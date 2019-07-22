@@ -10,6 +10,11 @@ describe('isType', () => {
   });
 });`;
 export const isTypeES6 = "export default function isType() { return 'got is-type'; };";
+export const isTypeLeftPad = `
+const leftPad = require('left-pad');
+module.exports = function isType() { return leftPad('got is-type', 15, 0); };
+`;
+export const isTypeTS = "export default function isType() { return 'got is-type'; };";
 export const isString =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 export const isStringV2 =
@@ -24,12 +29,16 @@ describe('isString', () => {
 });`;
 export const isStringES6 =
   "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
+export const isStringTS =
+  "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
 export const barFooFixture =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
 export const barFooFixtureV2 =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
 export const barFooES6 =
   "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
+export const barFooTS =
+  "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
 export const barFooSpecES6 = testShouldPass => `const expect = require('chai').expect;
 const foo = require('./foo.js');
 
@@ -38,7 +47,12 @@ describe('foo', () => {
     expect(foo())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
   });
 });`;
+export const appPrintIsType = "const isType = require('./components/utils/is-type'); console.log(isType());";
+export const appPrintIsTypeCapsule = "const isType = require('.'); console.log(isType());";
+export const appPrintIsString = "const isString = require('./components/utils/is-string'); console.log(isString());";
+export const appPrintIsStringCapsule = "const isString = require('.'); console.log(isString());";
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+export const appPrintBarFooCapsule = "const barFoo = require('.'); console.log(barFoo());";
 export const appPrintBarFooES6 = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
 export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";
 export const objectRestSpread = `const g = 5;

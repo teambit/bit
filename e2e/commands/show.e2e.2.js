@@ -374,7 +374,7 @@ describe('bit show command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/foo.js');
+      helper.deletePath('bar/foo.js');
       const output = helper.showComponent('bar/foo -j');
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -386,8 +386,8 @@ describe('bit show command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/index.js');
-      helper.deleteFile('bar/foo.js');
+      helper.deletePath('bar/index.js');
+      helper.deletePath('bar/foo.js');
 
       const showCmd = () => helper.showComponent('bar/foo');
       const error = new MissingFilesFromComponent('bar/foo');

@@ -1,7 +1,7 @@
 import init from './lib/init';
 import isolate from './lib/isolate';
 import remove from './lib/remove';
-import deprecate from './lib/deprecate';
+import { deprecate, undeprecate } from './lib/deprecation';
 import listScope from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
 import status from './lib/status';
@@ -39,6 +39,7 @@ export {
   exportAction,
   remove,
   deprecate,
+  undeprecate,
   buildAll,
   listScope,
   tagAction,

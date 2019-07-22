@@ -34,7 +34,7 @@ import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '..
 import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import { RemovedObjects } from './removed-components';
-import DependencyGraph from './graph/graph';
+import DependencyGraph from './graph/scope-graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
@@ -253,12 +253,18 @@ export default class Scope {
    * Two reasons why not running them in parallel:
    * 1) when several components have the same environment, it'll try to install them multiple times.
    * 2) npm throws errors when running 'npm install' from several directories
+   *
+   * Also, make sure to first build and write dists files of all components, and only then, write
+   * the links inside the dists. otherwise, you it could fail when writing links of one component
+   * needs another component dists files. (see 'importing all components and then deleting the dist
+   * directory' test case)
    */
   async buildMultiple(
     components: Component[],
     consumer: Consumer,
     noCache: boolean,
-    verbose: boolean
+    verbose: boolean,
+    dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
@@ -266,11 +272,15 @@ export default class Scope {
       loader.start(BEFORE_RUNNING_BUILD);
     }
     const build = async (component: Component) => {
-      await component.build({ scope: this, consumer, noCache, verbose });
-      const buildResults = await component.dists.writeDists(component, consumer);
+      await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
+      const buildResults = await component.dists.writeDists(component, consumer, false);
       return { component: component.id.toString(), buildResults };
     };
-    return pMapSeries(components, build);
+    const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
+
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+    return buildResults;
   }
 
   /**
@@ -313,11 +323,13 @@ export default class Scope {
     components,
     consumer,
     verbose,
+    dontPrintEnvMsg = false,
     rejectOnFailure = false
   }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
+    dontPrintEnvMsg?: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
@@ -334,7 +346,8 @@ export default class Scope {
         scope: this,
         rejectOnFailure,
         consumer,
-        verbose
+        verbose,
+        dontPrintEnvMsg
       });
       const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };
@@ -379,13 +392,6 @@ export default class Scope {
 
   async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
     return this.sources.get(id);
-  }
-
-  async deprecateSingle(bitId: BitId): Promise<string> {
-    const component = await this.getModelComponentIfExist(bitId);
-    component.deprecated = true;
-    this.objects.add(component);
-    return bitId.toStringWithoutVersion();
   }
 
   /**
@@ -462,19 +468,6 @@ export default class Scope {
     });
     await Promise.all(resultP);
     return { missingComponents, foundComponents };
-  }
-
-  /**
-   * deprecate components from scope
-   */
-  async deprecateMany(bitIds: BitIds): Promise<any> {
-    logger.debug(`scope.deprecateMany, ids: ${bitIds.toString()}`);
-    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
-    const deprecatedComponents = await Promise.all(deprecatedComponentsP);
-    await this.objects.persist();
-    const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
-    return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
   /**
@@ -645,14 +638,16 @@ export default class Scope {
     consumer,
     verbose,
     directory,
-    keep
+    keep,
+    noCache
   }: {
     bitId: BitId,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory?: ?string,
-    keep?: ?boolean
+    keep?: ?boolean,
+    noCache?: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
@@ -664,7 +659,8 @@ export default class Scope {
       consumer,
       verbose,
       directory,
-      keep
+      keep,
+      noCache
     });
   }
 

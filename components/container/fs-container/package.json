@@ -1,0 +1,17 @@
+{
+  "name": "@bit/bit.capsule-dev.container.fs-container",
+  "version": "0.0.4",
+  "homepage": "https://bitsrc.io/bit/capsule-dev/container/fs-container",
+  "main": "dist/container.js",
+  "dependencies": {
+    "@bit/bit.capsule-dev.core.capsule": "file:../../core/capsule",
+    "debug": "^4.1.1",
+    "fs-extra": "^7.0.1",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0"
+  },
+  "peerDependencies": {},
+  "license": "SEE LICENSE IN LICENSE"
+}

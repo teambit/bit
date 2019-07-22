@@ -1,10 +1,12 @@
 /** @flow */
+import yn from 'yn';
 import serializeError from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
 import path from 'path';
-import { GLOBAL_LOGS, DEBUG_LOG } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT } from '../constants';
 import { Analytics } from '../analytics/analytics';
+import { getSync } from '../api/consumer/lib/global-config';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -12,7 +14,7 @@ const extensionsLoggers = new Map();
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
-  json: false,
+  json: yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }),
   // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
   level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
   maxsize: 10 * 1024 * 1024, // 10MB

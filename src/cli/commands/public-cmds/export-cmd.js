@@ -19,25 +19,34 @@ export default class Export extends Command {
   migration = true;
 
   action([remote, ids]: [string, string[]], { eject }: any): Promise<*> {
-    return exportAction(ids, remote, eject).then(({ componentsIds, ejectResults }) => ({
-      componentsIds,
-      ejectResults,
+    return exportAction(ids, remote, eject).then(results => ({
+      ...results,
       remote
     }));
   }
 
   report({
     componentsIds,
+    nonExistOnBitMap,
     ejectResults,
     remote
   }: {
     componentsIds: BitId[],
+    nonExistOnBitMap: BitId[],
     ejectResults: ?EjectResults,
     remote: string
   }): string {
-    if (R.isEmpty(componentsIds)) return chalk.yellow('nothing to export');
+    if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap)) return chalk.yellow('nothing to export');
     const exportOutput = () => {
+      if (R.isEmpty(componentsIds)) return '';
       return chalk.green(`exported ${componentsIds.length} components to scope ${chalk.bold(remote)}`);
+    };
+    const nonExistOnBitMapOutput = () => {
+      if (R.isEmpty(nonExistOnBitMap)) return '';
+      const ids = nonExistOnBitMap.map(id => id.toString()).join(', ');
+      return chalk.yellow(
+        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.`
+      );
     };
     const ejectOutput = () => {
       if (!ejectResults) return '';
@@ -45,6 +54,6 @@ export default class Export extends Command {
       return `\n${output}`;
     };
 
-    return exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + exportOutput() + ejectOutput();
   }
 }

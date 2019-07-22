@@ -6,8 +6,8 @@ import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
-import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension';
-import type { PathOsBased, PathLinux } from '../../utils/path';
+import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension-types';
+import type { PathOsBased, PathLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import {
   BIT_JSON,
   NO_PLUGIN_TYPE,
@@ -20,6 +20,7 @@ import {
 import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
+import DataToPersist from '../component/sources/data-to-persist';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
@@ -177,26 +178,38 @@ export default class AbstractConfig {
     );
   }
 
-  async write({ bitDir }: { bitDir: string }): Promise<string[]> {
-    const jsonFiles = await this.prepareToWrite({ bitDir });
-    return Promise.all(jsonFiles.map(jsonFile => jsonFile.write()));
+  async write({
+    workspaceDir,
+    componentDir
+  }: {
+    workspaceDir: PathOsBasedAbsolute,
+    componentDir?: PathOsBasedRelative
+  }): Promise<string[]> {
+    const jsonFiles = await this.prepareToWrite({ workspaceDir, componentDir });
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(jsonFiles);
+    dataToPersist.addBasePath(workspaceDir);
+    return dataToPersist.persistAllToFS();
   }
 
-  async prepareToWrite({ bitDir }: { bitDir: string }): Promise<JSONFile[]> {
+  async prepareToWrite({
+    workspaceDir,
+    componentDir = '.'
+  }: {
+    workspaceDir: PathOsBasedAbsolute,
+    componentDir?: PathOsBasedRelative
+  }): Promise<JSONFile[]> {
     const plainObject = this.toPlainObject();
     const JsonFiles = [];
-    const addJsonFile = (pathStr: string, content: Object) => {
-      const params = { base: bitDir, override: true, path: pathStr, content };
-      JsonFiles.push(JSONFile.load(params));
-    };
     if (this.writeToPackageJson) {
-      const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(bitDir);
+      const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      JsonFiles.push(packageJsonFile.toJSONFile());
+      JsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
-      const bitJsonPath = AbstractConfig.composeBitJsonPath(bitDir);
-      addJsonFile(bitJsonPath, plainObject);
+      const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+      const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
+      JsonFiles.push(JSONFile.load(params));
     }
     return JsonFiles;
   }

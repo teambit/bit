@@ -10,6 +10,8 @@ import type Component from '../../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
 
+export type AutoTagResult = { component: ModelComponent, triggeredBy: BitIds };
+
 /**
  * bumping dependencies version, so-called "auto tagging" is needed when the currently tagged
  * component has dependents. these dependents should have the updated version of the currently
@@ -35,7 +37,7 @@ export async function bumpDependenciesVersions(
   scope: Scope,
   potentialComponents: BitIds,
   taggedComponents: Component[]
-): Promise<ModelComponent[]> {
+): Promise<AutoTagResult[]> {
   const taggedComponentsIds = BitIds.fromArray(taggedComponents.map(c => c.id));
   const allComponents = new BitIds(...potentialComponents, ...taggedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
@@ -49,7 +51,7 @@ export async function bumpDependenciesVersions(
     graph
   );
   if (updatedComponents.length) {
-    const ids = updatedComponents.map(component => component.toBitIdWithLatestVersion());
+    const ids = updatedComponents.map(({ component }) => component.toBitIdWithLatestVersion());
     await updateComponents(componentsAndVersions, scope, taggedComponentsIds, BitIds.fromArray(ids), true, graph);
   }
   return updatedComponents;
@@ -62,7 +64,8 @@ async function updateComponents(
   changedComponents: BitIds,
   isRound2 = false,
   graph: Object
-): Promise<ModelComponent[]> {
+): Promise<AutoTagResult[]> {
+  const autoTagResults: AutoTagResult[] = [];
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {
     let pendingUpdate = false;
     const bitId = component.toBitId();
@@ -75,12 +78,14 @@ async function updateComponents(
       return null;
     }
     const edges = graphlib.alg.preorder(graph, idStr);
+    const triggeredBy = new BitIds();
     edges.forEach((edge: string) => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
       if (changedComponentId && semver.gt(changedComponentId.version, edgeId.version)) {
         updateDependencies(version, edgeId, changedComponentId);
         pendingUpdate = true;
+        triggeredBy.push(edgeId);
       }
     });
     if (pendingUpdate) {
@@ -88,12 +93,13 @@ async function updateComponents(
       if (isRound2) {
         delete component.versions[component.latest()];
       }
+      autoTagResults.push({ component, triggeredBy });
       return scope.sources.putAdditionalVersion(component, version, message);
     }
     return null;
   });
-  const updatedComponentsAll = await Promise.all(componentsToUpdateP);
-  return removeNils(updatedComponentsAll);
+  await Promise.all(componentsToUpdateP);
+  return autoTagResults;
 }
 
 function updateDependencies(version, edgeId, changedComponentId) {

@@ -8,6 +8,7 @@ import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
 import ComponentOverrides from '../consumer/config/component-overrides';
+import PackageJsonFile from '../consumer/component/package-json-file';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -120,6 +121,11 @@ export default function validateVersionInstance(version: Version): void {
     version.dists.forEach((file) => {
       validateFile(file, true);
     });
+  } else if (version.mainDistFile) {
+    throw new VersionInvalid(`${message} the mainDistFile cannot be set when the dists are empty`);
+  }
+  if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
+    throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
   const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
   dependenciesInstances.forEach((dependenciesType) => {
@@ -183,5 +189,13 @@ export default function validateVersionInstance(version: Version): void {
     }
     // $FlowFixMe
     validateOverrides(version.overrides[field], field);
+  });
+  validateType(message, version.packageJsonChangedProps, 'packageJsonChangedProps', 'object');
+  const forbiddenPackageJsonProps = PackageJsonFile.propsNonUserChangeable();
+  Object.keys(version.packageJsonChangedProps).forEach((prop) => {
+    validateType(message, prop, 'property name of packageJson', 'string');
+    if (forbiddenPackageJsonProps.includes(prop)) {
+      throw new VersionInvalid(`${message}, the packageJsonChangedProps should not override the prop ${prop}`);
+    }
   });
 }

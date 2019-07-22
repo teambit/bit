@@ -7,7 +7,7 @@ import npmClient from '../../npm-client';
 export default class ValidateYarnExec extends Diagnosis {
   name = 'validate yarn exec';
   description = 'validate that yarn executable found';
-  category = '3rd-parties';
+  category = 'vendors';
 
   _formatSymptoms(): string {
     return 'yarn executable not found';

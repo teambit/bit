@@ -334,7 +334,7 @@ describe('bit test command', function () {
         statusCode = err.status;
       }
       expect(statusCode).to.not.equal(0);
-      expect(output).to.have.string('Unexpected token import');
+      expect(output).to.have.string('Unexpected token');
     });
     it('Should be able to test after building', () => {
       helper.importCompiler();

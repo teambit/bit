@@ -9,9 +9,9 @@ import WorkspaceConfig from '../../consumer/config/workspace-config';
 import AbstractConfig from '../../consumer/config/abstract-config';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
-  name = 'Validate workspace bit config';
-  description = 'validate workspace bit.json';
-  category = 'bit-core-files';
+  name = "validate workspace's bit config";
+  description = 'validate workspace configuration object';
+  category = 'configuration';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     const bitJsonPath = R.path(['data', 'bitJsonPath'], bareResult);
@@ -19,9 +19,10 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   }
 
   _formatManualTreat() {
-    return 'Manually fix the bit.json or consider running bit init --reset to recreate the file';
+    return 'manually fix the bit.json or consider running bit init --reset to recreate the file';
   }
 
+  // TODO: support configuraiton from package.json
   async _runExamine(): Promise<ExamineBareResult> {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();

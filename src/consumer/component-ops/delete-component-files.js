@@ -7,7 +7,11 @@ import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import Dists from '../component/sources/dists';
 
-export default async function deleteComponentsFiles(consumer: Consumer, bitIds: BitIds, deleteFilesForAuthor: boolean) {
+export default (async function deleteComponentsFiles(
+  consumer: Consumer,
+  bitIds: BitIds,
+  deleteFilesForAuthor: boolean
+) {
   logger.debug(`deleteComponentsFiles, ids: ${bitIds.toString()}`);
   const filesToDelete = getFilesToDelete();
   filesToDelete.addBasePath(consumer.getPath());
@@ -40,4 +44,4 @@ export default async function deleteComponentsFiles(consumer: Consumer, bitIds: 
     });
     return dataToPersist;
   }
-}
+});

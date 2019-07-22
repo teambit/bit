@@ -59,6 +59,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ?ResolveModulesConfig;
   overrides: ConsumerOverrides;
+  packageJsonObject: ?Object; // workspace package.json if exists (parsed)
 
   constructor({
     compiler,
@@ -225,6 +226,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     workspaceConfig.path = bitJsonPath;
     workspaceConfig.writeToBitJson = Boolean(bitJsonFile);
     workspaceConfig.writeToPackageJson = packageJsonHasConfig;
+    workspaceConfig.packageJsonObject = packageJsonFile;
     return workspaceConfig;
   }
   static async loadBitJson(bitJsonPath: string): Promise<?Object> {

@@ -6,19 +6,19 @@ import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/broken-symlink-f
 
 chai.use(require('chai-fs'));
 
-describe('custom module resolutions', function () {
+describe('copy workspace with env', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
-  describe('using custom module directory', () => {
+  describe('coping a workspace with a compiler to another directory', () => {
     let copiedPath;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.importCompiler('bit.envs/compilers/react');
+      helper.importCompiler('bit.envs/compilers/react-typescript');
 
       copiedPath = helper.cloneLocalScope();
       // remove the original workspace so then symlinks get invalid
@@ -35,7 +35,7 @@ describe('custom module resolutions', function () {
       const results = parsedDoctor.examineResult.bareResult;
       expect(results.valid).to.be.false;
       expect(results.data.brokenSymlinks[0].pathToDelete).to.have.string(
-        path.normalize('.bit/components/compilers/react/bit.envs')
+        path.normalize('.bit/components/compilers/react-typescript')
       );
     });
   });

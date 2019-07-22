@@ -1,0 +1,5 @@
+[Artifactory]
+name=Artifactory
+baseurl=https://@bitsrc.jfrog.io/bitsrc/bit-yum/development
+enabled=1
+gpgcheck=0

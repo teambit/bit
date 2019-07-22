@@ -2,12 +2,17 @@
 import path from 'path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
-import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
+import {
+  DEFAULT_INDEX_NAME,
+  COMPONENT_ORIGINS,
+  ANGULAR_PACKAGE_IDENTIFIER,
+  ANGULAR_BIT_ENTRY_POINT_FILE
+} from '../constants';
 import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import type { ComponentWithDependencies } from '../scope';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import type { Dependency, Dependencies } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
@@ -15,7 +20,7 @@ import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
-import { getLinkToFileContent } from './link-content';
+import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
@@ -48,10 +53,8 @@ function getComponentLinks({
   component: Component,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean,
-  bitMap?: ?BitMap
+  bitMap: BitMap
 }): DataToPersist {
-  // $FlowFixMe
-  bitMap = bitMap || consumer.bitMap;
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
@@ -71,8 +74,8 @@ function getComponentLinks({
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-        // $FlowFixMe
         consumer,
+        bitMap,
         component,
         relativePath,
         dependencyComponent,
@@ -96,7 +99,8 @@ function getComponentLinks({
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
-    const packageJsonFile = component.packageJsonFile.toJSONFile();
+    // $FlowFixMe it has been verified above that component.packageJsonFile is not empty
+    const packageJsonFile = component.packageJsonFile.toVinylFile();
     dataToPersist.addFile(packageJsonFile);
   }
 
@@ -202,10 +206,8 @@ function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
   createNpmLinkFiles: boolean,
-  bitMap?: BitMap
+  bitMap: BitMap
 ): DataToPersist {
-  // $FlowFixMe
-  bitMap = bitMap || consumer.bitMap;
   const componentsDependenciesLinks = new DataToPersist();
   const linkedComponents = new BitIds();
   const componentsToLink = getComponentsToLink();
@@ -215,7 +217,6 @@ function getComponentsDependenciesLinks(
   function getComponentsToLink(): ComponentWithDependencies[] {
     return componentDependencies.reduce((acc, componentWithDeps) => {
       const component = componentWithDeps.component;
-      // $FlowFixMe bitMap is set at this point
       const componentMap = bitMap.getComponent(component.id);
       component.componentMap = componentMap;
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -237,7 +238,8 @@ function getComponentsDependenciesLinks(
         consumer,
         component,
         dependencies: componentWithDeps.allDependencies,
-        createNpmLinkFiles
+        createNpmLinkFiles,
+        bitMap
       });
       componentsDependenciesLinks.merge(componentsLinks);
       linkedComponents.push(component.id);
@@ -257,7 +259,8 @@ function getComponentsDependenciesLinks(
           consumer,
           component: dep,
           dependencies,
-          createNpmLinkFiles
+          createNpmLinkFiles,
+          bitMap
         });
         componentsDependenciesLinks.merge(dependencyLinks);
         linkedComponents.push(dep.id);
@@ -293,7 +296,9 @@ function getInternalCustomResolvedLinks(
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
   }
   const getDestination = (importSource: string) => `node_modules/${importSource}`;
-  return component.customResolvedPaths.map((customPath) => {
+  const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
+  const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
+  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
     const dest = getDestination(customPath.importSource);
     const destAbs = path.join(componentDir, dest);
@@ -335,11 +340,11 @@ function generatePostInstallScript(component: Component, postInstallLinks = [], 
     acc[val.dest] = val.source;
     return acc;
   }, {});
-  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
+  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   component.packageJsonFile.addOrUpdateProperty('scripts', { postinstall: postInstallScript });
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
   return postInstallFile;
@@ -351,8 +356,7 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
     return acc;
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
-  // @TODO: load the package.json here if not found. it happens during the build process
-  if (!component.packageJsonFile) return false;
+  if (!component.packageJsonFile) return false; // e.g. author doesn't have package.json per component
   const bitProperty = component.packageJsonFile.getProperty('bit') || {};
   bitProperty.resolveAliases = resolveAliases;
   return true;
@@ -361,17 +365,29 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
 /**
  * Relevant for IMPORTED and NESTED only
  */
-function getEntryPointsForComponent(component: Component, consumer: Consumer): LinkFile[] {
-  const files = [];
-  const componentMap = consumer.bitMap.getComponent(component.id);
-  // $FlowFixMe
-  const componentRoot: string = component.writtenPath || componentMap.rootDir;
+function getEntryPointsForComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile[] {
+  const componentMap = bitMap.getComponent(component.id);
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
-  const indexName = getIndexFileName(mainFile); // Move to bit-javascript
+  const mainFileExt = getExt(mainFile);
+  if (JAVASCRIPT_FLAVORS_EXTENSIONS.includes(mainFileExt) && component.packageJsonFile) {
+    // throw new Error('hi')
+    // if the main file is a javascript kind of file and the component has package.json file, no
+    // need for an entry-point file because the "main" attribute of package.json takes care of that
+    return [];
+  }
+  const files = [];
+  const indexName = getIndexFileName(mainFile);
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
   const entryPointPath = path.join(componentRoot, indexName);
-  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
+  if (
+    !component.dists.isEmpty() &&
+    component.dists.writeDistsFiles &&
+    consumer &&
+    !consumer.shouldDistsBeInsideTheComponent()
+  ) {
     const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
@@ -382,23 +398,44 @@ function getEntryPointsForComponent(component: Component, consumer: Consumer): L
   return files;
 }
 
+function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): ?LinkFile {
+  if (!_isAngularComponent(component)) return null;
+  const componentMap = bitMap.getComponent(component.id);
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  const content = getLinkToFileContent(component.mainFile, []);
+  const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
+  return LinkFile.load({ filePath, content, override: false });
+}
+
+function _isAngularComponent(component: Component): boolean {
+  return (
+    component.packageDependencies[ANGULAR_PACKAGE_IDENTIFIER] ||
+    component.peerPackageDependencies[ANGULAR_PACKAGE_IDENTIFIER]
+  );
+}
+
 /**
  * used for writing compiler and tester dependencies to the directory of their configuration file
  * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
  * this methods write the environment dependency links no matter where the directory located on the workspace
- *
  */
 async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
-  consumer: Consumer
+  consumer: Consumer,
+  bitMap: BitMap
 ): Promise<LinkFile[]> {
+  // @todo: isolate consumer from this function for the Capsule.
+  if (!consumer) throw new Error('getLinksByDependencies expects to get Consumer');
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
     const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
+        bitMap,
         component,
         relativePath,
         dependencyComponent,
@@ -417,4 +454,10 @@ async function getLinksByDependencies(
   return linksToWrite.map(link => LinkFile.load(link));
 }
 
-export { getEntryPointsForComponent, getComponentsDependenciesLinks, getIndexFileName, getLinksByDependencies };
+export {
+  getEntryPointsForComponent,
+  getComponentsDependenciesLinks,
+  getIndexFileName,
+  getLinksByDependencies,
+  getEntryPointForAngularComponent
+};

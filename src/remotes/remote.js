@@ -43,8 +43,8 @@ export default class Remote {
     });
   }
 
-  list(): Promise<ListScopeResult[]> {
-    return this.connect().then(network => network.list());
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return this.connect().then(network => network.list(namespacesUsingWildcards));
   }
 
   search(query: string, reindex: boolean): Promise<any> {
@@ -79,6 +79,9 @@ export default class Remote {
   }
   deprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
+  }
+  undeprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
+    return connect(this.host).then(network => network.undeprecateMany(ids, context));
   }
 
   static load(name: string, host: string): Remote {

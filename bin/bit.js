@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
-require('v8-compile-cache');
+// require('v8-compile-cache');
 
 const constants = require('../dist/constants');
+
+const MINIMUM_NODE_VERSION = '8.12.0';
 
 // set max listeners to a more appripriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
@@ -14,7 +16,7 @@ bitVersion();
 const semver = require('semver');
 const mkdirp = require('mkdirp');
 const chalk = require('chalk');
-const bitUpdates = require('./bit-updates');
+// const bitUpdates = require('./bit-updates');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
@@ -27,7 +29,9 @@ function ensureDirectories() {
 function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
     console.log(
-      require('chalk').red(`Node version ${nodeVersion} is not supported, please use Node.js 4.0 or higher.`)
+      require('chalk').red(
+        `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
+      )
     ); // eslint-disable-line
     return process.exit();
   }
@@ -45,24 +49,20 @@ function bitVersion() {
 }
 
 function getCompatibilityStatus() {
-  if (semver.satisfies(nodeVersion, '>=5.0.0')) {
+  if (semver.satisfies(nodeVersion, `>=${MINIMUM_NODE_VERSION}`)) {
     return 'current';
-  }
-
-  if (semver.satisfies(nodeVersion, '>=4.0.0')) {
-    return 'legacy';
   }
 
   return 'unsupported';
 }
 
-function checkForUpdates(cb) {
-  return () => bitUpdates.checkUpdate(cb);
-}
+// function checkForUpdates(cb) {
+//   return () => bitUpdates.checkUpdate(cb);
+// }
 
-function updateOrLaunch(updateCommand) {
-  return updateCommand ? bitUpdates.runUpdate(updateCommand) : loadCli();
-}
+// function updateOrLaunch(updateCommand) {
+//   return updateCommand ? bitUpdates.runUpdate(updateCommand) : loadCli();
+// }
 
 function loadCli() {
   return require('../dist/app.js');
@@ -77,4 +77,4 @@ function promptAnalyticsIfNeeded(cb) {
 }
 verifyCompatibility();
 ensureDirectories();
-promptAnalyticsIfNeeded(checkForUpdates(updateOrLaunch));
+promptAnalyticsIfNeeded(loadCli);

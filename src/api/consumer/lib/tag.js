@@ -9,13 +9,13 @@ import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from
 import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
 import Component from '../../../consumer/component';
-import ModelComponent from '../../../scope/models/model-component';
+import type { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type TagResults = {
   taggedComponents: Component[],
-  autoTaggedComponents: ModelComponent[],
+  autoTaggedResults: AutoTagResult[],
   warnings: string[],
   newComponents: BitIds
 };
@@ -143,7 +143,7 @@ export async function tagAllAction(args: {
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
   Analytics.setExtraData(
     'num_components',
-    R.concat(tagResults.taggedComponents, tagResults.autoTaggedComponents, tagResults.newComponents).length
+    R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
   );
   await consumer.onDestroy();
   return tagResults;

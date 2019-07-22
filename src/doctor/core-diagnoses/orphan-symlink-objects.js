@@ -5,15 +5,15 @@ import { loadConsumer } from '../../consumer';
 import { Symlink, ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
-export const DIAGNOSIS_NAME = 'Check orphan link files';
+export const DIAGNOSIS_NAME = 'check orphan refs';
 export default class OrphanSymlinkObjects extends Diagnosis {
   name = DIAGNOSIS_NAME;
-  description = 'validate that objects do not have symlinks that point to non exist components';
-  category = 'bit-core-files';
+  description = 'checks for empty internal refs in local workspace';
+  category = 'internal store';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('OrphanSymlinkObjects, bareResult.data is missing');
-    return `the following symlink objects point to non-exist components "${bareResult.data.orphanSymlinks.toString()}"`;
+    return `the following refs points to non-existing components "${bareResult.data.orphanSymlinks.toString()}"`;
   }
 
   _formatManualTreat(bareResult: ExamineBareResult) {

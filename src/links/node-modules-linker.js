@@ -4,7 +4,7 @@ import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
 import type Component from '../consumer/component/consumer-component';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON, DEFAULT_BINDINGS_PREFIX } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, pathNormalizeToLinux } from '../utils';
@@ -20,6 +20,8 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
+import PackageJsonFile from '../consumer/component/package-json-file';
+import { getPathRelativeRegardlessCWD } from '../utils/path';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -36,10 +38,10 @@ export default class NodeModuleLinker {
   consumer: ?Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
+  constructor(components: Component[], consumer: ?Consumer, bitMap: BitMap) {
     this.components = ComponentsList.getUniqueComponents(components);
-    this.consumer = consumer; // $FlowFixMe
-    this.bitMap = bitMap || consumer.bitMap;
+    this.consumer = consumer;
+    this.bitMap = bitMap;
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<LinksResult[]> {
@@ -102,8 +104,8 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : null;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
+    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
     const srcTarget: PathOsBasedRelative = component.writtenPath || componentMap.rootDir;
@@ -120,32 +122,14 @@ export default class NodeModuleLinker {
       const distSymlink = Symlink.makeInstance(distTarget, linkPath, componentId);
       distSymlink.forDistOutsideComponentsDir = true;
       this.dataToPersist.addSymlink(distSymlink);
-    } else {
+    } else if (srcTarget !== '.') {
+      // avoid creating symlinks from node_modules to itself
       this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
-
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
-    const missingDependenciesLinks =
-      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
-    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
-    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
-      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
-      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
-      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
-    }
+    await this._populateDependenciesAndMissingLinks(component);
   }
-  /**
-   * nested components are linked only during the import process. running `bit link` command won't
-   * link them because the nested dependencies are not loaded during consumer.loadComponents()
-   */
-  _populateNestedComponentsLinks(component: Component): void {
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
+  async _populateNestedComponentsLinks(component: Component): Promise<void> {
+    await this._populateDependenciesAndMissingLinks(component);
   }
   /**
    * authored components are linked only when they were exported before
@@ -156,9 +140,10 @@ export default class NodeModuleLinker {
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer);
+      const isMain = file === component.componentMap.mainFile;
+      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
+      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
         const linkFile = LinkFile.load({
@@ -175,6 +160,32 @@ export default class NodeModuleLinker {
       }
     });
     this._createPackageJsonForAuthor(component);
+  }
+  /**
+   * for IMPORTED and NESTED components
+   */
+  async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
+    // $FlowFixMe loaded from FS, componentMap must be set
+    const componentMap: ComponentMap = component.componentMap;
+    if (component.hasDependencies()) {
+      const dependenciesLinks = this._getDependenciesLinks(component, componentMap);
+      this.dataToPersist.addManySymlinks(dependenciesLinks);
+    }
+    const missingDependenciesLinks =
+      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
+    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
+    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
+      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
+      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
+      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
+      if (component.componentFromModel && component.componentFromModel.hasDependencies()) {
+        // when custom-resolve links are missing, the component has been loaded without that
+        // dependency. (see "deleting the link generated for the custom-module-resolution" test)
+        // as a result, dependency links were not generated. our option is to get it from the scope
+        const dependenciesLinks = this._getDependenciesLinks(component.componentFromModel, componentMap);
+        this.dataToPersist.addManySymlinks(dependenciesLinks);
+      }
+    }
   }
   /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
@@ -206,13 +217,11 @@ export default class NodeModuleLinker {
     });
   }
 
-  _getDependenciesLinks(component: Component): Symlink[] {
-    // $FlowFixMe
-    const componentMap: ComponentMap = component.componentMap;
+  _getDependenciesLinks(component: Component, componentMap: ComponentMap): Symlink[] {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
-      if (!dependencyComponentMap) return dependenciesLinks;
+      if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
@@ -237,16 +246,19 @@ export default class NodeModuleLinker {
   _getMissingLinks(component: Component): Symlink[] {
     const missingLinks = component.issues.missingLinks;
     const result = Object.keys(component.issues.missingLinks).map((key) => {
-      return missingLinks[key].map((dependencyIdRaw: BitId) => {
-        const dependencyId: BitId = this.bitMap.getBitId(dependencyIdRaw, { ignoreVersion: true });
-        const dependencyComponentMap = this.bitMap.getComponent(dependencyId);
-        return this._getDependencyLink(
-          component.componentMap.rootDir,
-          dependencyId,
-          dependencyComponentMap.rootDir,
-          component.bindingPrefix
-        );
-      });
+      return missingLinks[key]
+        .map((dependencyIdRaw: BitId) => {
+          const dependencyId: BitId = this.bitMap.getBitId(dependencyIdRaw, { ignoreVersion: true });
+          const dependencyComponentMap = this.bitMap.getComponent(dependencyId);
+          if (!dependencyComponentMap.rootDir) return null;
+          return this._getDependencyLink(
+            component.componentMap.rootDir,
+            dependencyId,
+            dependencyComponentMap.rootDir,
+            component.bindingPrefix
+          );
+        })
+        .filter(x => x);
     });
     return R.flatten(result);
   }
@@ -257,14 +269,14 @@ export default class NodeModuleLinker {
     rootDir: PathOsBasedRelative,
     bindingPrefix: string
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
+    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true);
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
 
   async _getMissingCustomResolvedLinks(component: Component): Promise<DataToPersist> {
     if (!component.componentFromModel) return new DataToPersist();
-
+    if (!this.consumer) throw new Error('_getMissingCustomResolvedLinks expects to have consumer set');
     const componentWithDependencies = await component.toComponentWithDependencies(this.consumer);
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
     const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
@@ -272,20 +284,10 @@ export default class NodeModuleLinker {
     const componentsDependenciesLinks = getComponentsDependenciesLinks(
       [componentWithDependencies],
       this.consumer,
-      false
+      false,
+      this.bitMap
     );
     return componentsDependenciesLinks;
-  }
-
-  /**
-   * path.resolve uses current working dir.
-   * for us, the cwd is not important. a user may running bit command from an inner dir.
-   */
-  _getPathRelativeRegardlessCWD(from: PathOsBasedRelative, to: PathOsBasedRelative): PathLinuxRelative {
-    const fromLinux = pathNormalizeToLinux(from);
-    const toLinux = pathNormalizeToLinux(to);
-    // change them to absolute so path.relative won't consider the cwd
-    return pathRelativeLinux(`/${fromLinux}`, `/${toLinux}`);
   }
 
   /**
@@ -299,8 +301,8 @@ export default class NodeModuleLinker {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
-    const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
-    this.dataToPersist.addFile(packageJson.toJSONFile());
+    const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    this.dataToPersist.addFile(packageJson.toVinylFile());
   }
 
   /**
@@ -310,7 +312,7 @@ export default class NodeModuleLinker {
    * @todo: avoid repopulating for imported. (not easy because by default, all components get "true").
    */
   async _populateShouldDependenciesSavedAsComponentsData(): Promise<void> {
-    if (!this.components.length) return;
+    if (!this.components.length || !this.consumer) return;
     const bitIds = this.components.map(c => c.id);
     const shouldDependenciesSavedAsComponents = await this.consumer.shouldDependenciesSavedAsComponents(bitIds);
     this.components.forEach((component) => {

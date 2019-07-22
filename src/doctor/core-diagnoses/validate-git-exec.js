@@ -6,19 +6,19 @@ import Diagnosis from '../diagnosis';
 import getGitExecutablePath from '../../utils/git/git-executable';
 import type { ExamineBareResult } from '../diagnosis';
 
-export const DIAGNOSIS_NAME = 'Validate git exec';
+export const DIAGNOSIS_NAME = 'validate git exec';
 export default class ValidateGitExec extends Diagnosis {
   name = DIAGNOSIS_NAME;
   description = 'validate that git executable found';
-  category = '3rd-parties';
+  category = 'vendors';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     const gitExecutablePath = R.path(['data', 'gitExecutablePath'], bareResult);
-    return `git executable not found (on path '${gitExecutablePath}')`;
+    return `git executable not found (path '${gitExecutablePath}')`;
   }
 
   _formatManualTreat() {
-    return "please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'";
+    return "please ensure that git is installed and/or git_path is configured correctly - 'bit config set git_path <GIT_PATH>'";
   }
 
   async _runExamine(): Promise<ExamineBareResult> {

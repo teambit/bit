@@ -10,7 +10,7 @@ import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import type { PathLinux } from '../../utils/path';
+import type { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
@@ -62,14 +62,14 @@ export async function changeDependenciesToRelativeSyntax(
     const componentMap = consumer.bitMap.getComponent(component.id);
     const componentRootDir = componentMap.rootDir;
     if (!componentRootDir) return null;
-    const packageJsonFile = await PackageJsonFile.load(componentRootDir);
+    const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentRootDir);
     if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
     const devDeps = getPackages(component.devDependencies, componentMap);
     const compilerDeps = getPackages(component.compilerDependencies, componentMap);
     const testerDeps = getPackages(component.testerDependencies, componentMap);
     packageJsonFile.addDependencies(getPackages(component.dependencies, componentMap));
     packageJsonFile.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps });
-    return packageJsonFile.toJSONFile();
+    return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   // $FlowFixMe
@@ -118,7 +118,7 @@ export async function write(
 }
 
 export function preparePackageJsonToWrite(
-  consumer: Consumer,
+  consumer: ?Consumer,
   component: Component,
   bitDir: string,
   override?: boolean = true,
@@ -129,47 +129,32 @@ export function preparePackageJsonToWrite(
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = getPackageDependency(consumer, dep.id, component.id);
+      const packageDependency = consumer ? getPackageDependency(consumer, dep.id, component.id) : null;
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
       acc[packageName] = packageDependency;
       return acc;
     }, {});
   };
+  const addDependencies = (packageJsonFile: PackageJsonFile) => {
+    packageJsonFile.addDependencies(bitDependencies);
+    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
+  };
   const bitDependencies = getBitDependencies(component.dependencies);
   const bitDevDependencies = getBitDependencies(component.devDependencies);
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = getBitDependencies(component.testerDependencies);
-  const name = excludeRegistryPrefix
-    ? componentIdToPackageName(component.id, component.bindingPrefix, false)
-    : componentIdToPackageName(component.id, component.bindingPrefix);
-  const createPackageJsonFile = (dir): PackageJsonFile => {
-    const packageJsonFile = PackageJsonFile.create(dir, {
-      name,
-      version: component.version,
-      homepage: component._getHomepage(),
-      main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
-      dependencies: component.packageDependencies,
-      // Add environments PackageDependencies to the devDependencies in the package.json
-      devDependencies: {
-        ...component.devPackageDependencies,
-        ...component.compilerPackageDependencies,
-        ...component.testerPackageDependencies
-      },
-      peerDependencies: component.peerPackageDependencies,
-      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
-    });
-    packageJsonFile.addDependencies(bitDependencies);
-    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
-    return packageJsonFile;
-  };
-  const packageJson = createPackageJsonFile(bitDir);
+  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
+  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  packageJson.addOrUpdateProperty('main', main);
+  addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
-    distPackageJson = createPackageJsonFile(distRootDir);
+    distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
     const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
-    distPackageJson.addOrUpdateProperty('main', distMainFile);
+    distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
+    addDependencies(distPackageJson);
   }
 
   return { packageJson, distPackageJson };
@@ -177,11 +162,11 @@ export function preparePackageJsonToWrite(
 
 export async function updateAttribute(
   consumer: Consumer,
-  componentDir: PathLinux,
+  componentDir: PathRelative,
   attributeName: string,
   attributeValue: string
 ): Promise<void> {
-  const packageJsonFile = await PackageJsonFile.load(componentDir);
+  const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentDir);
   if (!packageJsonFile.fileExist) return; // package.json doesn't exist, that's fine, no need to update anything
   packageJsonFile.addOrUpdateProperty(attributeName, attributeValue);
   await packageJsonFile.write();
@@ -223,7 +208,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
-async function _addDependenciesPackagesIntoPackageJson(dir: string, dependencies: Object) {
+async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Object) {
   const packageJsonFile = await PackageJsonFile.load(dir);
   packageJsonFile.addDependencies(dependencies);
   await packageJsonFile.write();
@@ -244,7 +229,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(consumer.toAbsolutePath(componentPath))));
 }
 
-function convertToValidPathForPackageManager(pathStr: PathLinux): string {
+export function convertToValidPathForPackageManager(pathStr: PathLinux): string {
   const prefix = 'file:'; // it works for both, Yarn and NPM
   return prefix + (pathStr.startsWith('.') ? pathStr : `./${pathStr}`);
 }

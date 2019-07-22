@@ -305,7 +305,7 @@ export default class Repository {
   async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};
-    if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
+    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.debug(`repository._writeOne: ${objectPath}`);
     return writeFile(objectPath, contents, options);

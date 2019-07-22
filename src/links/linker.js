@@ -14,46 +14,51 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
-import PackageJsonFile from '../consumer/component/package-json-file';
+import BitMap from '../consumer/bit-map/bit-map';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   return nodeModuleLinker.link();
 }
 
 export async function getLinksInDistToWrite(
   component: Component,
   componentMap: ComponentMap,
-  consumer: Consumer
+  consumer: ?Consumer,
+  bitMap: BitMap,
+  componentWithDependencies?: ComponentWithDependencies
 ): Promise<DataToPersist> {
-  const componentWithDeps: ComponentWithDependencies = await component.toComponentWithDependencies(consumer);
+  if (!componentWithDependencies && !consumer) {
+    throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined');
+  }
+  const componentWithDeps: ComponentWithDependencies = // $FlowFixMe
+    componentWithDependencies || (await component.toComponentWithDependencies(consumer));
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     [componentWithDeps],
     consumer,
-    false
+    false,
+    bitMap
   );
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   const rootDir = componentMap.rootDir;
   if (!rootDir) {
     throw new GeneralError('getLinksInDistToWrite should get called on imported components only');
   }
-  const nodeModuleLinker = new NodeModuleLinker([component], consumer);
+  const nodeModuleLinker = new NodeModuleLinker([component], consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
-  const packageJsonFile = await PackageJsonFile.load(rootDir);
-  if (packageJsonFile.fileExist) {
+  const packageJsonFile = component.packageJsonFile;
+  if (packageJsonFile) {
     packageJsonFile.addOrUpdateProperty('main', newMainFile);
-    dataToPersist.addFile(packageJsonFile.toJSONFile());
-  } else {
-    // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
-    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
-    dataToPersist.addManyFiles(entryPoints);
+    dataToPersist.addFile(packageJsonFile.toVinylFile());
   }
+  const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
+  dataToPersist.addManyFiles(entryPoints);
   return dataToPersist;
 }
 
@@ -68,9 +73,10 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
-    false
+    false,
+    consumer.bitMap
   );
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(componentsDependenciesLinks);
@@ -116,19 +122,6 @@ export async function getReLinkDependentsData(
   return dataToPersist;
 }
 
-export async function linkComponents(params: {
-  componentsWithDependencies: ComponentWithDependencies[],
-  writtenComponents: Component[],
-  writtenDependencies: ?(Component[]),
-  consumer: Consumer,
-  createNpmLinkFiles: boolean,
-  writePackageJson: boolean
-}) {
-  const allLinks = await getAllComponentsLinks(params);
-  allLinks.addBasePath(params.consumer.getPath());
-  await allLinks.persistAllToFS();
-}
-
 /**
  * link the components after import.
  * this process contains the following steps:
@@ -143,45 +136,52 @@ export async function getAllComponentsLinks({
   writtenComponents,
   writtenDependencies,
   consumer,
-  createNpmLinkFiles,
-  writePackageJson
+  bitMap,
+  createNpmLinkFiles
 }: {
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
   writtenDependencies: ?(Component[]),
-  consumer: Consumer,
-  createNpmLinkFiles: boolean,
-  writePackageJson: boolean
+  consumer: ?Consumer,
+  bitMap: BitMap,
+  createNpmLinkFiles: boolean
 }): Promise<DataToPersist> {
   const dataToPersist = new DataToPersist();
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
-    createNpmLinkFiles
+    createNpmLinkFiles,
+    bitMap
   );
   if (writtenDependencies) {
     const uniqDependencies = ComponentsList.getUniqueComponents(R.flatten(writtenDependencies));
     const entryPoints = uniqDependencies.map(component =>
-      linkGenerator.getEntryPointsForComponent(component, consumer)
+      linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
     );
     dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
-  if (!writePackageJson) {
-    // no need for entry-point file if package.json is written.
-    const entryPoints = writtenComponents.map(component =>
-      linkGenerator.getEntryPointsForComponent(component, consumer)
-    );
-    dataToPersist.addManyFiles(R.flatten(entryPoints));
-  }
+  const entryPoints = writtenComponents.map(component =>
+    linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
+  );
+  dataToPersist.addManyFiles(R.flatten(entryPoints));
+  const bitAngularEntryPoints = writtenComponents
+    .map(component => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
+    .filter(x => x); // remove nulls when components are not Angular
+  dataToPersist.addManyFiles(bitAngularEntryPoints);
+
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
-  const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));
-  const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);
   dataToPersist.merge(nodeModuleLinks);
-  dataToPersist.merge(reLinkDependentsData);
+
+  if (consumer) {
+    const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));
+    const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);
+    dataToPersist.merge(reLinkDependentsData);
+  }
+
   dataToPersist.merge(componentsDependenciesLinks);
   return dataToPersist;
 }

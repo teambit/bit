@@ -168,7 +168,8 @@ export default class ScopeComponentsImporter {
   }
 
   componentsToComponentsObjects(
-    components: Array<VersionDependencies | ComponentVersion>, clientVersion: ?string
+    components: Array<VersionDependencies | ComponentVersion>,
+    clientVersion: ?string
   ): Promise<ComponentObjects[]> {
     return pMapSeries(components, component => component.toObjects(this.scope.objects, clientVersion));
   }

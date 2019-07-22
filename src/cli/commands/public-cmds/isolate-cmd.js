@@ -27,7 +27,8 @@ export default class Isolate extends Command {
       "exclude the registry prefix from the component's name in the package.json"
     ],
     ['v', 'verbose [boolean]', 'print more logs'],
-    ['', 'silent-client-result [boolean]', 'print environment install result']
+    ['', 'silent-client-result [boolean]', 'print environment install result'],
+    ['', 'use-capsule [boolean]', 'use capsule with fs-container']
   ];
   loader = true;
 
@@ -46,11 +47,11 @@ export default class Isolate extends Command {
       saveDependenciesAsComponents: ?boolean,
       excludeRegistryPrefix: ?boolean,
       verbose: ?boolean,
-      silentClientResult: ?boolean
+      silentClientResult: ?boolean,
+      useCapsule: ?boolean
     }
   ): Promise<any> {
     opts.writeToPath = opts.directory;
-    delete opts.directory;
     return isolate(id, scopePath || process.cwd(), opts);
   }
 

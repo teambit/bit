@@ -210,7 +210,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test
       };
     });
-    const dists = clonedComponent.dists.toDistFilesModel(
+    const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
       consumer,
       consumerComponent.originallySharedDir,
       consumerComponent.compiler
@@ -251,6 +251,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       versionFromModel,
       files,
       dists,
+      mainDistFile,
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,

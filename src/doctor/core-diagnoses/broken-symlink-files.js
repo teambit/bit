@@ -9,19 +9,19 @@ import { loadConsumer } from '../../consumer';
 import { Scope } from '../../scope';
 
 type BrokenSymlink = { symlinkPath: string, brokenPath: string, pathToDelete: string };
-export const DIAGNOSIS_NAME = 'Check invalid link files';
+export const DIAGNOSIS_NAME = 'check environment symlinks';
 
 export default class BrokenSymlinkFiles extends Diagnosis {
   name = DIAGNOSIS_NAME;
-  description = 'Validate Bit generated symlink files within environment directory';
-  category = 'bit-core-files';
+  description = 'validate generated symlinks for workspace environments';
+  category = 'local environments';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
     const toString = bareResult.data.brokenSymlinks
       .map(brokenSymlink => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`)
       .join('\n');
-    return `the following symlink files point to non-exist paths\n${toString}`;
+    return `the following symlinks points to non-existing paths\n${toString}`;
   }
 
   _formatManualTreat(bareResult: ExamineBareResult) {

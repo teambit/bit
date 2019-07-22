@@ -184,7 +184,6 @@ async function applyVersion(
     componentWithDependencies.devDependencies = [];
     componentWithDependencies.compilerDependencies = [];
     componentWithDependencies.testerDependencies = [];
-    componentWithDependencies.allDependencies = [];
   }
   const rootDir = componentMap.rootDir;
   const shouldWritePackageJson = async (): Promise<boolean> => {

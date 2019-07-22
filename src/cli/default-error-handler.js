@@ -2,6 +2,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
+import { paintSpecsResults } from './chalk-box';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import {
@@ -102,6 +103,8 @@ import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-foun
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
+import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
+import { importPendingMsg } from './commands/public-cmds/status-cmd';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -156,6 +159,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
+  [ComponentsPendingImport, () => importPendingMsg],
   [
     EjectNoDir,
     err =>
@@ -279,13 +283,7 @@ Original Error: ${err.message}`
   ],
   [MissingDiagnosisName, err => 'error: please provide a diagnosis name'],
   [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
-  [
-    ComponentSpecsFailed,
-    err =>
-      `${
-        err.specsResultsAndIdPretty
-      }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
-  ],
+  [ComponentSpecsFailed, err => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     ComponentOutOfSync,
     err => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
@@ -541,6 +539,16 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`
   ]
 ];
+function formatComponentSpecsFailed(id, specsResults) {
+  // $FlowFixMe this.specsResults is not null at this point
+  const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
+  const componentIdPretty = id ? chalk.bold.white(id) : '';
+  const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
+  const additionalInfo =
+    'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
+  const res = `${specsResultsAndIdPretty}${additionalInfo}`;
+  return res;
+}
 
 function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
@@ -557,7 +565,12 @@ function getErrorFunc(errorDefinition) {
 
 function getErrorMessage(error: ?Error, func: ?Function): string {
   if (!error || !func) return '';
-  const errorMessage = func(error);
+  let errorMessage = func(error);
+  if (error.showDoctorMessage) {
+    errorMessage = `${errorMessage}
+
+run 'bit doctor' to get detailed workspace diagnosis and issue resolution.`;
+  }
   return errorMessage;
 }
 

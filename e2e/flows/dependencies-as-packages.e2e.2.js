@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -37,6 +38,7 @@ chai.use(require('chai-fs'));
         helper.tagAllComponents('-s 0.0.2');
         helper.exportAllComponents();
         helper.reInitLocalScope();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
         helper.importComponent('utils/is-type');
@@ -294,6 +296,16 @@ chai.use(require('chai-fs'));
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
+        describe('deleting the dependency package from the FS', () => {
+          before(() => {
+            helper.deletePath('components/bar/foo/node_modules/@ci');
+          });
+          it('bit status should show missing components and not untracked components', () => {
+            const status = helper.status();
+            expect(status).to.have.string(componentIssuesLabels.missingComponents);
+            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+          });
+        });
         describe('import with dist outside the component directory', () => {
           before(() => {
             helper.getClonedLocalScope(beforeImportScope);
@@ -308,7 +320,7 @@ chai.use(require('chai-fs'));
             let symlinkPath;
             before(() => {
               symlinkPath = 'dist/components/bar/foo/node_modules/@ci';
-              helper.deleteFile(symlinkPath);
+              helper.deletePath(symlinkPath);
               helper.runCmd('bit link');
             });
             it('should recreate the symlink with the correct path', () => {
