@@ -29,6 +29,7 @@
     "performance-test-circle": "mocha --require @babel/register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.js",
     "clean": "rm -rf dist",
     "build": "babel src -d dist --verbose",
+    "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "pkg": "pkg bin/bit.js --targets node10 --out-path releases/ --options --no-warnings --config package.json",
     "pkg:linux": "pkg bin/bit.js --targets node10-linux-x64 --out-path releases/linux --options --no-warnings --config package.json",
     "pkg:mac": "pkg bin/bit.js --targets node10-macos-x64 --out-path releases/mac --options --no-warnings --config package.json",
