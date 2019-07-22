@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import glob from 'glob';
 import os from 'os';
 import path from 'path';
-import childProcess from 'child_process';
+import childProcess, { ChildProcess } from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
@@ -53,13 +53,44 @@ export default class Helper {
   }
 
   // #region General
-  runCmd(cmd: string, cwd: string = this.localScopePath) {
+  runCmd(cmd: string, cwd: string = this.localScopePath): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
+  }
+
+  watch(): Promise<ChildProcess> {
+    const cmd = `${this.bitBin} watch`;
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
+    return new Promise((resolve, reject) => {
+      const watchProcess = childProcess.exec(cmd, { cwd: this.localScopePath, detached: true });
+      watchProcess.stdout.on('data', (data) => {
+        if (this.debugMode) console.log(`stdout: ${data}`);
+        if (data.includes('Ready for changes')) {
+          if (this.debugMode) console.log('bit watch is up and running');
+          resolve(watchProcess);
+        }
+      });
+      watchProcess.stderr.on('data', (data) => {
+        if (this.debugMode) console.log(`stderr: ${data}`);
+        reject(data);
+      });
+      watchProcess.on('close', (code) => {
+        if (this.debugMode) console.log(`child process exited with code ${code}`);
+      });
+    });
+  }
+  async waitForWatchToRebuildComponent(watchProcess: ChildProcess) {
+    return new Promise((resolve) => {
+      watchProcess.stdout.on('data', (data) => {
+        if (data.includes('watching for changes')) {
+          resolve();
+        }
+      });
+    });
   }
 
   parseOptions(options: Object): string {

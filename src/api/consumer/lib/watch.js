@@ -48,35 +48,38 @@ export default (async function watchAll(verbose: boolean) {
   }
 
   const log = console.log.bind(console); // eslint-disable-line no-console
-  // prefix your command with "BIT_LOG=*" to see all watch events
-  if (process.env.BIT_LOG) {
-    watcher.on('all', (event, path) => {
-      log(event, path);
+
+  return new Promise((resolve, reject) => {
+    // prefix your command with "BIT_LOG=*" to see all watch events
+    if (process.env.BIT_LOG) {
+      watcher.on('all', (event, path) => {
+        log(event, path);
+      });
+    }
+    watcher.on('ready', () => {
+      log(chalk.yellow('Initial scan complete. Ready for changes'));
+      // if (verbose) {
+      //   const watchedPaths = watcher.getWatched();
+      //   console.log('watchedPaths', watchedPaths)
+      // }
     });
-  }
-
-  watcher.on('ready', () => {
-    log(chalk.yellow('Initial scan complete. Ready for changes'));
-    // if (verbose) {
-    //   const watchedPaths = watcher.getWatched();
-    //   console.log('watchedPaths', watchedPaths)
-    // }
+    watcher.on('change', (p) => {
+      log(`File ${p} has been changed, calling build`);
+      _handleChange().catch(err => reject(err));
+    });
+    watcher.on('add', (p) => {
+      log(`File ${p} has been added`);
+      _handleChange().catch(err => reject(err));
+    });
+    watcher.on('unlink', (p) => {
+      log(`File ${p} has been removed`);
+      _handleChange().catch(err => reject(err));
+    });
+    watcher.on('error', (err) => {
+      log(`Watcher error ${err}`);
+      reject(err);
+    });
   });
-
-  watcher.on('change', (p) => {
-    log(`File ${p} has been changed, calling build`);
-    _handleChange();
-  });
-  watcher.on('add', (p) => {
-    log(`File ${p} has been added`);
-    _handleChange();
-  });
-  watcher.on('unlink', (p) => {
-    log(`File ${p} has been removed`);
-    _handleChange();
-  });
-
-  return new Promise(() => {});
 });
 
 async function _handleChange() {
@@ -90,5 +93,6 @@ async function _handleChange() {
     })
     .catch((err) => {
       console.log(err); // eslint-disable-line
+      throw err;
     });
 }
