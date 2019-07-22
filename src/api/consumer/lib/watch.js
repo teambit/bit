@@ -80,6 +80,7 @@ export default (async function watchAll(verbose: boolean) {
 });
 
 async function _handleChange() {
+  loadConsumer.cache = null;
   // TODO: Make sure the log for build is printed to console
   buildAll(false, false)
     .then((buildResult) => {
