@@ -296,6 +296,25 @@ export default class ComponentsList {
     return res;
   }
 
+  getPathsToWatchForAllComponents(origin?: string, absolute: boolean = false): string[] {
+    // TODO: maybe cache this as well
+    const componentsFromBitMap = this.bitMap.getAllComponents(origin);
+    const res = [];
+    const getPaths = (agg, isAbsolute) => (componentMap, componentId) => {
+      const trackDir = componentMap.getTrackDir();
+      const relativePaths = trackDir ? [trackDir] : componentMap.getFilesRelativeToConsumer();
+      if (!isAbsolute) {
+        agg.push(...relativePaths);
+        return;
+      }
+      const consumerPath = this.consumer.getPath();
+      const absPaths = relativePaths.map(relativePath => path.join(consumerPath, relativePath));
+      agg.push(...absPaths);
+    };
+    R.forEachObjIndexed(getPaths(res, absolute), componentsFromBitMap);
+    return res;
+  }
+
   /**
    * get called when the Consumer is available, shows also components from remote scopes
    */
