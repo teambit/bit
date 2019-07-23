@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- build only the component of the modified/added/removed file upon `bit watch`
+- [#1634](https://github.com/teambit/bit/issues/1634) improve the output of `bit watch`
+- [#1668](https://github.com/teambit/bit/issues/1668) bug fix - `bit watch` doesn't update files
+- improve `bit watch` to watch directories instead of only files to support addition / deletion
+
 ## [14.2.1] - 2019-07-21
 
 - fix "Cannot read property 'length' of undefined" error upon `bit status`
