@@ -396,6 +396,12 @@ export default class Helper {
     return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
   }
 
+  moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
+    const src = path.join(this.localScopePath, srcPathRelativeToLocalScope);
+    const dest = path.join(this.localScopePath, destPathRelativeToLocalScope);
+    return fs.moveSync(src, dest);
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
