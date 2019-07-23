@@ -45,7 +45,7 @@ export default class WatchRunner {
   killWatcher() {
     const isWin = process.platform === 'win32';
     if (isWin) {
-      childProcess.spawn('taskkill', ['/pid', this.watchProcess.pid.toString(), '/f', '/t']);
+      childProcess.execSync(`taskkill /pid ${this.watchProcess.pid.toString()} /f /t`);
     } else {
       this.watchProcess.kill();
     }
