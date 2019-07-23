@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import glob from 'glob';
 import os from 'os';
 import path from 'path';
-import childProcess, { ChildProcess } from 'child_process';
+import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
@@ -16,7 +16,6 @@ import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
 import { FileStatus } from '../src/consumer/versions-ops/merge-version';
-import { STARTED_WATCHING_MSG, WATCHER_COMPLETE_BUILD_MSG } from '../src/consumer/component-ops/watch-components';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -61,37 +60,6 @@ export default class Helper {
     const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
-  }
-
-  watch(): Promise<ChildProcess> {
-    const cmd = `${this.bitBin} watch --verbose`;
-    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-    return new Promise((resolve, reject) => {
-      const watchProcess = childProcess.exec(cmd, { cwd: this.localScopePath, detached: true });
-      watchProcess.stdout.on('data', (data) => {
-        if (this.debugMode) console.log(`stdout: ${data}`);
-        if (data.includes(STARTED_WATCHING_MSG)) {
-          if (this.debugMode) console.log('bit watch is up and running');
-          resolve(watchProcess);
-        }
-      });
-      watchProcess.stderr.on('data', (data) => {
-        if (this.debugMode) console.log(`stderr: ${data}`);
-        reject(data);
-      });
-      watchProcess.on('close', (code) => {
-        if (this.debugMode) console.log(`child process exited with code ${code}`);
-      });
-    });
-  }
-  async waitForWatchToRebuildComponent(watchProcess: ChildProcess) {
-    return new Promise((resolve) => {
-      watchProcess.stdout.on('data', (data) => {
-        if (data.includes(WATCHER_COMPLETE_BUILD_MSG)) {
-          resolve(data);
-        }
-      });
-    });
   }
 
   parseOptions(options: Object): string {
