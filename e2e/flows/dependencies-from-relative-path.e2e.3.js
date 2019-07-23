@@ -33,9 +33,30 @@ describe('component that requires another component file by relative path', func
       before(() => {
         helper.addComponent('import-by-2-files/a3.js', { i: 'comp-a' });
       });
-      it('bit status should not throw an error', () => {
-        const func = () => helper.status();
-        expect(func).to.not.throw();
+      describe('when the file without importSpecifier is the last file', () => {
+        it('bit status should not throw an error', () => {
+          const func = () => helper.status();
+          expect(func).to.not.throw();
+        });
+        it('bit show should show all importSpecifiers', () => {
+          const show = helper.showComponentParsed('comp-a');
+          expect(show.dependencies[0].relativePaths[0].importSpecifiers).to.have.lengthOf(3);
+        });
+      });
+      describe('when the file without importSpecifier is the first file', () => {
+        before(() => {
+          helper.moveSync('import-by-2-files/a1.js', 'import-by-2-files/a4.js');
+          helper.moveSync('import-by-2-files/a3.js', 'import-by-2-files/a1.js');
+          helper.moveSync('import-by-2-files/a4.js', 'import-by-2-files/a3.js');
+        });
+        it('bit status should not throw an error', () => {
+          const func = () => helper.status();
+          expect(func).to.not.throw();
+        });
+        it('bit show should show all importSpecifiers', () => {
+          const show = helper.showComponentParsed('comp-a');
+          expect(show.dependencies[0].relativePaths[0].importSpecifiers).to.have.lengthOf(3);
+        });
       });
     });
   });

@@ -535,12 +535,20 @@ either, use the ignore file syntax or change the require statement to have a mod
         existingDependency.relativePaths.push(depsPaths);
         return;
       }
-      // The dep path is already exist but maybe with different import specifiers
-      const nonExistingImportSpecifiers = this.getDiffSpecifiers(
-        existingDepRelativePaths.importSpecifiers,
-        depsPaths.importSpecifiers
-      );
-      existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifiers);
+      // The dep path already exists but maybe this dep-file has more importSpecifiers
+      if (depsPaths.importSpecifiers) {
+        // add them to the existing dep
+        if (!existingDepRelativePaths.importSpecifiers) {
+          existingDepRelativePaths.importSpecifiers = [...depsPaths.importSpecifiers];
+        } else {
+          // both have importSpecifiers
+          const nonExistingImportSpecifiers = this.getDiffSpecifiers(
+            existingDepRelativePaths.importSpecifiers,
+            depsPaths.importSpecifiers
+          );
+          existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifiers);
+        }
+      }
       // Handle cases when the first dep paths are not custom resolved and the new one is
       if (depsPaths.isCustomResolveUsed && !existingDepRelativePaths.isCustomResolveUsed) {
         existingDepRelativePaths.isCustomResolveUsed = depsPaths.isCustomResolveUsed;
@@ -914,7 +922,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     );
   }
 
-  getDiffSpecifiers(originSpecifiers: ImportSpecifier[] = [], targetSpecifiers: ImportSpecifier[] = []) {
+  getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
     const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
   }
