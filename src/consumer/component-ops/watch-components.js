@@ -9,6 +9,7 @@ import { build } from '../../api/consumer';
 import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
 import { BIT_VERSION } from '../../constants';
+import { pathNormalizeToLinux } from '../../utils';
 
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
@@ -80,7 +81,7 @@ export default class WatchComponents {
   }
 
   async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<?BitId> {
-    const relativeFile = this.consumer.getPathRelativeToConsumer(filePath);
+    const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
     let componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
     if (!isNew && !componentId) {
       return null;
