@@ -4,7 +4,7 @@ RUN yum install -y git gcc-c++ make rpm dpkg-deb fakeroot rpmbuild ruby-devel gc
 RUN yum install -y nano
 RUN gem install --no-ri --no-rdoc fpm
 # RUN git clone https://github.com/teambit/bit.git
-COPY ./artifactory.repo /etc/yum.repos.d/artifactory.repo
+COPY ./bit.repo /etc/yum.repos.d/bit.repo
 RUN node -v
 RUN npm i -g pkg@4.4.0
 CMD ["/bin/bash"]
