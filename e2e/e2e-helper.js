@@ -16,6 +16,7 @@ import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
 import { FileStatus } from '../src/consumer/versions-ops/merge-version';
+import { STARTED_WATCHING_MSG, WATCHER_COMPLETE_BUILD_MSG } from '../src/consumer/component-ops/watch-components';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -63,13 +64,13 @@ export default class Helper {
   }
 
   watch(): Promise<ChildProcess> {
-    const cmd = `${this.bitBin} watch`;
+    const cmd = `${this.bitBin} watch --verbose`;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     return new Promise((resolve, reject) => {
       const watchProcess = childProcess.exec(cmd, { cwd: this.localScopePath, detached: true });
       watchProcess.stdout.on('data', (data) => {
         if (this.debugMode) console.log(`stdout: ${data}`);
-        if (data.includes('Ready for changes')) {
+        if (data.includes(STARTED_WATCHING_MSG)) {
           if (this.debugMode) console.log('bit watch is up and running');
           resolve(watchProcess);
         }
@@ -86,8 +87,8 @@ export default class Helper {
   async waitForWatchToRebuildComponent(watchProcess: ChildProcess) {
     return new Promise((resolve) => {
       watchProcess.stdout.on('data', (data) => {
-        if (data.includes('watching for changes')) {
-          resolve();
+        if (data.includes(WATCHER_COMPLETE_BUILD_MSG)) {
+          resolve(data);
         }
       });
     });
