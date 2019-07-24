@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.2-dev.1] - 2019-07-24
+
 - fix "Cannot read property 'push' of undefined" error upon `bit status`
 - build only the component of the modified/added/removed file upon `bit watch`
 - [#1634](https://github.com/teambit/bit/issues/1634) improve the output of `bit watch`
