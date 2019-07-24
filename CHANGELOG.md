@@ -7,20 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.2.2-dev.2] - 2019-07-24
+- [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
 
-- add option to pass context to trigger hook
+## [14.2.2] - 2019-07-24
+
+### New
+
 - add workspacePath and bitmapFileName to post-add hook invocation
 
-## [14.2.2-dev.1] - 2019-07-24
+### Changes
+
+- improve `bit watch` to watch directories instead of only files to support addition / deletion
+- [#1634](https://github.com/teambit/bit/issues/1634) improve the output of `bit watch`
+
+### Bug fixes
 
 - fix "Cannot read property 'push' of undefined" error upon `bit status`
 - build only the component of the modified/added/removed file upon `bit watch`
-- [#1634](https://github.com/teambit/bit/issues/1634) improve the output of `bit watch`
 - [#1668](https://github.com/teambit/bit/issues/1668) bug fix - `bit watch` doesn't update files
-- improve `bit watch` to watch directories instead of only files to support addition / deletion
 
 ## [[14.2.1] - 2019-07-21](https://github.com/teambit/bit/releases/tag/v14.2.1)
+
+### Bug fixes
 
 - fix "Cannot read property 'length' of undefined" error upon `bit status`
 - fix error "unable to link" upon `bit build` when dist is outside the components dir
