@@ -8,6 +8,10 @@ configuration:
   - e2e.2
   - e2e.3
 
+branches:
+  except:
+    - performance-tests
+
 for:
   -
     matrix:
