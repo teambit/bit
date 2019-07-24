@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#1668](https://github.com/teambit/bit/issues/1668) bug fix - `bit watch` doesn't update files
 - improve `bit watch` to watch directories instead of only files to support addition / deletion
 
-## [14.2.1] - 2019-07-21
+## [[14.2.1] - 2019-07-21](https://github.com/teambit/bit/releases/tag/v14.2.1)
 
 - fix "Cannot read property 'length' of undefined" error upon `bit status`
 - fix error "unable to link" upon `bit build` when dist is outside the components dir
