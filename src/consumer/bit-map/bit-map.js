@@ -768,7 +768,7 @@ export default class BitMap {
    * @returns {BitId} component id
    * @memberof BitMap
    */
-  getComponentIdByPath(componentPath: string, caseSensitive: boolean = true): BitId {
+  getComponentIdByPath(componentPath: PathLinux, caseSensitive: boolean = true): BitId {
     this._populateAllPaths();
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }

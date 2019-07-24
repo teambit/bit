@@ -9,9 +9,10 @@ import { build } from '../../api/consumer';
 import loader from '../../cli/loader';
 import { BitId } from '../../bit-id';
 import { BIT_VERSION } from '../../constants';
+import { pathNormalizeToLinux } from '../../utils';
 
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
-export const WATCHER_COMPLETE_BUILD_MSG = 'watching for changes';
+export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export default class WatchComponents {
   consumer: Consumer;
@@ -61,26 +62,26 @@ export default class WatchComponents {
 
   async _handleChange(filePath: string, isNew: boolean = false) {
     const componentId = await this._getBitIdByPathAndReloadConsumer(filePath, isNew);
-    if (!componentId) {
-      console.log(`file ${filePath} is not part of any component, ignoring it`);
-      return;
-    }
-    const idStr = componentId.toString();
-    console.log(`running build for ${chalk.bold(idStr)}`);
-    // TODO: Make sure the log for build is printed to console
-    const buildResults = await build(idStr, false, this.verbose);
-    if (buildResults) {
-      console.log(`\t${chalk.cyan(buildResults.join('\n\t'))}`);
+    if (componentId) {
+      const idStr = componentId.toString();
+      console.log(`running build for ${chalk.bold(idStr)}`);
+      // TODO: Make sure the log for build is printed to console
+      const buildResults = await build(idStr, false, this.verbose);
+      if (buildResults) {
+        console.log(`\t${chalk.cyan(buildResults.join('\n\t'))}`);
+      } else {
+        console.log(`${idStr} doesn't have a compiler, nothing to build`);
+      }
     } else {
-      console.log(`${idStr} doesn't have a compiler, nothing to build`);
+      console.log(`file ${filePath} is not part of any component, ignoring it`);
     }
 
     loader.stop();
-    console.log(chalk.yellow(WATCHER_COMPLETE_BUILD_MSG));
+    console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
   async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<?BitId> {
-    const relativeFile = this.consumer.getPathRelativeToConsumer(filePath);
+    const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
     let componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
     if (!isNew && !componentId) {
       return null;
