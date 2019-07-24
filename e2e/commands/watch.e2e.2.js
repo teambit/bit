@@ -61,6 +61,7 @@ describe('bit watch command', function () {
         helper.addRemoteScope();
         helper.addRemoteEnvironment();
         helper.importManyComponents(['bar/foo', 'utils/is-string', 'utils/is-type']);
+        helper.build('--no-cache'); // it'll also install the compiler
         watchRunner = new WatchRunner(helper);
         await watchRunner.watch();
       });

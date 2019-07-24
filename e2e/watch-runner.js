@@ -57,7 +57,7 @@ export default class WatchRunner {
     if (isWin) {
       childProcess.execSync(`taskkill /pid ${this.watchProcess.pid.toString()} /f /t`);
     } else {
-      this.watchProcess.kill();
+      this.watchProcess.kill('SIGINT');
     }
   }
 }
