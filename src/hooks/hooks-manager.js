@@ -107,7 +107,12 @@ export default class HooksManager {
    * @param {string} hookName - The hook name to trigger
    * @return {HookFailures} Aggregated errors of the actions failures
    */
-  async triggerHook(hookName: string, args: Object = {}, headers: Object = {}): ?(HookFailures[]) {
+  async triggerHook(
+    hookName: string,
+    args: Object = {},
+    headers: Object = {},
+    context: Object = {}
+  ): ?(HookFailures[]) {
     const resultErrors = [];
     if (!this.hooks.has(hookName)) {
       logger.warn(`trying to trigger a non existing hook ${hookName}`);
@@ -119,7 +124,9 @@ export default class HooksManager {
       logger.info(
         `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
           _stripArgs(args)
-        )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
+        )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))} \n and context ${_stringifyIfNeeded(
+          context
+        )}`
       );
     } else {
       logger.info(`triggering hook ${hookName}`);
@@ -132,7 +139,7 @@ export default class HooksManager {
       return Promise.resolve()
         .then(() => {
           logger.info(`running action ${action.name} on hook ${hookName}`);
-          return action.run(args, headers);
+          return action.run(args, headers, context);
         })
         .catch((e) => {
           logger.error(`running action ${action.name} on hook ${hookName} failed, err:`);
@@ -168,6 +175,7 @@ function _stripArgs(args) {
  * @param {Object} headers
  */
 function _stripHeaders(headers) {
+  if (!headers) return;
   // Create deep clone
   const res = R.clone(headers);
   if (res.context && res.context.pubSshKey) {
