@@ -68,13 +68,25 @@ describe('bit watch command', function () {
         watchRunner.killWatcher();
       });
       describe('adding a file to a tracked directory', () => {
-        before(() => {
+        before(async () => {
           helper.outputFile('components/utils/is-string/new-file.js', 'console.log();');
-        });
-        it('should create a dist file for that new file', async () => {
           await watchRunner.waitForWatchToRebuildComponent();
+        });
+        it('should create a dist file for that new file', () => {
           const expectedFile = path.join(helper.localScopePath, 'components/utils/is-string/dist/new-file.js');
           expect(expectedFile).to.be.a.file();
+        });
+        describe('changing the new file', () => {
+          it('should rebuild the changed component', async () => {
+            helper.outputFile('components/utils/is-string/new-file.js', 'console.log("v2");');
+            await watchRunner.waitForWatchToPrintMsg('utils/is-string');
+          });
+        });
+        describe('remove a file from the tracked directory', () => {
+          it('should recognize the deletion and rebuild the component that had that file', async () => {
+            helper.deletePath('components/utils/is-string/new-file.js');
+            await watchRunner.waitForWatchToPrintMsg('utils/is-string');
+          });
         });
       });
     });
