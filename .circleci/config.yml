@@ -195,7 +195,6 @@ jobs:
           root: .
           paths:
             - bit/releases
-
   build_bit_javascript:
     docker:
       -
@@ -409,7 +408,7 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
-  performence_test:
+  performance_e2e_test:
     docker:
       -
         image: 'circleci/node:8.12.0'
@@ -418,7 +417,7 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-      NPM_CONFIG_DEBUG: true
+      # NPM_CONFIG_DEBUG: true
     parallelism: 1
     steps:
       -
@@ -450,6 +449,7 @@ jobs:
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
+          no_output_timeout: '25m'
       -
         store_test_results:
           path: bit/junit
@@ -501,14 +501,27 @@ workflows:
       #       - build_bit_javascript
       -
         e2e_test:
+          filters:
+            branches:
+              ignore:
+                - performance-tests
           requires:
             - set_ssh_key
             - set_bitsrc_registry
             - build
             - build_bit_javascript
             # - pack
+      -
+        performance_e2e_test:
+          filters:
+            branches:
+              only:
+                - performance-tests
+          requires:
+            - build
+            - build_bit_javascript
 
-  performence_tests:
+  performance_tests:
     triggers:
       - schedule:
           cron: "0 9 * * *"
@@ -516,7 +529,6 @@ workflows:
             branches:
               only:
                 - master
-                - performance-tests
     jobs:
       - checkout_code
       -
@@ -536,7 +548,7 @@ workflows:
           requires:
             - install_bit_javascript_npm_deps
       -
-        performence_test:
+        performance_e2e_test:
           requires:
             - build
             - build_bit_javascript
