@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.2-dev.2] - 2019-07-24
+
 - add option to pass context to trigger hook
 - add workspacePath and bitmapFileName to post-add hook invocation
 
