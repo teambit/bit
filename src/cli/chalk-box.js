@@ -5,7 +5,7 @@ import SpecsResults from '../consumer/specs-results/specs-results';
 import type Component from '../consumer/component/consumer-component';
 import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
-import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import type { SpecsResultsWithComponentId, SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
@@ -134,9 +134,10 @@ export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = f
   });
 };
 
-export const paintAllSpecsResults = (results: SpecsResultsWithComponentId, verbose: boolean = false): string => {
-  if (results.length === 0) return c.yellow('nothing to test');
-  return results
+export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose: boolean = false): string => {
+  const childOutput = results.childOutput ? `${results.childOutput}\n` : '';
+  if (results.results && results.results.length === 0) return `${childOutput}${c.yellow('nothing to test')}`;
+  const resultsOutput = results.results
     .map((result) => {
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
@@ -145,6 +146,7 @@ export const paintAllSpecsResults = (results: SpecsResultsWithComponentId, verbo
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
     .join('\n');
+  return `${childOutput}\n${resultsOutput}`;
 };
 
 export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): string => {

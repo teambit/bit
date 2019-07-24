@@ -5,6 +5,7 @@ import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import type { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
 export default class Deprecate extends Command {
   name = '_deprecate <path> <args>';
@@ -23,7 +24,7 @@ export default class Deprecate extends Command {
     });
   }
 
-  report(str): string {
-    return packCommand(buildCommandMessage(str));
+  report(deprecationResult: DeprecationResult): string {
+    return packCommand(buildCommandMessage(deprecationResult));
   }
 }

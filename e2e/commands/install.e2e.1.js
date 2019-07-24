@@ -33,7 +33,7 @@ describe('run bit install', function () {
         helper.exportAllComponents();
 
         const requirePath = helper.getRequireBitPath('utils', 'is-string');
-        const fooBarFixture = `const isString = require('${requirePath}/utils/is-string');
+        const fooBarFixture = `const isString = require('${requirePath}');
   module.exports = function foo() { return isString() + ' and got foo'; };`;
         helper.createComponentBarFoo(fooBarFixture);
         helper.createFile('bar', 'foo.js', fooBarFixture);
@@ -63,6 +63,8 @@ describe('run bit install', function () {
           helper.mimicGitCloneLocalProject();
           helper.addRemoteScope();
           helper.runCmd('bit import');
+          // @todo: to reproduce issue #1746, remove the next line
+          helper.deletePath('package-lock.json');
           output = helper.runCmd('bit install');
         });
         it('bit install should npm-install all missing node-modules and link all components', () => {

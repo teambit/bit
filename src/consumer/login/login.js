@@ -26,12 +26,14 @@ const REDIRECT = 302;
 
 export default function loginToBitSrc(
   port: string,
-  suppressBrowserLaunch?: boolean,
+  suppressBrowserLaunch: boolean,
   npmrcPath: string,
-  skipRegistryConfig: boolean
+  skipRegistryConfig: boolean,
+  machineName: ?string
 ): Promise<{
   isAlreadyLoggedIn?: boolean,
-  username?: string
+  username?: string,
+  npmrcPath?: string
 }> {
   let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
@@ -108,9 +110,8 @@ export default function loginToBitSrc(
 
       const encoded = encodeURI(
         `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${port ||
-          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${os.hostname()}&os=${
-          process.platform
-        }`
+          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName ||
+          os.hostname()}&os=${process.platform}`
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console

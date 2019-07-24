@@ -11,14 +11,16 @@ export default function buildInScope({
   verbose,
   scopePath,
   directory,
-  keep
+  keep,
+  noCache = false
 }: {
   id: string,
   save: ?boolean,
   verbose: ?boolean,
   scopePath: string,
   directory: ?string,
-  keep: boolean
+  keep: boolean,
+  noCache: boolean
 }) {
   logger.debugAndAddBreadCrumb('buildInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: ?Error) {
@@ -32,7 +34,7 @@ export default function buildInScope({
     };
     const scope: Scope = await getScope();
     const bitId = await scope.getParsedId(id);
-    return scope.build({ bitId, save, verbose, directory, keep });
+    return scope.build({ bitId, save, verbose, directory, keep, noCache });
   }
 
   function loadFromConsumer() {

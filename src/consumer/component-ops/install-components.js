@@ -35,6 +35,6 @@ export async function installIds(consumer: Consumer, ids: BitId[], verbose: bool
   const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
   if (dirs.length) await installPackages(consumer, dirs, verbose);
   Analytics.setExtraData('num_components', components.length);
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   return nodeModuleLinker.link();
 }

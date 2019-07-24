@@ -53,7 +53,8 @@ jspm_packages
 .idea/
 
 #output
-dist/
+dist/*
+!components/*/dist/
 dist-legacy/
 flow-typed/
 eslint-report.html
@@ -69,9 +70,6 @@ nodeBin
 
 # bit directories
 .bit
-components
-
-!e2e/fixtures/components
 
 # DS_Store
 .DS_Store
@@ -84,6 +82,7 @@ _book
 
 # pkg releases
 releases/
+bin/bit
 
 # sonarcloud dir
 .scannerwork

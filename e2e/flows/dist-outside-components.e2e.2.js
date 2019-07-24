@@ -22,7 +22,7 @@ describe('dists file are written outside the components dir', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('when using absolute import syntax', () => {
+  describe('when using "module path" import syntax', () => {
     /**
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
@@ -109,7 +109,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
    * bar/foo depends on utils/is-string.
    * utils/is-string depends on utils/is-type
    */
-  describe('when using relative import syntax', () => {
+  describe('when using "relative path" import syntax', () => {
     let clonedScope;
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
@@ -142,6 +142,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       });
     });
     describe('as imported', () => {
+      let scopeAfterImport;
       before(() => {
         helper.getClonedLocalScope(clonedScope);
         helper.tagAllComponents();
@@ -152,6 +153,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.addRemoteScope();
         helper.modifyFieldInBitJson('dist', { target: 'dist' });
         helper.importComponent('bar/foo');
+        scopeAfterImport = helper.cloneLocalScope();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -198,6 +200,29 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             const result = helper.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
+        });
+      });
+      describe('removing the component', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          helper.removeComponent('bar/foo', '-s');
+        });
+        it('should remove the dist directory as well', () => {
+          expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+        });
+      });
+      describe('importing all components and then deleting the dist directory', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          helper.importComponent('utils/is-string');
+          helper.importComponent('utils/is-type');
+          helper.addRemoteEnvironment();
+          helper.deletePath('dist');
+        });
+        it('should be able to build with no errors', () => {
+          // previously it was showing an error "unable to link remote/utils/is-type@0.0.1, the file /workspace/dist/components/utils/is-type is missing from the filesystem."
+          const func = () => helper.build('--no-cache');
+          expect(func).to.not.throw();
         });
       });
     });
@@ -393,6 +418,84 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
       });
     });
+  });
+  describe('imported require authored component', () => {
+    function importRequireAuthored(distIsOutside = true) {
+      describe(`when distIsOutside ${distIsOutside.toString()}`, () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeWithCompiler);
+          helper.reInitRemoteScope();
+          helper.createFile('utils', 'is-string.js', '');
+          helper.addComponentUtilsIsString();
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.getClonedLocalScope(scopeWithCompiler);
+          if (distIsOutside) {
+            helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          }
+          helper.importComponent('utils/is-string');
+
+          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+          helper.createFile('utils', 'is-type.js', isTypeFixture);
+          helper.addComponentUtilsIsType();
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+
+          const isStringFixture = `import isType from '${helper.getRequireBitPath('utils', 'is-type')}';
+     export default function isString() { return isType() +  ' and got is-string'; };`;
+          helper.createFile('components/utils/is-string', 'is-string.js', isStringFixture);
+        });
+        it('bit status should not show missing links', () => {
+          // a previous bug showed "missing links" here because the package.json in node_modules
+          // was pointing to a non-exist main file.
+          const status = helper.status();
+          expect(status).to.not.have.string(statusFailureMsg);
+          expect(status).to.have.string('ok');
+        });
+        it('bit build should not throw an error', () => {
+          expect(() => helper.build()).to.not.throw();
+        });
+        it('bit link should not throw an error', () => {
+          expect(() => helper.runCmd('bit link')).to.not.throw();
+        });
+        it('bit link should not generate symlinks from an imported component to the workspace root dir', () => {
+          const output = helper.runCmd('bit link');
+          expect(output).to.not.have.string('original path: .,');
+          expect(output).to.not.have.string('original path: dist,');
+          const link = path.join(
+            helper.localScopePath,
+            `components/utils/is-string/node_modules/@bit/${helper.remoteScope}.utils.is-type`
+          );
+          expect(link).to.not.be.a.path();
+        });
+        it('bit link should not generate symlinks from an imported component to the root dist', () => {
+          const output = helper.runCmd('bit link');
+          expect(output).to.not.have.string('original path: dist,');
+          const distLink = path.join(
+            helper.localScopePath,
+            `dist/components/utils/is-string/node_modules/@bit/${helper.remoteScope}.utils.is-type`
+          );
+          expect(distLink).to.not.be.a.path();
+        });
+        describe('running bit tag', () => {
+          before(() => {
+            helper.initNpm(); // so then it has package.json with version 1.0.0 (needed for #1698)
+            helper.tagAllComponents();
+          });
+          it('bit status should not show modified', () => {
+            const output = helper.status();
+            expect(output).to.not.have.string('modified');
+          });
+          it('should tag with the correct version of the author component from .bitmap and not use the root package.json version', () => {
+            const cmp = helper.catComponent(`${helper.remoteScope}/utils/is-string@latest`);
+            expect(cmp.dependencies[0].id.version).to.equal('0.0.1');
+            // a previous bug showed it as 1.0.0, see #1698
+          });
+        });
+      });
+    }
+    importRequireAuthored(false);
+    importRequireAuthored(true);
   });
 });
 

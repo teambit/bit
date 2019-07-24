@@ -160,21 +160,8 @@ const _installInOneDirectory = ({
  * you should run this after you run npm install
  * internally it uses npm list -j
  */
-const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
+const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
-
-  const parsePeers = (deps: Object): Object => {
-    const result = {};
-    R.forEachObjIndexed((dep) => {
-      if (dep.peerMissing) {
-        const name = dep.required.name;
-        const version = dep.required.version;
-        result[name] = version;
-      }
-    }, deps);
-    return result;
-  };
-
   let npmList;
   try {
     npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
@@ -187,10 +174,26 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
       throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
-  const npmListObject = await parseNpmListJsonGracefully(npmList.stdout, packageManager);
-  const peers = parsePeers(npmListObject.dependencies);
-  return peers;
+  const peerDepsObject = await getPeerDepsFromNpmList(npmList.stdout, packageManager);
+  return objectToArray(peerDepsObject);
 };
+
+async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Object> {
+  const parsePeers = (deps: Object): Object => {
+    const result = {};
+    R.forEachObjIndexed((dep) => {
+      if (dep.peerMissing) {
+        const name = dep.required.name;
+        const version = dep.required.version;
+        result[name] = version;
+      }
+    }, deps);
+    return result;
+  };
+
+  const npmListObject = await parseNpmListJsonGracefully(npmList, packageManager);
+  return parsePeers(npmListObject.dependencies);
+}
 
 async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
   try {
@@ -325,7 +328,17 @@ async function getNpmVersion(): Promise<?string> {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
   } catch (err) {
-    logger.debug(`got an error when executing "npm --version". ${err.message}`);
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+async function getYarnVersion(): Promise<?string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
   }
   return null;
 }
@@ -347,8 +360,25 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
   return false;
 }
 
+async function getPackageLatestVersion(packageName: string): Promise<?string> {
+  try {
+    const { stdout } = await execa('npm', ['show', packageName, 'version']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb(
+      'npm-client',
+      `can't find ${packageName} version by running npm show ${packageName} version. ${e.message}`
+    );
+  }
+  return null;
+}
+
 export default {
   install: installAction,
   printResults,
-  isSupportedInstallationOfSubDirFromRoot
+  isSupportedInstallationOfSubDirFromRoot,
+  getNpmVersion,
+  getYarnVersion,
+  getPeerDepsFromNpmList,
+  getPackageLatestVersion
 };

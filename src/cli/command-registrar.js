@@ -4,6 +4,7 @@ import R from 'ramda';
 import commander from 'commander';
 import chalk from 'chalk';
 import type Command from './command';
+import type { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
 import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
@@ -169,7 +170,13 @@ export default class CommandRegistrar {
       .description(this.description);
   }
 
-  constructor(usage: string, description: string, version: string, commands: Command[], extensionsCommands: Command[]) {
+  constructor(
+    usage: string,
+    description: string,
+    version: string,
+    commands: Command[],
+    extensionsCommands: Array<Commands>
+  ) {
     this.usage = usage;
     this.description = description;
     this.version = version;

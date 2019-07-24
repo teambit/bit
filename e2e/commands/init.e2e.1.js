@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
+import detectIndent from 'detect-indent';
 import Helper from '../e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
@@ -45,7 +46,7 @@ describe('run bit init', function () {
       const bitmapPath = path.join(helper.localScopePath, '.bitmap');
       expect(bitmapPath).to.be.a.file('missing bitmap');
     });
-    it('bitmap should contain  version"', () => {
+    it('bitmap should contain version"', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('version');
       expect(bitMap.version).to.equal(helper.getBitVersion());
@@ -319,6 +320,14 @@ describe('run bit init', function () {
       it('should not create bit.json file', () => {
         expect(path.join(helper.localScopePath, 'bit.json')).to.not.be.a.path();
       });
+      it('should preserve the default npm indentation of 2', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(2);
+      });
+      it('should preserve the new line at the end of json as it was created by npm', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(packageJson.endsWith('\n')).to.be.true;
+      });
     });
     describe('with --standalone flag', () => {
       before(() => {
@@ -347,13 +356,27 @@ describe('run bit init', function () {
         helper.expectToThrow(initCmd, error);
       });
     });
+    describe('with an indentation of 4', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        const packageJson = helper.readPackageJson();
+        const packageJsonPath = path.join(helper.localScopePath, 'package.json');
+        fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
+        helper.runCmd('bit init');
+      });
+      it('should preserve the original indentation and keep it as 4', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(4);
+      });
+    });
   });
   describe('when there is .bitmap, bit.json but not .bit dir', () => {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.createBitMap();
-        helper.deleteFile('.bit');
+        helper.deletePath('.bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
         const lsCmd = () => helper.listLocalScope();
@@ -367,7 +390,7 @@ describe('run bit init', function () {
         helper.initNewGitRepo();
         helper.initLocalScope();
         helper.createBitMap();
-        helper.deleteFile('.git/bit');
+        helper.deletePath('.git/bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
         const lsCmd = () => helper.listLocalScope();

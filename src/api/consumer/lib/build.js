@@ -14,7 +14,6 @@ export async function build(id: string, noCache: boolean, verbose: boolean): Pro
   const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;
   const distFilePaths = await component.dists.writeDists(component, consumer);
-  consumer.bitMap.addMainDistFileToComponent(component.id, distFilePaths);
   await consumer.onDestroy();
   return distFilePaths;
 }

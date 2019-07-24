@@ -50,8 +50,8 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.initNewGitRepo();
       helper.deleteBitMap();
-      helper.deleteFile('.bit');
-      helper.deleteFile('bit.json');
+      helper.deletePath('.bit');
+      helper.deletePath('bit.json');
       helper.initLocalScope('bit init');
       helper.createFile('bar', 'foo.js');
       const addCmd = () => helper.addComponent('bar/foo.js', { i: 'bar/foo ' });
@@ -1060,7 +1060,7 @@ describe('bit add command', function () {
       helper.addComponent('bar/', { i: 'bar/foo ' });
       helper.tagAllComponents();
       helper.exportAllComponents();
-      helper.deleteFile('bar/foo2.js');
+      helper.deletePath('bar/foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });
       helper.runCmd('bit s');
       bitMap = helper.readBitMap();
@@ -1134,7 +1134,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo-main.js');
       helper.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
-      helper.deleteFile('bar/foo-main.js');
+      helper.deletePath('bar/foo-main.js');
       const status = helper.status();
       expect(status).to.have.string(statusInvalidComponentsMsg);
       expect(status).to.have.string('main-file was removed');
@@ -1211,6 +1211,81 @@ describe('bit add command', function () {
     });
     it('should add them as individual files and ignore the directories', () => {
       expect(output).to.have.string('tracking 4 new components');
+    });
+  });
+  describe.skip('running add command with id without any path to change a component', () => {
+    let scopeAfterAdd;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('src', 'main1.js');
+      helper.createFile('src', 'main2.js');
+      helper.createFile('src', 'main1.spec.js');
+      helper.createFile('src', 'main2.spec.js');
+      helper.addComponent('src/main1.js', { i: 'foo' });
+      scopeAfterAdd = helper.cloneLocalScope();
+    });
+    describe('changing the main file', () => {
+      before(() => {
+        helper.addComponent('', { i: 'foo', m: 'src/main2.js' });
+      });
+      it('should change the main file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap.foo.mainFile).to.equal('src/main2.js');
+      });
+    });
+    describe('adding test files', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.addComponent('', { i: 'foo', t: 'src/main1.spec.js' });
+      });
+      it('should add the test files', () => {
+        const bitMap = helper.readBitMap();
+        const specFile = bitMap.foo.files.find(f => f.relativePath === 'src/main1.spec.js');
+        expect(specFile).to.not.be.undefined;
+        expect(specFile.test).to.be.true;
+      });
+    });
+  });
+  describe('sort .bitmap components', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFileOnRootLevel('aaa.js');
+      helper.createFileOnRootLevel('bbb.js');
+      helper.createFileOnRootLevel('ccc.js');
+      helper.createFileOnRootLevel('ddd.js');
+      helper.addComponent('bbb.js');
+      helper.addComponent('ddd.js');
+      helper.addComponent('aaa.js');
+      helper.addComponent('ccc.js');
+    });
+    it('should sort the components in .bitmap file alphabetically', () => {
+      const bitMap = helper.readBitMap();
+      const ids = Object.keys(bitMap);
+      expect(ids[0]).to.equal('aaa');
+      expect(ids[1]).to.equal('bbb');
+      expect(ids[2]).to.equal('ccc');
+      expect(ids[3]).to.equal('ddd');
+    });
+  });
+  describe('sort .bitmap files', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFileOnRootLevel('aaa.js');
+      helper.createFileOnRootLevel('bbb.js');
+      helper.createFileOnRootLevel('ccc.js');
+      helper.createFileOnRootLevel('ddd.js');
+      helper.addComponent('bbb.js', { i: 'foo' });
+      helper.addComponent('ddd.js', { i: 'foo' });
+      helper.addComponent('aaa.js', { i: 'foo' });
+      helper.addComponent('ccc.js', { i: 'foo' });
+    });
+    it('should sort the components in .bitmap file alphabetically', () => {
+      const bitMap = helper.readBitMap();
+      const files = bitMap.foo.files;
+      expect(files[0].relativePath).to.equal('aaa.js');
+      expect(files[1].relativePath).to.equal('bbb.js');
+      expect(files[2].relativePath).to.equal('ccc.js');
+      expect(files[3].relativePath).to.equal('ddd.js');
     });
   });
 });

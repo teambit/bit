@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -28,24 +29,32 @@ chai.use(require('chai-fs'));
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
-        helper.addComponentBarFoo();
+        // creating a dev dependency for bar/foo to make sure the links are not generated. (see bug #1614)
+        helper.createFile('fixtures', 'mock.json');
+        helper.addComponent('fixtures');
+        helper.createFile('bar', 'foo.spec.js', "require('../fixtures/mock.json');");
+        helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
         helper.tagAllComponents();
         helper.tagAllComponents('-s 0.0.2');
         helper.exportAllComponents();
         helper.reInitLocalScope();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
         helper.importComponent('utils/is-type');
         helper.importComponent('utils/is-string');
+        helper.importComponent('fixtures');
 
         helper.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('bar/foo');
+        npmCiRegistry.publishComponent('fixtures');
         npmCiRegistry.publishComponent('utils/is-type', '0.0.2');
         npmCiRegistry.publishComponent('utils/is-string', '0.0.2');
         npmCiRegistry.publishComponent('bar/foo', '0.0.2');
+        npmCiRegistry.publishComponent('fixtures', '0.0.2');
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -287,6 +296,16 @@ chai.use(require('chai-fs'));
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
+        describe('deleting the dependency package from the FS', () => {
+          before(() => {
+            helper.deletePath('components/bar/foo/node_modules/@ci');
+          });
+          it('bit status should show missing components and not untracked components', () => {
+            const status = helper.status();
+            expect(status).to.have.string(componentIssuesLabels.missingComponents);
+            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+          });
+        });
         describe('import with dist outside the component directory', () => {
           before(() => {
             helper.getClonedLocalScope(beforeImportScope);
@@ -301,7 +320,7 @@ chai.use(require('chai-fs'));
             let symlinkPath;
             before(() => {
               symlinkPath = 'dist/components/bar/foo/node_modules/@ci';
-              helper.deleteFile(symlinkPath);
+              helper.deletePath(symlinkPath);
               helper.runCmd('bit link');
             });
             it('should recreate the symlink with the correct path', () => {

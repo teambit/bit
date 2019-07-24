@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../e2e-helper';
+import Helper, { FileStatusWithoutChalk } from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
-import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
@@ -19,6 +18,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
   describe('when originallySharedDir is the same as dist.entry (src)', () => {
     let originalScope;
     let scopeBeforeExport;
+    let scopeBeforeImport;
     let scopeAfterImport;
     let remoteScope;
     before(() => {
@@ -45,6 +45,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
+      scopeBeforeImport = helper.cloneLocalScope();
       helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.importComponent('string/pad-left -p src/pad-left');
       scopeAfterImport = helper.cloneLocalScope();
@@ -501,6 +502,37 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
             expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
           });
+        });
+      });
+    });
+    describe('changing the dist to be outside the components dir after the import', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.importComponent('string/pad-left -p src/pad-left');
+        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      });
+      it('should show a descriptive error when tagging the component', () => {
+        const error = helper.runWithTryCatch('bit tag -a -s 2.0.0');
+        expect(error).to.have.string(
+          'to rebuild the "dist" directory for all components, please run "bit import --merge"'
+        );
+      });
+      describe('running bit import --merge', () => {
+        before(() => {
+          helper.runCmd('bit import --merge');
+        });
+        it('should rebuild the dist directory for all components and dependencies', () => {
+          const distDir = path.join(helper.localScopePath, 'dist');
+          expect(distDir).to.be.a.path();
+          expect(
+            path.join(distDir, 'components/.dependencies/string/is-string', helper.remoteScope, '0.0.1/is-string.js')
+          ).to.be.a.file();
+          expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
+        });
+        it('should be able to tag the components', () => {
+          const tagCmd = () => helper.tagScope('2.0.0');
+          expect(tagCmd).to.not.throw();
         });
       });
     });

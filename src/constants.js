@@ -7,7 +7,7 @@ import type { PathOsBased } from './utils/path';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-const isWindows = os.platform() === 'win32';
+export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
@@ -118,7 +118,7 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
@@ -207,6 +207,8 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
+export const CFG_LOG_JSON_FORMAT = 'log_json_format';
+
 /**
  * git hooks
  */
@@ -222,6 +224,8 @@ export const GIT_HOOKS_NAMES = [POST_CHECKOUT, POST_MERGE];
 export const PRE_TAG_HOOK = 'pre-tag';
 
 export const POST_TAG_HOOK = 'post-tag';
+
+export const POST_ADD_HOOK = 'post-add';
 
 export const PRE_TAG_ALL_HOOK = 'pre-tag-all';
 
@@ -245,7 +249,11 @@ export const POST_RECEIVE_OBJECTS = 'post-receive-objects'; // post-put
 
 export const PRE_DEPRECATE_REMOTE = 'pre-deprecate-remote';
 
+export const PRE_UNDEPRECATE_REMOTE = 'pre-undeprecate-remote';
+
 export const POST_DEPRECATE_REMOTE = 'post-deprecate-remote';
+
+export const POST_UNDEPRECATE_REMOTE = 'post-undeprecate-remote';
 
 export const PRE_REMOVE_REMOTE = 'pre-remove-remote';
 
@@ -254,6 +262,7 @@ export const POST_REMOVE_REMOTE = 'post-remove-remote';
 export const HOOKS_NAMES = [
   PRE_TAG_HOOK,
   POST_TAG_HOOK,
+  POST_ADD_HOOK,
   PRE_TAG_ALL_HOOK,
   POST_TAG_ALL_HOOK,
   PRE_IMPORT_HOOK,
@@ -265,7 +274,9 @@ export const HOOKS_NAMES = [
   PRE_RECEIVE_OBJECTS,
   POST_RECEIVE_OBJECTS,
   PRE_DEPRECATE_REMOTE,
+  PRE_UNDEPRECATE_REMOTE,
   POST_DEPRECATE_REMOTE,
+  POST_UNDEPRECATE_REMOTE,
   PRE_REMOVE_REMOTE,
   POST_REMOVE_REMOTE
 ];
@@ -356,3 +367,11 @@ export const MANUALLY_ADD_DEPENDENCY = '+';
 export const OVERRIDE_FILE_PREFIX = 'file://';
 
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
+
+export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
+
+export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
+
+export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+
+export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';

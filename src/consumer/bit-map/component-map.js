@@ -32,8 +32,6 @@ export type ComponentMapData = {
   trackDir?: ?PathLinux,
   configDir?: ?PathLinux | ?ConfigDir | string,
   origin: ComponentOrigin,
-  dependencies?: ?(string[]),
-  mainDistFile?: ?PathLinux,
   originallySharedDir?: ?PathLinux,
   wrapDir?: ?PathLinux,
   exported?: ?boolean
@@ -53,8 +51,6 @@ export default class ComponentMap {
   trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   configDir: ?ConfigDir;
   origin: ComponentOrigin;
-  dependencies: ?(string[]); // needed for the link process
-  mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   wrapDir: ?PathLinux; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
@@ -68,8 +64,6 @@ export default class ComponentMap {
     trackDir,
     configDir,
     origin,
-    dependencies,
-    mainDistFile,
     originallySharedDir,
     wrapDir
   }: ComponentMapData) {
@@ -86,8 +80,6 @@ export default class ComponentMap {
     this.trackDir = trackDir;
     this.configDir = confDir;
     this.origin = origin;
-    this.dependencies = dependencies;
-    this.mainDistFile = mainDistFile;
     this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
   }
@@ -105,8 +97,6 @@ export default class ComponentMap {
       trackDir: this.trackDir,
       configDir: this.configDir ? this.configDir.linuxDirPath : undefined,
       origin: this.origin,
-      dependencies: this.dependencies,
-      mainDistFile: this.mainDistFile,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported
@@ -381,9 +371,9 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (this.originallySharedDir && this.origin !== COMPONENT_ORIGINS.IMPORTED) {
+    if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(
-        `${errorMessage} originallySharedDir attribute should be set for IMPORTED components only`
+        `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
       );
     }
 

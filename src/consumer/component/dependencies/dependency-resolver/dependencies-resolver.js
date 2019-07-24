@@ -97,6 +97,7 @@ export default class DependencyResolver {
 
   setTree(tree: Tree) {
     this.tree = tree;
+    // console.log(JSON.stringify(tree, null, 4)); // uncomment to easily watch the tree received from bit-javascript
   }
 
   /**
@@ -114,7 +115,11 @@ export default class DependencyResolver {
    * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
    * component.issues.missingDependenciesOnFs
    */
-  async loadDependenciesForComponent(bitDir: string, cacheResolvedDependencies: Object): Promise<Component> {
+  async loadDependenciesForComponent(
+    bitDir: string,
+    cacheResolvedDependencies: Object,
+    cacheProjectAst: ?Object
+  ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     this.setCompilerFiles();
@@ -127,7 +132,8 @@ export default class DependencyResolver {
         allFiles,
         this.component.bindingPrefix,
         this.consumer.config.resolveModules,
-        cacheResolvedDependencies
+        cacheResolvedDependencies,
+        cacheProjectAst
       );
     };
     // find the dependencies (internal files and packages) through automatic dependency resolution
@@ -167,6 +173,16 @@ export default class DependencyResolver {
    * generating links upon import:
    * sourceRelativePath - location of the link file.
    * destinationRelativePath - destination written inside the link file.
+   *
+   * When a dependency is found in a regular (implementation) file, it goes to `dependencies`. If
+   * it found on a test file, it goes to `devDependencies`. Same goes for environment dependencies,
+   * such ad `compilerDependencies` and `testerDependencies`.
+   * Similarly, when a package is found in a regular file, it goes to `packageDependencies`. When
+   * if found in a test file, it goes to `devPackageDependencies`.
+   * An exception for the above is when a package is required in a regular or test file but is also
+   * mentioned in the `package.json` file as a peerDependency, in that case, the package is added
+   * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
+   * and marked as ignored in the consumer or component config file.
    */
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
@@ -416,8 +432,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     fileType: FileType,
     depFileObject: FileObject
   ) {
-    if (this.processedFiles.includes(depFile)) return;
-    this.processedFiles.push(depFile);
+    // We don't just return because different files of the component might import different things from the depFile
+    // See more info here: https://github.com/teambit/bit/issues/1796
+    if (!this.processedFiles.includes(depFile)) {
+      this.processedFiles.push(depFile);
+    }
 
     // if the dependency of an envFile is already included in the env files of the component, we're good
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
@@ -426,11 +445,12 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
-      if (this.issues.untrackedDependencies[originFile]) {
-        this.issues.untrackedDependencies[originFile].push(depFileRelative);
-      } else {
-        this.issues.untrackedDependencies[originFile] = [depFileRelative];
+      if (this.tree[depFile] && this.tree[depFile].missing && this.tree[depFile].missing.bits) {
+        // this depFile is a dependency link and this dependency is missing
+        this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
+        return;
       }
+      this._pushToUntrackDependenciesIssues(originFile, depFileRelative);
       return;
     }
     if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
@@ -473,6 +493,10 @@ either, use the ignore file syntax or change the require statement to have a mod
       destinationRelativePath
     };
     if (importSpecifiers) {
+      importSpecifiers.map((importSpecifier) => {
+        if (importSpecifier.linkFile) delete importSpecifier.linkFile.exported;
+        if (importSpecifier.mainFile) delete importSpecifier.mainFile.exported;
+      });
       depsPaths.importSpecifiers = importSpecifiers;
     }
     if (depFileObject.isCustomResolveUsed) {
@@ -493,8 +517,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
       // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
       // outside the component directory, which might override user files.
-      if (this.issues.relativeComponents[originFile]) this.issues.relativeComponents[originFile].push(componentId);
-      else this.issues.relativeComponents[originFile] = [componentId];
+      this._pushToRelativeComponentsIssues(originFile, componentId);
       return;
     }
 
@@ -506,8 +529,33 @@ either, use the ignore file syntax or change the require statement to have a mod
     ];
     const existingDependency = this.getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
-      // it is another file of an already existing component. Just add the new path
-      existingDependency.relativePaths.push(depsPaths);
+      const existingDepRelativePaths = this.getExistingDepRelativePaths(existingDependency, depsPaths);
+      if (!existingDepRelativePaths) {
+        // it is another file of an already existing component. Just add the new path
+        existingDependency.relativePaths.push(depsPaths);
+        return;
+      }
+      // The dep path already exists but maybe this dep-file has more importSpecifiers
+      if (depsPaths.importSpecifiers) {
+        // add them to the existing dep
+        if (!existingDepRelativePaths.importSpecifiers) {
+          existingDepRelativePaths.importSpecifiers = [...depsPaths.importSpecifiers];
+        } else {
+          // both have importSpecifiers
+          const nonExistingImportSpecifiers = this.getDiffSpecifiers(
+            existingDepRelativePaths.importSpecifiers,
+            depsPaths.importSpecifiers
+          );
+          existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifiers);
+        }
+      }
+      // Handle cases when the first dep paths are not custom resolved and the new one is
+      if (depsPaths.isCustomResolveUsed && !existingDepRelativePaths.isCustomResolveUsed) {
+        existingDepRelativePaths.isCustomResolveUsed = depsPaths.isCustomResolveUsed;
+      }
+      if (depsPaths.importSource && !existingDepRelativePaths.importSource) {
+        existingDepRelativePaths.importSource = depsPaths.importSource;
+      }
     } else {
       this.pushToDependenciesArray(currentComponentsDeps, fileType);
     }
@@ -596,9 +644,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           this.pushToDependenciesArray(currentComponentsDeps, fileType);
         }
       } else {
-        this.issues.missingBits[originFile]
-          ? this.issues.missingBits[originFile].push(componentId)
-          : (this.issues.missingBits[originFile] = [componentId]);
+        this._pushToMissingBitsIssues(originFile, componentId);
       }
     });
   }
@@ -638,9 +684,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         return !this.overridesDependencies.shouldIgnoreFile(relativeToConsumer, fileType);
       });
       if (R.isEmpty(missingFiles)) return;
-      if (this.issues.missingDependenciesOnFs[originFile]) {
-        this.issues.missingDependenciesOnFs[originFile].concat(missingFiles);
-      } else this.issues.missingDependenciesOnFs[originFile] = missingFiles;
+      this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
       if (RA.isNilOrEmpty(missing.packages)) return;
@@ -652,9 +696,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (customResolvedDependencies) {
         Object.keys(customResolvedDependencies).forEach((missingPackage) => {
           const componentId = customResolvedDependencies[missingPackage].toString();
-          if (this.issues.missingCustomModuleResolutionLinks[originFile]) {
-            this.issues.missingCustomModuleResolutionLinks[originFile].push(componentId);
-          } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];
+          this._pushToMissingCustomModuleIssues(originFile, componentId);
         });
       }
       const missingPackagesWithoutCustomResolved = customResolvedDependencies
@@ -662,33 +704,32 @@ either, use the ignore file syntax or change the require statement to have a mod
         : missingPackages;
 
       if (!R.isEmpty(missingPackagesWithoutCustomResolved)) {
-        if (this.issues.missingPackagesDependenciesOnFs[originFile]) {
-          this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
-        } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
+        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages);
       }
     };
     const processMissingComponents = () => {
       if (RA.isNilOrEmpty(missing.bits)) return;
-      missing.bits.forEach((missingBit) => {
-        const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
-          missingBit,
-          this.component.bindingPrefix
-        );
-        if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-        // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-        if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
-          if (this.issues.missingLinks[originFile]) this.issues.missingLinks[originFile].push(componentId);
-          else this.issues.missingLinks[originFile] = [componentId];
-        } else if (this.issues.missingComponents[originFile]) {
-          this.issues.missingComponents[originFile].push(componentId);
-        } else {
-          this.issues.missingComponents[originFile] = [componentId];
-        }
-      });
+      this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();
     processMissingPackages();
     processMissingComponents();
+  }
+
+  _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
+    missingComponents.forEach((missingBit) => {
+      const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
+        missingBit,
+        this.component.bindingPrefix
+      );
+      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+      // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+      if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
+        this._pushToMissingLinksIssues(originFile, componentId);
+      } else {
+        this._pushToMissingComponentsIssues(originFile, componentId);
+      }
+    });
   }
 
   processErrors(originFile: PathLinuxRelative) {
@@ -872,6 +913,20 @@ either, use the ignore file syntax or change the require statement to have a mod
     return dependencies.find(d => d.id.isEqual(id));
   }
 
+  getExistingDepRelativePaths(dependency: Dependency, relativePath: RelativePath) {
+    if (!dependency.relativePaths || R.isEmpty(dependency.relativePaths)) return null;
+    return dependency.relativePaths.find(
+      paths =>
+        paths.sourceRelativePath === relativePath.sourceRelativePath &&
+        paths.destinationRelativePath === relativePath.destinationRelativePath
+    );
+  }
+
+  getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
+    const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
+    return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
+  }
+
   setCompilerFiles() {
     const compilerFiles = shouldProcessEnvDependencies(this.component.compiler) ? this.component.compiler.files : [];
     this.compilerFiles = this.getRelativeEnvFiles(compilerFiles);
@@ -956,6 +1011,55 @@ either, use the ignore file syntax or change the require statement to have a mod
         return 'peerPackageDependencies';
       default:
         throw new Error(`${field} is not recognized`);
+    }
+  }
+
+  _pushToUntrackDependenciesIssues(originFile, depFileRelative) {
+    if (this.issues.untrackedDependencies[originFile]) {
+      this.issues.untrackedDependencies[originFile].push(depFileRelative);
+    } else {
+      this.issues.untrackedDependencies[originFile] = [depFileRelative];
+    }
+  }
+  _pushToRelativeComponentsIssues(originFile, componentId) {
+    if (this.issues.relativeComponents[originFile]) {
+      this.issues.relativeComponents[originFile].push(componentId);
+    } else {
+      this.issues.relativeComponents[originFile] = [componentId];
+    }
+  }
+  _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
+    this.issues.missingBits[originFile]
+      ? this.issues.missingBits[originFile].push(componentId)
+      : (this.issues.missingBits[originFile] = [componentId]);
+  }
+  _pushToMissingDependenciesOnFs(originFile: PathLinuxRelative, missingFiles: string[]) {
+    if (this.issues.missingDependenciesOnFs[originFile]) {
+      this.issues.missingDependenciesOnFs[originFile].concat(missingFiles);
+    } else this.issues.missingDependenciesOnFs[originFile] = missingFiles;
+  }
+  _pushToMissingPackagesDependenciesIssues(originFile: PathLinuxRelative, missingPackages: string[]) {
+    if (this.issues.missingPackagesDependenciesOnFs[originFile]) {
+      this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
+    } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
+  }
+  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: BitId) {
+    if (this.issues.missingCustomModuleResolutionLinks[originFile]) {
+      this.issues.missingCustomModuleResolutionLinks[originFile].push(componentId);
+    } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];
+  }
+  _pushToMissingLinksIssues(originFile: PathLinuxRelative, componentId: BitId) {
+    if (this.issues.missingLinks[originFile]) {
+      this.issues.missingLinks[originFile].push(componentId);
+    } else {
+      this.issues.missingLinks[originFile] = [componentId];
+    }
+  }
+  _pushToMissingComponentsIssues(originFile: PathLinuxRelative, componentId: BitId) {
+    if (this.issues.missingComponents[originFile]) {
+      this.issues.missingComponents[originFile].push(componentId);
+    } else {
+      this.issues.missingComponents[originFile] = [componentId];
     }
   }
 }

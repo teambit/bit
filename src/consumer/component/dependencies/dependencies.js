@@ -245,7 +245,7 @@ export default class Dependencies {
                 .toString();
               if (linkFileProps !== specifierProps) {
                 throw new ValidationError(
-                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${mainFileProps}"`
+                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${linkFileProps}"`
                 );
               }
             }

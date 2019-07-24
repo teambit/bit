@@ -1,6 +1,6 @@
 /** @flow */
 import loadScope from '../../scope-loader';
-import { fetch, deprecate, remove, put } from '../../../api/scope';
+import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -49,6 +49,10 @@ export default class Fs implements Network {
     return deprecate({ path: this.scopePath, ids });
   }
 
+  undeprecateMany(ids: string[]): Promise<ComponentObjects[]> {
+    return undeprecate({ path: this.scopePath, ids });
+  }
+
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     const idsStr = bitIds.serialize();
     return fetch(this.scopePath, idsStr, noDependencies).then((bitsMatrix) => {
@@ -63,8 +67,8 @@ export default class Fs implements Network {
       .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
   }
 
-  list(): Promise<ListScopeResult[]> {
-    return ComponentsList.listLocalScope(this.getScope());
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
   search(query: string, reindex: boolean): Promise<[]> {

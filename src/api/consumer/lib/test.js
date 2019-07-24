@@ -2,11 +2,11 @@
 import { loadConsumer, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
-import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
+import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/loader/loader-messages';
 import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
 import GeneralError from '../../../error/general-error';
-import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
+import type { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 
@@ -22,7 +22,9 @@ export default (async function test(
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
   includeUnmodified: boolean = false,
   verbose: ?boolean
-): Promise<SpecsResultsWithComponentId> {
+): Promise<SpecsResultsWithMetaData> {
+  loader.start(BEFORE_RUNNING_SPECS);
+
   if (forkLevel === TESTS_FORK_LEVEL.NONE) {
     return testInProcess(id, includeUnmodified, verbose);
   }
@@ -45,21 +47,26 @@ export default (async function test(
 export const testInProcess = async (
   id?: string,
   includeUnmodified: boolean = false,
-  verbose: ?boolean
-): Promise<SpecsResultsWithComponentId> => {
+  verbose: ?boolean,
+  dontPrintEnvMsg: ?boolean
+): Promise<SpecsResultsWithMetaData> => {
   const consumer: Consumer = await loadConsumer();
-  const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
-  const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
+  const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose, dontPrintEnvMsg);
+  const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose, dontPrintEnvMsg });
   loader.stop();
   await consumer.onDestroy();
-  return testsResults;
+  return {
+    type: 'results',
+    results: testsResults
+  };
 };
 
 const _getComponentsAfterBuild = async (
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
-  verbose: ?boolean
+  verbose: ?boolean,
+  dontPrintEnvMsg: ?boolean
 ) => {
   let components;
   if (id) {
@@ -76,6 +83,6 @@ const _getComponentsAfterBuild = async (
     }
     loader.stop();
   }
-  await consumer.scope.buildMultiple(components, consumer, false, verbose);
+  await consumer.scope.buildMultiple(components, consumer, false, verbose, dontPrintEnvMsg);
   return components;
 };

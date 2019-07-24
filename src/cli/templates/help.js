@@ -89,6 +89,14 @@ const allCommands = [
       {
         name: 'link',
         description: 'generate symlinks for sourced components absolute path resolution.'
+      },
+      {
+        name: 'deprecate',
+        description: 'deprecate a component'
+      },
+      {
+        name: 'undeprecate',
+        description: 'undeprecate a deprecated component'
       }
     ]
   },

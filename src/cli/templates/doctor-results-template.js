@@ -82,11 +82,24 @@ function _createWrittenFileSection(savedFilePath) {
   return `File written to ${savedFilePath}`;
 }
 
-export default function render({ examineResults, savedFilePath }: DoctorRunAllResults): string {
+function _createMetaSection(metaData) {
+  return `
+  bit version   : ${metaData.bitVersion}
+  node version  : ${metaData.nodeVersion}
+  npm version   : ${metaData.npmVersion || 'NA'}
+  yarn version  : ${metaData.yarnVersion || 'NA'}
+  platform      : ${metaData.platform}
+  user details  : ${metaData.userDetails}
+`;
+}
+
+export default function render({ examineResults, savedFilePath, metaData }: DoctorRunAllResults): string {
+  const meatSection = _createMetaSection(metaData);
   const summerySection = _createSummerySection(examineResults);
   const fullReportSection = _createFullReportSection(examineResults);
   const writtenFileSection = _createWrittenFileSection(savedFilePath);
-  const output = `${summerySection}
+  const output = `${meatSection}
+${summerySection}
 ${fullReportSection}
 ${writtenFileSection}`;
   return output;

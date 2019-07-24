@@ -37,7 +37,6 @@ import allSettled from './promise-all-settled';
 import values from './object/values';
 import sortObject from './object/sort';
 import glob from './glob';
-import promisify from './promisify';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object';
 import objectToTupleArray from './object/to-tuple-array';
@@ -102,7 +101,6 @@ export {
   toBase64ArrayBuffer,
   fromBase64,
   glob,
-  promisify,
   resolveBoolean,
   empty,
   filter,

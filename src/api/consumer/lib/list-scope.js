@@ -11,26 +11,28 @@ import { getScopeRemotes } from '../../../scope/scope-remotes';
 export default (async function list({
   scopeName,
   showAll, // include nested
-  showRemoteVersion
+  showRemoteVersion,
+  namespacesUsingWildcards
 }: {
   scopeName?: string,
   showAll: boolean,
-  showRemoteVersion: boolean
+  showRemoteVersion: boolean,
+  namespacesUsingWildcards?: string
 }): Promise<ListScopeResult[]> {
   const consumer: Consumer = await loadConsumer();
   const scope: Scope = consumer.scope;
   if (scopeName) {
     const remotes = await getScopeRemotes(scope);
     const remote: Remote = await remotes.resolve(scopeName, scope);
-    return remoteList(remote);
+    return remoteList(remote, namespacesUsingWildcards);
   }
 
   return scopeList(consumer, showAll, showRemoteVersion);
 });
 
-function remoteList(remote: Remote): Promise<ListScopeResult[]> {
+function remoteList(remote: Remote, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
   loader.start(BEFORE_REMOTE_LIST);
-  return remote.list();
+  return remote.list(namespacesUsingWildcards);
 }
 
 async function scopeList(consumer: Consumer, showAll: boolean, showRemoteVersion: boolean): Promise<ListScopeResult[]> {

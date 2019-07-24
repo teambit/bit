@@ -6,8 +6,8 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../fixtures/fixtures';
-import { ComponentNotFound } from '../../src/scope/exceptions';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -22,7 +22,7 @@ describe('bit eject command', function () {
     describe('non existing component', () => {
       it('show an error saying the component was not found', () => {
         const useFunc = () => helper.ejectComponents('utils/non-exist');
-        const error = new ComponentNotFound('utils/non-exist');
+        const error = new MissingBitMapComponent('utils/non-exist');
         helper.expectToThrow(useFunc, error);
       });
     });
@@ -64,7 +64,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('as author', () => {
@@ -228,7 +227,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('export components with dependencies', () => {

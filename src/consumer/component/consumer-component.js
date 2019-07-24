@@ -44,16 +44,13 @@ import {
   BASE_WEB_DOMAIN
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
-import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
-import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
@@ -70,6 +67,10 @@ import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import type { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
+import PackageJsonFile from './package-json-file';
+import Isolator from '../../environment/isolator';
+import Capsule from '../../../components/core/capsule';
+import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -100,9 +101,12 @@ export type ComponentProps = {
   testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
   overrides: ComponentOverrides,
+  packageJsonFile?: ?PackageJsonFile,
+  packageJsonChangedProps?: ?{ [string]: any },
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
+  mainDistFile?: ?PathLinux,
   specsResults?: ?SpecsResults,
   license?: ?License,
   deprecated: ?boolean,
@@ -157,7 +161,8 @@ export default class Component {
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
-  packageJsonInstance: PackageJsonInstance;
+  packageJsonFile: ?PackageJsonFile; // populated when loadedFromFileSystem or when writing the components. for author it never exists
+  packageJsonChangedProps: ?Object; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
@@ -211,8 +216,11 @@ export default class Component {
     compilerPackageDependencies,
     testerPackageDependencies,
     overrides,
+    packageJsonFile,
+    packageJsonChangedProps,
     docs,
     dists,
+    mainDistFile,
     specsResults,
     license,
     log,
@@ -244,8 +252,10 @@ export default class Component {
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
+    this.packageJsonFile = packageJsonFile;
+    this.packageJsonChangedProps = packageJsonChangedProps;
     this._docs = docs;
-    this.setDists(dists);
+    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -265,7 +275,8 @@ export default class Component {
   }
 
   /**
-   * Warning: this method does not return a deep copy for objects properties except dependencies and devDependencies
+   * Warning: this method does not return a deep copy for all objects in this class, only for the
+   * ones you see in the implementation below.
    * Implement deep copy of other properties if needed
    */
   clone() {
@@ -276,6 +287,8 @@ export default class Component {
     newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
     newInstance.setTesterDependencies(this.testerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
+    newInstance.files = this.files.map(file => file.clone());
+    newInstance.dists = this.dists.clone();
     return newInstance;
   }
 
@@ -311,8 +324,8 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists?: Dist[]) {
-    this.dists = new Dists(dists);
+  setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
+    this.dists = new Dists(dists, mainDistFile);
   }
 
   getFileExtension(): string {
@@ -347,14 +360,17 @@ export default class Component {
   }
 
   async writeConfig(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, configDir);
+    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap, configDir);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
     return ejectConfData;
   }
 
-  async getConfigToWrite(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfData> {
-    const bitMap: BitMap = consumer.bitMap;
+  async getConfigToWrite(
+    consumer: ?Consumer,
+    bitMap: BitMap,
+    configDir: PathOsBased | ConfigDir
+  ): Promise<EjectConfData> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -372,7 +388,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
+    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -395,30 +411,6 @@ export default class Component {
       this.componentMap.setConfigDir();
     }
     return res;
-  }
-
-  getPackageNameAndPath(): Promise<any> {
-    const packagePath = `${this.bindingPrefix}/${this.id.name}`;
-    const packageName = this.id.toStringWithoutVersion();
-    return { packageName, packagePath };
-  }
-
-  async writePackageJson(
-    consumer: Consumer,
-    bitDir: string,
-    override?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    excludeRegistryPrefix?: boolean = false
-  ): Promise<boolean> {
-    const packageJsonInstance = await packageJson.write(
-      consumer,
-      this,
-      bitDir,
-      override,
-      writeBitDependencies,
-      excludeRegistryPrefix
-    );
-    this.packageJsonInstance = packageJsonInstance;
   }
 
   flattenedDependencies(): BitIds {
@@ -487,8 +479,8 @@ export default class Component {
    * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
    * and its dependencies. It helps to avoid large file-system paths.
    *
-   * This is relevant for IMPORTED components only as the author may have long paths that are not needed for whoever
-   * imports it. NESTED and AUTHORED components are written as is.
+   * This is relevant for IMPORTED and NESTED components only as the author may have long paths
+   * that are not needed for whoever imports it. AUTHORED components are written as is.
    *
    * @see sources.consumerComponentToVersion() for the opposite action. meaning, adding back the sharedDir.
    */
@@ -499,24 +491,19 @@ export default class Component {
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
-    const pathWithoutSharedDir = (pathStr: PathOsBased, sharedDir: PathLinux): PathOsBased => {
-      if (!sharedDir) return pathStr;
-      const partToRemove = path.normalize(sharedDir) + path.sep;
-      return pathStr.replace(partToRemove, '');
-    };
     this.files.forEach((file) => {
-      const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir);
+      const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
       file.updatePaths({ newBase: file.base, newRelative });
     });
-    this.dists.stripOriginallySharedDir(originallySharedDir, pathWithoutSharedDir);
-    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
+    this.dists.stripOriginallySharedDir(originallySharedDir);
+    this.mainFile = stripSharedDirFromPath(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
-        pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
+        stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
       );
     });
     this.overrides.stripOriginallySharedDir(originallySharedDir);
@@ -550,13 +537,17 @@ export default class Component {
     consumer,
     noCache,
     verbose,
+    dontPrintEnvMsg,
+    directory,
     keep
   }: {
     scope: Scope,
     save?: boolean,
-    consumer?: Consumer,
+    consumer?: ?Consumer,
     noCache?: boolean,
+    directory?: string,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
     return buildComponent({
@@ -565,7 +556,9 @@ export default class Component {
       save,
       consumer,
       noCache,
+      directory,
       verbose,
+      dontPrintEnvMsg,
       keep
     });
   }
@@ -576,6 +569,7 @@ export default class Component {
     consumer,
     save,
     verbose,
+    dontPrintEnvMsg,
     isolated,
     directory,
     keep
@@ -585,6 +579,7 @@ export default class Component {
     consumer?: Consumer,
     save?: boolean,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     isolated?: boolean,
     directory?: string,
     keep?: boolean
@@ -600,7 +595,7 @@ export default class Component {
       const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
       const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose }, context);
+      await tester.install(scope, { verbose, dontPrintEnvMsg }, context);
       logger.debug('Environment components are installed');
     }
 
@@ -681,7 +676,23 @@ export default class Component {
           const oneFileSpecResult = async (testFile) => {
             const testFilePath = testFile.path;
             try {
-              const results = await tester.oldAction(testFilePath);
+              const isolateFunc = async (
+                destDir?: string
+              ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+                const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
+                const componentWithDependencies = await isolator.isolate(component.id, {});
+                const testFileWithoutSharedDir = stripSharedDirFromPath(
+                  testFilePath,
+                  componentWithDependencies.component.originallySharedDir
+                );
+                return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
+              };
+              const context: Object = {
+                componentDir: cwd,
+                isolate: isolateFunc
+              };
+
+              const results = await tester.oldAction(testFilePath, context);
               results.specPath = testFile.relative;
               return results;
             } catch (err) {
@@ -719,11 +730,7 @@ export default class Component {
         // some or all the tests were failed.
         loader.stop();
         if (verbose) {
-          // $FlowFixMe this.specsResults is not null at this point
-          const specsResultsPretty = paintSpecsResults(this.specsResults).join('\n');
-          const componentIdPretty = c.bold.white(this.id.toString());
-          const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
-          return Promise.reject(new ComponentSpecsFailed(specsResultsAndIdPretty));
+          return Promise.reject(new ComponentSpecsFailed(this.id.toString(), this.specsResults));
         }
         return Promise.reject(new ComponentSpecsFailed());
       }
@@ -854,7 +861,7 @@ export default class Component {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
-    const getDependenciesComponents = (ids: BitIds) => {
+    const getDependenciesComponents = (ids: BitIds): Component[] => {
       return Promise.all(
         ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
@@ -996,6 +1003,7 @@ export default class Component {
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
+    const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -1041,9 +1049,13 @@ export default class Component {
     // (like dependencies)
     let componentConfig: ?ComponentConfig;
     if (configDir !== consumerPath) {
-      const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
       // $FlowFixMe unclear error
-      componentConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, workspaceConfig);
+      componentConfig = await ComponentConfig.load({
+        componentDir: componentMap.rootDir,
+        workspaceDir: consumerPath,
+        configDir,
+        workspaceConfig
+      });
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       if (componentFromModel) {
@@ -1110,6 +1122,8 @@ export default class Component {
       componentConfig,
       isAuthor
     );
+    const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
+    const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
 
     return new Component({
       name: id.name,
@@ -1125,11 +1139,14 @@ export default class Component {
       loadedFromFileSystem: true,
       componentMap,
       dists,
+      mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,
       origin: componentMap.origin,
-      overrides
+      overrides,
+      packageJsonFile,
+      packageJsonChangedProps
     });
   }
 }

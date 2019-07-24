@@ -1,11 +1,14 @@
 /** @flow */
 import AbstractError from '../../error/abstract-error';
+import SpecsResults from '../specs-results';
 
 export default class ComponentSpecsFailed extends AbstractError {
-  specsResultsAndIdPretty: string;
+  id: ?string;
+  specsResults: ?SpecsResults;
 
-  constructor(specsResultsAndIdPretty: string) {
+  constructor(id: ?string, specsResults: ?SpecsResults) {
     super();
-    this.specsResultsAndIdPretty = specsResultsAndIdPretty || '';
+    this.id = id;
+    this.specsResults = specsResults;
   }
 }

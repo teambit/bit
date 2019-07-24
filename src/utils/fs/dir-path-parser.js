@@ -3,7 +3,7 @@ import path from 'path';
 
 /**
  * parse given dir path
- * @param {*} dirPath 
+ * @param {*} dirPath
  */
 export default function parseDirPath(dirPath: string) {
   return path.parse(dirPath).dir.split(path.delimiter);
