@@ -509,14 +509,11 @@ workflows:
             # - pack
 
   performence_tests:
-    triggers:
-      - schedule:
-          cron: "0 9 * * *"
-          filters:
-            branches:
-              only:
-                - master
-                - performance-tests
+    filters:
+      branches:
+        only:
+          - master
+          - performance-tests
     jobs:
       - checkout_code
       -
