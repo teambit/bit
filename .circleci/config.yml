@@ -417,7 +417,7 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-      NPM_CONFIG_DEBUG: true
+      # NPM_CONFIG_DEBUG: true
     parallelism: 1
     steps:
       -

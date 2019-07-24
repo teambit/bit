@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -51,6 +52,7 @@ describe('many components', function () {
         const start = process.hrtime();
         helper.addComponent('bar/*');
         [addTimeInSeconds] = process.hrtime(start);
+        console.log('addTimeInSeconds', addTimeInSeconds);
       });
       it('should take less then 1 minutes to complete', () => {
         expect(addTimeInSeconds).to.be.lessThan(1 * 60);
@@ -61,6 +63,7 @@ describe('many components', function () {
           const start = process.hrtime();
           helper.tagAllComponents();
           [tagTimeInSeconds] = process.hrtime(start);
+          console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
         it('should take less then 5 minutes to complete', () => {
           expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
@@ -71,6 +74,7 @@ describe('many components', function () {
             const start = process.hrtime();
             helper.status();
             [statusTimeInSeconds] = process.hrtime(start);
+            console.log('statusTimeInSeconds', statusTimeInSeconds);
           });
           it('should take less then 3 minutes to complete', () => {
             expect(statusTimeInSeconds).to.be.lessThan(3 * 60);
@@ -82,6 +86,7 @@ describe('many components', function () {
             const start = process.hrtime();
             helper.exportAllComponents();
             [exportTimeInSeconds] = process.hrtime(start);
+            console.log('exportTimeInSeconds', exportTimeInSeconds);
           });
           it('should take less then 5 minutes to complete', () => {
             expect(exportTimeInSeconds).to.be.lessThan(5 * 60);
@@ -92,6 +97,7 @@ describe('many components', function () {
               const start = process.hrtime();
               helper.runCmd('bit import');
               [importTimeInSeconds] = process.hrtime(start);
+              console.log('importTimeInSeconds', importTimeInSeconds);
             });
             it('should take less then 20 minutes to complete', () => {
               expect(importTimeInSeconds).to.be.lessThan(20 * 60);
