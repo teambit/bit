@@ -6,6 +6,9 @@ const maxComponents = 3000;
 const maxFlattenedDependencies = 100;
 
 /**
+ * Performance log according to David's MacBook pro 2018.
+ * 2.6 GHz Intel Core i7, 16GB RAM.
+ *
  * as of v14.0.0
  * for 10,000 without dependencies
  * bit add ~3 minutes
@@ -25,6 +28,13 @@ const maxFlattenedDependencies = 100;
  * v14.0.7
  * import 3,000 with maxFlattenedDependencies of 100 => 13:26.57 total
  * import 300 with maxFlattenedDependencies of 10 => 13.641 total
+ *
+ * v14.2.3 (another change here. node is v8, not v6)
+ * add 3,000 with maxFlattenedDependencies of 100 => 7 sec
+ * tag 3,000 with maxFlattenedDependencies of 100 => 137 sec
+ * status 3,000 with maxFlattenedDependencies of 100 => 46 sec
+ * export 3,000 with maxFlattenedDependencies of 100 => 90 sec
+ * import 3,000 with maxFlattenedDependencies of 100 => 475 sec
  */
 describe('many components', function () {
   this.timeout(0);
