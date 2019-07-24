@@ -501,6 +501,10 @@ workflows:
       #       - build_bit_javascript
       -
         e2e_test:
+          filters:
+            branches:
+              ignore:
+                - performance-tests
           requires:
             - set_ssh_key
             - set_bitsrc_registry
