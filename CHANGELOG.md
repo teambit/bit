@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1715](https://github.com/teambit/bit/issues/1715) support test/spec file conventions
 - [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
 
 ## [14.2.2] - 2019-07-24

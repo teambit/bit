@@ -93,7 +93,6 @@
     "lodash.partition": "^4.6.0",
     "lodash.set": "^4.3.2",
     "lodash.toarray": "^4.4.0",
-    "lodash.unionby": "^4.8.0",
     "lodash.uniqby": "^4.7.0",
     "loud-rejection": "^1.6.0",
     "make-fetch-happen": "^4.0.1",

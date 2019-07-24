@@ -5,7 +5,6 @@ import R from 'ramda';
 import format from 'string-format';
 import assignwith from 'lodash.assignwith';
 import groupby from 'lodash.groupby';
-import unionBy from 'lodash.unionby';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
 import { Analytics } from '../../../analytics/analytics';
@@ -46,6 +45,7 @@ import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import { ModelComponent } from '../../../scope/models';
+import isTestFile from '../../../utils/file/is-test-file';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
@@ -480,10 +480,16 @@ export default class AddComponents {
   }
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
-    const testFiles = !R.isEmpty(this.tests)
-      ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
-      : [];
-
+    if (R.isEmpty(this.tests)) {
+      // when the user didn't specify any test-file, try to find them by the name (see #1715)
+      files.forEach((file) => {
+        if (isTestFile(file.relativePath)) {
+          file.test = true;
+        }
+      });
+      return files;
+    }
+    const testFiles = await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests);
     const resolvedTestFiles = testFiles.map((testFile) => {
       if (isDir(path.join(this.consumer.getPath(), testFile))) throw new TestIsDirectory(testFile);
       return {
@@ -493,7 +499,8 @@ export default class AddComponents {
       };
     });
 
-    return unionBy(resolvedTestFiles, files, 'relativePath');
+    // files don't override resolvedTestFiles
+    return R.unionWith(R.eqBy(R.prop('relativePath')), resolvedTestFiles, files);
   }
 
   /**
@@ -526,7 +533,6 @@ export default class AddComponents {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
 
-        // merge test files with files
         filteredMatchedFiles = await this._mergeTestFilesWithFiles(filteredMatchedFiles);
         const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
 

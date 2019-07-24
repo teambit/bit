@@ -1288,4 +1288,20 @@ describe('bit add command', function () {
       expect(files[3].relativePath).to.equal('ddd.js');
     });
   });
+  describe('adding specs/tests files without using the --test flag', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils', 'is-string.js');
+      helper.createFile('utils', 'is-string.spec.js');
+      helper.addComponent('utils', { m: 'is-string.js' });
+    });
+    it('should recognize the tests file by their names', () => {
+      const bitMap = helper.readBitMap();
+      const files = bitMap.utils.files;
+      const specFile = files.find(f => f.relativePath === 'utils/is-string.spec.js');
+      expect(specFile.test).to.be.true;
+      const nonSpecFile = files.find(f => f.relativePath === 'utils/is-string.js');
+      expect(nonSpecFile.test).to.be.false;
+    });
+  });
 });
