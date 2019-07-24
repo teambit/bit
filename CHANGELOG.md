@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add option to pass context to trigger hook
+- add workspacePath and bitmapFileName to post-add hook invocation
+
 ## [14.2.2-dev.1] - 2019-07-24
 
 - fix "Cannot read property 'push' of undefined" error upon `bit status`
