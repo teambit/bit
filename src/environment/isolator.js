@@ -29,6 +29,7 @@ export default class Isolator {
   capsuleBitMap: BitMap;
   capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
   componentWithDependencies: ComponentWithDependencies;
+  manyComponentsWriter: ManyComponentsWriter;
   constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
     this.capsule = capsule;
     this.scope = scope;
@@ -54,7 +55,6 @@ export default class Isolator {
     }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
-      // consumer: this.consumer,
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
       override: opts.override,
@@ -74,24 +74,35 @@ export default class Isolator {
       capsule: this.capsule
     };
     this.componentWithDependencies = componentWithDependencies;
-    // $FlowFixMe
-    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await this.writeComponentsAndDependencies();
+    await this.installPackages();
+    await this.writeLinks();
+    this.capsuleBitMap = this.manyComponentsWriter.bitMap;
+    return componentWithDependencies;
+  }
+
+  async writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
-    await manyComponentsWriter._populateComponentsFilesToWrite();
-    await manyComponentsWriter._populateComponentsDependenciesToWrite();
+    await this.manyComponentsWriter._populateComponentsFilesToWrite();
+    await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule();
+  }
+
+  async installPackages() {
     // $FlowFixMe
-    this.capsulePackageJson = componentWithDependencies.component.packageJsonFile;
+    this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // $FlowFixMe
-    const componentRootDir: string = componentWithDependencies.component.writtenPath;
+    const componentRootDir: string = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot(componentRootDir);
     logger.debug('ManyComponentsWriter, install packages on capsule');
     await this._installWithPeerOption(componentRootDir);
-    const links = await manyComponentsWriter._getAllLinks();
+  }
+
+  async writeLinks() {
+    const links = await this.manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
-    this.capsuleBitMap = manyComponentsWriter.bitMap;
-    return componentWithDependencies;
   }
 
   _manipulateDir() {
@@ -162,20 +173,7 @@ export default class Isolator {
   }
 
   async _getNpmVersion() {
-    const execResults = await this.capsule.exec('npm --version');
-    const versionString = await new Promise((resolve, reject) => {
-      let version = '';
-      execResults.stdout.on('data', (data: string) => {
-        version += data;
-      });
-      execResults.stdout.on('error', (error: string) => {
-        return reject(error);
-      });
-      // @ts-ignore
-      execResults.on('close', () => {
-        return resolve(version);
-      });
-    });
+    const versionString = await this.capsuleExec('npm --version');
     const validVersion = semver.coerce(versionString);
     return validVersion ? validVersion.raw : null;
   }
@@ -194,7 +192,11 @@ export default class Isolator {
       );
     }
     const args = ['install', ...modules, '--no-save'];
-    const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
+    return this.capsuleExec(`npm ${args.join(' ')}`, { cwd: directory });
+  }
+
+  async capsuleExec(cmd: string, options?: ?Object): Promise<string> {
+    const execResults = await this.capsule.exec(cmd, options);
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {

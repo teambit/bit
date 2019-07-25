@@ -323,6 +323,8 @@ const _runBuild = async ({
           componentWithDependencies,
           writeDists,
           getDependenciesLinks,
+          writeLinks: () => isolator.writeLinks(),
+          capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
           addSharedDir
         };
       };
