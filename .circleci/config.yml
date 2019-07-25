@@ -4,6 +4,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small
     working_directory: ~/bit
     steps:
       - checkout
@@ -25,6 +26,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/.ssh
     steps:
       -
@@ -45,6 +47,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small        
     working_directory: ~/bit
     steps:
       # prod registry
@@ -67,6 +70,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     # skipping the pre-built binaries to make sure we build them by the pack step
     # testing the install script will be done in different workflow dedicated for this
@@ -108,6 +112,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -126,6 +131,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -148,6 +154,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -199,6 +206,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -221,6 +229,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -249,6 +258,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -277,6 +287,7 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     steps:
       -
@@ -304,12 +315,13 @@ jobs:
     docker:
       -
         image: 'circleci/node:8.12.0'
+    resource_class: small    
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-    parallelism: 4
+    parallelism: 75
     steps:
       -
         attach_workspace:
