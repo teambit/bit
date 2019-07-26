@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- [#1856](https://github.com/teambit/bit/issues/1856) expose `writeLinks` function for the compiler to run after installing packages on a capsule
+- [#1856](https://github.com/teambit/bit/issues/1856) fix links deletion from `node_modules` after installing packages by a compiler on a capsule
 - [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
 
 ## [14.2.2] - 2019-07-24
