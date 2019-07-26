@@ -1525,3 +1525,49 @@ describe('envs with relative paths', function () {
     });
   });
 });
+
+describe('add an env with an invalid env name', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  let numOfObjectsBeforeTagging;
+  before(() => {
+    helper.reInitLocalScope();
+    helper.importDummyCompiler();
+    const bitJson = helper.readBitJson();
+    bitJson.env = {
+      compiler: {
+        dummy: {
+          // an invalid name. doesn't have a scope name.
+          options: {
+            file: path.join(
+              helper.localScopePath,
+              `.bit/components/compilers/dummy/${helper.envScope}/0.0.1/compiler.js`
+            )
+          }
+        }
+      }
+    };
+    helper.writeBitJson(bitJson);
+    const objectFiles = helper.getObjectFiles();
+    numOfObjectsBeforeTagging = objectFiles.length;
+    helper.createComponentBarFoo();
+    helper.addComponentBarFoo();
+  });
+  after(() => {
+    helper.destroyEnv();
+  });
+  describe('tagging the component', () => {
+    let output;
+    before(() => {
+      output = helper.runWithTryCatch('bit tag -a');
+    });
+    it('should throw an error saying BitId is invalid', () => {
+      expect(output).to.have.string('the env.name has an invalid Bit id');
+    });
+    it('should not save anything into the objects dir', () => {
+      // see https://github.com/teambit/bit/issues/1727 for a previous bug about it
+      const numOfObjectsAfterTagging = helper.getObjectFiles().length;
+      expect(numOfObjectsAfterTagging).to.equal(numOfObjectsBeforeTagging);
+    });
+  });
+});

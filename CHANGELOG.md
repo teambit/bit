@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1714](https://github.com/teambit/bit/issues/1714) auto recognize mainFile when a file added with the same name as its dir
+- [#1727](https://github.com/teambit/bit/issues/1727) prevent saving objects that link to invalid objects
 - [#1856](https://github.com/teambit/bit/issues/1856) fix links deletion from `node_modules` after installing packages by a compiler on a capsule
 - [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
 
