@@ -316,6 +316,12 @@ const _runBuild = async ({
           }
           return updatedFiles;
         };
+        const installPackages = async (packages: string[] = []) => {
+          await isolator.installPackagesOnRoot(packages);
+          // after installing packages on capsule root, some links/symlinks from node_modules might
+          // be deleted. rewrite the links to recreate them.
+          await isolator.writeLinks();
+        };
         const capsuleFiles = componentWithDependencies.component.files;
         return {
           capsule: isolator.capsule,
@@ -325,6 +331,7 @@ const _runBuild = async ({
           getDependenciesLinks,
           writeLinks: () => isolator.writeLinks(),
           capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
+          installPackages,
           addSharedDir
         };
       };
