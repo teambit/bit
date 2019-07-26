@@ -320,7 +320,7 @@ const _runBuild = async ({
           await isolator.installPackagesOnRoot(packages);
           // after installing packages on capsule root, some links/symlinks from node_modules might
           // be deleted. rewrite the links to recreate them.
-          await isolator.writeLinks();
+          await isolator.writeLinksOnNodeModules();
         };
         const capsuleFiles = componentWithDependencies.component.files;
         return {

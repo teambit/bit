@@ -108,6 +108,17 @@ export default class Isolator {
     await links.persistAllToCapsule(this.capsule);
   }
 
+  /**
+   * used by compilers that create capsule.
+   * when installing packages on the capsule, the links generated on node_modules may be deleted
+   */
+  async writeLinksOnNodeModules() {
+    const links = await this.manyComponentsWriter._getAllLinks();
+    const nodeModulesLinks = links.filterByPath(filePath => filePath.startsWith('node_modules'));
+    nodeModulesLinks.toConsole();
+    await nodeModulesLinks.persistAllToCapsule(this.capsule);
+  }
+
   _manipulateDir() {
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     const manipulateDirData = getManipulateDirForComponentWithDependencies(this.componentWithDependencies);

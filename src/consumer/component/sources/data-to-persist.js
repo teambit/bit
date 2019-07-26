@@ -71,10 +71,6 @@ export default class DataToPersist {
   async persistAllToCapsule(capsule: Capsule) {
     this._log();
     this._validateRelative();
-    // const filesForCapsule = this.files.reduce(
-    //   (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
-    //   {}
-    // );
     await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
@@ -113,7 +109,15 @@ export default class DataToPersist {
    */
   toConsole() {
     console.log(`\nfiles: ${this.files.map(f => f.path).join('\n')}`); // eslint-disable-line no-console
+    console.log(`\nsymlinks: ${this.symlinks.map(s => `src: ${s.src}, dest: ${s.dest}`).join('\n')}`); // eslint-disable-line no-console
     console.log(`remove: ${this.remove.map(r => r.path).join('\n')}`); // eslint-disable-line no-console
+  }
+  filterByPath(filterFunc: Function): DataToPersist {
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(this.files.filter(f => filterFunc(f.path)));
+    dataToPersist.removeManyPaths(this.remove.filter(r => filterFunc(r.path)));
+    dataToPersist.addManySymlinks(this.symlinks.filter(s => filterFunc(s.dest)));
+    return dataToPersist;
   }
   async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
