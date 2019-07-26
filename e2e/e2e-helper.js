@@ -337,6 +337,9 @@ export default class Helper {
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
       .map(x => path.normalize(x));
   }
+  getObjectFiles() {
+    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.localScopePath, '.bit/objects') });
+  }
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, impl);
