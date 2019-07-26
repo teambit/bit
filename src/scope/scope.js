@@ -253,12 +253,18 @@ export default class Scope {
    * Two reasons why not running them in parallel:
    * 1) when several components have the same environment, it'll try to install them multiple times.
    * 2) npm throws errors when running 'npm install' from several directories
+   *
+   * Also, make sure to first build and write dists files of all components, and only then, write
+   * the links inside the dists. otherwise, you it could fail when writing links of one component
+   * needs another component dists files. (see 'importing all components and then deleting the dist
+   * directory' test case)
    */
   async buildMultiple(
     components: Component[],
     consumer: Consumer,
     noCache: boolean,
-    verbose: boolean
+    verbose: boolean,
+    dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
@@ -266,11 +272,15 @@ export default class Scope {
       loader.start(BEFORE_RUNNING_BUILD);
     }
     const build = async (component: Component) => {
-      await component.build({ scope: this, consumer, noCache, verbose });
-      const buildResults = await component.dists.writeDists(component, consumer);
+      await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
+      const buildResults = await component.dists.writeDists(component, consumer, false);
       return { component: component.id.toString(), buildResults };
     };
-    return pMapSeries(components, build);
+    const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
+
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+    return buildResults;
   }
 
   /**
@@ -313,11 +323,13 @@ export default class Scope {
     components,
     consumer,
     verbose,
+    dontPrintEnvMsg = false,
     rejectOnFailure = false
   }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
+    dontPrintEnvMsg?: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
@@ -334,7 +346,8 @@ export default class Scope {
         scope: this,
         rejectOnFailure,
         consumer,
-        verbose
+        verbose,
+        dontPrintEnvMsg
       });
       const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };

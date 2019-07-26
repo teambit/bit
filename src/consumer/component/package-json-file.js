@@ -3,38 +3,49 @@ import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
 import detectIndent from 'detect-indent';
+import detectNewline from 'detect-newline';
+import stringifyPackage from 'stringify-package';
 import type { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
-import { PACKAGE_JSON, PACKAGE_JSON_DEFAULT_INDENT } from '../../constants';
-import JSONFile from './sources/json-file';
+import { PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
 import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import PackageJsonVinyl from './package-json-vinyl';
 
+/**
+ * when a package.json file is loaded, we save the indentation and the type of newline it uses, so
+ * then we could preserve it later on while writing the file. this is same process used by NPM when
+ * writing the package.json file
+ */
 export default class PackageJsonFile {
   packageJsonObject: Object;
-  indent: number;
   fileExist: boolean;
   filePath: PathOsBasedRelative;
   workspaceDir: ?PathOsBasedAbsolute;
+  indent: ?string; // default when writing (in stringifyPackage) is "  ". (two spaces).
+  newline: ?string; // whether "\n" or "\r\n", default when writing (in stringifyPackage) is "\n"
   constructor(
     filePath: PathOsBasedRelative,
     packageJsonObject: Object,
     fileExist: boolean,
     workspaceDir?: PathOsBasedAbsolute,
-    indent?: number
+    indent?: string,
+    newline?: string
   ) {
     this.filePath = filePath;
     this.packageJsonObject = packageJsonObject;
     this.fileExist = fileExist;
     this.workspaceDir = workspaceDir;
-    this.indent = indent || PACKAGE_JSON_DEFAULT_INDENT;
+    this.indent = indent;
+    this.newline = newline;
   }
 
   async write() {
     if (!this.workspaceDir) throw new Error('PackageJsonFile is unable to write, workspaceDir is not defined');
     const pathToWrite = path.join(this.workspaceDir, this.filePath);
     logger.debug(`package-json-file.write, path ${pathToWrite}`);
-    await fs.outputJSON(pathToWrite, this.packageJsonObject, { spaces: this.indent });
+    const packageJsonStr = stringifyPackage(this.packageJsonObject, this.indent, this.newline);
+    await fs.outputFile(pathToWrite, packageJsonStr);
     this.fileExist = true;
   }
 
@@ -50,8 +61,9 @@ export default class PackageJsonFile {
       return new PackageJsonFile(filePath, {}, false, workspaceDir);
     }
     const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, componentDir);
-    const indent = detectIndent(packageJsonStr).amount;
-    return new PackageJsonFile(filePath, packageJsonObject, true, workspaceDir, indent);
+    const indent = detectIndent(packageJsonStr).indent;
+    const newline = detectNewline(packageJsonStr);
+    return new PackageJsonFile(filePath, packageJsonObject, true, workspaceDir, indent, newline);
   }
 
   static createFromComponent(
@@ -80,13 +92,13 @@ export default class PackageJsonFile {
     return new PackageJsonFile(filePath, packageJsonObject, false);
   }
 
-  toJSONFile(): JSONFile {
-    return JSONFile.load({
+  toVinylFile(): PackageJsonVinyl {
+    return PackageJsonVinyl.load({
       base: path.dirname(this.filePath),
       path: this.filePath,
       content: this.packageJsonObject,
       indent: this.indent,
-      override: true
+      newline: this.newline
     });
   }
 

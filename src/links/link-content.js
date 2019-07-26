@@ -1,5 +1,6 @@
 // @flow
 import normalize from 'normalize-path';
+import R from 'ramda';
 import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getWithoutExt, getExt } from '../utils';
 import logger from '../logger/logger';
@@ -29,6 +30,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 
 const fileExtensionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
+export const JAVASCRIPT_FLAVORS_EXTENSIONS = ['js', 'ts', 'jsx', 'tsx'];
 export const EXTENSIONS_TO_STRIP_FROM_PACKAGES = ['js', 'ts', 'jsx', 'tsx'];
 export const EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES = ['ts', 'jsx', 'tsx'];
 
@@ -146,8 +148,8 @@ function tsTemplateWithImportSpecifiers(importSpecifiers) {
 }
 
 function es6TemplateWithImportSpecifiers(importSpecifiers) {
-  return importSpecifiers
-    .map((importSpecifier) => {
+  return R.uniq(
+    importSpecifiers.map((importSpecifier) => {
       if (!importSpecifier.linkFile) {
         // when no link-file is involved, use the standard non-es6 syntax (a privilege that doesn't exist for TS)
         return LINKS_CONTENT_TEMPLATES.js;
@@ -168,5 +170,5 @@ function es6TemplateWithImportSpecifiers(importSpecifiers) {
         : `${linkVariable}.${importSpecifier.mainFile.name}`;
       return `${linkRequire}\n${exportPart} = ${pathPart};`;
     })
-    .join('\n');
+  ).join('\n');
 }

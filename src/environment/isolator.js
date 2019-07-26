@@ -21,6 +21,7 @@ import { topologicalSortComponentDependencies } from '../scope/graph/components-
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import BitMap from '../consumer/bit-map';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
+import GeneralError from '../error/general-error';
 
 export default class Isolator {
   capsule: Capsule;
@@ -29,6 +30,9 @@ export default class Isolator {
   capsuleBitMap: BitMap;
   capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
   componentWithDependencies: ComponentWithDependencies;
+  manyComponentsWriter: ManyComponentsWriter;
+  _npmVersionHasValidated: boolean = false;
+  componentRootDir: string;
   constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
     this.capsule = capsule;
     this.scope = scope;
@@ -54,7 +58,6 @@ export default class Isolator {
     }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
-      // consumer: this.consumer,
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
       override: opts.override,
@@ -74,24 +77,45 @@ export default class Isolator {
       capsule: this.capsule
     };
     this.componentWithDependencies = componentWithDependencies;
-    // $FlowFixMe
-    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await this.writeComponentsAndDependencies();
+    await this.installComponentPackages();
+    await this.writeLinks();
+    this.capsuleBitMap = this.manyComponentsWriter.bitMap;
+    return componentWithDependencies;
+  }
+
+  async writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
-    await manyComponentsWriter._populateComponentsFilesToWrite();
-    await manyComponentsWriter._populateComponentsDependenciesToWrite();
+    await this.manyComponentsWriter._populateComponentsFilesToWrite();
+    await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule();
+  }
+
+  async installComponentPackages() {
     // $FlowFixMe
-    this.capsulePackageJson = componentWithDependencies.component.packageJsonFile;
+    this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // $FlowFixMe
-    const componentRootDir: string = componentWithDependencies.component.writtenPath;
-    await this._addComponentsToRoot(componentRootDir);
+    this.componentRootDir = this.componentWithDependencies.component.writtenPath;
+    await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    await this._installWithPeerOption(componentRootDir);
-    const links = await manyComponentsWriter._getAllLinks();
+    await this._installWithPeerOption();
+  }
+
+  async writeLinks() {
+    const links = await this.manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
-    this.capsuleBitMap = manyComponentsWriter.bitMap;
-    return componentWithDependencies;
+  }
+
+  /**
+   * used by compilers that create capsule.
+   * when installing packages on the capsule, the links generated on node_modules may be deleted
+   */
+  async writeLinksOnNodeModules() {
+    const links = await this.manyComponentsWriter._getAllLinks();
+    const nodeModulesLinks = links.filterByPath(filePath => filePath.startsWith('node_modules'));
+    await nodeModulesLinks.persistAllToCapsule(this.capsule);
   }
 
   _manipulateDir() {
@@ -134,13 +158,13 @@ export default class Isolator {
     await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
-  async _addComponentsToRoot(rootDir: string): Promise<void> {
+  async _addComponentsToRoot(): Promise<void> {
     const capsulePath = this.capsule.container.getPath();
     // the capsulePath hack only works for the fs-capsule
     // for other capsule types, we would need to do this
     // (and other things) inside the capsule itself
     // rather than fetching its folder and using it
-    const rootPathInCapsule = path.join(capsulePath, rootDir);
+    const rootPathInCapsule = path.join(capsulePath, this.componentRootDir);
     const componentsToAdd = this.componentWithDependencies.allDependencies.reduce((acc, component) => {
       // $FlowFixMe - writtenPath is defined
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
@@ -157,44 +181,41 @@ export default class Isolator {
 
   async _writeCapsulePackageJson() {
     const dataToPersist = new DataToPersist();
-    dataToPersist.addFile(this.capsulePackageJson.toJSONFile());
+    dataToPersist.addFile(this.capsulePackageJson.toVinylFile());
     dataToPersist.persistAllToCapsule(this.capsule);
   }
 
   async _getNpmVersion() {
-    const execResults = await this.capsule.exec('npm --version');
-    const versionString = await new Promise((resolve, reject) => {
-      let version = '';
-      execResults.stdout.on('data', (data: string) => {
-        version += data;
-      });
-      execResults.stdout.on('error', (error: string) => {
-        return reject(error);
-      });
-      // @ts-ignore
-      execResults.on('close', () => {
-        return resolve(version);
-      });
-    });
+    const versionString = await this.capsuleExec('npm --version');
     const validVersion = semver.coerce(versionString);
     return validVersion ? validVersion.raw : null;
   }
 
-  async _installPackages(directory: string, modules: string[] = []) {
+  async installPackagesOnRoot(modules: string[] = []) {
+    await this._throwForOldNpmVersion();
+    const args = ['install', ...modules, '--no-save'];
+    return this.capsuleExec(`npm ${args.join(' ')}`, { cwd: this.componentRootDir });
+  }
+
+  async _throwForOldNpmVersion() {
+    if (this._npmVersionHasValidated) {
+      return;
+    }
     const npmVersion = await this._getNpmVersion();
     if (!npmVersion) {
-      return Promise.reject(new Error('Failed to isolate component: unable to run npm'));
+      throw new Error('Failed to isolate component: unable to run npm');
     }
     if (!semver.satisfies(npmVersion, ACCEPTABLE_NPM_VERSIONS)) {
-      return Promise.reject(
-        new Error(
-          `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
-            `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
-        )
+      throw new GeneralError(
+        `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
+          `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
       );
     }
-    const args = ['install', ...modules, '--no-save'];
-    const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
+    this._npmVersionHasValidated = true;
+  }
+
+  async capsuleExec(cmd: string, options?: ?Object): Promise<string> {
+    const execResults = await this.capsule.exec(cmd, options);
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {
@@ -216,26 +237,26 @@ export default class Isolator {
    * again. The reason for adding the missing peer into devDependencies is to not get them deleted
    * once `npm install` is running along the road.
    */
-  async _installWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
-    await this._installPackages(directory);
+  async _installWithPeerOption(installPeerDependencies: boolean = true) {
+    await this.installPackagesOnRoot();
     if (installPeerDependencies) {
-      const peers = await this._getPeerDependencies(directory);
+      const peers = await this._getPeerDependencies();
       if (!R.isEmpty(peers)) {
         this.capsulePackageJson.packageJsonObject.devDependencies = Object.assign(
           this.capsulePackageJson.packageJsonObject.devDependencies || {},
           peers
         );
         await this._writeCapsulePackageJson();
-        await this._installPackages(directory);
+        await this.installPackagesOnRoot();
       }
     }
   }
 
-  async _getPeerDependencies(dir: string): Promise<Object> {
+  async _getPeerDependencies(): Promise<Object> {
     const packageManager = DEFAULT_PACKAGE_MANAGER;
     let npmList;
     try {
-      npmList = await this._getNpmListOutput(dir, packageManager);
+      npmList = await this._getNpmListOutput(packageManager);
     } catch (err) {
       logger.error(err);
       throw new Error(
@@ -245,24 +266,13 @@ export default class Isolator {
     return npmClient.getPeerDepsFromNpmList(npmList, packageManager);
   }
 
-  async _getNpmListOutput(dir: string, packageManager: string) {
+  async _getNpmListOutput(packageManager: string): Promise<string> {
     const args = [packageManager, 'list', '-j'];
-    const execResults = await this.capsule.exec(args.join(' '), { cwd: dir });
-    let output = '';
-    let outputErr = '';
-    return new Promise((resolve, reject) => {
-      execResults.stdout.on('data', (data: string) => {
-        output += data;
-      });
-      execResults.stdout.on('error', (error: string) => {
-        outputErr += error;
-      });
-      // @ts-ignore
-      execResults.on('close', () => {
-        if (output) return resolve(output);
-        if (outputErr && outputErr.startsWith('{')) return resolve(output); // it's probably a valid json with errors, that's fine, parse it.
-        return reject(outputErr);
-      });
-    });
+    try {
+      return await this.capsuleExec(args.join(' '), { cwd: this.componentRootDir });
+    } catch (err) {
+      if (err && err.startsWith('{')) return err; // it's probably a valid json with errors, that's fine, parse it.
+      throw err;
+    }
   }
 }

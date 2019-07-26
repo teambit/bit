@@ -106,6 +106,7 @@ export default class ImportComponents {
           if (!listResult.length) {
             throw new GeneralError(`no components found on the remote scope matching the "${idStr}" pattern`);
           }
+          loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           const ids = listResult.map(result => result.id);
           bitIds.push(...ids);
         } else {

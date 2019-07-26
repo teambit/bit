@@ -1,6 +1,7 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
+import type { Commands } from '../extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
@@ -54,7 +55,7 @@ import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 
-export default function registerCommands(extensionsCommands): CommandRegistrar {
+export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
     BIT_USAGE,
     BIT_DESCRIPTION,

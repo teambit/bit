@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -5,6 +6,9 @@ const maxComponents = 3000;
 const maxFlattenedDependencies = 100;
 
 /**
+ * Performance log according to David's MacBook pro 2018.
+ * 2.6 GHz Intel Core i7, 16GB RAM.
+ *
  * as of v14.0.0
  * for 10,000 without dependencies
  * bit add ~3 minutes
@@ -24,6 +28,13 @@ const maxFlattenedDependencies = 100;
  * v14.0.7
  * import 3,000 with maxFlattenedDependencies of 100 => 13:26.57 total
  * import 300 with maxFlattenedDependencies of 10 => 13.641 total
+ *
+ * v14.2.3 (another change here. node is v8, not v6)
+ * add 3,000 with maxFlattenedDependencies of 100 => 7 sec
+ * tag 3,000 with maxFlattenedDependencies of 100 => 137 sec
+ * status 3,000 with maxFlattenedDependencies of 100 => 46 sec
+ * export 3,000 with maxFlattenedDependencies of 100 => 90 sec
+ * import 3,000 with maxFlattenedDependencies of 100 => 475 sec
  */
 describe('many components', function () {
   this.timeout(0);
@@ -51,6 +62,7 @@ describe('many components', function () {
         const start = process.hrtime();
         helper.addComponent('bar/*');
         [addTimeInSeconds] = process.hrtime(start);
+        console.log('addTimeInSeconds', addTimeInSeconds);
       });
       it('should take less then 1 minutes to complete', () => {
         expect(addTimeInSeconds).to.be.lessThan(1 * 60);
@@ -61,6 +73,7 @@ describe('many components', function () {
           const start = process.hrtime();
           helper.tagAllComponents();
           [tagTimeInSeconds] = process.hrtime(start);
+          console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
         it('should take less then 5 minutes to complete', () => {
           expect(tagTimeInSeconds).to.be.lessThan(5 * 60);
@@ -71,6 +84,7 @@ describe('many components', function () {
             const start = process.hrtime();
             helper.status();
             [statusTimeInSeconds] = process.hrtime(start);
+            console.log('statusTimeInSeconds', statusTimeInSeconds);
           });
           it('should take less then 3 minutes to complete', () => {
             expect(statusTimeInSeconds).to.be.lessThan(3 * 60);
@@ -82,6 +96,7 @@ describe('many components', function () {
             const start = process.hrtime();
             helper.exportAllComponents();
             [exportTimeInSeconds] = process.hrtime(start);
+            console.log('exportTimeInSeconds', exportTimeInSeconds);
           });
           it('should take less then 5 minutes to complete', () => {
             expect(exportTimeInSeconds).to.be.lessThan(5 * 60);
@@ -92,6 +107,7 @@ describe('many components', function () {
               const start = process.hrtime();
               helper.runCmd('bit import');
               [importTimeInSeconds] = process.hrtime(start);
+              console.log('importTimeInSeconds', importTimeInSeconds);
             });
             it('should take less then 20 minutes to complete', () => {
               expect(importTimeInSeconds).to.be.lessThan(20 * 60);

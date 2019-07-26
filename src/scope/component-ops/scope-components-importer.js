@@ -95,19 +95,18 @@ export default class ScopeComponentsImporter {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
-    const importAllVersions = (versionDependencies) => {
+
+    const allIdsWithAllVersions = new BitIds();
+    versionDependenciesArr.forEach((versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
         return versionId.changeVersion(version);
       });
-      // $FlowFixMe
-      const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
-      return this.importManyWithoutDependencies(bitIdsWithAllVersions);
-    };
-
-    await pMapSeries(versionDependenciesArr, importAllVersions);
+      allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
+    });
+    await this.importManyWithoutDependencies(allIdsWithAllVersions);
 
     return versionDependenciesArr;
   }

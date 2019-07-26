@@ -118,7 +118,9 @@ export { isString };`
               helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
             });
             it('should be able to create the dependency link correctly and print the result', () => {
-              const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo.default());`;
+              const appJsFixture = `const barFoo = require('@ci/${
+                helper.remoteScope
+              }.bar.foo'); console.log(barFoo.default());`;
               fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
               const result = helper.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');
@@ -132,7 +134,9 @@ export { isString };`
               helper.importComponent('bar/foo');
             });
             it('should be able to create the dependency link correctly and print the result', () => {
-              const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo.default());`;
+              const appJsFixture = `const barFoo = require('@ci/${
+                helper.remoteScope
+              }.bar.foo'); console.log(barFoo.default());`;
               fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
               const result = helper.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');

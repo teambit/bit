@@ -139,7 +139,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagComponentBarFoo();
-      helper.deleteFile('.bit');
+      helper.deletePath('.bit');
       scopeOutOfSync = helper.cloneLocalScope();
     });
     describe('bit tag', () => {
@@ -264,7 +264,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.addComponentBarFoo();
       helper.tagComponentBarFoo();
       helper.exportAllComponents();
-      helper.deleteFile('.bit');
+      helper.deletePath('.bit');
       scopeOutOfSync = helper.cloneLocalScope();
     });
     describe('bit tag', () => {

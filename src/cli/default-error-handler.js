@@ -2,6 +2,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
+import { paintSpecsResults } from './chalk-box';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import {
@@ -282,13 +283,7 @@ Original Error: ${err.message}`
   ],
   [MissingDiagnosisName, err => 'error: please provide a diagnosis name'],
   [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
-  [
-    ComponentSpecsFailed,
-    err =>
-      `${
-        err.specsResultsAndIdPretty
-      }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
-  ],
+  [ComponentSpecsFailed, err => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     ComponentOutOfSync,
     err => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
@@ -544,6 +539,16 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
 3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`
   ]
 ];
+function formatComponentSpecsFailed(id, specsResults) {
+  // $FlowFixMe this.specsResults is not null at this point
+  const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
+  const componentIdPretty = id ? chalk.bold.white(id) : '';
+  const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
+  const additionalInfo =
+    'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
+  const res = `${specsResultsAndIdPretty}${additionalInfo}`;
+  return res;
+}
 
 function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {

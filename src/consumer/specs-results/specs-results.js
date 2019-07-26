@@ -62,6 +62,13 @@ export type SpecsResultsWithComponentId = Array<{
   pass: boolean
 }>;
 
+export type SpecsResultsWithMetaData = {
+  type: 'results' | 'error',
+  childOutput?: string,
+  error?: Error,
+  results?: SpecsResultsWithComponentId
+};
+
 export default class SpecsResults {
   tests: Test[];
   stats: Stats;
@@ -118,6 +125,7 @@ export default class SpecsResults {
     });
 
     if (hasFailures) {
+      // $FlowFixMe
       failures = rawResults.failures.map((failure) => {
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         // $FlowFixMe

@@ -139,6 +139,20 @@ export default class DependencyFileLinkGenerator {
       this.linkFiles.push(linkFileInNodeModules);
     }
 
+    if (getExt(this.relativePathInDependency) === 'ts') {
+      // this is needed for when building Angular components inside a capsule, so we don't care
+      // about the case when dist is outside the components
+      const linkFileTs = this.prepareLinkFile({
+        linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency).replace('.js', '.d.ts'),
+        relativePathInDependency: relativePathInDependency.replace('.js', '.ts'),
+        depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
+      });
+      if (this.createNpmLinkFiles && linkFile.linkContent) {
+        linkFileTs.postInstallLink = true;
+      }
+      this.linkFiles.push(linkFileTs);
+    }
+
     return this.linkFiles;
   }
 

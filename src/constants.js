@@ -7,7 +7,7 @@ import type { PathOsBased } from './utils/path';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-const isWindows = os.platform() === 'win32';
+export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
@@ -118,7 +118,7 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
@@ -352,8 +352,6 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
 
-export const PACKAGE_JSON_DEFAULT_INDENT = 2; // as per NPM default
-
 export const COMPILER_ENV_TYPE = 'compiler';
 
 export const TESTER_ENV_TYPE = 'tester';
@@ -375,3 +373,5 @@ export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
 export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+
+export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';

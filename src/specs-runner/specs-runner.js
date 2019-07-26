@@ -1,7 +1,8 @@
 /** @flow */
-import path from 'path';
 import R from 'ramda';
-import { fork } from 'child_process';
+import path from 'path';
+import execa from 'execa';
+import pEvent from 'p-event';
 import deserializeError from 'deserialize-error';
 import { Results } from '../consumer/specs-results';
 import type { ForkLevel } from '../api/consumer/lib/test';
@@ -11,7 +12,7 @@ import logger from '../logger/logger';
 import ExternalErrors from '../error/external-errors';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
-import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import type { SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
 import { BitId } from '../bit-id';
 
 export type Tester = {
@@ -30,7 +31,7 @@ export default (async function run({
   forkLevel: ForkLevel,
   includeUnmodified: boolean,
   verbose: ?boolean
-}): Promise<?SpecsResultsWithComponentId> {
+}): Promise<?SpecsResultsWithMetaData> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
     logger.debug('specs-runner.run', 'running tests on one child process without ids');
@@ -57,30 +58,25 @@ export default (async function run({
       verbose
     })
   );
-  const allRunnersResults = ((await Promise.all(allRunnersP): any): SpecsResultsWithComponentId);
+  const allRunnersResults = ((await Promise.all(allRunnersP): any): SpecsResultsWithMetaData[]);
   if (!allRunnersResults || !allRunnersResults.length) return undefined;
-  const finalResults = allRunnersResults.reduce((acc, curr) => {
-    if (!curr || !curr[0]) return acc;
-    acc.push(curr[0]);
-    return acc;
-  }, []);
+  const finalResults = allRunnersResults.reduce(
+    (acc, curr) => {
+      // if (!curr || !curr[0]) return acc;
+      if (curr.childOutput) {
+        acc.childOutput = `${acc.childOutput}\n${curr.childOutput}`;
+      }
+      if (curr.results && curr.results[0]) {
+        acc.results.push(curr.results[0]);
+      }
+      return acc;
+    },
+    { type: 'results', childOutput: '', results: [] }
+  );
   return finalResults;
 });
 
-function getDebugPort(): ?number {
-  const debugPortArgName = '--debug-brk';
-  try {
-    const execArgv = process.execArgv.map(arg => arg.split('='));
-    const execArgvObj = R.fromPairs(execArgv);
-    if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
-  } catch (e) {
-    return null;
-  }
-
-  return null;
-}
-
-function runOnChildProcess({
+async function runOnChildProcess({
   ids,
   includeUnmodified,
   verbose
@@ -88,61 +84,61 @@ function runOnChildProcess({
   ids?: ?(string[]),
   includeUnmodified: ?boolean,
   verbose: ?boolean
-}): Promise<?SpecsResultsWithComponentId> {
-  return new Promise((resolve, reject) => {
-    const debugPort = getDebugPort();
-    const openPort = debugPort ? debugPort + 1 : null;
-    const baseEnv: Object = {
-      __verbose__: verbose,
-      __includeUnmodified__: includeUnmodified
-    };
-    // Don't use ternary condition since if we put it as undefined
-    // It will pass to the fork as "undefined" (string) instad of not passing it at all
-    // __ids__: ids ? ids.join() : undefined,
-    if (ids) {
-      baseEnv.__ids__ = ids.join();
+}): Promise<?SpecsResultsWithMetaData> {
+  // Check if we run from npm or from binary (pkg)
+  let args = [];
+  if (ids) {
+    args = args.concat(ids);
+  }
+  if (verbose) {
+    args.push('--verbose');
+  }
+  if (includeUnmodified) {
+    args.push('--all');
+  }
+  const baseEnv: Object = {
+    __verbose__: verbose,
+    __includeUnmodified__: includeUnmodified
+  };
+  // Don't use ternary condition since if we put it as undefined
+  // It will pass to the fork as "undefined" (string) instad of not passing it at all
+  // __ids__: ids ? ids.join() : undefined,
+  if (ids) {
+    baseEnv.__ids__ = ids.join();
+  }
+  // Merge process.env from the main process
+  const env = Object.assign({}, process.env, baseEnv);
+  try {
+    const workerPath = path.join(__dirname, 'worker.js');
+    // if (process.pkg) {
+    //   const entryPoint = process.argv[1];
+    //   workerPath = path.join(entryPoint, '../../dist/specs-runner/worker.js');
+    // }
+    const child = execa.node(workerPath, args, { env });
+    const result = await pEvent(child, 'message');
+    const childResult = await child;
+    if (!result) {
+      return null;
     }
 
-    // Merge process.env from the main process
-    const env = Object.assign({}, process.env, baseEnv);
-
-    const child = fork(path.join(__dirname, 'worker.js'), {
-      execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
-      silent: false,
-      env
-    });
-
-    child.on('exit', (code) => {
-      if (code !== 0) reject();
-    });
-    process.on('exit', () => {
-      child.kill('SIGKILL');
-    });
-
-    child.on('message', (results) => {
-      // if (type === 'error') return reject(payload);
-      // if (payload.specPath) payload.specPath = testFile.relative;
-      const deserializedResults = deserializeResults(results);
-      if (!deserializedResults) return resolve(undefined);
-      if (deserializedResults.type === 'error') {
-        return reject(deserializedResults.error);
+    const deserializedResults = deserializeResults(result);
+    if (!deserializedResults) return null;
+    if (childResult.all) {
+      deserializedResults.childOutput = childResult.all;
+    }
+    if (deserializedResults.type === 'error') {
+      if (deserializedResults.error instanceof Error) {
+        throw deserializedResults.error;
       }
-      return resolve(deserializedResults.results);
-    });
-
-    child.on('error', (e) => {
-      reject(e);
-    });
-  });
+      throw new Error(deserializedResults.error);
+    }
+    return deserializedResults;
+  } catch (e) {
+    throw e;
+  }
 }
 
-function deserializeResults(
-  results
-): ?{
-  type: 'results' | 'error',
-  error?: Error,
-  results?: SpecsResultsWithComponentId
-} {
+function deserializeResults(results): ?SpecsResultsWithMetaData {
   if (!results) return undefined;
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);

@@ -35,6 +35,7 @@ export default (async function buildComponent({
   noCache,
   directory,
   verbose,
+  dontPrintEnvMsg,
   keep
 }: {
   component: ConsumerComponent,
@@ -44,6 +45,7 @@ export default (async function buildComponent({
   noCache?: boolean,
   directory?: string,
   verbose?: boolean,
+  dontPrintEnvMsg?: boolean,
   keep?: boolean
 }): Promise<?Dists> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
@@ -80,7 +82,7 @@ export default (async function buildComponent({
   if (component.compiler && !component.compiler.loaded) {
     await component.compiler.install(
       scope,
-      { verbose: !!verbose },
+      { verbose: !!verbose, dontPrintEnvMsg },
       { workspaceDir: consumerPath, componentDir, dependentId: component.id }
     );
   }
@@ -314,6 +316,12 @@ const _runBuild = async ({
           }
           return updatedFiles;
         };
+        const installPackages = async (packages: string[] = []) => {
+          await isolator.installPackagesOnRoot(packages);
+          // after installing packages on capsule root, some links/symlinks from node_modules might
+          // be deleted. rewrite the links to recreate them.
+          await isolator.writeLinksOnNodeModules();
+        };
         const capsuleFiles = componentWithDependencies.component.files;
         return {
           capsule: isolator.capsule,
@@ -321,6 +329,9 @@ const _runBuild = async ({
           componentWithDependencies,
           writeDists,
           getDependenciesLinks,
+          writeLinks: () => isolator.writeLinks(),
+          capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
+          installPackages,
           addSharedDir
         };
       };

@@ -53,7 +53,7 @@ export default class Helper {
   }
 
   // #region General
-  runCmd(cmd: string, cwd: string = this.localScopePath) {
+  runCmd(cmd: string, cwd: string = this.localScopePath): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
@@ -143,10 +143,7 @@ export default class Helper {
   }
 
   generateRandomTmpDirName() {
-    const randomStr = generateRandomStr();
-    // never start the str with 'x', otherwise, when injected into a file it may throw
-    // "SyntaxError: Invalid hexadecimal escape sequence"
-    return path.join(this.e2eDir, randomStr.startsWith('x') ? randomStr.replace('x', 'a') : randomStr);
+    return path.join(this.e2eDir, generateRandomStr());
   }
   // #endregion
 
@@ -158,10 +155,6 @@ export default class Helper {
 
   nodeStart(mainFilePath: string, cwd?: string) {
     return this.runCmd(`node ${mainFilePath}`, cwd);
-  }
-
-  npmLink(libraryName: string, cwd: string = process.cwd()) {
-    return this.runCmd(`npm link ${libraryName}`, cwd);
   }
   // #endregion
 
@@ -344,6 +337,9 @@ export default class Helper {
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
       .map(x => path.normalize(x));
   }
+  getObjectFiles() {
+    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.localScopePath, '.bit/objects') });
+  }
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, impl);
@@ -367,8 +363,14 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
-  outputFile(filePathRelativeToLocalScope: string, data: string): string {
+  outputFile(filePathRelativeToLocalScope: string, data: string = ''): string {
     return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
+  }
+
+  moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
+    const src = path.join(this.localScopePath, srcPathRelativeToLocalScope);
+    const dest = path.join(this.localScopePath, destPathRelativeToLocalScope);
+    return fs.moveSync(src, dest);
   }
 
   /**
@@ -379,7 +381,7 @@ export default class Helper {
     fs.outputFileSync(filePath, `\n${content}`);
   }
 
-  deleteFile(relativePathToLocalScope: string) {
+  deletePath(relativePathToLocalScope: string) {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
   // #endregion
@@ -910,7 +912,7 @@ export default class Helper {
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   deleteBitMap() {
-    return this.deleteFile(BIT_MAP);
+    return this.deletePath(BIT_MAP);
   }
   createBitMap(
     cwd: string = this.localScopePath,
@@ -1092,6 +1094,10 @@ export default class Helper {
   installAndGetTypeScriptCompilerDir(): string {
     this.installNpmPackage('typescript');
     return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
+  setProjectAsAngular() {
+    this.initNpm();
+    this.installNpmPackage('@angular/core');
   }
 }
 

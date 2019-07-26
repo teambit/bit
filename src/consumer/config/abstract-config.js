@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
-import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension';
+import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension-types';
 import type { PathOsBased, PathLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import {
   BIT_JSON,
@@ -204,7 +204,7 @@ export default class AbstractConfig {
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      JsonFiles.push(packageJsonFile.toJSONFile());
+      JsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);

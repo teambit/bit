@@ -152,7 +152,7 @@ describe('envs', function () {
         const babelRcObjectHash = compilerLoaded.files[0].file;
         const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
         const babelRcPath = path.join(helper.localScopePath, '.babelrc');
-        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString(), babelRcPath);
+        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString());
         expect(babelRcFromModel).to.equal(babelRcFromFS);
       });
       it('should store the tester files in the model', () => {
@@ -646,7 +646,10 @@ describe('envs', function () {
             expect(output).to.have.string('total duration');
             expect(output).to.have.string('✔   group of passed tests');
           });
-          it('should write config files to tmp directory', () => {
+          // This was skipped as part of the binary branch since we move the bit test to run inside bit
+          // and we expect a valid json to return from the command.
+          // See worker.js and search for "const VERBOSE = false" for more information
+          it.skip('should write config files to tmp directory', () => {
             const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
             const writingStr = `writing config files to ${tmpFolder}`;
             // Since the output comes from console.log it's with \n also in windows
@@ -1414,7 +1417,7 @@ describe('envs', function () {
         describe.skip('deleting the custom config directory', () => {
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
-            helper.deleteFile(envFilesFolder);
+            helper.deletePath(envFilesFolder);
           });
           it('bit status should not throw an error', () => {
             const statusFunc = () => helper.status();
@@ -1519,6 +1522,52 @@ describe('envs with relative paths', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
+    });
+  });
+});
+
+describe('add an env with an invalid env name', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  let numOfObjectsBeforeTagging;
+  before(() => {
+    helper.reInitLocalScope();
+    helper.importDummyCompiler();
+    const bitJson = helper.readBitJson();
+    bitJson.env = {
+      compiler: {
+        dummy: {
+          // an invalid name. doesn't have a scope name.
+          options: {
+            file: path.join(
+              helper.localScopePath,
+              `.bit/components/compilers/dummy/${helper.envScope}/0.0.1/compiler.js`
+            )
+          }
+        }
+      }
+    };
+    helper.writeBitJson(bitJson);
+    const objectFiles = helper.getObjectFiles();
+    numOfObjectsBeforeTagging = objectFiles.length;
+    helper.createComponentBarFoo();
+    helper.addComponentBarFoo();
+  });
+  after(() => {
+    helper.destroyEnv();
+  });
+  describe('tagging the component', () => {
+    let output;
+    before(() => {
+      output = helper.runWithTryCatch('bit tag -a');
+    });
+    it('should throw an error saying BitId is invalid', () => {
+      expect(output).to.have.string('the env.name has an invalid Bit id');
+    });
+    it('should not save anything into the objects dir', () => {
+      // see https://github.com/teambit/bit/issues/1727 for a previous bug about it
+      const numOfObjectsAfterTagging = helper.getObjectFiles().length;
+      expect(numOfObjectsAfterTagging).to.equal(numOfObjectsBeforeTagging);
     });
   });
 });

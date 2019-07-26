@@ -1,4 +1,5 @@
 // @flow
+import R from 'ramda';
 import fs from 'fs-extra';
 import semver from 'semver';
 import * as RA from 'ramda-adjunct';
@@ -9,8 +10,14 @@ import type { ComponentOrigin } from '../bit-map/component-map';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
+import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
+import {
+  COMPONENT_ORIGINS,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE,
+  DEFAULT_EJECTED_ENVS_DIR_PATH,
+  COMPONENT_DIST_PATH_TEMPLATE
+} from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
@@ -21,6 +28,7 @@ import ConfigDir from '../bit-map/config-dir';
 import EnvExtension from '../../extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import { populateEnvFilesToWrite } from './eject-conf';
+import PackageJsonFile from '../component/package-json-file';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -170,10 +178,10 @@ export default class ComponentWriter {
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
-      packageJson.mergePackageJsonObject(this.component.packageJsonChangedProps);
+      this._mergeChangedPackageJsonProps(packageJson);
       await this._populateEnvFilesIfNeeded();
-      this.component.dataToPersist.addFile(packageJson.toJSONFile());
-      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toJSONFile());
+      this.component.dataToPersist.addFile(packageJson.toVinylFile());
+      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
@@ -243,6 +251,38 @@ export default class ComponentWriter {
       this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
       this.component.componentMap.setConfigDir(this.configDir);
     }
+  }
+
+  _mergeChangedPackageJsonProps(packageJson: PackageJsonFile) {
+    if (!this.component.packageJsonChangedProps) return;
+    const valuesToMerge = this._replaceDistPathTemplateWithCalculatedDistPath(packageJson);
+    packageJson.mergePackageJsonObject(valuesToMerge);
+  }
+
+  /**
+   * see https://github.com/teambit/bit/issues/1808 for more info why it's needed
+   */
+  _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Object {
+    // $FlowFixMe
+    const packageJsonChangedProps: Object = this.component.packageJsonChangedProps;
+    const isReplaceNeeded = R.values(packageJsonChangedProps).some(val => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
+    if (!isReplaceNeeded) {
+      return packageJsonChangedProps;
+    }
+    if (!this.component.dists || !this.component.dists.distsRootDir) {
+      throw new Error(
+        `package.json has a dynamic value ${COMPONENT_DIST_PATH_TEMPLATE}, however, the dist root is not set`
+      );
+    }
+    const distRelativeToPackageJson = getPathRelativeRegardlessCWD(
+      path.dirname(packageJson.filePath), // $FlowFixMe
+      this.component.dists.distsRootDir
+    );
+    return Object.keys(packageJsonChangedProps).reduce((acc, key) => {
+      const val = packageJsonChangedProps[key].replace(COMPONENT_DIST_PATH_TEMPLATE, distRelativeToPackageJson);
+      acc[key] = val;
+      return acc;
+    }, {});
   }
 
   _copyFilesIntoDistsWhenDistsOutsideComponentDir() {

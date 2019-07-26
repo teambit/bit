@@ -19,6 +19,8 @@ export const isString =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 export const isStringV2 =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
+export const isStringV3 =
+  "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v3'; };";
 export const isStringSpec = testShouldPass => `const expect = require('chai').expect;
 const isString = require('./is-string.js');
 
