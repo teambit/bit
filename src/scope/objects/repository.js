@@ -264,8 +264,33 @@ export default class Repository {
   async persist(validate: boolean = true): Promise<void> {
     logger.debug(`Repository.persist, validate = ${validate.toString()}`);
     await this._deleteMany();
-    if (!validate) Object.keys(this.objects).map(hash => (this.objects[hash].validateBeforePersist = false));
+    this._validateObjects(validate);
     await this._writeMany();
+  }
+
+  /**
+   * normally, the validation step takes place just before the acutal writing of the file.
+   * however, this can be an issue where a component has an invalid version. the component could
+   * be saved before validating the version (see #1727). that's why we validate here before writing
+   * anything to the filesystem.
+   * the open question here is whether should we validate again before the actual writing or it
+   * should be enough to validate here?
+   * for now, it does validate again before saving, only to be 100% sure nothing happens in a few
+   * lines of code until the actual writing. however, if the performance penalty is noticeable, we
+   * can easily revert it by changing `bitObject.validateBeforePersist = false` line run regardless
+   * the `validate` argument.
+   */
+  _validateObjects(validate: boolean) {
+    Object.keys(this.objects).forEach((hash) => {
+      const bitObject = this.objects[hash];
+      // $FlowFixMe some BitObject classes have validate() method
+      if (validate && bitObject.validate) {
+        bitObject.validate();
+      }
+      if (!validate) {
+        bitObject.validateBeforePersist = false;
+      }
+    });
   }
 
   async _deleteMany(): Promise<void> {
