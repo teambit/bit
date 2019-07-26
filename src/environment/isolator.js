@@ -115,7 +115,6 @@ export default class Isolator {
   async writeLinksOnNodeModules() {
     const links = await this.manyComponentsWriter._getAllLinks();
     const nodeModulesLinks = links.filterByPath(filePath => filePath.startsWith('node_modules'));
-    nodeModulesLinks.toConsole();
     await nodeModulesLinks.persistAllToCapsule(this.capsule);
   }
 
