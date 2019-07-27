@@ -24,19 +24,18 @@ export default (async function list({
   if (scopeName) {
     const remotes = await getScopeRemotes(scope);
     const remote: Remote = await remotes.resolve(scopeName, scope);
-    return remoteList(remote, namespacesUsingWildcards);
+    return remoteList(remote);
+  }
+  return scopeList();
+
+  function remoteList(remote: Remote): Promise<ListScopeResult[]> {
+    loader.start(BEFORE_REMOTE_LIST);
+    return remote.list(namespacesUsingWildcards);
   }
 
-  return scopeList(consumer, showAll, showRemoteVersion);
+  async function scopeList(): Promise<ListScopeResult[]> {
+    loader.start(BEFORE_LOCAL_LIST);
+    const componentsList = new ComponentsList(consumer);
+    return componentsList.listScope(showRemoteVersion, showAll, namespacesUsingWildcards);
+  }
 });
-
-function remoteList(remote: Remote, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
-  loader.start(BEFORE_REMOTE_LIST);
-  return remote.list(namespacesUsingWildcards);
-}
-
-async function scopeList(consumer: Consumer, showAll: boolean, showRemoteVersion: boolean): Promise<ListScopeResult[]> {
-  loader.start(BEFORE_LOCAL_LIST);
-  const componentsList = new ComponentsList(consumer);
-  return componentsList.listScope(showRemoteVersion, showAll);
-}

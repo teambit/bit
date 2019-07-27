@@ -18,7 +18,8 @@ export default class List extends Command {
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
     ['o', 'outdated', 'show latest versions from remotes'],
-    ['j', 'json', 'show the output in JSON format']
+    ['j', 'json', 'show the output in JSON format'],
+    ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
   ];
   loader = true;
   migration = true;
@@ -30,14 +31,15 @@ export default class List extends Command {
       scope = false,
       bare = false,
       json = false,
-      outdated = false
-    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
+      outdated = false,
+      namespace
+    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean, namespace?: string }
   ): Promise<any> {
     const params = { scopeName, showAll: scope, showRemoteVersion: outdated };
-    if (hasWildcard(scopeName) && scopeName.includes('/')) {
-      const scopeNameSplit = scopeName.split('/');
-      params.scopeName = R.head(scopeNameSplit);
-      params.namespacesUsingWildcards = R.tail(scopeNameSplit).join('/');
+    if (namespace) {
+      const namespaceWithWildcard = hasWildcard(namespace) ? namespace : `${namespace}/*`;
+      // $FlowFixMe
+      params.namespacesUsingWildcards = namespaceWithWildcard;
     }
     return listScope(params).then(listScopeResults => ({
       listScopeResults,
