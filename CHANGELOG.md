@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1683](https://github.com/teambit/bit/issues/1683) introduce `--namespace` flag for `bit list` to support namespaces with wildcards
 - [#1727](https://github.com/teambit/bit/issues/1727) prevent saving objects that link to invalid objects
 - [#1856](https://github.com/teambit/bit/issues/1856) fix links deletion from `node_modules` after installing packages by a compiler on a capsule
 - [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
