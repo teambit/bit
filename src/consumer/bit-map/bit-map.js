@@ -8,17 +8,14 @@ import logger from '../../logger/logger';
 import {
   BIT_MAP,
   OLD_BIT_MAP,
-  DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
-  DEFAULT_SEPARATOR,
-  DEFAULT_INDEX_EXTS,
   BIT_VERSION,
   VERSION_DELIMITER,
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   COMPONENT_DIR
 } from '../../constants';
-import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
+import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import {
   outputFile,
@@ -488,50 +485,6 @@ export default class BitMap {
     return path.relative(this.projectRoot, absolutePath);
   }
 
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], rootDir: ?PathLinux): ?PathLinux {
-    // search for an exact relative-path
-    let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
-    if (mainFileFromFiles) return baseMainFile;
-    if (rootDir) {
-      const mainFileUsingRootDir = files.find(file => pathJoinLinux(rootDir, file.relativePath) === baseMainFile);
-      if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
-    }
-    // search for a file-name
-    const potentialMainFiles = files.filter(file => file.name === baseMainFile);
-    if (!potentialMainFiles.length) return null;
-    // when there are several files that met the criteria, choose the closer to the root
-    const sortByNumOfDirs = (a, b) =>
-      a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
-    potentialMainFiles.sort(sortByNumOfDirs);
-    mainFileFromFiles = R.head(potentialMainFiles);
-    return mainFileFromFiles.relativePath;
-  }
-
-  _getMainFile(mainFile?: PathLinux, componentIdStr: string): PathLinux {
-    const componentMap: ComponentMap = this.components[componentIdStr];
-    const files = componentMap.files.filter(file => !file.test);
-    // scenario 1) user entered mainFile => search the mainFile in the files array
-    if (mainFile) {
-      const foundMainFile = this._searchMainFile(mainFile, files, componentMap.rootDir);
-      if (foundMainFile) return foundMainFile;
-      throw new MissingMainFile(componentIdStr, mainFile, files.map(file => path.normalize(file.relativePath)));
-    }
-    // scenario 2) user didn't enter mainFile and the component has only one file => use that file as the main file.
-    if (files.length === 1) return files[0].relativePath;
-    // scenario 3) user didn't enter mainFile and the component has multiple files => search for default main files (such as index.js)
-    let searchResult;
-    DEFAULT_INDEX_EXTS.forEach((ext) => {
-      // TODO: can be improved - stop loop if finding main file
-      if (!searchResult) {
-        const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
-        searchResult = this._searchMainFile(mainFileNameToSearch, files, componentMap.rootDir);
-      }
-    });
-    if (searchResult) return searchResult;
-    const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-    throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
-  }
-
   /**
    * find ids that have the same name but different version
    * if compareWithoutScope is false, the scope should be identical in addition to the name
@@ -624,7 +577,7 @@ export default class BitMap {
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
-    mainFile?: PathOsBased,
+    mainFile: PathLinux,
     origin: ComponentOrigin,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
@@ -637,9 +590,6 @@ export default class BitMap {
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       this.components[componentIdStr].files = files;
-      if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
-      }
     } else {
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
         // if there are older versions, the user is updating an existing component, delete old ones from bit.map
@@ -649,8 +599,8 @@ export default class BitMap {
       const componentMap = new ComponentMap({ files, origin });
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, componentMap);
-      this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
     }
+    this.components[componentIdStr].mainFile = mainFile;
     if (rootDir) {
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootDir);
     }

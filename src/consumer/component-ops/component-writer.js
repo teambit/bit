@@ -206,7 +206,7 @@ export default class ComponentWriter {
     return this.bitMap.addComponent({
       componentId: this.component.id,
       files: filesForBitMap,
-      mainFile: this.component.mainFile, // $FlowFixMe
+      mainFile: pathNormalizeToLinux(this.component.mainFile), // $FlowFixMe
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,

@@ -46,6 +46,7 @@ import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import { ModelComponent } from '../../../scope/models';
+import determineMainFile from './determine-main-file';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
@@ -56,7 +57,7 @@ type Warnings = {
 export type AddActionResults = { addedComponents: AddResult[], warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
-type AddedComponent = {
+export type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
   mainFile?: ?PathOsBased,
@@ -64,7 +65,8 @@ type AddedComponent = {
   idFromPath: ?{
     name: string,
     namespace: string
-  }
+  },
+  immediateDir?: string
 };
 const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 
@@ -303,7 +305,8 @@ export default class AddComponents {
       component.files = componentFiles;
     }
 
-    const { componentId, mainFile, trackDir } = component;
+    const { componentId, trackDir } = component;
+    const mainFile = determineMainFile(component, foundComponentFromBitMap);
     const getComponentMap = (): ComponentMap => {
       if (this.trackDirFeature) {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
@@ -530,14 +533,14 @@ export default class AddComponents {
         filteredMatchedFiles = await this._mergeTestFilesWithFiles(filteredMatchedFiles);
         const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
 
+        const absoluteComponentPath = path.resolve(componentPath);
+        const splitPath = absoluteComponentPath.split(path.sep);
+        const lastDir = splitPath[splitPath.length - 1];
         if (!finalBitId) {
           const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
           if (idOfTrackDir) {
             finalBitId = idOfTrackDir;
           } else {
-            const absoluteComponentPath = path.resolve(componentPath);
-            const splitPath = absoluteComponentPath.split(path.sep);
-            const lastDir = splitPath[splitPath.length - 1];
             const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
             if (!this.namespace) {
               idFromPath = { namespace: BitId.getValidIdChunk(nameSpaceOrDir), name: BitId.getValidIdChunk(lastDir) };
@@ -558,7 +561,8 @@ export default class AddComponents {
           files: filteredMatchedFiles,
           mainFile: resolvedMainFile,
           trackDir,
-          idFromPath
+          idFromPath,
+          immediateDir: lastDir
         };
       }
       // is file

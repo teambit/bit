@@ -1246,6 +1246,19 @@ describe('bit add command', function () {
       });
     });
   });
+  describe('no mainFile and one of the files has the same name as the directory', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'bar.js');
+      helper.createFile('bar', 'foo.js');
+      helper.addComponent('bar');
+    });
+    it('should resolve the mainFile as the file with the same name as the directory', () => {
+      const bitMap = helper.readBitMap();
+      const bar = bitMap.bar;
+      expect(bar.mainFile).to.equal('bar/bar.js');
+    });
+  });
   describe('sort .bitmap components', () => {
     before(() => {
       helper.reInitLocalScope();
