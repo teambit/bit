@@ -314,5 +314,35 @@ describe('component id with wildcard', function () {
         });
       });
     });
+    describe('list with wildcard', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllComponents();
+        output = helper.listLocalScope('--namespace "bar/*"');
+      });
+      it('should list only for the matched components', () => {
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should not list unmatched components', () => {
+        expect(output).to.not.have.string('utils');
+      });
+    });
+    describe('list remote with wildcard', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllComponents();
+        helper.reInitRemoteScope();
+        helper.exportAllComponents();
+        output = helper.listRemoteScope(true, '--namespace "bar/*"');
+      });
+      it('should list only for the matched components', () => {
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should not list unmatched components', () => {
+        expect(output).to.not.have.string('utils');
+      });
+    });
   });
 });
