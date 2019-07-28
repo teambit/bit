@@ -295,7 +295,7 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
-    this.writeToPath = this.componentMap.getRootDir();
+    this.writeToPath = this.componentMap.getComponentDir() || '.';
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
   }
