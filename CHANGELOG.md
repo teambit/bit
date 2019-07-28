@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.3-dev.1] - 2019-07-28
+
 - [#1714](https://github.com/teambit/bit/issues/1714) auto recognize mainFile when a file added with the same name as its dir
 - [#1683](https://github.com/teambit/bit/issues/1683) introduce `--namespace` flag for `bit list` to support namespaces with wildcards
 - [#1727](https://github.com/teambit/bit/issues/1727) prevent saving objects that link to invalid objects
