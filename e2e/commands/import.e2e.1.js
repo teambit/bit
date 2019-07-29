@@ -169,6 +169,38 @@ describe('bit import', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
       });
+      describe('when the component is authored', () => {
+        before(() => {
+          // create few components one of them with files in different folders
+          // tag component
+          // export component
+        });
+        describe('when the component is not modified', () => {
+          it('should write the component to the specified path', () => {
+            // expect all the component files to be in the destination
+          });
+          it('should strip the original shared dir in the destination', () => {
+            // expect all the component files to not include the shard dir
+          });
+          it('delete the component files', () => {
+            // expect the old files to not be there (even if they weren't in the same dir)
+          });
+          it('should not delete files which are not part of the component', () => {
+            // expect other files (not components' files) to be there
+          });
+          it('should change the component to be imported instead of authored', () => {
+            // expect the bitmap to be updated
+          });
+        });
+        describe('when the component is modified', () => {
+          it('should prompt an error about component is modified', () => {
+            // expect error to shown and nothing to happen
+          });
+          it('should merge the files to the destination folder', () => {
+            // expect when merging to merge and move the files to destination
+          });
+        });
+      });
       describe('when the destination is a non-exist directory', () => {
         before(() => {
           helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
