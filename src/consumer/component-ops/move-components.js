@@ -11,6 +11,7 @@ import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
 import RemovePath from '../component/sources/remove-path';
 import BitIds from '../../bit-id/bit-ids';
+import ComponentMap from '../bit-map/component-map';
 
 export async function movePaths(
   consumer: Consumer,
@@ -56,8 +57,21 @@ export function moveExistingComponent(
     );
   }
   const componentMap = consumer.bitMap.getComponent(component.id);
-  const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
   const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
+  if (oldPath) {
+    const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
+    _moveExistingComponentWithRootDir(componentMap, component, oldPathRelative, newPathRelative);
+  } else {
+    _moveExistingComponentWithoutRootDir(componentMap, component, newPathRelative);
+  }
+}
+
+export function _moveExistingComponentWithRootDir(
+  componentMap: ComponentMap,
+  component: Component,
+  oldPathRelative: PathOsBasedAbsolute,
+  newPathRelative: PathOsBasedAbsolute
+) {
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
   component.dataToPersist.files.forEach((file) => {
     const newBase = file.base.replace(oldPathRelative, newPathRelative);
@@ -66,3 +80,15 @@ export function moveExistingComponent(
   component.dataToPersist.removePath(new RemovePath(oldPathRelative));
   component.writtenPath = newPathRelative;
 }
+
+/**
+ * When using import -p for an authored component which doesn't have track dir
+ * @param {*} componentMap
+ * @param {*} component
+ * @param {*} newPath
+ */
+export function _moveExistingComponentWithoutRootDir(
+  componentMap: ComponentMap,
+  component: Component,
+  newPathRelative: PathOsBasedAbsolute
+) {}
