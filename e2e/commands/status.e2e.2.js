@@ -4,7 +4,12 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import { statusInvalidComponentsMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import {
+  statusInvalidComponentsMsg,
+  statusWorkspaceIsCleanMsg,
+  statusFailureMsg,
+  importPendingMsg
+} from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../fixtures/fixtures';
 
 const assertArrays = require('chai-arrays');
@@ -265,9 +270,7 @@ describe('bit status command', function () {
       });
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.runCmd('bit status');
-        expect(output).to.have.string(
-          'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope.\n'
-        );
+        expect(output).to.have.string(importPendingMsg);
       });
     });
   });
@@ -432,7 +435,7 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/foo.js');
+        helper.deletePath('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
         const beforeRemoveBitMap = helper.readBitMap();
@@ -448,7 +451,7 @@ describe('bit status command', function () {
         helper.createFile('bar', 'foo1.js');
         helper.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/foo1.js');
+        helper.deletePath('bar/foo1.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
         expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
@@ -459,7 +462,7 @@ describe('bit status command', function () {
           helper.createFile('bar', 'index.js');
           helper.createFile('bar', 'foo.js');
           helper.addComponent('bar/', { i: 'bar/foo' });
-          helper.deleteFile('bar/index.js');
+          helper.deletePath('bar/index.js');
         });
         it('should show an error indicating the mainFile was deleting', () => {
           const output = helper.runCmd('bit status');
@@ -475,8 +478,8 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/index.js');
-        helper.deleteFile('bar/foo.js');
+        helper.deletePath('bar/index.js');
+        helper.deletePath('bar/foo.js');
         output = helper.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
@@ -511,7 +514,7 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar');
+        helper.deletePath('bar');
         output = helper.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
@@ -584,6 +587,17 @@ describe('bit status command', function () {
     it('should show missing utils/is-type', () => {
       expect(output).to.have.string('non-existing dependency files');
       expect(output).to.have.string('utils/is-string.js -> ./is-type.js');
+    });
+  });
+  describe('dynamic import', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo('const a = "./b"; import(a); require(a);');
+      helper.addComponentBarFoo();
+    });
+    it('status should not show the component as missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.a.string(statusFailureMsg);
     });
   });
 });

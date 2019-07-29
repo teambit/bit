@@ -17,6 +17,8 @@ import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } 
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
+import hasWildcard from '../../utils/string/has-wildcard';
+import { listScope } from '../../api/consumer';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -60,7 +62,7 @@ export default class ImportComponents {
 
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
-    this.options.saveDependenciesAsComponents = this.consumer.bitConfig.saveDependenciesAsComponents;
+    this.options.saveDependenciesAsComponents = this.consumer.config.saveDependenciesAsComponents;
     if (!this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
@@ -74,7 +76,7 @@ export default class ImportComponents {
 
   async importSpecificComponents(): ImportResult {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
-    const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
+    const bitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = await this.consumer.importComponents(
@@ -85,6 +87,34 @@ export default class ImportComponents {
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
+  }
+
+  async _getBitIds(): Promise<BitId[]> {
+    const bitIds: BitId[] = [];
+    await Promise.all(
+      this.options.ids.map(async (idStr: string) => {
+        if (hasWildcard(idStr)) {
+          if (!idStr.includes('/')) {
+            throw new GeneralError(
+              `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
+            );
+          }
+          const idSplit = idStr.split('/');
+          const scopeName = idSplit[0];
+          const namespacesUsingWildcards = R.tail(idSplit).join('/');
+          const listResult = await listScope({ scopeName, namespacesUsingWildcards });
+          if (!listResult.length) {
+            throw new GeneralError(`no components found on the remote scope matching the "${idStr}" pattern`);
+          }
+          loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          const ids = listResult.map(result => result.id);
+          bitIds.push(...ids);
+        } else {
+          bitIds.push(BitId.parse(idStr, true)); // we don't support importing without a scope name
+        }
+      })
+    );
+    return bitIds;
   }
 
   async importAccordingToBitMap(): ImportResult {

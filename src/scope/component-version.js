@@ -1,4 +1,6 @@
 /** @flow */
+import semver from 'semver';
+import R from 'ramda';
 import type ModelComponent from './models/model-component';
 import type Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
@@ -9,6 +11,7 @@ import type ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
+import CustomError from '../error/custom-error';
 
 export default class ComponentVersion {
   component: ModelComponent;
@@ -56,9 +59,15 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 
-  async toObjects(repo: Repository): Promise<ComponentObjects> {
+  async toObjects(repo: Repository, clientVersion: ?string): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
     if (!version) throw new GeneralError(`failed loading version ${this.version} of ${this.component.id()}`);
+    // @todo: remove this customError once upgrading to v15, because when the server has v15
+    // and the client has < 15, the client will get anyway an error to upgrade the version
+    if (clientVersion && version.overrides && !R.isEmpty(version.overrides) && semver.lt(clientVersion, '14.1.0')) {
+      throw new CustomError(`Your components were created with a newer version and use the "overrides" feature.
+Please upgrade your bit client to version >= v14.1.0`);
+    }
     try {
       const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
         this.component.asRaw(repo),

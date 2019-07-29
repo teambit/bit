@@ -1,6 +1,7 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
+import type { Commands } from '../extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
@@ -26,7 +27,6 @@ import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
-import EnvsAttach from './commands/public-cmds/envs-attach-cmd';
 import EjectConf from './commands/public-cmds/eject-conf-cmd';
 import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
@@ -40,7 +40,9 @@ import Untag from './commands/public-cmds/untag-cmd';
 import Move from './commands/public-cmds/move-cmd';
 import Remove from './commands/public-cmds/remove-cmd';
 import Deprecate from './commands/public-cmds/deprecate-cmd';
+import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import DeprecatePrivate from './commands/private-cmds/_deprecate-cmd';
+import UndeprecatePrivate from './commands/private-cmds/_undeprecate-cmd';
 import Delete from './commands/private-cmds/_delete-cmd';
 import Latest from './commands/private-cmds/_latest-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
@@ -51,8 +53,9 @@ import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import Doctor from './commands/public-cmds/doctor-cmd';
 
-export default function registerCommands(extensionsCommands): CommandRegistrar {
+export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
     BIT_USAGE,
     BIT_DESCRIPTION,
@@ -81,7 +84,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new ScopeShow(),
       new Fetch(),
       new Build(),
-      new EnvsAttach(),
       new EjectConf(),
       new InjectConf(),
       new DescribeScope(),
@@ -97,8 +99,10 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Move(),
       new Remove(),
       new Deprecate(),
+      new Undeprecate(),
       new Delete(),
       new DeprecatePrivate(),
+      new UndeprecatePrivate(),
       new Latest(),
       new Checkout(),
       new Merge(),
@@ -107,7 +111,8 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Logout(),
       new Eject(),
       new Migrate(),
-      new Watch()
+      new Watch(),
+      new Doctor()
     ],
     extensionsCommands
   );

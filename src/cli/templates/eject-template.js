@@ -14,7 +14,11 @@ export default function ejectTemplate(ejectResults: EjectResults): string {
     const failures = ejectResults.failedComponents;
     const title = chalk.red(`${failureEjectMessage}\n`);
     const modified = failures.modifiedComponents.length
-      ? `components with local modification (use --force to ignore): ${failures.modifiedComponents.toString()}\n`
+      ? `stopped the eject process for the following components because they have local changes.
+${chalk.bold(failures.modifiedComponents.toString())}
+ejecting modified components discards all local, unstaged, changes.
+use 'bit diff <component id>' to see the changes and decide if to 'bit tag' them or not.
+use the '--force' flag to discard local modifications and proceed with the eject process.\n`
       : '';
     const staged = failures.stagedComponents.length
       ? `components with local versions (use --force to ignore): ${failures.stagedComponents.toString()}\n`

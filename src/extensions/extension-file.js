@@ -9,7 +9,7 @@ import logger from '../logger/logger';
 import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
-import type { EnvType } from './env-extension';
+import type { EnvType } from './env-extension-types';
 import { pathNormalizeToLinux } from '../utils/path';
 
 export type ExtensionFileModel = {
@@ -60,12 +60,11 @@ export default class ExtensionFile extends AbstractVinyl {
   static async loadFromBitJsonObject(
     bitJsonObj: PathOsBased,
     consumerPath: PathOsBased,
-    bitJsonPath: PathOsBased,
+    bitJsonDirPath: PathOsBased,
     envType?: EnvType
   ): Promise<ExtensionFile[]> {
     if (!bitJsonObj || R.isEmpty(bitJsonObj)) return [];
     const loadP: Promise<ExtensionFile>[] = [];
-    const bitJsonDirPath = path.dirname(bitJsonPath);
 
     // for non-envs extension, the base is the consumer root.
     // for envs, bit.json may have "{ENV_TYPE}" in its "ejectedEnvsDirectory" configuration, when

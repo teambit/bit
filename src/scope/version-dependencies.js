@@ -59,9 +59,9 @@ export default class VersionDependencies {
     });
   }
 
-  toObjects(repo: Repository): Promise<ComponentObjects> {
-    const depsP = Promise.all(this.allDependencies.map(dep => dep.toObjects(repo)));
-    const compP = this.component.toObjects(repo);
+  toObjects(repo: Repository, clientVersion: ?string): Promise<ComponentObjects> {
+    const depsP = Promise.all(this.allDependencies.map(dep => dep.toObjects(repo, clientVersion)));
+    const compP = this.component.toObjects(repo, clientVersion);
 
     return Promise.all([compP, depsP]).then(([component, dependencies]) => {
       const flattened = dependencies.reduce((array, compObjects) => {

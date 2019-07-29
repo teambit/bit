@@ -18,7 +18,8 @@ export default class Show extends Command {
     ['r', 'remote', 'show a remote component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
-    ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
+    ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]'],
+    ['d', 'detailed', 'show more details']
   ];
   loader = true;
   migration = true;
@@ -30,8 +31,16 @@ export default class Show extends Command {
       versions,
       remote = false,
       outdated = false,
-      compare = false
-    }: { json?: boolean, versions: ?boolean, remote: boolean, outdated?: boolean, compare?: boolean }
+      compare = false,
+      detailed = false
+    }: {
+      json?: boolean,
+      versions: ?boolean,
+      remote: boolean,
+      outdated?: boolean,
+      compare?: boolean,
+      detailed?: boolean
+    }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       if (remote) {
@@ -58,7 +67,8 @@ export default class Show extends Command {
       component,
       componentModel,
       json,
-      outdated
+      outdated,
+      detailed
     }));
   }
 
@@ -68,14 +78,16 @@ export default class Show extends Command {
     json,
     versions,
     components,
-    outdated
+    outdated,
+    detailed
   }: {
     component: ?ConsumerComponent,
     componentModel?: ConsumerComponent,
     json: ?boolean,
     versions: ?boolean,
     components: ?(ConsumerComponent[]),
-    outdated: boolean
+    outdated: boolean,
+    detailed: boolean
   }): string {
     if (versions) {
       if (R.isNil(components) || R.isEmpty(components)) {
@@ -115,6 +127,6 @@ export default class Show extends Command {
       const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
       return JSON.stringify(jsonObject, null, '  ');
     }
-    return paintComponent(component, componentModel, outdated);
+    return paintComponent(component, componentModel, outdated, detailed);
   }
 }

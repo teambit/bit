@@ -7,7 +7,7 @@ import type { PathOsBased } from './utils/path';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-const isWindows = os.platform() === 'win32';
+export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
@@ -118,21 +118,33 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
 
-export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
+export const BASE_WEB_DOMAIN = 'bit.dev';
 
-export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
+export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
-export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/bit-login';
+export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
+
+export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
+
+export const REPO_NAME = 'teambit/bit';
+
+export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
-export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
+export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_WEB_DOMAIN}/`;
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const SEARCH_DOMAIN = 'api.bitsrc.io';
+export const SEARCH_DOMAIN = `api.${BASE_WEB_DOMAIN}`;
+
+export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
+
+export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;
+
+export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
@@ -195,6 +207,8 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
+export const CFG_LOG_JSON_FORMAT = 'log_json_format';
+
 /**
  * git hooks
  */
@@ -210,6 +224,8 @@ export const GIT_HOOKS_NAMES = [POST_CHECKOUT, POST_MERGE];
 export const PRE_TAG_HOOK = 'pre-tag';
 
 export const POST_TAG_HOOK = 'post-tag';
+
+export const POST_ADD_HOOK = 'post-add';
 
 export const PRE_TAG_ALL_HOOK = 'pre-tag-all';
 
@@ -233,7 +249,11 @@ export const POST_RECEIVE_OBJECTS = 'post-receive-objects'; // post-put
 
 export const PRE_DEPRECATE_REMOTE = 'pre-deprecate-remote';
 
+export const PRE_UNDEPRECATE_REMOTE = 'pre-undeprecate-remote';
+
 export const POST_DEPRECATE_REMOTE = 'post-deprecate-remote';
+
+export const POST_UNDEPRECATE_REMOTE = 'post-undeprecate-remote';
 
 export const PRE_REMOVE_REMOTE = 'pre-remove-remote';
 
@@ -242,6 +262,7 @@ export const POST_REMOVE_REMOTE = 'post-remove-remote';
 export const HOOKS_NAMES = [
   PRE_TAG_HOOK,
   POST_TAG_HOOK,
+  POST_ADD_HOOK,
   PRE_TAG_ALL_HOOK,
   POST_TAG_ALL_HOOK,
   PRE_IMPORT_HOOK,
@@ -253,7 +274,9 @@ export const HOOKS_NAMES = [
   PRE_RECEIVE_OBJECTS,
   POST_RECEIVE_OBJECTS,
   PRE_DEPRECATE_REMOTE,
+  PRE_UNDEPRECATE_REMOTE,
   POST_DEPRECATE_REMOTE,
+  POST_UNDEPRECATE_REMOTE,
   PRE_REMOVE_REMOTE,
   POST_REMOVE_REMOTE
 ];
@@ -262,11 +285,6 @@ export const HOOKS_NAMES = [
  * cache root directory
  */
 export const CACHE_ROOT = getCacheDirectory();
-
-/**
- * modules cache directory
- */
-export const MODULES_CACHE_DIR: PathOsBased = path.join(CACHE_ROOT, 'modules');
 
 /**
  * app cache directory
@@ -289,11 +307,6 @@ export const BIT_HIDDEN_DIR = '.bit';
 export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
-
-/**
- * modules cache filename
- */
-export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
 
 /**
  * bit registry default URL.
@@ -327,10 +340,6 @@ export const BIT_VERSION = packageFile.version;
 
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
-export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
-
-export const DEFAULT_REGISTRY_URL = 'https://node.bitsrc.io';
-
 export const SKIP_UPDATE_FLAG = '--skip-update';
 
 export const LICENSE_FILENAME = 'LICENSE';
@@ -348,3 +357,21 @@ export const COMPILER_ENV_TYPE = 'compiler';
 export const TESTER_ENV_TYPE = 'tester';
 
 export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
+
+export const MANUALLY_REMOVE_DEPENDENCY = '-';
+
+export const MANUALLY_REMOVE_ENVIRONMENT = '-';
+
+export const MANUALLY_ADD_DEPENDENCY = '+';
+
+export const OVERRIDE_FILE_PREFIX = 'file://';
+
+export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
+
+export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
+
+export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
+
+export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
+
+export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';

@@ -2,7 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
-import ComponentBitConfig from '../bit-config';
+import ComponentConfig from '../config';
 import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
@@ -49,7 +49,7 @@ export default (async function injectConf(
   // Delete bit.json and bit.json dir
   const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
   const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
-  await ComponentBitConfig.removeIfExist(bitJsonDirFullPath);
+  await ComponentConfig.removeIfExist(bitJsonDirFullPath);
   await removeEmptyDir(bitJsonDirFullPath);
 
   return { id: component.id.toStringWithoutVersion() };

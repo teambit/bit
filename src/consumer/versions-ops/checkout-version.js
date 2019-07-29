@@ -184,7 +184,6 @@ async function applyVersion(
     componentWithDependencies.devDependencies = [];
     componentWithDependencies.compilerDependencies = [];
     componentWithDependencies.testerDependencies = [];
-    componentWithDependencies.allDependencies = [];
   }
   const rootDir = componentMap.rootDir;
   const shouldWritePackageJson = async (): Promise<boolean> => {
@@ -217,7 +216,7 @@ async function applyVersion(
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
-    writeConfig: !!componentFromFS.bitJson || componentMap.configDir, // write bit.json and config files only if it was there before
+    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
     configDir: componentMap.configDir,
     verbose,
     writeDists: !ignoreDist,

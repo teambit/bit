@@ -11,7 +11,9 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
@@ -22,10 +24,10 @@ import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
+import ComponentOverrides from '../../consumer/config/component-overrides';
+import { makeEnvFromModel } from '../../extensions/env-factory';
 
 type State = {
   versions?: {
@@ -50,6 +52,8 @@ export type ComponentProps = {
   local?: boolean, // get deleted after export
   state?: State // get deleted after export
 };
+
+const VERSION_ZERO = '0.0.0';
 
 /**
  * we can't rename the class as ModelComponent because old components are already saved in the model
@@ -93,7 +97,7 @@ export default class Component extends BitObject {
   }
 
   hasVersion(version: string): boolean {
-    return !!this.versions[version];
+    return Boolean(this.versions[version]);
   }
 
   /**
@@ -131,7 +135,7 @@ export default class Component extends BitObject {
   }
 
   latest(): string {
-    if (empty(this.versions)) return '0.0.0';
+    if (empty(this.versions)) return VERSION_ZERO;
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
@@ -145,7 +149,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   latestExisting(repository: Repository): string {
-    if (empty(this.versions)) return '0.0.0';
+    if (empty(this.versions)) return VERSION_ZERO;
     const versions = this.listVersions('ASC');
     let version = null;
     let versionStr = null;
@@ -153,7 +157,7 @@ export default class Component extends BitObject {
       versionStr = versions.pop();
       version = this.loadVersionSync(versionStr, repository, false);
     }
-    return versionStr || '0.0.0';
+    return versionStr || VERSION_ZERO;
   }
 
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -207,6 +211,11 @@ export default class Component extends BitObject {
 
   toBitIdWithLatestVersion(): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
+  }
+
+  toBitIdWithLatestVersionAllowNull(): BitId {
+    const id = this.toBitIdWithLatestVersion();
+    return id.version === VERSION_ZERO ? id.changeVersion(null) : id;
   }
 
   toObject() {
@@ -298,8 +307,8 @@ export default class Component extends BitObject {
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
-    const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
+    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
+    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
       filesP,
       distsP,
@@ -323,8 +332,6 @@ export default class Component extends BitObject {
       mainFile: version.mainFile || null,
       compiler,
       tester,
-      detachedCompiler: version.detachedCompiler,
-      detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       compilerDependencies: version.compilerDependencies.getClone(),
@@ -340,11 +347,14 @@ export default class Component extends BitObject {
       testerPackageDependencies: clone(version.testerPackageDependencies),
       files,
       dists,
+      mainDistFile: version.mainDistFile,
       docs: version.docs,
       license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
+      overrides: ComponentOverrides.loadFromScope(version.overrides),
+      packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated
     });
     if (manipulateDirData) {

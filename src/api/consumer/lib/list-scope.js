@@ -11,11 +11,13 @@ import { getScopeRemotes } from '../../../scope/scope-remotes';
 export default (async function list({
   scopeName,
   showAll, // include nested
-  showRemoteVersion
+  showRemoteVersion,
+  namespacesUsingWildcards
 }: {
   scopeName?: string,
   showAll: boolean,
-  showRemoteVersion: boolean
+  showRemoteVersion: boolean,
+  namespacesUsingWildcards?: string
 }): Promise<ListScopeResult[]> {
   const consumer: Consumer = await loadConsumer();
   const scope: Scope = consumer.scope;
@@ -24,17 +26,16 @@ export default (async function list({
     const remote: Remote = await remotes.resolve(scopeName, scope);
     return remoteList(remote);
   }
+  return scopeList();
 
-  return scopeList(consumer, showAll, showRemoteVersion);
+  function remoteList(remote: Remote): Promise<ListScopeResult[]> {
+    loader.start(BEFORE_REMOTE_LIST);
+    return remote.list(namespacesUsingWildcards);
+  }
+
+  async function scopeList(): Promise<ListScopeResult[]> {
+    loader.start(BEFORE_LOCAL_LIST);
+    const componentsList = new ComponentsList(consumer);
+    return componentsList.listScope(showRemoteVersion, showAll, namespacesUsingWildcards);
+  }
 });
-
-function remoteList(remote: Remote): Promise<ListScopeResult[]> {
-  loader.start(BEFORE_REMOTE_LIST);
-  return remote.list();
-}
-
-async function scopeList(consumer: Consumer, showAll: boolean, showRemoteVersion: boolean): Promise<ListScopeResult[]> {
-  loader.start(BEFORE_LOCAL_LIST);
-  const componentsList = new ComponentsList(consumer);
-  return componentsList.listScope(showRemoteVersion, showAll);
-}

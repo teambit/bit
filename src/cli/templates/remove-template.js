@@ -6,7 +6,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
   const paintMissingComponents = () => {
     if (R.isEmpty(missingComponents)) return '';
     return (
-      chalk.red('missing components:') +
+      chalk.red('missing components (try to `bit untrack` them instead):') +
       chalk(
         ` ${missingComponents.map((id) => {
           if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId

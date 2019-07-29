@@ -9,7 +9,7 @@ export default (async function ejectConf(id: string, { ejectPath }: { ejectPath:
     throw new GeneralError('please specify component id');
   }
   const consumer: Consumer = await loadConsumer();
-  const attachResults = await consumer.ejectConf(consumer.getParsedId(id), { ejectPath });
+  const ejectResults = await consumer.ejectConf(consumer.getParsedId(id), { ejectPath });
   await consumer.onDestroy();
-  return attachResults;
+  return ejectResults;
 });

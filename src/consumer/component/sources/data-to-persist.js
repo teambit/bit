@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import Capsule from '../../../../components/core/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -38,7 +39,9 @@ export default class DataToPersist {
   }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
-    this.remove.push(pathToRemove);
+    if (!this.remove.includes(pathToRemove)) {
+      this.remove.push(pathToRemove);
+    }
   }
   removeManyPaths(pathsToRemove: RemovePath[] = []) {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
@@ -59,14 +62,31 @@ export default class DataToPersist {
   }
   async persistAllToFS() {
     this._log();
-    this._validate();
+    this._validateAbsolute();
     // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule() {
-    throw new Error('not implemented yet');
+  async persistAllToCapsule(capsule: Capsule) {
+    this._log();
+    this._validateRelative();
+    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
+    await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
+  }
+  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+    try {
+      await capsule.symlink(symlink.src, symlink.dest);
+    } catch (e) {
+      // On windows when the link already created by npm we got EPERM error
+      // TODO: We should handle this better and avoid creating the symlink if it's already exists
+      if (e.code !== 'EEXIST' && e.code !== 'EPERM') {
+        throw e;
+      } else {
+        logger.debug(`ignoring ${e.code} error on atomicSymlink creation`);
+      }
+    }
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
@@ -89,7 +109,15 @@ export default class DataToPersist {
    */
   toConsole() {
     console.log(`\nfiles: ${this.files.map(f => f.path).join('\n')}`); // eslint-disable-line no-console
+    console.log(`\nsymlinks: ${this.symlinks.map(s => `src: ${s.src}, dest: ${s.dest}`).join('\n')}`); // eslint-disable-line no-console
     console.log(`remove: ${this.remove.map(r => r.path).join('\n')}`); // eslint-disable-line no-console
+  }
+  filterByPath(filterFunc: Function): DataToPersist {
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(this.files.filter(f => filterFunc(f.path)));
+    dataToPersist.removeManyPaths(this.remove.filter(r => filterFunc(r.path)));
+    dataToPersist.addManySymlinks(this.symlinks.filter(s => filterFunc(s.dest)));
+    return dataToPersist;
   }
   async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
@@ -105,7 +133,7 @@ export default class DataToPersist {
     }
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
-  _validate() {
+  _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the
     // filesystem. relative paths won't work when running bit commands from an inner dir
     const validateAbsolutePath = (pathToValidate) => {
@@ -124,6 +152,24 @@ export default class DataToPersist {
       validateAbsolutePath(symlink.dest);
     });
   }
+  _validateRelative() {
+    // it's important to make sure that all paths are relative before writing them to the capsule
+    const validateRelativePath = (pathToValidate) => {
+      if (path.isAbsolute(pathToValidate)) {
+        throw new Error(`DataToPersist expects ${pathToValidate} to be relative, got absolute`);
+      }
+    };
+    this.files.forEach((file) => {
+      validateRelativePath(file.path);
+    });
+    this.remove.forEach((removePath) => {
+      validateRelativePath(removePath.path);
+    });
+    this.symlinks.forEach((symlink) => {
+      validateRelativePath(symlink.src);
+      validateRelativePath(symlink.dest);
+    });
+  }
   _log() {
     if (this.remove.length) {
       const pathToDeleteStr = this.remove.map(r => r.path).join('\n');
@@ -134,7 +180,9 @@ export default class DataToPersist {
       logger.debug(`DateToPersist, paths-to-write:\n${filesToWriteStr}`);
     }
     if (this.symlinks.length) {
-      const symlinksStr = this.symlinks.map(symlink => `src: ${symlink.src}, dest: ${symlink.dest}`).join('\n');
+      const symlinksStr = this.symlinks
+        .map(symlink => `src (existing): ${symlink.src}\ndest (new): ${symlink.dest}`)
+        .join('\n');
       logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
     }
   }

@@ -3,16 +3,18 @@ import ComponentsList from './components-list';
 import { ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
-describe('ComponentList', () => {
+describe('ComponentList', function () {
+  this.timeout(0);
   const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
   const getScope = modelComponent => ({
     listLocal: () => {
       return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
     }
   });
-  describe('listLocalScope', () => {
+  describe('listLocalScope', function () {
     let modelComponent;
     before(() => {
+      this.timeout(0);
       modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {

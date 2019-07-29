@@ -4,12 +4,12 @@ import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import type { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
-import ModelComponent from '../../../scope/models/model-component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
+export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
 export default class Tag extends Command {
   name = 'tag [id] [version]';
@@ -126,46 +126,42 @@ export default class Tag extends Command {
 
   report(results: TagResults): string {
     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
-    const { taggedComponents, autoTaggedComponents, warnings, newComponents }: TagResults = results;
-    function joinComponents(comps) {
-      return comps
-        .map((comp) => {
-          if (comp instanceof ModelComponent) {
-            const bitId = comp.toBitId();
-            return bitId.changeVersion(comp.latest()).toString();
-          }
-          return comp.id.toString();
-        })
-        .join(', ');
-    }
-
-    function outputIfExists(comps, label, breakBefore) {
-      if (comps.length !== 0) {
-        let str = '';
-        if (breakBefore) str = '\n';
-        str += `${chalk.cyan(label)} ${joinComponents(comps)}`;
-        return str;
-      }
-
-      return '';
-    }
-
-    // send only non new components to changed components compare
+    const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
     const changedComponents = taggedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
     const addedComponents = taggedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
-    const autoTaggedCount = autoTaggedComponents ? autoTaggedComponents.length : 0;
+    const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
+    const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
+(use "bit untag" to unstage versions)\n`;
+
+    const outputComponents = (comps) => {
+      return comps
+        .map((component) => {
+          let componentOutput = `     > ${component.id.toString()}`;
+          const autoTag = autoTaggedResults.filter(result =>
+            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
+          );
+          if (autoTag.length) {
+            const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+            componentOutput += `\n       ${AUTO_TAGGED_MSG}: ${autoTagComp.join(', ')}`;
+          }
+          return componentOutput;
+        })
+        .join('\n');
+    };
+
+    const outputIfExists = (label, explanation, components) => {
+      if (!components.length) return '';
+      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+    };
 
     return (
       warningsOutput +
-      chalk.green(`${taggedComponents.length + autoTaggedCount} components tagged`) +
-      chalk.gray(
-        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoTaggedCount} auto-tagged`
-      ) +
-      outputIfExists(addedComponents, 'added components: ', true) +
-      outputIfExists(changedComponents, 'changed components: ', true) +
-      outputIfExists(autoTaggedComponents, 'auto-tagged components (as a result of tagging their dependencies): ', true)
+      chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
+      tagExplanation +
+      outputIfExists('new components', 'first version for components', addedComponents) +
+      outputIfExists('changed components', 'components that got a version bump', changedComponents)
     );
   }
 }

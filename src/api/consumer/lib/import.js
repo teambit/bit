@@ -35,40 +35,40 @@ export default (async function importAction(
     const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envComponents[0].component.id.toString();
-    function writeBitConfigIfNeeded() {
+    function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
-        consumer.bitConfig.compiler = id;
+        consumer.config.compiler = id;
         Analytics.setExtraData('build_env', id);
-        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
-        consumer.bitConfig.tester = id;
+        consumer.config.tester = id;
         Analytics.setExtraData('test_env', id);
-        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       if (environmentOptions.extension) {
         const idWithoutVersion = BitId.getStringWithoutVersion(id);
         // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.bitConfig.extensions).find((ext) => {
+        const oldVersion = Object.keys(consumer.config.extensions).find((ext) => {
           return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
         });
         if (oldVersion) {
-          consumer.bitConfig.extensions[id] = consumer.bitConfig.extensions[oldVersion];
-          delete consumer.bitConfig.extensions[oldVersion];
-          return consumer.bitConfig.write({ bitDir: consumer.getPath() });
+          consumer.config.extensions[id] = consumer.config.extensions[oldVersion];
+          delete consumer.config.extensions[oldVersion];
+          return consumer.config.write({ workspaceDir: consumer.getPath() });
         }
-        consumer.bitConfig.extensions[id] = {
+        consumer.config.extensions[id] = {
           options: {},
           config: {}
         };
-        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       return Promise.resolve(true);
     }
-    await writeBitConfigIfNeeded();
+    await writeConfigIfNeeded();
     return { envComponents };
   }
 

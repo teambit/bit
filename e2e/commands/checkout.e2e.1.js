@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { FileStatusWithoutChalk } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
-import { ComponentNotFound } from '../../src/scope/exceptions';
-import { FileStatusWithoutChalk } from './merge.e2e.2';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -26,7 +25,7 @@ describe('bit checkout command', function () {
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
       const useFunc = () => helper.runCmd('bit checkout 1.0.0 utils/non-exist');
-      const error = new ComponentNotFound('utils/non-exist');
+      const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(useFunc, error);
     });
   });
@@ -100,7 +99,7 @@ describe('bit checkout command', function () {
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
               const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(tagOutput).to.have.string('1 components tagged');
+              expect(tagOutput).to.have.string('1 component(s) tagged');
             });
           });
         });

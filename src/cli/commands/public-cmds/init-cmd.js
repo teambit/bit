@@ -15,7 +15,11 @@ export default class Init extends Command {
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
-    ['t', 'standalone [boolean]', 'do not nest component store within .git directory '],
+    [
+      't',
+      'standalone [boolean]',
+      'do not nest component store within .git directory and do not write config data inside package.json'
+    ],
     ['r', 'reset', 'write missing or damaged Bit files'],
     [
       '',

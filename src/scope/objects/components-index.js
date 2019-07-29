@@ -92,6 +92,15 @@ export default class ComponentsIndex {
   getPath() {
     return this.indexPath;
   }
+  /**
+   * it's obviously not accurate. a local path might include 'bithub' as part of the path as well.
+   * however, it's needed only for suppressing the error message when the indexJson is outdate,
+   * so if it happens on a local scope it's okay.
+   * for other purposes, don't rely on this.
+   */
+  isFileOnBitHub() {
+    return this.indexPath.includes('/bithub/');
+  }
   _find(hash: string): ?IndexItem {
     return this.index.find(indexItem => indexItem.hash === hash);
   }

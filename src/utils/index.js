@@ -37,7 +37,6 @@ import allSettled from './promise-all-settled';
 import values from './object/values';
 import sortObject from './object/sort';
 import glob from './glob';
-import promisify from './promisify';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object';
 import objectToTupleArray from './object/to-tuple-array';
@@ -45,6 +44,7 @@ import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './encryption/sha1';
 import isString from './string/is-string';
+import removeChalkCharacters from './string/remove-chalk-characters';
 import getStringifyArgs from './string/get-stringify-args';
 import isNumeric from './number/is-numeric';
 import diff from './array/diff';
@@ -88,6 +88,7 @@ export {
   filterObject,
   sortObject,
   isString,
+  removeChalkCharacters,
   getStringifyArgs,
   isNumeric,
   inflate,
@@ -100,7 +101,6 @@ export {
   toBase64ArrayBuffer,
   fromBase64,
   glob,
-  promisify,
   resolveBoolean,
   empty,
   filter,

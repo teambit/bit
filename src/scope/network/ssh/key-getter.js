@@ -14,9 +14,9 @@ async function readKey(keyPath: ?string) {
   }
 }
 
-export default async function keyGetter(keyPath: ?string) {
+export default (async function keyGetter(keyPath: ?string) {
   if (keyPath) return readKey(keyPath);
   const sshFile = await identityFile();
   logger.debug(`ssh, reading ssh key at ${sshFile}`);
   return readKey(sshFile);
-}
+});

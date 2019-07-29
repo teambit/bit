@@ -9,7 +9,7 @@ export default (async function injectConf(id: string, force: boolean): Promise<I
     throw new GeneralError('please specify component id');
   }
   const consumer: Consumer = await loadConsumer();
-  const attachResults = await consumer.injectConf(consumer.getParsedId(id), force);
+  const injectResults = await consumer.injectConf(consumer.getParsedId(id), force);
   await consumer.onDestroy();
-  return attachResults;
+  return injectResults;
 });

@@ -4,13 +4,11 @@ import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
-import loadVersionHandler from './cli/version-command';
 
 Promise.config({
   longStackTraces: false // change it to true for easy debugging. by default, leave it as false for better performance
 });
 
-loadVersionHandler();
 loudRejection();
 HooksManager.init();
 

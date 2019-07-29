@@ -7,12 +7,13 @@ import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
-import type BitMap from '../bit-map/bit-map';
+import BitMap from '../bit-map/bit-map';
 import type Consumer from '../consumer';
 import { filterAsync } from '../../utils';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
+import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -28,7 +29,6 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
-  _fromBitMap: { [cacheKey: string]: BitId[] } = {};
   _fromObjectsIds: BitId[];
   _modelComponents: ModelComponent[];
   _invalidComponents: string[];
@@ -207,7 +207,23 @@ export default class ComponentsList {
   async listExportPendingComponentsIds(): Promise<BitIds> {
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = modelComponents.filter(component => component.isLocallyChanged());
-    return BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
+    const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
+    return this.updateIdsFromModelIfTheyOutOfSync(ids);
+  }
+
+  async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
+    const authoredAndImported = this.bitMap.getAuthoredAndImportedBitIds();
+    const updatedIdsP = ids.map(async (id: BitId) => {
+      const idFromBitMap = authoredAndImported.searchWithoutScopeAndVersion(id);
+      if (idFromBitMap && !idFromBitMap.hasVersion()) {
+        // component is out of sync, fix it by loading it from the consumer
+        const component = await this.consumer.loadComponent(id.changeVersion(LATEST));
+        return component.id;
+      }
+      return id;
+    });
+    const updatedIds = await Promise.all(updatedIdsP);
+    return BitIds.fromArray(updatedIds);
   }
 
   async listExportPendingComponents(): Promise<ModelComponent[]> {
@@ -257,13 +273,9 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  getFromBitMap(origin?: string): BitId[] {
-    const cacheKeyName = origin || 'all';
-    if (!this._fromBitMap[cacheKeyName]) {
-      const originParam = origin ? [origin] : undefined;
-      this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
-    }
-    return this._fromBitMap[cacheKeyName];
+  getFromBitMap(origin?: string): BitIds {
+    const originParam = origin ? [origin] : undefined;
+    return this.bitMap.getAllBitIds(originParam);
   }
 
   getPathsForAllFilesOfAllComponents(origin?: string, absolute: boolean = false): string[] {
@@ -287,9 +299,16 @@ export default class ComponentsList {
   /**
    * get called when the Consumer is available, shows also components from remote scopes
    */
-  async listScope(showRemoteVersion: boolean, includeNested: boolean): Promise<ListScopeResult[]> {
+  async listScope(
+    showRemoteVersion: boolean,
+    includeNested: boolean,
+    namespacesUsingWildcards?: string
+  ): Promise<ListScopeResult[]> {
     const components: ModelComponent[] = await this.getModelComponents();
-    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const componentsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
+      : components;
+    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated
@@ -321,9 +340,12 @@ export default class ComponentsList {
   /**
    * get called from a bare-scope, shows only components of that scope
    */
-  static async listLocalScope(scope: Scope): Promise<ListScopeResult[]> {
+  static async listLocalScope(scope: Scope, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
-    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const componentsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
+      : components;
+    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     return componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated
@@ -356,33 +378,16 @@ export default class ComponentsList {
   }
 
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
-    if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
     const getBitId = (component): BitId => {
       if (R.is(ModelComponent, component)) return component.toBitId();
       if (R.is(Component, component)) return component.id;
       if (R.is(BitId, component)) return component;
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
-    const getRegex = (idWithWildcard) => {
-      if (!R.is(String, idWithWildcard)) {
-        throw new TypeError(
-          `filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`
-        );
-      }
-      const rule = idWithWildcard.replace(/\*/g, '.*');
-      return new RegExp(`^${rule}$`);
-    };
-    const regexPatterns = idsWithWildcard.map(id => getRegex(id));
-    const isNameMatchByWildcard = (name): boolean => {
-      return regexPatterns.some(regex => regex.test(name));
-    };
     // $FlowFixMe
     return components.filter((component) => {
       const bitId: BitId = getBitId(component);
-      return (
-        isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
-        isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
-      );
+      return isBitIdMatchByWildcards(bitId, idsWithWildcard);
     });
   }
 

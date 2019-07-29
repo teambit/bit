@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { COMPONENT_DIST_PATH_TEMPLATE } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));
@@ -62,8 +63,8 @@ describe('bit build', function () {
           expect(output).to.contain.string('staged');
         });
         beforeEach(() => {
-          helper.deleteFile(distFolder);
-          helper.deleteFile(compilerFolder);
+          helper.deletePath(distFolder);
+          helper.deletePath(compilerFolder);
           expect(distFolderFullPath).to.not.be.a.path();
           expect(compilerFolderFullPath).to.not.be.a.path();
         });
@@ -74,8 +75,17 @@ describe('bit build', function () {
             expect(compilerFolderFullPath).to.not.be.a.path();
           });
           it('should not take dist files from cache with --no-cache', () => {
-            helper.deleteFile(compilerFolder);
+            helper.deletePath(compilerFolder);
             const output = helper.buildComponentWithOptions('bar/foo', { '-no-cache': '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
+          it('should not take dist files from cache with -c', () => {
+            helper.deletePath(compilerFolder);
+            const output = helper.buildComponentWithOptions('bar/foo', { c: '' });
             expect(output).to.have.string(
               `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
             );
@@ -91,6 +101,14 @@ describe('bit build', function () {
           });
           it('should not take dist files from cache with --no-cache', () => {
             const output = helper.buildComponentWithOptions('', { '-no-cache': '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
+          it('should not take dist files from cache with -c', () => {
+            const output = helper.buildComponentWithOptions('', { c: '' });
             expect(output).to.have.string(
               `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
             );
@@ -129,6 +147,10 @@ describe('bit build', function () {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
       });
+      it('should not create an index.js file because package.json file already exists', () => {
+        const indexJs = path.join(helper.localScopePath, 'components/bar/foo/index.js');
+        expect(indexJs).to.not.be.a.path();
+      });
       describe('changing dist target', () => {
         let rebuildOutput;
         before(() => {
@@ -159,6 +181,125 @@ describe('bit build', function () {
       it('should indicate that compiler was installed', () => {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
+      });
+    });
+  });
+  /**
+   * this test uses the `pkg-json` compiler, which adds `{ foo: 'bar' }` to the package.json
+   */
+  describe('change package.json values', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.importDummyCompiler('pkg-json');
+    });
+    describe('as author', () => {
+      before(() => {
+        helper.initNpm();
+        helper.build();
+      });
+      it('should not change the root package.json', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.not.have.property('foo');
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the additional package.json props into the scope', () => {
+          const catComponent = helper.catComponent('bar/foo@latest');
+          expect(catComponent).to.have.property('packageJsonChangedProps');
+          expect(catComponent.packageJsonChangedProps)
+            .to.have.property('foo')
+            .that.equal('bar');
+        });
+        describe('importing the component to a new workspace', () => {
+          let packageJson;
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar/foo');
+            packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          });
+          it('should write the added props into the component package.json', () => {
+            expect(packageJson).to.have.property('foo');
+            expect(packageJson.foo).equal('bar');
+          });
+          it(`should search for ${COMPONENT_DIST_PATH_TEMPLATE} template and replace with the path to the dist`, () => {
+            expect(packageJson).to.have.property('dynamicValue');
+            expect(packageJson.dynamicValue).equal('dist/bar/foo.js');
+          });
+          describe('importing when the dist is outside the components dir', () => {
+            before(() => {
+              helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+              helper.importComponent('bar/foo -O');
+              packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            });
+            it(`should search for ${COMPONENT_DIST_PATH_TEMPLATE} template and replace with the correct path of the dist`, () => {
+              expect(packageJson).to.have.property('dynamicValue');
+              expect(packageJson.dynamicValue).equal('../../../dist/components/bar/foo/bar/foo.js');
+            });
+          });
+        });
+      });
+    });
+    describe('as imported', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.importDummyCompiler('pkg-json');
+        const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+        const packageJson = helper.readPackageJson(componentDir);
+        packageJson.bit.env = {
+          compiler: `${helper.envScope}/compilers/dummy@0.0.1`
+        };
+        // an intermediate step, make sure packageJson doesn't have this "foo" property
+        expect(packageJson).to.not.have.property('foo');
+        helper.writePackageJson(packageJson, componentDir);
+        helper.runCmd('bit build --no-cache');
+      });
+      it('should add the packageJson properties to the component package.json', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        expect(packageJson).to.have.property('foo');
+        expect(packageJson.foo).equal('bar');
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the additional package.json props into the scope', () => {
+          const catComponent = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);
+          expect(catComponent).to.have.property('packageJsonChangedProps');
+          expect(catComponent.packageJsonChangedProps)
+            .to.have.property('foo')
+            .that.equal('bar');
+        });
+        describe('changing the compiler to generate a different value in the package.json file', () => {
+          before(() => {
+            const compilerPath = `.bit/components/compilers/dummy/${helper.envScope}/0.0.1/compiler.js`;
+            const compiler = helper.readFile(compilerPath);
+            const changedCompiler = compiler.replace('bar', 'baz');
+            helper.outputFile(compilerPath, changedCompiler);
+            helper.runCmd('bit build --no-cache');
+          });
+          it('status should not show as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+          it('should add the changed packageJson properties to the component package.json', () => {
+            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            expect(packageJson).to.have.property('foo');
+            expect(packageJson.foo).equal('baz');
+          });
+        });
       });
     });
   });

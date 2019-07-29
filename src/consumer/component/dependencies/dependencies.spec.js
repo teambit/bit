@@ -2,13 +2,16 @@ import R from 'ramda';
 import { expect } from 'chai';
 import { Dependencies } from './';
 import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
+import { BitId } from '../../../bit-id';
 
 describe('Dependencies', () => {
   describe('validate()', () => {
     let dependencies;
     let validateFunc;
     beforeEach(() => {
-      dependencies = new Dependencies(R.clone(dependenciesFixture));
+      const dependenciesFixtureCloned = R.clone(dependenciesFixture);
+      dependenciesFixtureCloned.forEach(d => (d.id = BitId.parse(d.id)));
+      dependencies = new Dependencies(dependenciesFixtureCloned);
       validateFunc = () => dependencies.validate();
     });
     it('should not throw when it has a valid dependencies array', () => {

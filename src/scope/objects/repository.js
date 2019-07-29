@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import fs from 'fs-extra';
 import path from 'path';
 import uniqBy from 'lodash.uniqby';
@@ -12,7 +13,6 @@ import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
-import { BitId } from '../../bit-id';
 import { ScopeJson } from '../scope-json';
 import { typesObj } from '../object-registrar';
 import { ModelComponent } from '../models';
@@ -20,7 +20,7 @@ import { ModelComponent } from '../models';
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
-  objects: BitObject[] = [];
+  objects: { [string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
@@ -81,7 +81,7 @@ export default class Repository {
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
   }
 
-  load(ref: Ref): Promise<BitObject> {
+  load(ref: Ref, throws: boolean = false): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return fs
       .readFile(this.objectPath(ref))
@@ -98,6 +98,7 @@ export default class Repository {
         } else {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
         }
+        if (throws) throw err;
         return null;
       });
   }
@@ -143,17 +144,26 @@ export default class Repository {
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
-    return Promise.all(
+    const bitObjects = await Promise.all(
       hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const componentId = this.componentsIndex.getIdByHash(hash);
+          const indexJsonPath = this.componentsIndex.getPath();
+          if (this.componentsIndex.isFileOnBitHub()) {
+            logger.error(
+              `repository._getBitObjectsByHashes, indexJson at "${indexJsonPath}" is outdated and needs to be deleted`
+            );
+            return null;
+          }
           // $FlowFixMe componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(componentId, this.componentsIndex.getPath());
+          throw new OutdatedIndexJson(componentId, indexJsonPath);
         }
         return bitObject;
       })
     );
+    // $FlowFixMe
+    return bitObjects.filter(b => b); // remove nulls;
   }
 
   async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {
@@ -182,6 +192,9 @@ export default class Repository {
     return bitRawObject;
   }
 
+  /**
+   * prefer using `this.load()` for an async version, which also writes to the cache
+   */
   loadSync(ref: Ref, throws: boolean = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
@@ -219,7 +232,7 @@ export default class Repository {
     if (!object) return this;
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
-    this.objects.push(object);
+    this.objects[object.hash().toString()] = object;
     this.setCache(object);
     return this;
   }
@@ -239,13 +252,6 @@ export default class Repository {
     refs.forEach(ref => this.removeObject(ref));
   }
 
-  /**
-   * alias to `load`
-   */
-  findOne(ref: Ref): Promise<BitObject> {
-    return this.load(ref);
-  }
-
   findMany(refs: Ref[]): Promise<BitObject[]> {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
@@ -258,8 +264,33 @@ export default class Repository {
   async persist(validate: boolean = true): Promise<void> {
     logger.debug(`Repository.persist, validate = ${validate.toString()}`);
     await this._deleteMany();
-    if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
+    this._validateObjects(validate);
     await this._writeMany();
+  }
+
+  /**
+   * normally, the validation step takes place just before the acutal writing of the file.
+   * however, this can be an issue where a component has an invalid version. the component could
+   * be saved before validating the version (see #1727). that's why we validate here before writing
+   * anything to the filesystem.
+   * the open question here is whether should we validate again before the actual writing or it
+   * should be enough to validate here?
+   * for now, it does validate again before saving, only to be 100% sure nothing happens in a few
+   * lines of code until the actual writing. however, if the performance penalty is noticeable, we
+   * can easily revert it by changing `bitObject.validateBeforePersist = false` line run regardless
+   * the `validate` argument.
+   */
+  _validateObjects(validate: boolean) {
+    Object.keys(this.objects).forEach((hash) => {
+      const bitObject = this.objects[hash];
+      // $FlowFixMe some BitObject classes have validate() method
+      if (validate && bitObject.validate) {
+        bitObject.validate();
+      }
+      if (!validate) {
+        bitObject.validateBeforePersist = false;
+      }
+    });
   }
 
   async _deleteMany(): Promise<void> {
@@ -272,11 +303,11 @@ export default class Repository {
   }
 
   async _writeMany(): Promise<void> {
-    if (!this.objects.length) return;
-    logger.debug(`Repository._writeMany: writing ${this.objects.length} objects`);
+    if (R.isEmpty(this.objects)) return;
+    logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
-    await Promise.all(this.objects.map(object => this._writeOne(object)));
-    const added = this.componentsIndex.addMany(this.objects);
+    await Promise.all(Object.keys(this.objects).map(hash => this._writeOne(this.objects[hash])));
+    const added = this.componentsIndex.addMany(R.values(this.objects));
     if (added) await this.componentsIndex.write();
   }
 
@@ -299,7 +330,7 @@ export default class Repository {
   async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};
-    if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
+    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.debug(`repository._writeOne: ${objectPath}`);
     return writeFile(objectPath, contents, options);

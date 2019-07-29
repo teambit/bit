@@ -15,11 +15,8 @@ specs/scope/migrations/objectsFixtures/simple-component.js
 specs/specs-runner/fixtures/invalid-tester.js
 src/api/consumer/lib/isolate.js
 src/api/consumer/lib/migrate.js
-src/api/scope/lib/deprecate.js
 src/api/scope/lib/modify-ci-props.js
-src/cli/command-registrar-builder.js
 src/cli/commands/private-cmds/_delete-cmd.js
-src/cli/commands/private-cmds/_deprecate-cmd.js
 src/cli/commands/private-cmds/migrate-cmd.js
 src/cli/commands/public-cmds/isolate-cmd.js
 src/cli/commands/public-cmds/log-cmd.js
@@ -84,7 +81,6 @@ src/consumer/component/sources/source-file.js
 src/consumer/migrations/consumer-migrator.js
 specs/scope/migrations/scope-migrator.spec.js
 src/cli/chalk-box.js
-src/cli/commands/public-cmds/deprecate-cmd.js
 src/scope/migrations/component-version/to-semver-migration.js
 src/scope/models/scopeMeta.js
 src/scope/network/fs/fs.js
@@ -93,8 +89,8 @@ src/jsdoc/parser.js
 src/scope/objects/repository.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
-src/scope/graph/graph.js
-src/consumer/bit-config/component-bit-config.js
+src/scope/graph/scope-graph.js
+src/consumer/config/component-config.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js
 src/scope/models/version.js

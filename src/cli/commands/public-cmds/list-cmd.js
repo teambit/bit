@@ -7,6 +7,7 @@ import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -17,7 +18,8 @@ export default class List extends Command {
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
     ['o', 'outdated', 'show latest versions from remotes'],
-    ['j', 'json', 'show the output in JSON format']
+    ['j', 'json', 'show the output in JSON format'],
+    ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
   ];
   loader = true;
   migration = true;
@@ -29,10 +31,17 @@ export default class List extends Command {
       scope = false,
       bare = false,
       json = false,
-      outdated = false
-    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
+      outdated = false,
+      namespace
+    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean, namespace?: string }
   ): Promise<any> {
-    return listScope({ scopeName, showAll: scope, showRemoteVersion: outdated }).then(listScopeResults => ({
+    const params = { scopeName, showAll: scope, showRemoteVersion: outdated };
+    if (namespace) {
+      const namespaceWithWildcard = hasWildcard(namespace) ? namespace : `${namespace}/*`;
+      // $FlowFixMe
+      params.namespacesUsingWildcards = namespaceWithWildcard;
+    }
+    return listScope(params).then(listScopeResults => ({
       listScopeResults,
       scope: scopeName,
       ids,

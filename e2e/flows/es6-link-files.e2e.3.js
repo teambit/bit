@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('es6 components with link files', function () {
   this.timeout(0);
@@ -55,12 +56,20 @@ describe('es6 components with link files', function () {
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
   describe('multiple link files', () => {
     let output;
+    let npmCiRegistry;
     before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.setNewLocalAndRemoteScopes();
+      npmCiRegistry.setCiScopeInBitJson();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
       helper.createFile('utils/is-string', 'index.js', "export { default as isString } from './is-string';");
-      helper.createFile('utils', 'index.js', "export { default as isString } from './is-string';");
+      helper.createFile(
+        'utils',
+        'index.js',
+        `import { isString } from './is-string';
+export { isString };`
+      );
       helper.addComponent('utils/is-string/is-string.js', { i: 'is-string/is-string' });
       const fooBarFixture =
         "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
@@ -79,6 +88,7 @@ describe('es6 components with link files', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.importComponent('bar/foo');
       });
       it('should rewrite the relevant part of the link file', () => {
@@ -87,6 +97,53 @@ describe('es6 components with link files', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
+      (supportNpmCiRegistryTesting ? describe : describe.skip)(
+        'installing dependencies as packages (not as components)',
+        () => {
+          before(async () => {
+            await npmCiRegistry.init();
+            helper.importComponent('is-string/is-string');
+            helper.importNpmPackExtension();
+            helper.removeRemoteScope();
+            npmCiRegistry.publishComponent('is-string/is-string');
+            npmCiRegistry.publishComponent('bar/foo');
+          });
+          after(() => {
+            npmCiRegistry.destroy();
+          });
+          describe('installing a component using NPM', () => {
+            before(() => {
+              helper.reInitLocalScope();
+              helper.runCmd('npm init -y');
+              helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+            });
+            it('should be able to create the dependency link correctly and print the result', () => {
+              const appJsFixture = `const barFoo = require('@ci/${
+                helper.remoteScope
+              }.bar.foo'); console.log(barFoo.default());`;
+              fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+              const result = helper.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-string and got foo');
+            });
+          });
+          describe('importing a component using Bit', () => {
+            before(() => {
+              helper.reInitLocalScope();
+              npmCiRegistry.setCiScopeInBitJson();
+              npmCiRegistry.setResolver();
+              helper.importComponent('bar/foo');
+            });
+            it('should be able to create the dependency link correctly and print the result', () => {
+              const appJsFixture = `const barFoo = require('@ci/${
+                helper.remoteScope
+              }.bar.foo'); console.log(barFoo.default());`;
+              fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+              const result = helper.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-string and got foo');
+            });
+          });
+        }
+      );
     });
   });
 

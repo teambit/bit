@@ -1,7 +1,7 @@
 import init from './lib/init';
 import isolate from './lib/isolate';
 import remove from './lib/remove';
-import deprecate from './lib/deprecate';
+import { deprecate, undeprecate } from './lib/deprecation';
 import listScope from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
 import status from './lib/status';
@@ -25,7 +25,6 @@ import link from './lib/link';
 import checkout from './lib/checkout';
 import merge from './lib/merge';
 import diff from './lib//diff';
-import attachEnvs from './lib/envs-attach';
 import ejectConf from './lib/eject-conf';
 import injectConf from './lib/inject-conf';
 import migrate from './lib/migrate';
@@ -40,6 +39,7 @@ export {
   exportAction,
   remove,
   deprecate,
+  undeprecate,
   buildAll,
   listScope,
   tagAction,
@@ -67,7 +67,6 @@ export {
   checkout,
   merge,
   diff,
-  attachEnvs,
   ejectConf,
   injectConf,
   migrate,

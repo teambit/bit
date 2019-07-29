@@ -1,7 +1,7 @@
 // @flow
 import * as semver from 'semver';
 import chalk from 'chalk';
-import { BIT_VERSION } from '../../constants';
+import { BIT_VERSION, BASE_DOCS_DOMAIN } from '../../constants';
 import loader from '../../cli/loader/loader';
 import { OldClientVersion } from './exceptions';
 
@@ -78,10 +78,9 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 export function checkVersionCompatibilityOnTheServer(clientVersion: string) {
   const clientMajor = semver.major(clientVersion);
   const localMajor = semver.major(BIT_VERSION);
-  const oldClientVersionMessageUntilV14 =
-    'Please update your Bit client.\nFor additional information: https://docs.bitsrc.io/docs/latest-version.html';
+  const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_DOCS_DOMAIN}/docs/latest-version.html`;
   const oldClientVersionMessageAfterV14 = () => `Fatal: Bit client - server version mismatch. Using "${clientVersion}" Local version to communicate with "${BIT_VERSION}" on the Remove Server. Please update your Bit client.
-For additional information: https://docs.bitsrc.io/docs/latest-version.html`;
+For additional information: https://${BASE_DOCS_DOMAIN}/docs/latest-version.html`;
 
   if (localMajor > clientMajor) {
     if (clientMajor >= throwErrorFromServerSinceVersion) {
@@ -90,4 +89,8 @@ For additional information: https://docs.bitsrc.io/docs/latest-version.html`;
     }
     throw new Error(oldClientVersionMessageUntilV14);
   }
+}
+
+export function isClientHasVersionBefore(version: string, clientVersion: string) {
+  return semver.lt(clientVersion, version);
 }

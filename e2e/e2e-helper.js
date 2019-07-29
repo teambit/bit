@@ -10,10 +10,12 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
+import { removeChalkCharacters } from '../src/utils';
+import { FileStatus } from '../src/consumer/versions-ops/merge-version';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -32,6 +34,8 @@ export default class Helper {
   e2eDir: string;
   bitBin: string;
   compilerCreated: boolean;
+  dummyCompilerCreated: boolean;
+  dummyTesterCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
@@ -49,13 +53,23 @@ export default class Helper {
   }
 
   // #region General
-  runCmd(cmd: string, cwd: string = this.localScopePath) {
+  runCmd(cmd: string, cwd: string = this.localScopePath): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-    const cmdOutput = childProcess.execSync(cmd, { cwd });
+    const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
+  }
+
+  parseOptions(options: Object): string {
+    const value = Object.keys(options)
+      .map((key) => {
+        const keyStr = key.length === 1 ? `-${key}` : `--${key}`;
+        return `${keyStr} ${options[key]}`;
+      })
+      .join(' ');
+    return value;
   }
 
   runWithTryCatch(cmd: string, cwd: string = this.localScopePath) {
@@ -68,16 +82,11 @@ export default class Helper {
     return output;
   }
 
-  static removeChalkCharacters(str?: ?string): ?string {
-    if (!str) return str;
-    return str.replace(/\u001b\[.*?m/g, '');
-  }
-
   static alignOutput(str?: ?string): ?string {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
     // $FlowFixMe
-    return Helper.removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
+    return removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
   }
 
   expectToThrow(cmdFunc: Function, error: Error) {
@@ -103,6 +112,7 @@ export default class Helper {
     if (this.cache) {
       fs.removeSync(this.cache.localScopePath);
       fs.removeSync(this.cache.remoteScopePath);
+      delete this.cache;
     }
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
@@ -131,6 +141,10 @@ export default class Helper {
   getBitVersion() {
     return BIT_VERSION;
   }
+
+  generateRandomTmpDirName() {
+    return path.join(this.e2eDir, generateRandomStr());
+  }
   // #endregion
 
   // #region npm utils
@@ -141,10 +155,6 @@ export default class Helper {
 
   nodeStart(mainFilePath: string, cwd?: string) {
     return this.runCmd(`node ${mainFilePath}`, cwd);
-  }
-
-  npmLink(libraryName: string, cwd: string = process.cwd()) {
-    return this.runCmd(`npm link ${libraryName}`, cwd);
   }
   // #endregion
 
@@ -251,8 +261,8 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.envScopePath);
   }
 
-  listRemoteScope(bare: boolean = true) {
-    return this.runCmd(`bit list ${this.remoteScope} ${bare ? '--bare' : ''}`);
+  listRemoteScope(bare: boolean = true, options: string = '') {
+    return this.runCmd(`bit list ${this.remoteScope} ${options} ${bare ? '--bare' : ''}`);
   }
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
@@ -289,6 +299,9 @@ export default class Helper {
   }
 
   getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+    if (!fs.existsSync(clonedScopePath)) {
+      throw new Error(`getClonedLocalScope was unable to find the clonedScopePath at ${clonedScopePath}`);
+    }
     if (deleteCurrentScope) {
       fs.removeSync(this.localScopePath);
     } else {
@@ -324,6 +337,9 @@ export default class Helper {
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
       .map(x => path.normalize(x));
   }
+  getObjectFiles() {
+    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.localScopePath, '.bit/objects') });
+  }
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, impl);
@@ -347,6 +363,16 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
+  outputFile(filePathRelativeToLocalScope: string, data: string = ''): string {
+    return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
+  }
+
+  moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
+    const src = path.join(this.localScopePath, srcPathRelativeToLocalScope);
+    const dest = path.join(this.localScopePath, destPathRelativeToLocalScope);
+    return fs.moveSync(src, dest);
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -355,7 +381,7 @@ export default class Helper {
     fs.outputFileSync(filePath, `\n${content}`);
   }
 
-  deleteFile(relativePathToLocalScope: string) {
+  deletePath(relativePathToLocalScope: string) {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
   // #endregion
@@ -391,6 +417,9 @@ export default class Helper {
   }
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
+  }
+  undeprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
@@ -462,13 +491,25 @@ export default class Helper {
       this.createCompiler();
     }
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     return this.runCmd(`bit import ${id} --compiler`);
+  }
+
+  importDummyCompiler(dummyType?: string = 'dummy') {
+    const id = `${this.envScope}/compilers/dummy`;
+    this.createDummyCompiler(dummyType);
+    return this.runCmd(`bit import ${id} --compiler`);
+  }
+
+  importDummyTester(dummyType?: string = 'dummy') {
+    const id = `${this.envScope}/testers/dummy`;
+    this.createDummyTester(dummyType);
+    return this.runCmd(`bit import ${id} --tester`);
   }
 
   importTester(id) {
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     this.runCmd(`bit import ${id} --tester`);
   }
 
@@ -492,7 +533,11 @@ export default class Helper {
       'excludeRegistryPrefix: true',
       'excludeRegistryPrefix: false'
     );
-    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
+    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
+      'return result;',
+      'return JSON.stringify(result, null, 2);'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
   build(id?: string = '') {
@@ -560,18 +605,11 @@ export default class Helper {
 
   diff(id?: string = '') {
     const output = this.runCmd(`bit diff ${id}`);
-    return Helper.removeChalkCharacters(output);
+    return removeChalkCharacters(output);
   }
 
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
-  }
-  envsAttach(ids: string[] = ['bar/foo'], options: ?Object) {
-    const joinedIds = ids.join(' ');
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit envs-attach ${joinedIds} ${value}`);
   }
   ejectConf(id: string = 'bar/foo', options: ?Object) {
     const value = options
@@ -589,9 +627,29 @@ export default class Helper {
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
-  setHubDomain(domain: string = 'hub.bitsrc.io') {
+  setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
+
+  getGitPath() {
+    this.runCmd(`bit config get ${CFG_GIT_EXECUTABLE_PATH}`);
+  }
+
+  setGitPath(gitPath: string = 'git') {
+    this.runCmd(`bit config set ${CFG_GIT_EXECUTABLE_PATH} ${gitPath}`);
+  }
+
+  deleteGitPath() {
+    this.runCmd(`bit config del ${CFG_GIT_EXECUTABLE_PATH}`);
+  }
+
+  restoreGitPath(oldGitPath: ?string): any {
+    if (!oldGitPath) {
+      return this.deleteGitPath();
+    }
+    return this.setGitPath(oldGitPath);
+  }
+
   // #endregion
 
   // #region bit commands on templates (like add BarFoo / create compiler)
@@ -621,6 +679,85 @@ export default class Helper {
 
   tagComponentBarFoo() {
     return this.tagComponent('bar/foo');
+  }
+
+  doctor(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor ${parsedOpts}`);
+  }
+
+  doctorOne(diagnosisName: string, options: Object, cwd: ?string) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`, cwd);
+  }
+
+  doctorList(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor --list ${parsedOpts}`);
+  }
+
+  doctorJsonParsed() {
+    const result = this.runCmd('bit doctor --json');
+    return JSON.parse(result);
+  }
+
+  createDummyCompiler(dummyType: string) {
+    // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
+    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+    this.runCmd('bit add compiler.js -i compilers/dummy', tempScopePath);
+    this.runCmd('bit tag compilers/dummy -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} compilers/dummy`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.dummyCompilerCreated = true;
+    return true;
+  }
+
+  createDummyTester(dummyType: string) {
+    if (this.dummyTesterCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
+    const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
+
+    ensureAndWriteJson(path.join(tempScopePath, 'package.json'), {
+      name: 'dummy-compiler',
+      version: '1.0.0',
+      dependencies: {
+        mocha: '6.1.4',
+        chai: '4.2.0'
+      }
+    });
+    this.runCmd('npm install', tempScopePath);
+    this.runCmd('bit add tester.js -i testers/dummy', tempScopePath);
+    this.runCmd('bit tag testers/dummy -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} testers/dummy`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.dummyTesterCreated = true;
+    return true;
   }
 
   createCompiler() {
@@ -673,95 +810,88 @@ export default class Helper {
   // #endregion
 
   // #region bit.json manipulation
-  addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson.dependencies = bitJson.dependencies || {};
-    bitJson.packageDependencies = bitJson.packageDependencies || {};
-    Object.assign(bitJson.dependencies, dependencies);
-    Object.assign(bitJson.packageDependencies, packageDependencies);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-
-  readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  readBitJson(bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-
-  addKeyValToBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json'), key: string, val: Any) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson[key] = val;
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+  writeBitJson(bitJson: Object, bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
+    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
-
+  addKeyValToBitJson(bitJsonDir: string = this.localScopePath, key: string, val: any) {
+    const bitJson = this.readBitJson(bitJsonDir);
+    bitJson[key] = val;
+    this.writeBitJson(bitJson, bitJsonDir);
+  }
+  addOverridesToBitJson(overrides: Object) {
+    const bitJson = this.readBitJson();
+    bitJson.overrides = overrides;
+    this.writeBitJson(bitJson);
+  }
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const env = bitJson.env[envType];
     const envName = typeof env === 'string' ? env : Object.keys(env)[0];
     return envName;
   }
-
   getEnvFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];
     const env = R.path(basePath, bitJson);
     const envName = Object.keys(env)[0];
     return env[envName];
   }
-
   addKeyValToEnvPropInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonDir: string = this.localScopePath,
     propName: string,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
-    const bitJson = this.readBitJson(bitJsonPath);
+    const bitJson = this.readBitJson(bitJsonDir);
     const envName = this.getEnvNameFromBitJsonByType(bitJson, envType);
     const propPath = ['env', envType, envName, propName];
     const prop = R.pathOr({}, propPath, bitJson);
     prop[key] = val;
     set(bitJson, propPath, prop);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson, bitJsonDir);
   }
-
   addFileToEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     fileName: string,
     filePath: string,
     envType: 'compiler' | 'tester'
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'files', fileName, filePath, envType);
   }
-
   addToRawConfigOfEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'rawConfig', key, val, envType);
   }
-  manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  manageWorkspaces(withWorkspaces: boolean = true) {
+    const bitJson = this.readBitJson();
     bitJson.packageManager = 'yarn';
     bitJson.manageWorkspaces = withWorkspaces;
     bitJson.useWorkspaces = withWorkspaces;
     this.writeBitJson(bitJson);
   }
-  writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  setComponentsDirInBitJson(content: string) {
+    const bitJson = this.readBitJson();
     bitJson.componentsDefaultDirectory = content;
     this.writeBitJson(bitJson);
   }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson.corrupt = '"corrupted';
-    fs.writeFileSync(bitJsonPath, bitJson.toString());
+    fs.writeFileSync(bitJsonPath, '"corrupted');
   }
-  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
+    fs.writeFileSync(packageJsonPath, '{ corrupted');
+  }
+  modifyFieldInBitJson(key: string, value: string) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson);
   }
   // #endregion
 
@@ -782,7 +912,7 @@ export default class Helper {
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   deleteBitMap() {
-    return this.deleteFile(BIT_MAP);
+    return this.deletePath(BIT_MAP);
   }
   createBitMap(
     cwd: string = this.localScopePath,
@@ -917,6 +1047,39 @@ export default class Helper {
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
+   */
+  populateWorkspaceWithComponents() {
+    this.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
+
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'   => requires the left-pad package
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type => left-pad
+   */
+  populateWorkspaceWithComponentsAndPackages() {
+    this.initNpm();
+    this.installNpmPackage('left-pad', '1.3.0');
+    this.createFile('utils', 'is-type.js', fixtures.isTypeLeftPad);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
   // #endregion
 
   indexJsonPath() {
@@ -928,11 +1091,24 @@ export default class Helper {
   writeIndexJson(indexJson: Object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
+  installAndGetTypeScriptCompilerDir(): string {
+    this.installNpmPackage('typescript');
+    return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
+  setProjectAsAngular() {
+    this.initNpm();
+    this.installNpmPackage('@angular/core');
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
+
+// eslint-disable-next-line import/prefer-default-export
+export const FileStatusWithoutChalk = R.fromPairs(
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
+);
 
 export { VERSION_DELIMITER };

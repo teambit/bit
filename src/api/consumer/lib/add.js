@@ -9,6 +9,10 @@ import type {
   PathOrDSL
 } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
+import { POST_ADD_HOOK, BIT_MAP } from '../../../constants';
+import HooksManager from '../../../hooks';
+
+const HooksManagerInstance = HooksManager.getInstance();
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
@@ -16,6 +20,11 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();
+  const hookContext = {
+    workspacePath: consumer.getPath(),
+    bitmapFileName: BIT_MAP
+  };
+  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }
 
@@ -48,5 +57,10 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
     })
   );
   await consumer.onDestroy();
+  const hookContext = {
+    workspacePath: consumer.getPath(),
+    bitmapFileName: BIT_MAP
+  };
+  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }

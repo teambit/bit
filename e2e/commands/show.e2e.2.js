@@ -374,7 +374,7 @@ describe('bit show command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/foo.js');
+      helper.deletePath('bar/foo.js');
       const output = helper.showComponent('bar/foo -j');
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo'].files;
@@ -386,8 +386,8 @@ describe('bit show command', function () {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deleteFile('bar/index.js');
-      helper.deleteFile('bar/foo.js');
+      helper.deletePath('bar/index.js');
+      helper.deletePath('bar/foo.js');
 
       const showCmd = () => helper.showComponent('bar/foo');
       const error = new MissingFilesFromComponent('bar/foo');
@@ -567,6 +567,62 @@ describe('bit show command', function () {
     it.skip('Should show versions of a remote component using scope name when you are not the author', () => {
       output = helper.runCmd('bit show bit.envs/compilers/babel -v');
       console.log(output);
+    });
+  });
+  describe('component with overrides data', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      const overrides = {
+        'bar/foo': {
+          dependencies: {
+            chai: '4.3.2'
+          }
+        }
+      };
+      helper.addOverridesToBitJson(overrides);
+    });
+    it('should not show the overrides data when --detailed was not used', () => {
+      const barFoo = helper.showComponent('bar/foo');
+      expect(barFoo).to.not.have.string('overrides');
+    });
+    it('should show the overrides data when --detailed was used', () => {
+      const barFoo = helper.showComponent('bar/foo --detailed');
+      expect(barFoo).to.have.string('Overrides Dependencies');
+    });
+  });
+  describe('class with properties', () => {
+    let barFoo;
+    before(() => {
+      helper.reInitLocalScope();
+      const classReactFixture = `import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
+export default class Circle extends Component {
+    render() {
+        return <div className="lds-circle" style={{ background: this.props.color }}></div>
+    }
+}
+
+Circle.propTypes = {
+    color: PropTypes.string
+}
+
+Circle.defaultProps = {
+    color: '#fff'
+}`;
+      helper.createComponentBarFoo(classReactFixture);
+      helper.addComponentBarFoo();
+      barFoo = helper.showComponent();
+    });
+    it('should show the properties data', () => {
+      expect(barFoo).to.have.string('Properties');
+      expect(barFoo).to.have.string('(color: string)');
+    });
+    it('should not show Args and Returns as they are empty and not relevant for classes', () => {
+      expect(barFoo).to.not.have.string('Args');
+      expect(barFoo).to.not.have.string('Returns');
     });
   });
 });

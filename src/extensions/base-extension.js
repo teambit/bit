@@ -7,9 +7,8 @@ import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
-import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
-import type { EnvExtensionOptions } from './env-extension';
+import type { EnvExtensionOptions } from './env-extension-types';
 import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
@@ -308,7 +307,6 @@ export default class BaseExtension {
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
-    logger.debug('base-extension, load extension from model object');
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {
@@ -433,12 +431,12 @@ export default class BaseExtension {
   }
 }
 
-const _getExtensionPath = (name: string, scopePath: ?string, isCore: boolean = false): ExtensionPath => {
+const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): ExtensionPath => {
   if (isCore) {
     return _getCoreExtensionPath(name);
   }
   if (!scopePath) {
-    throw new ScopeNotFound();
+    throw new Error('base-extension._getExtensionPath expects to get scopePath');
   }
   return _getRegularExtensionPath(name, scopePath);
 };
@@ -469,7 +467,7 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
     // It will be handled in higher functions
     const resolved = require.resolve(componentPath);
     return {
-      resolvedPath: resolved,
+      resolvedPath: typeof resolved === 'string' ? resolved : componentPath,
       componentPath
     };
   } catch (e) {

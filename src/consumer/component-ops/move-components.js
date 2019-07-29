@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import { NodeModuleLinker, reLinkDependents } from '../../links';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import GeneralError from '../../error/general-error';
 import type Consumer from '../consumer';
 import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
@@ -36,8 +36,8 @@ export async function movePaths(
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map(c => c.id);
     const { components } = await consumer.loadComponents(BitIds.fromArray(componentsIds));
-    await packageJson.addComponentsToRoot(consumer, components);
-    const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+    await packageJsonUtils.addComponentsToRoot(consumer, components);
+    const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
     await nodeModuleLinker.link();
     await reLinkDependents(consumer, components);
   }

@@ -24,7 +24,7 @@ describe('big text file', function () {
       tagOutput = helper.tagComponent('bar/text');
     });
     it('tagging the component should not throw any error', () => {
-      expect(tagOutput).to.have.string('1 components tagged');
+      expect(tagOutput).to.have.string('1 component(s) tagged');
     });
     describe('exporting and importing the component', () => {
       let importOutput;

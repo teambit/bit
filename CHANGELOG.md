@@ -7,14 +7,195 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
-- obsolete the "dependencies" property of consumer bit.json
-- avoid installing "undefined" npm package when importing authored components
+## [[14.2.3] - 2019-07-28](https://github.com/teambit/bit/releases/tag/v14.2.3)
 
-## [14.0.4-dev.1] - 2019-03-14
+- [#1714](https://github.com/teambit/bit/issues/1714) auto recognize mainFile when a file added with the same name as its dir
+- [#1683](https://github.com/teambit/bit/issues/1683) introduce `--namespace` flag for `bit list` to support namespaces with wildcards
+- [#1727](https://github.com/teambit/bit/issues/1727) prevent saving objects that link to invalid objects
+- [#1856](https://github.com/teambit/bit/issues/1856) fix links deletion from `node_modules` after installing packages by a compiler on a capsule
+- [#1710](https://github.com/teambit/bit/issues/1710) improve performance of importing an entire collection
 
-- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+## [14.2.2] - 2019-07-24
+
+### New
+
+- add workspacePath and bitmapFileName to post-add hook invocation
+
+### Changes
+
+- improve `bit watch` to watch directories instead of only files to support addition / deletion
+- [#1634](https://github.com/teambit/bit/issues/1634) improve the output of `bit watch`
+
+### Bug fixes
+
+- fix "Cannot read property 'push' of undefined" error upon `bit status`
+- build only the component of the modified/added/removed file upon `bit watch`
+- [#1668](https://github.com/teambit/bit/issues/1668) bug fix - `bit watch` doesn't update files
+
+## [[14.2.1] - 2019-07-21](https://github.com/teambit/bit/releases/tag/v14.2.1)
+
+### Bug fixes
+
+- fix "Cannot read property 'length' of undefined" error upon `bit status`
+- fix error "unable to link" upon `bit build` when dist is outside the components dir
+- [#1705](https://github.com/teambit/bit/issues/1705) preserve newline type of `package.json` and add a newline at the end (same as NPM does)
+
+## [[14.2.0] - 2019-07-18](https://github.com/teambit/bit/releases/tag/v14.2.0)
+
+Bit is now available to install as a binary with all dependencies. This is the prefer method to install Bit, as it is bundled with its runtime. Note that when you install with npm / yarn Bit only supports node < `8.12.0`.
+
+### New
+
+- Support packaging bit-bin into a binary file according to the OS by running `npm run pkg`
+- Enable compilers and testers to isolate components using capsule.
+- add `--no-cache` flag to `bit ci-update` command
+- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file.
+- [#1770](https://github.com/teambit/bit/issues/1770) modify dependency links for compilers that bundle them.
+- [#1663](https://github.com/teambit/bit/issues/1663) Support toposort order when compiling components.
+- [#1808](https://github.com/teambit/bit/issues/1808) Adding `dist-path-template` as a `package.json` value, which gets replaced with the calculated dist path upon import.
+- Generate `index.d.ts` file for `node_modules` links generated for typescript's `custom-resolve-modules`.
+- Add a custom entry point file for Angular components
+- Support providing different main-file for dists by a compiler
+- Support identify angular dependencies
+
+### Changes
+
+- fix require statements to an internal package file to not include extensions if they're [.js, .ts, .tsx, .jsx]
+- [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
+- change dependency links generated when dependencies are saved as components to be module paths and not relative paths
+
+### Bug fixes
+
+- [#1817](https://github.com/teambit/bit/issues/1817) fix `ComponentNotFound` error when tagging after `export`, `tag` and `untag` for author using compiler that builds dependencies.
+- [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with `.ts`, `.jsx` and `.tsx` inside `node_modules`.
+- [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
+- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
+- [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
+- avoid generating duplicate `require` statements within dependency links files of ES6
+- update bit-javascript to fix finding tsconfig.json for Angular projects
+- [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
+- [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
+- fix `directory` flag of `bit ci-update` command
+- fix installation errors on Windows related to `posix` package by replacing it with `uid-number`
+- [#1734](https://github.com/teambit/bit/issues/1734) fix error "unable to add the file ..." when the require statement was of `.` or `..` as the only string
+
+### Experimental
+
+- add `post-add` hook
+- add option to isolate component into "capsule" via `bit isolate` command
+
+### Internal
+
+- update execa to v2.0.3
+- upgrade to babel 7
+
+## [14.1.3] - 2019-06-06
+
+### Bug fixes
+
+- [#1708](https://github.com/teambit/bit/issues/1708) support `require` with apostrophes
+- [#1698](https://github.com/teambit/bit/issues/1698) fix dependency version resolution when imported component requires authored component
+- [#1702](https://github.com/teambit/bit/issues/1702) fix error "failed adding a symlink into DataToPersist, src is empty"
+- [#1699](https://github.com/teambit/bit/issues/1699) fix config.get is not a function
+
+## [14.1.2] - 2019-06-02
+
+### New
+
+- introduce a new command `bit undeprecate` to revert deprecation of components
+- introduce a new flag `--machine-name` for `bit login` to help CI servers keep their token not revoked
+- support `bit import` with wildcards to import an entire scope or particular namespace(s)
+- support changing the log to json format by running `bit config set log_json_format true`
+- add bit version validation to `bit doctor` command
+- add validation for npm executable on `bit doctor`
+- add validation for yarn executable on `bit doctor`
+
+### Changes
+
+- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
+- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
+- add a suggestion to run `bit doctor` on various errors
+- avoid generating links of devDependencies when installing component as packages (#1614)
+- add metadata to `bit doctor` output
+- update `bit add` help message with instructions for using glob patterns with `--tests`
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+
+### Bug fixes
+
+- [#1665](https://github.com/teambit/bit/issues/1665) fix resolve-modules prefix with Tilda
+- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- ignore `import`/`require` statements from CDN (HTTP/HTTPS)
+- avoid generating package.json inside node_modules for an author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
+
+## [14.1.1] - 2019-05-16
+
+### Bug fixes
+
+- fix bit build to not generate `index.js` files when `package.json` file already exists
+- prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
+- avoid changing the local version of a component to the latest when exporting an older version
+- fix post-receive-hook to send all exported versions and not only the latest
+- fix dependency resolution to identify link (proxy) files correctly
+- fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
+- fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
+- fix dependency value in the dependent package.json to include the path when importing them both in the same command
+- fix "EEXIST: file already exists" error when running `bit link` or `bit install` and the dist is outside the component directory
+- fix `bit add` to ignore directories when their files are added (#1406)
+
+## [[14.1.0] - 2019-05-01](https://github.com/teambit/bit/releases/tag/v14.1.0)
+
+### New
+
+- [enable manual manipulation for component dependency resolution and environment configuration using `overrides`](http://docs.bit.dev/docs/conf-bit-json.html#overrides).
+
+### Changes
+
+- [moving Bit configuration to `package.json`.](http://docs.bit.dev/docs/initializing-bit.html#bit-config)
+- improve performance of `bit import` by reducing memory consumption and using more cache
+- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
 - improve authentication error message to clearly indicate the various strategies failures
+- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+- avoid installing "undefined" npm package when importing authored components
+- improve Bit load time by changing bit-javascript to use lazy loading
+- remove `dependencies` property from workspace `bit.json`.
+- improve `bit show` to display class properties
+- replace the cache mechanism from roadrunner to v8-compile-cache
+
+### Bug fixes
+
+- fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
+- fix output for `bit list -j` (remove chalk characters and improve format)
+- avoid reporting errors on components with dynamic import statements (#1554)
+- fix tagging imported components to not loose `package.json` properties
+- fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+- fix `bit status` to not show the component as modified when dependencies have different order
+- show a descriptive error when user try to export components with private dependencies to collection under another owner
+- show a descriptive error when a version object is missing
+
+### Experimental
+
+- `bit doctor` command and APIs to run diagnosis on a workspace
+
+## [14.0.6] - 2019-04-16
+
+- fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
+
+## [14.0.5] - 2019-04-07
+
+- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
+- fix symlink to binary (or unsupported) files dependencies when installed via npm
+
+
+## [14.0.4] - 2019-03-18
+
+- replace default bitsrc.io domain to bit.dev
 
 ## [14.0.3] - 2019-03-12
 
@@ -59,7 +240,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Summary
 
-*Bit’s v14 is released side-by-side with the release of the v2 for [bitsrc.io](https://bitsrc.io), Bit’s component community hub. New features for bitsrc.io v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
+*Bit’s v14 is released side-by-side with the release of the v2 for [bit.dev](https://bit.dev), Bit’s component community hub. New features for bit.dev v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
 
 With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem.
 
@@ -410,7 +591,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 ## [0.12.0] - 2018-01-18
 
 ### New
-- [extension system (beta)](https://docs.bitsrc.io/docs/ext-concepts.html)
+- [extension system (beta)](https://docs.bit.dev/docs/ext-concepts.html)
 - [#540](https://github.com/teambit/bit/issues/540) support Yarn as package manager
 - `bit import`: install hub dependencies as npm packages by default
 - `bit import`: install npm packages by default

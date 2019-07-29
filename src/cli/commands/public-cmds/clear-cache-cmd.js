@@ -1,10 +1,11 @@
 /** @flow */
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import roadRunner from 'roadrunner';
+// it's a hack, but I didn't find a better way to access the getCacheDir() function
+import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
 import Command from '../../command';
 
-const { BASE_DOCS_DOMAIN, MODULES_CACHE_DIR, MODULES_CACHE_FILENAME, BIT_VERSION } = require('../../../constants');
+const { BASE_DOCS_DOMAIN } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
@@ -14,10 +15,8 @@ export default class ClearCache extends Command {
   loader = false;
 
   action(): Promise<any> {
-    fs.removeSync(MODULES_CACHE_DIR);
-    fs.mkdirsSync(MODULES_CACHE_DIR);
-    roadRunner.reset(MODULES_CACHE_FILENAME);
-    roadRunner.set('CACHE_BREAKER', { version: BIT_VERSION });
+    const cacheDir = v8CompileCache.getCacheDir();
+    fs.removeSync(cacheDir);
     return Promise.resolve();
   }
 

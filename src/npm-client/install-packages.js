@@ -7,7 +7,7 @@ import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import type { ComponentWithDependencies } from '../scope';
 import type Consumer from '../consumer/consumer';
-import type { PathAbsolute } from '../utils/path';
+import type { PathOsBasedRelative, PathAbsolute } from '../utils/path';
 import filterAsync from '../utils/array/filter-async';
 import { PACKAGE_JSON } from '../constants';
 
@@ -20,12 +20,12 @@ export async function installPackages(
   installPeerDependencies: boolean = false // also install peer dependencies
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.bitConfig.packageManager;
+  const packageManager = consumer.config.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.bitConfig.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.bitConfig.packageManagerProcessOptions;
-  const useWorkspaces = consumer.bitConfig.useWorkspaces;
+    : consumer.config.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.config.packageManagerProcessOptions;
+  const useWorkspaces = consumer.config.useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
@@ -73,6 +73,14 @@ export async function installNpmPackagesForComponents({
   silentPackageManagerResult?: boolean,
   installPeerDependencies: boolean
 }): Promise<*> {
+  const componentDirsRelative = getAllRootDirectoriesFor(componentsWithDependencies);
+  const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
+  return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
+}
+
+export function getAllRootDirectoriesFor(
+  componentsWithDependencies: ComponentWithDependencies[]
+): PathOsBasedRelative[] {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
@@ -84,9 +92,7 @@ export async function installNpmPackagesForComponents({
   );
 
   const componentDirsRelative = componentsWithDependenciesFlatten.map(component => component.writtenPath);
-  const componentDirsRelativeUniq = R.uniq(componentDirsRelative);
-  const componentDirs = componentDirsRelativeUniq.map(dir => (basePath ? path.join(basePath, dir) : dir));
-  return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
+  return R.uniq(componentDirsRelative);
 }
 
 async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {

@@ -1,3 +1,5 @@
+import { BASE_DOCS_DOMAIN, BASE_WEB_DOMAIN } from '../../constants';
+
 const rightpad = require('pad-right');
 const chalk = require('chalk');
 
@@ -87,6 +89,14 @@ const allCommands = [
       {
         name: 'link',
         description: 'generate symlinks for sourced components absolute path resolution.'
+      },
+      {
+        name: 'deprecate',
+        description: 'deprecate a component'
+      },
+      {
+        name: 'undeprecate',
+        description: 'undeprecate a deprecated component'
       }
     ]
   },
@@ -129,10 +139,6 @@ const allCommands = [
         description: 'watch components and perform `build` on changes'
       }
       // {
-      //   name: 'envs-attach',
-      //   description: 'attach workspace environments to components'
-      // },
-      // {
       //   name: 'eject-conf',
       //   description: 'ejecting components configuration'
       // },
@@ -147,15 +153,19 @@ const allCommands = [
     commands: [
       {
         name: 'login',
-        description: 'log the CLI into bitsrc.io'
+        description: `log the CLI into ${BASE_WEB_DOMAIN}`
       },
       {
         name: 'logout',
-        description: 'log the CLI out of bitsrc.io'
+        description: `log the CLI out of ${BASE_WEB_DOMAIN}`
       },
       {
         name: 'config',
         description: 'global config management'
+      },
+      {
+        name: 'doctor',
+        description: 'diagnose a bit workspace'
       },
       {
         name: 'cc',
@@ -173,7 +183,7 @@ const baseTemplate = (commands) => {
   )}
   ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
-  ${chalk.grey('Bit documentation: https://docs.bitsrc.io')}
+  ${chalk.grey(`Bit documentation: https://${BASE_DOCS_DOMAIN}`)}
 
 ${commandsTemplate(commands)}
 

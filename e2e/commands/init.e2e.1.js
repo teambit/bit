@@ -1,13 +1,15 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
+import detectIndent from 'detect-indent';
 import Helper from '../e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
-import { InvalidBitConfig } from '../../src/consumer/bit-config/exceptions';
+import { InvalidBitJson } from '../../src/consumer/config/exceptions';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import InvalidPackageJson from '../../src/consumer/config/exceptions/invalid-package-json';
 
 const assertArrays = require('chai-arrays');
 
@@ -44,7 +46,7 @@ describe('run bit init', function () {
       const bitmapPath = path.join(helper.localScopePath, '.bitmap');
       expect(bitmapPath).to.be.a.file('missing bitmap');
     });
-    it('bitmap should contain  version"', () => {
+    it('bitmap should contain version"', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('version');
       expect(bitMap.version).to.equal(helper.getBitVersion());
@@ -198,10 +200,10 @@ describe('run bit init', function () {
         helper.reInitLocalScope();
         helper.corruptBitJson();
       });
-      it('bit status should throw an exception InvalidBitConfig', () => {
+      it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.localScopePath, BIT_JSON);
         const statusCmd = () => helper.runCmd('bit status');
-        const error = new InvalidBitConfig(bitJsonPath, 'Unexpected token t');
+        const error = new InvalidBitJson(bitJsonPath, 'Unexpected token t');
         helper.expectToThrow(statusCmd, error);
       });
       it('should create a new bit.json file', () => {
@@ -299,6 +301,118 @@ describe('run bit init', function () {
       it('bit status should show nothing-to-tag', () => {
         const output = helper.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+    });
+  });
+  describe('when a project has package.json file', () => {
+    describe('without --standalone flag', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        helper.runCmd('bit init');
+      });
+      it('should write the bit.json content into the package.json inside "bit" property', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.have.property('componentsDefaultDirectory');
+        expect(packageJson.bit.componentsDefaultDirectory).to.equal('components/{name}');
+      });
+      it('should not create bit.json file', () => {
+        expect(path.join(helper.localScopePath, 'bit.json')).to.not.be.a.path();
+      });
+      it('should preserve the default npm indentation of 2', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(2);
+      });
+      it('should preserve the new line at the end of json as it was created by npm', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(packageJson.endsWith('\n')).to.be.true;
+      });
+    });
+    describe('with --standalone flag', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        helper.runCmd('bit init --standalone');
+      });
+      it('should not write the bit.json content into the package.json file', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.not.have.property('bit');
+      });
+      it('should create bit.json file', () => {
+        expect(path.join(helper.localScopePath, 'bit.json')).to.be.a.file();
+        const bitJson = helper.readBitJson();
+        expect(bitJson).to.have.property('componentsDefaultDirectory');
+      });
+    });
+    describe('when the package.json is corrupted', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.corruptPackageJson();
+      });
+      it('should throw InvalidPackageJson error', () => {
+        const initCmd = () => helper.runCmd('bit init');
+        const error = new InvalidPackageJson(path.join(helper.localScopePath, 'package.json'));
+        helper.expectToThrow(initCmd, error);
+      });
+    });
+    describe('with an indentation of 4', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        const packageJson = helper.readPackageJson();
+        const packageJsonPath = path.join(helper.localScopePath, 'package.json');
+        fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
+        helper.runCmd('bit init');
+      });
+      it('should preserve the original indentation and keep it as 4', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(4);
+      });
+    });
+  });
+  describe('when there is .bitmap, bit.json but not .bit dir', () => {
+    describe('when .bit located directly on workspace root', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createBitMap();
+        helper.deletePath('.bit');
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
+        const lsCmd = () => helper.listLocalScope();
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, '.bit')).to.be.a.directory();
+      });
+    });
+    describe('when bit located on .git', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNewGitRepo();
+        helper.initLocalScope();
+        helper.createBitMap();
+        helper.deletePath('.git/bit');
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
+        const lsCmd = () => helper.listLocalScope();
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, '.git/bit')).to.be.a.directory();
+      });
+    });
+    describe('when running from an inner directory that has also .bitmap', () => {
+      let innerDir;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createBitMap();
+        innerDir = path.join(helper.localScopePath, 'inner');
+        fs.mkdirSync(innerDir);
+        helper.runCmd('bit init', innerDir);
+        fs.removeSync(path.join(innerDir, '.bit'));
+        fs.removeSync(path.join(helper.localScopePath, '.bit'));
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir in the inner directory', () => {
+        const lsCmd = () => helper.runCmd('bit ls ', innerDir);
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, 'inner/.bit')).to.be.a.directory();
       });
     });
   });

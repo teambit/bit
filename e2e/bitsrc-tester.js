@@ -1,10 +1,12 @@
 import requestify from 'requestify';
+import { BASE_WEB_DOMAIN } from '../src/constants';
 
-// const apiBaseUrl = process.env.NODE_ENV === 'production' ? 'https://api.bitsrc.io' : 'https://api-stg.bitsrc.io';
+// const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_WEB_DOMAIN}` : `https://api-stg.${BASE_WEB_DOMAIN}`;
 const isAppVeyor = process.env.APPVEYOR === 'True';
 const supportTestingOnBitsrc = !isAppVeyor;
 // const supportTestingOnBitsrc = true;
-const apiBaseUrl = process.env.BITSRC_ENV === 'stg' ? 'https://api-stg.bitsrc.io' : 'https://api.bitsrc.io';
+const apiBaseUrl =
+  process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_WEB_DOMAIN}` : `https://api.${BASE_WEB_DOMAIN}`;
 const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
 
@@ -19,16 +21,22 @@ export default class BitsrcTester {
       .post(`${apiBaseUrl}/user/login`, { username, password })
       .then((res) => {
         return {
-          cocyclesSession: res
-            .getHeader('set-cookie')[0]
-            .split(';')[0]
-            .split('cocyclesSession=')[1]
+          cocyclesSession: getSession(res.getHeader('set-cookie'))
         };
       })
       .catch((err) => {
         console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
         throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
+    function getSession(cookies) {
+      const sessionPart = cookies.find(str => str.includes('cocyclesSession'));
+      if (!sessionPart) {
+        throw new Error(`Failed to authenticate to ${apiBaseUrl}, the "cocyclesSession" was not found`);
+      }
+      const cocyclesSessionPart = sessionPart.split(';');
+      const cocyclesSession = cocyclesSessionPart.find(str => str.includes('cocyclesSession'));
+      return cocyclesSession.replace('cocyclesSession=', '');
+    }
   }
 
   loginToBitSrc() {

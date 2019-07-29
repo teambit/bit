@@ -12,7 +12,8 @@ import {
   CFG_HUB_LOGIN_KEY,
   DEFAULT_LANGUAGE,
   DEFAULT_REGISTRY_URL,
-  CFG_REGISTRY_URL_KEY
+  CFG_REGISTRY_URL_KEY,
+  PREVIOUSLY_DEFAULT_REGISTRY_URL
 } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
@@ -25,12 +26,14 @@ const REDIRECT = 302;
 
 export default function loginToBitSrc(
   port: string,
-  suppressBrowserLaunch?: boolean,
+  suppressBrowserLaunch: boolean,
   npmrcPath: string,
-  skipRegistryConfig: boolean
+  skipRegistryConfig: boolean,
+  machineName: ?string
 ): Promise<{
   isAlreadyLoggedIn?: boolean,
-  username?: string
+  username?: string,
+  npmrcPath?: string
 }> {
   let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
@@ -66,9 +69,16 @@ export default function loginToBitSrc(
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token);
+        const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
-            actualNpmrcPath = driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
+            if (!configuredRegistry) {
+              // some packages might have links in package-lock.json to the previous registry
+              // this makes sure to have also the auth-token of the previous registry.
+              // (the @bit:registry part points only to the current registry).
+              actualNpmrcPath = driver.npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
+            }
+            actualNpmrcPath = driver.npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
           } catch (e) {
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;
@@ -100,9 +110,8 @@ export default function loginToBitSrc(
 
       const encoded = encodeURI(
         `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${port ||
-          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${os.hostname()}&os=${
-          process.platform
-        }`
+          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${machineName ||
+          os.hostname()}&os=${process.platform}`
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
