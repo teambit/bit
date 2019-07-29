@@ -659,8 +659,8 @@ export default class BitMap {
     return ids.map(id => this.removeComponent(id));
   }
 
-  isExistWithSameVersion(id: BitId) {
-    return id.hasVersion() && this.components[id.toString()];
+  isExistWithSameVersion(id: BitId): boolean {
+    return Boolean(id.hasVersion() && this.components[id.toString()]);
   }
 
   /**
