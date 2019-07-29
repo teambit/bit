@@ -144,7 +144,7 @@ function register(command: Command, commanderCmd) {
   });
 
   // attach skip-update to all commands
-  concrete.option('--skip-update', 'Skips auto updates');
+  // concrete.option('--skip-update', 'Skips auto updates');
 
   if (command.commands) {
     command.commands.forEach((nestedCmd) => {
@@ -166,7 +166,7 @@ export default class CommandRegistrar {
     commander
       .version(this.version)
       .usage(this.usage)
-      .option('--skip-update', 'Skips auto updates for a command')
+      // .option('--skip-update', 'Skips auto updates for a command')
       .description(this.description);
   }
 
