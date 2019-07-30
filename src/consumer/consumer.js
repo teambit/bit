@@ -54,6 +54,7 @@ import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
 import type { BitIdStr } from '../bit-id/bit-id';
+import type { WorkspaceConfigProps } from './config/workspace-config';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
@@ -727,8 +728,12 @@ export default class Consumer {
     return path.join(this.getPath(), relativeDependencyPath);
   }
 
-  static create(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {
-    return this.ensure(projectPath, noGit);
+  static create(
+    projectPath: PathOsBasedAbsolute,
+    noGit: boolean = false,
+    workspaceConfigProps: WorkspaceConfigProps
+  ): Promise<Consumer> {
+    return this.ensure(projectPath, noGit, workspaceConfigProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -740,12 +745,16 @@ export default class Consumer {
     return resolvedScopePath;
   }
 
-  static async ensure(projectPath: PathOsBasedAbsolute, standAlone: boolean = false): Promise<Consumer> {
+  static async ensure(
+    projectPath: PathOsBasedAbsolute,
+    standAlone: boolean = false,
+    workspaceConfigProps: WorkspaceConfigProps
+  ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, standAlone);
+    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,

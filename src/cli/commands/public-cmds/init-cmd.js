@@ -1,5 +1,6 @@
 /** @flow */
 import chalk from 'chalk';
+import R from 'ramda';
 import * as pathlib from 'path';
 import Command from '../../command';
 import { initScope } from '../../../api/scope';
@@ -7,6 +8,7 @@ import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
+import clean from '../../../utils/object-clean';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -16,7 +18,7 @@ export default class Init extends Command {
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     [
-      't',
+      'T',
       'standalone [boolean]',
       'do not nest component store within .git directory and do not write config data inside package.json'
     ],
@@ -26,15 +28,33 @@ export default class Init extends Command {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
     ],
-    ['f', 'force', 'force workspace initialization without clearing local objects']
+    ['c', 'compiler <compiler>', 'set up compiler'],
+    ['t', 'tester <tester>', 'set up tester'],
+    ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
+    ['p', 'package-manager <package-manager>', 'set up package manager (npm | yarn)'],
+    ['f', 'force', 'force workspace initialization without clearing local objects'],
+    ['N', 'skip-interactive', 'do not start the interactive process']
   ];
 
-  action([path]: [string], { bare, shared, standalone, reset, resetHard, force }: any): Promise<{ [string]: any }> {
-    return initInteractive();
+  action([path]: [string], flags: Object): Promise<{ [string]: any }> {
+    if (!_isAnyFlagUsed(flags) && !flags.skipInteractive) {
+      return initInteractive();
+    }
+    const {
+      bare,
+      shared,
+      standalone,
+      reset,
+      resetHard,
+      force,
+      compiler,
+      tester,
+      defaultDirectory,
+      packageManager
+    } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
-      if (typeof bare === 'boolean') bare = '';
       return initScope(path, bare, shared).then(({ created }) => {
         return {
           created,
@@ -43,18 +63,21 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    return init(path, standalone, reset, resetHard, force).then(({ created, addedGitHooks, existingGitHooks }) => {
-      return {
-        created,
-        addedGitHooks,
-        existingGitHooks,
-        reset,
-        resetHard
-      };
-    });
+    const workspaceConfigProps = { compiler, tester, componentsDefaultDirectory: defaultDirectory, packageManager };
+    return init(path, standalone, reset, resetHard, force, workspaceConfigProps).then(
+      ({ created, addedGitHooks, existingGitHooks }) => {
+        return {
+          created,
+          addedGitHooks,
+          existingGitHooks,
+          reset,
+          resetHard
+        };
+      }
+    );
   }
 
-  report({ created, bare, addedGitHooks, existingGitHooks, reset, resetHard }: any): string {
+  report({ created, bare, reset, resetHard }: any): string {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
@@ -73,20 +96,25 @@ export default class Init extends Command {
   }
 }
 
-function _generateAddedGitHooksTemplate(addedGitHooks) {
-  if (addedGitHooks && addedGitHooks.length > 0) {
-    return chalk.green(`the following git hooks were added: ${addedGitHooks.join(', ')}`);
-  }
-  return '';
+function _isAnyFlagUsed(flags: Object) {
+  const cleaned = clean(flags);
+  return !R.isEmpty(cleaned);
 }
 
-function _generateExistingGitHooksTemplate(existingGitHooks) {
-  if (existingGitHooks && existingGitHooks.length > 0) {
-    return chalk.yellow(
-      `warning: the following git hooks are already existing: ${existingGitHooks.join(
-        ', '
-      )}\nplease add the following code to your hooks: \`bit import\``
-    );
-  }
-  return '';
-}
+// function _generateAddedGitHooksTemplate(addedGitHooks) {
+//   if (addedGitHooks && addedGitHooks.length > 0) {
+//     return chalk.green(`the following git hooks were added: ${addedGitHooks.join(', ')}`);
+//   }
+//   return '';
+// }
+
+// function _generateExistingGitHooksTemplate(existingGitHooks) {
+//   if (existingGitHooks && existingGitHooks.length > 0) {
+//     return chalk.yellow(
+//       `warning: the following git hooks are already existing: ${existingGitHooks.join(
+//         ', '
+//       )}\nplease add the following code to your hooks: \`bit import\``
+//     );
+//   }
+//   return '';
+// }

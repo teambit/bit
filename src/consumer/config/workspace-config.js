@@ -17,12 +17,13 @@ import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
+import InvalidPackageManager from './exceptions/invalid-package-manager';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
-type workspaceConfigProps = {
+export type WorkspaceConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   saveDependenciesAsComponents?: boolean,
@@ -80,8 +81,11 @@ export default class WorkspaceConfig extends AbstractConfig {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
     overrides = ConsumerOverrides.load()
-  }: workspaceConfigProps) {
+  }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
+    if (packageManager !== 'npm' && packageManager !== 'yarn') {
+      throw new InvalidPackageManager(packageManager);
+    }
     this.distTarget = distTarget;
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
@@ -133,17 +137,21 @@ export default class WorkspaceConfig extends AbstractConfig {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  static create(): WorkspaceConfig {
-    return new WorkspaceConfig({});
+  static create(workspaceConfigProps: WorkspaceConfigProps): WorkspaceConfig {
+    return new WorkspaceConfig(workspaceConfigProps);
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<WorkspaceConfig> {
+  static async ensure(
+    dirPath: PathOsBasedAbsolute,
+    standAlone: boolean,
+    workspaceConfigProps: WorkspaceConfigProps = {}
+  ): Promise<WorkspaceConfig> {
     try {
       const workspaceConfig = await this.load(dirPath);
       return workspaceConfig;
     } catch (err) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
-        const consumerBitJson = this.create();
+        const consumerBitJson = this.create(workspaceConfigProps);
         const packageJsonExists = await AbstractConfig.pathHasPackageJson(dirPath);
         if (packageJsonExists && !standAlone) {
           consumerBitJson.writeToPackageJson = true;
