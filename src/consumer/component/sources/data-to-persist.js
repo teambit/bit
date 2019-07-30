@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import fs from 'fs-extra';
 import Capsule from '../../../../components/core/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
@@ -72,8 +73,25 @@ export default class DataToPersist {
     this._log();
     this._validateRelative();
     await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
-    await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
+    await Promise.all(this.files.map(file => this._writeFileToCapsule(capsule, file)));
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
+  }
+  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl) {
+    if (file.override === false) {
+      // @todo, capsule hack. use capsule.fs once you get it as a component.
+      const capsulePath = capsule.container.getPath();
+      const absPath = path.join(capsulePath, file.relative);
+      try {
+        await fs.lstat(absPath); // if no errors have been thrown, the file exists
+        logger.debug(`skip file ${absPath}, it already exists`);
+        return null;
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    }
+    return capsule.outputFile(file.path, file.contents);
   }
   async atomicSymlink(capsule: Capsule, symlink: Symlink) {
     try {
