@@ -165,23 +165,42 @@ describe('bit import', function () {
 
     describe('with a specific path, using -p flag', () => {
       describe('as author', () => {
-        describe.only('when there is a track dir', () => {
+        describe('when there is a track dir', () => {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.createFile('bar-author', 'foo1.js');
-            helper.createFile('bar-author', 'foo2.js');
+            helper.createFile('bar-author-track', 'foo1.js');
+            helper.createFile('bar-author-track', 'foo2.js');
             helper.outputFile('should-not-be-deleted.js');
-            helper.addComponent('bar-author', { m: 'foo1.js' });
+            helper.addComponent('bar-author-track', { m: 'foo1.js' });
             helper.tagAllComponents();
             helper.exportAllComponents();
-            helper.importComponentWithOptions('bar-author', { p: 'my-new-dir' });
+            helper.importComponentWithOptions('bar-author-track', { p: 'my-new-dir' });
           });
           it('should not delete other files on the workspace', () => {
             expect(path.join(helper.localScopePath, 'should-not-be-deleted.js')).to.be.a.file();
           });
-          it('should move the component to the specified directory', () => {
+          it('should throw an error saying it is not possible to move the component', () => {
             expect(path.join(helper.localScopePath, 'my-new-dir')).to.be.a.directory();
+          });
+        });
+        describe('when there is no track dir', () => {
+          before(() => {
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.createFile('bar-author', 'foo.js');
+            helper.outputFile('should-not-be-deleted.js');
+            helper.addComponent('bar-author/foo.js');
+            helper.tagAllComponents();
+            helper.exportAllComponents();
+            const func = () => helper.importComponentWithOptions('foo', { p: 'my-new-dir' });
+            expect(func).to.throw();
+          });
+          it('should not delete other files on the workspace', () => {
+            expect(path.join(helper.localScopePath, 'should-not-be-deleted.js')).to.be.a.file();
+          });
+          it('should not move the component', () => {
+            expect(path.join(helper.localScopePath, 'bar-author')).to.be.a.directory();
           });
         });
       });
