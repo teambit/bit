@@ -305,13 +305,19 @@ export default class ComponentWriter {
    * we update/remove/don't-touch the record in bit.map.
    * 1) current origin is AUTHORED - If the version is the same as before, don't update bit.map. Otherwise, update.
    * 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
-   * 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
-   * never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
+   * 3) current origin is NESTED - If it was not NESTED before, don't update.
    */
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
     const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
     if (componentMapExistWithSameVersion) {
+      if (
+        this.existingComponentMap &&
+        this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
+        this.origin === COMPONENT_ORIGINS.NESTED
+      ) {
+        return;
+      }
       this.bitMap.removeComponent(this.component.id);
     }
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
