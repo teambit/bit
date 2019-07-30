@@ -1,7 +1,11 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe('permissions', function () {
+/**
+ * skipping the permissions tests as it won't be easy to have the CIs testing 'sudo' commands.
+ * it does work locally though and is recommended to run it whenever this functionality is touched
+ */
+describe.skip('permissions', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
