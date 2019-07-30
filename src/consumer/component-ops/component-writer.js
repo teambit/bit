@@ -208,6 +208,7 @@ export default class ComponentWriter {
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,
+      trackDir: this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
@@ -310,9 +311,10 @@ export default class ComponentWriter {
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
     const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
-    if (!componentMapExistWithSameVersion) {
-      this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
+    if (componentMapExistWithSameVersion) {
+      this.bitMap.removeComponent(this.component.id);
     }
+    this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
   async _updateConsumerConfigIfNeeded() {
