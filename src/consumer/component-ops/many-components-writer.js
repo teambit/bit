@@ -270,7 +270,8 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        const componentMap = componentWithDeps.component.componentMap;
+        // $FlowFixMe componentWithDeps.component.componentMap is set
+        const componentMap: ComponentMap = componentWithDeps.component.componentMap;
         if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
