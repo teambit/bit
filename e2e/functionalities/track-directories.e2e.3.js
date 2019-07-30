@@ -14,7 +14,7 @@ describe('track directories functionality', function () {
   describe('add a directory as authored', () => {
     let localScope;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils/bar', 'foo.js');
       helper.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.cloneLocalScope();
@@ -137,6 +137,20 @@ describe('track directories functionality', function () {
         const bitMap = helper.readBitMap();
         expect(bitMap).to.have.property('utils/bar');
         expect(bitMap['utils/bar']).to.not.have.property('trackDir');
+      });
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.addRemoteScope();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.importComponent('utils/bar');
+      });
+      it('should not remove the trackDir property from bitmap file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/bar@0.0.1`);
+        expect(bitMap[`${helper.remoteScope}/utils/bar@0.0.1`]).to.have.property('trackDir');
       });
     });
   });

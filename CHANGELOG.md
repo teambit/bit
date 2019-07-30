@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- do not delete trackDir when a component is imported
 - fix capsule to respect the `override` property of vinyl files
 
 ## [[14.2.3] - 2019-07-28](https://github.com/teambit/bit/releases/tag/v14.2.3)

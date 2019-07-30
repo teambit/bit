@@ -60,7 +60,6 @@ export default class ComponentWriter {
   bitMap: BitMap;
   writeBitDependencies: boolean;
   deleteBitDirContent: ?boolean;
-  componentMap: ComponentMap;
   existingComponentMap: ?ComponentMap;
   excludeRegistryPrefix: boolean;
   constructor({
@@ -122,8 +121,7 @@ export default class ComponentWriter {
     }
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
-    this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
-    this.component.componentMap = this.componentMap;
+    this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
     this._determineWhetherToDeleteComponentDirContent();
     await this._handlePreviouslyNestedCurrentlyImportedCase();
@@ -199,7 +197,7 @@ export default class ComponentWriter {
     });
     const getConfigDir = () => {
       if (this.configDir) return this.configDir;
-      if (this.componentMap) return this.componentMap.configDir;
+      if (this.component.componentMap) return this.component.componentMap.configDir;
       return undefined;
     };
 
@@ -210,6 +208,7 @@ export default class ComponentWriter {
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,
+      trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
@@ -295,7 +294,8 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
-    this.writeToPath = this.componentMap.getRootDir();
+    // $FlowFixMe this.component.componentMap is set
+    this.writeToPath = this.component.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
   }
@@ -306,31 +306,31 @@ export default class ComponentWriter {
    * we update/remove/don't-touch the record in bit.map.
    * 1) current origin is AUTHORED - If the version is the same as before, don't update bit.map. Otherwise, update.
    * 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
-   * one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
-   * this case has been already handled before by this._handlePreviouslyNestedCurrentlyImportedCase();
-   * 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
-   * never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
+   * 3) current origin is NESTED - If it was not NESTED before, don't update.
    */
   _updateBitMapIfNeeded() {
     if (this.isolated) return;
     const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
-    const updateBitMap =
-      !componentMapExistWithSameVersion || this.componentMap.originallySharedDir !== this.component.originallySharedDir;
-    if (updateBitMap) {
-      if (componentMapExistWithSameVersion) {
-        // originallySharedDir has been changed. it affects also the relativePath of the files
-        // so it's better to just remove the old record and add a new one
-        this.bitMap.removeComponent(this.component.id);
+    if (componentMapExistWithSameVersion) {
+      if (
+        this.existingComponentMap &&
+        this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
+        this.origin === COMPONENT_ORIGINS.NESTED
+      ) {
+        return;
       }
-      this.component.componentMap = this.addComponentToBitMap(this.componentMap.rootDir);
+      this.bitMap.removeComponent(this.component.id);
     }
+    // $FlowFixMe this.component.componentMap is set
+    this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
   async _updateConsumerConfigIfNeeded() {
     // for authored components there is no bit.json/package.json component specific
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
-      const context = { componentDir: this.componentMap.getRootDir() };
+      // $FlowFixMe this.component.componentMap is set
+      const context = { componentDir: this.component.componentMap.getRootDir() };
       const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
       const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
@@ -346,13 +346,15 @@ export default class ComponentWriter {
         )
       );
     };
-    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
+    // $FlowFixMe this.component.componentMap is set
+    if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
   _determineWhetherToWriteConfig() {
-    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+    // $FlowFixMe this.component.componentMap is set
+    if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       this.writeConfig = false;
     }
   }
@@ -372,9 +374,10 @@ export default class ComponentWriter {
    */
   async _handlePreviouslyNestedCurrentlyImportedCase() {
     if (!this.consumer) return;
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+    // $FlowFixMe this.component.componentMap is set
+    if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.component.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       await this._cleanOldNestedComponent();
-      this.componentMap = this.addComponentToBitMap(this.writeToPath);
+      this.component.componentMap = this.addComponentToBitMap(this.writeToPath);
     }
   }
 
@@ -401,7 +404,7 @@ export default class ComponentWriter {
   async _cleanOldNestedComponent() {
     if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
-    const oldLocation = path.join(this.consumer.getPath(), this.componentMap.rootDir);
+    const oldLocation = path.join(this.consumer.getPath(), this.component.componentMap.rootDir);
     logger.debugAndAddBreadCrumb(
       'component-writer._cleanOldNestedComponent',
       'deleting the old directory of a component at {oldLocation}',
