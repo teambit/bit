@@ -581,7 +581,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
-    trackDir?: PathOsBased,
+    trackDir?: ?PathOsBased,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {

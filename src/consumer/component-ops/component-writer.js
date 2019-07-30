@@ -294,6 +294,7 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
+    // $FlowFixMe this.component.componentMap is set
     this.writeToPath = this.component.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
@@ -320,6 +321,7 @@ export default class ComponentWriter {
       }
       this.bitMap.removeComponent(this.component.id);
     }
+    // $FlowFixMe this.component.componentMap is set
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
@@ -327,6 +329,7 @@ export default class ComponentWriter {
     // for authored components there is no bit.json/package.json component specific
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
+      // $FlowFixMe this.component.componentMap is set
       const context = { componentDir: this.component.componentMap.getRootDir() };
       const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
       const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
@@ -343,12 +346,14 @@ export default class ComponentWriter {
         )
       );
     };
+    // $FlowFixMe this.component.componentMap is set
     if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
   _determineWhetherToWriteConfig() {
+    // $FlowFixMe this.component.componentMap is set
     if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       this.writeConfig = false;
     }
@@ -369,6 +374,7 @@ export default class ComponentWriter {
    */
   async _handlePreviouslyNestedCurrentlyImportedCase() {
     if (!this.consumer) return;
+    // $FlowFixMe this.component.componentMap is set
     if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.component.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       await this._cleanOldNestedComponent();
       this.component.componentMap = this.addComponentToBitMap(this.writeToPath);
