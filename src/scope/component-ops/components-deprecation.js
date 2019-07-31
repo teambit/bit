@@ -6,6 +6,7 @@ import type { BitIdStr } from '../../bit-id/bit-id';
 import { Scope } from '..';
 import { getScopeRemotes } from '../scope-remotes';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
+import Remotes from '../../remotes/remotes';
 
 export type DeprecationResult = {
   bitIds: BitIdStr[],
@@ -22,12 +23,20 @@ export async function undeprecateMany(scope: Scope, bitIds: BitIds): Promise<Dep
   return _deprecationMany(scope, bitIds, _undeprecateSingle);
 }
 
-export async function deprecateRemote(scope: Scope, bitIds: Array<BitId>): Promise<DeprecationResult[]> {
-  return _deprecationRemote(scope, bitIds, true);
+export async function deprecateRemote(
+  remotes: Remotes,
+  scope: ?Scope,
+  bitIds: Array<BitId>
+): Promise<DeprecationResult[]> {
+  return _deprecationRemote(remotes, scope, bitIds, true);
 }
 
-export async function undeprecateRemote(scope: Scope, bitIds: Array<BitId>): Promise<DeprecationResult[]> {
-  return _deprecationRemote(scope, bitIds, false);
+export async function undeprecateRemote(
+  remotes: Remotes,
+  scope: ?Scope,
+  bitIds: Array<BitId>
+): Promise<DeprecationResult[]> {
+  return _deprecationRemote(remotes, scope, bitIds, false);
 }
 
 async function _deprecationMany(scope: Scope, ids: BitIds, deprecationAction: Function): Promise<DeprecationResult> {
@@ -40,12 +49,12 @@ async function _deprecationMany(scope: Scope, ids: BitIds, deprecationAction: Fu
 }
 
 async function _deprecationRemote(
-  scope: Scope,
+  remotes: Remotes,
+  scope: ?Scope,
   bitIds: Array<BitId>,
   deprecate: boolean
 ): Promise<DeprecationResult[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
-  const remotes = await getScopeRemotes(scope);
   const context = {};
   enrichContextFromGlobal(context);
   const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {

@@ -3,7 +3,7 @@ import path from 'path';
 import Consumer from './consumer';
 import { ConsumerNotFound } from './exceptions';
 
-export default (async function loadConsumer(
+export async function loadConsumer(
   currentPath?: string = process.cwd(),
   newInstance?: boolean = false
 ): Promise<Consumer> {
@@ -13,7 +13,7 @@ export default (async function loadConsumer(
     loadConsumer.cache[currentPath] = consumer;
   }
   return loadConsumer.cache[currentPath];
-});
+}
 
 export async function loadConsumerIfExist(
   currentPath?: string = process.cwd(),

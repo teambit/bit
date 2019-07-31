@@ -121,22 +121,4 @@ describe('bit list command', function () {
       });
     });
   });
-  describe('running bit list outside a workspace', () => {
-    before(() => {
-      helper.cleanLocalScope(); // delete Bit workspace
-    });
-    describe('bit list of a local scope', () => {
-      it('should throw an error ConsumerNotFound', () => {
-        const error = new ConsumerNotFound();
-        const func = () => helper.listLocalScope();
-        helper.expectToThrow(func, error);
-      });
-    });
-    describe('bit list of a remote scope', () => {
-      it('should list the scope', () => {
-        const func = () => helper.runCmd('bit list bit.envs');
-        expect(func).to.not.throw();
-      });
-    });
-  });
 });

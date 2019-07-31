@@ -806,14 +806,6 @@ export default class Consumer {
     });
   }
 
-  async deprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
-  }
-
-  async undeprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? undeprecateRemote(this.scope, bitIds) : undeprecateMany(this.scope, bitIds);
-  }
-
   /**
    * Remove components local and remote
    * splits array of ids into local and remote and removes according to flags
