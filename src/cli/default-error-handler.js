@@ -608,19 +608,30 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
  * in which case, it loses its class and has only the fields.
  */
-function sendToAnalyticsAndSentry(err) {
+function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
-  // only level FATAL are reported to Sentry.
   // $FlowFixMe
-  const level = err.isUserError ? LEVEL.INFO : LEVEL.FATAL;
+  const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
+  // only level FATAL are reported to Sentry.
+  const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;
   Analytics.setError(level, possiblyHashedError);
+}
+
+function handleNonBitCustomErrors(err: Error): string {
+  if (err.code === 'EACCES') {
+    // see #1774
+    return chalk.red(
+      `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
+    );
+  }
+  return chalk.red(err.message || err);
 }
 
 export default (err: Error): ?string => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {
-    return chalk.red(err.message || err);
+    return handleNonBitCustomErrors(err);
   }
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
