@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import { loadConsumer, Consumer } from '../../../consumer';
+import { loadConsumer, loadConsumerIfExist, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 import { BitId, BitIds } from '../../../bit-id';
@@ -24,8 +24,8 @@ export default (async function remove({
   deleteFiles: boolean
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
-  const consumer: Consumer = await loadConsumer();
-  const bitIds = await getBitIdsToRemove(consumer, ids, remote);
+  const consumer: ?Consumer = remote ? await loadConsumerIfExist() : await loadConsumer();
+  const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
   const removeResults = await removeComponents({
     consumer,
     ids: BitIds.fromArray(bitIds),
@@ -34,23 +34,25 @@ export default (async function remove({
     track,
     deleteFiles
   });
-  await consumer.onDestroy();
+  if (consumer) await consumer.onDestroy();
   return removeResults;
 });
 
-async function getBitIdsToRemove(consumer: Consumer, ids: string[], remote: boolean): Promise<BitId[]> {
+async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {
-    if (remote) {
-      return getIdsFromRemoteByWildcards(ids);
-    }
     const allIds = consumer.bitMap.getAllBitIds();
     const bitIds = ComponentsList.filterComponentsByWildcard(allIds, ids);
     if (!bitIds.length) throw new NoIdMatchWildcard(ids);
     return bitIds;
   }
-  return ids.map((id) => {
-    return remote ? BitId.parse(id, true) : consumer.getParsedId(id);
-  });
+  return ids.map(id => consumer.getParsedId(id));
+}
+
+async function getRemoteBitIdsToRemove(ids: string[]): Promise<BitId[]> {
+  if (hasWildcard(ids)) {
+    return getIdsFromRemoteByWildcards(ids);
+  }
+  return ids.map(id => BitId.parse(id, true));
 }
 
 async function getIdsFromRemoteByWildcards(ids: string[]): Promise<BitId[]> {

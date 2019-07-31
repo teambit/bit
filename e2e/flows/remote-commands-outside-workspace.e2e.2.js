@@ -66,5 +66,18 @@ describe('bit remote command', function () {
         });
       });
     });
+    describe('bit remove with --remote flag', () => {
+      let output;
+      before(() => {
+        output = helper.removeComponent(`${helper.remoteScope}/bar/foo`, '--silent --remote');
+      });
+      it('should not throw an error', () => {
+        expect(output).to.have.string('successfully removed');
+      });
+      it('should remove successfully', () => {
+        const list = helper.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(0);
+      });
+    });
   });
 });
