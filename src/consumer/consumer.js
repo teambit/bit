@@ -1,13 +1,11 @@
 /** @flow */
 import path from 'path';
 import semver from 'semver';
-import groupArray from 'group-array';
 import fs from 'fs-extra';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import format from 'string-format';
-import partition from 'lodash.partition';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
@@ -20,7 +18,6 @@ import {
   COMPONENT_ORIGINS,
   BIT_VERSION,
   NODE_PATH_COMPONENT_SEPARATOR,
-  LATEST_BIT_VERSION,
   BIT_GIT_DIR,
   DOT_GIT_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
@@ -32,7 +29,6 @@ import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import migrate from './migrations/consumer-migrator';
 import type { ConsumerMigrationResult } from './migrations/consumer-migrator';
-import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import loader from '../cli/loader';
 import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import BitMap from './bit-map/bit-map';
@@ -43,7 +39,6 @@ import { pathNormalizeToLinux, sortObject } from '../utils';
 import { ModelComponent, Version } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
-import { RemovedLocalObjects } from '../scope/removed-components';
 import * as packageJsonUtils from './component/package-json-utils';
 import { Dependencies } from './component/dependencies';
 import CompilerExtension from '../extensions/compiler-extension';
@@ -57,7 +52,6 @@ import type { BitIdStr } from '../bit-id/bit-id';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
-import ComponentVersion from '../scope/component-version';
 import {
   getManipulateDirWhenImportingComponents,
   getManipulateDirForExistingComponents
@@ -74,7 +68,6 @@ import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
-import deleteComponentsFiles from './component-ops/delete-component-files';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
 import {
   deprecateRemote,
@@ -815,69 +808,6 @@ export default class Consumer {
   }
 
   /**
-   * Remove components local and remote
-   * splits array of ids into local and remote and removes according to flags
-   * @param {string[]} ids - list of remote component ids to delete
-   * @param {boolean} force - delete component that are used by other components.
-   * @param {boolean} remote - delete component from a remote scope
-   * @param {boolean} track - keep tracking local staged components in bitmap.
-   * @param {boolean} deleteFiles - delete local added files from fs.
-   */
-  async remove({
-    ids,
-    force,
-    remote,
-    track,
-    deleteFiles
-  }: {
-    ids: BitIds,
-    force: boolean,
-    remote: boolean,
-    track: boolean,
-    deleteFiles: boolean
-  }): Promise<{ localResult: RemovedLocalObjects, remoteResult: Object[] }> {
-    logger.debugAndAddBreadCrumb('consumer.remove', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
-    // added this to remove support for remove only one version from a component
-    const bitIdsLatest = BitIds.fromArray(
-      ids.map((id) => {
-        return id.changeVersion(LATEST_BIT_VERSION);
-      })
-    );
-    const [localIds, remoteIds] = partition(bitIdsLatest, id => id.isLocal());
-    if (remote && localIds.length) {
-      throw new GeneralError(
-        `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
-      );
-    }
-    const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
-    const localResult = !remote
-      ? await this.removeLocal(bitIdsLatest, force, track, deleteFiles)
-      : new RemovedLocalObjects();
-
-    return { localResult, remoteResult };
-  }
-
-  /**
-   * Remove remote component from ssh server
-   * this method groups remote components by remote name and deletes remote components together
-   * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {boolean} force - delete component that are used by other components.
-   */
-  async removeRemote(bitIds: BitIds, force: boolean) {
-    const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await getScopeRemotes(this.scope);
-    const context = {};
-    enrichContextFromGlobal(context);
-    const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-      const resolvedRemote = await remotes.resolve(key, this.scope);
-      const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
-      return resolvedRemote.deleteMany(idsStr, force, context);
-    });
-
-    return Promise.all(removeP);
-  }
-
-  /**
    * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    * @param {BitIds} removedDependencies - delete component that are used by other components.
@@ -886,63 +816,6 @@ export default class Consumer {
     logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);
-  }
-  /**
-   * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
-   * @param {BitIds} bitIds - list of component ids to delete
-   * @param {boolean} force - delete component that are used by other components.
-   * @param {boolean} deleteFiles - delete component that are used by other components.
-   */
-  async removeLocal(
-    bitIds: BitIds,
-    force: boolean,
-    track: boolean,
-    deleteFiles: boolean
-  ): Promise<RemovedLocalObjects> {
-    // local remove in case user wants to delete tagged components
-    const modifiedComponents = new BitIds();
-    const nonModifiedComponents = new BitIds();
-    if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
-    if (!force) {
-      await Promise.all(
-        bitIds.map(async (id) => {
-          try {
-            const componentStatus = await this.getComponentStatusById(id);
-            if (componentStatus.modified) modifiedComponents.push(id);
-            else nonModifiedComponents.push(id);
-          } catch (err) {
-            // if a component has an error, such as, missing main file, we do want to allow removing that component
-            if (Component.isComponentInvalidByErrorType(err)) {
-              nonModifiedComponents.push(id);
-            } else {
-              throw err;
-            }
-          }
-        })
-      );
-    }
-    const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
-      force ? bitIds : nonModifiedComponents,
-      force,
-      true,
-      this
-    );
-
-    if (!R.isEmpty(removedComponentIds)) {
-      await deleteComponentsFiles(this, removedComponentIds, deleteFiles);
-      await deleteComponentsFiles(this, removedDependencies, false);
-      if (!track) {
-        await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
-        await this.cleanFromBitMap(removedComponentIds, removedDependencies);
-      }
-    }
-    return new RemovedLocalObjects(
-      removedComponentIds,
-      missingComponents,
-      modifiedComponents,
-      removedDependencies,
-      dependentBits
-    );
   }
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
