@@ -1,6 +1,7 @@
 /** @flow */
 import inquirer from 'inquirer';
 import { listScope } from '../../api/consumer';
+import { init } from '../../api/consumer';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
@@ -88,8 +89,8 @@ async function askForComponentsDir() {
     // rootPath :: String
     // Root search directory
     message: 'Select a default imported components directory',
-    default: './components',
-    suggestOnly: true
+    default: 'components/{name}',
+    suggestOnly: false
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
   };
@@ -97,7 +98,9 @@ async function askForComponentsDir() {
 
   // ]);
   const { componentsDir } = await inquirer.prompt([componentsDirQ]);
-  finalResult.componentsDir = componentsDir;
+  if (componentsDir) {
+    finalResult.componentsDefaultDirectory = componentsDir;
+  }
 }
 
 export default (async function initInteractive() {
@@ -115,4 +118,15 @@ Press ^C at any time to quit.`);
   await askToSetupCompiler();
   await askForPackageManager();
   await askForComponentsDir();
+  return init(undefined, false, false, false, false, finalResult).then(
+    ({ created, addedGitHooks, existingGitHooks }) => {
+      return {
+        created,
+        addedGitHooks,
+        existingGitHooks,
+        reset: false,
+        resetHard: false
+      };
+    }
+  );
 });
