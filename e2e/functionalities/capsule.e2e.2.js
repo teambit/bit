@@ -170,6 +170,7 @@ describe('capsule', function () {
     });
     describe('building with shouldBuildDependencies option enabled', () => {
       let capsuleDir;
+      let afterChangingCompiler;
       before(() => {
         helper.deletePath('dist');
         const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
@@ -179,6 +180,7 @@ describe('capsule', function () {
           'shouldBuildDependencies: true'
         );
         helper.outputFile(compilerPath, compilerWithBuildDependenciesEnabled);
+        afterChangingCompiler = helper.cloneLocalScope();
         const buildOutput = helper.build('bar/foo --no-cache');
         capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
       });
@@ -218,6 +220,32 @@ describe('capsule', function () {
         it('should not throw an error componentNotFound', () => {
           const tagFunc = () => helper.tagComponent('utils/is-string -f');
           expect(tagFunc).to.not.throw();
+        });
+      });
+      describe('when there is a circle dependencies', () => {
+        let buildOutput;
+        before(() => {
+          helper.getClonedLocalScope(afterChangingCompiler);
+          helper.createFile('circle', 'comp-a.js', "require('./comp-b');");
+          helper.createFile('circle', 'comp-b.js', "require('./comp-c');");
+          helper.createFile('circle', 'comp-c.js', "require('./comp-a');");
+          helper.createFile('circle', 'comp-d.js', '');
+          helper.addComponent('circle/comp-a.js');
+          helper.addComponent('circle/comp-b.js');
+          helper.addComponent('circle/comp-c.js');
+          helper.addComponent('circle/comp-d.js'); // comp-d has no deps, so is not part of the circle
+          buildOutput = helper.runWithTryCatch('bit build comp-a');
+        });
+        it('should throw an error saying there is cyclic dependencies', () => {
+          expect(buildOutput).to.have.string('cyclic dependencies');
+        });
+        it('should print the components participate in the cyclic dependencies', () => {
+          expect(buildOutput).to.have.string('comp-a');
+          expect(buildOutput).to.have.string('comp-b');
+          expect(buildOutput).to.have.string('comp-c');
+        });
+        it('should not print the components that are not participate in the cyclic dependencies', () => {
+          expect(buildOutput).to.not.have.string('comp-d');
         });
       });
     });
