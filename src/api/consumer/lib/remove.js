@@ -6,6 +6,7 @@ import { BitId, BitIds } from '../../../bit-id';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import removeComponents from '../../../consumer/component-ops/remove-components';
 
 export default (async function remove({
   ids,
@@ -23,7 +24,14 @@ export default (async function remove({
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
   const bitIds = getBitIdsToRemove(consumer, ids, remote);
-  const removeResults = await consumer.remove({ ids: BitIds.fromArray(bitIds), force, remote, track, deleteFiles });
+  const removeResults = await removeComponents({
+    consumer,
+    ids: BitIds.fromArray(bitIds),
+    force,
+    remote,
+    track,
+    deleteFiles
+  });
   await consumer.onDestroy();
   return removeResults;
 });
