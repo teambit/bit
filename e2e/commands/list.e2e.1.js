@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import ConsumerNotFound from '../../src/consumer/exceptions/consumer-not-found';
 
 describe('bit list command', function () {
   this.timeout(0);
@@ -117,6 +118,24 @@ describe('bit list command', function () {
       it('should show that the component does not have a remote version', () => {
         const barLocal = output.find(item => item.id === 'bar/local');
         expect(barLocal.remoteVersion).to.equal('N/A');
+      });
+    });
+  });
+  describe('running bit list outside a workspace', () => {
+    before(() => {
+      helper.cleanLocalScope(); // delete Bit workspace
+    });
+    describe('bit list of a local scope', () => {
+      it('should throw an error ConsumerNotFound', () => {
+        const error = new ConsumerNotFound();
+        const func = () => helper.listLocalScope();
+        helper.expectToThrow(func, error);
+      });
+    });
+    describe('bit list of a remote scope', () => {
+      it('should list the scope', () => {
+        const func = () => helper.runCmd('bit list bit.envs');
+        expect(func).to.not.throw();
       });
     });
   });

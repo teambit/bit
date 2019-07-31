@@ -1,6 +1,6 @@
 /** @flow */
 import { loadScope } from '../../../scope';
-import { loadConsumer } from '../../../consumer';
+import { loadConsumerIfExist } from '../../../consumer';
 import logger from '../../../logger/logger';
 import type { MigrationResult } from '../../../migration/migration-helper';
 
@@ -12,7 +12,7 @@ import type { MigrationResult } from '../../../migration/migration-helper';
  * @param {boolean} verbose - print debug logs
  * @returns {Promise<MigrationResult>} - wether the process run and wether it successeded
  */
-export default (async function migrate(scopePath: string, verbose: boolean): Promise<MigrationResult> {
+export default (async function migrate(scopePath: string, verbose: boolean): Promise<?MigrationResult> {
   logger.debug('migrate.migrate, starting migration process');
   if (verbose) console.log('starting migration process'); // eslint-disable-line no-console
   let scope;
@@ -24,7 +24,10 @@ export default (async function migrate(scopePath: string, verbose: boolean): Pro
     return scope.migrate(verbose);
   }
   // If a scope path was not provided we will run the migrate on the consumer and for the scope
-  const consumer = await loadConsumer();
+  const consumer = await loadConsumerIfExist();
+  if (!consumer) {
+    return null;
+  }
   scope = consumer.scope;
   await consumer.migrate(verbose);
   // const consumerMigrationResult = await consumer.migrate(verbose);

@@ -1,6 +1,7 @@
 /** @flow */
 import path from 'path';
 import Consumer from './consumer';
+import { ConsumerNotFound } from './exceptions';
 
 export default (async function loadConsumer(
   currentPath?: string = process.cwd(),
@@ -13,3 +14,17 @@ export default (async function loadConsumer(
   }
   return loadConsumer.cache[currentPath];
 });
+
+export async function loadConsumerIfExist(
+  currentPath?: string = process.cwd(),
+  newInstance?: boolean = false
+): Promise<?Consumer> {
+  try {
+    return await loadConsumer(currentPath, newInstance);
+  } catch (err) {
+    if (err instanceof ConsumerNotFound) {
+      return null;
+    }
+    throw err;
+  }
+}
