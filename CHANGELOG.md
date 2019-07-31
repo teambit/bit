@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1837](https://github.com/teambit/bit/issues/1837) enable executing commands on remote components outside of bit-workspace
 - [#1774](https://github.com/teambit/bit/issues/1774) improve access errors and warn when sudo is used
 
 ## [14.2.4-dev.1] - 2019-07-30
