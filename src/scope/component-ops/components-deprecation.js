@@ -4,7 +4,6 @@ import logger from '../../logger/logger';
 import { BitIds, BitId } from '../../bit-id';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import { Scope } from '..';
-import { getScopeRemotes } from '../scope-remotes';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import Remotes from '../../remotes/remotes';
 

@@ -49,6 +49,6 @@ function getBitIdsForLocal(ids: string[], consumer: Consumer): BitIds {
   return BitIds.fromArray(ids.map(id => consumer.getParsedId(id)));
 }
 
-function getBitIdsForRemote(ids: string[]): BitIds {
-  return BitIds.fromArray(ids.map(id => BitId.parse(id, true)));
+function getBitIdsForRemote(ids: string[]): BitId[] {
+  return ids.map(id => BitId.parse(id, true));
 }

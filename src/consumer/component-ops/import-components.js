@@ -18,7 +18,6 @@ import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-w
 import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
 import hasWildcard from '../../utils/string/has-wildcard';
-import { listScope } from '../../api/consumer';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 
 export type ImportOptions = {

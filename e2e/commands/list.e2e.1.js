@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
-import ConsumerNotFound from '../../src/consumer/exceptions/consumer-not-found';
 
 describe('bit list command', function () {
   this.timeout(0);
