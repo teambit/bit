@@ -57,10 +57,12 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
     componentWithDependencies.dependencies = dependencies;
   } catch (err) {
     logger.error(err);
-    throw new GeneralError(
-      `unable to topological sort dependencies of ${componentId}, it probably has cyclic dependencies. Original error: ${
-        err.message
-      }`
-    );
+    if (err.constructor && err.constructor.name && err.constructor.name === 'CycleException') {
+      const circle = graphLib.alg.findCycles(graphDeps);
+      throw new GeneralError(
+        `unable to topological sort dependencies of ${componentId}, it has the following cyclic dependencies\n${circle}`
+      );
+    }
+    throw new GeneralError(`unable to topological sort dependencies of ${componentId}. Original error: ${err.message}`);
   }
 }

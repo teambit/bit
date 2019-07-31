@@ -270,7 +270,16 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        const relativeWrittenPath = componentWithDeps.component.writtenPath;
+        // $FlowFixMe componentWithDeps.component.componentMap is set
+        const componentMap: ComponentMap = componentWithDeps.component.componentMap;
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {
+          throw new GeneralError(`unable to use "--path" flag.
+to move individual files, use bit move.
+to move all component files to a different directory, run bit remove and then bit import --path`);
+        }
+        const relativeWrittenPath = componentMap.trackDir
+          ? componentMap.trackDir
+          : componentWithDeps.component.writtenPath;
         // $FlowFixMe relativeWrittenPath is set
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // $FlowFixMe this.writeToPath is set

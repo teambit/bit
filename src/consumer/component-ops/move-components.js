@@ -11,6 +11,7 @@ import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
 import RemovePath from '../component/sources/remove-path';
 import BitIds from '../../bit-id/bit-ids';
+import { COMPONENT_ORIGINS } from '../../constants';
 
 export async function movePaths(
   consumer: Consumer,
@@ -59,10 +60,18 @@ export function moveExistingComponent(
   const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
   const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
-  component.dataToPersist.files.forEach((file) => {
-    const newBase = file.base.replace(oldPathRelative, newPathRelative);
-    file.updatePaths({ newBase });
-  });
+  consumer.bitMap.markAsChanged();
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+    component.dataToPersist.files.forEach((file) => {
+      const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
+      file.updatePaths({ newRelative });
+    });
+  } else {
+    component.dataToPersist.files.forEach((file) => {
+      const newBase = file.base.replace(oldPathRelative, newPathRelative);
+      file.updatePaths({ newBase });
+    });
+  }
   component.dataToPersist.removePath(new RemovePath(oldPathRelative));
   component.writtenPath = newPathRelative;
 }

@@ -581,7 +581,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
-    trackDir?: PathOsBased,
+    trackDir?: ?PathOsBased,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
@@ -659,8 +659,8 @@ export default class BitMap {
     return ids.map(id => this.removeComponent(id));
   }
 
-  isExistWithSameVersion(id: BitId) {
-    return id.hasVersion() && this.components[id.toString()];
+  isExistWithSameVersion(id: BitId): boolean {
+    return Boolean(id.hasVersion() && this.components[id.toString()]);
   }
 
   /**
