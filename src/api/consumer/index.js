@@ -2,7 +2,7 @@ import init from './lib/init';
 import isolate from './lib/isolate';
 import remove from './lib/remove';
 import { deprecate, undeprecate } from './lib/deprecation';
-import listScope from './lib/list-scope';
+import { listScope } from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';

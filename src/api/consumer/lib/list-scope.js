@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST, BEFORE_LOCAL_LIST } from '../../../cli/loader/loader-messages';
@@ -8,16 +9,19 @@ import type { ListScopeResult } from '../../../consumer/component/components-lis
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import { Remotes } from '../../../remotes';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
+import GeneralError from '../../../error/general-error';
+import { BitId } from '../../../bit-id';
+import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
-export default (async function list({
+export async function listScope({
   scopeName,
   showAll, // include nested
   showRemoteVersion,
   namespacesUsingWildcards
 }: {
   scopeName?: string,
-  showAll: boolean,
-  showRemoteVersion: boolean,
+  showAll?: boolean,
+  showRemoteVersion?: boolean,
   namespacesUsingWildcards?: string
 }): Promise<ListScopeResult[]> {
   const consumer: ?Consumer = await loadConsumerIfExist();
@@ -48,4 +52,20 @@ export default (async function list({
     }
     return Remotes.getScopeRemote(scopeName);
   }
-});
+}
+
+export async function getRemoteBitIdsByWildcards(idStr: string): Promise<BitId[]> {
+  if (!idStr.includes('/')) {
+    throw new GeneralError(
+      `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
+    );
+  }
+  const idSplit = idStr.split('/');
+  const scopeName = idSplit[0];
+  const namespacesUsingWildcards = R.tail(idSplit).join('/');
+  const listResult = await listScope({ scopeName, namespacesUsingWildcards });
+  if (!listResult.length) {
+    throw new NoIdMatchWildcard([idStr]);
+  }
+  return listResult.map(result => result.id);
+}

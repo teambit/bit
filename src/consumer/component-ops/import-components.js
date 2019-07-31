@@ -19,6 +19,7 @@ import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
 import hasWildcard from '../../utils/string/has-wildcard';
 import { listScope } from '../../api/consumer';
+import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -94,20 +95,8 @@ export default class ImportComponents {
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          if (!idStr.includes('/')) {
-            throw new GeneralError(
-              `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
-            );
-          }
-          const idSplit = idStr.split('/');
-          const scopeName = idSplit[0];
-          const namespacesUsingWildcards = R.tail(idSplit).join('/');
-          const listResult = await listScope({ scopeName, namespacesUsingWildcards });
-          if (!listResult.length) {
-            throw new GeneralError(`no components found on the remote scope matching the "${idStr}" pattern`);
-          }
+          const ids = await getRemoteBitIdsByWildcards(idStr);
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
-          const ids = listResult.map(result => result.id);
           bitIds.push(...ids);
         } else {
           bitIds.push(BitId.parse(idStr, true)); // we don't support importing without a scope name
