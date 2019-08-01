@@ -13,6 +13,7 @@ import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-globa
 import Component from '../component/consumer-component';
 import deleteComponentsFiles from '../component-ops/delete-component-files';
 import * as packageJsonUtils from '../component/package-json-utils';
+import { Remotes } from '../../remotes';
 
 /**
  * Remove components local and remote
@@ -31,7 +32,7 @@ export default (async function removeComponents({
   track,
   deleteFiles
 }: {
-  consumer: Consumer,
+  consumer: ?Consumer, // when remote is false, it's always set
   ids: BitIds,
   force: boolean,
   remote: boolean,
@@ -65,13 +66,14 @@ export default (async function removeComponents({
  * @param {BitIds} bitIds - list of remote component ids to delete
  * @param {boolean} force - delete component that are used by other components.
  */
-async function removeRemote(consumer: Consumer, bitIds: BitIds, force: boolean) {
+async function removeRemote(consumer: ?Consumer, bitIds: BitIds, force: boolean) {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
-  const remotes = await getScopeRemotes(consumer.scope);
+  const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};
   enrichContextFromGlobal(context);
+  const scope = consumer ? consumer.scope : null;
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, consumer.scope);
+    const resolvedRemote = await remotes.resolve(key, scope);
     const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });

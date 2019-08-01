@@ -114,15 +114,46 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.removeComponent('none/* --silent --remote');
-          const error = new NoIdMatchWildcard(['none/*']);
+          const removeFunc = () => helper.removeComponent(`${helper.remoteScope}/none/* --silent --remote`);
+          const error = new NoIdMatchWildcard([`${helper.remoteScope}/none/*`]);
           helper.expectToThrow(removeFunc, error);
         });
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.removeComponent('"utils/fs/*" --silent --remote');
+          output = helper.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
+        });
+        it('should indicate the removed components', () => {
+          expect(output).to.have.string('utils/fs/read');
+          expect(output).to.have.string('utils/fs/write');
+        });
+        it('should remove only the matched components', () => {
+          const ls = helper.listRemoteScopeParsed();
+          expect(ls).to.have.lengthOf(3);
+        });
+      });
+    });
+    describe('remove from remote with wildcard after removed locally', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.reInitRemoteScope();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.removeComponent(`${helper.remoteScope}/* -s`);
+
+        // as an intermediate step, make sure the remote scope has all components
+        const ls = helper.listRemoteScopeParsed();
+        expect(ls).to.have.lengthOf(5);
+
+        // as an intermediate step, make sure the local scope does not have any components
+        const lsLocal = helper.listLocalScopeParsed();
+        expect(lsLocal).to.have.lengthOf(0);
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');

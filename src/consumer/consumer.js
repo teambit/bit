@@ -799,14 +799,6 @@ export default class Consumer {
     });
   }
 
-  async deprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
-  }
-
-  async undeprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? undeprecateRemote(this.scope, bitIds) : undeprecateMany(this.scope, bitIds);
-  }
-
   /**
    * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.

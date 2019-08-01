@@ -20,7 +20,8 @@ import { FileStatus } from '../src/consumer/versions-ops/merge-version';
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
     .toString(36)
-    .slice(size * -1);
+    .slice(size * -1)
+    .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
 };
 
 export default class Helper {
