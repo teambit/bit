@@ -1,80 +1,104 @@
 /** @flow */
 import inquirer from 'inquirer';
-import { listScope } from '../../api/consumer';
-import { init } from '../../api/consumer';
+import { init, listScope } from '../../api/consumer';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
-const finalResult = {};
+function _generateBuildEnvOriginQ() {
+  const ansShowBitCompilers = {
+    name: 'list compilers maintained by @bit team (bit list bit.envs --namespace compilers)',
+    value: 'bit.envs'
+  };
 
-async function askToSetupCompiler() {
-  const ansShowBitCompilers = 'list compilers maintained by @bit team (bit list bit.envs --namespace compilers)';
-  const ansShowCustomCompilers = 'list compilers from your own collection';
+  const ansShowCustomCompilers = {
+    name: 'list compilers from your own collection',
+    value: 'custom'
+  };
 
-  const buildEnvQ = {
+  const buildEnvOriginQ = {
     type: 'list',
-    name: 'buildEnv',
+    name: 'buildEnvOrigin',
     message: 'setting up a default compiler for all components',
     choices: [ansShowBitCompilers, ansShowCustomCompilers, 'skip']
   };
-  const { buildEnv } = await inquirer.prompt(buildEnvQ);
-  if (buildEnv === ansShowBitCompilers) {
-    await askBitsEnvs();
-  } else if (buildEnv === ansShowCustomCompilers) {
-    await askCustomEnvs();
-  }
+
+  return buildEnvOriginQ;
 }
 
-async function askBitsEnvs() {
-  return askForRemoteCompiler('bit.envs');
-}
-
-async function askCustomEnvs() {
+async function _generateBuildEnvScopeNameQ(propName) {
   const buildEnvScopeNameQ = {
     type: 'input',
-    name: 'envsScope',
-    message: 'enter your envs scope name'
+    name: propName,
+    message: 'enter your environment collection name',
+    when: (answers) => {
+      return answers.buildEnvOrigin === 'custom';
+    }
   };
-  const { envsScope } = await inquirer.prompt(buildEnvScopeNameQ);
-  return askForRemoteCompiler(envsScope);
+  return buildEnvScopeNameQ;
 }
 
-async function askForRemoteCompiler(scopeName) {
-  const ids = await fetchComps(scopeName);
-  const bitsEnvsQ = {
-    type: 'list',
-    name: 'compiler',
-    message: 'choose your compiler',
-    choices: ids
+async function _generateRemoteCompilerAutoCompleteQ(customCollectionPropName) {
+  const getCompilerScopePropName = async (answers) => {
+    const propName = answers.buildEnvOrigin === 'bit.envs' ? 'buildEnvOrigin' : customCollectionPropName;
+    return Promise.resolve(propName);
   };
-  const { compiler } = await inquirer.prompt(bitsEnvsQ);
-  finalResult.compiler = compiler;
-  return compiler;
+  const when = (answers) => {
+    return answers.buildEnvOrigin !== 'skip';
+  };
+  return _generateRemoteComponentAutoComplete('compiler', 'choose your compiler', when, {
+    ansPropName: getCompilerScopePropName
+  });
 }
 
-async function fetchComps(scopeName) {
+async function _fetchComps(scopeName) {
   const listScopeResults = await listScope({ scopeName, showAll: false, showRemoteVersion: true });
   const ids = listScopeResults.map(result => result.id.toString());
   return ids;
 }
 
-async function askForPackageManager() {
-  const buildEnvQ = {
+async function _generateRemoteComponentAutoComplete(
+  name,
+  message,
+  when,
+  { scopeName, ansPropName }: { scopeName?: string, ansPropName: string | Function }
+) {
+  const components = scopeName ? await _fetchComps(scopeName) : null;
+  let choices = components;
+  if (!choices) {
+    // Used to build from previous answered question
+    choices = async (answers) => {
+      let propName = ansPropName;
+      if (typeof ansPropName === 'function') {
+        propName = await ansPropName(answers);
+      }
+      return _fetchComps(answers[propName]);
+    };
+  }
+
+  const selectComponent = {
+    type: 'list',
+    name,
+    message,
+    when,
+    choices
+  };
+
+  return selectComponent;
+}
+
+async function _buildQuestions() {
+  const packageManagerQ = {
     type: 'list',
     name: 'packageManager',
     message: 'Which is your default package manger',
     choices: ['npm', 'yarn']
   };
-  const { packageManager } = await inquirer.prompt(buildEnvQ);
-  finalResult.packageManager = packageManager;
-}
 
-async function askForComponentsDir() {
   // TODO: 1. the suggestOnly is the opposite, this is a bug in https://github.com/mokkabonna/inquirer-autocomplete-prompt/blob/master/index.js
   // TODO: 2. add option for the default ./components add support for adding extra values in (https://github.com/adelsz/inquirer-fuzzy-path)
   const componentsDirQ = {
     type: 'fuzzypath',
-    name: 'componentsDir',
+    name: 'componentsDefaultDirectory',
     excludePath: (nodePath) => {
       return nodePath.startsWith('node_modules') || nodePath.startsWith('.bit') || nodePath.startsWith('.git');
     },
@@ -94,13 +118,10 @@ async function askForComponentsDir() {
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
   };
-  // return inquirer.prompt([
-
-  // ]);
-  const { componentsDir } = await inquirer.prompt([componentsDirQ]);
-  if (componentsDir) {
-    finalResult.componentsDefaultDirectory = componentsDir;
-  }
+  const buildEnvOriginQ = _generateBuildEnvOriginQ();
+  const buildEnvCollectionNameQ = await _generateBuildEnvScopeNameQ('compilerCollectionName');
+  const buildEnvNameQ = await _generateRemoteCompilerAutoCompleteQ('compilerCollectionName');
+  return [componentsDirQ, packageManagerQ, buildEnvOriginQ, buildEnvCollectionNameQ, buildEnvNameQ];
 }
 
 export default (async function initInteractive() {
@@ -115,18 +136,19 @@ After setting up the workspace, use bit add to track components and modules.
 
 Press ^C at any time to quit.`);
 
-  await askToSetupCompiler();
-  await askForPackageManager();
-  await askForComponentsDir();
-  return init(undefined, false, false, false, false, finalResult).then(
-    ({ created, addedGitHooks, existingGitHooks }) => {
-      return {
-        created,
-        addedGitHooks,
-        existingGitHooks,
-        reset: false,
-        resetHard: false
-      };
-    }
-  );
+  // await askToSetupCompiler();
+  // await askForPackageManager();
+  // await askForComponentsDir();
+  const questions = await _buildQuestions();
+  const answers = await inquirer.prompt(questions);
+
+  return init(undefined, false, false, false, false, answers).then(({ created, addedGitHooks, existingGitHooks }) => {
+    return {
+      created,
+      addedGitHooks,
+      existingGitHooks,
+      reset: false,
+      resetHard: false
+    };
+  });
 });
