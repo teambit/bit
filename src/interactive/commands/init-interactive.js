@@ -1,52 +1,75 @@
 /** @flow */
 import inquirer from 'inquirer';
 import { init, listScope } from '../../api/consumer';
+import format from 'string-format';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
-function _generateBuildEnvOriginQ() {
-  const ansShowBitCompilers = {
-    name: 'list compilers maintained by @bit team (bit list bit.envs --namespace compilers)',
+const TOP_MESSAGE = `This utility initialize an empty Bit workspace and walks you through creating a bit.json file.
+Run bit help json for full workspace configuration definition.
+
+All configurations are reversible and overridable on per-command basis.
+
+After setting up the workspace, use bit add to track components and modules.
+
+Press ^C at any time to quit.`;
+
+function _generateEnvOriginQ(mode: 'compiler' | 'tester' = 'compiler', propName: string) {
+  const ansShowBitEnvsTextTemplate = 'list {type} maintained by @bit team (bit list bit.envs --namespace {namespace})';
+  const ansShowBitEnvsTextValues =
+    mode === 'compiler' ? { type: 'compilers', namespace: 'compilers' } : { type: 'testers', namespace: 'testers' };
+  const ansShowBitEnvsText = format(ansShowBitEnvsTextTemplate, ansShowBitEnvsTextValues);
+
+  const ansShowBitEnvs = {
+    name: ansShowBitEnvsText,
     value: 'bit.envs'
   };
 
-  const ansShowCustomCompilers = {
-    name: 'list compilers from your own collection',
+  const ansShowCustomEnvsTextTemplate = 'list {type} from your own collection';
+  const ansShowCustomEnvsTextValues = mode === 'compiler' ? { type: 'compilers' } : { type: 'testers' };
+  const ansShowCustomEnvsText = format(ansShowCustomEnvsTextTemplate, ansShowCustomEnvsTextValues);
+
+  const ansShowCustomEnvs = {
+    name: ansShowCustomEnvsText,
     value: 'custom'
   };
 
-  const buildEnvOriginQ = {
+  const mainTextTemplate = 'setting up a default {type} for all components';
+  const mainTextValues = mode === 'compiler' ? { type: 'compilers' } : { type: 'testers' };
+  const mainText = format(mainTextTemplate, mainTextValues);
+
+  const envOriginQ = {
     type: 'list',
-    name: 'buildEnvOrigin',
-    message: 'setting up a default compiler for all components',
-    choices: [ansShowBitCompilers, ansShowCustomCompilers, 'skip']
+    name: propName,
+    message: mainText,
+    choices: [ansShowBitEnvs, ansShowCustomEnvs, 'skip']
   };
 
-  return buildEnvOriginQ;
+  return envOriginQ;
 }
 
-async function _generateBuildEnvScopeNameQ(propName) {
-  const buildEnvScopeNameQ = {
+async function _generateEnvScopeNameQ(propName, originPropName) {
+  const envScopeNameQ = {
     type: 'input',
     name: propName,
     message: 'enter your environment collection name',
     when: (answers) => {
-      return answers.buildEnvOrigin === 'custom';
+      return answers[originPropName] === 'custom';
     }
   };
-  return buildEnvScopeNameQ;
+  return envScopeNameQ;
 }
 
-async function _generateRemoteCompilerAutoCompleteQ(customCollectionPropName) {
-  const getCompilerScopePropName = async (answers) => {
-    const propName = answers.buildEnvOrigin === 'bit.envs' ? 'buildEnvOrigin' : customCollectionPropName;
-    return Promise.resolve(propName);
+async function _generateRemoteEnvAutoCompleteQ(propName, message, customCollectionPropName, envOriginPropName) {
+  const getEnvScopePropName = async (answers) => {
+    const envScopePropName = answers[envOriginPropName] === 'bit.envs' ? envOriginPropName : customCollectionPropName;
+    return Promise.resolve(envScopePropName);
   };
   const when = (answers) => {
-    return answers.buildEnvOrigin !== 'skip';
+    return answers[envOriginPropName] !== 'skip';
   };
-  return _generateRemoteComponentAutoComplete('compiler', 'choose your compiler', when, {
-    ansPropName: getCompilerScopePropName
+  return _generateRemoteComponentAutoComplete(propName, message, when, {
+    ansPropName: getEnvScopePropName
   });
 }
 
@@ -118,30 +141,40 @@ async function _buildQuestions() {
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
   };
-  const buildEnvOriginQ = _generateBuildEnvOriginQ();
-  const buildEnvCollectionNameQ = await _generateBuildEnvScopeNameQ('compilerCollectionName');
-  const buildEnvNameQ = await _generateRemoteCompilerAutoCompleteQ('compilerCollectionName');
-  return [componentsDirQ, packageManagerQ, buildEnvOriginQ, buildEnvCollectionNameQ, buildEnvNameQ];
+  const buildEnvOriginQ = _generateEnvOriginQ('compiler', 'buildEnvOrigin');
+  const buildEnvCollectionNameQ = await _generateEnvScopeNameQ('compilerCollectionName', 'buildEnvOrigin');
+  const buildEnvNameQ = await _generateRemoteEnvAutoCompleteQ(
+    'compiler',
+    'choose your compiler',
+    'compilerCollectionName',
+    'buildEnvOrigin'
+  );
+  const testEnvOriginQ = _generateEnvOriginQ('tester', 'testEnvOrigin');
+  const testEnvCollectionNameQ = await _generateEnvScopeNameQ('testerCollectionName', 'testEnvOrigin');
+  const testEnvNameQ = await _generateRemoteEnvAutoCompleteQ(
+    'tester',
+    'choose your tester',
+    'testerCollectionName',
+    'testEnvOrigin'
+  );
+  return [
+    componentsDirQ,
+    packageManagerQ,
+    buildEnvOriginQ,
+    buildEnvCollectionNameQ,
+    buildEnvNameQ,
+    testEnvOriginQ,
+    testEnvCollectionNameQ,
+    testEnvNameQ
+  ];
 }
 
 export default (async function initInteractive() {
   const ui = new inquirer.ui.BottomBar();
 
-  ui.log.write(`This utility initialize an empty Bit workspace and walks you through creating a bit.json file.
-Run bit help json for full workspace configuration definition.
-
-All configurations are reversible and overridable on per-command basis.
-
-After setting up the workspace, use bit add to track components and modules.
-
-Press ^C at any time to quit.`);
-
-  // await askToSetupCompiler();
-  // await askForPackageManager();
-  // await askForComponentsDir();
+  ui.log.write(TOP_MESSAGE);
   const questions = await _buildQuestions();
   const answers = await inquirer.prompt(questions);
-
   return init(undefined, false, false, false, false, answers).then(({ created, addedGitHooks, existingGitHooks }) => {
     return {
       created,
