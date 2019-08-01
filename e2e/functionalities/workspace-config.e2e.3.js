@@ -1297,6 +1297,73 @@ describe('workspace config', function () {
         expect(showBar.compiler).to.be.null;
       });
     });
+    describe('override package.json values', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/*': {
+            bin: 'my-bin-file.js'
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('bit show should show the overrides', () => {
+        const show = helper.showComponentParsed('bar/foo');
+        expect(show.overrides)
+          .to.have.property('bin')
+          .equal('my-bin-file.js');
+      });
+      describe('tag, export and import the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should write the values into package.json file', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          expect(packageJson)
+            .to.have.property('bin')
+            .that.equals('my-bin-file.js');
+        });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('changing the value in the package.json directly (not inside overrides)', () => {
+          before(() => {
+            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(compDir);
+            packageJson.bin = 'my-new-file.js';
+            helper.writePackageJson(packageJson, compDir);
+          });
+          it('should not show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+        });
+        describe('changing the value in the package.json inside overrides', () => {
+          before(() => {
+            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(compDir);
+            packageJson.bit.overrides.bin = 'my-new-file.js';
+            helper.writePackageJson(packageJson, compDir);
+          });
+          it('should show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.have.string('modified components');
+          });
+          it('bit diff should show the field diff', () => {
+            const diff = helper.diff('bar/foo');
+            expect(diff).to.have.string('my-bin-file.js');
+            expect(diff).to.have.string('my-new-file.js');
+          });
+        });
+      });
+    });
   });
   describe('basic validations', () => {
     before(() => {

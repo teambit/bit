@@ -19,7 +19,9 @@ export type ConsumerOverridesOfComponent = {
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
-const consumerOverridesPermittedFields = [...dependenciesFields, 'env'];
+export const overridesForbiddenFields = ['name', 'main', 'version'];
+export const overridesSystemFields = ['propagate'];
+export const nonPackageJsonFields = [...dependenciesFields, ...overridesSystemFields];
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
@@ -47,10 +49,9 @@ export default class ConsumerOverrides {
       if (!current.propagate) {
         stopPropagation = true;
       }
-      consumerOverridesPermittedFields.forEach((field) => {
-        if (!current[field]) return;
-        if (!acc[field]) acc[field] = {};
+      Object.keys(current).forEach((field) => {
         if (field === 'env') {
+          if (!acc[field]) acc[field] = {};
           ['compiler', 'tester'].forEach((envField) => {
             // $FlowFixMe we made sure before that current.env is set
             if (acc.env[envField] || !current.env[envField]) return;
@@ -59,8 +60,9 @@ export default class ConsumerOverrides {
         } else if (dependenciesFields.includes(field)) {
           // $FlowFixMe
           acc[field] = Object.assign(current[field], acc[field]);
-        } else {
-          throw new Error(`consumer-overrides, ${field} does not have a merge strategy`);
+        } else if (!overridesSystemFields.includes(field)) {
+          // $FlowFixMe propagate is a system field
+          acc[field] = current[field];
         }
       });
       return acc;
@@ -154,9 +156,9 @@ export default class ConsumerOverrides {
     function validateComponentOverride(id, override) {
       validateUserInputType(message, override, `overrides.${id}`, 'object');
       Object.keys(override).forEach((field) => {
-        if (!consumerOverridesPermittedFields.includes(field)) {
-          throw new GeneralError(`${message} found an unrecognized field "${field}" inside "overrides.${id}" property.
-only the following fields are allowed: ${consumerOverridesPermittedFields.join(', ')}.`);
+        if (overridesForbiddenFields.includes(field)) {
+          throw new GeneralError(`${message} found a forbidden field "${field}" inside "overrides.${id}" property.
+the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
         }
         if (dependenciesFields.includes(field)) {
           validateDependencyField(field, override, id);
