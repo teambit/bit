@@ -21,7 +21,7 @@ export default class Remotes extends Map<string, Remote> {
     return this.forEach(remote => remote.validate());
   }
 
-  resolve(scopeName: string, thisScope?: Scope): Promise<Remote> {
+  resolve(scopeName: string, thisScope?: ?Scope): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
     return remoteResolver(scopeName, thisScope).then((scopeHost) => {
@@ -82,9 +82,13 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   static getScopeRemote(scopeName: string): Promise<Remote> {
+    return Remotes.getGlobalRemotes().then(remotes => remotes.resolve(scopeName));
+  }
+
+  static getGlobalRemotes(): Promise<Remotes> {
     return GlobalRemotes.load()
       .then(globalRemotes => globalRemotes.toPlainObject())
-      .then(remotes => Remotes.load(remotes).resolve(scopeName));
+      .then(remotes => Remotes.load(remotes));
   }
 
   static load(remotes: { [string]: string }): Remotes {

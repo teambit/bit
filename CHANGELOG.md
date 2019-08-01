@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1837](https://github.com/teambit/bit/issues/1837) enable executing commands on remote components outside of bit-workspace
 - [#1774](https://github.com/teambit/bit/issues/1774) improve access errors and warn when sudo is used
 - change shortcut flag to `bit init` standalone from `t` to `T`
 - add new flags to bit init `-c|--compiler`, `-t|--tester`, `-d|--default-directory`, `-p|--package-manager`
