@@ -1,7 +1,7 @@
 /** @flow */
 import inquirer from 'inquirer';
-import { init, listScope } from '../../api/consumer';
 import format from 'string-format';
+import { init, listScope } from '../../api/consumer';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
