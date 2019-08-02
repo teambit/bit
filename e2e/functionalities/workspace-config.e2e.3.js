@@ -1391,18 +1391,18 @@ describe('workspace config', function () {
         expect(output).to.have.string('expected overrides.bar to be object, got number');
       });
     });
-    describe('when an unrecognized field is added into overrides of a component', () => {
+    describe('when a forbidden field is added into overrides of a component', () => {
       before(() => {
         const overrides = {
           bar: {
-            some_field: {}
+            name: 'foo'
           }
         };
         helper.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
-        expect(output).to.have.string('found an unrecognized field "some_field" inside "overrides.bar" property');
+        expect(output).to.have.string('found a forbidden field "name" inside "overrides.bar" property');
       });
     });
     describe('when a dependency field is not an object', () => {
