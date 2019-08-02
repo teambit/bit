@@ -19,7 +19,7 @@ export type ConsumerOverridesOfComponent = {
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
-export const overridesForbiddenFields = ['name', 'main', 'version'];
+export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
 export const overridesSystemFields = ['propagate', 'env'];
 export const nonPackageJsonFields = [...dependenciesFields, ...overridesSystemFields];
 
@@ -33,15 +33,10 @@ export default class ConsumerOverrides {
     return new ConsumerOverrides(overrides);
   }
   getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
-    const getMatches = (): string[] => {
-      const exactMatch = this.findExactMatch(bitId);
-      const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this.isMatchByWildcard(bitId, idStr));
-      const allMatches = matchByGlobPattern.sort(ConsumerOverrides.sortWildcards);
-      if (exactMatch) allMatches.unshift(exactMatch);
-      return allMatches;
-    };
-    const matches = getMatches();
-    if (!matches.length) return null;
+    const matches = this._getAllRulesMatchedById(bitId);
+    if (!matches.length) {
+      return null;
+    }
     const overrideValues = matches.map(match => this.overrides[match]);
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
@@ -49,26 +44,42 @@ export default class ConsumerOverrides {
       if (!current.propagate) {
         stopPropagation = true;
       }
-      Object.keys(current).forEach((field) => {
-        if (field === 'env') {
-          if (!acc[field]) acc[field] = {};
-          ['compiler', 'tester'].forEach((envField) => {
-            // $FlowFixMe we made sure before that current.env is set
-            if (acc.env[envField] || !current.env[envField]) return;
-            acc.env[envField] = current.env[envField];
-          });
-        } else if (dependenciesFields.includes(field)) {
-          // $FlowFixMe
-          acc[field] = Object.assign(current[field], acc[field]);
-        } else if (!overridesSystemFields.includes(field)) {
-          // $FlowFixMe propagate is a system field
-          acc[field] = current[field];
-        }
-      });
+      this._updateSpecificOverridesWithGeneralOverrides(current, acc);
       return acc;
     }, {});
   }
-  isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
+  _updateSpecificOverridesWithGeneralOverrides(generalOverrides: Object, specificOverrides: Object) {
+    const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
+    Object.keys(generalOverrides).forEach((field) => {
+      switch (field) {
+        case 'env':
+          if (!specificOverrides[field]) specificOverrides[field] = {};
+          ['compiler', 'tester'].forEach((envField) => {
+            if (specificOverrides.env[envField] || !generalOverrides.env[envField]) return;
+            specificOverrides.env[envField] = generalOverrides.env[envField];
+          });
+          break;
+        case 'propagate':
+          // it's a system field, do nothing
+          break;
+        default:
+          if (isObjectAndNotArray(specificOverrides[field]) && isObjectAndNotArray(generalOverrides[field])) {
+            specificOverrides[field] = Object.assign(generalOverrides[field], specificOverrides[field]);
+          } else if (!specificOverrides[field]) {
+            specificOverrides[field] = generalOverrides[field];
+          }
+        // when specificOverrides[field] is set and not an object, do not override it by the general one
+      }
+    });
+  }
+  _getAllRulesMatchedById(bitId: BitId): string[] {
+    const exactMatch = this.findExactMatch(bitId);
+    const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this._isMatchByWildcard(bitId, idStr));
+    const allMatches = matchByGlobPattern.sort(ConsumerOverrides.sortWildcards);
+    if (exactMatch) allMatches.unshift(exactMatch);
+    return allMatches;
+  }
+  _isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
   }
