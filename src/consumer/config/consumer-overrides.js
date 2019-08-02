@@ -20,7 +20,7 @@ export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent }
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
 export const overridesForbiddenFields = ['name', 'main', 'version'];
-export const overridesSystemFields = ['propagate'];
+export const overridesSystemFields = ['propagate', 'env'];
 export const nonPackageJsonFields = [...dependenciesFields, ...overridesSystemFields];
 
 export default class ConsumerOverrides {
