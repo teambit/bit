@@ -1297,13 +1297,162 @@ describe('workspace config', function () {
         expect(showBar.compiler).to.be.null;
       });
     });
+    describe('override package.json values', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/*': {
+            bin: 'my-bin-file.js'
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('bit show should show the overrides', () => {
+        const show = helper.showComponentParsed('bar/foo');
+        expect(show.overrides)
+          .to.have.property('bin')
+          .equal('my-bin-file.js');
+      });
+      describe('tag, export and import the component', () => {
+        let authorScope;
+        before(() => {
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          authorScope = helper.cloneLocalScope();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should write the values into package.json file', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          expect(packageJson)
+            .to.have.property('bin')
+            .that.equals('my-bin-file.js');
+        });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('changing the value in the package.json directly (not inside overrides)', () => {
+          before(() => {
+            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(compDir);
+            packageJson.bin = 'my-new-file.js';
+            helper.writePackageJson(packageJson, compDir);
+          });
+          it('should not show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+        });
+        describe('changing the value in the package.json inside overrides', () => {
+          before(() => {
+            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(compDir);
+            packageJson.bit.overrides.bin = 'my-new-file.js';
+            helper.writePackageJson(packageJson, compDir);
+          });
+          it('should show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.have.string('modified components');
+          });
+          it('bit diff should show the field diff', () => {
+            const diff = helper.diff('bar/foo');
+            expect(diff).to.have.string('my-bin-file.js');
+            expect(diff).to.have.string('my-new-file.js');
+          });
+          describe('tagging, exporting and re-importing as author', () => {
+            before(() => {
+              helper.tagAllComponents();
+              helper.exportAllComponents();
+              helper.getClonedLocalScope(authorScope);
+              helper.importComponent('bar/foo');
+            });
+            it('should not show the component as modified', () => {
+              const status = helper.status();
+              expect(status).to.not.have.string('modified components');
+            });
+            it('author bit.json should be rewritten to include a rule of the specific component', () => {
+              const bitJson = helper.readBitJson();
+              expect(bitJson.overrides)
+                .to.have.property(`${helper.remoteScope}/bar/foo`)
+                .that.deep.equals({ bin: 'my-new-file.js' });
+            });
+            it('bit show should display the modified field and not the original one', () => {
+              const show = helper.showComponentParsed('bar/foo');
+              expect(show.overrides)
+                .to.have.property('bin')
+                .that.equals('my-new-file.js');
+            });
+          });
+        });
+      });
+    });
+    describe('propagating from a specific rule to a more general rule when propagate field is true', () => {
+      let show;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.addComponentBarFoo();
+        const overrides = {
+          '*': {
+            scripts: {
+              build: 'babel build'
+            }
+          },
+          'bar/*': {
+            bin: 'my-bin-file.js',
+            scripts: {
+              test: 'mocha test',
+              lint: 'eslint lint'
+            },
+            propagate: true
+          },
+          'bar/foo': {
+            scripts: {
+              test: 'jest test',
+              watch: 'babel watch'
+            },
+            propagate: true
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        show = helper.showComponentParsed();
+      });
+      it('should not save the "propagate" field', () => {
+        expect(show.overrides).to.not.have.property('propagate');
+      });
+      it('should propagate to a more general rule and save string values that are not in the specific rule', () => {
+        expect(show.overrides)
+          .to.have.property('bin')
+          .that.equals('my-bin-file.js');
+      });
+      it('should propagate to a more general rule and merge objects that are in the specific rule', () => {
+        expect(show.overrides).to.have.property('scripts');
+        expect(show.overrides.scripts)
+          .to.have.property('build')
+          .that.equals('babel build');
+        expect(show.overrides.scripts)
+          .to.have.property('lint')
+          .that.equals('eslint lint');
+        expect(show.overrides.scripts)
+          .to.have.property('watch')
+          .that.equals('babel watch');
+      });
+      it('should let the more specific rule wins when it contradict a more general rule', () => {
+        expect(show.overrides.scripts).to.have.property('test');
+        expect(show.overrides.scripts.test).to.equals('jest test');
+        expect(show.overrides.scripts.test).not.to.equals('mocha test');
+      });
+    });
   });
   describe('basic validations', () => {
-    before(() => {
-      helper.reInitLocalScope();
-    });
     describe('when overrides is not an object', () => {
       before(() => {
+        helper.reInitLocalScope();
         const overrides = ['dependencies'];
         helper.addOverridesToBitJson(overrides);
       });
@@ -1314,6 +1463,7 @@ describe('workspace config', function () {
     });
     describe('when overrides of a component is not an object', () => {
       before(() => {
+        helper.reInitLocalScope();
         const overrides = {
           bar: 1234
         };
@@ -1324,22 +1474,43 @@ describe('workspace config', function () {
         expect(output).to.have.string('expected overrides.bar to be object, got number');
       });
     });
-    describe('when an unrecognized field is added into overrides of a component', () => {
+    describe('when a forbidden field is added into overrides of a component', () => {
       before(() => {
+        helper.reInitLocalScope();
         const overrides = {
           bar: {
-            some_field: {}
+            name: 'foo' // the name field of package.json is not permitted to change
           }
         };
         helper.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
-        expect(output).to.have.string('found an unrecognized field "some_field" inside "overrides.bar" property');
+        expect(output).to.have.string('found a forbidden field "name" inside "overrides.bar" property');
+      });
+    });
+    describe('when a non-compliant package.json field is added into overrides of a component', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/*': {
+            private: 'foo' // according to npm specs it should be boolean
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('bit tag should throw an error', () => {
+        const output = helper.runWithTryCatch('bit tag -a');
+        expect(output).to.have.string(
+          'unable to save Version object, "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
+        );
       });
     });
     describe('when a dependency field is not an object', () => {
       before(() => {
+        helper.reInitLocalScope();
         const overrides = {
           bar: {
             dependencies: 1234
@@ -1354,6 +1525,7 @@ describe('workspace config', function () {
     });
     describe('when a dependency rule is not a string', () => {
       before(() => {
+        helper.reInitLocalScope();
         const overrides = {
           foo: {
             dependencies: {

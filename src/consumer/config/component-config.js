@@ -94,7 +94,9 @@ export default class ComponentConfig extends AbstractConfig {
    */
   static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: ?WorkspaceConfig): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
-    return ComponentConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
+    const consumerConfigWithoutConsumerSpecifics = filterObject(plainConsumerConfig, (val, key) => key !== 'overrides');
+    const mergedObject = R.merge(consumerConfigWithoutConsumerSpecifics, componentConfig);
+    return ComponentConfig.fromPlainObject(mergedObject);
   }
 
   /**

@@ -8,7 +8,7 @@ import {
   OVERRIDE_COMPONENT_PREFIX
 } from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
-import { dependenciesFields } from './consumer-overrides';
+import { dependenciesFields, overridesSystemFields, nonPackageJsonFields } from './consumer-overrides';
 
 export type ComponentOverridesData = {
   dependencies?: Object,
@@ -59,14 +59,13 @@ export default class ComponentOverrides {
     // $FlowFixMe
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
-
-  static componentOverridesDataFields() {
-    return dependenciesFields;
-  }
   get componentOverridesData() {
-    const fields = ComponentOverrides.componentOverridesDataFields();
-    const isDependencyField = (val, field) => fields.includes(field);
-    return R.pickBy(isDependencyField, this.overrides);
+    const isNotSystemField = (val, field) => !overridesSystemFields.includes(field);
+    return R.pickBy(isNotSystemField, this.overrides);
+  }
+  get componentOverridesPackageJsonData() {
+    const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
+    return R.pickBy(isPackageJsonField, this.overrides);
   }
   getComponentDependenciesWithVersion(): Object {
     const allDeps = Object.assign(
