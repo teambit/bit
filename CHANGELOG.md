@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1863](https://github.com/teambit/bit/issues/1863) allow excluding components from `overrides` rules
 - [#1865](https://github.com/teambit/bit/issues/1865) allow adding `package.json` props via `overrides`
 - [#1837](https://github.com/teambit/bit/issues/1837) enable executing commands on remote components outside of bit-workspace
 - [#1774](https://github.com/teambit/bit/issues/1774) improve access errors and warn when sudo is used

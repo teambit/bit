@@ -20,7 +20,7 @@ export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent }
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
 export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
-export const overridesSystemFields = ['propagate', 'env'];
+export const overridesSystemFields = ['propagate', 'exclude', 'env'];
 export const nonPackageJsonFields = [...dependenciesFields, ...overridesSystemFields];
 
 export default class ConsumerOverrides {
@@ -60,6 +60,7 @@ export default class ConsumerOverrides {
           });
           break;
         case 'propagate':
+        case 'exclude':
           // it's a system field, do nothing
           break;
         default:
@@ -75,13 +76,25 @@ export default class ConsumerOverrides {
   _getAllRulesMatchedById(bitId: BitId): string[] {
     const exactMatch = this.findExactMatch(bitId);
     const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this._isMatchByWildcard(bitId, idStr));
-    const allMatches = matchByGlobPattern.sort(ConsumerOverrides.sortWildcards);
+    const nonExcluded = matchByGlobPattern.filter(match => !this._isExcluded(this.overrides[match], bitId));
+    const allMatches = nonExcluded.sort(ConsumerOverrides.sortWildcards);
     if (exactMatch) allMatches.unshift(exactMatch);
     return allMatches;
   }
   _isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
+  }
+  _isExcluded(overridesValues: Object, bitId: BitId) {
+    if (!overridesValues.exclude || !overridesValues.exclude.length) {
+      return false;
+    }
+    return overridesValues.exclude.some(
+      excludeRule =>
+        this._isMatchByWildcard(bitId, excludeRule) ||
+        bitId.toStringWithoutVersion() === excludeRule ||
+        bitId.toStringWithoutScopeAndVersion() === excludeRule
+    );
   }
   /**
    * sort from the more specific (more namespaces) to the more generic (less namespaces)
@@ -175,6 +188,8 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
           validateDependencyField(field, override, id);
         } else if (field === 'env') {
           validateEnv(override, id);
+        } else if (field === 'exclude') {
+          validateUserInputType(message, override.exclude, `overrides.${id}.exclude`, 'array');
         }
       });
     }
