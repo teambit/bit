@@ -1392,12 +1392,13 @@ describe('workspace config', function () {
     });
     describe('propagating from a specific rule to a more general rule when propagate field is true', () => {
       let show;
+      let overrides;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
         helper.addComponentBarFoo();
-        const overrides = {
+        overrides = {
           '*': {
             scripts: {
               build: 'babel build'
@@ -1446,6 +1447,58 @@ describe('workspace config', function () {
         expect(show.overrides.scripts).to.have.property('test');
         expect(show.overrides.scripts.test).to.equals('jest test');
         expect(show.overrides.scripts.test).not.to.equals('mocha test');
+      });
+      describe('propagate with exclude', () => {
+        before(() => {
+          overrides['bar/*'].exclude = ['bar/foo'];
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('should consider the exclude prop and show the overrides accordingly', () => {
+          const output = helper.showComponentParsed();
+          expect(output.overrides).to.not.have.property('bin');
+          expect(output.overrides).to.have.property('scripts');
+          expect(output.overrides.scripts).to.have.property('build');
+          expect(output.overrides.scripts).to.have.property('test');
+          expect(output.overrides.scripts).to.have.property('watch');
+          expect(output.overrides.scripts).to.not.have.property('lint');
+        });
+      });
+    });
+    describe('using "exclude" to exclude component from a rule', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+      });
+      describe('exclude with an exact id', () => {
+        before(() => {
+          const overrides = {
+            '*': {
+              bin: 'my-bin-file.js',
+              exclude: ['bar/foo']
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('should exclude the excluded component from the overrides value', () => {
+          const show = helper.showComponentParsed('bar/foo');
+          expect(show.overrides).to.not.have.property('bin');
+        });
+      });
+      describe('exclude with an wildcards', () => {
+        before(() => {
+          const overrides = {
+            '*': {
+              bin: 'my-bin-file.js',
+              exclude: ['bar/*']
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('should exclude the excluded component from the overrides value', () => {
+          const show = helper.showComponentParsed('bar/foo');
+          expect(show.overrides).to.not.have.property('bin');
+        });
       });
     });
   });
@@ -1538,6 +1591,21 @@ describe('workspace config', function () {
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.foo.dependencies.bar to be string, got boolean');
+      });
+    });
+    describe('when "exclude" prop that is not an array', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const overrides = {
+          '*': {
+            exclude: 'bar'
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('any bit command should throw an error', () => {
+        const output = helper.runWithTryCatch('bit list');
+        expect(output).to.have.string('expected overrides.*.exclude to be array, got string');
       });
     });
   });
