@@ -1,7 +1,9 @@
 /** @flow */
 import inquirer from 'inquirer';
 import format from 'string-format';
+import chalk from 'chalk';
 import { init, listScope } from '../../api/consumer';
+import logger from '../../logger/logger';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
@@ -85,24 +87,45 @@ async function _generateRemoteComponentAutoComplete(
   when,
   { scopeName, ansPropName }: { scopeName?: string, ansPropName: string | Function }
 ) {
-  const components = scopeName ? await _fetchComps(scopeName) : null;
-  let choices = components;
-  if (!choices) {
-    // Used to build from previous answered question
-    choices = async (answers) => {
-      let propName = ansPropName;
+  let choices = [];
+  let components;
+  // This is a wrapper function which called the original when function to check if we should ask the question
+  // Then it will fetch the components from the remote. If there was an error or no components returned we will skip the question.
+  // We will store the returned components in a higher scope, to prevent another request during the choices calculation
+  const whenWithFetch = async (answers) => {
+    // If the original when returns false no need to continue
+    if (!when(answers)) {
+      return false;
+    }
+    let actualScopeName = scopeName || '';
+    if (!scopeName) {
+      let scopePropName = ansPropName;
       if (typeof ansPropName === 'function') {
-        propName = await ansPropName(answers);
+        scopePropName = await ansPropName(answers);
       }
-      return _fetchComps(answers[propName]);
-    };
-  }
+      actualScopeName = answers[scopePropName];
+    }
+    try {
+      components = await _fetchComps(actualScopeName);
+      if (!components || !components.length) {
+        console.log(chalk.yellow(`no components found on ${actualScopeName}. skipping question`));
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.log(chalk.yellow('failed fetching components, see full error in bit.logs. skipping question'));
+      logger.info(e);
+      return false;
+    }
+  };
+  // Make it a function to make sure we already fetched the components
+  choices = () => components;
 
   const selectComponent = {
     type: 'list',
     name,
     message,
-    when,
+    when: whenWithFetch,
     choices
   };
 
