@@ -177,6 +177,7 @@ export default class ComponentWriter {
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       this._mergeChangedPackageJsonProps(packageJson);
+      this._mergePackageJsonPropsFromOverrides(packageJson);
       await this._populateEnvFilesIfNeeded();
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
@@ -252,6 +253,17 @@ export default class ComponentWriter {
     }
   }
 
+  /**
+   * these changes were entered manually by a user via `overrides` key
+   */
+  _mergePackageJsonPropsFromOverrides(packageJson: PackageJsonFile) {
+    const valuesToMerge = this.component.overrides.componentOverridesPackageJsonData;
+    packageJson.mergePackageJsonObject(valuesToMerge);
+  }
+
+  /**
+   * these are changes done by a compiler
+   */
   _mergeChangedPackageJsonProps(packageJson: PackageJsonFile) {
     if (!this.component.packageJsonChangedProps) return;
     const valuesToMerge = this._replaceDistPathTemplateWithCalculatedDistPath(packageJson);
