@@ -16,6 +16,10 @@ import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
 import { FileStatus } from '../src/consumer/versions-ops/merge-version';
+import runInteractive from '../src/interactive/utils/run-interactive-cmd';
+import type { InteractiveInputs } from '../src/interactive/utils/run-interactive-cmd';
+
+export { INTERACTIVE_KEYS } from '../src/interactive/utils/run-interactive-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -23,6 +27,8 @@ const generateRandomStr = (size: number = 8): string => {
     .slice(size * -1)
     .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
 };
+
+const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
 export default class Helper {
   debugMode: boolean;
@@ -55,12 +61,44 @@ export default class Helper {
 
   // #region General
   runCmd(cmd: string, cwd: string = this.localScopePath): string {
-    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
-    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  async runInteractiveCmd({
+    args = [],
+    inputs = [],
+    // Options for the process (execa)
+    processOpts = {
+      cwd: this.localScopePath
+    },
+    // opts for interactive
+    opts = {
+      defaultIntervalBetweenInputs: DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS,
+      verbose: false
+    }
+  }: {
+    args: string[],
+    inputs: InteractiveInputs,
+    processOpts: Object,
+    opts: {
+      // Default interval between inputs in case there is no specific interval
+      defaultIntervalBetweenInputs: number,
+      verbose: boolean
+    }
+  }) {
+    const processName = this.bitBin || 'bit';
+    opts.verbose = !!this.debugMode;
+    const { stdout } = await runInteractive({ processName, args, inputs, processOpts, opts });
+    if (this.debugMode) {
+      console.log(rightpad(chalk.green('output: \n'), 20, ' ')); // eslint-disable-line no-console
+      console.log(chalk.cyan(stdout)); // eslint-disable-line no-console
+    }
+    return stdout;
   }
 
   parseOptions(options: Object): string {
@@ -182,7 +220,11 @@ export default class Helper {
   }
 
   initLocalScope() {
-    return this.runCmd('bit init');
+    return this.runCmd('bit init -N');
+  }
+
+  async initInteractive(inputs: InteractiveInputs) {
+    return this.runInteractiveCmd({ args: ['init'], inputs });
   }
 
   initLocalScopeWithOptions(options: ?Object) {

@@ -1,0 +1,73 @@
+import chai, { expect } from 'chai';
+import path from 'path';
+import format from 'string-format';
+import Helper, { INTERACTIVE_KEYS } from '../e2e-helper';
+import {
+  DEFAULT_DIR_MSG_Q,
+  PACKAGE_MANAGER_MSG_Q,
+  DEFAULT_ENV_MSG_TEMPLATE_Q
+} from '../../src/interactive/commands/init-interactive';
+
+const DEFAULT_COMPILER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
+const DEFAULT_TESTER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'tester' });
+
+const assertArrays = require('chai-arrays');
+
+chai.use(assertArrays);
+chai.use(require('chai-fs'));
+
+describe.only('run bit init - interactive', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  after(() => {
+    helper.destroyEnv();
+  });
+  describe('running bit init interactive with defaults', () => {
+    let output;
+    before(async () => {
+      helper.cleanLocalScope();
+      const inputs = [
+        { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+        { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+        {
+          triggerText: DEFAULT_COMPILER_MSG_Q,
+          inputs: [
+            { value: INTERACTIVE_KEYS.down },
+            { value: INTERACTIVE_KEYS.down },
+            { value: INTERACTIVE_KEYS.enter }
+          ]
+        },
+        {
+          triggerText: DEFAULT_TESTER_MSG_Q,
+          inputs: [
+            { value: INTERACTIVE_KEYS.down },
+            { value: INTERACTIVE_KEYS.down },
+            { value: INTERACTIVE_KEYS.enter }
+          ]
+        }
+      ];
+      output = await helper.initInteractive(inputs);
+    });
+    it('should prompt about default directory', () => {
+      expect(output).to.have.string(DEFAULT_DIR_MSG_Q);
+    });
+    it('should prompt about package manager', () => {
+      expect(output).to.have.string(PACKAGE_MANAGER_MSG_Q);
+    });
+    it('should prompt about compiler', () => {
+      expect(output).to.have.string(DEFAULT_COMPILER_MSG_Q);
+    });
+    it('should prompt about tester', () => {
+      expect(output).to.have.string(DEFAULT_TESTER_MSG_Q);
+    });
+    it('should init a new scope with provided inputs from the user', () => {
+      expect(output).to.have.string('successfully initialized a bit workspace');
+      const bitmapPath = path.join(helper.localScopePath, '.bitmap');
+      expect(bitmapPath).to.be.a.file('missing bitmap');
+      const bitJson = helper.readBitJson();
+      expect(bitJson.componentsDefaultDirectory).to.equal('components/{name}');
+      expect(bitJson.packageManager).to.equal('npm');
+      expect(bitJson.env).to.be.empty;
+    });
+  });
+});

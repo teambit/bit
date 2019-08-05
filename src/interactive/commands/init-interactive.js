@@ -7,7 +7,7 @@ import logger from '../../logger/logger';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
-const TOP_MESSAGE = `This utility initialize an empty Bit workspace and walks you through creating a bit.json file.
+export const TOP_MESSAGE = `This utility initialize an empty Bit workspace and walks you through creating a bit.json file.
 Run bit help json for full workspace configuration definition.
 
 All configurations are reversible and overridable on per-command basis.
@@ -15,6 +15,10 @@ All configurations are reversible and overridable on per-command basis.
 After setting up the workspace, use bit add to track components and modules.
 
 Press ^C at any time to quit.`;
+
+export const DEFAULT_DIR_MSG_Q = 'Select a default imported components directory';
+export const PACKAGE_MANAGER_MSG_Q = 'Which is your default package manger';
+export const DEFAULT_ENV_MSG_TEMPLATE_Q = 'setting up a default {type} for all components';
 
 function _generateEnvOriginQ(mode: 'compiler' | 'tester' = 'compiler', propName: string) {
   const ansShowBitEnvsTextTemplate = 'list {type} maintained by @bit team (bit list bit.envs --namespace {namespace})';
@@ -36,8 +40,8 @@ function _generateEnvOriginQ(mode: 'compiler' | 'tester' = 'compiler', propName:
     value: 'custom'
   };
 
-  const mainTextTemplate = 'setting up a default {type} for all components';
-  const mainTextValues = mode === 'compiler' ? { type: 'compilers' } : { type: 'testers' };
+  const mainTextTemplate = DEFAULT_ENV_MSG_TEMPLATE_Q;
+  const mainTextValues = mode === 'compiler' ? { type: 'compiler' } : { type: 'tester' };
   const mainText = format(mainTextTemplate, mainTextValues);
 
   const envOriginQ = {
@@ -136,7 +140,7 @@ async function _buildQuestions() {
   const packageManagerQ = {
     type: 'list',
     name: 'packageManager',
-    message: 'Which is your default package manger',
+    message: PACKAGE_MANAGER_MSG_Q,
     choices: ['npm', 'yarn']
   };
 
@@ -158,7 +162,7 @@ async function _buildQuestions() {
     rootPath: '.',
     // rootPath :: String
     // Root search directory
-    message: 'Select a default imported components directory',
+    message: DEFAULT_DIR_MSG_Q,
     default: 'components/{name}',
     suggestOnly: false
     // suggestOnly :: Bool
