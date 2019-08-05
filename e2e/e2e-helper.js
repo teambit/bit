@@ -262,8 +262,8 @@ export default class Helper {
     return this.runCmd('bit init --bare', this.envScopePath);
   }
 
-  listRemoteScope(bare: boolean = true, options: string = '') {
-    return this.runCmd(`bit list ${this.remoteScope} ${options} ${bare ? '--bare' : ''}`);
+  listRemoteScope(raw: boolean = true, options: string = '') {
+    return this.runCmd(`bit list ${this.remoteScope} ${options} ${raw ? '--raw' : ''}`);
   }
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);

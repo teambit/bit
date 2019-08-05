@@ -46,7 +46,7 @@ describe('basic flow with dependencies', function () {
       });
     });
     it('bit list should not show any component', () => {
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output).to.have.string('found 0 components');
     });
     describe('after tagging the components', () => {
@@ -67,7 +67,7 @@ describe('basic flow with dependencies', function () {
         });
       });
       it('bit list should show the components sorted alphabetically', () => {
-        const output = helper.runCmd('bit list');
+        const output = helper.listLocalScope();
         expectComponentsToBeSortedAlphabetically(output);
       });
       describe('after modifying the components', () => {
@@ -95,7 +95,7 @@ describe('basic flow with dependencies', function () {
           });
         });
         it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.runCmd('bit list');
+          const output = helper.listLocalScope();
           expectComponentsToBeSortedAlphabetically(output);
         });
       });
@@ -121,7 +121,7 @@ describe('basic flow with dependencies', function () {
           });
         });
         it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.runCmd('bit list');
+          const output = helper.listLocalScope();
           expectComponentsToBeSortedAlphabetically(output);
         });
       });
