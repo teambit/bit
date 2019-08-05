@@ -1116,7 +1116,13 @@ export default class Component {
     };
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
-    const overrides = ComponentOverrides.loadFromConsumer(overridesFromConsumer, overridesFromModel, componentConfig);
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    const overrides = ComponentOverrides.loadFromConsumer(
+      overridesFromConsumer,
+      overridesFromModel,
+      componentConfig,
+      isAuthor
+    );
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;

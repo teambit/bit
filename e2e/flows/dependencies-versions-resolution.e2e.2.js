@@ -104,10 +104,10 @@ describe('dependencies versions resolution', function () {
         };
         helper.writeBitJson(bitJson);
       });
-      it('should not use the dependency version from the consumer config as it is imported', () => {
+      it('should use the dependency version from the consumer config as it is imported', () => {
         const output = helper.showComponentParsed('bar/foo -c');
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.1`
+          `${helper.remoteScope}/utils/is-string@0.0.5`
         );
       });
       describe('when the consumer config conflicts the component config', () => {

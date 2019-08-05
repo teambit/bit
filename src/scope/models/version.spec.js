@@ -315,6 +315,10 @@ describe('Version', () => {
       version.packageJsonChangedProps = { bin: 'my-file.js' };
       expect(validateFunc).to.not.throw();
     });
+    it('should throw when overrides has a "system" field (field that Bit uses internally for consumer overrides)', () => {
+      version.overrides = { exclude: ['*'] };
+      expect(validateFunc).to.throw('the "overrides" has a forbidden key "exclude"');
+    });
     it('should throw when overrides has a package.json field that is non-compliant npm value', () => {
       version.overrides = { bin: 1234 };
       expect(validateFunc).to.throw(

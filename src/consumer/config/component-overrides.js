@@ -8,7 +8,15 @@ import {
   OVERRIDE_COMPONENT_PREFIX
 } from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
-import { dependenciesFields, overridesSystemFields, nonPackageJsonFields } from './consumer-overrides';
+import {
+  dependenciesFields,
+  overridesBitInternalFields,
+  nonPackageJsonFields,
+  overridesForbiddenFields
+} from './consumer-overrides';
+
+// consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
+export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type ComponentOverridesData = {
   dependencies?: Object,
@@ -19,10 +27,8 @@ export type ComponentOverridesData = {
 
 export default class ComponentOverrides {
   overrides: ConsumerOverridesOfComponent;
-  overridesFromConsumer: ConsumerOverridesOfComponent;
-  constructor(overrides: ?ConsumerOverridesOfComponent, overridesFromConsumer: ?ConsumerOverridesOfComponent) {
+  constructor(overrides: ?ConsumerOverridesOfComponent) {
     this.overrides = overrides || {};
-    this.overridesFromConsumer = overridesFromConsumer || {};
   }
   /**
    * overrides of component can be determined by three different sources.
@@ -49,44 +55,37 @@ export default class ComponentOverrides {
   static loadFromConsumer(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentConfig: ?ComponentConfig
+    componentConfig: ?ComponentConfig,
+    isAuthor: boolean
   ): ComponentOverrides {
     const getFromComponent = (): ?ComponentOverridesData => {
       if (componentConfig && componentConfig.componentHasWrittenConfig) {
-        // $FlowFixMe
-        componentConfig.overrides;
+        return componentConfig.overrides;
       }
-      return overridesFromModel;
+      return isAuthor ? null : overridesFromModel;
     };
     const fromComponent = getFromComponent();
-    if (fromComponent) {
-      const overridesFromComponent = R.clone(fromComponent);
-      const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
-      Object.keys(overridesFromConsumer || {}).forEach((field) => {
-        switch (field) {
-          case 'env':
-          case 'propagate':
-          case 'exclude':
-            // they're system field, do nothing
-            break;
-          default:
-            if (
-              isObjectAndNotArray(overridesFromComponent[field]) &&
-              isObjectAndNotArray(overridesFromConsumer[field])
-            ) {
-              overridesFromComponent[field] = Object.assign(
-                overridesFromConsumer[field],
-                overridesFromComponent[field]
-              );
-            } else if (!overridesFromComponent[field]) {
-              overridesFromComponent[field] = overridesFromConsumer[field];
-            }
-          // when overridesFromComponent[field] is set and not an object, do not override it by the general one
-        }
-      });
-      return new ComponentOverrides(overridesFromComponent, overridesFromConsumer);
+    if (!fromComponent) {
+      return new ComponentOverrides(overridesFromConsumer);
     }
-    return new ComponentOverrides(overridesFromConsumer, overridesFromConsumer);
+    const overridesFromComponent = R.clone(fromComponent);
+    const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
+    Object.keys(overridesFromConsumer || {}).forEach((field) => {
+      if (overridesBitInternalFields.includes(field)) {
+        return; // do nothing
+      }
+      if (
+        isObjectAndNotArray(overridesFromComponent[field]) && // $FlowFixMe
+        isObjectAndNotArray(overridesFromConsumer[field])
+      ) {
+        overridesFromComponent[field] = Object.assign(overridesFromConsumer[field], overridesFromComponent[field]);
+      } else if (!overridesFromComponent[field]) {
+        // $FlowFixMe
+        overridesFromComponent[field] = overridesFromConsumer[field];
+      }
+      // when overridesFromComponent[field] is set and not an object, do not override it by overridesFromConsumer
+    });
+    return new ComponentOverrides(overridesFromComponent);
   }
 
   static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
@@ -94,7 +93,7 @@ export default class ComponentOverrides {
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
   get componentOverridesData() {
-    const isNotSystemField = (val, field) => !overridesSystemFields.includes(field);
+    const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
     return R.pickBy(isNotSystemField, this.overrides);
   }
   get componentOverridesPackageJsonData() {
@@ -110,15 +109,7 @@ export default class ComponentOverrides {
     );
     return this._filterForComponentWithValidVersion(allDeps);
   }
-  getComponentDependenciesWithVersionFromConsumer(): Object {
-    const allDeps = Object.assign(
-      {},
-      this.overridesFromConsumer.dependencies,
-      this.overridesFromConsumer.devDependencies,
-      this.overridesFromConsumer.peerDependencies
-    );
-    return this._filterForComponentWithValidVersion(allDeps);
-  }
+
   _filterForComponentWithValidVersion(deps: Object): Object {
     return Object.keys(deps).reduce((acc, current) => {
       if (this._isValidVersion(deps[current]) && current.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
@@ -219,6 +210,6 @@ export default class ComponentOverrides {
       .map(rule => rule.replace(OVERRIDE_FILE_PREFIX, ''));
   }
   clone(): ComponentOverrides {
-    return new ComponentOverrides(R.clone(this.overrides), R.clone(this.overridesFromConsumer));
+    return new ComponentOverrides(R.clone(this.overrides));
   }
 }

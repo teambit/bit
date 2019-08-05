@@ -303,7 +303,7 @@ export default class EnvExtension extends BaseExtension {
 
   /**
    * load the compiler/tester according to the following strategies:
-   * 1. from component config. (bit.json/package.json of the component) if it was written.
+   * 1. from component config (bit.json/package.json of the component) if it was written.
    * 2. from component model. an imported component might not have the config written.
    * for author, it's irrelevant, because upon import it's written to consumer config (if changed).
    * 3. from consumer config overrides. (bit.json/package.json of the consumer when this component
@@ -336,7 +336,6 @@ export default class EnvExtension extends BaseExtension {
     // $FlowFixMe
     if (componentConfig && componentConfig.componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
-      // $FlowFixMe
       const envConfig = { [envType]: componentConfig[envType] };
       const configPath = path.dirname(componentConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
