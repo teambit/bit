@@ -13,7 +13,8 @@ import { dependenciesFields, overridesSystemFields, nonPackageJsonFields } from 
 export type ComponentOverridesData = {
   dependencies?: Object,
   devDependencies?: Object,
-  peerDependencies?: Object
+  peerDependencies?: Object,
+  [string]: any // any package.json field should be valid here. can't be overridesSystemFields
 };
 
 export default class ComponentOverrides {
@@ -30,12 +31,17 @@ export default class ComponentOverrides {
    * 2. consumer-config. (bit.json/package.json of the consumer when it has overrides of the component).
    * 3. model. (when the component is tagged, the overrides data is saved into the model).
    *
-   * the strategy of loading them is simple:
-   * if the component config is written to the filesystem, use it (#1).
-   * if the component config is not written, it can be for two reasons:
-   * a) it's imported and the user chose not to write package.json nor bit.json. in this case, use
+   * the strategy of loading them is as follows:
+   * a) find the component config. (if exists)
+   * b) find the overrides of workspace config matching this component. (if exists)
+   * c) merge between the two. in case of conflict, the component config wins.
+   *
+   * the following steps are needed to find the component config
+   * a) if the component config is written to the filesystem, use it
+   * b) if the component config is not written, it can be for two reasons:
+   * 1) it's imported and the user chose not to write package.json nor bit.json. in this case, use
    * component from the model.
-   * b) it's author. by default, the config is written into consumer-config (if not exist) on import.
+   * 2) it's author. by default, the config is written into consumer-config (if not exist) on import.
    * which, in this case, use only consumer-config.
    * an exception is when an author runs `eject-conf` command to explicitly write the config, then,
    * use the component-config.
@@ -43,18 +49,46 @@ export default class ComponentOverrides {
   static loadFromConsumer(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentConfig: ?ComponentConfig,
-    isAuthor: boolean
+    componentConfig: ?ComponentConfig
   ): ComponentOverrides {
-    if (componentConfig && componentConfig.componentHasWrittenConfig) {
-      // $FlowFixMe
-      return new ComponentOverrides(componentConfig.overrides, overridesFromConsumer);
-    }
-    if (!isAuthor) {
-      return ComponentOverrides.loadFromScope(overridesFromModel);
+    const getFromComponent = (): ?ComponentOverridesData => {
+      if (componentConfig && componentConfig.componentHasWrittenConfig) {
+        // $FlowFixMe
+        componentConfig.overrides;
+      }
+      return overridesFromModel;
+    };
+    const fromComponent = getFromComponent();
+    if (fromComponent) {
+      const overridesFromComponent = R.clone(fromComponent);
+      const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
+      Object.keys(overridesFromConsumer || {}).forEach((field) => {
+        switch (field) {
+          case 'env':
+          case 'propagate':
+          case 'exclude':
+            // they're system field, do nothing
+            break;
+          default:
+            if (
+              isObjectAndNotArray(overridesFromComponent[field]) &&
+              isObjectAndNotArray(overridesFromConsumer[field])
+            ) {
+              overridesFromComponent[field] = Object.assign(
+                overridesFromConsumer[field],
+                overridesFromComponent[field]
+              );
+            } else if (!overridesFromComponent[field]) {
+              overridesFromComponent[field] = overridesFromConsumer[field];
+            }
+          // when overridesFromComponent[field] is set and not an object, do not override it by the general one
+        }
+      });
+      return new ComponentOverrides(overridesFromComponent, overridesFromConsumer);
     }
     return new ComponentOverrides(overridesFromConsumer, overridesFromConsumer);
   }
+
   static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
     // $FlowFixMe
     return new ComponentOverrides(R.clone(overridesFromModel), {});

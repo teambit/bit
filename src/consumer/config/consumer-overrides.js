@@ -13,7 +13,8 @@ export type ConsumerOverridesOfComponent = {
   devDependencies?: Object,
   peerDependencies?: Object,
   env?: Object,
-  propagate?: boolean // whether propagate to a more general rule
+  propagate?: boolean, // whether propagate to a more general rule,
+  [string]: any // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
