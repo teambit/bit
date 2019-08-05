@@ -1260,6 +1260,7 @@ describe('workspace config', function () {
       });
     });
     describe('adding overrides data on consumer-config to imported component', () => {
+      let overrides;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createComponentBarFoo();
@@ -1269,7 +1270,7 @@ describe('workspace config', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
-        const overrides = {
+        overrides = {
           'bar/*': {
             peerDependencies: {
               chai: '2.4.0'
@@ -1284,17 +1285,37 @@ describe('workspace config', function () {
         bitJson.env = { compiler: 'bit.env/my-special-compiler2@0.0.1' };
         helper.writeBitJson(bitJson);
       });
-      it('bit status should not show the component as modified', () => {
+      it('bit status should show the component as modified', () => {
         const status = helper.status();
-        expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        expect(status).to.have.string('modified');
       });
-      it('bit diff should not show any diff', () => {
+      it('bit diff should show the diff', () => {
         const diff = helper.diff('bar/foo');
-        expect(diff).to.have.string('no diff');
+        expect(diff).to.have.string('+ bit.env/my-special-compiler@0.0.1');
+        expect(diff).to.have.string('+ [ chai@2.4.0 ]');
       });
-      it('bit show should not display any compiler', () => {
+      it('bit show should show the settings from the workspace config', () => {
         const showBar = helper.showComponentParsed('bar/foo');
-        expect(showBar.compiler).to.be.null;
+        expect(showBar.compiler.name).to.equal('bit.env/my-special-compiler@0.0.1');
+        expect(showBar.overrides.peerDependencies).to.deep.equal({ chai: '2.4.0' });
+      });
+      describe('when the overrides data on consumer config excluded the imported component', () => {
+        before(() => {
+          overrides['bar/*'].exclude = [`${helper.remoteScope}/*`];
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('bit status should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        it('bit diff should not show any diff', () => {
+          const diff = helper.diff('bar/foo');
+          expect(diff).to.have.string('no diff');
+        });
+        it('bit show should not display any compiler', () => {
+          const showBar = helper.showComponentParsed('bar/foo');
+          expect(showBar.compiler).to.be.null;
+        });
       });
     });
     describe('override package.json values', () => {

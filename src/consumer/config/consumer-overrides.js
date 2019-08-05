@@ -13,15 +13,16 @@ export type ConsumerOverridesOfComponent = {
   devDependencies?: Object,
   peerDependencies?: Object,
   env?: Object,
-  propagate?: boolean // whether propagate to a more general rule
+  propagate?: boolean, // whether propagate to a more general rule,
+  [string]: any // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
 export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
-export const overridesSystemFields = ['propagate', 'exclude', 'env'];
-export const nonPackageJsonFields = [...dependenciesFields, ...overridesSystemFields];
+export const overridesBitInternalFields = ['propagate', 'exclude', 'env'];
+export const nonPackageJsonFields = [...dependenciesFields, ...overridesBitInternalFields];
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
