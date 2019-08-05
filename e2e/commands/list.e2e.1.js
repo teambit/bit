@@ -21,7 +21,7 @@ describe('bit list command', function () {
       helper.runCmd('bit init');
     });
     it('should display "found 0 components"', () => {
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
@@ -33,7 +33,7 @@ describe('bit list command', function () {
       helper.addComponentBarFoo();
     });
     it('should display "found 0 components"', () => {
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
@@ -46,12 +46,12 @@ describe('bit list command', function () {
       helper.tagComponentBarFoo();
     });
     it('should display "found 1 components"', () => {
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output.includes('found 1 components')).to.be.true;
     });
     it('should list deprecated component', () => {
       helper.deprecateComponent('bar/foo');
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output).to.contain.string('bar/foo [Deprecated]');
     });
   });
@@ -76,8 +76,7 @@ describe('bit list command', function () {
         helper.exportAllComponents();
 
         helper.getClonedLocalScope(clonedScopePath);
-        const stringOutput = helper.runCmd('bit list -o -j');
-        output = JSON.parse(stringOutput);
+        output = helper.listLocalScopeParsed('-o');
       });
       it('should show that it has a later version in the remote', () => {
         const barFoo = output.find(item => item.id === `${helper.remoteScope}/bar/foo`);
@@ -96,8 +95,7 @@ describe('bit list command', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/baz@0.0.1');
-        const stringOutput = helper.runCmd('bit list -o -j');
-        output = JSON.parse(stringOutput);
+        output = helper.listLocalScopeParsed('-o');
       });
       it('should display the same version for the local and remote', () => {
         const barBaz = output.find(item => item.id === `${helper.remoteScope}/bar/baz`);
@@ -111,8 +109,7 @@ describe('bit list command', function () {
         helper.createFile('bar', 'local');
         helper.addComponent('bar/local', { i: 'bar/local' });
         helper.tagComponent('bar/local');
-        const stringOutput = helper.runCmd('bit list -o -j');
-        output = JSON.parse(stringOutput);
+        output = helper.listLocalScopeParsed('-o');
       });
       it('should show that the component does not have a remote version', () => {
         const barLocal = output.find(item => item.id === 'bar/local');
