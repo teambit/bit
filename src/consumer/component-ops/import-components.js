@@ -207,11 +207,11 @@ export default class ImportComponents {
     this._throwForDifferentComponentWithSameName(ids);
   }
 
-  async _throwForModifiedOrNewComponents(ids: BitId[]) {
+  async _throwForModifiedOrNewComponents(ids: BitId[]): Promise<void> {
     // the typical objectsOnly option is when a user cloned a project with components tagged to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.override || this.options.objectsOnly || this.options.merge) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly || this.options.merge) return;
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -227,7 +227,11 @@ export default class ImportComponents {
   }
 
   async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
-    const allDependenciesIds = R.flatten(componentsAndDependencies.map(componentAndDependencies => componentAndDependencies.component.dependencies.getAllIds()));
+    const allDependenciesIds = R.flatten(
+      componentsAndDependencies.map(componentAndDependencies =>
+        componentAndDependencies.component.dependencies.getAllIds()
+      )
+    );
     await this._throwForModifiedOrNewComponents(allDependenciesIds);
   }
 
