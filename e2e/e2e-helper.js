@@ -226,7 +226,11 @@ export default class Helper {
   }
 
   initLocalScope() {
-    return this.runCmd('bit init -N');
+    return this.initWorkspace();
+  }
+
+  initWorkspace(workspacePath?: string) {
+    return this.runCmd('bit init -N', workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {
@@ -272,21 +276,31 @@ export default class Helper {
     }
     this.setLocalScope();
     fs.ensureDirSync(this.localScopePath);
-    return this.runCmd('bit init');
+    return this.initLocalScope();
   }
-  addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
+  addRemoteScope(
+    remoteScopePath: string = this.remoteScopePath,
+    localScopePath: string = this.localScopePath,
+    isGlobal: boolean = false
+  ) {
+    const globalArg = isGlobal ? '-g' : '';
     if (process.env.npm_config_with_ssh) {
-      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
+      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath} ${globalArg}`, localScopePath);
     }
-    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
+    return this.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, localScopePath);
   }
 
-  removeRemoteScope(remoteScope: string = this.remoteScope) {
-    return this.runCmd(`bit remote del ${remoteScope}`);
+  removeRemoteScope(remoteScope: string = this.remoteScope, isGlobal: boolean = false) {
+    const globalArg = isGlobal ? '-g' : '';
+    return this.runCmd(`bit remote del ${remoteScope} ${globalArg}`);
   }
 
-  addRemoteEnvironment() {
-    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
+  addRemoteEnvironment(isGlobal: boolean = false) {
+    return this.addRemoteScope(this.envScopePath, this.localScopePath, isGlobal);
+  }
+
+  removeRemoteEnvironment(isGlobal: boolean = false) {
+    return this.removeRemoteScope(this.envScope, isGlobal);
   }
 
   reInitRemoteScope() {
@@ -750,14 +764,15 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  createDummyCompiler(dummyType: string) {
+  createDummyCompiler(dummyType: string = 'dummy') {
     // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
+    // TODO: this is not really a scope but a workspace
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -778,11 +793,12 @@ export default class Helper {
   createDummyTester(dummyType: string) {
     if (this.dummyTesterCreated) return this.addRemoteScope(this.envScopePath);
 
+    // TODO: this is not really a scope but a workspace
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
     const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');

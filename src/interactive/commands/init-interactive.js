@@ -20,6 +20,7 @@ export const DEFAULT_DIR_MSG_Q = 'Select a default imported components directory
 export const PACKAGE_MANAGER_MSG_Q = 'Which is your default package manger';
 export const DEFAULT_ENV_MSG_TEMPLATE_Q = 'setting up a default {type} for all components';
 export const CHOOSE_ENV_MSG_TEMPLATE_Q = 'choose your {type}';
+export const CHOOSE_ENV_SCOPE_MSG_Q = 'enter your environment collection name';
 export const CHOOSE_COMPILER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
 export const CHOOSE_TESTER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'tester' });
 
@@ -61,7 +62,7 @@ async function _generateEnvScopeNameQ(propName, originPropName) {
   const envScopeNameQ = {
     type: 'input',
     name: propName,
-    message: 'enter your environment collection name',
+    message: CHOOSE_ENV_SCOPE_MSG_Q,
     when: (answers) => {
       return answers[originPropName] === 'custom';
     }

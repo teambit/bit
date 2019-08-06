@@ -7,7 +7,8 @@ import {
   PACKAGE_MANAGER_MSG_Q,
   DEFAULT_ENV_MSG_TEMPLATE_Q,
   CHOOSE_COMPILER_MSG_Q,
-  CHOOSE_TESTER_MSG_Q
+  CHOOSE_TESTER_MSG_Q,
+  CHOOSE_ENV_SCOPE_MSG_Q
 } from '../../src/interactive/commands/init-interactive';
 
 const DEFAULT_COMPILER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
@@ -24,7 +25,7 @@ describe('run bit init - interactive', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('running bit init interactive with defaults', () => {
+  describe('with defaults', () => {
     let output;
     before(async () => {
       helper.cleanLocalScope();
@@ -72,7 +73,7 @@ describe('run bit init - interactive', function () {
       expect(bitJson.env).to.be.empty;
     });
   });
-  describe('running bit init interactive - change dir, use yarn, set compiler and testers from bit.envs', () => {
+  describe('change dir, use yarn, set compiler and testers from bit.envs', () => {
     let bitJson;
     before(async () => {
       helper.cleanLocalScope();
@@ -114,6 +115,59 @@ describe('run bit init - interactive', function () {
     });
     it('should set the tester to tester from bit.envs', () => {
       expect(bitJson.env.tester).to.have.string('bit.envs');
+    });
+  });
+  describe('use compiler and tester from custom scope', () => {
+    let bitJson;
+    before(async () => {
+      helper.reInitLocalScope();
+      helper.createDummyCompiler();
+      // We adding the remote scope as global because we need it to be identified on a clean folder during the init process
+      // (it will be delete few lines below right after the init)
+      helper.addRemoteEnvironment(true);
+      helper.cleanLocalScope();
+      const inputs = [
+        { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+        {
+          triggerText: PACKAGE_MANAGER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: DEFAULT_COMPILER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_ENV_SCOPE_MSG_Q,
+          inputs: [{ value: helper.envScope }, { value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_COMPILER_MSG_Q,
+          // Select the first value from the env scope
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: DEFAULT_TESTER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_ENV_SCOPE_MSG_Q,
+          inputs: [{ value: helper.envScope }, { value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_TESTER_MSG_Q,
+          // Select the first value from the env scope - it will be the same as the compiler but it doesn't really matter for the testing
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        }
+      ];
+      await helper.initInteractive(inputs);
+      helper.removeRemoteEnvironment(true);
+      bitJson = helper.readBitJson();
+    });
+    it('should set the compiler to compiler from bit.envs', () => {
+      expect(bitJson.env.compiler).to.have.string(helper.envScope);
+    });
+    it('should set the tester to tester from bit.envs', () => {
+      expect(bitJson.env.tester).to.have.string(helper.envScope);
     });
   });
 });
