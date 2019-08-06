@@ -84,6 +84,7 @@ export default class ImportComponents {
       true,
       this.options.saveDependenciesAsComponents
     );
+    await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
@@ -131,6 +132,7 @@ export default class ImportComponents {
     let componentsAndDependencies = [];
     if (componentsIdsToImport.length) {
       componentsAndDependencies = await this.consumer.importComponents(componentsIdsToImport, true);
+      await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
@@ -213,17 +215,20 @@ export default class ImportComponents {
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
-
     if (modifiedComponents.length) {
       throw new GeneralError(
         chalk.yellow(
-          `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
+          `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
             '\n'
           )} `
         )
       );
     }
-    return Promise.resolve();
+  }
+
+  async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
+    const allDependenciesIds = R.flatten(componentsAndDependencies.map(componentAndDependencies => componentAndDependencies.component.dependencies.getAllIds()));
+    await this._throwForModifiedOrNewComponents(allDependenciesIds);
   }
 
   /**

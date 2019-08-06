@@ -1583,6 +1583,21 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
     });
+    describe('import is-type directly, changing it then import it as a dependency', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-type');
+        helper.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV2);
+        output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/utils/is-string`); // imports is-type as a dependency
+      });
+      it('should throw an error saying is-type is modified, suggesting to override or merge', () => {
+        expect(output).to.have.string('unable to import');
+        expect(output).to.have.string('use --override');
+        expect(output).to.have.string('use --merge');
+      });
+    });
     describe('import is-type as a dependency and then import it directly with a newer version', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterExport);
