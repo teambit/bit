@@ -167,7 +167,7 @@ async function _buildQuestions() {
     // rootPath :: String
     // Root search directory
     message: DEFAULT_DIR_MSG_Q,
-    default: 'components/{name}',
+    default: 'components',
     suggestOnly: false
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
@@ -206,6 +206,7 @@ export default (async function initInteractive() {
   ui.log.write(TOP_MESSAGE);
   const questions = await _buildQuestions();
   const answers = await inquirer.prompt(questions);
+  answers.componentsDefaultDirectory = `${answers.componentsDefaultDirectory}/{name}`;
   return init(undefined, false, false, false, false, answers).then(({ created, addedGitHooks, existingGitHooks }) => {
     return {
       created,

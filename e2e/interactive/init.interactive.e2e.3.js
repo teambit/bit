@@ -105,7 +105,7 @@ describe('run bit init - interactive', function () {
       bitJson = helper.readBitJson();
     });
     it('should set the default dir to my-comps', () => {
-      expect(bitJson.componentsDefaultDirectory).to.equal('my-comps');
+      expect(bitJson.componentsDefaultDirectory).to.equal('my-comps/{name}');
     });
     it('should set the package manager to yarn', () => {
       expect(bitJson.packageManager).to.equal('yarn');
