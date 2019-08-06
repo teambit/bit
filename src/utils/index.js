@@ -1,10 +1,8 @@
 /** @flow */
 // @TODO refactor this file to include only exports
 import first from './array/first';
-import bufferFrom from './buffer/from';
 import flatten from './array/flatten';
 import filterAsync from './array/filter-async';
-import resolveBoolean from './resolve-boolean';
 import mapObject from './map-object';
 import mkdirp from './mkdirp';
 import forEach from './object/foreach';
@@ -24,7 +22,6 @@ import toBase64 from './string/to-base64';
 import toBase64ArrayBuffer from './string/to-base64-array-buffer';
 import fromBase64 from './string/from-base64';
 import parseSSHUrl from './ssh/parse-url';
-import listDirectories from './fs/list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './fs/is-dir-empty';
 import isDir from './is-dir';
@@ -47,7 +44,6 @@ import isString from './string/is-string';
 import removeChalkCharacters from './string/remove-chalk-characters';
 import getStringifyArgs from './string/get-stringify-args';
 import isNumeric from './number/is-numeric';
-import diff from './array/diff';
 import sharedStartOfArray from './array/shared-start';
 import filterObject from './filter-object';
 import isValidIdChunk from './is-valid-id-chunk';
@@ -92,7 +88,6 @@ export {
   getStringifyArgs,
   isNumeric,
   inflate,
-  diff,
   sharedStartOfArray,
   filterAsync,
   deflate,
@@ -101,7 +96,6 @@ export {
   toBase64ArrayBuffer,
   fromBase64,
   glob,
-  resolveBoolean,
   empty,
   filter,
   cleanChar,
@@ -121,7 +115,6 @@ export {
   pathHasAll,
   first,
   bufferToReadStream,
-  listDirectories,
   isDirEmpty,
   isDirEmptySync,
   flatten,
@@ -138,7 +131,6 @@ export {
   outputFile,
   camelCase,
   stripTrailingChar,
-  bufferFrom,
   getLatestVersionNumber,
   calculateFileInfo,
   getWithoutExt,
