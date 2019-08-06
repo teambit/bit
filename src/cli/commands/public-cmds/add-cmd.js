@@ -53,9 +53,9 @@ export default class Add extends Command {
     }: {
       id: ?string,
       main: ?string,
-      tests: ?(string[]),
+      tests: ?string,
       namespace: ?string,
-      exclude: ?(string[]),
+      exclude: ?string,
       override: boolean
     }
   ): Promise<*> {

@@ -1,5 +1,5 @@
 // @flow
-import { Doclet } from './parser';
+import type { Doclet } from './parser';
 
 export default function format(doc: Doclet): string {
   let args;
