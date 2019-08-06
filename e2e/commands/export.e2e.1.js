@@ -64,7 +64,7 @@ describe('bit export command', function () {
       helper.exportAllComponents();
     });
     it('should export them all', () => {
-      const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
+      const output = helper.runCmd(`bit list ${helper.remoteScope} --raw`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar')).to.be.true;
       expect(output.includes('baz')).to.be.true;
@@ -83,13 +83,13 @@ describe('bit export command', function () {
       helper.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {
-      const output = helper.runCmd(`bit list ${helper.remoteScope} --bare`);
+      const output = helper.runCmd(`bit list ${helper.remoteScope} --raw`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar/foo1')).to.be.true;
       expect(output.includes('bar/foo2')).to.be.true;
     });
     it('bit list locally should display 2 components', () => {
-      const output = helper.runCmd('bit list');
+      const output = helper.listLocalScope();
       expect(output.includes('found 2 components in local scope')).to.be.true;
     });
   });

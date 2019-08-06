@@ -292,7 +292,7 @@ describe('bit remove command', function () {
       expect(output).to.contain.string('utils/is-string@0.0.2');
     });
     it('should display version 0.0.1 for component', () => {
-      const output = JSON.parse(helper.listLocalScope('-j'));
+      const output = helper.listLocalScopeParsed();
       expect(output).to.deep.includes({ id: 'utils/is-string', localVersion: '0.0.1' });
     });
     it('should still be in bitmap', () => {

@@ -32,7 +32,7 @@ export default class Import extends Command {
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'ignore-dist', 'write dist files (when exist) to the configured directory'],
+    ['', 'ignore-dist', "skip writing the component's build files during import"],
     [
       '',
       'conf [path]',

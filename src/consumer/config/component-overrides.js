@@ -8,20 +8,27 @@ import {
   OVERRIDE_COMPONENT_PREFIX
 } from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
-import { dependenciesFields, overridesSystemFields, nonPackageJsonFields } from './consumer-overrides';
+import {
+  dependenciesFields,
+  overridesBitInternalFields,
+  nonPackageJsonFields,
+  overridesForbiddenFields
+} from './consumer-overrides';
+
+// consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
+export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type ComponentOverridesData = {
   dependencies?: Object,
   devDependencies?: Object,
-  peerDependencies?: Object
+  peerDependencies?: Object,
+  [string]: any // any package.json field should be valid here. can't be overridesSystemFields
 };
 
 export default class ComponentOverrides {
   overrides: ConsumerOverridesOfComponent;
-  overridesFromConsumer: ConsumerOverridesOfComponent;
-  constructor(overrides: ?ConsumerOverridesOfComponent, overridesFromConsumer: ?ConsumerOverridesOfComponent) {
+  constructor(overrides: ?ConsumerOverridesOfComponent) {
     this.overrides = overrides || {};
-    this.overridesFromConsumer = overridesFromConsumer || {};
   }
   /**
    * overrides of component can be determined by three different sources.
@@ -30,12 +37,17 @@ export default class ComponentOverrides {
    * 2. consumer-config. (bit.json/package.json of the consumer when it has overrides of the component).
    * 3. model. (when the component is tagged, the overrides data is saved into the model).
    *
-   * the strategy of loading them is simple:
-   * if the component config is written to the filesystem, use it (#1).
-   * if the component config is not written, it can be for two reasons:
-   * a) it's imported and the user chose not to write package.json nor bit.json. in this case, use
+   * the strategy of loading them is as follows:
+   * a) find the component config. (if exists)
+   * b) find the overrides of workspace config matching this component. (if exists)
+   * c) merge between the two. in case of conflict, the component config wins.
+   *
+   * the following steps are needed to find the component config
+   * a) if the component config is written to the filesystem, use it
+   * b) if the component config is not written, it can be for two reasons:
+   * 1) it's imported and the user chose not to write package.json nor bit.json. in this case, use
    * component from the model.
-   * b) it's author. by default, the config is written into consumer-config (if not exist) on import.
+   * 2) it's author. by default, the config is written into consumer-config (if not exist) on import.
    * which, in this case, use only consumer-config.
    * an exception is when an author runs `eject-conf` command to explicitly write the config, then,
    * use the component-config.
@@ -46,21 +58,42 @@ export default class ComponentOverrides {
     componentConfig: ?ComponentConfig,
     isAuthor: boolean
   ): ComponentOverrides {
-    if (componentConfig && componentConfig.componentHasWrittenConfig) {
-      // $FlowFixMe
-      return new ComponentOverrides(componentConfig.overrides, overridesFromConsumer);
+    const getFromComponent = (): ?ComponentOverridesData => {
+      if (componentConfig && componentConfig.componentHasWrittenConfig) {
+        return componentConfig.overrides;
+      }
+      return isAuthor ? null : overridesFromModel;
+    };
+    const fromComponent = getFromComponent();
+    if (!fromComponent) {
+      return new ComponentOverrides(overridesFromConsumer);
     }
-    if (!isAuthor) {
-      return ComponentOverrides.loadFromScope(overridesFromModel);
-    }
-    return new ComponentOverrides(overridesFromConsumer, overridesFromConsumer);
+    const overridesFromComponent = R.clone(fromComponent);
+    const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
+    Object.keys(overridesFromConsumer || {}).forEach((field) => {
+      if (overridesBitInternalFields.includes(field)) {
+        return; // do nothing
+      }
+      if (
+        isObjectAndNotArray(overridesFromComponent[field]) && // $FlowFixMe
+        isObjectAndNotArray(overridesFromConsumer[field])
+      ) {
+        overridesFromComponent[field] = Object.assign(overridesFromConsumer[field], overridesFromComponent[field]);
+      } else if (!overridesFromComponent[field]) {
+        // $FlowFixMe
+        overridesFromComponent[field] = overridesFromConsumer[field];
+      }
+      // when overridesFromComponent[field] is set and not an object, do not override it by overridesFromConsumer
+    });
+    return new ComponentOverrides(overridesFromComponent);
   }
+
   static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
     // $FlowFixMe
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
   get componentOverridesData() {
-    const isNotSystemField = (val, field) => !overridesSystemFields.includes(field);
+    const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
     return R.pickBy(isNotSystemField, this.overrides);
   }
   get componentOverridesPackageJsonData() {
@@ -76,15 +109,7 @@ export default class ComponentOverrides {
     );
     return this._filterForComponentWithValidVersion(allDeps);
   }
-  getComponentDependenciesWithVersionFromConsumer(): Object {
-    const allDeps = Object.assign(
-      {},
-      this.overridesFromConsumer.dependencies,
-      this.overridesFromConsumer.devDependencies,
-      this.overridesFromConsumer.peerDependencies
-    );
-    return this._filterForComponentWithValidVersion(allDeps);
-  }
+
   _filterForComponentWithValidVersion(deps: Object): Object {
     return Object.keys(deps).reduce((acc, current) => {
       if (this._isValidVersion(deps[current]) && current.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
@@ -185,6 +210,6 @@ export default class ComponentOverrides {
       .map(rule => rule.replace(OVERRIDE_FILE_PREFIX, ''));
   }
   clone(): ComponentOverrides {
-    return new ComponentOverrides(R.clone(this.overrides), R.clone(this.overridesFromConsumer));
+    return new ComponentOverrides(R.clone(this.overrides));
   }
 }

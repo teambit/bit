@@ -303,7 +303,7 @@ export default class EnvExtension extends BaseExtension {
 
   /**
    * load the compiler/tester according to the following strategies:
-   * 1. from component config. (bit.json/package.json of the component) if it was written.
+   * 1. from component config (bit.json/package.json of the component) if it was written.
    * 2. from component model. an imported component might not have the config written.
    * for author, it's irrelevant, because upon import it's written to consumer config (if changed).
    * 3. from consumer config overrides. (bit.json/package.json of the consumer when this component
@@ -332,18 +332,19 @@ export default class EnvExtension extends BaseExtension {
     context?: Object
   }): Promise<?EnvExtension> {
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
-    if (componentConfig && componentConfig.componentHasWrittenConfig) {
+    const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
+    // $FlowFixMe
+    if (componentConfig && componentConfig.componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
-      // $FlowFixMe
       const envConfig = { [envType]: componentConfig[envType] };
       const configPath = path.dirname(componentConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
-    if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
+    if (!isAuthor && componentFromModel && componentFromModel[envType]) {
       // config was not written into component dir, load the config from the model
       logger.debug(`env-extension, loading ${envType} from the model`);
-      return componentFromModel ? componentFromModel[envType] : undefined;
+      return componentFromModel[envType];
     }
     if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
       if (overridesFromConsumer.env[envType] === MANUALLY_REMOVE_ENVIRONMENT) {
@@ -356,7 +357,7 @@ export default class EnvExtension extends BaseExtension {
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     // $FlowFixMe
-    if (workspaceConfig[envType]) {
+    if (isAuthor && workspaceConfig[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config`);
       // $FlowFixMe
       const envConfig = { [envType]: workspaceConfig[envType] };

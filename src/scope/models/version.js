@@ -2,7 +2,7 @@
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
+import { filterObject, first, getStringifyArgs } from '../../utils';
 import type { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -341,7 +341,7 @@ export default class Version extends BitObject {
     const args = getStringifyArgs(pretty);
     const str = JSON.stringify(obj, ...args);
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
-    return bufferFrom(str);
+    return Buffer.from(str);
   }
 
   /**

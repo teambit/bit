@@ -11,7 +11,7 @@ export default class Cmd {
 
   // eslint-disable-next-line no-unused-vars
   action(params: any, opts: { [string]: any }, packageManagerArgs: string[]): Promise<any> {
-    console.log('"action" method not implemented on this command');
+    console.log('"action" method not implemented on this command'); // eslint-disable-line no-console
     return new Promise(resolve => resolve({}));
   }
 
@@ -24,7 +24,7 @@ export default class Cmd {
     return null;
   }
 
-  splitList(val) {
+  splitList(val: string) {
     return val.split(',');
   }
 }

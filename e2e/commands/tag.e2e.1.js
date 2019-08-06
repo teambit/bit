@@ -84,7 +84,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'default.js');
         helper.addComponent('components/default.js', { i: 'components/default' });
         output = helper.tagComponent('components/default');
-        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        const listOutput = helper.listLocalScopeParsed();
         expect(listOutput).to.deep.include({
           id: 'components/default',
           localVersion: '0.0.1',
@@ -126,7 +126,7 @@ describe('bit tag command', function () {
         helper.addComponent('components/dependency.js components/dependent.js', { n: 'components' });
         helper.tagAllComponents();
         helper.tagComponent('components/dependency', 'message', '-f --major');
-        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        const listOutput = helper.listLocalScopeParsed();
         expect(listOutput).to.deep.include({
           id: 'components/dependency',
           localVersion: '1.0.0',
@@ -170,7 +170,7 @@ describe('bit tag command', function () {
       });
       it('Should set the version to default version in tag new component', () => {
         helper.tagAllComponents();
-        const listOutput = JSON.parse(helper.listLocalScope('-j'));
+        const listOutput = helper.listLocalScopeParsed();
         expect(listOutput).to.deep.include({
           id: 'components/a',
           localVersion: '0.0.1',

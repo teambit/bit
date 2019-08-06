@@ -9,11 +9,8 @@ import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
-import {
-  overridesForbiddenFields,
-  dependenciesFields,
-  nonPackageJsonFields
-} from '../consumer/config/consumer-overrides';
+import { dependenciesFields, nonPackageJsonFields } from '../consumer/config/consumer-overrides';
+import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -207,7 +204,7 @@ export default function validateVersionInstance(version: Version): void {
     }
   };
   Object.keys(version.overrides).forEach((field) => {
-    if (overridesForbiddenFields.includes(field)) {
+    if (componentOverridesForbiddenFields.includes(field)) {
       throw new VersionInvalid(`${message}, the "overrides" has a forbidden key "${field}"`);
     }
     // $FlowFixMe

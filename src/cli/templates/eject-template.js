@@ -1,6 +1,7 @@
 // @flow
 import chalk from 'chalk';
 import type { EjectResults } from '../../consumer/component-ops/eject-components';
+import { BASE_WEB_DOMAIN } from '../../constants';
 
 export const successEjectMessage = 'successfully ejected the following components';
 export const failureEjectMessage = 'failed to eject the following components';
@@ -27,7 +28,7 @@ use the '--force' flag to discard local modifications and proceed with the eject
       ? `local components that were not exported yet: ${failures.notExportedComponents.toString()}\n`
       : '';
     const selfHosted = failures.selfHostedExportedComponents.length
-      ? `components that were exported to a self hosted scope (not bitsrc): ${failures.selfHostedExportedComponents.toString()}\n`
+      ? `components that were exported to a self hosted scope (not ${BASE_WEB_DOMAIN}): ${failures.selfHostedExportedComponents.toString()}\n`
       : '';
     const body = modified + staged + notExported + selfHosted;
     if (body) return chalk.underline(title) + chalk.red(body);
