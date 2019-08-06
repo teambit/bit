@@ -5,7 +5,9 @@ import Helper, { INTERACTIVE_KEYS } from '../e2e-helper';
 import {
   DEFAULT_DIR_MSG_Q,
   PACKAGE_MANAGER_MSG_Q,
-  DEFAULT_ENV_MSG_TEMPLATE_Q
+  DEFAULT_ENV_MSG_TEMPLATE_Q,
+  CHOOSE_COMPILER_MSG_Q,
+  CHOOSE_TESTER_MSG_Q
 } from '../../src/interactive/commands/init-interactive';
 
 const DEFAULT_COMPILER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
@@ -16,7 +18,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
-describe.only('run bit init - interactive', function () {
+describe('run bit init - interactive', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -68,6 +70,50 @@ describe.only('run bit init - interactive', function () {
       expect(bitJson.componentsDefaultDirectory).to.equal('components/{name}');
       expect(bitJson.packageManager).to.equal('npm');
       expect(bitJson.env).to.be.empty;
+    });
+  });
+  describe('running bit init interactive - change dir, use yarn, set compiler and testers from bit.envs', () => {
+    let bitJson;
+    before(async () => {
+      helper.cleanLocalScope();
+      helper.createNewDirectoryInLocalWorkspace('my-comps');
+      const inputs = [
+        { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: 'my-comps' }, { value: INTERACTIVE_KEYS.enter }] },
+        {
+          triggerText: PACKAGE_MANAGER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: DEFAULT_COMPILER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_COMPILER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: DEFAULT_TESTER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        },
+        {
+          triggerText: CHOOSE_TESTER_MSG_Q,
+          inputs: [{ value: INTERACTIVE_KEYS.enter }]
+        }
+      ];
+      await helper.initInteractive(inputs);
+      bitJson = helper.readBitJson();
+    });
+    it('should set the default dir to my-comps', () => {
+      expect(bitJson.componentsDefaultDirectory).to.equal('my-comps');
+    });
+    it('should set the package manager to yarn', () => {
+      expect(bitJson.packageManager).to.equal('yarn');
+    });
+    it('should set the compiler to compiler from bit.envs', () => {
+      expect(bitJson.env.compiler).to.have.string('bit.envs');
+    });
+    it('should set the tester to tester from bit.envs', () => {
+      expect(bitJson.env.tester).to.have.string('bit.envs');
     });
   });
 });

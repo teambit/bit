@@ -169,6 +169,12 @@ export default class Helper {
     return newDirPath;
   }
 
+  createNewDirectoryInLocalWorkspace(dirPath: string) {
+    const newDirPath = path.join(this.localScopePath, dirPath);
+    fs.ensureDirSync(newDirPath);
+    return newDirPath;
+  }
+
   cleanDir(dirPath: string) {
     fs.removeSync(dirPath);
   }

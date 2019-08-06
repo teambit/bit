@@ -19,6 +19,9 @@ Press ^C at any time to quit.`;
 export const DEFAULT_DIR_MSG_Q = 'Select a default imported components directory';
 export const PACKAGE_MANAGER_MSG_Q = 'Which is your default package manger';
 export const DEFAULT_ENV_MSG_TEMPLATE_Q = 'setting up a default {type} for all components';
+export const CHOOSE_ENV_MSG_TEMPLATE_Q = 'choose your {type}';
+export const CHOOSE_COMPILER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
+export const CHOOSE_TESTER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'tester' });
 
 function _generateEnvOriginQ(mode: 'compiler' | 'tester' = 'compiler', propName: string) {
   const ansShowBitEnvsTextTemplate = 'list {type} maintained by @bit team (bit list bit.envs --namespace {namespace})';
@@ -172,7 +175,7 @@ async function _buildQuestions() {
   const buildEnvCollectionNameQ = await _generateEnvScopeNameQ('compilerCollectionName', 'buildEnvOrigin');
   const buildEnvNameQ = await _generateRemoteEnvAutoCompleteQ(
     'compiler',
-    'choose your compiler',
+    CHOOSE_COMPILER_MSG_Q,
     'compilerCollectionName',
     'buildEnvOrigin'
   );
@@ -180,7 +183,7 @@ async function _buildQuestions() {
   const testEnvCollectionNameQ = await _generateEnvScopeNameQ('testerCollectionName', 'testEnvOrigin');
   const testEnvNameQ = await _generateRemoteEnvAutoCompleteQ(
     'tester',
-    'choose your tester',
+    CHOOSE_TESTER_MSG_Q,
     'testerCollectionName',
     'testEnvOrigin'
   );
