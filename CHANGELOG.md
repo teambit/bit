@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1889](https://github.com/teambit/bit/issues/1889) auto add `@types/package-name` to the dependencies of TS components
 - [#1867](https://github.com/teambit/bit/issues/1867) apply workspace overrides config on imported components
 - [#1892](https://github.com/teambit/bit/issues/1892) rename `--bare` flag of `bit list` to `--raw`
 - [#1863](https://github.com/teambit/bit/issues/1863) allow excluding components from `overrides` rules

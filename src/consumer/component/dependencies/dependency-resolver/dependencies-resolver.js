@@ -8,7 +8,7 @@ import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import { Driver } from '../../../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import type Consumer from '../../../../consumer/consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
@@ -650,7 +650,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const getPackages = () => {
+    const getPackages = (): ?Object => {
       const packages = this.tree[originFile].packages;
       if (RA.isNilOrEmpty(packages)) return null;
       const shouldBeIncluded = (pkgVersion, pkgName) =>
@@ -668,6 +668,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       } else {
         Object.assign(this.allPackagesDependencies.packageDependencies, packages);
       }
+      this._addTypesPackagesForTypeScript(packages, originFile);
     }
   }
 
@@ -983,22 +984,49 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerPackages;
   }
 
+  /**
+   * returns `package.json` of the component when it's imported, or `package.json` of the workspace
+   * when it's authored.
+   */
   _getPackageJson(): ?Object {
     const componentMap = this.component.componentMap;
     // $FlowFixMe
-    const componentRoot = componentMap.getRootDir();
-    const packageJsonLocation = path.join(this.consumer.toAbsolutePath(componentRoot), 'package.json');
-    if (!fs.existsSync(packageJsonLocation)) return null;
-    try {
-      const packageJson = fs.readJsonSync(packageJsonLocation);
-      return packageJson;
-    } catch (err) {
-      logger.errorAndAddBreadCrumb(
-        'dependency-resolver._getPackageJson',
-        'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
-        { packageJsonLocation, message: err.message }
-      );
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    if (isAuthor) {
+      return this.consumer.config.packageJsonObject;
     }
+    if (this.component.packageJsonFile) {
+      return this.component.packageJsonFile.packageJsonObject;
+    }
+    return null;
+  }
+
+  /**
+   * when requiring packages in typescript, sometimes there are the types packages with the same
+   * name, which the user probably wants as well. for example, requiring `foo` package, will also
+   * add `@types/foo` to the devDependencies if it has been found in the user `package.json` file.
+   *
+   * ideally this should be in bit-javascript. however, the decision where to put these `@types`
+   * packages (dependencies/devDependencies) is done here according to the user `package.json`
+   * and can't be done there because the `Tree` we get from bit-javascript doesn't have this
+   * distinction.
+   */
+  _addTypesPackagesForTypeScript(packages: Object, originFile: PathLinuxRelative): void {
+    const isTypeScript = getExt(originFile) === 'ts';
+    if (!isTypeScript) return;
+    const packageJson = this._getPackageJson();
+    if (!packageJson) return;
+    const addIfNeeded = (depField: string, packageName: string) => {
+      if (!packageJson[depField]) return;
+      const typesPackage = `@types/${packageName}`;
+      if (!packageJson[depField][typesPackage]) return;
+      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], {
+        [typesPackage]: packageJson[depField][typesPackage]
+      });
+    };
+    Object.keys(packages).forEach((packageName) => {
+      dependenciesFields.forEach(depField => addIfNeeded(depField, packageName));
+    });
   }
 
   _pkgFieldMapping(field: string) {
