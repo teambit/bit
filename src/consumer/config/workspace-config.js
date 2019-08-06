@@ -88,7 +88,12 @@ export default class WorkspaceConfig extends AbstractConfig {
     }
     this.distTarget = distTarget;
     this.distEntry = distEntry;
+
     this.componentsDefaultDirectory = componentsDefaultDirectory;
+    // Make sure we have the component name in the path. otherwise components will be imported to the same dir.
+    if (!componentsDefaultDirectory.includes('{name}')) {
+      this.componentsDefaultDirectory = `${this.componentsDefaultDirectory}/{name}`;
+    }
     this.dependenciesDirectory = dependenciesDirectory;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;

@@ -16,7 +16,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
-describe('run bit init', function () {
+describe.only('run bit init', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -74,6 +74,31 @@ describe('run bit init', function () {
         helper.runCmd('bit init');
         expect(path.join(helper.localScope, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
       });
+    });
+  });
+  describe('with custom configs', () => {
+    let bitJson;
+    before(() => {
+      helper.cleanLocalScope();
+      helper.initLocalScopeWithOptions({
+        '-default-directory': 'my-comps',
+        '-package-manager': 'yarn',
+        '-compiler': 'my-compiler',
+        '-tester': 'my-tester'
+      });
+      bitJson = helper.readBitJson();
+    });
+    it('should set the default dir to my-comps', () => {
+      expect(bitJson.componentsDefaultDirectory).to.equal('my-comps/{name}');
+    });
+    it('should set the package manager to yarn', () => {
+      expect(bitJson.packageManager).to.equal('yarn');
+    });
+    it('should set the compiler to my-compiler', () => {
+      expect(bitJson.env.compiler).to.equal('my-compiler');
+    });
+    it('should set the tester to my-tester', () => {
+      expect(bitJson.env.tester).to.equal('my-tester');
     });
   });
   describe('git integration', () => {
