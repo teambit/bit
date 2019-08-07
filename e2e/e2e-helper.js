@@ -472,6 +472,15 @@ export default class Helper {
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
+  getConfig(configName: string) {
+    return this.runCmd(`bit config get ${configName}`);
+  }
+  delConfig(configName: string) {
+    return this.runCmd(`bit config del ${configName}`);
+  }
+  setConfig(configName: string, configVal: string) {
+    return this.runCmd(`bit config set ${configName} ${configVal}`);
+  }
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
@@ -690,20 +699,25 @@ export default class Helper {
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
+
+  // #endregion
+
+  // #region bit config manipulation
+
   setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
-    this.runCmd(`bit config set hub_domain ${domain}`);
+    this.setConfig('hub_domain', domain);
   }
 
   getGitPath() {
-    this.runCmd(`bit config get ${CFG_GIT_EXECUTABLE_PATH}`);
+    this.getConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
   setGitPath(gitPath: string = 'git') {
-    this.runCmd(`bit config set ${CFG_GIT_EXECUTABLE_PATH} ${gitPath}`);
+    this.setConfig(CFG_GIT_EXECUTABLE_PATH, gitPath);
   }
 
   deleteGitPath() {
-    this.runCmd(`bit config del ${CFG_GIT_EXECUTABLE_PATH}`);
+    this.delConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
   restoreGitPath(oldGitPath: ?string): any {
@@ -711,6 +725,24 @@ export default class Helper {
       return this.deleteGitPath();
     }
     return this.setGitPath(oldGitPath);
+  }
+
+  backupConfigs(names: string[]): Object {
+    const backupObject: Object = {};
+    names.forEach((name) => {
+      backupObject[name] = this.getConfig(name);
+    });
+    return backupObject;
+  }
+
+  restoreConfigs(backupObject: { [string]: string }): void {
+    R.forEachObjIndexed((val, key) => {
+      if (val === undefined) {
+        this.delConfig(key);
+      } else {
+        this.setConfig(key, val);
+      }
+    }, backupObject);
   }
 
   // #endregion
