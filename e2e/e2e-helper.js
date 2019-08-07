@@ -737,7 +737,7 @@ export default class Helper {
 
   restoreConfigs(backupObject: { [string]: string }): void {
     R.forEachObjIndexed((val, key) => {
-      if (val === undefined) {
+      if (val === undefined || val.includes('undefined')) {
         this.delConfig(key);
       } else {
         this.setConfig(key, val);
