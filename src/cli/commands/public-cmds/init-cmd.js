@@ -5,10 +5,11 @@ import * as pathlib from 'path';
 import Command from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
+import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -37,7 +38,7 @@ export default class Init extends Command {
   ];
 
   action([path]: [string], flags: Object): Promise<{ [string]: any }> {
-    if (!_isAnyFlagUsed(flags) && !flags.skipInteractive) {
+    if (!_isAnyFlagUsed(flags) && !flags.skipInteractive && shouldShowInteractive(CFG_INIT_INTERACTIVE)) {
       return initInteractive();
     }
     const {
