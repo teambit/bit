@@ -1,5 +1,5 @@
 /**
- * this compiler generates an additional dist main-file which is different than the source main-file
+ * this compiler adds new values into the package.json of the component
  */
 const path = require('path');
 
