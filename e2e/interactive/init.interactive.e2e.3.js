@@ -10,6 +10,7 @@ import {
   CHOOSE_TESTER_MSG_Q,
   CHOOSE_ENV_SCOPE_MSG_Q
 } from '../../src/interactive/commands/init-interactive';
+import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE } from '../../src/constants';
 
 const DEFAULT_COMPILER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
 const DEFAULT_TESTER_MSG_Q = format(DEFAULT_ENV_MSG_TEMPLATE_Q, { type: 'tester' });
@@ -29,27 +30,7 @@ describe('run bit init - interactive', function () {
     let output;
     before(async () => {
       helper.cleanLocalScope();
-      const inputs = [
-        { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
-        { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
-        {
-          triggerText: DEFAULT_COMPILER_MSG_Q,
-          inputs: [
-            { value: INTERACTIVE_KEYS.down },
-            { value: INTERACTIVE_KEYS.down },
-            { value: INTERACTIVE_KEYS.enter }
-          ]
-        },
-        {
-          triggerText: DEFAULT_TESTER_MSG_Q,
-          inputs: [
-            { value: INTERACTIVE_KEYS.down },
-            { value: INTERACTIVE_KEYS.down },
-            { value: INTERACTIVE_KEYS.enter }
-          ]
-        }
-      ];
-      output = await helper.initInteractive(inputs);
+      output = await helper.initInteractive(inputsWithDefaultsNoCompilerNoTester);
     });
     it('should prompt about default directory', () => {
       expect(output).to.have.string(DEFAULT_DIR_MSG_Q);
@@ -170,4 +151,50 @@ describe('run bit init - interactive', function () {
       expect(bitJson.env.tester).to.have.string(helper.envScope);
     });
   });
+  describe('interactive global configs', () => {
+    let configsBackup;
+    before(() => {
+      // Backup the user config because they are global, we will restore them in the end
+      configsBackup = helper.backupConfigs([CFG_INTERACTIVE, CFG_INIT_INTERACTIVE]);
+    });
+    beforeEach(() => {
+      helper.cleanLocalScope();
+      helper.delConfig(CFG_INTERACTIVE);
+      helper.delConfig(CFG_INIT_INTERACTIVE);
+    });
+    after(() => {
+      helper.restoreConfigs(configsBackup);
+    });
+    it('should prefer interactive.init config over interactive config', async () => {
+      helper.setConfig(CFG_INTERACTIVE, true);
+      helper.setConfig(CFG_INIT_INTERACTIVE, false);
+      const output = await helper.initInteractive([]);
+      // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
+      expect(output).to.have.string('successfully initialized');
+    });
+    it('should should not show interactive when interactive config set to false', async () => {
+      helper.setConfig(CFG_INTERACTIVE, false);
+      const output = await helper.initInteractive([]);
+      // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
+      expect(output).to.have.string('successfully initialized');
+    });
+    it('should should show interactive by default', async () => {
+      const output = await helper.initInteractive(inputsWithDefaultsNoCompilerNoTester);
+      // We don't enter anything we just want to see that any question has been asked
+      expect(output).to.have.string(DEFAULT_DIR_MSG_Q);
+    });
+  });
 });
+
+const inputsWithDefaultsNoCompilerNoTester = [
+  { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+  { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+  {
+    triggerText: DEFAULT_COMPILER_MSG_Q,
+    inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+  },
+  {
+    triggerText: DEFAULT_TESTER_MSG_Q,
+    inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
+  }
+];
