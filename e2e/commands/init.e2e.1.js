@@ -16,7 +16,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
-describe.only('run bit init', function () {
+describe('run bit init', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -25,7 +25,7 @@ describe.only('run bit init', function () {
   describe('running bit init with path', () => {
     before(() => {
       helper.cleanLocalScope();
-      helper.runCmd('bit init my-dir');
+      helper.runCmd('bit init -N my-dir');
     });
     it('should init Bit at that path', () => {
       expect(path.join(helper.localScopePath, 'my-dir/bit.json')).to.be.a.file();
@@ -334,7 +334,7 @@ describe.only('run bit init', function () {
       before(() => {
         helper.cleanLocalScope();
         helper.initNpm();
-        helper.runCmd('bit init');
+        helper.initLocalScope();
       });
       it('should write the bit.json content into the package.json inside "bit" property', () => {
         const packageJson = helper.readPackageJson();
@@ -376,7 +376,7 @@ describe.only('run bit init', function () {
         helper.corruptPackageJson();
       });
       it('should throw InvalidPackageJson error', () => {
-        const initCmd = () => helper.runCmd('bit init');
+        const initCmd = () => helper.initLocalScope();
         const error = new InvalidPackageJson(path.join(helper.localScopePath, 'package.json'));
         helper.expectToThrow(initCmd, error);
       });
@@ -430,7 +430,7 @@ describe.only('run bit init', function () {
         helper.createBitMap();
         innerDir = path.join(helper.localScopePath, 'inner');
         fs.mkdirSync(innerDir);
-        helper.runCmd('bit init', innerDir);
+        helper.initWorkspace(innerDir);
         fs.removeSync(path.join(innerDir, '.bit'));
         fs.removeSync(path.join(helper.localScopePath, '.bit'));
       });
