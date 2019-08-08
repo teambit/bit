@@ -871,7 +871,7 @@ export default class Helper {
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -1127,7 +1127,7 @@ export default class Helper {
         fs.removeSync(path.join(this.localScopePath, dir));
       }
     });
-    this.runCmd('bit init');
+    this.initWorkspace();
   }
   // #endregion
 
