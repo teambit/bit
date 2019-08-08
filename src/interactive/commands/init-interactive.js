@@ -50,11 +50,13 @@ function _generateChooseEnvQ(
     try {
       components = await _fetchEnvs(envType);
       if (!components || !components.length) {
+        // eslint-disable-next-line no-console
         console.log(chalk.yellow('no components found. skipping question'));
         return false;
       }
       return true;
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.log(
         chalk.yellow(`could not retrieve compilers list.
 see full error log in ${DEBUG_LOG} 

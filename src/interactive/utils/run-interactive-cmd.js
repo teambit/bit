@@ -4,7 +4,6 @@ import execa from 'execa';
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import pSeries from 'p-series';
-import { CHOOSE_CUSTOM_ENV_MSG_TEMPLATE_Q } from '../commands/init-interactive';
 
 export type InteractiveInputs = InteractiveInputDefinition[];
 
