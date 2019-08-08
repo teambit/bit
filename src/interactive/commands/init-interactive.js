@@ -4,6 +4,7 @@ import format from 'string-format';
 import chalk from 'chalk';
 import { init, listScope } from '../../api/consumer';
 import logger from '../../logger/logger';
+import { DEBUG_LOG } from '../../constants';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
@@ -54,7 +55,11 @@ function _generateChooseEnvQ(
       }
       return true;
     } catch (e) {
-      console.log(chalk.yellow('failed fetching components, see full error in bit.logs. skipping question'));
+      console.log(
+        chalk.yellow(`could not retrieve compilers list.
+see full error log in ${DEBUG_LOG} 
+you can add a compiler later using bit import [compiler-name] --${envType}`)
+      );
       logger.info(e);
       return false;
     }
