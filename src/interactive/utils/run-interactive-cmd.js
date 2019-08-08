@@ -4,6 +4,7 @@ import execa from 'execa';
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import pSeries from 'p-series';
+import { CHOOSE_CUSTOM_ENV_MSG_TEMPLATE_Q } from '../commands/init-interactive';
 
 export type InteractiveInputs = InteractiveInputDefinition[];
 
@@ -124,7 +125,8 @@ export default (async function runInteractive({
     const currString = chunk.toString();
     if (pointer < inputs.length) {
       const triggerText = inputs[pointer].triggerText;
-      if (currString.includes(triggerText)) {
+      // We remove the eol since sometime interactive frameworks added line breaks if the question is too long
+      if (_removeEol(currString).includes(_removeEol(triggerText))) {
         const inputsToWrite = inputs[pointer].inputs;
         writeInputsArray(inputsToWrite).then(() => {
           leftInputsArrays -= 1;
@@ -161,4 +163,8 @@ function _printInputs(inputsToPrint: InteractiveInputs, actualDefaultIntervalBet
   };
   const output = inputsToPrint.map(getEntryOutput).join('\n');
   console.log(rightpad(chalk.green('inputs:\n'), 20, ''), output); // eslint-disable-line no-console
+}
+
+function _removeEol(str: string) {
+  return str.replace(/\n/, '');
 }
