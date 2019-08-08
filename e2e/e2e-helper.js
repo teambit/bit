@@ -573,6 +573,13 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
+  changeDummyCompilerCode(originalCode: string, replaceTo: string) {
+    const compilerPath = path.join('.bit/components/compilers/dummy', this.envScope, '0.0.1/compiler.js');
+    const compilerContent = this.readFile(compilerPath);
+    const changedCompiler = compilerContent.replace(originalCode, replaceTo);
+    this.outputFile(compilerPath, changedCompiler);
+  }
+
   importDummyTester(dummyType?: string = 'dummy') {
     const id = `${this.envScope}/testers/dummy`;
     this.createDummyTester(dummyType);

@@ -149,6 +149,7 @@ describe('capsule', function () {
     });
   });
   describe('build into capsule', () => {
+    let afterImportingCompiler;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
@@ -159,7 +160,7 @@ describe('capsule', function () {
       helper.createComponentBarFoo(strToAdd + fixtures.barFooFixture);
       helper.addComponentBarFoo();
       helper.importDummyCompiler('capsule');
-
+      afterImportingCompiler = helper.cloneLocalScope();
       helper.build();
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
@@ -168,18 +169,26 @@ describe('capsule', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('using the new compiler API', () => {
+      before(() => {
+        helper.getClonedLocalScope(afterImportingCompiler);
+        helper.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
+        const output = helper.build();
+        expect(output).to.have.string('using the new compiler API');
+      });
+      it('should be able to require the component and its dependencies from the dist directory', () => {
+        const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
     describe('building with shouldBuildDependencies option enabled', () => {
       let capsuleDir;
       let afterChangingCompiler;
       before(() => {
-        helper.deletePath('dist');
-        const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
-        const compilerContent = helper.readFile(compilerPath);
-        const compilerWithBuildDependenciesEnabled = compilerContent.replace(
-          'shouldBuildDependencies: false',
-          'shouldBuildDependencies: true'
-        );
-        helper.outputFile(compilerPath, compilerWithBuildDependenciesEnabled);
+        helper.getClonedLocalScope(afterImportingCompiler);
+        helper.changeDummyCompilerCode('shouldBuildDependencies: false', 'shouldBuildDependencies: true');
         afterChangingCompiler = helper.cloneLocalScope();
         const buildOutput = helper.build('bar/foo --no-cache');
         capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
