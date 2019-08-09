@@ -42,8 +42,32 @@ function getCapsuleDirByComponentName(compilerOutput, componentName) {
   return componentOutput.replace(`generated a capsule for ${componentName} at `, '');
 }
 
-module.exports = {
+const newCompilerApi = {
+  init: ({ rawConfig, dynamicConfig, api }) => {
+    logger = api.getLogger();
+    return { write: true };
+  },
+  action: ({
+    files,
+    rawConfig,
+    dynamicConfig,
+    configFiles,
+    api,
+    context
+  }) => {
+    // don't remove the next line, it is important for the tests to make sure the new api is used
+    console.log('using the new compiler API');
+    const distPath = path.join(context.rootDistDir, 'dist');
+    return compile(files, distPath, context);
+  }
+}
+
+const currentCompilerApi = {
   compile,
   stringToRemovedByCompiler,
   getCapsuleDirByComponentName
 };
+
+const isNewAPI = false;
+
+module.exports = isNewAPI ? newCompilerApi : currentCompilerApi;

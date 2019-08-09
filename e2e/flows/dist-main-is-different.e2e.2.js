@@ -19,6 +19,7 @@ describe('mainFile of the dist is different than the source', function () {
   after(() => {
     helper.destroyEnv();
   });
+  let afterImportingCompiler;
   before(() => {
     helper.setNewLocalAndRemoteScopes();
     npmCiRegistry = new NpmCiRegistry(helper);
@@ -42,6 +43,7 @@ describe('mainFile of the dist is different than the source', function () {
     );
     helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
     helper.importDummyCompiler('dist-main');
+    afterImportingCompiler = helper.cloneLocalScope();
   });
   describe('tagging the component', () => {
     before(() => {
@@ -156,6 +158,21 @@ describe('mainFile of the dist is different than the source', function () {
           });
         });
       });
+    });
+  });
+  describe('using the new compiler API', () => {
+    before(() => {
+      helper.getClonedLocalScope(afterImportingCompiler);
+      helper.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
+      const output = helper.build();
+      expect(output).to.have.string('using the new compiler API');
+      helper.tagAllComponents();
+    });
+    it('should save the mainDistFile to the scope', () => {
+      const barFoo = helper.catComponent('bar/foo@latest');
+      expect(barFoo).to.have.property('mainDistFile');
+      expect(barFoo.mainDistFile).to.equal('src/bar/foo-main.js');
+      expect(barFoo.mainDistFile).to.not.equal(barFoo.mainFile);
     });
   });
 });
