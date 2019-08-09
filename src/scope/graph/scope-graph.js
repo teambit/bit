@@ -5,6 +5,7 @@ import type { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
 import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import Component from '../../consumer/component/consumer-component';
 
 const Graph = GraphLib.Graph;
 
@@ -28,7 +29,7 @@ export default class DependencyGraph {
   }
 
   static async loadLatest(scope: Scope): Promise<DependencyGraph> {
-    const graph = await DependencyGraph.buildGraphOfLatest(scope);
+    const graph = await DependencyGraph.buildGraphOfLatestFromScope(scope);
     return new DependencyGraph(graph);
   }
 
@@ -47,6 +48,7 @@ export default class DependencyGraph {
   static async buildGraphWithAllVersions(scope: Scope): Graph {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
+    // $FlowFixMe
     const allComponents = await scope.list();
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
@@ -75,10 +77,11 @@ export default class DependencyGraph {
     return graph;
   }
 
-  static async buildGraphOfLatest(scope: Scope): Graph {
+  static async buildGraphOfLatestFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
-    const allModelComponents = await scope.list();
+    const allModelComponents: ModelComponent[] = await scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
+      // $FlowFixMe
       const latestVersion = await modelComponent.loadVersion(modelComponent.latest(), scope.objects);
       const id = modelComponent.toBitIdWithLatestVersion();
       const idStr = id.toString();
@@ -93,6 +96,25 @@ export default class DependencyGraph {
       });
     });
     await Promise.all(buildGraphP);
+    return graph;
+  }
+
+  static buildGraphFromComponents(components: Component[]): Graph {
+    const graph = new Graph();
+    components.forEach((component: Component) => {
+      const id = component.id;
+      const idStr = component.id.toString();
+      // save the full BitId of a string id to be able to retrieve it later with no confusion
+      if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
+      DEPENDENCIES_TYPES.forEach((depType) => {
+        // $FlowFixMe
+        component[depType].get().forEach((dependency) => {
+          const depIdStr = dependency.id.toString();
+          if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
+          graph.setEdge(idStr, depIdStr, depType);
+        });
+      });
+    });
     return graph;
   }
 

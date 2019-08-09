@@ -222,7 +222,6 @@ export default function paintComponent(
   }
 
   function generateDependenciesInfoTable() {
-    console.log('TCL: generateDependenciesInfoTable -> dependenciesInfo', dependenciesInfo);
     if (!dependenciesInfo.length) {
       return '';
     }

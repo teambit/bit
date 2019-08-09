@@ -743,4 +743,24 @@ Circle.defaultProps = {
       });
     });
   });
+  describe('show with --dependents flag on a new component', () => {
+    let show;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      show = helper.showComponentParsed('utils/is-string --dependents --dependencies');
+    });
+    it('should show all dependents and dependencies', () => {
+      expect(show)
+        .to.have.property('dependentsInfo')
+        .that.is.an('array')
+        .with.lengthOf(1);
+      expect(show)
+        .to.have.property('dependenciesInfo')
+        .that.is.an('array')
+        .with.lengthOf(1);
+      expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
+      expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
+    });
+  });
 });
