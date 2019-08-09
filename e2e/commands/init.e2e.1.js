@@ -71,7 +71,7 @@ describe('run bit init', function () {
       it('should not create bit inside .git', () => {
         helper.reInitLocalScope();
         helper.initNewGitRepo();
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         expect(path.join(helper.localScope, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
       });
     });
@@ -260,7 +260,7 @@ describe('run bit init', function () {
     });
     describe('bit init', () => {
       before(() => {
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should not change BitMap file', () => {
         const currentBitMap = helper.readBitMap();
@@ -388,7 +388,7 @@ describe('run bit init', function () {
         const packageJson = helper.readPackageJson();
         const packageJsonPath = path.join(helper.localScopePath, 'package.json');
         fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should preserve the original indentation and keep it as 4', () => {
         const packageJson = helper.readFile('package.json');

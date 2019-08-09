@@ -266,7 +266,7 @@ describe('bit status command', function () {
     describe('and then all objects were deleted', () => {
       before(() => {
         fs.removeSync(path.join(helper.localScopePath, '.bit'));
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.runCmd('bit status');
