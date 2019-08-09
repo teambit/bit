@@ -9,6 +9,7 @@ import {
   getDiffBetweenObjects,
   prettifyFieldName
 } from '../../consumer/component-ops/components-object-diff';
+import type { DependenciesInfo } from '../../scope/graph/scope-graph';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
@@ -30,7 +31,9 @@ export default function paintComponent(
   component: ConsumerComponent,
   componentModel?: ConsumerComponent,
   showRemoteVersion: boolean,
-  detailed: boolean
+  detailed: boolean,
+  dependenciesInfo: DependenciesInfo[],
+  dependentsInfo: DependenciesInfo[]
 ) {
   return componentModel ? paintWithCompare() : paintWithoutCompare();
 
@@ -62,7 +65,15 @@ export default function paintComponent(
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
-    return componentTable + dependenciesTableStr + paintDocumentation(component.docs);
+    const dependentsInfoTableStr = generateDependentsInfoTable();
+    const dependenciesInfoTableStr = generateDependenciesInfoTable();
+    return (
+      componentTable +
+      dependenciesTableStr +
+      dependentsInfoTableStr +
+      dependenciesInfoTableStr +
+      paintDocumentation(component.docs)
+    );
   }
 
   function paintWithCompare() {
@@ -184,6 +195,56 @@ export default function paintComponent(
 
     const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
     return dependenciesTable;
+  }
+
+  function generateDependentsInfoTable() {
+    if (!dependentsInfo.length) {
+      return '';
+    }
+    const dependentsHeader = [];
+    dependentsHeader.push([
+      c.cyan('Dependent ID'),
+      c.cyan('Depth'),
+      c.cyan('Immediate Dependency'),
+      c.cyan('Dependent type')
+    ]);
+    const allDependenciesRows = dependentsInfo.map((dependent: DependenciesInfo) => {
+      const row = [];
+      row.push(dependent.id);
+      row.push(dependent.depth);
+      row.push(dependent.parent);
+      row.push(dependent.dependencyType);
+      return row;
+    });
+
+    const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
+    return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
+  }
+
+  function generateDependenciesInfoTable() {
+    console.log('TCL: generateDependenciesInfoTable -> dependenciesInfo', dependenciesInfo);
+    if (!dependenciesInfo.length) {
+      return '';
+    }
+
+    const dependenciesHeader = [];
+    dependenciesHeader.push([
+      c.cyan('Dependency ID'),
+      c.cyan('Depth'),
+      c.cyan('Immediate Dependent'),
+      c.cyan('Dependency type')
+    ]);
+    const allDependenciesRows = dependenciesInfo.map((dependency: DependenciesInfo) => {
+      const row = [];
+      row.push(dependency.id);
+      row.push(dependency.depth);
+      row.push(dependency.parent);
+      row.push(dependency.dependencyType);
+      return row;
+    });
+
+    const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
+    return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
   }
 
   function calculatePadRightLength(str: string, columnWidth: number): string {

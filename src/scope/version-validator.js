@@ -11,6 +11,7 @@ import { Dependencies } from '../consumer/component/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { dependenciesFields, nonPackageJsonFields } from '../consumer/config/consumer-overrides';
 import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
+import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -129,8 +130,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
     throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
-  const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
-  dependenciesInstances.forEach((dependenciesType) => {
+  DEPENDENCIES_TYPES.forEach((dependenciesType) => {
     // $FlowFixMe
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(

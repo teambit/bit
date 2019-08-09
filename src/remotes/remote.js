@@ -7,6 +7,7 @@ import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
 import type Component from '../consumer/component/consumer-component';
 import type { ListScopeResult } from '../consumer/component/components-list';
+import DependencyGraph from '../scope/graph/scope-graph';
 
 /**
  * @ctx bit, primary, remote
@@ -53,6 +54,10 @@ export default class Remote {
 
   show(bitId: BitId): Promise<?Component> {
     return this.connect().then(network => network.show(bitId));
+  }
+
+  graph(bitId?: BitId): Promise<DependencyGraph> {
+    return this.connect().then(network => network.graph(bitId));
   }
 
   fetch(bitIds: BitIds, withoutDeps: boolean, context: ?Object): Promise<ComponentObjects[]> {

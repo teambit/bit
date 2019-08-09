@@ -11,11 +11,11 @@ HooksManager.init();
 
 module.exports = {
   show: (scopePath: string, id: string, opts: Object) =>
-    getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then((c) => {
-      if (Array.isArray(c)) {
-        return c.map(v => v.toObject());
+    getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
+      if (Array.isArray(component)) {
+        return component.map(v => v.toObject());
       }
-      return c.toObject();
+      return component.toObject();
     }),
   list: (scopePath: string) =>
     scopeList(scopePath).then(listScopeResult => listScopeResult.map(result => result.id.toString())),

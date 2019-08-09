@@ -31,6 +31,7 @@ import migrate from './lib/migrate';
 import ejectAction from './lib/eject';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
+import show from './lib/show';
 
 export {
   init,
@@ -71,5 +72,6 @@ export {
   injectConf,
   migrate,
   ejectAction,
-  login
+  login,
+  show
 };

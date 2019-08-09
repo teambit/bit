@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit show` to display them all recursively
 - [#1903](https://github.com/teambit/bit/issues/1903) fix importing dependents to not override dependencies
 - [#1889](https://github.com/teambit/bit/issues/1889) auto add `@types/package-name` to the dependencies of TS components
 - [#1867](https://github.com/teambit/bit/issues/1867) apply workspace overrides config on imported components
