@@ -7,7 +7,7 @@ import {
   CHOOSE_COMPILER_MSG_Q,
   CHOOSE_CUSTOM_COMPILER_MSG_Q
 } from '../../src/interactive/commands/init-interactive';
-import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE } from '../../src/constants';
+import { CFG_INIT_INTERACTIVE, CFG_INTERACTIVE, IS_WINDOWS } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 
@@ -21,6 +21,10 @@ describe('run bit init - interactive', function () {
     helper.destroyEnv();
   });
   describe('with defaults', () => {
+    // Skip on windows since the interactive keys are not working on windows
+    if (IS_WINDOWS) {
+      this.skip;
+    }
     let output;
     before(async () => {
       helper.cleanLocalScope();
@@ -46,6 +50,10 @@ describe('run bit init - interactive', function () {
     });
   });
   describe('change dir, use yarn, set compiler from bit.envs', () => {
+    // Skip on windows since the interactive keys are not working on windows
+    if (IS_WINDOWS) {
+      this.skip;
+    }
     let bitJson;
     before(async () => {
       helper.cleanLocalScope();
@@ -75,6 +83,10 @@ describe('run bit init - interactive', function () {
     });
   });
   describe('use a custom compiler', () => {
+    // Skip on windows since the interactive keys are not working on windows
+    if (IS_WINDOWS) {
+      this.skip;
+    }
     let bitJson;
     const compilerName = 'my-compiler';
     before(async () => {
