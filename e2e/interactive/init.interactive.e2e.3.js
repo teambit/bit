@@ -123,37 +123,42 @@ describe('run bit init - interactive', function () {
     }
   });
   describe('interactive global configs', () => {
-    let configsBackup;
-    before(() => {
-      // Backup the user config because they are global, we will restore them in the end
-      configsBackup = helper.backupConfigs([CFG_INTERACTIVE, CFG_INIT_INTERACTIVE]);
-    });
-    beforeEach(() => {
-      helper.cleanLocalScope();
-      helper.delConfig(CFG_INTERACTIVE);
-      helper.delConfig(CFG_INIT_INTERACTIVE);
-    });
-    after(() => {
-      helper.restoreConfigs(configsBackup);
-    });
-    it('should prefer interactive.init config over interactive config', async () => {
-      helper.setConfig(CFG_INTERACTIVE, true);
-      helper.setConfig(CFG_INIT_INTERACTIVE, false);
-      const output = await helper.initInteractive([]);
-      // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
-      expect(output).to.have.string('successfully initialized');
-    });
-    it('should should not show interactive when interactive config set to false', async () => {
-      helper.setConfig(CFG_INTERACTIVE, false);
-      const output = await helper.initInteractive([]);
-      // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
-      expect(output).to.have.string('successfully initialized');
-    });
-    it('should should show interactive by default', async () => {
-      const output = await helper.initInteractive(inputsWithDefaultsNoCompiler);
-      // We don't enter anything we just want to see that any question has been asked
-      expect(output).to.have.string(PACKAGE_MANAGER_MSG_Q);
-    });
+    // Skip on windows since the interactive keys are not working on windows
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      this.skip;
+    } else {
+      let configsBackup;
+      before(() => {
+        // Backup the user config because they are global, we will restore them in the end
+        configsBackup = helper.backupConfigs([CFG_INTERACTIVE, CFG_INIT_INTERACTIVE]);
+      });
+      beforeEach(() => {
+        helper.cleanLocalScope();
+        helper.delConfig(CFG_INTERACTIVE);
+        helper.delConfig(CFG_INIT_INTERACTIVE);
+      });
+      after(() => {
+        helper.restoreConfigs(configsBackup);
+      });
+      it('should prefer interactive.init config over interactive config', async () => {
+        helper.setConfig(CFG_INTERACTIVE, true);
+        helper.setConfig(CFG_INIT_INTERACTIVE, false);
+        const output = await helper.initInteractive([]);
+        // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
+        expect(output).to.have.string('successfully initialized');
+      });
+      it('should should not show interactive when interactive config set to false', async () => {
+        helper.setConfig(CFG_INTERACTIVE, false);
+        const output = await helper.initInteractive([]);
+        // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
+        expect(output).to.have.string('successfully initialized');
+      });
+      it('should should show interactive by default', async () => {
+        const output = await helper.initInteractive(inputsWithDefaultsNoCompiler);
+        // We don't enter anything we just want to see that any question has been asked
+        expect(output).to.have.string(PACKAGE_MANAGER_MSG_Q);
+      });
+    }
   });
 });
 
