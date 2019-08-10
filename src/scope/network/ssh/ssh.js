@@ -32,6 +32,7 @@ import type { ListScopeResult } from '../../../consumer/component/components-lis
 import CustomError from '../../../error/custom-error';
 import RemoteResolverError from '../exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
+import DependencyGraph from '../../graph/scope-graph';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
@@ -429,6 +430,15 @@ export default class SSH implements Network {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       return str ? ConsumerComponent.fromString(payload) : null;
+    });
+  }
+
+  graph(bitId?: BitId): Promise<DependencyGraph> {
+    const idStr = bitId ? bitId.toString() : '';
+    return this.exec('_graph', idStr).then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return DependencyGraph.loadFromString(payload);
     });
   }
 

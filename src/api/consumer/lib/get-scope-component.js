@@ -3,75 +3,69 @@ import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_SHOW } from '../../../cli/loader/loader-messages';
-import { ScopeNotFound } from '../../../scope/exceptions';
 import Remotes from '../../../remotes/remotes';
 import Remote from '../../../remotes/remote';
 import Component from '../../../consumer/component';
-import { loadConsumer, Consumer } from '../../../consumer';
+import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
+import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default (async function getScopeComponent({
   id,
   allVersions,
-  scopePath
+  scopePath,
+  showDependents,
+  showDependencies
 }: {
   id: string,
   allVersions: ?boolean,
-  scopePath: ?string // used by the api (see /src/api.js)
-}): Promise<Component[] | Component> {
+  scopePath: ?string, // used by the api (see /src/api.js)
+  showDependents: boolean,
+  showDependencies: boolean
+}): Promise<{ component: Component[] | Component }> {
   const bitId: BitId = BitId.parse(id, true); // user used --remote so we know it has a scope
-  const remoteShow = async (remote: Remote): Promise<?Component> => {
-    loader.start(BEFORE_REMOTE_SHOW);
-    return remote.show(bitId);
-  };
-  const getConsumer = async (): Promise<?Consumer> => {
-    try {
-      const consumer: Consumer = await loadConsumer();
-      return consumer;
-    } catch (err) {
-      return null;
+
+  if (scopePath) {
+    // coming from the api
+    const scope: Scope = await loadScope(scopePath);
+    const component = await showComponentUsingScope(scope);
+    return { component };
+  }
+
+  const consumer: ?Consumer = await loadConsumerIfExist();
+  // $FlowFixMe
+  const remote = await getRemote();
+  loader.start(BEFORE_REMOTE_SHOW);
+  const component = await remote.show(bitId);
+  let dependenciesInfo: DependenciesInfo[] = [];
+  let dependentsInfo: DependenciesInfo[] = [];
+  if (showDependents || showDependencies) {
+    const componentDepGraph = await remote.graph(component.id);
+    if (showDependents) {
+      dependentsInfo = componentDepGraph.getDependentsInfo(component.id);
     }
-  };
-  const getScope = async (): Promise<?Scope> => {
-    try {
-      const scope = await loadScope(scopePath || process.cwd());
-      return scope;
-    } catch (err) {
-      if (err instanceof ScopeNotFound) return null;
-      throw err;
+    if (showDependencies) {
+      dependenciesInfo = componentDepGraph.getDependenciesInfo(component.id);
     }
-  };
-  const showComponentUsingConsumer = async (consumer: Consumer) => {
-    if (allVersions) {
-      return Promise.reject(new Error('cant list all versions of a remote scope'));
-    }
-    const remotes: Remotes = await getScopeRemotes(consumer.scope);
-    // $FlowFixMe scope must be set as it came from a remote
-    const remote = await remotes.resolve(bitId.scope, consumer.scope);
-    return remoteShow(remote);
-  };
-  const showComponentUsingScope = async (scope: Scope) => {
+  }
+  return { component, dependentsInfo, dependenciesInfo };
+
+  async function showComponentUsingScope(scope: Scope) {
     if (allVersions) {
       return scope.loadAllVersions(bitId);
     }
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     return scopeComponentsImporter.loadRemoteComponent(bitId);
-  };
+  }
 
-  if (!scopePath) {
-    const consumer: ?Consumer = await getConsumer();
+  async function getRemote(): Promise<Remote> {
+    // $FlowFixMe scope must be set as it came from a remote
+    const scopeName: string = bitId.scope;
     if (consumer) {
-      return showComponentUsingConsumer(consumer);
+      const remotes: Remotes = await getScopeRemotes(consumer.scope);
+      return remotes.resolve(scopeName, consumer.scope);
     }
+    return Remotes.getScopeRemote(scopeName);
   }
-
-  const scope: ?Scope = await getScope();
-  if (scope) {
-    return showComponentUsingScope(scope);
-  }
-
-  // $FlowFixMe the scope must be there
-  const remote = await Remotes.getScopeRemote(bitId.scope);
-  return remoteShow(remote);
 });
