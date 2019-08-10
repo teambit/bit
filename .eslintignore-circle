@@ -86,7 +86,6 @@ src/jsdoc/parser.js
 src/scope/objects/repository.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
-src/scope/graph/scope-graph.js
 src/consumer/config/component-config.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js

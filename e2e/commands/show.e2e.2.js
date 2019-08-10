@@ -625,4 +625,142 @@ Circle.defaultProps = {
       expect(barFoo).to.not.have.string('Returns');
     });
   });
+  describe('show with --dependents and --dependencies flag', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      helper.createFile('bar-dep', 'bar.js');
+      helper.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
+      helper.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
+      helper.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
+      helper.addComponent('baz/baz.js');
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+    });
+    describe('with local scope', () => {
+      before(() => {
+        helper.importComponent('*');
+      });
+      describe('when using --dependents', () => {
+        let show;
+        before(() => {
+          show = helper.showComponentParsed('utils/is-string --dependents');
+        });
+        it('should show the dependents only', () => {
+          expect(show)
+            .to.have.property('dependentsInfo')
+            .that.is.an('array')
+            .with.lengthOf(2);
+          expect(show)
+            .to.have.property('dependenciesInfo')
+            .to.deep.equal([]);
+        });
+        it('should show all dependents sorted by depth', () => {
+          expect(show.dependentsInfo[0])
+            .to.have.property('depth')
+            .that.equals(1);
+          expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
+          expect(show.dependentsInfo[1])
+            .to.have.property('depth')
+            .that.equals(2);
+          expect(show.dependentsInfo[1].id.name).to.equal('bar-dep');
+        });
+      });
+      describe('when using --dependencies', () => {
+        let show;
+        before(() => {
+          show = helper.showComponentParsed('utils/is-string --dependencies');
+        });
+        it('should show the dependencies only', () => {
+          expect(show)
+            .to.have.property('dependenciesInfo')
+            .that.is.an('array')
+            .with.lengthOf(1);
+          expect(show)
+            .to.have.property('dependentsInfo')
+            .to.deep.equal([]);
+        });
+        it('should show all dependencies', () => {
+          expect(show.dependenciesInfo[0])
+            .to.have.property('depth')
+            .that.equals(1);
+          expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
+        });
+      });
+    });
+    describe('with remote scope (using --remote flag)', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+      });
+      describe('when using --dependents', () => {
+        let show;
+        before(() => {
+          show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependents`);
+        });
+        it('should show the dependents only', () => {
+          expect(show)
+            .to.have.property('dependentsInfo')
+            .that.is.an('array')
+            .with.lengthOf(2);
+          expect(show)
+            .to.have.property('dependenciesInfo')
+            .to.deep.equal([]);
+        });
+        it('should show all dependents sorted by depth', () => {
+          expect(show.dependentsInfo[0])
+            .to.have.property('depth')
+            .that.equals(1);
+          expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
+          expect(show.dependentsInfo[1])
+            .to.have.property('depth')
+            .that.equals(2);
+          expect(show.dependentsInfo[1].id.name).to.equal('bar-dep');
+        });
+      });
+      describe('when using --dependencies', () => {
+        let show;
+        before(() => {
+          show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependencies`);
+        });
+        it('should show the dependencies only', () => {
+          expect(show)
+            .to.have.property('dependenciesInfo')
+            .that.is.an('array')
+            .with.lengthOf(1);
+          expect(show)
+            .to.have.property('dependentsInfo')
+            .to.deep.equal([]);
+        });
+        it('should show all dependencies', () => {
+          expect(show.dependenciesInfo[0])
+            .to.have.property('depth')
+            .that.equals(1);
+          expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
+        });
+      });
+    });
+  });
+  describe('show with --dependents flag on a new component', () => {
+    let show;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      show = helper.showComponentParsed('utils/is-string --dependents --dependencies');
+    });
+    it('should show all dependents and dependencies', () => {
+      expect(show)
+        .to.have.property('dependentsInfo')
+        .that.is.an('array')
+        .with.lengthOf(1);
+      expect(show)
+        .to.have.property('dependenciesInfo')
+        .that.is.an('array')
+        .with.lengthOf(1);
+      expect(show.dependenciesInfo[0].id.name).to.equal('utils/is-type');
+      expect(show.dependentsInfo[0].id.name).to.equal('bar/foo');
+    });
+  });
 });

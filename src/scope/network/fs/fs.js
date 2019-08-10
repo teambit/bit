@@ -11,6 +11,7 @@ import type { Network } from '../network';
 import ComponentsList from '../../../consumer/component/components-list';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
+import DependencyGraph from '../../graph/scope-graph';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -78,6 +79,21 @@ export default class Fs implements Network {
   show(bitId: BitId): Promise<> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
     return scopeComponentsImporter.loadComponent(bitId);
+  }
+
+  async graph(bitId?: BitId): Promise<DependencyGraph> {
+    const scope = this.getScope();
+    const dependencyGraph = await DependencyGraph.loadLatest(scope);
+    // get as string to mimic the exact steps of using ssh
+    const getGraphAsString = (): string => {
+      if (!bitId) {
+        return dependencyGraph.serialize();
+      }
+      const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);
+      return dependencyGraph.serialize(componentGraph);
+    };
+    const graphStr = getGraphAsString();
+    return DependencyGraph.loadFromString(graphStr);
   }
 
   connect() {
