@@ -329,7 +329,7 @@ export default class SSH implements Network {
     try {
       return unpackCommand(data, base64);
     } catch (err) {
-      logger.error(`unpackCommand found on error "${err}", while paring the following string: ${data}`);
+      logger.error(`unpackCommand found on error "${err}", while parsing the following string: ${data}`);
       throw new SSHInvalidResponse(data);
     }
   }
