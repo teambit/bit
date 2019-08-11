@@ -14,7 +14,9 @@ export const TOP_MESSAGE = `This utility initialize an empty Bit workspace and w
 
 You can later edit your configuration in your package.json or bit.json.
 
-After setting up the workspace, use bit add to track components and modules.
+After setting up the workspace, use 'bit add' to track components and modules.
+
+To disable interactive mode run 'bit config set interactive.init false' or use 'bit init -N'.
 
 Press ^C at any time to quit.`;
 
