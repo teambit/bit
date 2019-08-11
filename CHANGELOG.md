@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- added `no_warnings` config to eliminate some warnings from being written to the stdout
+
 ## [14.2.4-dev.2] - 2019-08-11
 
 - [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit show` to display them all recursively

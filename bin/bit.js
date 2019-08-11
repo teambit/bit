@@ -3,6 +3,7 @@
 // require('v8-compile-cache');
 
 const constants = require('../dist/constants');
+const { printWarning } = require('../dist/logger/logger');
 
 const MINIMUM_NODE_VERSION = '8.12.0';
 
@@ -31,8 +32,7 @@ function ensureDirectories() {
 function warnIfRunningAsRoot() {
   const isRoot = process.getuid && process.getuid() === 0;
   if (isRoot) {
-    // eslint-disable-next-line
-    console.log(chalk.red('Warning: running bit as root might cause permission issues later'));
+    printWarning('running bit as root might cause permission issues later');
   }
 }
 

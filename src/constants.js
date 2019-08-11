@@ -215,6 +215,8 @@ export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
 export const CFG_LOG_JSON_FORMAT = 'log_json_format';
 
+export const CFG_NO_WARNINGS = 'no_warnings';
+
 export const CFG_INTERACTIVE = 'interactive';
 
 // Template for interactive config for specific command like interactive.init
