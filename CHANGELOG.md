@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.4-dev.5] - 2019-08-11
+
+- safer access to bit global config
+
+
 ## [14.2.4-dev.3] - 2019-08-11
 
 - added `no_warnings` config to eliminate some warnings from being written to the stdout
