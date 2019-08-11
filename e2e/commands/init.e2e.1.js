@@ -25,7 +25,7 @@ describe('run bit init', function () {
   describe('running bit init with path', () => {
     before(() => {
       helper.cleanLocalScope();
-      helper.runCmd('bit init my-dir');
+      helper.runCmd('bit init -N my-dir');
     });
     it('should init Bit at that path', () => {
       expect(path.join(helper.localScopePath, 'my-dir/bit.json')).to.be.a.file();
@@ -71,9 +71,34 @@ describe('run bit init', function () {
       it('should not create bit inside .git', () => {
         helper.reInitLocalScope();
         helper.initNewGitRepo();
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         expect(path.join(helper.localScope, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
       });
+    });
+  });
+  describe('with custom configs', () => {
+    let bitJson;
+    before(() => {
+      helper.cleanLocalScope();
+      helper.initLocalScopeWithOptions({
+        '-default-directory': 'my-comps',
+        '-package-manager': 'yarn',
+        '-compiler': 'my-compiler',
+        '-tester': 'my-tester'
+      });
+      bitJson = helper.readBitJson();
+    });
+    it('should set the default dir to my-comps', () => {
+      expect(bitJson.componentsDefaultDirectory).to.equal('my-comps/{name}');
+    });
+    it('should set the package manager to yarn', () => {
+      expect(bitJson.packageManager).to.equal('yarn');
+    });
+    it('should set the compiler to my-compiler', () => {
+      expect(bitJson.env.compiler).to.equal('my-compiler');
+    });
+    it('should set the tester to my-tester', () => {
+      expect(bitJson.env.tester).to.equal('my-tester');
     });
   });
   describe('git integration', () => {
@@ -235,7 +260,7 @@ describe('run bit init', function () {
     });
     describe('bit init', () => {
       before(() => {
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should not change BitMap file', () => {
         const currentBitMap = helper.readBitMap();
@@ -309,7 +334,7 @@ describe('run bit init', function () {
       before(() => {
         helper.cleanLocalScope();
         helper.initNpm();
-        helper.runCmd('bit init');
+        helper.initLocalScope();
       });
       it('should write the bit.json content into the package.json inside "bit" property', () => {
         const packageJson = helper.readPackageJson();
@@ -351,7 +376,7 @@ describe('run bit init', function () {
         helper.corruptPackageJson();
       });
       it('should throw InvalidPackageJson error', () => {
-        const initCmd = () => helper.runCmd('bit init');
+        const initCmd = () => helper.initLocalScope();
         const error = new InvalidPackageJson(path.join(helper.localScopePath, 'package.json'));
         helper.expectToThrow(initCmd, error);
       });
@@ -363,7 +388,7 @@ describe('run bit init', function () {
         const packageJson = helper.readPackageJson();
         const packageJsonPath = path.join(helper.localScopePath, 'package.json');
         fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should preserve the original indentation and keep it as 4', () => {
         const packageJson = helper.readFile('package.json');
@@ -405,7 +430,7 @@ describe('run bit init', function () {
         helper.createBitMap();
         innerDir = path.join(helper.localScopePath, 'inner');
         fs.mkdirSync(innerDir);
-        helper.runCmd('bit init', innerDir);
+        helper.initWorkspace(innerDir);
         fs.removeSync(path.join(innerDir, '.bit'));
         fs.removeSync(path.join(helper.localScopePath, '.bit'));
       });

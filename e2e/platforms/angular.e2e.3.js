@@ -37,7 +37,7 @@ describe('angular', function () {
       helper.runCmd('git clone https://github.com/ng-lightning/ng-lightning');
       helper.runCmd('git checkout v4.8.1', path.join(helper.localScopePath, 'ng-lightning'));
       localWorkspace = path.join(helper.localScopePath, 'ng-lightning/projects/ng-lightning');
-      helper.runCmd('bit init', localWorkspace);
+      helper.initWorkspace(localWorkspace);
       helper.runCmd('bit add src/lib/badges', localWorkspace);
     });
     describe('isolating a component that has public_api.js on the root dir', () => {

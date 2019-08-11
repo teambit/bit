@@ -114,7 +114,7 @@ describe('workspace config', function () {
           helper.getClonedLocalScope(localScope);
           helper.deletePath('bit.json');
           helper.initNpm();
-          helper.runCmd('bit init');
+          helper.initWorkspace();
           const packageJson = helper.readPackageJson();
           expect(packageJson).to.have.property('bit');
           packageJson.bit.overrides = {

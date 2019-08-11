@@ -18,7 +18,7 @@ describe('bit list command', function () {
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.initWorkspace();
     });
     it('should display "found 0 components"', () => {
       const output = helper.listLocalScope();
@@ -28,7 +28,7 @@ describe('bit list command', function () {
   describe('when a component is created but not tagged', () => {
     before(() => {
       helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.initWorkspace();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
     });
@@ -40,7 +40,7 @@ describe('bit list command', function () {
   describe('when a component is created and tagged', () => {
     before(() => {
       helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.initWorkspace();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagComponentBarFoo();

@@ -248,7 +248,7 @@ describe('javascript-hooks', function () {
     describe.skip('with test', () => {
       before(() => {
         helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         helper.runCmd('bit import bit.envs/testers/mocha --tester');
         helper.runCmd('bit create foo --json --specs');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
@@ -257,7 +257,7 @@ describe('javascript-hooks', function () {
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
         fs.emptyDirSync(helper.localScopePath); // a new local scope
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
       });
@@ -274,7 +274,7 @@ describe('javascript-hooks', function () {
     describe.skip('with dependencies', () => {
       before(() => {
         helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         createFile('foo');
         helper.tagComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
@@ -354,7 +354,7 @@ describe('javascript-hooks', function () {
     describe.skip('with multiple versions', () => {
       before(() => {
         helper.cleanEnv();
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         helper.runCmd('bit create foo');
         const fooComponentV1 = "module.exports = function foo() { return 'got foo v1'; };";
         fs.writeFileSync(fooImplPath, fooComponentV1);
@@ -369,7 +369,7 @@ describe('javascript-hooks', function () {
       });
       const prepareCleanLocalEnv = () => {
         fs.emptyDirSync(helper.localScopePath); // a new local scope
-        helper.runCmd('bit init');
+        helper.initWorkspace();
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
       };
       describe('importing without mentioning the version', () => {

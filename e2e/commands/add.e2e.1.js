@@ -1185,7 +1185,7 @@ describe('bit add command', function () {
       consumerDir = path.join(helper.localScopePath, 'bar');
       fs.mkdirSync(consumerDir);
       helper.createFile('', 'foo.js');
-      helper.runCmd('bit init', consumerDir);
+      helper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
       const addCmd = () => helper.runCmd('bit add ../foo.js', consumerDir);
@@ -1200,7 +1200,7 @@ describe('bit add command', function () {
       consumerDir = path.join(helper.localScopePath, 'bar');
       fs.mkdirSync(consumerDir);
       helper.createFile('foo', 'foo.js');
-      helper.runCmd('bit init', consumerDir);
+      helper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
       const addCmd = () => helper.runCmd('bit add ../foo', consumerDir);

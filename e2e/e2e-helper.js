@@ -16,6 +16,10 @@ import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
 import { FileStatus } from '../src/consumer/versions-ops/merge-version';
+import runInteractive from '../src/interactive/utils/run-interactive-cmd';
+import type { InteractiveInputs } from '../src/interactive/utils/run-interactive-cmd';
+
+export { INTERACTIVE_KEYS } from '../src/interactive/utils/run-interactive-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -23,6 +27,8 @@ const generateRandomStr = (size: number = 8): string => {
     .slice(size * -1)
     .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
 };
+
+const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
 export default class Helper {
   debugMode: boolean;
@@ -55,12 +61,44 @@ export default class Helper {
 
   // #region General
   runCmd(cmd: string, cwd: string = this.localScopePath): string {
-    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
-    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  async runInteractiveCmd({
+    args = [],
+    inputs = [],
+    // Options for the process (execa)
+    processOpts = {
+      cwd: this.localScopePath
+    },
+    // opts for interactive
+    opts = {
+      defaultIntervalBetweenInputs: DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS,
+      verbose: false
+    }
+  }: {
+    args: string[],
+    inputs: InteractiveInputs,
+    processOpts: Object,
+    opts: {
+      // Default interval between inputs in case there is no specific interval
+      defaultIntervalBetweenInputs: number,
+      verbose: boolean
+    }
+  }) {
+    const processName = this.bitBin || 'bit';
+    opts.verbose = !!this.debugMode;
+    const { stdout } = await runInteractive({ processName, args, inputs, processOpts, opts });
+    if (this.debugMode) {
+      console.log(rightpad(chalk.green('output: \n'), 20, ' ')); // eslint-disable-line no-console
+      console.log(chalk.cyan(stdout)); // eslint-disable-line no-console
+    }
+    return stdout;
   }
 
   parseOptions(options: Object): string {
@@ -131,6 +169,12 @@ export default class Helper {
     return newDirPath;
   }
 
+  createNewDirectoryInLocalWorkspace(dirPath: string) {
+    const newDirPath = path.join(this.localScopePath, dirPath);
+    fs.ensureDirSync(newDirPath);
+    return newDirPath;
+  }
+
   cleanDir(dirPath: string) {
     fs.removeSync(dirPath);
   }
@@ -182,7 +226,15 @@ export default class Helper {
   }
 
   initLocalScope() {
-    return this.runCmd('bit init');
+    return this.initWorkspace();
+  }
+
+  initWorkspace(workspacePath?: string) {
+    return this.runCmd('bit init -N', workspacePath);
+  }
+
+  async initInteractive(inputs: InteractiveInputs) {
+    return this.runInteractiveCmd({ args: ['init'], inputs });
   }
 
   initLocalScopeWithOptions(options: ?Object) {
@@ -224,21 +276,31 @@ export default class Helper {
     }
     this.setLocalScope();
     fs.ensureDirSync(this.localScopePath);
-    return this.runCmd('bit init');
+    return this.initLocalScope();
   }
-  addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
+  addRemoteScope(
+    remoteScopePath: string = this.remoteScopePath,
+    localScopePath: string = this.localScopePath,
+    isGlobal: boolean = false
+  ) {
+    const globalArg = isGlobal ? '-g' : '';
     if (process.env.npm_config_with_ssh) {
-      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
+      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath} ${globalArg}`, localScopePath);
     }
-    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
+    return this.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, localScopePath);
   }
 
-  removeRemoteScope(remoteScope: string = this.remoteScope) {
-    return this.runCmd(`bit remote del ${remoteScope}`);
+  removeRemoteScope(remoteScope: string = this.remoteScope, isGlobal: boolean = false) {
+    const globalArg = isGlobal ? '-g' : '';
+    return this.runCmd(`bit remote del ${remoteScope} ${globalArg}`);
   }
 
-  addRemoteEnvironment() {
-    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
+  addRemoteEnvironment(isGlobal: boolean = false) {
+    return this.addRemoteScope(this.envScopePath, this.localScopePath, isGlobal);
+  }
+
+  removeRemoteEnvironment(isGlobal: boolean = false) {
+    return this.removeRemoteScope(this.envScope, isGlobal);
   }
 
   reInitRemoteScope() {
@@ -409,6 +471,15 @@ export default class Helper {
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
+  }
+  getConfig(configName: string) {
+    return this.runCmd(`bit config get ${configName}`);
+  }
+  delConfig(configName: string) {
+    return this.runCmd(`bit config del ${configName}`);
+  }
+  setConfig(configName: string, configVal: string) {
+    return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
@@ -635,20 +706,25 @@ export default class Helper {
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
+
+  // #endregion
+
+  // #region bit config manipulation
+
   setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
-    this.runCmd(`bit config set hub_domain ${domain}`);
+    this.setConfig('hub_domain', domain);
   }
 
   getGitPath() {
-    this.runCmd(`bit config get ${CFG_GIT_EXECUTABLE_PATH}`);
+    this.getConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
   setGitPath(gitPath: string = 'git') {
-    this.runCmd(`bit config set ${CFG_GIT_EXECUTABLE_PATH} ${gitPath}`);
+    this.setConfig(CFG_GIT_EXECUTABLE_PATH, gitPath);
   }
 
   deleteGitPath() {
-    this.runCmd(`bit config del ${CFG_GIT_EXECUTABLE_PATH}`);
+    this.delConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
   restoreGitPath(oldGitPath: ?string): any {
@@ -656,6 +732,24 @@ export default class Helper {
       return this.deleteGitPath();
     }
     return this.setGitPath(oldGitPath);
+  }
+
+  backupConfigs(names: string[]): Object {
+    const backupObject: Object = {};
+    names.forEach((name) => {
+      backupObject[name] = this.getConfig(name);
+    });
+    return backupObject;
+  }
+
+  restoreConfigs(backupObject: { [string]: string }): void {
+    R.forEachObjIndexed((val, key) => {
+      if (val === undefined || val.includes('undefined')) {
+        this.delConfig(key);
+      } else {
+        this.setConfig(key, val);
+      }
+    }, backupObject);
   }
 
   // #endregion
@@ -709,14 +803,15 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  createDummyCompiler(dummyType: string) {
+  createDummyCompiler(dummyType: string = 'dummy') {
     // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
+    // TODO: this is not really a scope but a workspace
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -737,11 +832,12 @@ export default class Helper {
   createDummyTester(dummyType: string) {
     if (this.dummyTesterCreated) return this.addRemoteScope(this.envScopePath);
 
+    // TODO: this is not really a scope but a workspace
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
     const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
@@ -775,7 +871,7 @@ export default class Helper {
     const tempScopePath = path.join(this.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.runCmd('bit init', tempScopePath);
+    this.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -1031,7 +1127,7 @@ export default class Helper {
         fs.removeSync(path.join(this.localScopePath, dir));
       }
     });
-    this.runCmd('bit init');
+    this.initWorkspace();
   }
   // #endregion
 

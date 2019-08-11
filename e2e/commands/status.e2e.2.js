@@ -33,7 +33,7 @@ describe('bit status command', function () {
   describe('when no components created', () => {
     before(() => {
       helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.initWorkspace();
     });
     it('should indicate that there are no components', () => {
       const output = helper.runCmd('bit status');
@@ -44,7 +44,7 @@ describe('bit status command', function () {
   describe('when a component is created in components directory but not added', () => {
     before(() => {
       helper.cleanEnv();
-      helper.runCmd('bit init');
+      helper.initWorkspace();
       helper.createFile(path.join('components', 'bar'), 'foo.js');
     });
     it('should indicate that there are no components and should not throw an error', () => {
@@ -266,7 +266,7 @@ describe('bit status command', function () {
     describe('and then all objects were deleted', () => {
       before(() => {
         fs.removeSync(path.join(helper.localScopePath, '.bit'));
-        helper.runCmd('bit init');
+        helper.initWorkspace();
       });
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.runCmd('bit status');
