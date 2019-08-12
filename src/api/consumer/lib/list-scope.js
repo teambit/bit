@@ -12,17 +12,20 @@ import { ConsumerNotFound } from '../../../consumer/exceptions';
 import GeneralError from '../../../error/general-error';
 import { BitId } from '../../../bit-id';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
+import type { SSHConnectionStrategyName } from '../../../scope/network/ssh/ssh';
 
 export async function listScope({
   scopeName,
   showAll, // include nested
   showRemoteVersion,
-  namespacesUsingWildcards
+  namespacesUsingWildcards,
+  strategiesNames
 }: {
   scopeName?: string,
   showAll?: boolean,
   showRemoteVersion?: boolean,
-  namespacesUsingWildcards?: string
+  namespacesUsingWildcards?: string,
+  strategiesNames?: SSHConnectionStrategyName[]
 }): Promise<ListScopeResult[]> {
   const consumer: ?Consumer = await loadConsumerIfExist();
   if (scopeName) {
@@ -33,7 +36,7 @@ export async function listScope({
   async function remoteList(): Promise<ListScopeResult[]> {
     const remote: Remote = await _getRemote();
     loader.start(BEFORE_REMOTE_LIST);
-    return remote.list(namespacesUsingWildcards);
+    return remote.list(namespacesUsingWildcards, strategiesNames);
   }
 
   async function scopeList(): Promise<ListScopeResult[]> {

@@ -7,6 +7,7 @@ import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
 import type Component from '../consumer/component/consumer-component';
 import type { ListScopeResult } from '../consumer/component/components-list';
+import type { SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
 
 /**
@@ -27,8 +28,8 @@ export default class Remote {
     this.primary = primary;
   }
 
-  connect(): Promise<Network> {
-    return connect(this.host);
+  connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
+    return connect(this.host, strategiesNames);
   }
 
   toPlainObject() {
@@ -44,8 +45,8 @@ export default class Remote {
     });
   }
 
-  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
-    return this.connect().then(network => network.list(namespacesUsingWildcards));
+  list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]> {
+    return this.connect(strategiesNames).then(network => network.list(namespacesUsingWildcards));
   }
 
   search(query: string, reindex: boolean): Promise<any> {
