@@ -56,7 +56,7 @@ export default class Init extends Command {
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
-      return initScope(path, undefined, shared).then(({ created }) => {
+      return initScope(path, bare, shared).then(({ created }) => {
         return {
           created,
           bare: true
