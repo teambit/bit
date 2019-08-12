@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.4-dev.6] - 2019-08-12
+
 - fix init --bare with name
 
 ## [14.2.4-dev.5] - 2019-08-11
