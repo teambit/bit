@@ -4,7 +4,6 @@ import format from 'string-format';
 import chalk from 'chalk';
 import { init, listScope } from '../../api/consumer';
 import logger from '../../logger/logger';
-import { DEBUG_LOG } from '../../constants';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
@@ -24,19 +23,22 @@ export const PACKAGE_MANAGER_MSG_Q = 'Which package manager would you like to us
 export const DEFAULT_DIR_MSG_Q = 'Where would you like to store imported components?';
 export const CHOOSE_ENV_MSG_TEMPLATE_Q = 'Which {type} would you like to use for the components?';
 export const CHOOSE_CUSTOM_ENV_MSG_TEMPLATE_Q =
-  'Paste the bit import command for the {type} or enter "skip" to skip defining a {type}.';
+  'Paste the "bit import" command for the {type} (press "enter" to skip).';
 export const CHOOSE_COMPILER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
 // export const CHOOSE_TESTER_MSG_Q = format(CHOOSE_ENV_MSG_TEMPLATE_Q, { type: 'tester' });
 export const CHOOSE_CUSTOM_COMPILER_MSG_Q = format(CHOOSE_CUSTOM_ENV_MSG_TEMPLATE_Q, { type: 'compiler' });
 const SKIP_DEFINE_ENV_TEMPLATE_ANS = 'no {type}';
 const SKIP_DEFINE_COMPILER_ANS = format(SKIP_DEFINE_ENV_TEMPLATE_ANS, { type: 'compiler' });
 // const SKIP_DEFINE_TESTER_ANS = format(SKIP_DEFINE_ENV_TEMPLATE_ANS, { type: 'tester' });
-const CUSTOM_ENV_TEMPLATE_ANS = 'another {type}';
+const CUSTOM_ENV_TEMPLATE_ANS = 'I have my own {type}';
 const CUSTOM_COMPILER_ANS = format(CUSTOM_ENV_TEMPLATE_ANS, { type: 'compiler' });
 // const CUSTOM_TESTER_ANS = format(CUSTOM_ENV_TEMPLATE_ANS, { type: 'tester' });
 const SKIP_CUSTOM_ENV_KEYWORD = 'skip';
 const BIT_ENVS_SCOPE_NAME = 'bit.envs';
 const CUSTOM_COMPILER_PROP_NAME = 'custom-compiler';
+const DEFAULT_LOCATION_DIR = 'components';
+const DEFAULT_LOCATION_NOTE = "(bit's default location)";
+const DEFAULT_LOCATION_ANS = `${DEFAULT_LOCATION_DIR} ${DEFAULT_LOCATION_NOTE}`;
 
 function _generateChooseEnvQ(
   envType: ENVS_TYPE,
@@ -45,7 +47,7 @@ function _generateChooseEnvQ(
   skipAnsTxt: string,
   customEnvAnsTxt: string
 ) {
-  let components;
+  let components = [];
   // Fetch the components from the remote. If there was an error or no components returned we will skip the question.
   // We will store the returned components in a higher scope, to prevent another request during the choices calculation
   const whenWithFetch = async () => {
@@ -59,25 +61,25 @@ function _generateChooseEnvQ(
       return true;
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.log(
-        chalk.yellow(`could not retrieve compilers list.
-see full error log in ${DEBUG_LOG} 
-you can add a compiler later using bit import [compiler-name] --${envType}`)
-      );
+      //  console.log(
+      //  chalk.yellow(`could not retrieve compilers list.
+      // see full error log in ${DEBUG_LOG}
+      // you can add a compiler later using bit import [compiler-name] --${envType}`)
+      //      );
       logger.info(e);
-      return false;
+      return true;
     }
   };
 
   const choices = () => {
-    return [
-      skipAnsTxt,
-      new inquirer.Separator(),
-      ...components,
-      new inquirer.Separator(),
-      customEnvAnsTxt,
-      new inquirer.Separator()
-    ];
+    const choicesArr = [skipAnsTxt, new inquirer.Separator()];
+    if (components && components.length) {
+      choicesArr.push(...components);
+      choicesArr.push(new inquirer.Separator());
+    }
+    choicesArr.push(customEnvAnsTxt);
+    choicesArr.push(new inquirer.Separator());
+    return choicesArr;
   };
 
   const selectEnv = {
@@ -129,12 +131,15 @@ async function _fetchTesters() {
 async function _fetchComps(scopeName: string, namespaces: string[] = []) {
   // Filter the namespace on the remote
   const namespacesUsingWildcards = namespaces.length ? `${namespaces.join('|')}/*` : undefined;
+  // Not using user/pass strategy since it will interrupt the flow
+  const strategiesNames = ['token', 'ssh-agent', 'ssh-key'];
 
   const listScopeResults = await listScope({
     scopeName,
     showAll: false,
     showRemoteVersion: true,
-    namespacesUsingWildcards
+    namespacesUsingWildcards,
+    strategiesNames
   });
   const ids = listScopeResults.map(result => result.id.toString());
   return ids;
@@ -167,7 +172,7 @@ async function _buildQuestions() {
     // rootPath :: String
     // Root search directory
     message: DEFAULT_DIR_MSG_Q,
-    default: 'components',
+    default: DEFAULT_LOCATION_ANS,
     suggestOnly: false
     // suggestOnly :: Bool
     // Restrict prompt answer to available choices or use them as suggestions
@@ -197,6 +202,10 @@ export default (async function initInteractive() {
   ui.log.write(TOP_MESSAGE);
   const questions = await _buildQuestions();
   const answers = await inquirer.prompt(questions);
+  if (answers.componentsDefaultDirectory === DEFAULT_LOCATION_ANS) {
+    // Remove the default location note
+    answers.componentsDefaultDirectory = DEFAULT_LOCATION_DIR;
+  }
   answers.componentsDefaultDirectory = `${answers.componentsDefaultDirectory}/{name}`;
   let actualCompiler = answers.compiler;
   if (actualCompiler === CUSTOM_COMPILER_ANS) {
