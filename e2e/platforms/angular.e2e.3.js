@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const helper = new Helper();
 
@@ -11,23 +10,48 @@ describe('angular', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('importing an ngx-bootstrap component from staging', () => {
+  describe('adding a component without its styles and templates', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.setProjectAsAngular();
-      helper.runCmd('bit import david.ngx/buttons');
+      helper.createFile(
+        'bar',
+        'foo.ts',
+        `import { NgModule, Component } from '@angular/core';
+@Component({
+  selector: 'main-component',
+  templateUrl: './my-template.html',
+  styleUrl: './my-style.css'
+})
+export class MainComponent {}
+
+@NgModule({
+  imports: [],
+  exports: [MainComponent],
+  declarations: [MainComponent],
+  bootstrap: [MainComponent]
+})
+export class AppModule {}
+
+      `
+      );
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
-    it('bit status should show an error about missing tsconfig.json', () => {
+    it('bit status should show an error about missing templates and style dependencies', () => {
       const output = helper.runCmd('bit status');
-      expect(output).to.have.string('failed finding tsconfig.json file');
+      expect(output).to.have.string('non-existing dependency files');
+      expect(output).to.have.string('bar/foo.ts -> ./my-template.html, ./my-style.css');
     });
-    describe('after creating tsconfig.json file', () => {
+    describe('after creating the template and styles', () => {
       before(() => {
-        helper.outputFile('tsconfig.json');
+        helper.createFile('bar', 'my-template.html');
+        helper.createFile('bar', 'my-style.css');
+        helper.addComponent('bar', { i: 'bar/foo ' });
       });
-      it('bit status should show a clean state', () => {
+      it('should not warn about it anymore', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(output).to.not.have.string('non-existing dependency files');
+        expect(output).to.not.have.string('my-template.html');
+        expect(output).to.not.have.string('my-style.css');
       });
     });
   });
