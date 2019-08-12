@@ -371,12 +371,12 @@ jobs:
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
         run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && sudo npm link ../bit-javascript'
-      -
-        run:
           name: 'npm link bit to global'
           command: cd bit && npm link
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run: which bit
       -
