@@ -128,4 +128,29 @@ describe('detective-typescript', () => {
       assert.equal(depsKeys[0], 'foo');
     });
   });
+
+  describe('Angular Decorators', () => {
+    let deps;
+    before(() => {
+      const componentDecorator = `const styleUrl = './my-style2.css';
+      @Component({
+        selector: 'main-component',
+        templateUrl: './my-template.html',
+        styleUrls: ['./my-style1.css', styleUrl, './my-style3.css']
+      })
+      export class MainComponent {}`;
+      const results = detective(componentDecorator); // eslint-disable-line
+      deps = Object.keys(results);
+    });
+    it('should recognize the templateUrl as a dependency', () => {
+      expect(deps).to.include('./my-template.html');
+    });
+    it('should recognize the styleUrls as dependencies', () => {
+      expect(deps).to.include('./my-style1.css');
+      expect(deps).to.include('./my-style3.css');
+    });
+    it('should not recognize dynamic style (style path entered as a variable)', () => {
+      expect(deps).to.not.include('./my-style2.css');
+    });
+  });
 });

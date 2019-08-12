@@ -1,6 +1,3 @@
-import { isRelativeImport } from '../../utils';
-import extractAngularDependencies from '../platforms/angular/extract-dependencies';
-
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
@@ -91,7 +88,6 @@ module.exports._getDependencies = function (config) {
   dependencies.forEach(dependency => processDependency(dependency));
   pathMapFile.dependencies = pathMapDependencies;
   config.pathMap.push(pathMapFile);
-  processAngularDependencies();
   return resolvedDependencies;
 
   function processDependency(dependency) {
@@ -152,24 +148,6 @@ module.exports._getDependencies = function (config) {
       config.nonExistent[config.filename].push(dependency);
     } else {
       config.nonExistent[config.filename] = [dependency];
-    }
-  }
-  function processAngularDependencies() {
-    if (config.cacheProjectAst && config.cacheProjectAst.angular && config.filename.endsWith('.ts')) {
-      // no need to add to nonExistent array. if a file is missing, it'll fail during the AST
-      // generation and will throw an error
-      const { angularAst, angularDependencies } = extractAngularDependencies(
-        config.directory,
-        config.filename,
-        config.cacheProjectAst.angular
-      );
-      config.cacheProjectAst.angular = angularAst;
-      debug(`extracted additional ${angularDependencies.length} angular-dependencies: `, angularDependencies);
-      angularDependencies.forEach((angularDependency) => {
-        const pathMap = { importSource: '', resolvedDep: angularDependency };
-        pathMapDependencies.push(pathMap);
-      });
-      resolvedDependencies.push(...angularDependencies);
     }
   }
 };

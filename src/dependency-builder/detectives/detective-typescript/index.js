@@ -93,6 +93,31 @@ module.exports = function (src, options = {}) {
           if (value) addDependency(value);
         }
         break;
+      case 'Decorator': // parse Angular Decorators to find style/template dependencies
+        if (
+          node.expression &&
+          node.expression.callee &&
+          node.expression.callee.name === 'Component' &&
+          node.expression.arguments &&
+          node.expression.arguments.length &&
+          node.expression.arguments[0].type === 'ObjectExpression'
+        ) {
+          const angularComponent = node.expression.arguments[0].properties;
+          angularComponent.forEach((prop) => {
+            if (!prop.key || !prop.value) return;
+            if (prop.key.name === 'templateUrl' && prop.value.type === 'Literal') {
+              addDependency(prop.value.value);
+            }
+            if (prop.key.name === 'styleUrl' && prop.value.type === 'Literal') {
+              addDependency(prop.value.value);
+            }
+            if (prop.key.name === 'styleUrls' && prop.value.type === 'ArrayExpression') {
+              const literalsElements = prop.value.elements.filter(e => e.type === 'Literal');
+              literalsElements.forEach(element => addDependency(element.value));
+            }
+          });
+        }
+        break;
       default:
         break;
     }

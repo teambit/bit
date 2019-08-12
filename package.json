@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "2.1.0",
+  "version": "2.1.1-dev.1",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -34,9 +34,6 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "@angular/compiler": "^8.0.0",
-    "@angular/compiler-cli": "^8.0.0",
-    "@angular/core": "^8.0.0",
     "@babel/runtime": "^7.0.0",
     "@typescript-eslint/typescript-estree": "^1.1.0",
     "app-module-path": "^2.2.0",
@@ -57,7 +54,6 @@
     "lodash.set": "^4.3.2",
     "module-definition": "^2.2.4",
     "module-lookup-amd": "^5.0.1",
-    "ngast": "^0.3.0",
     "node-source-walk": "^4.2.0",
     "object-assign": "^4.1.1",
     "ora": "^1.2.0",
@@ -66,7 +62,6 @@
     "regenerator-runtime": "^0.10.5",
     "resolve": "^1.5.0",
     "resolve-dependency-path": "^1.0.2",
-    "rxjs": "^6.5.2",
     "sass-lookup": "^1.1.0",
     "stylable": "5.2.2",
     "stylus-lookup": "^1.0.2",
