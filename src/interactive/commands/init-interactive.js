@@ -4,7 +4,6 @@ import format from 'string-format';
 import chalk from 'chalk';
 import { init, listScope } from '../../api/consumer';
 import logger from '../../logger/logger';
-import { DEBUG_LOG } from '../../constants';
 
 inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
