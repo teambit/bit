@@ -17,6 +17,9 @@ chai.use(require('chai-fs'));
 describe('run bit init - interactive', function () {
   this.timeout(0);
   const helper = new Helper();
+  after(() => {
+    helper.destroyEnv();
+  });
   describe('with defaults', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
@@ -136,7 +139,6 @@ describe('run bit init - interactive', function () {
       });
       after(() => {
         helper.restoreConfigs(configsBackup);
-        helper.destroyEnv();
       });
       it('should prefer interactive.init config over interactive config', async () => {
         helper.setConfig(CFG_INTERACTIVE, true);
