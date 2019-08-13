@@ -18,13 +18,10 @@ export default class ComponentLoader {
   _componentsCacheForCapsule: Object = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Object;
-  cacheProjectAst: ?{ angular: Object }; // specific platforms (like Angular) need to parse the entire project
+  cacheProjectAst: ?Object; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
-    if (this._isAngularProject()) {
-      this.cacheProjectAst = { angular: {} };
-    }
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
