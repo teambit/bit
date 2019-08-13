@@ -230,11 +230,12 @@ export default class Helper {
   }
 
   initWorkspace(workspacePath?: string) {
-    return this.runCmd('bit init -N', workspacePath);
+    // return this.runCmd('bit init -N', workspacePath);
+    return this.runCmd('bit init', workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {
-    return this.runInteractiveCmd({ args: ['init'], inputs });
+    return this.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 
   initLocalScopeWithOptions(options: ?Object) {

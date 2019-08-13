@@ -71,7 +71,7 @@ export default (async function runInteractive({
     opts.defaultIntervalBetweenInputs || DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS;
   if (opts.verbose) {
     console.log(rightpad(chalk.green('cwd: '), 20, ' '), processOpts.cwd); // eslint-disable-line no-console
-    console.log(rightpad(chalk.green('command: '), 20, ' '), `${processName} ${args.join('')}`); // eslint-disable-line no-console
+    console.log(rightpad(chalk.green('command: '), 20, ' '), `${processName} ${args.join(' ')}`); // eslint-disable-line no-console
     _printInputs(inputs, actualDefaultIntervalBetweenInputs);
   }
 
