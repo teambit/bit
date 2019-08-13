@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.4-dev.7] - 2019-08-13
+
 - remove Angular dependencies from bit-javascript, instead, use TS compiler to parse Angular Decorators
 - improve interactive behavior when ssh connection failed
 - improve interactive texts
