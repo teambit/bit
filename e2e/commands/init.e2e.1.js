@@ -25,7 +25,7 @@ describe('run bit init', function () {
   describe('running bit init with path', () => {
     before(() => {
       helper.cleanLocalScope();
-      helper.runCmd('bit init -N my-dir');
+      helper.runCmd('bit init my-dir');
     });
     it('should init Bit at that path', () => {
       expect(path.join(helper.localScopePath, 'my-dir/bit.json')).to.be.a.file();
