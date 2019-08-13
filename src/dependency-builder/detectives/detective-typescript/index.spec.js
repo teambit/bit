@@ -136,7 +136,7 @@ describe('detective-typescript', () => {
       @Component({
         selector: 'main-component',
         templateUrl: './my-template.html',
-        styleUrls: ['./my-style1.css', styleUrl, './my-style3.css']
+        styleUrls: ['./my-style1.css', styleUrl, './my-style3.css', 'my-style4.css']
       })
       export class MainComponent {}`;
       const results = detective(componentDecorator); // eslint-disable-line
@@ -151,6 +151,9 @@ describe('detective-typescript', () => {
     });
     it('should not recognize dynamic style (style path entered as a variable)', () => {
       expect(deps).to.not.include('./my-style2.css');
+    });
+    it('should change non-relative paths to be relative', () => {
+      expect(deps).to.include('./my-style4.css');
     });
   });
 });

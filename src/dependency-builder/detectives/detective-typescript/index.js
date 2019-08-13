@@ -2,6 +2,7 @@
  * this file had been forked from https://github.com/pahen/detective-typescript
  */
 import { getDependenciesFromMemberExpression, getDependenciesFromCallExpression } from '../parser-helper';
+import { isRelativeImport } from '../../../utils';
 
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
@@ -23,6 +24,10 @@ module.exports = function (src, options = {}) {
     if (!dependencies[dependency]) {
       dependencies[dependency] = {};
     }
+  };
+  const addAngularLocalDependency = (dependency) => {
+    const angularDep = isRelativeImport(dependency) ? dependency : `./${dependency}`;
+    addDependency(angularDep);
   };
   const addImportSpecifier = (dependency, importSpecifier) => {
     if (dependencies[dependency].importSpecifiers) {
@@ -106,14 +111,14 @@ module.exports = function (src, options = {}) {
           angularComponent.forEach((prop) => {
             if (!prop.key || !prop.value) return;
             if (prop.key.name === 'templateUrl' && prop.value.type === 'Literal') {
-              addDependency(prop.value.value);
+              addAngularLocalDependency(prop.value.value);
             }
             if (prop.key.name === 'styleUrl' && prop.value.type === 'Literal') {
-              addDependency(prop.value.value);
+              addAngularLocalDependency(prop.value.value);
             }
             if (prop.key.name === 'styleUrls' && prop.value.type === 'ArrayExpression') {
               const literalsElements = prop.value.elements.filter(e => e.type === 'Literal');
-              literalsElements.forEach(element => addDependency(element.value));
+              literalsElements.forEach(element => addAngularLocalDependency(element.value));
             }
           });
         }
