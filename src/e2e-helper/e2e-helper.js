@@ -814,7 +814,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
+    const sourceDir = path.join(this.getFixturesDir(), 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -840,7 +840,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
+    const sourceDir = path.join(this.getFixturesDir(), 'testers', dummyType);
     const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
 
@@ -874,7 +874,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+    const sourceDir = path.join(this.getFixturesDir(), 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -1134,11 +1134,11 @@ export default class Helper {
 
   // #region fixtures utils
   getFixturesDir() {
-    return path.join(__dirname, 'fixtures');
+    return path.join(__dirname, '../../e2e/fixtures');
   }
 
   copyFixtureComponents(dir: string = '', cwd: string = this.localScopePath) {
-    const sourceDir = path.join(__dirname, '../../e2e/fixtures', 'components', dir);
+    const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
   }
 
@@ -1147,7 +1147,7 @@ export default class Helper {
     newName: string = path.basename(pathToFile),
     cwd: string = this.localScopePath
   ) {
-    const sourceFile = path.join(__dirname, 'fixtures', pathToFile);
+    const sourceFile = path.join(this.getFixturesDir(), pathToFile);
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
