@@ -13,7 +13,9 @@
     "build": "babel src -d dist  --source-maps --verbose",
     "watch": "babel --watch src -d dist --source-maps --verbose",
     "prepublishOnly": "npm run clean && npm run build",
-    "build-debug": "babel src -d dist --source-maps"
+    "build-debug": "babel src -d dist --source-maps",
+    "pre-release": "gh-release --prerelease",
+    "release": "gh-release"
   },
   "bin": {
     "bitjs": "bin/bitjs.js"
