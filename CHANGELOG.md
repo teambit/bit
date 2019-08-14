@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1924](https://github.com/teambit/bit/issues/1924) avoid generating old dists files when using capsule compilers
+
 ## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
 ​
 ### New
