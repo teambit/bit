@@ -1,11 +1,12 @@
 /** @flow */
 import GraphLib from 'graphlib';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import type { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
 import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Component from '../../consumer/component/consumer-component';
+import { getLatestVersionNumber } from '../../utils';
 
 const Graph = GraphLib.Graph;
 
@@ -18,9 +19,14 @@ export type DependenciesInfo = {
 
 export default class DependencyGraph {
   graph: Graph;
+  scopeName: string;
 
   constructor(graph: Object) {
     this.graph = graph;
+  }
+
+  setScopeName(scopeName: string) {
+    this.scopeName = scopeName;
   }
 
   static async loadAllVersions(scope: Scope): Promise<DependencyGraph> {
@@ -132,7 +138,8 @@ export default class DependencyGraph {
   }
 
   getDependenciesInfo(id: BitId): DependenciesInfo[] {
-    const dijkstraResults = GraphLib.alg.dijkstra(this.graph, id.toString());
+    const idWithVersion = this._getIdWithLatestVersion(id);
+    const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString());
     const dependencies: DependenciesInfo[] = [];
     Object.keys(dijkstraResults).forEach((idStr) => {
       const distance = dijkstraResults[idStr].distance;
@@ -154,8 +161,9 @@ export default class DependencyGraph {
   }
 
   getDependentsInfo(id: BitId): DependenciesInfo[] {
+    const idWithVersion = this._getIdWithLatestVersion(id);
     const edgeFunc = v => this.graph.inEdges(v);
-    const dijkstraResults = GraphLib.alg.dijkstra(this.graph, id.toString(), undefined, edgeFunc);
+    const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString(), undefined, edgeFunc);
     const dependents: DependenciesInfo[] = [];
     Object.keys(dijkstraResults).forEach((idStr) => {
       const distance = dijkstraResults[idStr].distance;
@@ -174,6 +182,19 @@ export default class DependencyGraph {
     });
     dependents.sort((a, b) => a.depth - b.depth);
     return dependents;
+  }
+
+  _getIdWithLatestVersion(id: BitId): BitId {
+    if (id.hasVersion()) {
+      return id;
+    }
+    const nodes = this.graph.nodes();
+    const ids = nodes.filter(n => n.startsWith(id.toString()));
+    if (!ids.length) {
+      throw new Error(`failed finding ${id.toString()} in the graph`);
+    }
+    const bitIds = ids.map(idStr => this.graph.node(idStr));
+    return getLatestVersionNumber(BitIds.fromArray(bitIds), id);
   }
 
   getComponent(id: BitId): ModelComponent {

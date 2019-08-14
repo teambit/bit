@@ -2237,4 +2237,58 @@ console.log(barFoo.default());`;
       });
     });
   });
+  describe('import with --dependencies and --dependents flags', () => {
+    let scopeBeforeImport;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      helper.createFile('utils', 'bar-dep.js');
+      helper.createFile('bar', 'foo2.js', 'require("../utils/bar-dep");');
+      helper.addComponent('utils/bar-dep.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      scopeBeforeImport = helper.cloneLocalScope();
+    });
+    describe('import with --dependencies flag', () => {
+      before(() => {
+        helper.importComponent('bar/* --dependencies');
+      });
+      it('should import directly (not nested) all dependencies', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/bar-dep@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+      });
+    });
+    describe('import with --dependents flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        output = helper.importComponent('utils/is-type --dependents');
+      });
+      it('should import all dependents', () => {
+        expect(output).to.have.string('successfully imported 3 components');
+        expect(output).to.have.string(`${helper.remoteScope}/utils/is-string`);
+        expect(output).to.have.string(`${helper.remoteScope}/bar/foo`);
+      });
+      it('bit list should show them all', () => {
+        const list = helper.listLocalScope();
+        expect(list).to.have.string(`${helper.remoteScope}/utils/is-type`);
+        expect(list).to.have.string(`${helper.remoteScope}/utils/is-string`);
+        expect(list).to.have.string(`${helper.remoteScope}/bar/foo`);
+      });
+    });
+  });
 });

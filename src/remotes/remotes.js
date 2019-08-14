@@ -9,6 +9,7 @@ import remoteResolver from './remote-resolver/remote-resolver';
 import GlobalRemotes from '../global-config/global-remotes';
 import type Scope from '../scope/scope';
 import logger from '../logger/logger';
+import DependencyGraph from '../scope/graph/scope-graph';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -42,9 +43,9 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<ComponentObjects[]> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
-    const byScope = groupBy(prop('scope'));
+    const groupedIds = this._groupByScopeName(ids);
     const promises = [];
-    forEach(byScope(ids), (scopeIds, scopeName) => {
+    forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(
         this.resolve(scopeName, thisScope).then(remote =>
           remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context)
@@ -59,14 +60,36 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
-    const byScope = groupBy(prop('scope'));
+    const groupedIds = this._groupByScopeName(ids);
     const promises = [];
-    forEach(byScope(ids), (scopeIds, scopeName) => {
+    forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(this.resolve(scopeName, thisScope).then(remote => remote.latestVersions(scopeIds)));
     });
     const components = await Promise.all(promises);
     const flattenComponents = flatten(components);
     return flattenComponents.map(componentId => BitId.parse(componentId, true));
+  }
+
+  /**
+   * returns scope graphs of the given bit-ids.
+   * it is possible to improve it by returning only the connected-graph of the given id and not the
+   * entire scope graph. however, when asking for multiple ids in the same scope, which is more
+   * likely to happen, it'll harm the performance.
+   */
+  async scopeGraphs(ids: BitId[], thisScope: Scope): Promise<DependencyGraph[]> {
+    const groupedIds = this._groupByScopeName(ids);
+    const graphsP = Object.keys(groupedIds).map(async (scopeName) => {
+      const remote = await this.resolve(scopeName, thisScope);
+      const dependencyGraph = await remote.graph();
+      dependencyGraph.setScopeName(scopeName);
+      return dependencyGraph;
+    });
+    return Promise.all(graphsP);
+  }
+
+  _groupByScopeName(ids: BitId[]): { [scopeName: string]: BitId[] } {
+    const byScope = groupBy(prop('scope'));
+    return byScope(ids);
   }
 
   toPlainObject() {

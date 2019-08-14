@@ -52,7 +52,9 @@ export default class Import extends Command {
       'm',
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
-    ]
+    ],
+    ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
   ];
   loader = true;
   migration = true;
@@ -73,7 +75,9 @@ export default class Import extends Command {
       conf,
       skipNpmInstall = false,
       ignorePackageJson = false,
-      merge
+      merge,
+      dependencies = false,
+      dependents = false
     }: {
       tester?: boolean,
       compiler?: boolean,
@@ -88,7 +92,9 @@ export default class Import extends Command {
       conf?: string,
       skipNpmInstall?: boolean,
       ignorePackageJson?: boolean,
-      merge?: MergeStrategy
+      merge?: MergeStrategy,
+      dependencies?: boolean,
+      dependents?: boolean
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -127,7 +133,9 @@ export default class Import extends Command {
       writeDists: !ignoreDist,
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
-      writePackageJson: !ignorePackageJson
+      writePackageJson: !ignorePackageJson,
+      importDependenciesDirectly: dependencies,
+      importDependents: dependents
     };
     // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
     if (typeof conf === 'string') {
