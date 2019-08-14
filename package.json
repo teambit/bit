@@ -90,6 +90,7 @@
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.8.2",
     "flow-bin": "^0.75.0",
+    "gh-release": "^3.5.0",
     "husky": "^0.14.3",
     "lint-staged": "^7.1.0",
     "mocha": "^5.1.1",
