@@ -281,7 +281,10 @@ const _runBuild = async ({
         shouldBuildDependencies?: boolean
       }): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
         const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
-        const componentWithDependencies = await isolator.isolate(component.id, { shouldBuildDependencies });
+        const componentWithDependencies = await isolator.isolate(component.id, {
+          shouldBuildDependencies,
+          dist: false
+        });
         const writeDists = async (builtFiles, mainDist): Promise<void> => {
           const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
           capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
