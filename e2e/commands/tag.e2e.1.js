@@ -3,7 +3,7 @@
 import sinon from 'sinon';
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';

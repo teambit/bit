@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import R from 'ramda';
-import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 
 const assertArrays = require('chai-arrays');

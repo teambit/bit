@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import detectIndent from 'detect-indent';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';

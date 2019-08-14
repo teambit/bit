@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { ConsumerNotFound } from '../../src/consumer/exceptions';
 
 describe('bit remote command', function () {

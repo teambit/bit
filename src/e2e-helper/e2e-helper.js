@@ -10,16 +10,16 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../src/constants';
-import defaultErrorHandler from '../src/cli/default-error-handler';
-import * as fixtures from './fixtures/fixtures';
-import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
-import { removeChalkCharacters } from '../src/utils';
-import { FileStatus } from '../src/consumer/versions-ops/merge-version';
-import runInteractive from '../src/interactive/utils/run-interactive-cmd';
-import type { InteractiveInputs } from '../src/interactive/utils/run-interactive-cmd';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../constants';
+import defaultErrorHandler from '../cli/default-error-handler';
+import * as fixtures from '../../e2e/fixtures/fixtures';
+import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
+import { removeChalkCharacters } from '../utils';
+import { FileStatus } from '../consumer/versions-ops/merge-version';
+import runInteractive from '../interactive/utils/run-interactive-cmd';
+import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 
-export { INTERACTIVE_KEYS } from '../src/interactive/utils/run-interactive-cmd';
+export { INTERACTIVE_KEYS } from '../interactive/utils/run-interactive-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -1138,7 +1138,7 @@ export default class Helper {
   }
 
   copyFixtureComponents(dir: string = '', cwd: string = this.localScopePath) {
-    const sourceDir = path.join(__dirname, 'fixtures', 'components', dir);
+    const sourceDir = path.join(__dirname, '../../e2e/fixtures', 'components', dir);
     fs.copySync(sourceDir, cwd);
   }
 
