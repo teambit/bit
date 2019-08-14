@@ -7,13 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [2.1.1-dev.2] - 2019-08-13
-
-- [#1925](https://github.com/teambit/bit/issues/1925) fix Angular non-relative paths from decorators
-
-## [2.1.1-dev.1] - 2019-08-12
+## [2.1.1] - 2019-08-14
 
 - remove angular dependencies. use typescript compiler to parse Angular Decorators
+- [#1925](https://github.com/teambit/bit/issues/1925) fix Angular non-relative paths from decorators
 
 ## [2.1.0] - 2019-07-18
 
