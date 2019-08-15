@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import semver from 'semver';
 import chalk from 'chalk';
 import { NothingToImport } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
@@ -90,9 +91,28 @@ export default class ImportComponents {
       this.options.saveDependenciesAsComponents
     );
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
-    await this._writeToFileSystem(componentsWithDependencies);
+    const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
+    await this._writeToFileSystem(componentsWithDependenciesFiltered);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
-    return { dependencies: componentsWithDependencies, importDetails };
+    return { dependencies: componentsWithDependenciesFiltered, importDetails };
+  }
+
+  /**
+   * it can happen for example when importing a component with `--dependent` flag and the component has
+   * the same dependent with different versions. we only want the one with the higher version
+   */
+  _filterComponentsWithLowerVersions(
+    componentsWithDependencies: ComponentWithDependencies[]
+  ): ComponentWithDependencies[] {
+    return componentsWithDependencies.filter((comp) => {
+      const sameIdHigherVersion = componentsWithDependencies.find(
+        c =>
+          !c.component.id.isEqual(comp.component.id) &&
+          c.component.id.isEqualWithoutVersion(comp.component.id) &&
+          semver.gt(c.component.id.version, comp.component.id.version)
+      );
+      return !sameIdHigherVersion;
+    });
   }
 
   async _getBitIds(): Promise<BitIds> {
