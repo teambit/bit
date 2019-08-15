@@ -10,16 +10,16 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../src/constants';
-import defaultErrorHandler from '../src/cli/default-error-handler';
-import * as fixtures from './fixtures/fixtures';
-import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
-import { removeChalkCharacters } from '../src/utils';
-import { FileStatus } from '../src/consumer/versions-ops/merge-version';
-import runInteractive from '../src/interactive/utils/run-interactive-cmd';
-import type { InteractiveInputs } from '../src/interactive/utils/run-interactive-cmd';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../constants';
+import defaultErrorHandler from '../cli/default-error-handler';
+import * as fixtures from '../../e2e/fixtures/fixtures';
+import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
+import { removeChalkCharacters } from '../utils';
+import { FileStatus } from '../consumer/versions-ops/merge-version';
+import runInteractive from '../interactive/utils/run-interactive-cmd';
+import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 
-export { INTERACTIVE_KEYS } from '../src/interactive/utils/run-interactive-cmd';
+export { INTERACTIVE_KEYS } from '../interactive/utils/run-interactive-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -814,7 +814,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
+    const sourceDir = path.join(this.getFixturesDir(), 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -840,7 +840,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
+    const sourceDir = path.join(this.getFixturesDir(), 'testers', dummyType);
     const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
 
@@ -874,7 +874,7 @@ export default class Helper {
 
     this.initWorkspace(tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+    const sourceDir = path.join(this.getFixturesDir(), 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -1134,11 +1134,11 @@ export default class Helper {
 
   // #region fixtures utils
   getFixturesDir() {
-    return path.join(__dirname, 'fixtures');
+    return path.join(__dirname, '../../e2e/fixtures');
   }
 
   copyFixtureComponents(dir: string = '', cwd: string = this.localScopePath) {
-    const sourceDir = path.join(__dirname, 'fixtures', 'components', dir);
+    const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
   }
 
@@ -1147,7 +1147,7 @@ export default class Helper {
     newName: string = path.basename(pathToFile),
     cwd: string = this.localScopePath
   ) {
-    const sourceFile = path.join(__dirname, 'fixtures', pathToFile);
+    const sourceFile = path.join(this.getFixturesDir(), pathToFile);
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);

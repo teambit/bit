@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';

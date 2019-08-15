@@ -3,7 +3,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
-import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';

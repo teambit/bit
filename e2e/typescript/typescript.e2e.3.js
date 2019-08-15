@@ -3,7 +3,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../fixtures/fixtures';

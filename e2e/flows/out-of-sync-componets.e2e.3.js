@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusWorkspaceIsCleanMsg, importPendingMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';

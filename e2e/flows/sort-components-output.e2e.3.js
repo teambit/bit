@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 /**
  * expect the components 'bar/foo', 'utils/is-string', 'utils/is-type' to be sorted in this order

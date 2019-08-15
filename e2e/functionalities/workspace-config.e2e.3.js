@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 

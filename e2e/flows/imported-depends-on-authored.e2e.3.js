@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 
 describe('imported component that depends on authored component', function () {

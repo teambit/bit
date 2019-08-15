@@ -3,7 +3,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 
 const helper = new Helper();
 const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";

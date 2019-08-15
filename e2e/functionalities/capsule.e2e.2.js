@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';
