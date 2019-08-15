@@ -2237,4 +2237,109 @@ console.log(barFoo.default());`;
       });
     });
   });
+  describe('import with --dependencies and --dependents flags', () => {
+    let scopeBeforeImport;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      helper.createFile('utils', 'bar-dep.js');
+      helper.createFile('bar', 'foo2.js', 'require("../utils/bar-dep");');
+      helper.addComponent('utils/bar-dep.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      scopeBeforeImport = helper.cloneLocalScope();
+    });
+    describe('import with --dependencies flag', () => {
+      before(() => {
+        helper.importComponent('bar/* --dependencies');
+      });
+      it('should import directly (not nested) all dependencies', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+        expect(bitMap)
+          .to.have.property(`${helper.remoteScope}/bar-dep@0.0.1`)
+          .that.has.property('origin')
+          .equal('IMPORTED');
+      });
+    });
+    describe('import with --dependents flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        output = helper.importComponent('utils/is-type --dependents');
+      });
+      it('should import all dependents', () => {
+        expect(output).to.have.string('successfully imported 3 components');
+        expect(output).to.have.string(`${helper.remoteScope}/utils/is-string`);
+        expect(output).to.have.string(`${helper.remoteScope}/bar/foo`);
+      });
+      it('bit list should show them all', () => {
+        const list = helper.listLocalScope();
+        expect(list).to.have.string(`${helper.remoteScope}/utils/is-type`);
+        expect(list).to.have.string(`${helper.remoteScope}/utils/is-string`);
+        expect(list).to.have.string(`${helper.remoteScope}/bar/foo`);
+      });
+    });
+  });
+  // is-type has bar/foo@0.0.1 as an indirect dependent and bar/foo@0.0.1 as a direct dependent
+  describe('component with different versions of the same dependent', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      helper.tagAllComponents();
+      helper.createComponentBarFoo("require('../utils/is-type.js')");
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+    });
+    it('bit show of the remote scope should show both versions of the dependent', () => {
+      const show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-type --remote --dependents`);
+      expect(show.dependentsInfo).to.have.lengthOf(3);
+      const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
+      const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
+      expect(barFooV1).to.not.be.undefined;
+      expect(barFooV2).to.not.be.undefined;
+      expect(barFooV1)
+        .to.have.property('depth')
+        .that.equals(2);
+      expect(barFooV2)
+        .to.have.property('depth')
+        .that.equals(1);
+    });
+    describe('import the component with "--dependents" flag', () => {
+      before(() => {
+        helper.importComponent('utils/is-type --dependents');
+      });
+      it('should import the dependent only once and with the highest version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
+        expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+      });
+      it('bit show of the local scope show both versions of the dependent', () => {
+        const show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-type --dependents`);
+        expect(show.dependentsInfo).to.have.lengthOf(3);
+        const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
+        const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
+        expect(barFooV1).to.not.be.undefined;
+        expect(barFooV2).to.not.be.undefined;
+        expect(barFooV1)
+          .to.have.property('depth')
+          .that.equals(2);
+        expect(barFooV2)
+          .to.have.property('depth')
+          .that.equals(1);
+      });
+    });
+  });
 });

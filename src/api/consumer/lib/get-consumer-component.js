@@ -3,7 +3,6 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
-import ComponentsList from '../../../consumer/component/components-list';
 
 export default (async function getConsumerBit({
   id,
@@ -29,9 +28,7 @@ export default (async function getConsumerBit({
   let dependenciesInfo: DependenciesInfo[] = [];
   let dependentsInfo: DependenciesInfo[] = [];
   if (showDependents || showDependencies) {
-    const componentsList = new ComponentsList(consumer);
-    const allComponents = await componentsList.getFromFileSystem();
-    const graph = DependencyGraph.buildGraphFromComponents(allComponents);
+    const graph = await DependencyGraph.buildGraphFromWorkspace(consumer);
     const dependencyGraph = new DependencyGraph(graph);
     const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(component.id);
     const componentDepGraph = new DependencyGraph(componentGraph);

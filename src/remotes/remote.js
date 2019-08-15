@@ -57,7 +57,7 @@ export default class Remote {
     return this.connect().then(network => network.show(bitId));
   }
 
-  graph(bitId?: BitId): Promise<DependencyGraph> {
+  graph(bitId?: ?BitId): Promise<DependencyGraph> {
     return this.connect().then(network => network.graph(bitId));
   }
 
