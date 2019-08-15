@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('component that requires another component file by relative path', function () {
   this.timeout(0);

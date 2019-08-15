@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 const maxComponents = 3000;
 const maxFlattenedDependencies = 100;

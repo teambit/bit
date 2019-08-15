@@ -100,7 +100,7 @@ src/scope/component-remove.js
 src/extensions/extension.js
 src/scope/models/model-component.js
 src/consumer/consumer.js
-e2e/e2e-helper.js
+src/e2e-helper/e2e-helper.js
 src/consumer/component/consumer-component.js
 src/scope/scope.js
 src/api/consumer/lib/global-config.js

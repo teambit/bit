@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import { VersionNotFound } from '../../src/scope/exceptions';
 import * as fixtures from '../fixtures/fixtures';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';

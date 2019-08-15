@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('reduce-path functionality (eliminate the original shared-dir among component files and its dependencies)', function () {
   this.timeout(0);

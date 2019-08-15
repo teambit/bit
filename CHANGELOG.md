@@ -8,32 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
+- [#1924](https://github.com/teambit/bit/issues/1924) avoid generating old dists files when using capsule compilers
 
-## [14.2.4-dev.7] - 2019-08-13
-
-- remove Angular dependencies from bit-javascript, instead, use TS compiler to parse Angular Decorators
-- improve interactive behavior when ssh connection failed
-- improve interactive texts
-- change init interactive to be false by default
-
-## [14.2.4-dev.6] - 2019-08-12
-
-- fix init --bare with name
-
-## [14.2.4-dev.5] - 2019-08-11
-
-- safer access to bit global config
-
-
-## [14.2.4-dev.3] - 2019-08-11
-
-- added `no_warnings` config to eliminate some warnings from being written to the stdout
-
-## [14.2.4-dev.2] - 2019-08-11
-
-- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit show` to display them all recursively
-- [#1903](https://github.com/teambit/bit/issues/1903) fix importing dependents to not override dependencies
-- [#1889](https://github.com/teambit/bit/issues/1889) auto add `@types/package-name` to the dependencies of TS components
 ## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
 ​
 ### New

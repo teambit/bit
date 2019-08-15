@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper, { INTERACTIVE_KEYS } from '../e2e-helper';
+import Helper, { INTERACTIVE_KEYS } from '../../src/e2e-helper/e2e-helper';
 import {
   DEFAULT_DIR_MSG_Q,
   PACKAGE_MANAGER_MSG_Q,

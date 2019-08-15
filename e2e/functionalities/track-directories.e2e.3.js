@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 
 //  track directories functionality = add/rename files to rootDir or trackDir

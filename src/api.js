@@ -6,6 +6,7 @@ import { scopeList } from './api/scope/index';
 import Extension from './extensions/extension';
 import HooksManager from './hooks';
 import type { BaseLoadArgsProps } from './extensions/base-extension';
+import Helper from './e2e-helper/e2e-helper';
 
 HooksManager.init();
 
@@ -28,5 +29,6 @@ module.exports = {
   loadExtension: async (args: BaseLoadArgsProps): Promise<Extension> => {
     const extension = await Extension.load(args);
     return Promise.resolve(extension);
-  }
+  },
+  e2eTestHelper: Helper
 };
