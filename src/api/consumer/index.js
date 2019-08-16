@@ -32,6 +32,7 @@ import ejectAction from './lib/eject';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
 import show from './lib/show';
+import paintGraph from './lib/paint-graph';
 
 export {
   init,
@@ -73,5 +74,6 @@ export {
   migrate,
   ejectAction,
   login,
-  show
+  show,
+  paintGraph
 };
