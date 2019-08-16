@@ -23,7 +23,7 @@ export default (async function paintGraph(id: string, options: Object): Promise<
   const config = {};
   if (layout) config.layout = layout;
   const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
-  if (id) {
+  if (bitId) {
     visualDependencyGraph.highlightId(bitId);
   }
   const result = await visualDependencyGraph.image(image);
