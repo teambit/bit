@@ -76,7 +76,7 @@ describe('bit diff command', function () {
           expect(diffOutput).to.have.string("+module.exports = function foo() { return 'got foo v2'; };");
         });
         it('should show a success message also when running from an inner directory', () => {
-          const outputInner = helper.command.runCmd('bit diff bar/foo', path.join(helper.scopes.localScopePath, 'bar'));
+          const outputInner = helper.command.runCmd('bit diff bar/foo', path.join(helper.scopes.localPath, 'bar'));
           expect(outputInner).to.have.string(successDiffMessage);
         });
         describe('when git path is configured incorrectly', () => {
@@ -152,7 +152,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'foo2.js', barFooV2);
-      fs.removeSync(path.join(helper.scopes.localScopePath, 'bar/foo.js'));
+      fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
       helper.command.addComponent('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
       helper.command.runCmd('bit status'); // to clean bitmap file
       output = helper.command.diff('bar/foo');

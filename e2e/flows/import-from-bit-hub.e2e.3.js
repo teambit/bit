@@ -12,7 +12,7 @@ chai.use(require('chai-fs'));
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
-  const barFooDir = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo');
+  const barFooDir = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
   let scopeName;
   let scopeId;
   let componentTestId;
@@ -66,7 +66,7 @@ chai.use(require('chai-fs'));
       helper.command.runCmd(`bit import ${componentTestId}`);
     });
     it('should not save the dependencies as bit components inside the component directory', () => {
-      expect(path.join(helper.scopes.localScopePath, 'components', '.dependencies')).to.not.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'components', '.dependencies')).to.not.be.a.path();
     });
     it('should not write the dependencies in bit.map', () => {
       const bitMap = helper.bitMap.readBitMap();
@@ -80,7 +80,7 @@ chai.use(require('chai-fs'));
     });
     it('should generate all the links correctly and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -93,9 +93,7 @@ chai.use(require('chai-fs'));
       expect(output.includes('bar/foo')).to.be.false;
     });
     it('should save the package name with the binding-prefix', () => {
-      const barFooPackageJson = helper.packageJson.read(
-        path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo')
-      );
+      const barFooPackageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components', 'bar', 'foo'));
       expect(barFooPackageJson.name).to.equal(`@bit/${scopeId}.bar.foo`);
     });
     it('should save the imported component as a dependency in the package.json of the project', () => {
@@ -112,7 +110,7 @@ chai.use(require('chai-fs'));
       helper.command.runCmd(`bit import ${componentTestId}`);
     });
     it('should save the dependencies as bit components inside the component directory', () => {
-      expect(path.join(helper.scopes.localScopePath, 'components', '.dependencies')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'components', '.dependencies')).to.be.a.path();
     });
     it('should write the dependencies in bit.map', () => {
       const bitMap = helper.bitMap.readBitMap();
@@ -126,7 +124,7 @@ chai.use(require('chai-fs'));
     });
     it('should generate all the links correctly and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -141,7 +139,7 @@ chai.use(require('chai-fs'));
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -154,7 +152,7 @@ chai.use(require('chai-fs'));
       });
       it('should generate all the links in the dists dir correctly and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo-es6'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -167,10 +165,10 @@ chai.use(require('chai-fs'));
       helper.command.runCmd(`bit import ${scopeId}/utils/is-type`); // import is-type directly
 
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
     });
     it('should update the package.json of the dependent with relative-path of the dependency', () => {
-      const isStringDir = path.join(helper.scopes.localScopePath, 'components', 'utils', 'is-string');
+      const isStringDir = path.join(helper.scopes.localPath, 'components', 'utils', 'is-string');
       const packageJsonIsString = helper.packageJson.read(isStringDir);
       expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
     });
@@ -224,13 +222,13 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
         helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
       });
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
-        const isStringDir = path.join(helper.scopes.localScopePath, 'components', 'utils', 'is-string');
+        const isStringDir = path.join(helper.scopes.localPath, 'components', 'utils', 'is-string');
         const packageJsonIsString = helper.packageJson.read(isStringDir);
         expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
       });
       it('should affect its dependent', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });

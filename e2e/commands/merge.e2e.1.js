@@ -89,7 +89,7 @@ describe('bit merge command', function () {
     });
     describe('as authored', () => {
       before(() => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFooAuthor);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFooAuthor);
       });
       it('as an intermediate step, make sure all components have v2', () => {
         const result = helper.command.runCmd('node app.js');
@@ -133,13 +133,13 @@ describe('bit merge command', function () {
           expect(statusOutput).to.have.string('modified components');
         });
         it('should not write package.json file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'package.json')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'package.json')).to.not.be.a.path();
         });
         it('should not create node_modules directory', () => {
-          expect(path.join(helper.scopes.localScopePath, 'node_modules')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'node_modules')).to.not.be.a.path();
         });
         it('should not write package-lock.json file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'package-lock.json')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'package-lock.json')).to.not.be.a.path();
         });
       });
     });
@@ -152,7 +152,7 @@ describe('bit merge command', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
 
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
         localScopeAfterImport = helper.scopeHelper.cloneLocalScope();
       });
       it('as an intermediate step, make sure all components have v2', () => {
@@ -186,19 +186,19 @@ describe('bit merge command', function () {
           expect(output).to.not.have.string('.dependencies');
         });
         it('should not change the bitmap file', () => {
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/bar/foo@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/bar/foo@0.0.1`);
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-string@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-string@0.0.1`);
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-string@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-string@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
         it('should show the component as modified', () => {
           const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
         });
         it('should not write bit.json file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components/bar/foo/bit.json')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).not.to.be.a.path();
         });
       });
       describe('merging a previous version of the main component when modified', () => {
@@ -273,7 +273,7 @@ describe('bit merge command', function () {
           helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not delete the bit.json file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).to.be.a.path();
         });
       });
       describe('merging a version when import did not write package.json file', () => {
@@ -283,7 +283,7 @@ describe('bit merge command', function () {
           helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not write package.json file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
         });
       });
     });
@@ -311,13 +311,13 @@ describe('bit merge command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.manual);
       });
       it('should rewrite the file with the conflict with the conflicts segments', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.have.string('<<<<<<<');
         expect(fileContent).to.have.string('>>>>>>>');
         expect(fileContent).to.have.string('=======');
       });
       it('should label the conflicts segments according to the versions', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.have.string('<<<<<<< 0.0.2'); // current-change
         expect(fileContent).to.have.string('>>>>>>> 0.0.1'); // incoming-change
       });
@@ -345,7 +345,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.updated);
       });
       it('should rewrite the file according to the merged version', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should not update bitmap', () => {
@@ -374,7 +374,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
       });
       it('should leave the file intact', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(barFooV2);
       });
       it('should not update bitmap', () => {
@@ -414,7 +414,7 @@ describe('bit merge command', function () {
           expect(files[1].relativePath).to.equal('bar/foo2.js');
         });
         it('should not delete the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
       });
       describe('using theirs strategy', () => {
@@ -437,7 +437,7 @@ describe('bit merge command', function () {
           expect(files[1].relativePath).to.equal('bar/foo2.js');
         });
         it('should not delete the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
         it('should show the component as modified', () => {
           const statusOutput = helper.command.runCmd('bit status');
@@ -463,7 +463,7 @@ describe('bit merge command', function () {
           expect(files[1].relativePath).to.equal('bar/foo2.js');
         });
         it('should not delete the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
       });
     });
@@ -474,7 +474,7 @@ describe('bit merge command', function () {
         helper.fs.createFile('bar', 'foo2.js');
         helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
         helper.command.tagAllComponents(); // 0.0.3
-        fs.removeSync(path.join(helper.scopes.localScopePath, 'bar/foo2.js'));
+        fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo2.js'));
         helper.fixtures.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
         helper.command.tagAllComponents(); // 0.0.4 without bar/foo2.js
         scopeWithRemovedFile = helper.scopeHelper.cloneLocalScope();
@@ -497,7 +497,7 @@ describe('bit merge command', function () {
           expect(files[1].relativePath).to.equal('bar/foo2.js');
         });
         it('should add the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
       });
       describe('using theirs strategy', () => {
@@ -519,7 +519,7 @@ describe('bit merge command', function () {
           expect(files[1].relativePath).to.equal('bar/foo2.js');
         });
         it('should add the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
         });
         it('should show the component as modified', () => {
           const statusOutput = helper.command.runCmd('bit status');
@@ -544,7 +544,7 @@ describe('bit merge command', function () {
           expect(files[0].relativePath).to.equal('bar/foo.js');
         });
         it('should not add the file', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar/foo2.js')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.not.be.a.path();
         });
       });
     });
@@ -566,7 +566,7 @@ describe('bit merge command', function () {
       let fileContent;
       before(() => {
         output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
-        fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -611,7 +611,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.updated);
       });
       it('should rewrite the file according to the merged version', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should show the component as modified', () => {
@@ -634,7 +634,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
       });
       it('should leave the file intact', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(barFooV3);
       });
       it('should not change bitmap', () => {
@@ -668,7 +668,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should not change the file content', () => {
-        const fileContent = fs.readFileSync(path.join(helper.scopes.localScopePath, 'bar/foo.js')).toString();
+        const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should not change bitmap', () => {

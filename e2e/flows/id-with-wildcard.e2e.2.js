@@ -114,16 +114,15 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () =>
-            helper.command.removeComponent(`${helper.scopes.remoteScope}/none/* --silent --remote`);
-          const error = new NoIdMatchWildcard([`${helper.scopes.remoteScope}/none/*`]);
+          const removeFunc = () => helper.command.removeComponent(`${helper.scopes.remote}/none/* --silent --remote`);
+          const error = new NoIdMatchWildcard([`${helper.scopes.remote}/none/*`]);
           helper.general.expectToThrow(removeFunc, error);
         });
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remoteScope}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --silent --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -141,7 +140,7 @@ describe('component id with wildcard', function () {
         helper.scopeHelper.reInitRemoteScope();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.command.removeComponent(`${helper.scopes.remoteScope}/* -s`);
+        helper.command.removeComponent(`${helper.scopes.remote}/* -s`);
 
         // as an intermediate step, make sure the remote scope has all components
         const ls = helper.command.listRemoteScopeParsed();
@@ -154,7 +153,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remoteScope}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --silent --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');

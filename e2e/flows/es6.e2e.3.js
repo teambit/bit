@@ -22,7 +22,7 @@ describe('es6 components', function () {
     });
     it('the generated dependency link should not have duplicates', () => {
       const dependencyLink = helper.fs.readFile('components/bar/foo/utils/index.js');
-      const requireStatement = `require('@bit/${helper.scopes.remoteScope}.index');`;
+      const requireStatement = `require('@bit/${helper.scopes.remote}.index');`;
       const numOfOccurrences = dependencyLink.split(requireStatement).length - 1;
       expect(numOfOccurrences).to.equal(1);
     });

@@ -14,7 +14,7 @@ export default class BitMapHelper {
     this.fs = fsHelper;
   }
 
-  readBitMap(bitMapPath: string = path.join(this.scopes.localScopePath, BIT_MAP), withoutComment: boolean = true) {
+  readBitMap(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     // $FlowFixMe
     return json.parse(map.toString('utf8'), null, withoutComment);
@@ -27,14 +27,14 @@ export default class BitMapHelper {
   }
 
   writeBitMap(bitMap: Object) {
-    const bitMapPath = path.join(this.scopes.localScopePath, BIT_MAP);
+    const bitMapPath = path.join(this.scopes.localPath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   deleteBitMap() {
     return this.fs.deletePath(BIT_MAP);
   }
   createBitMap(
-    cwd: string = this.scopes.localScopePath,
+    cwd: string = this.scopes.localPath,
     // $FlowFixMe
     componentObject = {
       'bar/foo': {

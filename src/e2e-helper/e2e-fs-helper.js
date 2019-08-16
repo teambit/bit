@@ -15,42 +15,42 @@ export default class FsHelper {
 
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
     return glob
-      .sync(path.normalize(`**/${ext}`), { cwd: this.scopes.localScopePath, dot: includeDot })
+      .sync(path.normalize(`**/${ext}`), { cwd: this.scopes.localPath, dot: includeDot })
       .map(x => path.normalize(x));
   }
   getObjectFiles() {
-    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localScopePath, '.bit/objects') });
+    return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
   }
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
-    const filePath = path.join(this.scopes.localScopePath, folder, name);
+    const filePath = path.join(this.scopes.localPath, folder, name);
     fs.outputFileSync(filePath, impl);
   }
 
   createJsonFile(filePathRelativeToLocalScope: string, jsonContent: string) {
-    const filePath = path.join(this.scopes.localScopePath, filePathRelativeToLocalScope);
+    const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
     ensureAndWriteJson(filePath, jsonContent);
   }
 
   createFileOnRootLevel(name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
-    const filePath = path.join(this.scopes.localScopePath, name);
+    const filePath = path.join(this.scopes.localPath, name);
     fs.outputFileSync(filePath, impl);
   }
 
   readFile(filePathRelativeToLocalScope: string): string {
-    return fs.readFileSync(path.join(this.scopes.localScopePath, filePathRelativeToLocalScope)).toString();
+    return fs.readFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).toString();
   }
 
   readJsonFile(filePathRelativeToLocalScope: string): string {
-    return fs.readJsonSync(path.join(this.scopes.localScopePath, filePathRelativeToLocalScope));
+    return fs.readJsonSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
   outputFile(filePathRelativeToLocalScope: string, data: string = ''): string {
-    return fs.outputFileSync(path.join(this.scopes.localScopePath, filePathRelativeToLocalScope), data);
+    return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
 
   moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {
-    const src = path.join(this.scopes.localScopePath, srcPathRelativeToLocalScope);
-    const dest = path.join(this.scopes.localScopePath, destPathRelativeToLocalScope);
+    const src = path.join(this.scopes.localPath, srcPathRelativeToLocalScope);
+    const dest = path.join(this.scopes.localPath, destPathRelativeToLocalScope);
     return fs.moveSync(src, dest);
   }
 
@@ -63,7 +63,7 @@ export default class FsHelper {
   }
 
   deletePath(relativePathToLocalScope: string) {
-    return fs.removeSync(path.join(this.scopes.localScopePath, relativePathToLocalScope));
+    return fs.removeSync(path.join(this.scopes.localPath, relativePathToLocalScope));
   }
 
   createNewDirectory() {
@@ -75,7 +75,7 @@ export default class FsHelper {
   }
 
   createNewDirectoryInLocalWorkspace(dirPath: string) {
-    const newDirPath = path.join(this.scopes.localScopePath, dirPath);
+    const newDirPath = path.join(this.scopes.localPath, dirPath);
     fs.ensureDirSync(newDirPath);
     return newDirPath;
   }

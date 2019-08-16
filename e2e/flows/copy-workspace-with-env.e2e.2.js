@@ -22,7 +22,7 @@ describe('copy workspace with env', function () {
 
       copiedPath = helper.scopeHelper.cloneLocalScope();
       // remove the original workspace so then symlinks get invalid
-      fs.removeSync(helper.scopes.localScopePath);
+      fs.removeSync(helper.scopes.localPath);
     });
     it('bit status should throw an exception', () => {
       const func = () => helper.command.runCmd('bit status', copiedPath);

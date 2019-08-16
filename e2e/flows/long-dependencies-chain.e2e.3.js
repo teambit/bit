@@ -49,7 +49,7 @@ describe('flow of a long-dependencies-chain', function () {
         const lastComponent = `bar${sizeOfChain - 1}/foo${sizeOfChain - 1}`;
         helper.command.importComponent(lastComponent);
         const appJsFixture = `const barFoo = require('./components/${lastComponent}'); console.log(barFoo());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         const arrayOfSizeOfChain = [...Array(sizeOfChain).keys()];
         const expectedResult = arrayOfSizeOfChain.map(num => `got foo${num}`).join(' and ');

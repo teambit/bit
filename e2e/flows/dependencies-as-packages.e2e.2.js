@@ -63,13 +63,11 @@ chai.use(require('chai-fs'));
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -86,12 +84,12 @@ chai.use(require('chai-fs'));
           afterImportScope = helper.scopeHelper.cloneLocalScope();
         });
         it('should not create .dependencies directory', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components/.dependencies')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/.dependencies')).to.not.be.a.path();
         });
         it('should install the dependencies using NPM', () => {
-          const basePath = path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules/@ci');
-          expect(path.join(basePath, `${helper.scopes.remoteScope}.utils.is-string`, 'is-string.js')).to.be.a.file();
-          expect(path.join(basePath, `${helper.scopes.remoteScope}.utils.is-type`, 'is-type.js')).to.be.a.file();
+          const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
           const output = helper.command.runCmd('bit status');
@@ -99,7 +97,7 @@ chai.use(require('chai-fs'));
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -108,12 +106,12 @@ chai.use(require('chai-fs'));
             helper.command.checkout('0.0.1 bar/foo');
           });
           it('should not create .dependencies directory', () => {
-            expect(path.join(helper.scopes.localScopePath, 'components/.dependencies')).to.not.be.a.path();
+            expect(path.join(helper.scopes.localPath, 'components/.dependencies')).to.not.be.a.path();
           });
           it('should install the dependencies using NPM', () => {
-            const basePath = path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules/@ci');
-            expect(path.join(basePath, `${helper.scopes.remoteScope}.utils.is-string`, 'is-string.js')).to.be.a.file();
-            expect(path.join(basePath, `${helper.scopes.remoteScope}.utils.is-type`, 'is-type.js')).to.be.a.file();
+            const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
@@ -121,7 +119,7 @@ chai.use(require('chai-fs'));
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
@@ -135,9 +133,9 @@ chai.use(require('chai-fs'));
           it('should write the correct scope in the package.json file', () => {
             const packageJson = helper.packageJson.read();
             const packages = Object.keys(packageJson.dependencies);
-            expect(packages).to.include(`@ci/${helper.scopes.remoteScope}.bar.foo`);
-            expect(packages).to.include(`@ci/${helper.scopes.remoteScope}.utils.is-string`);
-            expect(packages).to.include(`@ci/${helper.scopes.remoteScope}.utils.is-type`);
+            expect(packages).to.include(`@ci/${helper.scopes.remote}.bar.foo`);
+            expect(packages).to.include(`@ci/${helper.scopes.remote}.utils.is-string`);
+            expect(packages).to.include(`@ci/${helper.scopes.remote}.utils.is-type`);
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
@@ -153,7 +151,7 @@ chai.use(require('chai-fs'));
             });
             it('should be able to require its direct dependency and print results from all dependencies', () => {
               const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-type and got is-string and got foo');
             });
@@ -163,14 +161,14 @@ chai.use(require('chai-fs'));
           describe('when using caret (^) in the version', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(afterImportScope);
-              const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+              const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
               const packageJson = helper.packageJson.read(barFooDir);
-              packageJson.dependencies[`@ci/${helper.scopes.remoteScope}.utils.is-string`] = '^1.0.0';
+              packageJson.dependencies[`@ci/${helper.scopes.remote}.utils.is-string`] = '^1.0.0';
               helper.packageJson.write(packageJson, barFooDir);
             });
             it('should show the dependency version from the package.json', () => {
               const barFoo = helper.command.showComponentParsed('bar/foo');
-              expect(barFoo.dependencies[0].id).to.equal(`${helper.scopes.remoteScope}/utils/is-string@1.0.0`);
+              expect(barFoo.dependencies[0].id).to.equal(`${helper.scopes.remote}/utils/is-string@1.0.0`);
             });
           });
           describe('when importing also the dependency so the package.json has a different version than the model', () => {
@@ -178,26 +176,26 @@ chai.use(require('chai-fs'));
               helper.scopeHelper.getClonedLocalScope(beforeImportScope);
               helper.command.importComponent('bar/foo');
               helper.command.importComponent('utils/is-string');
-              const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+              const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
               const packageJson = helper.packageJson.read(barFooDir);
-              packageJson.dependencies[`@ci/${helper.scopes.remoteScope}.utils.is-string`] = '0.0.1';
+              packageJson.dependencies[`@ci/${helper.scopes.remote}.utils.is-string`] = '0.0.1';
               helper.packageJson.write(packageJson, barFooDir);
             });
             it('should show the dependency version from the package.json', () => {
               const barFoo = helper.command.showComponentParsed('bar/foo');
-              expect(barFoo.dependencies[0].id).to.equal(`${helper.scopes.remoteScope}/utils/is-string@0.0.1`);
+              expect(barFoo.dependencies[0].id).to.equal(`${helper.scopes.remote}/utils/is-string@0.0.1`);
             });
             it('bit diff should show the dependencies ', () => {
               const diff = helper.command.diff('bar/foo');
-              expect(diff).to.have.string(`- [ ${helper.scopes.remoteScope}/utils/is-string@0.0.2 ]`);
-              expect(diff).to.have.string(`+ [ ${helper.scopes.remoteScope}/utils/is-string@0.0.1 ]`);
+              expect(diff).to.have.string(`- [ ${helper.scopes.remote}/utils/is-string@0.0.2 ]`);
+              expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/utils/is-string@0.0.1 ]`);
             });
             describe('tagging the component', () => {
               before(() => {
                 helper.command.tagAllComponents();
               });
               it('should save the version from package.json into the scope', () => {
-                const barFoo = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo@latest`);
+                const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
                 expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
               });
               it('bit status should not show the component as modified', () => {
@@ -214,10 +212,8 @@ chai.use(require('chai-fs'));
               helper.command.importManyComponents(['bar/foo', 'utils/is-string']);
             });
             it('should write the path of the dependency into the dependent package.json instead of the version', () => {
-              const packageJson = helper.packageJson.read(
-                path.join(helper.scopes.localScopePath, 'components/bar/foo')
-              );
-              expect(packageJson.dependencies[`@ci/${helper.scopes.remoteScope}.utils.is-string`]).to.equal(
+              const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
+              expect(packageJson.dependencies[`@ci/${helper.scopes.remote}.utils.is-string`]).to.equal(
                 'file:../../utils/is-string'
               );
             });
@@ -228,10 +224,8 @@ chai.use(require('chai-fs'));
               helper.command.importManyComponents(['utils/is-string', 'bar/foo']);
             });
             it('should write the path of the dependency into the dependent package.json instead of the version', () => {
-              const packageJson = helper.packageJson.read(
-                path.join(helper.scopes.localScopePath, 'components/bar/foo')
-              );
-              expect(packageJson.dependencies[`@ci/${helper.scopes.remoteScope}.utils.is-string`]).to.equal(
+              const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
+              expect(packageJson.dependencies[`@ci/${helper.scopes.remote}.utils.is-string`]).to.equal(
                 'file:../../utils/is-string'
               );
             });
@@ -274,13 +268,11 @@ chai.use(require('chai-fs'));
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -300,7 +292,7 @@ chai.use(require('chai-fs'));
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -332,11 +324,11 @@ chai.use(require('chai-fs'));
               helper.command.runCmd('bit link');
             });
             it('should recreate the symlink with the correct path', () => {
-              const expectedDest = path.join(helper.scopes.localScopePath, symlinkPath);
+              const expectedDest = path.join(helper.scopes.localPath, symlinkPath);
               expect(expectedDest).to.be.a.path();
               const symlinkValue = fs.readlinkSync(expectedDest);
               expect(symlinkValue).to.have.string(
-                path.join(helper.scopes.localScope, 'components/bar/foo/node_modules/@ci')
+                path.join(helper.scopes.local, 'components/bar/foo/node_modules/@ci')
               );
             });
           });

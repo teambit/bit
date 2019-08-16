@@ -29,7 +29,7 @@ describe('imported component that depends on authored component', function () {
       helper.env.importCompiler();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      const fixture = `require('@bit/${helper.scopes.remoteScope}.utils.is-type');`;
+      const fixture = `require('@bit/${helper.scopes.remote}.utils.is-type');`;
       helper.fs.createFile('components/utils/is-string', 'is-string.js', fixture);
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

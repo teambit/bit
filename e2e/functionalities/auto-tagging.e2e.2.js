@@ -55,7 +55,7 @@ describe('auto tagging functionality', function () {
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         // notice the "v2" (!)
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
@@ -110,7 +110,7 @@ describe('auto tagging functionality', function () {
         helper.command.importComponent('utils/is-string');
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
       });
@@ -258,7 +258,7 @@ describe('auto tagging functionality', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should use the updated dependencies and print the results from the latest versions', () => {
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
           const result = helper.command.runCmd('node app.js');
           // notice the "v2" (!)
           expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
@@ -303,7 +303,7 @@ describe('auto tagging functionality', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
 
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo'); // notice the "v2"
       });
@@ -332,10 +332,10 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show only the IMPORTED dependents of the modified component as auto-tag pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remoteScope}/bar/c`);
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remoteScope}/bar/d`);
-      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remoteScope}/bar/b`); // it's nested
-      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remoteScope}/bar/a`); // it's a dependent via nested
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/c`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/d`);
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remote}/bar/b`); // it's nested
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remote}/bar/a`); // it's a dependent via nested
     });
     describe('after tagging the components', () => {
       let tagOutput;
@@ -350,27 +350,27 @@ describe('auto tagging functionality', function () {
         expect(tagOutput).to.not.have.string('bar/a');
       });
       it('should update the dependencies and the flattenedDependencies of the IMPORTED dependents with the new versions', () => {
-        const barC = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/c@latest`);
+        const barC = helper.command.catComponent(`${helper.scopes.remote}/bar/c@latest`);
         expect(barC.dependencies[0].id.name).to.equal('bar/d');
         expect(barC.dependencies[0].id.version).to.equal('0.0.2');
 
         expect(barC.flattenedDependencies).to.deep.include({
-          scope: helper.scopes.remoteScope,
+          scope: helper.scopes.remote,
           name: 'bar/d',
           version: '0.0.2'
         });
         expect(barC.flattenedDependencies).to.deep.include({
-          scope: helper.scopes.remoteScope,
+          scope: helper.scopes.remote,
           name: 'bar/e',
           version: '0.0.2'
         });
 
-        const barD = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/d@latest`);
+        const barD = helper.command.catComponent(`${helper.scopes.remote}/bar/d@latest`);
         expect(barD.dependencies[0].id.name).to.equal('bar/e');
         expect(barD.dependencies[0].id.version).to.equal('0.0.2');
 
         expect(barD.flattenedDependencies).to.deep.include({
-          scope: helper.scopes.remoteScope,
+          scope: helper.scopes.remote,
           name: 'bar/e',
           version: '0.0.2'
         });
@@ -458,8 +458,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show the auto-tagged pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remoteScope}/bar/a`);
-      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remoteScope}/bar/b`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/a`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remote}/bar/b`);
     });
     describe('tagging the dependency', () => {
       let tagOutput;
@@ -469,7 +469,7 @@ describe('auto tagging functionality', function () {
       it('should bump the component version that is direct and indirect dependent only once', () => {
         expect(tagOutput).to.have.string('bar/a@0.0.2');
 
-        const barA = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/a`);
+        const barA = helper.command.catComponent(`${helper.scopes.remote}/bar/a`);
         const barAVersions = Object.keys(barA.versions);
         expect(barAVersions).to.include('0.0.1');
         expect(barAVersions).to.include('0.0.2');

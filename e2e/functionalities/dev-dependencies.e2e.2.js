@@ -158,7 +158,7 @@ describe('foo', () => {
           return bitsrcTester.deleteScope(scopeName);
         });
         it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
-          const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+          const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
           const id = `@bit/${scopeId}.utils.is-string`;
           expect(packageJson.dependencies).to.not.have.property(id);
           expect(packageJson.devDependencies).to.have.property(id);

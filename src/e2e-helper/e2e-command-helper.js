@@ -22,7 +22,7 @@ export default class CommandHelper {
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localScopePath): string {
+  runCmd(cmd: string, cwd: string = this.scopes.localPath): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
@@ -33,7 +33,7 @@ export default class CommandHelper {
   }
 
   listRemoteScope(raw: boolean = true, options: string = '') {
-    return this.runCmd(`bit list ${this.scopes.remoteScope} ${options} ${raw ? '--raw' : ''}`);
+    return this.runCmd(`bit list ${this.scopes.remote} ${options} ${raw ? '--raw' : ''}`);
   }
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
@@ -43,7 +43,7 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options: string = '') {
-    const output = this.runCmd(`bit list ${this.scopes.remoteScope} --json ${options}`);
+    const output = this.runCmd(`bit list ${this.scopes.remote} --json ${options}`);
     return JSON.parse(output);
   }
 
@@ -63,7 +63,7 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id}`, cwd);
     return JSON.parse(result);
   }
-  addComponent(filePaths: string, options: Object = {}, cwd: string = this.scopes.localScopePath) {
+  addComponent(filePaths: string, options: Object = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -78,7 +78,7 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string) {
     return this.runCmd(`bit config set ${configName} ${configVal}`);
   }
-  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.scopes.localScopePath) {
+  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.scopes.localPath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
   removeComponent(id: string, flags: string = '') {
@@ -109,7 +109,7 @@ export default class CommandHelper {
     return this.runCmd(`bit untag ${id}`);
   }
 
-  exportComponent(id: string, scope: string = this.scopes.remoteScope, assert: boolean = true) {
+  exportComponent(id: string, scope: string = this.scopes.remote, assert: boolean = true) {
     const result = this.runCmd(`bit export ${scope} ${id}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
@@ -125,16 +125,16 @@ export default class CommandHelper {
     return JSON.parse(jsonResult);
   }
 
-  exportAllComponents(scope: string = this.scopes.remoteScope) {
+  exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope}`);
   }
 
   importComponent(id: string) {
-    return this.runCmd(`bit import ${this.scopes.remoteScope}/${id}`);
+    return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
 
   importManyComponents(ids: string[]) {
-    const idsWithRemote = ids.map(id => `${this.scopes.remoteScope}/${id}`);
+    const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);
     return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
   }
 
@@ -142,7 +142,7 @@ export default class CommandHelper {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
-    return this.runCmd(`bit import ${this.scopes.remoteScope}/${id} ${value}`);
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} ${value}`);
   }
 
   importAllComponents(writeToFileSystem: boolean = false) {
@@ -150,9 +150,7 @@ export default class CommandHelper {
   }
 
   isolateComponent(id: string, flags: string): string {
-    const isolatedEnvOutput = this.runCmd(
-      `bit isolate ${this.scopes.remoteScope}/${id} ${this.scopes.remoteScopePath} ${flags}`
-    );
+    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.scopes.remote}/${id} ${this.scopes.remotePath} ${flags}`);
     const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter(str => str);
     return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
   }
@@ -165,7 +163,7 @@ export default class CommandHelper {
     return this.runCmd(`bit build ${id}`);
   }
 
-  buildComponentWithOptions(id: string = '', options: Object, cwd: string = this.scopes.localScopePath) {
+  buildComponentWithOptions(id: string = '', options: Object, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -176,7 +174,7 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${id}`);
   }
 
-  testComponentWithOptions(id: string = '', options: Object, cwd: string = this.scopes.localScopePath) {
+  testComponentWithOptions(id: string = '', options: Object, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -279,7 +277,7 @@ export default class CommandHelper {
     inputs = [],
     // Options for the process (execa)
     processOpts = {
-      cwd: this.scopes.localScopePath
+      cwd: this.scopes.localPath
     },
     // opts for interactive
     opts = {

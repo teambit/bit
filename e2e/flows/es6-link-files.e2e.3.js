@@ -93,7 +93,7 @@ export { isString };`
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -115,13 +115,13 @@ export { isString };`
             before(() => {
               helper.scopeHelper.reInitLocalScope();
               helper.command.runCmd('npm init -y');
-              helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+              helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
             });
             it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
-                helper.scopes.remoteScope
+                helper.scopes.remote
               }.bar.foo'); console.log(barFoo.default());`;
-              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');
             });
@@ -135,9 +135,9 @@ export { isString };`
             });
             it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
-                helper.scopes.remoteScope
+                helper.scopes.remote
               }.bar.foo'); console.log(barFoo.default());`;
-              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');
             });
@@ -179,7 +179,7 @@ export { isString };`
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -215,7 +215,7 @@ export { isString };`
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localPath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
@@ -227,13 +227,13 @@ export { isString };`
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -274,13 +274,13 @@ export { isString };`
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules/utils/index.js')
+          path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/utils/index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -316,7 +316,7 @@ export { isString };`
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localPath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
@@ -328,13 +328,13 @@ export { isString };`
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -369,7 +369,7 @@ export { isString };`
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localPath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
@@ -381,13 +381,13 @@ export { isString };`
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -424,7 +424,7 @@ export { isString };`
       });
       it('should generate the links correctly as if there was no link-file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got is-array and got foo');
       });
@@ -463,7 +463,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
@@ -503,7 +503,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
@@ -539,7 +539,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');
 console.log(barFoo.default());`;
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(
         'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
@@ -584,7 +584,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');
 console.log(barFoo.default());`;
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(
         'got is-array and got is-string and got is-boolean and got is-boolean2 and got is-boolean-default and got foo'

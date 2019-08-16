@@ -14,7 +14,7 @@ export default class NpmHelper {
     this.command = commandHelper;
   }
 
-  initNpm(initPath: string = path.join(this.scopes.localScopePath)) {
+  initNpm(initPath: string = path.join(this.scopes.localPath)) {
     this.command.runCmd('npm init -y', initPath);
   }
 
@@ -24,7 +24,7 @@ export default class NpmHelper {
    * @param {*} name
    * @param {*} version
    */
-  installNpmPackage(name: string, version: ?string, cwd: string = this.scopes.localScopePath) {
+  installNpmPackage(name: string, version: ?string, cwd: string = this.scopes.localPath) {
     const versionWithDelimiter = version ? `@${version}` : '';
     const cmd = `npm i --save ${name}${versionWithDelimiter}`;
     return this.command.runCmd(cmd, cwd);

@@ -43,8 +43,8 @@ describe('track directories functionality', function () {
       });
       describe('rename a non-main file', () => {
         before(() => {
-          const currentFile = path.join(helper.scopes.localScopePath, 'utils/bar/foo2.js');
-          const newFile = path.join(helper.scopes.localScopePath, 'utils/bar/foo3.js');
+          const currentFile = path.join(helper.scopes.localPath, 'utils/bar/foo2.js');
+          const newFile = path.join(helper.scopes.localPath, 'utils/bar/foo3.js');
           fs.moveSync(currentFile, newFile);
           statusOutput = helper.command.runCmd('bit status');
         });
@@ -64,7 +64,7 @@ describe('track directories functionality', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('utils/bar', 'foo2.js');
-        statusOutput = helper.command.runCmd('bit status', path.join(helper.scopes.localScopePath, 'utils'));
+        statusOutput = helper.command.runCmd('bit status', path.join(helper.scopes.localPath, 'utils'));
       });
       it('bit status should still show the component as new', () => {
         expect(statusOutput).to.have.string('new components');
@@ -81,8 +81,8 @@ describe('track directories functionality', function () {
       let statusOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        const currentFile = path.join(helper.scopes.localScopePath, 'utils/bar/foo.js');
-        const newFile = path.join(helper.scopes.localScopePath, 'utils/bar/foo2.js');
+        const currentFile = path.join(helper.scopes.localPath, 'utils/bar/foo.js');
+        const newFile = path.join(helper.scopes.localPath, 'utils/bar/foo2.js');
         fs.moveSync(currentFile, newFile);
         statusOutput = helper.command.runCmd('bit status');
       });
@@ -149,8 +149,8 @@ describe('track directories functionality', function () {
       });
       it('should not remove the trackDir property from bitmap file', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/bar@0.0.1`);
-        expect(bitMap[`${helper.scopes.remoteScope}/utils/bar@0.0.1`]).to.have.property('trackDir');
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/bar@0.0.1`);
+        expect(bitMap[`${helper.scopes.remote}/utils/bar@0.0.1`]).to.have.property('trackDir');
       });
     });
   });
@@ -232,7 +232,7 @@ describe('track directories functionality', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
-      barFooId = `${helper.scopes.remoteScope}/bar/foo@0.0.1`;
+      barFooId = `${helper.scopes.remote}/bar/foo@0.0.1`;
     });
     it('should not add trackDir field', () => {
       const bitMap = helper.bitMap.readBitMap();
@@ -277,7 +277,7 @@ describe('track directories functionality', function () {
           expect(statusOutput).to.have.string('staged components');
         });
         it('should save both files to the model', () => {
-          const barFoo = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo@latest`);
+          const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
           expect(barFoo.files[0].name).to.equal('foo.js');
           expect(barFoo.files[1].name).to.equal('foo2.js');
           expect(barFoo.files).to.have.lengthOf(2);

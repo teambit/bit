@@ -81,7 +81,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -94,7 +94,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.command.build();
       });
       it('should save the dists file in the same place "bit import" saved them', () => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
       });
@@ -136,7 +136,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.command.exportAllComponents();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -156,7 +156,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         scopeAfterImport = helper.scopeHelper.cloneLocalScope();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -165,7 +165,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         before(() => {
           helper.command.runCmd(
             'npm install --save lodash.isstring',
-            path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo')
+            path.join(helper.scopes.localPath, 'components', 'bar', 'foo')
           );
           helper.command.runCmd('bit link'); // after npm install, all @bit symlinks are deleted, we have to re-link them.
           const fooBarFixtureV2 = `import isString from '${helper.general.getRequireBitPath('utils', 'is-string')}';
@@ -178,19 +178,11 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         });
         it('should symlink the external packages as well into dist', () => {
           expect(
-            path.join(
-              helper.scopes.localScopePath,
-              'dist',
-              'components',
-              'bar',
-              'foo',
-              'node_modules',
-              'lodash.isstring'
-            )
+            path.join(helper.scopes.localPath, 'dist', 'components', 'bar', 'foo', 'node_modules', 'lodash.isstring')
           ).to.be.a.path();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
         });
@@ -204,7 +196,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             helper.command.importComponent('bar/foo');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
@@ -216,7 +208,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           helper.command.removeComponent('bar/foo', '-s');
         });
         it('should remove the dist directory as well', () => {
-          expect(path.join(helper.scopes.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'dist/components/bar')).to.not.be.a.path();
         });
       });
       describe('importing all components and then deleting the dist directory', () => {
@@ -359,18 +351,18 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
     describe('"bit build" of a component with no compiler-id (when dists are outside the components dir)', () => {
       before(() => {
-        fs.removeSync(path.join(helper.scopes.localScopePath, 'dist'));
+        fs.removeSync(path.join(helper.scopes.localPath, 'dist'));
         helper.command.build('utils/is-string');
       });
       it('should save the source files as dists files', () => {
         expect(
-          path.join(helper.scopes.localScopePath, 'dist', 'components', '.dependencies', 'utils', 'is-string')
+          path.join(helper.scopes.localPath, 'dist', 'components', '.dependencies', 'utils', 'is-string')
         ).to.be.a.path();
       });
     });
@@ -403,7 +395,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -421,7 +413,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.command.build();
       });
       it('should save the dists file in the same place "bit import" saved them', () => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
       });
@@ -471,8 +463,8 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           expect(output).to.not.have.string('original path: .,');
           expect(output).to.not.have.string('original path: dist,');
           const link = path.join(
-            helper.scopes.localScopePath,
-            `components/utils/is-string/node_modules/@bit/${helper.scopes.remoteScope}.utils.is-type`
+            helper.scopes.localPath,
+            `components/utils/is-string/node_modules/@bit/${helper.scopes.remote}.utils.is-type`
           );
           expect(link).to.not.be.a.path();
         });
@@ -480,8 +472,8 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           const output = helper.command.runCmd('bit link');
           expect(output).to.not.have.string('original path: dist,');
           const distLink = path.join(
-            helper.scopes.localScopePath,
-            `dist/components/utils/is-string/node_modules/@bit/${helper.scopes.remoteScope}.utils.is-type`
+            helper.scopes.localPath,
+            `dist/components/utils/is-string/node_modules/@bit/${helper.scopes.remote}.utils.is-type`
           );
           expect(distLink).to.not.be.a.path();
         });
@@ -495,7 +487,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             expect(output).to.not.have.string('modified');
           });
           it('should tag with the correct version of the author component from .bitmap and not use the root package.json version', () => {
-            const cmp = helper.command.catComponent(`${helper.scopes.remoteScope}/utils/is-string@latest`);
+            const cmp = helper.command.catComponent(`${helper.scopes.remote}/utils/is-string@latest`);
             expect(cmp.dependencies[0].id.version).to.equal('0.0.1');
             // a previous bug showed it as 1.0.0, see #1698
           });

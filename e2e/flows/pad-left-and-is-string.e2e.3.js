@@ -24,7 +24,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.fixtures.getFixturesDir(), 'components');
-      const destination = path.join(helper.scopes.localScopePath, 'src');
+      const destination = path.join(helper.scopes.localPath, 'src');
       fs.copySync(path.join(sourceDir, 'is-string'), path.join(destination, 'is-string'));
       fs.copySync(path.join(sourceDir, 'pad-left'), path.join(destination, 'pad-left'));
 
@@ -55,7 +55,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       expect(output).to.have.string('tests passed');
     });
     it('should save the paths in the model as Linux format', () => {
-      const isString = helper.command.catComponent(`${helper.scopes.remoteScope}/string/is-string@latest`);
+      const isString = helper.command.catComponent(`${helper.scopes.remote}/string/is-string@latest`);
       expect(isString.docs[0].filePath).to.equal('src/is-string/is-string.js');
       expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
       isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
@@ -63,7 +63,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     });
     describe('changing to absolute syntax and tagging', () => {
       before(() => {
-        const padLeftFile = path.join(helper.scopes.localScopePath, 'src', 'pad-left', 'pad-left', 'pad-left.js');
+        const padLeftFile = path.join(helper.scopes.localPath, 'src', 'pad-left', 'pad-left', 'pad-left.js');
         const padLeftContent = fs.readFileSync(padLeftFile).toString();
         const relativeSyntax = '../is-string/is-string';
         const absoluteSyntax = helper.general.getRequireBitPath('string', 'is-string');
@@ -77,7 +77,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.command.exportAllComponents();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
-        const padLeftModel = helper.command.catComponent(`${helper.scopes.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should not add the dist.entry if it was not removed before', () => {
@@ -86,7 +86,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
         helper.command.importComponent('string/pad-left -p src/pad-left');
         helper.command.tagComponent('string/pad-left', 'msg', '-f');
-        const padLeftModel = helper.command.catComponent(`${helper.scopes.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       describe('importing back to the original repo', () => {
@@ -138,8 +138,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(exportOutput).to.not.have.a.string(failureEjectMessage);
         });
         it('should delete the original component files from the file-system', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components/string/is-string')).not.to.be.a.path();
-          expect(path.join(helper.scopes.localScopePath, 'components/string/pad-left')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/string/is-string')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components/string/pad-left')).not.to.be.a.path();
         });
         it('should update the package.json with the components as packages', () => {
           const packageJson = helper.packageJson.read();
@@ -147,7 +147,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(packageJson.dependencies[`@bit/${padLeftId}`]).to.equal('2.0.0');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const nodeModulesDir = path.join(helper.scopes.localScopePath, 'node_modules', '@bit');
+          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
           expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
           expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
         });
@@ -166,7 +166,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeExport);
         helper.scopeHelper.reInitRemoteScope();
-        const padLeftFile = path.join(helper.scopes.localScopePath, 'src', 'pad-left', 'pad-left.js');
+        const padLeftFile = path.join(helper.scopes.localPath, 'src', 'pad-left', 'pad-left.js');
         const padLeftContent = fs.readFileSync(padLeftFile).toString();
         const relativeSyntax = '../is-string/is-string';
         const customSyntax = 'is-string';
@@ -185,11 +185,11 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         originalScopeWithCustomResolve = helper.scopeHelper.cloneLocalScope();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
-        const padLeftModel = helper.command.catComponent(`${helper.scopes.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should indicate that the dependency used custom-module-resolution', () => {
-        const padLeftModel = helper.command.catComponent(`${helper.scopes.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
         const relativePath = padLeftModel.dependencies[0].relativePaths[0];
         expect(relativePath).to.have.property('isCustomResolveUsed');
         expect(relativePath).to.have.property('importSource');
@@ -208,7 +208,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         describe('changing the component', () => {
           before(() => {
-            const padLeftFile = path.join(helper.scopes.localScopePath, 'src', 'pad-left', 'pad-left.js');
+            const padLeftFile = path.join(helper.scopes.localPath, 'src', 'pad-left', 'pad-left.js');
             const padLeftContent = fs.readFileSync(padLeftFile).toString();
             fs.outputFileSync(padLeftFile, `${padLeftContent}\n`);
 
@@ -275,7 +275,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           return bitsrcTester.deleteScope(scopeName);
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const nodeModulesDir = path.join(helper.scopes.localScopePath, 'node_modules', '@bit');
+          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
           expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
           expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
         });
@@ -283,7 +283,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(npmOutput).to.have.string('node .bit.postinstall.js');
         });
         it('should generate .bit.postinstall.js file', () => {
-          const nodeModulesDir = path.join(helper.scopes.localScopePath, 'node_modules', '@bit');
+          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
           expect(path.join(nodeModulesDir, padLeftId, '.bit.postinstall.js')).to.be.a.file();
         });
       });
@@ -294,13 +294,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.scopeHelper.getClonedLocalScope(originalScope);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
-        const padLeftPath = path.join(helper.scopes.localScopePath, 'src/pad-left/pad-left.js');
+        const padLeftPath = path.join(helper.scopes.localPath, 'src/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPath, '\n console.log("modified");');
         helper.command.tagAllComponents('--force'); // 0.0.2
         helper.command.exportAllComponents();
 
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-        const padLeftPathImported = path.join(helper.scopes.localScopePath, 'src/pad-left/pad-left/pad-left.js');
+        const padLeftPathImported = path.join(helper.scopes.localPath, 'src/pad-left/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPathImported, '\n console.log("imported-modified");');
         helper.command.tagAllComponents('--force');
         try {
@@ -336,7 +336,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.testComponent('string/pad-left');
         fs.appendFileSync(
-          path.join(helper.scopes.localScopePath, 'src/pad-left/pad-left/pad-left.js'),
+          path.join(helper.scopes.localPath, 'src/pad-left/pad-left/pad-left.js'),
           '\n console.log("modified");'
         );
         helper.command.tagAllComponents('--force');
@@ -412,12 +412,12 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           '0.0.1',
           'string/pad-left',
           undefined,
-          path.join(helper.scopes.localScopePath, 'src')
+          path.join(helper.scopes.localPath, 'src')
         );
       });
       it('should not change the rootDir in bitMap file', () => {
         const bitMap = helper.bitMap.readBitMap();
-        const padLeft = bitMap[`${helper.scopes.remoteScope}/string/pad-left@0.0.1`];
+        const padLeft = bitMap[`${helper.scopes.remote}/string/pad-left@0.0.1`];
         expect(padLeft.rootDir).to.equal('src/pad-left');
       });
     });
@@ -427,15 +427,15 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importComponent('string/is-string -p src/is-string');
         helper.command.tagAllComponents('-s 0.0.2');
-        const padLeftDir = path.join(helper.scopes.localScopePath, 'src/pad-left');
+        const padLeftDir = path.join(helper.scopes.localPath, 'src/pad-left');
         const packageJson = helper.packageJson.read(padLeftDir);
-        packageJson.dependencies[`@bit/${helper.scopes.remoteScope}.string.is-string`] = '0.0.1';
+        packageJson.dependencies[`@bit/${helper.scopes.remote}.string.is-string`] = '0.0.1';
         helper.packageJson.write(packageJson, padLeftDir);
       });
       it('bit diff should show the dependencies difference', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`- [ ${helper.scopes.remoteScope}/string/is-string@0.0.2 ]`);
-        expect(diff).to.have.string(`+ [ ${helper.scopes.remoteScope}/string/is-string@0.0.1 ]`);
+        expect(diff).to.have.string(`- [ ${helper.scopes.remote}/string/is-string@0.0.2 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/string/is-string@0.0.1 ]`);
       });
       it('should be able to tag the component with no error thrown', () => {
         const output = helper.command.tagAllComponents();
@@ -482,7 +482,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         describe('re-import for author after changing the overrides of the imported', () => {
           before(() => {
-            const padLeftDir = path.join(helper.scopes.localScopePath, 'components/string/pad-left');
+            const padLeftDir = path.join(helper.scopes.localPath, 'components/string/pad-left');
             const packageJson = helper.packageJson.read(padLeftDir);
             packageJson.bit.overrides.dependencies['@bit/string/*'] = '-';
             helper.packageJson.write(packageJson, padLeftDir);
@@ -495,7 +495,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           });
           it('should write the updated overrides into consumer bit.json', () => {
             const bitJson = helper.bitJson.readBitJson();
-            const padLeftComp = `${helper.scopes.remoteScope}/string/pad-left`;
+            const padLeftComp = `${helper.scopes.remote}/string/pad-left`;
             expect(bitJson.overrides).to.have.property(padLeftComp);
             expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
             expect(bitJson.overrides[padLeftComp]).to.have.property('env');
@@ -503,7 +503,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           });
           it('should write the compiler and the tester as strings because they dont have special configuration', () => {
             const bitJson = helper.bitJson.readBitJson();
-            const padLeftComp = `${helper.scopes.remoteScope}/string/pad-left`;
+            const padLeftComp = `${helper.scopes.remote}/string/pad-left`;
             expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
             expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
           });
@@ -528,15 +528,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.command.runCmd('bit import --merge');
         });
         it('should rebuild the dist directory for all components and dependencies', () => {
-          const distDir = path.join(helper.scopes.localScopePath, 'dist');
+          const distDir = path.join(helper.scopes.localPath, 'dist');
           expect(distDir).to.be.a.path();
           expect(
-            path.join(
-              distDir,
-              'components/.dependencies/string/is-string',
-              helper.scopes.remoteScope,
-              '0.0.1/is-string.js'
-            )
+            path.join(distDir, 'components/.dependencies/string/is-string', helper.scopes.remote, '0.0.1/is-string.js')
           ).to.be.a.file();
           expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
         });

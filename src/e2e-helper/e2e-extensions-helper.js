@@ -27,7 +27,7 @@ export default class ExtensionsHelper {
     this.importAndConfigureExtension(id);
     // workaround to get the registry into the package.json file
     const extensionFilePath = path.join(
-      this.scopes.localScopePath,
+      this.scopes.localPath,
       '.bit/components/npm/pack/bit.extensions/2.0.1/index.js'
     );
     const extensionFile = fs.readFileSync(extensionFilePath).toString();

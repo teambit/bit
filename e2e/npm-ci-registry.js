@@ -113,9 +113,9 @@ EOD`;
    * published and ready to be consumed later on when running 'npm install package-name'.
    */
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
-    const packDir = path.join(this.helper.scopes.localScopePath, 'pack');
+    const packDir = path.join(this.helper.scopes.localPath, 'pack');
     const result = this.helper.command.runCmd(
-      `bit npm-pack ${this.helper.scopes.remoteScope}/${componentName}@${componentVersion} -o -k -d ${packDir}`
+      `bit npm-pack ${this.helper.scopes.remote}/${componentName}@${componentVersion} -o -k -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
     const resultParsed = JSON.parse(result);
@@ -139,7 +139,7 @@ EOD`;
   setResolver() {
     const scopeJsonPath = '.bit/scope.json';
     const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
-    const resolverPath = path.join(this.helper.scopes.localScopePath, 'resolver.js');
+    const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
     // $FlowFixMe
     scopeJson.resolverPath = resolverPath;
     this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
@@ -147,7 +147,7 @@ EOD`;
   }
 
   _getResolverContent() {
-    return `module.exports = () => Promise.resolve('file://${this.helper.scopes.remoteScopePath}');`;
+    return `module.exports = () => Promise.resolve('file://${this.helper.scopes.remotePath}');`;
   }
 
   _validateRegistryScope(dir: string) {

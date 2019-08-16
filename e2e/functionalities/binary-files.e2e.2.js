@@ -22,7 +22,7 @@ describe('binary files', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
@@ -52,7 +52,7 @@ describe('binary files', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
@@ -67,7 +67,7 @@ describe('binary files', function () {
     });
     it('should not create any other file in node_modules/@bit other than the binary file itself and package.json', () => {
       const files = glob.sync(path.normalize('**/*'), {
-        cwd: path.join(helper.scopes.localScopePath, 'node_modules/@bit'),
+        cwd: path.join(helper.scopes.localPath, 'node_modules/@bit'),
         nodir: true
       });
       expect(files).to.be.lengthOf(2);
@@ -76,14 +76,14 @@ describe('binary files', function () {
     });
     it('should create the file in node_modules/@bit as a symlink', () => {
       const symlinkPath = path.join(
-        helper.scopes.localScopePath,
-        `node_modules/@bit/${helper.scopes.remoteScope}.bar.foo/bar/png_fixture.png`
+        helper.scopes.localPath,
+        `node_modules/@bit/${helper.scopes.remote}.bar.foo/bar/png_fixture.png`
       );
       const symlinkValue = fs.readlinkSync(symlinkPath);
       expect(symlinkValue).to.have.string(path.join('bar', 'png_fixture.png'));
     });
     it('should not install a package "undefined" ', () => {
-      expect(path.join(helper.scopes.localScopePath, 'node_modules/undefined')).to.not.be.a.path;
+      expect(path.join(helper.scopes.localPath, 'node_modules/undefined')).to.not.be.a.path;
     });
     describe('after importing the file', () => {
       before(() => {
@@ -92,12 +92,12 @@ describe('binary files', function () {
         helper.command.importComponent('bar/foo');
       });
       it('the size of the binary file should not be changed', () => {
-        const currentStats = fs.statSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/png_fixture.png'));
+        const currentStats = fs.statSync(path.join(helper.scopes.localPath, 'components/bar/foo/png_fixture.png'));
         const currentSize = currentStats.size;
         expect(currentSize).to.equal(pngSize);
       });
       it('should generate a package.json with "main" property pointing to the binary file', () => {
-        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
         expect(packageJson.main).to.equal('png_fixture.png');
       });
     });
@@ -107,7 +107,7 @@ describe('binary files', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.command.runCmd('bit add bar -m png_fixture.png -i bar/png');
       const fixture = 'require("./png_fixture.png")';
@@ -121,7 +121,7 @@ describe('binary files', function () {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localScopePath, 'components/bar/foo/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -145,7 +145,7 @@ describe('binary files', function () {
       helper.bitJson.writeBitJson(bitJson);
 
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'src/bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("bar/png_fixture.png")';
@@ -159,10 +159,7 @@ describe('binary files', function () {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(
-        helper.scopes.localScopePath,
-        'components/bar/foo/node_modules/bar/png_fixture.png'
-      );
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -185,19 +182,19 @@ describe('binary files', function () {
 
         helper.scopeHelper.reInitLocalScope();
         helper.command.runCmd('npm init -y');
-        helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+        helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
 
-        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.foo`);
-        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`);
+        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`);
+        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.png`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
       it('should generate .bit.postinstall.js file', () => {
-        expect(path.join(helper.scopes.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
       });
       it('should create a symlink on node_modules pointing to the unsupported file', () => {
-        const expectedDest = path.join(helper.scopes.localScopePath, barFooPath, 'node_modules/bar/png_fixture.png');
+        const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'node_modules/bar/png_fixture.png');
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
@@ -214,7 +211,7 @@ describe('binary files', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'src/bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("../bar/png_fixture.png")';
@@ -228,7 +225,7 @@ describe('binary files', function () {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localScopePath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -248,8 +245,8 @@ describe('binary files', function () {
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
-        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.foo`);
-        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`);
+        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`);
+        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.png`);
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -258,13 +255,13 @@ describe('binary files', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
-          expect(path.join(helper.scopes.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localScopePath, barFooPath, 'bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -279,13 +276,13 @@ describe('binary files', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
           expect(symlinkValue).to.have.string(
-            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`, 'png_fixture.png')
+            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remote}.bar.png`, 'png_fixture.png')
           );
         });
       });
@@ -300,7 +297,7 @@ describe('binary files', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'src/bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("../bar/png_fixture.png")';
@@ -315,7 +312,7 @@ describe('binary files', function () {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localScopePath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -336,8 +333,8 @@ describe('binary files', function () {
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
 
-        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.foo`);
-        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`);
+        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`);
+        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.png`);
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -346,13 +343,13 @@ describe('binary files', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
-          expect(path.join(helper.scopes.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localScopePath, barFooPath, 'bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -367,23 +364,23 @@ describe('binary files', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
           expect(symlinkValue).to.have.string(
-            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`, 'dist/png_fixture.png')
+            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remote}.bar.png`, 'dist/png_fixture.png')
           );
         });
         it('should create a symlink in dist dir pointing to the package of the unsupported file', () => {
-          const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const expectedDest = path.join(barFooDir, 'dist/bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
           expect(symlinkValue).to.have.string(
-            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`, 'dist/png_fixture.png')
+            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remote}.bar.png`, 'dist/png_fixture.png')
           );
         });
       });
@@ -398,7 +395,7 @@ describe('binary files', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'src/bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.fs.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
       helper.command.runCmd('bit add src/bar -m index.js -i bar/png');
@@ -414,7 +411,7 @@ describe('binary files', function () {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localScopePath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -435,8 +432,8 @@ describe('binary files', function () {
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
 
-        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.foo`);
-        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`);
+        barFooPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`);
+        barPngPath = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.png`);
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -445,13 +442,13 @@ describe('binary files', function () {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
-          expect(path.join(helper.scopes.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const expectedDest = path.join(helper.scopes.localScopePath, barFooPath, 'bar/png_fixture.png');
+          const expectedDest = path.join(helper.scopes.localPath, barFooPath, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
@@ -466,23 +463,23 @@ describe('binary files', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
-          const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
           expect(symlinkValue).to.have.string(
-            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`, 'dist/png_fixture.png')
+            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remote}.bar.png`, 'dist/png_fixture.png')
           );
         });
         it('should create a symlink in dist dir pointing to the package of the unsupported file', () => {
-          const barFooDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const barFooDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const expectedDest = path.join(barFooDir, 'dist/bar/png_fixture.png');
           expect(expectedDest).to.be.a.file();
 
           const symlinkValue = fs.readlinkSync(expectedDest);
           expect(symlinkValue).to.have.string(
-            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remoteScope}.bar.png`, 'dist/png_fixture.png')
+            path.join(barFooDir, 'node_modules/@ci', `${helper.scopes.remote}.bar.png`, 'dist/png_fixture.png')
           );
         });
       });

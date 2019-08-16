@@ -16,11 +16,11 @@ export default class GitHelper {
     this.scopeHelper = scopeHelper;
   }
   writeGitIgnore(list: string[]) {
-    const gitIgnorePath = path.join(this.scopes.localScopePath, '.gitignore');
+    const gitIgnorePath = path.join(this.scopes.localPath, '.gitignore');
     return fs.writeFileSync(gitIgnorePath, list.join('\n'));
   }
   writeToGitHook(hookName: string, content: string) {
-    const hookPath = path.join(this.scopes.localScopePath, '.git', 'hooks', hookName);
+    const hookPath = path.join(this.scopes.localPath, '.git', 'hooks', hookName);
     return fs.outputFileSync(hookPath, content);
   }
   initNewGitRepo() {
@@ -35,13 +35,13 @@ export default class GitHelper {
     return this.command.runCmd(`git config --unset --${location} ${key}`);
   }
   mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
-    fs.removeSync(path.join(this.scopes.localScopePath, '.bit'));
-    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localScopePath, 'components'));
+    fs.removeSync(path.join(this.scopes.localPath, '.bit'));
+    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localScopePath, dot: true });
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
     directories.forEach((dir) => {
       if (dir.includes('node_modules')) {
-        fs.removeSync(path.join(this.scopes.localScopePath, dir));
+        fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
     this.scopehelper.scopeHelper.initWorkspace();

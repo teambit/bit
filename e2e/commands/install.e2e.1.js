@@ -50,7 +50,7 @@ describe('run bit install', function () {
         const appJsFixture = `const barFoo = require('${fooRequirePath}');
   const isBoolean = require('lodash.isboolean');
   console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should print results from all dependencies (this is an intermediate check to make sure we are good so far)', () => {
@@ -75,14 +75,14 @@ describe('run bit install', function () {
         });
         describe('running bit install from an inner directory', () => {
           before(() => {
-            output = helper.command.runCmd('bit install', path.join(helper.scopes.localScopePath, 'components'));
+            output = helper.command.runCmd('bit install', path.join(helper.scopes.localPath, 'components'));
           });
           it('should not create another directory inside that inner directory', () => {
-            expect(path.join(helper.scopes.localScopePath, 'components', 'components')).to.not.be.a.path();
+            expect(path.join(helper.scopes.localPath, 'components', 'components')).to.not.be.a.path();
           });
           it('should install npm packages with absolute paths', () => {
             expect(output).to.not.have.a.string('successfully ran npm install at components/bar/foo');
-            expect(output).to.have.a.string(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+            expect(output).to.have.a.string(path.join(helper.scopes.localPath, 'components/bar/foo'));
           });
         });
       });
@@ -90,7 +90,7 @@ describe('run bit install', function () {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
-          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules'));
+          fs.removeSync(path.join(helper.scopes.localPath, 'components/bar/foo/node_modules'));
           output = helper.command.runCmd('bit install bar/foo');
         });
         it('should npm install only the specified id', () => {

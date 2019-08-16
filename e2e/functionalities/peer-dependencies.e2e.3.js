@@ -57,7 +57,7 @@ describe('peer-dependencies functionality', function () {
         before(() => {
           helper.packageJson.addKeyValue(
             { peerDependencies: {} },
-            path.join(helper.scopes.localScopePath, 'components/bar/foo')
+            path.join(helper.scopes.localPath, 'components/bar/foo')
           );
         });
         it('should be shown as modified', () => {
@@ -67,7 +67,7 @@ describe('peer-dependencies functionality', function () {
       });
       describe('and the package.json of the component does not exist', () => {
         before(() => {
-          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/package.json'));
+          fs.removeSync(path.join(helper.scopes.localPath, 'components/bar/foo/package.json'));
         });
         it('should not be shown as modified', () => {
           const output = helper.command.runCmd('bit status');

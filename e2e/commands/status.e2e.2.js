@@ -265,7 +265,7 @@ describe('bit status command', function () {
     });
     describe('and then all objects were deleted', () => {
       before(() => {
-        fs.removeSync(path.join(helper.scopes.localScopePath, '.bit'));
+        fs.removeSync(path.join(helper.scopes.localPath, '.bit'));
         helper.scopeHelper.initWorkspace();
       });
       it('should indicate that running "bit import" should solve the issue', () => {
@@ -425,7 +425,7 @@ describe('bit status command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localPath, 'bit.json')}`);
     });
   });
   describe('when component files were deleted', () => {

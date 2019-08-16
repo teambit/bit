@@ -102,7 +102,7 @@ describe('bit untrack command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localPath, 'bit.json')}`);
     });
   });
 });

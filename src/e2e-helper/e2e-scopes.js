@@ -6,12 +6,12 @@ import { generateRandomStr } from './e2e-helper';
 
 export default class ScopesData {
   e2eDir: string;
-  localScope: string;
-  localScopePath: string;
-  remoteScope: string;
-  remoteScopePath: string;
-  envScope: string;
-  envScopePath: string;
+  local: string;
+  localPath: string;
+  remote: string;
+  remotePath: string;
+  env: string;
+  envPath: string;
   constructor() {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
@@ -19,16 +19,16 @@ export default class ScopesData {
     this.setEnvScope();
   }
   setLocalScope(localScope?: string) {
-    this.localScope = localScope || `${generateRandomStr()}-local`;
-    this.localScopePath = path.join(this.e2eDir, this.localScope);
-    fs.ensureDirSync(this.localScopePath);
+    this.local = localScope || `${generateRandomStr()}-local`;
+    this.localPath = path.join(this.e2eDir, this.local);
+    fs.ensureDirSync(this.localPath);
   }
   setRemoteScope() {
-    this.remoteScope = `${generateRandomStr()}-remote`;
-    this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
+    this.remote = `${generateRandomStr()}-remote`;
+    this.remotePath = path.join(this.e2eDir, this.remote);
   }
   setEnvScope() {
-    this.envScope = `${generateRandomStr()}-env`;
-    this.envScopePath = path.join(this.e2eDir, this.envScope);
+    this.env = `${generateRandomStr()}-env`;
+    this.envPath = path.join(this.e2eDir, this.env);
   }
 }

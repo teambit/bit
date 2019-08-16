@@ -39,10 +39,7 @@ describe('bit ci-update', function () {
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.command.runCmd(
-        `bit ci-update ${helper.scopes.remoteScope}/comp/comp`,
-        helper.scopes.remoteScopePath
-      );
+      const output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/comp/comp`, helper.scopes.remotePath);
       expect(output).to.have.string('tests passed');
     });
   });
@@ -66,10 +63,7 @@ describe('bit ci-update', function () {
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.command.runCmd(
-        `bit ci-update ${helper.scopes.remoteScope}/bar/foo`,
-        helper.scopes.remoteScopePath
-      );
+      const output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/bar/foo`, helper.scopes.remotePath);
       expect(output).to.have.string('tests passed');
     });
   });

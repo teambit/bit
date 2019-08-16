@@ -46,7 +46,7 @@ describe('scope components index mechanism', function () {
       it('should create a new record with the new scope', () => {
         const indexJson = helper.general.getIndexJson();
         const scopes = indexJson.map(item => item.id.scope);
-        expect(scopes).to.contain(helper.scopes.remoteScope);
+        expect(scopes).to.contain(helper.scopes.remote);
       });
       it('should change the previous record to be a symlink', () => {
         const indexJson = helper.general.getIndexJson();
@@ -56,7 +56,7 @@ describe('scope components index mechanism', function () {
       it('bit list should show only one component', () => {
         const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
-        expect(list[0].id).to.contain(helper.scopes.remoteScope);
+        expect(list[0].id).to.contain(helper.scopes.remote);
       });
       describe('removing the component', () => {
         before(() => {

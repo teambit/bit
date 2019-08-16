@@ -101,24 +101,12 @@ describe('basic flow with dependencies', function () {
       });
       describe('after deleting the components', () => {
         before(() => {
-          fs.moveSync(
-            path.join(helper.scopes.localScopePath, 'utils'),
-            path.join(helper.scopes.localScopePath, 'utils-bak')
-          );
-          fs.moveSync(
-            path.join(helper.scopes.localScopePath, 'bar'),
-            path.join(helper.scopes.localScopePath, 'bar-bak')
-          );
+          fs.moveSync(path.join(helper.scopes.localPath, 'utils'), path.join(helper.scopes.localPath, 'utils-bak'));
+          fs.moveSync(path.join(helper.scopes.localPath, 'bar'), path.join(helper.scopes.localPath, 'bar-bak'));
         });
         after(() => {
-          fs.moveSync(
-            path.join(helper.scopes.localScopePath, 'utils-bak'),
-            path.join(helper.scopes.localScopePath, 'utils')
-          );
-          fs.moveSync(
-            path.join(helper.scopes.localScopePath, 'bar-bak'),
-            path.join(helper.scopes.localScopePath, 'bar')
-          );
+          fs.moveSync(path.join(helper.scopes.localPath, 'utils-bak'), path.join(helper.scopes.localPath, 'utils'));
+          fs.moveSync(path.join(helper.scopes.localPath, 'bar-bak'), path.join(helper.scopes.localPath, 'bar'));
         });
         describe('bit status', () => {
           let output;

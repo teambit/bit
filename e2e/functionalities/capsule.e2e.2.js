@@ -165,7 +165,7 @@ describe('capsule', function () {
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
       const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -178,7 +178,7 @@ describe('capsule', function () {
       });
       it('should be able to require the component and its dependencies from the dist directory', () => {
         const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -200,12 +200,12 @@ describe('capsule', function () {
         expect(isTypeDist).to.be.a.file();
       });
       it('should not write the same paths written to the capsule into the author workspace', () => {
-        expect(path.join(helper.scopes.localScopePath, '.dependencies')).to.not.be.a.path();
+        expect(path.join(helper.scopes.localPath, '.dependencies')).to.not.be.a.path();
       });
       it('should be able to require the component and its dependencies from the dist directory', () => {
         helper.command.build();
         const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -293,7 +293,7 @@ describe('capsule', function () {
         const fileHash = distLink.file;
         const content = helper.command.catObject(fileHash);
         // expect the link file to include the full name including the scope name
-        expect(content).to.have.string(`@bit/${helper.scopes.remoteScope}.utils.is-string`);
+        expect(content).to.have.string(`@bit/${helper.scopes.remote}.utils.is-string`);
         expect(content).to.not.have.string('@bit/utils.is-string');
       });
       describe('importing the component to another workspace', () => {
@@ -305,7 +305,7 @@ describe('capsule', function () {
         it('should write the dist link file from the scope and not the generated one', () => {
           const fileContent = helper.fs.readFile('components/bar/foo/dist/utils/is-string.js');
           expect(fileContent).to.not.have.string(AUTO_GENERATED_STAMP);
-          expect(fileContent).to.have.string(`@bit/${helper.scopes.remoteScope}.utils.is-string`);
+          expect(fileContent).to.have.string(`@bit/${helper.scopes.remote}.utils.is-string`);
         });
       });
     });

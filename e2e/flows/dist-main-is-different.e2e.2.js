@@ -63,14 +63,14 @@ describe('mainFile of the dist is different than the source', function () {
           'src/utils',
           'is-string.js',
           `const isType = require('@ci/${
-            helper.scopes.remoteScope
+            helper.scopes.remote
           }.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string from source'; };`
         );
         helper.fs.createFile(
           'src/bar',
           'foo.js',
           `const isString = require('@ci/${
-            helper.scopes.remoteScope
+            helper.scopes.remote
           }.utils.is-string'); module.exports = function foo() { return isString() + ' and got foo from source'; };`
         );
         helper.command.tagAllComponents();
@@ -78,10 +78,8 @@ describe('mainFile of the dist is different than the source', function () {
         helper.command.exportAllComponents();
       });
       it('should be able to require the component and its dependencies from the dist directory', () => {
-        const appJsFixture = `const barFoo = require('@ci/${
-          helper.scopes.remoteScope
-        }.bar.foo'); console.log(barFoo());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type from dist and got is-string from dist and got foo from dist');
       });
@@ -93,10 +91,8 @@ describe('mainFile of the dist is different than the source', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should be able to require the component and its dependencies using the main dist file', () => {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type from dist and got is-string from dist and got foo from dist');
         });
@@ -110,10 +106,8 @@ describe('mainFile of the dist is different than the source', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should be able to require the component and its dependencies using the main dist file', () => {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type from dist and got is-string from dist and got foo from dist');
         });
@@ -137,10 +131,8 @@ describe('mainFile of the dist is different than the source', function () {
           npmCiRegistry.destroy();
         });
         function runAppJs() {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type from dist and got is-string from dist and got foo from dist');
         }
@@ -148,7 +140,7 @@ describe('mainFile of the dist is different than the source', function () {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.command.runCmd('npm init -y');
-            helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+            helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             runAppJs();

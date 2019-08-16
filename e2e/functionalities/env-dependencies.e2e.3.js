@@ -29,12 +29,12 @@ describe('environments with dependencies', function () {
     helper.npm.addNpmPackage('vinyl', '2.1.0');
     helper.npm.addNpmPackage('resolve', '1.7.1');
     helper.command.tagAllComponents();
-    helper.command.exportAllComponents(helper.scopes.envScope);
+    helper.command.exportAllComponents(helper.scopes.env);
     helper.scopeHelper.reInitLocalScope();
     helper.scopeHelper.addRemoteScope();
     helper.npm.initNpm();
     helper.scopeHelper.addRemoteEnvironment();
-    helper.env.importCompiler(`${helper.scopes.envScope}/${compilerId}`);
+    helper.env.importCompiler(`${helper.scopes.env}/${compilerId}`);
     helper.fixtures.copyFixtureFile(path.join('compilers', 'webpack', 'base.config.js'));
     helper.fixtures.copyFixtureFile(path.join('compilers', 'webpack', 'dev.config.js'));
     helper.npm.addNpmPackage('webpack-merge', '4.1.4');
@@ -154,14 +154,14 @@ describe('environments with dependencies', function () {
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should not generate the links for environment component when --conf was not used', () => {
-          const linkFile = path.join(helper.scopes.localScopePath, 'components/bar/foo/base.config.js');
+          const linkFile = path.join(helper.scopes.localPath, 'components/bar/foo/base.config.js');
           expect(linkFile).to.not.be.a.path();
         });
         it('package.json should contain the env name only without the files', () => {
-          const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+          const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
           expect(packageJson.bit.env.compiler)
             .to.be.a('string')
-            .that.equals(`${helper.scopes.envScope}/compilers/webpack@0.0.1`);
+            .that.equals(`${helper.scopes.env}/compilers/webpack@0.0.1`);
         });
         describe('ejecting the environment configuration to component dir', () => {
           before(() => {
@@ -193,7 +193,7 @@ describe('environments with dependencies', function () {
           });
         });
         describe('importing with --conf flag', () => {
-          const componentDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
           const linkFile = path.join(componentDir, 'base.config.js');
           const configurationFile = path.join(componentDir, 'dev.config.js');
           before(() => {
@@ -227,11 +227,11 @@ describe('environments with dependencies', function () {
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
           it('should generate the links for environment component', () => {
-            const linkFile = path.join(helper.scopes.localScopePath, 'my-config-dir/base.config.js');
+            const linkFile = path.join(helper.scopes.localPath, 'my-config-dir/base.config.js');
             expect(linkFile).to.be.a.file();
           });
           it('should not generate an extra link in the components dir', () => {
-            const linkFile = path.join(helper.scopes.localScopePath, 'components/bar/foo/base.config.js');
+            const linkFile = path.join(helper.scopes.localPath, 'components/bar/foo/base.config.js');
             expect(linkFile).to.not.be.a.path();
           });
           describe('running inject-conf', () => {
@@ -239,7 +239,7 @@ describe('environments with dependencies', function () {
               helper.command.injectConf('bar/foo');
             });
             it('should delete not only the configuration files but also the link file', () => {
-              const linkFile = path.join(helper.scopes.localScopePath, 'my-config-dir/base.config.js');
+              const linkFile = path.join(helper.scopes.localPath, 'my-config-dir/base.config.js');
               expect(linkFile).to.not.be.a.path();
             });
           });

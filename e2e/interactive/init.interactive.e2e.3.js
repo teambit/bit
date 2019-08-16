@@ -42,7 +42,7 @@ describe('run bit init - interactive', function () {
       });
       it('should init a new scope with provided inputs from the user', () => {
         expect(output).to.have.string('successfully initialized a bit workspace');
-        const bitmapPath = path.join(helper.scopes.localScopePath, '.bitmap');
+        const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
         expect(bitmapPath).to.be.a.file('missing bitmap');
         const bitJson = helper.bitJson.readBitJson();
         expect(bitJson.packageManager).to.equal('npm');

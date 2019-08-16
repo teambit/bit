@@ -38,15 +38,15 @@ describe('merge functionality', function () {
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
       const idsAndVersions = [
-        { id: `${helper.scopes.remoteScope}/bar/foo`, versions: ['0.0.2'] },
-        { id: `${helper.scopes.remoteScope}/bar2/foo2`, versions: ['0.0.2'] }
+        { id: `${helper.scopes.remote}/bar/foo`, versions: ['0.0.2'] },
+        { id: `${helper.scopes.remote}/bar2/foo2`, versions: ['0.0.2'] }
       ];
       const error = new MergeConflictOnRemote(idsAndVersions);
       helper.general.expectToThrow(exportFunc, error);
     });
     it('should throw MergeConflict error when importing the component', () => {
       const importFunc = () => helper.command.importComponent('bar/foo');
-      const error = new MergeConflict(`${helper.scopes.remoteScope}/bar/foo`, ['0.0.2']);
+      const error = new MergeConflict(`${helper.scopes.remote}/bar/foo`, ['0.0.2']);
       helper.general.expectToThrow(importFunc, error);
     });
   });
@@ -136,8 +136,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
       describe('merge with strategy=theirs', () => {
@@ -160,8 +160,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
       describe('merge with strategy=ours', () => {
@@ -184,8 +184,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
     });
@@ -213,8 +213,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
     });

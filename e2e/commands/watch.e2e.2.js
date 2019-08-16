@@ -78,7 +78,7 @@ describe('bit watch command', function () {
             await watchRunner.waitForWatchToRebuildComponent();
           });
           it('should create a dist file for that new file', () => {
-            const expectedFile = path.join(helper.scopes.localScopePath, 'components/utils/is-string/dist/new-file.js');
+            const expectedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/dist/new-file.js');
             expect(expectedFile).to.be.a.file();
           });
           describe('changing the new file', () => {

@@ -21,7 +21,7 @@ export default class GeneralHelper {
   }
 
   indexJsonPath() {
-    return path.join(this.scopes.localScopePath, '.bit/index.json');
+    return path.join(this.scopes.localPath, '.bit/index.json');
   }
   getIndexJson() {
     return fs.readJsonSync(this.indexJsonPath());
@@ -31,7 +31,7 @@ export default class GeneralHelper {
   }
   installAndGetTypeScriptCompilerDir(): string {
     this.npm.installNpmPackage('typescript');
-    return path.join(this.scopes.localScopePath, 'node_modules', '.bin');
+    return path.join(this.scopes.localPath, 'node_modules', '.bin');
   }
   setProjectAsAngular() {
     this.npm.initNpm();
@@ -41,7 +41,7 @@ export default class GeneralHelper {
     return this.command.runCmd(`node ${mainFilePath}`, cwd);
   }
 
-  runWithTryCatch(cmd: string, cwd: string = this.scopes.localScopePath) {
+  runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath) {
     let output;
     try {
       output = this.command.runCmd(cmd, cwd);
@@ -71,7 +71,7 @@ export default class GeneralHelper {
   }
 
   getRequireBitPath(box: string, name: string) {
-    return `@bit/${this.scopes.remoteScope}.${box}.${name}`;
+    return `@bit/${this.scopes.remote}.${box}.${name}`;
   }
 
   getBitVersion() {

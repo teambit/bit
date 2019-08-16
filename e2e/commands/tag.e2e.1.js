@@ -37,7 +37,7 @@ describe('bit tag command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localPath, 'bit.json')}`);
     });
   });
   describe('tag component with invalid mainFile in bitmap', () => {
@@ -438,7 +438,7 @@ describe('bit tag command', function () {
         helper.command.importComponent('comp/comp --skip-npm-install');
         helper.npm.addNpmPackage('lodash.isstring', '3.0.0');
         const bitMap = helper.bitMap.readBitMap();
-        componentRootDir = path.normalize(bitMap[`${helper.scopes.remoteScope}/comp/comp@0.0.1`].rootDir);
+        componentRootDir = path.normalize(bitMap[`${helper.scopes.remote}/comp/comp@0.0.1`].rootDir);
       });
       it('should take the package version from package.json in the component dir if exists', () => {
         const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'lodash.isstring': '^2.0.1' } });
@@ -526,7 +526,7 @@ describe('bit tag command', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp/comp');
         helper.command.importComponent('comp/comp2');
-        const fileFixture = `var a = require('@bit/${helper.scopes.remoteScope}.comp.comp2/file2')`;
+        const fileFixture = `var a = require('@bit/${helper.scopes.remote}.comp.comp2/file2')`;
         helper.fs.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.command.tagComponent('comp/comp');
         showOutput = JSON.parse(helper.command.showComponentWithOptions('comp/comp', { j: '' }));
@@ -539,11 +539,11 @@ describe('bit tag command', function () {
         expect(deps.length).to.equal(1);
       });
       it('should increment the package.json version of the tagged component', () => {
-        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/comp/comp'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/comp/comp'));
         expect(packageJson.version).to.equal('0.0.2');
       });
       it('should not delete "bit" property from package.json', () => {
-        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/comp/comp'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/comp/comp'));
         expect(packageJson).to.have.property('bit');
       });
     });
@@ -607,7 +607,7 @@ describe('bit tag command', function () {
       expect(output).to.have.string(
         'components with relative import statements (please use absolute paths for imported components)'
       );
-      expect(output).to.have.string(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
   });
 

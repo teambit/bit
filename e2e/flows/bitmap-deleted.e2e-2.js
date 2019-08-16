@@ -23,7 +23,7 @@ describe('user deleted only .bitmap file leaving the objects in place', function
     });
     describe('bit init', () => {
       it('should throw an error', () => {
-        const error = new ObjectsWithoutConsumer(path.join(helper.scopes.localScopePath, '.bit'));
+        const error = new ObjectsWithoutConsumer(path.join(helper.scopes.localPath, '.bit'));
         const initCmd = () => helper.scopeHelper.initWorkspace();
         helper.general.expectToThrow(initCmd, error);
       });

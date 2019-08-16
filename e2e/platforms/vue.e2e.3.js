@@ -103,14 +103,14 @@ describe('support vue files', function () {
       });
       it('should export tagged components', () => {
         const output = helper.command.exportAllComponents();
-        expect(output).to.have.string(`exported 9 components to scope ${helper.scopes.remoteScope}`);
+        expect(output).to.have.string(`exported 9 components to scope ${helper.scopes.remote}`);
       });
       it('should import component', () => {
         helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteScope(helper.scopes.remoteScopePath);
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
         const output = helper.command.importComponent('vue/ui-autocomplete');
         expect(output).to.have.string('successfully imported one component');
-        expect(output).to.have.string(`${helper.scopes.remoteScope}/vue/ui-autocomplete`);
+        expect(output).to.have.string(`${helper.scopes.remote}/vue/ui-autocomplete`);
         expect(output).to.have.string('0.0.1');
       });
     });

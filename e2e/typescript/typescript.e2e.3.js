@@ -83,17 +83,10 @@ describe('typescript', function () {
           '.dependencies',
           'utils',
           'is-string',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1'
         );
-        const isTypePath = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-type',
-          helper.scopes.remoteScope,
-          '0.0.1'
-        );
+        const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
         it('should keep the original directory structure of the main component', () => {
           const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.ts');
           expect(localConsumerFiles).to.include(expectedLocation);
@@ -103,10 +96,10 @@ describe('typescript', function () {
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should point the main file key in the component package.json to the dist main file', () => {
-          const packageJsonFolder = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo');
+          const packageJsonFolder = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
           const packageJsonContent = helper.packageJson.read(packageJsonFolder);
           expect(packageJsonContent).to.deep.include({
-            name: `@bit/${helper.scopes.remoteScope}.bar.foo`,
+            name: `@bit/${helper.scopes.remote}.bar.foo`,
             version: '0.0.1',
             main: 'dist/bar/foo.js'
           });
@@ -116,19 +109,19 @@ describe('typescript', function () {
           expect(localConsumerFiles).to.not.include(expectedLocation);
         });
         it('should point the main file key in the is-string dependency package.json to the dist main file', () => {
-          const packageJsonFolder = path.join(helper.scopes.localScopePath, isStringPath);
+          const packageJsonFolder = path.join(helper.scopes.localPath, isStringPath);
           const packageJsonContent = helper.packageJson.read(packageJsonFolder);
           expect(packageJsonContent).to.deep.include({
-            name: `@bit/${helper.scopes.remoteScope}.utils.is-string`,
+            name: `@bit/${helper.scopes.remote}.utils.is-string`,
             version: '0.0.1',
             main: 'dist/is-string.js'
           });
         });
         it('should point the main file key in the is-type dependency package.json to the dist main file', () => {
-          const packageJsonFolder = path.join(helper.scopes.localScopePath, isTypePath);
+          const packageJsonFolder = path.join(helper.scopes.localPath, isTypePath);
           const packageJsonContent = helper.packageJson.read(packageJsonFolder);
           expect(packageJsonContent).to.deep.include({
-            name: `@bit/${helper.scopes.remoteScope}.utils.is-type`,
+            name: `@bit/${helper.scopes.remote}.utils.is-type`,
             version: '0.0.1',
             main: 'dist/is-type.js'
           });
@@ -165,7 +158,7 @@ describe('typescript', function () {
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -201,13 +194,13 @@ describe('typescript', function () {
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-array and got is-string and got is-string2 and got foo');
         });
         it('should be able to compile the main component with auto-generated .ts files without errors', () => {
           helper.env.importCompiler('bit.envs/compilers/react-typescript');
-          const barFooFile = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+          const barFooFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
           const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
           const result = helper.command.runCmd(`tsc ${barFooFile}`, tscPath);
           // in case of compilation error it throws an exception
@@ -262,7 +255,7 @@ describe('typescript', function () {
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
@@ -297,7 +290,7 @@ describe('typescript', function () {
               // and there are dist files, it doesn't generate an un-compiled .ts file, but a .js file
               const appJsFixture =
                 "const isString = require('./components/utils/is-string'); console.log(isString.default());";
-              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-type and got is-string');
             });
@@ -351,15 +344,15 @@ describe('typescript', function () {
           });
           it('should generate the custom-resolve links correctly and be able to require the components', () => {
             const appJsFixture = `const barFoo = require('@bit/${
-              helper.scopes.remoteScope
+              helper.scopes.remote
             }.bar.foo'); console.log(barFoo.default());`;
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
           it('should create index.d.ts file along with the index.js file inside the node_modules/custom-resolve', () => {
             const expectedPath = path.join(
-              helper.scopes.localScopePath,
+              helper.scopes.localPath,
               'components/bar/foo/node_modules/@/utils/is-string/index.d.ts'
             );
             expect(expectedPath).to.be.a.file();
@@ -378,12 +371,12 @@ describe('typescript', function () {
           });
           it('should generate the link inside node_modules with .js extension and not .ts', () => {
             const expectedFile = path.join(
-              helper.scopes.localScopePath,
+              helper.scopes.localPath,
               'components/bar/foo/node_modules/@/utils/is-string/index.js'
             );
             expect(expectedFile).to.be.a.file();
             const notExpectedFile = path.join(
-              helper.scopes.localScopePath,
+              helper.scopes.localPath,
               'components/bar/foo/node_modules/@/utils/is-string/index.ts'
             );
             expect(notExpectedFile).not.to.be.a.path();
@@ -414,9 +407,9 @@ describe('typescript', function () {
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = `const barFoo = require('@bit/${
-          helper.scopes.remoteScope
+          helper.scopes.remote
         }.bar.foo'); console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -437,9 +430,9 @@ describe('typescript', function () {
         });
         function runAppJs() {
           const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
+            helper.scopes.remote
           }.bar.foo'); console.log(barFoo.default());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         }
@@ -447,7 +440,7 @@ describe('typescript', function () {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.command.runCmd('npm init -y');
-            helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+            helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             runAppJs();
@@ -462,9 +455,7 @@ describe('typescript', function () {
             helper.command.importComponent('bar/foo');
           });
           it('package.json of the dist should point to the dist file with .js extension (not .ts)', () => {
-            const packageJson = helper.packageJson.read(
-              path.join(helper.scopes.localScopePath, 'dist/components/bar/foo')
-            );
+            const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'dist/components/bar/foo'));
             expect(packageJson.main).to.equal('bar/foo.js');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -475,7 +466,7 @@ describe('typescript', function () {
               helper.command.ejectComponents('bar/foo');
             });
             it('should delete also the dist directory', () => {
-              expect(path.join(helper.scopes.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+              expect(path.join(helper.scopes.localPath, 'dist/components/bar')).to.not.be.a.path();
             });
           });
         });
@@ -514,7 +505,7 @@ describe('typescript', function () {
         helper.command.importComponent('bar/foo');
       });
       it('should be able to require the main and the internal files and print the results', () => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFooES6);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });

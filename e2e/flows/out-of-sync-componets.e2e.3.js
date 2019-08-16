@@ -93,7 +93,7 @@ describe('components that are not synced between the scope and the consumer', fu
       it('should sync .bitmap according to the scope', () => {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         const bitMap = helper.bitMap.readBitMap();
-        const newId = `${helper.scopes.remoteScope}/bar/foo@0.0.1`;
+        const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
         expect(bitMap[newId].exported).to.be.true;
       });
@@ -126,7 +126,7 @@ describe('components that are not synced between the scope and the consumer', fu
       it('should sync .bitmap according to the scope', () => {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         const bitMap = helper.bitMap.readBitMap();
-        const newId = `${helper.scopes.remoteScope}/bar/foo@0.0.1`;
+        const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
         expect(bitMap[newId].exported).to.be.true;
       });
@@ -251,7 +251,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should sync the new component with the scope and assign a version and a scope name', () => {
         const bitMap = helper.bitMap.readBitMap();
-        const newId = `${helper.scopes.remoteScope}/bar/foo@0.0.1`;
+        const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
       });
     });
@@ -367,7 +367,7 @@ describe('components that are not synced between the scope and the consumer', fu
         const bitMap = helper.bitMap.readBitMap();
         helper.scopeHelper.getClonedLocalScope(scopeAfterV1);
         helper.bitMap.writeBitMap(bitMap);
-        helper.command.removeComponent(`${helper.scopes.remoteScope}/bar/foo`, '-r -s');
+        helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '-r -s');
         scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
       });
       describe('bit status', () => {
@@ -378,7 +378,7 @@ describe('components that are not synced between the scope and the consumer', fu
         it('should sync .bitmap according to the latest version of the scope', () => {
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           const bitMap = helper.bitMap.readBitMap();
-          const newId = `${helper.scopes.remoteScope}/bar/foo@0.0.1`;
+          const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
           expect(bitMap).to.have.property(newId);
         });
       });

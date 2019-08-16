@@ -45,7 +45,7 @@ describe('component that requires another component internal (not main) file', f
     });
     describe('when dependencies are saved as components', () => {
       before(() => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should be able to require the main and the internal files and print the results', () => {
         const result = helper.command.runCmd('node app.js');
@@ -63,16 +63,14 @@ describe('component that requires another component internal (not main) file', f
 
         helper.scopeHelper.reInitLocalScope();
         helper.command.runCmd('npm init -y');
-        helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+        helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = `const barFoo = require('@ci/${
-          helper.scopes.remoteScope
-        }.bar.foo'); console.log(barFoo());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -113,7 +111,7 @@ describe('component that requires another component internal (not main) file', f
     });
     describe('when dependencies are saved as components', () => {
       before(() => {
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFooES6);
       });
       it('should be able to require the main and the internal files and print the results', () => {
         const result = helper.command.runCmd('node app.js');
@@ -131,16 +129,16 @@ describe('component that requires another component internal (not main) file', f
 
         helper.scopeHelper.reInitLocalScope();
         helper.command.runCmd('npm init -y');
-        helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+        helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = `const barFoo = require('@ci/${
-          helper.scopes.remoteScope
+          helper.scopes.remote
         }.bar.foo'); console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });

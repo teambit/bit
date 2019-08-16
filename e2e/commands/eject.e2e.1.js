@@ -95,12 +95,12 @@ describe('bit eject command', function () {
         });
         it('should have the component files as a package (in node_modules)', () => {
           const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'foo.js');
-          expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
+          expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
         });
         it('should delete the original component files from the file-system', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
           const bitMap = helper.bitMap.readBitMap();
@@ -129,7 +129,7 @@ describe('bit eject command', function () {
       describe('eject from an inner directory', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
-          ejectOutput = helper.command.runCmd('bit eject bar/foo', path.join(helper.scopes.localScopePath, 'bar'));
+          ejectOutput = helper.command.runCmd('bit eject bar/foo', path.join(helper.scopes.localPath, 'bar'));
         });
         it('should indicate that the eject was successful', () => {
           expect(ejectOutput).to.have.string(successEjectMessage);
@@ -143,12 +143,12 @@ describe('bit eject command', function () {
         });
         it('should have the component files as a package (in node_modules)', () => {
           const fileInPackage = path.join('node_modules/@bit', `${username}.${scopeName}.bar.foo`, 'foo.js');
-          expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
+          expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
         });
         it('should delete the original component files from the file-system', () => {
-          expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('bit status should show a clean state', () => {
           const output = helper.command.runCmd('bit status');
@@ -277,16 +277,16 @@ describe('bit eject command', function () {
           });
           it('should have the component files as a package (in node_modules)', () => {
             const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'bar/foo.js');
-            expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
+            expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
             const fileContent = helper.fs.readFile(fileInPackage);
             expect(fileContent).to.equal(fixtures.barFooFixture);
           });
           it('should delete the ejected component files from the file-system', () => {
-            expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+            expect(path.join(helper.scopes.localPath, 'bar', 'foo.js')).not.to.be.a.path();
           });
           it('should not delete the non-ejected component files from the file-system', () => {
-            expect(path.join(helper.scopes.localScopePath, 'utils', 'is-string.js')).to.be.a.file();
-            expect(path.join(helper.scopes.localScopePath, 'utils', 'is-type.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'utils', 'is-string.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'utils', 'is-type.js')).to.be.a.file();
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.readBitMap();
@@ -329,7 +329,7 @@ describe('bit eject command', function () {
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
           it('should delete the imported component files from the file-system', () => {
-            expect(path.join(helper.scopes.localScopePath, 'components/bar/foo/bar/foo.js')).not.to.be.a.path();
+            expect(path.join(helper.scopes.localPath, 'components/bar/foo/bar/foo.js')).not.to.be.a.path();
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.readBitMap();
@@ -380,9 +380,7 @@ describe('bit eject command', function () {
               expect(result.trim()).to.have.string('got is-type and got is-string v2 and got foo');
             });
             it('should delete the imported component files from the file-system', () => {
-              expect(
-                path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js')
-              ).not.to.be.a.path();
+              expect(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();
             });
             it('should delete the component from bit.map', () => {
               const bitMap = helper.bitMap.readBitMap();
@@ -415,14 +413,8 @@ describe('bit eject command', function () {
               let errorFailure;
               before(() => {
                 const renameMainComponentFile = () => {
-                  const currentFile = path.join(
-                    helper.scopes.localScopePath,
-                    'components/utils/is-string/is-string.js'
-                  );
-                  const renamedFile = path.join(
-                    helper.scopes.localScopePath,
-                    'components/utils/is-string/is-string2.js'
-                  );
+                  const currentFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js');
+                  const renamedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string2.js');
                   fs.moveSync(currentFile, renamedFile);
                 };
                 renameMainComponentFile();
@@ -483,9 +475,7 @@ describe('bit eject command', function () {
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
               it('should not delete the component files from the filesystem', () => {
-                expect(
-                  path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js')
-                ).to.be.a.file();
+                expect(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js')).to.be.a.file();
               });
             });
           });

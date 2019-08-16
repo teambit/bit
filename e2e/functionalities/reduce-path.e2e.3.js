@@ -24,7 +24,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       // Imported user gets the component without the "bar" directory as it is an originallySharedDir
       helper.command.importComponent('bar/foo');
       const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
-      expect(fs.existsSync(path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'foo.js'))).to.be.true;
+      expect(fs.existsSync(path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'foo.js'))).to.be.true;
       helper.fs.createFile(path.join('components', 'bar', 'foo'), 'foo.js', barFooV2); // update component
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -32,7 +32,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       helper.scopeHelper.getClonedLocalScope(authorScope);
       helper.command.importComponent('bar/foo');
       // Authored user updates the component with the recent changes done by Imported user
-      const authorLocation = path.join(helper.scopes.localScopePath, 'bar', 'foo.js');
+      const authorLocation = path.join(helper.scopes.localPath, 'bar', 'foo.js');
       expect(fs.existsSync(authorLocation)).to.be.true;
       expect(fs.readFileSync(authorLocation).toString()).to.equal(barFooV2);
       helper.fs.createFile('', 'foo2.js');

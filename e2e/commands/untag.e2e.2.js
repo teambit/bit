@@ -113,7 +113,7 @@ describe('bit untag command', function () {
         });
         it('should throw an error', () => {
           expect(output).to.have.string(
-            `unable to untag ${helper.scopes.remoteScope}/bar/foo, the version 0.0.1 was exported already`
+            `unable to untag ${helper.scopes.remote}/bar/foo, the version 0.0.1 was exported already`
           );
         });
       });
@@ -245,7 +245,7 @@ describe('bit untag command', function () {
           }
         });
         it('should show an error', () => {
-          expect(output).to.have.string(`unable to untag ${helper.scopes.remoteScope}/utils/is-type`);
+          expect(output).to.have.string(`unable to untag ${helper.scopes.remote}/utils/is-type`);
         });
         describe('tagging after the export, then, un-tagging the local tag', () => {
           let packageJsonUtilsIsStringPath;
@@ -254,8 +254,8 @@ describe('bit untag command', function () {
             helper.command.tagScope('2.0.1');
             // an intermediate step, make sure the package.json is updated to that version
             packageJsonUtilsIsStringPath = path.join(
-              helper.scopes.localScopePath,
-              `node_modules/@bit/${helper.scopes.remoteScope}.utils.is-string`
+              helper.scopes.localPath,
+              `node_modules/@bit/${helper.scopes.remote}.utils.is-string`
             );
             const packageJson = helper.packageJson.read(packageJsonUtilsIsStringPath);
             expect(packageJson.version).to.equal('2.0.1');
@@ -339,7 +339,7 @@ describe('bit untag command', function () {
       describe('modify, tag and then untag all', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-          helper.fs.modifyFile(path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js'));
+          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js'));
           helper.command.tagAllComponents();
           helper.command.runCmd('bit untag --all');
         });

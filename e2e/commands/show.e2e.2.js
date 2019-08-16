@@ -79,7 +79,7 @@ describe('bit show command', function () {
 
       it('should render the compiler correctly', () => {
         expect(output).to.have.string('Compiler', 'Compiler row is missing');
-        expect(output).to.have.string(`${helper.scopes.envScope}/compilers/babel@0.0.1`, 'compiler is wrong');
+        expect(output).to.have.string(`${helper.scopes.env}/compilers/babel@0.0.1`, 'compiler is wrong');
       });
 
       it('should render the language correctly', () => {
@@ -140,7 +140,7 @@ describe('bit show command', function () {
         const outputCompiler = output.compiler;
         expect(outputCompiler.files).to.be.an('array').that.is.empty;
         expect(outputCompiler.config).to.be.an('object').that.is.empty;
-        expect(outputCompiler.name).have.string(`${helper.scopes.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1`);
+        expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
       });
 
       it('should include the language correctly', () => {
@@ -201,7 +201,7 @@ describe('bit show command', function () {
           const outputCompiler = output.compiler;
           expect(outputCompiler.files).to.be.an('array').that.is.empty;
           expect(outputCompiler.config).to.be.an('object').that.is.empty;
-          expect(outputCompiler.name).have.string(`${helper.scopes.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1`);
+          expect(outputCompiler.name).have.string(`${helper.scopes.env}/compilers/babel${VERSION_DELIMITER}0.0.1`);
         });
       });
     });
@@ -221,7 +221,7 @@ describe('bit show command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       scopeBeforeShow = helper.scopeHelper.cloneLocalScope();
-      output = helper.command.showComponent(`${helper.scopes.remoteScope}/bar/foo --remote`);
+      output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
     });
     describe('single version as cli output (no -v or -j flags)', () => {
       it('should render the id correctly', () => {
@@ -243,10 +243,10 @@ describe('bit show command', function () {
         // triggered an error
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeShow);
-          output = helper.command.showComponent(`${helper.scopes.remoteScope}/bar/foo --remote`);
+          output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
           expect(output).to.have.string('Id');
           expect(output).to.have.string('bar/foo@0.0.1');
-          output = helper.command.showComponent(`${helper.scopes.remoteScope}/bar/foo --remote`);
+          output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
         });
         it('should still work and show the component with no errors', () => {
           expect(output).to.have.string('Id');
@@ -287,14 +287,14 @@ describe('bit show command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportAllComponents();
-      helper.command.deprecateComponent(`${helper.scopes.remoteScope}/bar/foo`, '-r');
+      helper.command.deprecateComponent(`${helper.scopes.remote}/bar/foo`, '-r');
     });
     it('should show the component as deprecated when using "--remote" flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remoteScope}/bar/foo -j -r`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j -r`));
       expect(output).to.include({ deprecated: true });
     });
     it('should not show the component as deprecated when not using "--remote" flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remoteScope}/bar/foo -j`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j`));
       expect(output).to.include({ deprecated: false });
     });
   });
@@ -308,11 +308,11 @@ describe('bit show command', function () {
       helper.command.exportAllComponents();
     });
     it('should indicate a component as non-deprecated when using "--remote" flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remoteScope}/bar/foo -j -r`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j -r`));
       expect(output).to.include({ deprecated: false });
     });
     it('should indicate a component as non-deprecated when not using "--remote flag', () => {
-      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remoteScope}/bar/foo -j`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.scopes.remote}/bar/foo -j`));
       expect(output).to.include({ deprecated: false });
     });
   });
@@ -335,7 +335,7 @@ describe('bit show command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localPath, 'bit.json')}`);
     });
   });
   describe('local component without compiler', () => {
@@ -537,7 +537,7 @@ describe('bit show command', function () {
         helper.command.importComponent('utils/is-string@0.0.1');
       });
       it('should show the remote and local versions', () => {
-        const output = helper.command.showComponent(`${helper.scopes.remoteScope}/utils/is-string --outdated --json`);
+        const output = helper.command.showComponent(`${helper.scopes.remote}/utils/is-string --outdated --json`);
         const outputParsed = JSON.parse(output);
         expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.1');
         expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.2');
@@ -698,9 +698,7 @@ Circle.defaultProps = {
       describe('when using --dependents', () => {
         let show;
         before(() => {
-          show = helper.command.showComponentParsed(
-            `${helper.scopes.remoteScope}/utils/is-string --remote --dependents`
-          );
+          show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-string --remote --dependents`);
         });
         it('should show the dependents only', () => {
           expect(show)
@@ -725,9 +723,7 @@ Circle.defaultProps = {
       describe('when using --dependencies', () => {
         let show;
         before(() => {
-          show = helper.command.showComponentParsed(
-            `${helper.scopes.remoteScope}/utils/is-string --remote --dependencies`
-          );
+          show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-string --remote --dependencies`);
         });
         it('should show the dependencies only', () => {
           expect(show)

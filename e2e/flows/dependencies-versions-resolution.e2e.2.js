@@ -32,12 +32,12 @@ describe('dependencies versions resolution', function () {
     it('when nothing is changed should show the dependency version from the model', () => {
       const output = helper.command.showComponentParsed('bar/foo -c');
       expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-        `${helper.scopes.remoteScope}/utils/is-string@0.0.1`
+        `${helper.scopes.remote}/utils/is-string@0.0.1`
       );
     });
     describe('when package.json overrides the version', () => {
       before(() => {
-        const componentPath = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+        const componentPath = path.join(helper.scopes.localPath, 'components/bar/foo');
         const packageJson = helper.packageJson.read(componentPath);
         packageJson.bit = {};
         packageJson.bit.overrides = {
@@ -50,7 +50,7 @@ describe('dependencies versions resolution', function () {
       it('should use the dependency version from bit.json', () => {
         const output = helper.command.showComponentParsed('bar/foo -c');
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.scopes.remoteScope}/utils/is-string@0.0.10`
+          `${helper.scopes.remote}/utils/is-string@0.0.10`
         );
       });
     });
@@ -58,7 +58,7 @@ describe('dependencies versions resolution', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
         helper.command.importComponent('bar/foo --conf');
-        const bitJsonDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+        const bitJsonDir = path.join(helper.scopes.localPath, 'components/bar/foo');
         const bitJson = helper.bitJson.readBitJson(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
@@ -70,12 +70,12 @@ describe('dependencies versions resolution', function () {
       it('should use the dependency version from bit.json', () => {
         const output = helper.command.showComponentParsed('bar/foo -c');
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.scopes.remoteScope}/utils/is-string@0.0.2`
+          `${helper.scopes.remote}/utils/is-string@0.0.2`
         );
       });
       describe('when package.json and bit.json override the version differently', () => {
         before(() => {
-          const componentPath = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const componentPath = path.join(helper.scopes.localPath, 'components/bar/foo');
           const packageJson = helper.packageJson.read(componentPath);
           packageJson.bit = {};
           packageJson.bit.overrides = {
@@ -88,7 +88,7 @@ describe('dependencies versions resolution', function () {
         it('bit.json should win', () => {
           const output = helper.command.showComponentParsed('bar/foo -c');
           expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-            `${helper.scopes.remoteScope}/utils/is-string@0.0.2`
+            `${helper.scopes.remote}/utils/is-string@0.0.2`
           );
         });
       });
@@ -109,12 +109,12 @@ describe('dependencies versions resolution', function () {
       it('should use the dependency version from the consumer config as it is imported', () => {
         const output = helper.command.showComponentParsed('bar/foo -c');
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.scopes.remoteScope}/utils/is-string@0.0.5`
+          `${helper.scopes.remote}/utils/is-string@0.0.5`
         );
       });
       describe('when the consumer config conflicts the component config', () => {
         before(() => {
-          const componentPath = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+          const componentPath = path.join(helper.scopes.localPath, 'components/bar/foo');
           const packageJson = helper.packageJson.read(componentPath);
           packageJson.bit = {};
           packageJson.bit.overrides = {
@@ -127,7 +127,7 @@ describe('dependencies versions resolution', function () {
         it('component config should win', () => {
           const output = helper.command.showComponentParsed('bar/foo -c');
           expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-            `${helper.scopes.remoteScope}/utils/is-string@0.0.10`
+            `${helper.scopes.remote}/utils/is-string@0.0.10`
           );
         });
       });

@@ -61,8 +61,8 @@ describe('dynamic namespaces', function () {
           helper.command.importComponent(componentName);
         });
         it('should create the directories according to the multiple namespaces', () => {
-          expect(path.join(helper.scopes.localScopePath, 'components', componentName)).to.be.a.path();
-          expect(path.join(helper.scopes.localScopePath, 'components', componentName, 'foo.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'components', componentName)).to.be.a.path();
+          expect(path.join(helper.scopes.localPath, 'components', componentName, 'foo.js')).to.be.a.file();
         });
       });
     });
@@ -78,17 +78,17 @@ describe('dynamic namespaces', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remoteScope}/foo` });
+      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remote}/foo` });
     });
     it('should throw an error and not allow the import', () => {
-      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/foo`);
+      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);
       expect(output).to.have.string('unable to import');
       const bitMap = helper.bitMap.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.have.lengthOf(1);
     });
     it('should throw an error also after tagging', () => {
       helper.command.tagAllComponents();
-      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/foo`);
+      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);
       expect(output).to.have.string('unable to import');
     });
   });

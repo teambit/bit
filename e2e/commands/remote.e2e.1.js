@@ -13,16 +13,16 @@ describe('bit remote command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.reInitRemoteScope();
-      helper.command.runCmd(`bit remote add file://${helper.scopes.remoteScopePath} --global`);
+      helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
     });
     it('should be shown when running "bit remote"', () => {
       const output = helper.command.runCmd('bit remote');
-      expect(output).to.have.string(helper.scopes.remoteScope);
+      expect(output).to.have.string(helper.scopes.remote);
     });
     it('should be shown from any other workspace as well', () => {
       helper.scopeHelper.reInitLocalScope();
       const output = helper.command.runCmd('bit remote');
-      expect(output).to.have.string(helper.scopes.remoteScope);
+      expect(output).to.have.string(helper.scopes.remote);
     });
     describe('deleting remote', () => {
       before(() => {
@@ -33,19 +33,19 @@ describe('bit remote command', function () {
         expect(output).to.have.string('remote "non-exist-remote" was not found');
       });
       it('deleting the global remote without "--global" flag should throw an error', () => {
-        const output = helper.general.runWithTryCatch(`bit remote del ${helper.scopes.remoteScope}`);
+        const output = helper.general.runWithTryCatch(`bit remote del ${helper.scopes.remote}`);
         expect(output).to.have.string(
           `remote "${
-            helper.scopes.remoteScope
+            helper.scopes.remote
           }" was not found locally, to remove a global remote, please use "--global" flag`
         );
       });
       it('should successfully delete the global remote when "--global" flag was used', () => {
-        const output = helper.command.runCmd(`bit remote del ${helper.scopes.remoteScope} --global`);
+        const output = helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);
         expect(output).to.have.string('successfully removed remote');
 
         const remotes = helper.command.runCmd('bit remote');
-        expect(remotes).to.not.have.string(helper.scopes.remoteScope);
+        expect(remotes).to.not.have.string(helper.scopes.remote);
       });
     });
   });
@@ -53,43 +53,43 @@ describe('bit remote command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.reInitRemoteScope();
-      helper.command.runCmd(`bit remote add file://${helper.scopes.remoteScopePath}`);
+      helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath}`);
     });
     it('should be shown when running "bit remote"', () => {
       const output = helper.command.runCmd('bit remote');
-      expect(output).to.have.string(helper.scopes.remoteScope);
+      expect(output).to.have.string(helper.scopes.remote);
     });
     it('should not be shown from other workspace', () => {
       helper.scopeHelper.reInitLocalScope();
       const output = helper.command.runCmd('bit remote');
-      expect(output).to.not.have.string(helper.scopes.remoteScope);
+      expect(output).to.not.have.string(helper.scopes.remote);
     });
     describe('deleting remote', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.command.runCmd(`bit remote add file://${helper.scopes.remoteScopePath}`);
+        helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath}`);
       });
       it('deleting the remote with "--global" flag should throw an error', () => {
-        const output = helper.general.runWithTryCatch(`bit remote del ${helper.scopes.remoteScope} --global`);
+        const output = helper.general.runWithTryCatch(`bit remote del ${helper.scopes.remote} --global`);
         expect(output).to.have.string(
           `remote "${
-            helper.scopes.remoteScope
+            helper.scopes.remote
           }" was not found globally, to remove a local remote, please omit the "--global" flag`
         );
       });
       it('should successfully delete the remote when "--global" flag was not used', () => {
-        const output = helper.command.runCmd(`bit remote del ${helper.scopes.remoteScope}`);
+        const output = helper.command.runCmd(`bit remote del ${helper.scopes.remote}`);
         expect(output).to.have.string('successfully removed remote');
 
         const remotes = helper.command.runCmd('bit remote');
-        expect(remotes).to.not.have.string(helper.scopes.remoteScope);
+        expect(remotes).to.not.have.string(helper.scopes.remote);
       });
     });
   });
   describe('adding a non exist local remote with relative path', () => {
     it('should throw ScopeNotFound error', () => {
       const func = () => helper.command.runCmd('bit remote add file://non-exist-dir');
-      const error = new ScopeNotFound(path.join(helper.scopes.localScopePath, 'non-exist-dir'));
+      const error = new ScopeNotFound(path.join(helper.scopes.localPath, 'non-exist-dir'));
       helper.general.expectToThrow(func, error);
     });
   });

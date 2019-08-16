@@ -50,16 +50,16 @@ describe('bit import', function () {
     });
     it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.bitMap.readBitMap();
-      expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`);
+      expect(bitMap).to.have.property(`${helper.scopes.remote}/global/simple${VERSION_DELIMITER}0.0.1`);
     });
     // TODO: Validate all files exists in a folder with the component name
     it('should write the component to default path from bit.json', () => {
       // TODO: check few cases with different structure props - namespace, name, version, scope
-      const expectedLocation = path.join(helper.scopes.localScopePath, 'components', 'global', 'simple', 'simple.js');
+      const expectedLocation = path.join(helper.scopes.localPath, 'components', 'global', 'simple', 'simple.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
     it('should not write the component bit.json file (only when --conf flag is set)', () => {
-      const bitJsonLocation = path.join(helper.scopes.localScopePath, 'components', 'global', 'simple', 'bit.json');
+      const bitJsonLocation = path.join(helper.scopes.localPath, 'components', 'global', 'simple', 'bit.json');
       expect(fs.existsSync(bitJsonLocation)).to.be.false;
     });
 
@@ -80,7 +80,7 @@ describe('bit import', function () {
         expect(output.includes('imprel/imprel')).to.be.true;
       });
       it('should write the internal files according to their relative paths', () => {
-        const imprelRoot = path.join(helper.scopes.localScopePath, 'components', 'imprel', 'imprel');
+        const imprelRoot = path.join(helper.scopes.localPath, 'components', 'imprel', 'imprel');
         const expectedLocationImprel = path.join(imprelRoot, 'imprel.js');
         const expectedLocationImprelSpec = path.join(imprelRoot, 'imprel.spec.js');
         const expectedLocationMyUtil = path.join(imprelRoot, 'utils', 'myUtil.js');
@@ -97,20 +97,20 @@ describe('bit import', function () {
         helper.command.importComponent('global/simple --conf');
       });
       it('should write the bit.json file of the component', () => {
-        const expectedLocation = path.join(helper.scopes.localScopePath, 'components', 'global', 'simple', 'bit.json');
+        const expectedLocation = path.join(helper.scopes.localPath, 'components', 'global', 'simple', 'bit.json');
         expect(fs.existsSync(expectedLocation)).to.be.true;
       });
     });
 
     describe('when the default component directory already exist', () => {
-      const componentFileLocation = path.join(helper.scopes.localScopePath, 'components/global/simple/simple.js');
-      const componentDir = path.join(helper.scopes.localScopePath, 'components/global/simple');
+      const componentFileLocation = path.join(helper.scopes.localPath, 'components/global/simple/simple.js');
+      const componentDir = path.join(helper.scopes.localPath, 'components/global/simple');
       describe('when the destination is an existing empty directory', () => {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.ensureDirSync(componentDir);
-          helper.command.runCmd(`bit import ${helper.scopes.remoteScope}/global/simple`);
+          helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple`);
         });
         it('should write the component to the specified path', () => {
           expect(componentFileLocation).to.be.a.file();
@@ -123,7 +123,7 @@ describe('bit import', function () {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(existingFile, 'console.log()');
-          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/global/simple`);
+          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
         });
         it('should not import the component', () => {
           expect(componentFileLocation).to.not.be.a.path();
@@ -145,7 +145,7 @@ describe('bit import', function () {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(componentDir, 'console.log()');
-          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/global/simple`);
+          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
         });
         it('should not import the component', () => {
           expect(componentFileLocation).to.not.be.a.path();
@@ -157,7 +157,7 @@ describe('bit import', function () {
           expect(output).to.have.string('unable to import');
         });
         it('should throw an error also when the --override flag is used', () => {
-          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/global/simple --override`);
+          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple --override`);
           expect(output).to.have.string('unable to import');
         });
       });
@@ -178,10 +178,10 @@ describe('bit import', function () {
             helper.command.importComponentWithOptions('bar-author-track', { p: 'my-new-dir' });
           });
           it('should not delete other files on the workspace', () => {
-            expect(path.join(helper.scopes.localScopePath, 'should-not-be-deleted.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'should-not-be-deleted.js')).to.be.a.file();
           });
           it('should throw an error saying it is not possible to move the component', () => {
-            expect(path.join(helper.scopes.localScopePath, 'my-new-dir')).to.be.a.directory();
+            expect(path.join(helper.scopes.localPath, 'my-new-dir')).to.be.a.directory();
           });
         });
         describe('when there is no track dir', () => {
@@ -197,22 +197,22 @@ describe('bit import', function () {
             expect(func).to.throw();
           });
           it('should not delete other files on the workspace', () => {
-            expect(path.join(helper.scopes.localScopePath, 'should-not-be-deleted.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'should-not-be-deleted.js')).to.be.a.file();
           });
           it('should not move the component', () => {
-            expect(path.join(helper.scopes.localScopePath, 'bar-author')).to.be.a.directory();
+            expect(path.join(helper.scopes.localPath, 'bar-author')).to.be.a.directory();
           });
         });
       });
       describe('as imported', () => {
-        const componentFileLocation = path.join(helper.scopes.localScopePath, 'my-custom-location/simple.js');
+        const componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
         });
         describe('when the destination is a non-exist directory', () => {
           before(() => {
-            helper.command.runCmd(`bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location`);
+            helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location`);
           });
           it('should write the component to the specified path', () => {
             expect(componentFileLocation).to.be.a.file();
@@ -222,8 +222,8 @@ describe('bit import', function () {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
-            fs.ensureDirSync(path.join(helper.scopes.localScopePath, 'my-custom-location'));
-            helper.command.runCmd(`bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location`);
+            fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
+            helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location`);
           });
           it('should write the component to the specified path', () => {
             expect(componentFileLocation).to.be.a.file();
@@ -231,14 +231,14 @@ describe('bit import', function () {
         });
         describe('when the destination directory is not empty', () => {
           let output;
-          const existingFile = path.join(helper.scopes.localScopePath, 'my-custom-location/my-file.js');
+          const existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
-            fs.ensureDirSync(path.join(helper.scopes.localScopePath, 'my-custom-location'));
+            fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
             fs.outputFileSync(existingFile, 'console.log()');
             output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location`
+              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location`
             );
           });
           it('should not import the component', () => {
@@ -251,9 +251,7 @@ describe('bit import', function () {
             expect(output).to.have.string('unable to import');
           });
           it('should import successfully if the --override flag is used', () => {
-            helper.command.runCmd(
-              `bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location --override`
-            );
+            helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location --override`);
             expect(componentFileLocation).to.be.a.file();
           });
         });
@@ -262,23 +260,23 @@ describe('bit import', function () {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'my-custom-location'), 'console.log()');
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'my-custom-location'), 'console.log()');
             output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location`
+              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location`
             );
           });
           it('should not import the component', () => {
             expect(componentFileLocation).to.not.be.a.path();
           });
           it('should not delete the existing file', () => {
-            expect(path.join(helper.scopes.localScopePath, 'my-custom-location')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'my-custom-location')).to.be.a.file();
           });
           it('should throw an error', () => {
             expect(output).to.have.string('unable to import');
           });
           it('should throw an error also when the --override flag is used', () => {
             output = helper.general.runWithTryCatch(
-              `bit import ${helper.scopes.remoteScope}/global/simple -p my-custom-location --override`
+              `bit import ${helper.scopes.remote}/global/simple -p my-custom-location --override`
             );
             expect(output).to.have.string('unable to import');
           });
@@ -292,7 +290,7 @@ describe('bit import', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('global/simple');
-        fs.removeSync(path.join(helper.scopes.localScopePath, 'components'));
+        fs.removeSync(path.join(helper.scopes.localPath, 'components'));
         output = helper.command.importComponent('global/simple');
       });
       it('should import the component successfully', () => {
@@ -306,7 +304,7 @@ describe('bit import', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('global/simple');
-        fs.removeSync(path.join(helper.scopes.localScopePath, '.bitmap'));
+        fs.removeSync(path.join(helper.scopes.localPath, '.bitmap'));
         output = helper.command.importComponent('global/simple --override');
       });
       it('should import the component successfully', () => {
@@ -327,15 +325,15 @@ describe('bit import', function () {
           expect(output).to.have.string('successfully imported one component');
         });
         it('should import the component into new dir structure according to dsl', () => {
-          expect(
-            path.join(helper.scopes.localScopePath, helper.scopes.remoteScope, '-global/simple-')
-          ).to.be.a.directory('should not be empty').and.not.empty;
+          expect(path.join(helper.scopes.localPath, helper.scopes.remote, '-global/simple-')).to.be.a.directory(
+            'should not be empty'
+          ).and.not.empty;
         });
         it('bitmap should contain component with correct rootDir according to dsl', () => {
           const bitMap = helper.bitMap.readBitMap();
-          const cmponentId = `${helper.scopes.remoteScope}/global/simple@0.0.1`;
+          const cmponentId = `${helper.scopes.remote}/global/simple@0.0.1`;
           expect(bitMap).to.have.property(cmponentId);
-          expect(bitMap[cmponentId].rootDir).to.equal(`${helper.scopes.remoteScope}/-global/simple-`);
+          expect(bitMap[cmponentId].rootDir).to.equal(`${helper.scopes.remote}/-global/simple-`);
         });
       });
       describe('when the DSL has invalid parameters', () => {
@@ -344,7 +342,7 @@ describe('bit import', function () {
           helper.scopeHelper.reInitLocalScope();
           helper.bitJson.setComponentsDirInBitJson('{non-exist-param}/{name}');
           helper.scopeHelper.addRemoteScope();
-          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/global/simple`);
+          output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
         });
         it('should throw an error saying it has an invalid parameter', () => {
           expect(output).to.have.string(
@@ -364,12 +362,12 @@ describe('bit import', function () {
           expect(output).to.have.string('successfully imported one component');
         });
         it('should import the component into the given structure without the namespace part', () => {
-          expect(path.join(helper.scopes.localScopePath, 'global/simple')).to.be.a.directory('should not be empty').and
-            .not.empty;
+          expect(path.join(helper.scopes.localPath, 'global/simple')).to.be.a.directory('should not be empty').and.not
+            .empty;
         });
         it('bitmap should contain component with correct rootDir according to dsl', () => {
           const bitMap = helper.bitMap.readBitMap();
-          const componentId = `${helper.scopes.remoteScope}/global/simple@0.0.1`;
+          const componentId = `${helper.scopes.remote}/global/simple@0.0.1`;
           expect(bitMap).to.have.property(componentId);
           expect(bitMap[componentId].rootDir).to.equal('global/simple');
         });
@@ -609,8 +607,8 @@ describe('bit import', function () {
         localConsumerFiles = helper.fs.getConsumerFiles();
       });
       it('should print the imported component correctly', () => {
-        expect(output).to.have.string(`${helper.scopes.remoteScope}/comp/comp1`);
-        expect(output).to.have.string(`${helper.scopes.remoteScope}/comp/comp2`);
+        expect(output).to.have.string(`${helper.scopes.remote}/comp/comp1`);
+        expect(output).to.have.string(`${helper.scopes.remote}/comp/comp2`);
       });
       it('should link the level0 dep from the dependencies folder to the first comp', () => {
         const expectedLocation = path.join('components', 'comp', 'comp1', 'level0.js');
@@ -626,7 +624,7 @@ describe('bit import', function () {
           '.dependencies',
           'dep',
           'level0',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'level0.js'
         );
@@ -639,7 +637,7 @@ describe('bit import', function () {
           '.dependencies',
           'dep',
           'level1',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'level1.js'
         );
@@ -652,7 +650,7 @@ describe('bit import', function () {
           '.dependencies',
           'dep',
           'level0',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'level1.js'
         );
@@ -692,44 +690,36 @@ describe('bit import', function () {
       });
 
       it('should add all missing components to bit.map file', () => {
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`);
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/global/simple${VERSION_DELIMITER}0.0.1`);
       });
       it('should mark direct dependencies as "IMPORTED" in bit.map file', () => {
-        expect(bitMap[`${helper.scopes.remoteScope}/comp/with-deps${VERSION_DELIMITER}0.0.1`].origin).to.equal(
-          'IMPORTED'
-        );
+        expect(bitMap[`${helper.scopes.remote}/comp/with-deps${VERSION_DELIMITER}0.0.1`].origin).to.equal('IMPORTED');
       });
       it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
-        expect(bitMap[`${helper.scopes.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`].origin).to.equal('NESTED');
+        expect(bitMap[`${helper.scopes.remote}/global/simple${VERSION_DELIMITER}0.0.1`].origin).to.equal('NESTED');
       });
       it('should print a successful message about installed npm packages', () => {
         expect(output).to.have.string('successfully ran npm install');
       });
       it('should write the dependency in the dependencies directory', () => {
         const depDir = path.join(
-          helper.scopes.localScopePath,
+          helper.scopes.localPath,
           'components',
           '.dependencies',
           'global',
           'simple',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'simple.js'
         );
         expect(fs.existsSync(depDir)).to.be.true;
       });
       it('should write a package.json in the component dir', () => {
-        const packageJsonPath = path.join(
-          helper.scopes.localScopePath,
-          'components',
-          'comp',
-          'with-deps',
-          'package.json'
-        );
+        const packageJsonPath = path.join(helper.scopes.localPath, 'components', 'comp', 'with-deps', 'package.json');
         expect(fs.existsSync(packageJsonPath)).to.be.true;
         const packageJsonContent = fs.readJsonSync(packageJsonPath);
         expect(packageJsonContent).to.deep.include({
-          name: `@bit/${helper.scopes.remoteScope}.comp.with-deps`,
+          name: `@bit/${helper.scopes.remote}.comp.with-deps`,
           version: '0.0.1',
           main: 'with-deps.js'
         });
@@ -737,19 +727,19 @@ describe('bit import', function () {
       });
       it('should write a package.json in the nested dependency component dir', () => {
         const packageJsonPath = path.join(
-          helper.scopes.localScopePath,
+          helper.scopes.localPath,
           'components',
           '.dependencies',
           'global',
           'simple',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'package.json'
         );
         expect(fs.existsSync(packageJsonPath)).to.be.true;
         const packageJsonContent = fs.readJsonSync(packageJsonPath);
         expect(packageJsonContent).to.deep.include({
-          name: `@bit/${helper.scopes.remoteScope}.global.simple`,
+          name: `@bit/${helper.scopes.remote}.global.simple`,
           version: '0.0.1',
           main: 'simple.js'
         });
@@ -766,23 +756,17 @@ describe('bit import', function () {
         helper.command.importComponentWithOptions('comp/with-deps', { '-ignore-package-json': '' });
       });
       it('should not write a package.json in the component dir', () => {
-        const packageJsonPath = path.join(
-          helper.scopes.localScopePath,
-          'components',
-          'comp',
-          'with-deps',
-          'package.json'
-        );
+        const packageJsonPath = path.join(helper.scopes.localPath, 'components', 'comp', 'with-deps', 'package.json');
         expect(fs.existsSync(packageJsonPath)).to.be.false;
       });
       it('should not write a package.json in the nested dependency component dir', () => {
         const packageJsonPath = path.join(
-          helper.scopes.localScopePath,
+          helper.scopes.localPath,
           'components',
           '.dependencies',
           'global',
           'simple',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1',
           'package.json'
         );
@@ -844,7 +828,7 @@ describe('bit import', function () {
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -884,7 +868,7 @@ describe('bit import', function () {
         });
         it('should write the components files back', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -924,7 +908,7 @@ describe('bit import', function () {
           it('should not override the current files', () => {
             // as opposed to running import with '--merge', the files should remain intact
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-            fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+            fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
@@ -945,12 +929,12 @@ describe('bit import', function () {
       });
       it('should update the rootDir in bit.map to the new location', () => {
         const bitMap = helper.bitMap.readBitMap();
-        const componentMap = bitMap[`${helper.scopes.remoteScope}/bar/foo@0.0.1`];
+        const componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
         expect(componentMap.rootDir).to.equal('new-location');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -970,7 +954,7 @@ describe('bit import', function () {
       it('should copy also the dependencies into the dist directory', () => {
         const expectedLocation = path.join(
           'dist/components/.dependencies/utils/is-string',
-          helper.scopes.remoteScope,
+          helper.scopes.remote,
           '0.0.1/is-string.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
@@ -1033,12 +1017,12 @@ describe('bit import', function () {
         '.dependencies',
         'style',
         'style',
-        helper.scopes.remoteScope,
+        helper.scopes.remote,
         '0.0.1',
         'index.css'
       );
       expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.scopes.localScopePath, expectedLocation);
+      const indexPath = path.join(helper.scopes.localPath, expectedLocation);
       const indexFileContent = fs.readFileSync(indexPath).toString();
       expect(indexFileContent).to.have.string("@import './style.css';");
     });
@@ -1048,7 +1032,7 @@ describe('bit import', function () {
         '.dependencies',
         'style',
         'style',
-        helper.scopes.remoteScope,
+        helper.scopes.remote,
         '0.0.1',
         'style.css'
       );
@@ -1111,17 +1095,10 @@ describe('bit import', function () {
       '.dependencies',
       'utils',
       'is-string',
-      helper.scopes.remoteScope,
+      helper.scopes.remote,
       '0.0.1'
     );
-    const isTypeLocation = path.join(
-      'components',
-      '.dependencies',
-      'utils',
-      'is-type',
-      helper.scopes.remoteScope,
-      '0.0.1'
-    );
+    const isTypeLocation = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);
@@ -1169,7 +1146,7 @@ describe('bit import', function () {
       expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFooES6);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -1185,9 +1162,7 @@ describe('bit import', function () {
         localConsumerFiles.forEach(file => expect(file).to.not.have.string(distFolder));
       });
       it('main property of package.json file should point to the source and not to the dist', () => {
-        const packageJson = helper.packageJson.read(
-          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo')
-        );
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components', 'bar', 'foo'));
         expect(packageJson.main).to.equal('bar/foo.js');
       });
       describe('bit build after importing without --ignore-dist flag', () => {
@@ -1196,15 +1171,15 @@ describe('bit import', function () {
           helper.command.build('bar/foo');
 
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         });
         it('package.json main attribute should point to the main dist file', () => {
-          const packageJsonFile = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo');
+          const packageJsonFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
           const packageJson = helper.packageJson.read(packageJsonFile);
           expect(packageJson.main).to.equal('dist/bar/foo.js');
         });
         it('should not create an index file because it uses the package.json main property', () => {
-          const indexFile = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'index.js');
+          const indexFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'index.js');
           expect(indexFile).to.not.be.a.path();
         });
         it('should generate all the links in the dists directory and be able to require its direct dependency', () => {
@@ -1213,7 +1188,7 @@ describe('bit import', function () {
         });
         describe('bit build all', () => {
           before(() => {
-            fs.removeSync(path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'dist'));
+            fs.removeSync(path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'dist'));
             helper.command.build();
           });
           it('should build the imported component although it was not modified', () => {
@@ -1239,13 +1214,13 @@ describe('bit import', function () {
       });
       it('should update the rootDir in bit.map to the new location', () => {
         const bitMap = helper.bitMap.readBitMap();
-        const componentMap = bitMap[`${helper.scopes.remoteScope}/bar/foo@0.0.1`];
+        const componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
         expect(componentMap.rootDir).to.equal('new-location');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = `const barFoo = require('${helper.general.getRequireBitPath('bar', 'foo')}');
 console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -1263,10 +1238,10 @@ console.log(barFoo.default());`;
         helper.command.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localPath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
-        expect(bitJson.env.compiler).to.equal(`${helper.scopes.envScope}/compilers/babel@0.0.1`);
+        expect(bitJson.env.compiler).to.equal(`${helper.scopes.env}/compilers/babel@0.0.1`);
       });
     });
   });
@@ -1299,7 +1274,7 @@ console.log(barFoo.default());`;
     });
     it('should use the updated dependent and dependencies and print the results from the latest versions', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2 and got is-string v2');
     });
@@ -1316,12 +1291,12 @@ console.log(barFoo.default());`;
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
 
-      const pathToRunImportFrom = path.join(helper.scopes.localScopePath, 'utils');
+      const pathToRunImportFrom = path.join(helper.scopes.localPath, 'utils');
       fs.ensureDirSync(pathToRunImportFrom);
-      helper.command.runCmd(`bit import ${helper.scopes.remoteScope}/bar/foo`, pathToRunImportFrom);
+      helper.command.runCmd(`bit import ${helper.scopes.remote}/bar/foo`, pathToRunImportFrom);
     });
     it('should import to the consumer root directory as if the command was running from the root', () => {
-      const expectedLocation = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'foo.js');
+      const expectedLocation = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'foo.js');
       expect(fs.existsSync(expectedLocation)).to.be.true;
     });
   });
@@ -1358,17 +1333,17 @@ console.log(barFoo.default());`;
       });
       it('should imported v2 successfully and print the result from the latest version', () => {
         const appJsFixture = "const isType = require('./components/utils/is-type'); console.log(isType());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2'); // notice the "v2"
       });
       it('should update the existing record in bit.map', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
       });
       it('should not create a new record in bit.map', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+        expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
       });
     });
   });
@@ -1400,7 +1375,7 @@ console.log(barFoo.default());`;
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
         `error: issues found with the following component dependencies\n\n${
-          helper.scopes.remoteScope
+          helper.scopes.remote
         }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );
     });
@@ -1463,7 +1438,7 @@ console.log(barFoo.default());`;
         '.dependencies',
         'utils',
         'is-type',
-        helper.scopes.remoteScope,
+        helper.scopes.remote,
         '0.0.1',
         'utils',
         'is-type.js'
@@ -1472,7 +1447,7 @@ console.log(barFoo.default());`;
     });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string');
     });
@@ -1504,14 +1479,14 @@ console.log(barFoo.default());`;
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.general.getRequireBitPath('utils', 'is-string');
       const appJsFixture = `const isString = require('${requirePath}'); console.log(isString());`;
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v1 and got is-string');
     });
     it('should successfully print results of is-type@0.0.2 when requiring it directly', () => {
       const requirePath = helper.general.getRequireBitPath('utils', 'is-type');
       const appJsFixture = `const isType = require('${requirePath}'); console.log(isType());`;
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type v2');
     });
@@ -1540,7 +1515,7 @@ console.log(barFoo.default());`;
         localConsumerFiles = helper.fs.getConsumerFiles();
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should rewrite is-type directly into "components" directory', () => {
@@ -1549,8 +1524,8 @@ console.log(barFoo.default());`;
       });
       it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
-        expect(bitMap[`${helper.scopes.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
+        expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
       it('should not show any component in bit status', () => {
         const output = helper.command.runCmd('bit status');
@@ -1577,7 +1552,7 @@ console.log(barFoo.default());`;
       describe('removing is-string', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
-          helper.command.removeComponent(`${helper.scopes.remoteScope}/utils/is-string`, '-f -d -s');
+          helper.command.removeComponent(`${helper.scopes.remote}/utils/is-string`, '-f -d -s');
         });
         it('should not delete is-type from the filesystem', () => {
           localConsumerFiles = helper.fs.getConsumerFiles();
@@ -1586,7 +1561,7 @@ console.log(barFoo.default());`;
         });
         it('should not delete is-type from bitMap', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
     });
@@ -1599,15 +1574,15 @@ console.log(barFoo.default());`;
       });
       it('should keep the existing record of is-type in bit.map as IMPORTED', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
-        expect(bitMap[`${helper.scopes.remoteScope}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
+        expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
       it('changes of is-type in components directory should affect is-string', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
@@ -1619,7 +1594,7 @@ console.log(barFoo.default());`;
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-type');
         helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV2);
-        output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/utils/is-string`); // imports is-type as a dependency
+        output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/utils/is-string`); // imports is-type as a dependency
       });
       it('should throw an error saying is-type is modified, suggesting to override or merge', () => {
         expect(output).to.have.string('unable to import');
@@ -1646,12 +1621,12 @@ console.log(barFoo.default());`;
       });
       it('bit diff should show that the modification is about version bump of is-type', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`- [ ${helper.scopes.remoteScope}/utils/is-type@0.0.1 ]`);
-        expect(diff).to.have.string(`+ [ ${helper.scopes.remoteScope}/utils/is-type@0.0.2 ]`);
+        expect(diff).to.have.string(`- [ ${helper.scopes.remote}/utils/is-type@0.0.1 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/utils/is-type@0.0.2 ]`);
       });
       it('should use the new version of is-type', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
@@ -1683,7 +1658,7 @@ console.log(barFoo.default());`;
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       scopeB = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent(`${helper.scopes.remoteScope}/utils/is-string@0.0.2`, scopeB);
+      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`, scopeB);
       // import to a new local scope
       helper.scopeHelper.initNewLocalScope();
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -1696,7 +1671,7 @@ console.log(barFoo.default());`;
     });
     it('should import the component successfully from scope B to a new local scope', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string v2');
     });
@@ -1712,7 +1687,7 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      const authorScope = helper.scopes.localScope;
+      const authorScope = helper.scopes.local;
 
       helper.scopeHelper.initNewLocalScope(false);
       helper.scopeHelper.addRemoteScope();
@@ -1723,18 +1698,18 @@ console.log(barFoo.default());`;
       const componentPath = path.join('components', 'utils', 'is-string');
       helper.fs.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
       helper.command.tagComponent('utils/is-string');
-      helper.command.exportComponent(`${helper.scopes.remoteScope}/utils/is-string@0.0.2`);
+      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`);
 
-      fs.removeSync(helper.scopes.localScopePath);
+      fs.removeSync(helper.scopes.localPath);
       helper.setLocalScope(authorScope);
       helper.command.importComponent('utils/is-string');
       localConsumerFiles = glob
-        .sync(path.normalize('**/*.js'), { cwd: helper.scopes.localScopePath })
+        .sync(path.normalize('**/*.js'), { cwd: helper.scopes.localPath })
         .map(x => path.normalize(x));
     });
     it('should update the author original component successfully', () => {
       const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string v2');
     });
@@ -1760,7 +1735,7 @@ console.log(barFoo.default());`;
       helper.fs.createFile(path.join('components', 'bar', 'foo'), 'foo.js', barFooFixtureV2);
 
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without --override flag', () => {
@@ -1871,7 +1846,7 @@ console.log(barFoo.default());`;
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
@@ -1887,7 +1862,7 @@ console.log(barFoo.default());`;
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -1906,7 +1881,7 @@ console.log(barFoo.default());`;
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -1916,8 +1891,8 @@ console.log(barFoo.default());`;
           helper.scopeHelper.getClonedLocalScope(clonedScope);
           helper.command.importComponent('bar/foo');
           helper.command.runCmd(
-            `bit import ${helper.scopes.remoteScope}/bar/foo -p new-location`,
-            path.join(helper.scopes.localScopePath, 'components')
+            `bit import ${helper.scopes.remote}/bar/foo -p new-location`,
+            path.join(helper.scopes.localPath, 'components')
           );
           localConsumerFiles = helper.fs.getConsumerFiles();
         });
@@ -1929,7 +1904,7 @@ console.log(barFoo.default());`;
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/new-location'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -1958,12 +1933,12 @@ console.log(barFoo.default());`;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       dependencies = path.join(
-        helper.scopes.localScopePath,
+        helper.scopes.localPath,
         'components',
         '.dependencies',
         'global',
         'simple',
-        helper.scopes.remoteScope,
+        helper.scopes.remote,
         '0.0.1'
       );
       helper.npm.addNpmPackage('lodash.isboolean', '3.0.0');
@@ -1979,7 +1954,7 @@ console.log(barFoo.default());`;
       helper.command.tagAllComponents();
       helper.command.exportComponent('comp/with-deps');
       helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remoteScopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
       helper.bitJson.manageWorkspaces();
       helper.command.importComponent('comp/with-deps');
       helper.packageJson.addKeyValue({ customField: 'bit is awsome' });
@@ -1988,35 +1963,34 @@ console.log(barFoo.default());`;
       expect(dependencies).to.be.a.directory('should not be empty').and.not.empty;
     });
     it('Should contain yarn lock file', () => {
-      expect(path.join(helper.scopes.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
+      expect(path.join(helper.scopes.localPath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
     it('should install  global/simple package dependencies with yarn', () => {
-      expect(path.join(helper.scopes.localScopePath, 'node_modules')).to.be.a.directory('should not be empty').and.not
-        .empty;
-      expect(path.join(helper.scopes.localScopePath, 'node_modules', 'lodash.isboolean')).to.be.a.directory(
+      expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory('should not be empty').and.not.empty;
+      expect(path.join(helper.scopes.localPath, 'node_modules', 'lodash.isboolean')).to.be.a.directory(
         'should contain lodash.isboolean'
       ).and.not.empty;
     });
     it('should contain  workspaces array in package.json  and private true', () => {
-      const pkgJson = helper.packageJson.read(helper.scopes.localScopePath);
+      const pkgJson = helper.packageJson.read(helper.scopes.localPath);
       expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.private).to.be.true;
     });
     it('component dep should be install as npm package', () => {
       const modulePath = path.join(
-        helper.scopes.localScopePath,
+        helper.scopes.localPath,
         'node_modules',
         '@bit',
-        `${helper.scopes.remoteScope}.global.simple`
+        `${helper.scopes.remote}.global.simple`
       );
       expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
     });
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
       helper.command.importComponent('comp/with-deps --override');
-      const pkgJson = helper.packageJson.read(helper.scopes.localScopePath);
+      const pkgJson = helper.packageJson.read(helper.scopes.localPath);
       expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.workspaces).to.be.ofSize(2);
-      expect(path.join(helper.scopes.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
+      expect(path.join(helper.scopes.localPath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
     it('Should not delete custom fields in package.json', () => {
       helper.command.importComponent('comp/with-deps --override');
@@ -2032,7 +2006,7 @@ console.log(barFoo.default());`;
     });
     it('Should save workspaces with custom import path ', () => {
       helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remoteScopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
       helper.bitJson.manageWorkspaces();
       helper.command.importComponent('comp/with-deps -p test');
       const pkgJson = helper.packageJson.read();
@@ -2081,12 +2055,12 @@ console.log(barFoo.default());`;
         helper.command.importComponent('bar/foo');
       });
       it('should not remove the local version', () => {
-        const catComponent = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo`);
+        const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
         expect(catComponent.versions).to.have.property('0.0.1');
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       it('should not override the local component', () => {
-        const catComponent = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo`);
+        const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
         expect(catComponent).to.have.property('state');
         expect(catComponent.state).to.have.property('versions');
         expect(catComponent.state.versions).to.have.property('0.0.2');
@@ -2247,7 +2221,7 @@ console.log(barFoo.default());`;
       it('bit ls should show that only bar/foo has imported', () => {
         const ls = helper.command.listLocalScopeParsed();
         expect(ls).to.be.lengthOf(1);
-        expect(ls[0].id).to.equal(`${helper.scopes.remoteScope}/bar/foo`);
+        expect(ls[0].id).to.equal(`${helper.scopes.remote}/bar/foo`);
       });
     });
     describe('import only utils/* namespace', () => {
@@ -2289,15 +2263,15 @@ console.log(barFoo.default());`;
       it('should import directly (not nested) all dependencies', () => {
         const bitMap = helper.bitMap.readBitMap();
         expect(bitMap)
-          .to.have.property(`${helper.scopes.remoteScope}/utils/is-string@0.0.1`)
+          .to.have.property(`${helper.scopes.remote}/utils/is-string@0.0.1`)
           .that.has.property('origin')
           .equal('IMPORTED');
         expect(bitMap)
-          .to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`)
+          .to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`)
           .that.has.property('origin')
           .equal('IMPORTED');
         expect(bitMap)
-          .to.have.property(`${helper.scopes.remoteScope}/bar-dep@0.0.1`)
+          .to.have.property(`${helper.scopes.remote}/bar-dep@0.0.1`)
           .that.has.property('origin')
           .equal('IMPORTED');
       });
@@ -2310,14 +2284,14 @@ console.log(barFoo.default());`;
       });
       it('should import all dependents', () => {
         expect(output).to.have.string('successfully imported 3 components');
-        expect(output).to.have.string(`${helper.scopes.remoteScope}/utils/is-string`);
-        expect(output).to.have.string(`${helper.scopes.remoteScope}/bar/foo`);
+        expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string`);
+        expect(output).to.have.string(`${helper.scopes.remote}/bar/foo`);
       });
       it('bit list should show them all', () => {
         const list = helper.command.listLocalScope();
-        expect(list).to.have.string(`${helper.scopes.remoteScope}/utils/is-type`);
-        expect(list).to.have.string(`${helper.scopes.remoteScope}/utils/is-string`);
-        expect(list).to.have.string(`${helper.scopes.remoteScope}/bar/foo`);
+        expect(list).to.have.string(`${helper.scopes.remote}/utils/is-type`);
+        expect(list).to.have.string(`${helper.scopes.remote}/utils/is-string`);
+        expect(list).to.have.string(`${helper.scopes.remote}/bar/foo`);
       });
     });
   });
@@ -2334,9 +2308,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.addRemoteScope();
     });
     it('bit show of the remote scope should show both versions of the dependent', () => {
-      const show = helper.command.showComponentParsed(
-        `${helper.scopes.remoteScope}/utils/is-type --remote --dependents`
-      );
+      const show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-type --remote --dependents`);
       expect(show.dependentsInfo).to.have.lengthOf(3);
       const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
       const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');
@@ -2355,11 +2327,11 @@ console.log(barFoo.default());`;
       });
       it('should import the dependent only once and with the highest version', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/bar/foo@0.0.2`);
-        expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/bar/foo@0.0.1`);
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.2`);
+        expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
       });
       it('bit show of the local scope show both versions of the dependent', () => {
-        const show = helper.command.showComponentParsed(`${helper.scopes.remoteScope}/utils/is-type --dependents`);
+        const show = helper.command.showComponentParsed(`${helper.scopes.remote}/utils/is-type --dependents`);
         expect(show.dependentsInfo).to.have.lengthOf(3);
         const barFooV1 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.1');
         const barFooV2 = show.dependentsInfo.find(d => d.id.name === 'bar/foo' && d.id.version === '0.0.2');

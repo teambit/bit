@@ -46,7 +46,7 @@ describe('bit doctor infra', function () {
           output = helper.command.doctor({ save: '', j: '' });
           parsedOutput = JSON.parse(output);
           const filePath = parsedOutput.savedFilePath;
-          const fileFullPath = path.join(helper.scopes.localScopePath, filePath);
+          const fileFullPath = path.join(helper.scopes.localPath, filePath);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
@@ -60,7 +60,7 @@ describe('bit doctor infra', function () {
           expect(output).to.have.string(`File written to ${fileName}`);
         });
         it('should create a non empty tar file in the file system', () => {
-          const fileFullPath = path.join(helper.scopes.localScopePath, fileName);
+          const fileFullPath = path.join(helper.scopes.localPath, fileName);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });

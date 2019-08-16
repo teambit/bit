@@ -69,7 +69,7 @@ describe('custom module resolutions', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -80,12 +80,12 @@ describe('custom module resolutions', function () {
         expect(output).to.not.have.string('modified');
       });
       it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
         expect(packageJson).to.have.property('bit');
         expect(packageJson.bit).to.have.property('resolveAliases');
         expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
         expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-          `@bit/${helper.scopes.remoteScope}.utils.is-string`
+          `@bit/${helper.scopes.remote}.utils.is-string`
         );
       });
       describe('importing the component using isolated environment', () => {
@@ -105,8 +105,8 @@ describe('custom module resolutions', function () {
         let packDir;
         before(() => {
           helper.extensions.importNpmPackExtension();
-          packDir = path.join(helper.scopes.localScopePath, 'pack');
-          helper.command.runCmd(`bit npm-pack ${helper.scopes.remoteScope}/bar/foo -o -k -d ${packDir}`);
+          packDir = path.join(helper.scopes.localPath, 'pack');
+          helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
         });
         it('should create the specified directory', () => {
           expect(packDir).to.be.a.path();
@@ -126,7 +126,7 @@ describe('custom module resolutions', function () {
           expect(packageJson.bit).to.have.property('resolveAliases');
           expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
           expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-            `@bit/${helper.scopes.remoteScope}.utils.is-string`
+            `@bit/${helper.scopes.remote}.utils.is-string`
           );
         });
       });
@@ -177,7 +177,7 @@ describe('custom module resolutions', function () {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
         });
         it('should generate the non-relative links correctly', () => {
           const result = helper.command.runCmd('node app.js');
@@ -230,7 +230,7 @@ describe('custom module resolutions', function () {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
         });
         it('should generate the non-relative links correctly', () => {
           const result = helper.command.runCmd('node app.js');
@@ -244,8 +244,8 @@ describe('custom module resolutions', function () {
           let packDir;
           before(() => {
             helper.extensions.importNpmPackExtension();
-            packDir = path.join(helper.scopes.localScopePath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remoteScope}/bar/foo -o -k -d ${packDir}`);
+            packDir = path.join(helper.scopes.localPath, 'pack');
+            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
@@ -330,7 +330,7 @@ describe('custom module resolutions', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -351,16 +351,14 @@ describe('custom module resolutions', function () {
 
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         after(() => {
           npmCiRegistry.destroy();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
-          const appJsFixture = `const barFoo = require('@ci/${
-            helper.scopes.remoteScope
-          }.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -379,7 +377,7 @@ describe('custom module resolutions', function () {
       npmCiRegistry.setCiScopeInBitJson();
 
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      const destPngFile = path.join(helper.scopes.localScopePath, 'src/assets', 'png_fixture.png');
+      const destPngFile = path.join(helper.scopes.localPath, 'src/assets', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const barFooFixture = "require('assets/png_fixture.png');";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
@@ -404,7 +402,7 @@ describe('custom module resolutions', function () {
       });
       it('should create a symlink on node_modules pointing to the binary file', () => {
         const expectedDest = path.join(
-          helper.scopes.localScopePath,
+          helper.scopes.localPath,
           'components/bar/foo/node_modules/assets/png_fixture.png'
         );
         expect(expectedDest).to.be.a.file();
@@ -421,15 +419,15 @@ describe('custom module resolutions', function () {
 
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
         });
         after(() => {
           npmCiRegistry.destroy();
         });
         it('should be able to install the package successfully and generate the symlink to the file', () => {
           const expectedDest = path.join(
-            helper.scopes.localScopePath,
-            `node_modules/@ci/${helper.scopes.remoteScope}.bar.foo/node_modules/assets/png_fixture.png`
+            helper.scopes.localPath,
+            `node_modules/@ci/${helper.scopes.remote}.bar.foo/node_modules/assets/png_fixture.png`
           );
           expect(expectedDest).to.be.a.file();
 
@@ -499,7 +497,7 @@ describe('custom module resolutions', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -511,7 +509,7 @@ describe('custom module resolutions', function () {
       });
       describe('deleting the link generated for the custom-module-resolution', () => {
         before(() => {
-          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules'));
+          fs.removeSync(path.join(helper.scopes.localPath, 'components/bar/foo/node_modules'));
         });
         it('bit status should show it as missing links and not as missing packages dependencies', () => {
           const output = helper.command.runCmd('bit status');

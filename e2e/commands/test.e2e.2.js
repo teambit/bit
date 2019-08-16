@@ -282,10 +282,7 @@ describe('bit test command', function () {
     describe('when running bit ci-update', () => {
       let output;
       before(() => {
-        output = helper.command.runCmd(
-          `bit ci-update ${helper.scopes.remoteScope}/utils/is-type`,
-          helper.scopes.remoteScopePath
-        );
+        output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/utils/is-type`, helper.scopes.remotePath);
       });
       it('should be able to run the tests on an isolated environment', () => {
         expect(output).to.have.string('tests passed');
@@ -303,7 +300,7 @@ describe('bit test command', function () {
         helper.command.importComponent('utils/is-type --conf');
       });
       it('should save the tester with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localScopePath, 'components/utils/is-type'));
+        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localPath, 'components/utils/is-type'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('tester');
         expect(bitJson.env.tester).to.have.string('testers/mocha');

@@ -9,7 +9,7 @@ describe('bit export command', function () {
   const helper = new Helper();
   const createFile = (dir, name) => {
     const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
-    fs.outputFileSync(path.join(helper.scopes.localScopePath, dir, `${name}.js`), componentFixture);
+    fs.outputFileSync(path.join(helper.scopes.localPath, dir, `${name}.js`), componentFixture);
   };
   after(() => {
     helper.scopeHelper.destroy();
@@ -24,7 +24,7 @@ describe('bit export command', function () {
     });
     it('should write the exported component into bit.map', () => {
       const bitMap = helper.bitMap.readBitMap();
-      expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/bar/foo${VERSION_DELIMITER}0.0.1`);
+      expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo${VERSION_DELIMITER}0.0.1`);
     });
   });
   describe('with multiple components, each has one file', () => {
@@ -42,7 +42,7 @@ describe('bit export command', function () {
       helper.command.exportAllComponents();
     });
     it('should export them all', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope}`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote}`);
       expect(output.includes('found 4 components')).to.be.true;
       expect(output.includes('baz/foo1')).to.be.true;
       expect(output.includes('baz/foo2')).to.be.true;
@@ -64,7 +64,7 @@ describe('bit export command', function () {
       helper.command.exportAllComponents();
     });
     it('should export them all', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope} --raw`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote} --raw`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar')).to.be.true;
       expect(output.includes('baz')).to.be.true;
@@ -83,7 +83,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope} --raw`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote} --raw`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('bar/foo1')).to.be.true;
       expect(output.includes('bar/foo2')).to.be.true;
@@ -110,7 +110,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('utils/is-string');
     });
     it('should export them successfully', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope}`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote}`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('utils/is-type')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
@@ -132,7 +132,7 @@ describe('bit export command', function () {
       helper.command.exportAllComponents();
     });
     it('should export them all', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope}`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote}`);
       expect(output.includes('found 2 components')).to.be.true;
       expect(output.includes('utils/is-type')).to.be.true;
       expect(output.includes('utils/is-string')).to.be.true;
@@ -158,7 +158,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('bar/foo');
     });
     it('should export it with no errors', () => {
-      const output = helper.command.runCmd(`bit list ${helper.scopes.remoteScope}`);
+      const output = helper.command.runCmd(`bit list ${helper.scopes.remote}`);
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
       expect(output.includes('2')).to.be.true; // this is the version
@@ -187,7 +187,7 @@ describe('bit export command', function () {
     });
     it('should export it with no errors', () => {
       const output = helper.command.listRemoteScope();
-      expect(output.includes(`${helper.scopes.remoteScope}/bar/foo@0.0.3`)).to.be.true;
+      expect(output.includes(`${helper.scopes.remote}/bar/foo@0.0.3`)).to.be.true;
     });
   });
 
@@ -207,8 +207,8 @@ describe('bit export command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
-      helper.command.tagComponent(`${helper.scopes.remoteScope}/utils/is-string -f`);
-      helper.command.exportComponent(`${helper.scopes.remoteScope}/utils/is-string`);
+      helper.command.tagComponent(`${helper.scopes.remote}/utils/is-string -f`);
+      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string`);
     });
 
     it('should export it successfully', () => {
@@ -261,11 +261,11 @@ describe('bit export command', function () {
       helper.command.importComponent('bar/foo');
 
       helper.command.tagComponent('bar/foo -f'); // v3
-      helper.command.exportComponent(`${helper.scopes.remoteScope}/bar/foo`);
+      helper.command.exportComponent(`${helper.scopes.remote}/bar/foo`);
     });
     it('should export it with no errors', () => {
       const output = helper.command.listRemoteScope();
-      expect(output).to.have.string(`${helper.scopes.remoteScope}/bar/foo@0.0.3`);
+      expect(output).to.have.string(`${helper.scopes.remote}/bar/foo@0.0.3`);
     });
   });
 
@@ -300,7 +300,7 @@ describe('bit export command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      destPngFile = path.join(helper.scopes.localScopePath, 'bar', 'png_fixture.png');
+      destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
@@ -388,13 +388,13 @@ describe('bit export command', function () {
       helper.command.exportComponent('utils/is-string2', remote2);
     });
     it('should have is-type@0.0.2 on that remote', () => {
-      const isType = helper.command.catComponent(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`, remote2Path);
+      const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
       expect(isType).to.have.property('files');
     });
     it('should not have is-type@0.0.1 on that remote', () => {
       let isType;
       try {
-        isType = helper.command.catComponent(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`, remote2Path);
+        isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
       } catch (err) {
         isType = err.toString();
       }
@@ -412,7 +412,7 @@ describe('bit export command', function () {
         expect(output).to.have.string('exported 1 components to scope');
       });
       it('should fetch is-type@0.0.1 from remote1', () => {
-        const isType = helper.command.catComponent(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`, remote2Path);
+        const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
         expect(isType).to.have.property('files');
       });
     });
@@ -431,8 +431,8 @@ describe('bit export command', function () {
     });
     it('.bitmap should keep the current version and do not update to the latest version', () => {
       const bitMap = helper.bitMap.readBitMap();
-      expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/bar/foo@1.0.0`);
-      expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/bar/foo@2.0.0`);
+      expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@1.0.0`);
+      expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@2.0.0`);
     });
     it('bit show should display the component with the current version, not the latest', () => {
       const show = helper.command.showComponent('bar/foo');
@@ -449,8 +449,8 @@ describe('bit export command', function () {
     let scopeBeforeExport;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      fs.emptyDirSync(helper.scopes.remoteScopePath);
-      helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remoteScopePath);
+      fs.emptyDirSync(helper.scopes.remotePath);
+      helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
@@ -459,12 +459,12 @@ describe('bit export command', function () {
     });
     describe('when the group name does not exist', () => {
       before(() => {
-        fs.emptyDirSync(helper.scopes.remoteScopePath);
-        helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remoteScopePath);
+        fs.emptyDirSync(helper.scopes.remotePath);
+        helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remotePath);
         helper.scopeHelper.addRemoteScope();
       });
       it('should throw an error indicating that the group does not exist (unless it is Windows)', () => {
-        const output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remoteScope}`);
+        const output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote}`);
         if (isWin) {
           expect(output).to.have.string('exported 1 components');
         } else {
@@ -478,9 +478,9 @@ describe('bit export command', function () {
       } else {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeExport);
-          fs.emptyDirSync(helper.scopes.remoteScopePath);
+          fs.emptyDirSync(helper.scopes.remotePath);
           const currentGroup = helper.command.runCmd('id -gn');
-          helper.command.runCmd(`bit init --bare --shared ${currentGroup}`, helper.scopes.remoteScopePath);
+          helper.command.runCmd(`bit init --bare --shared ${currentGroup}`, helper.scopes.remotePath);
           helper.scopeHelper.addRemoteScope();
         });
         it('should export the component successfully and change the owner to that group', () => {

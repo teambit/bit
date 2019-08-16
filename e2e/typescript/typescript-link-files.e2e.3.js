@@ -72,7 +72,7 @@ describe('typescript components with link files', function () {
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-string and got foo');
     });
@@ -116,7 +116,7 @@ describe('typescript components with link files', function () {
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = `const barFoo = require('./components/bar/foo');
   console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(
           'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
@@ -124,7 +124,7 @@ describe('typescript components with link files', function () {
       });
       it('should be able to compile the main component with auto-generated .ts files without errors', () => {
         helper.env.importCompiler('bit.envs/compilers/react-typescript');
-        const barFooFile = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+        const barFooFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
         const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
         const result = helper.command.runCmd(`tsc ${barFooFile}`, tscPath);
         // in case of compilation error it throws an exception

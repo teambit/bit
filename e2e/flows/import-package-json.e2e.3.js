@@ -32,7 +32,7 @@ describe('component with package.json as a file of the component', function () {
       helper.command.importComponent('foo/pkg');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
       bitMap = helper.bitMap.readBitMap();
-      componentMap = bitMap[`${helper.scopes.remoteScope}/foo/pkg@0.0.1`];
+      componentMap = bitMap[`${helper.scopes.remote}/foo/pkg@0.0.1`];
     });
     it('should wrap the component files in a wrapper dir', () => {
       expect(consumerFiles).to.include(path.join('components/foo/pkg', WRAPPER_DIR, 'package.json'));
@@ -96,7 +96,7 @@ describe('component with package.json as a file of the component', function () {
       helper.command.importComponent('bar/foo');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
       bitMap = helper.bitMap.readBitMap();
-      componentMap = bitMap[`${helper.scopes.remoteScope}/bar/foo@0.0.1`];
+      componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
     });
     it('should keep the files inside the sharedDir and not strip that dir', () => {
       expect(consumerFiles).to.include(path.join('components/bar/foo/bar/package.json'));
@@ -140,12 +140,12 @@ describe('component with package.json as a file of the component', function () {
       helper.command.importComponent('bar/foo');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
       bitMap = helper.bitMap.readBitMap();
-      componentMapBarFoo = bitMap[`${helper.scopes.remoteScope}/bar/foo@0.0.1`];
-      componentMapFooPkg = bitMap[`${helper.scopes.remoteScope}/foo/pkg@0.0.1`];
+      componentMapBarFoo = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
+      componentMapFooPkg = bitMap[`${helper.scopes.remote}/foo/pkg@0.0.1`];
     });
     it('should wrap the nested component (the dependency) with the wrap dir', () => {
       expect(consumerFiles).to.include(
-        path.join('components/.dependencies/foo/pkg', helper.scopes.remoteScope, '0.0.1', WRAPPER_DIR, 'package.json')
+        path.join('components/.dependencies/foo/pkg', helper.scopes.remote, '0.0.1', WRAPPER_DIR, 'package.json')
       );
     });
     it('should wrap the component files in a wrapper dir', () => {
@@ -156,7 +156,7 @@ describe('component with package.json as a file of the component', function () {
     });
     it('should generate a link to the correct path of its dependency package.json file', () => {
       const linkPath = path.join('components/bar/foo', WRAPPER_DIR, 'package.json');
-      expect(path.join(helper.scopes.localScopePath, linkPath)).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, linkPath)).to.be.a.path();
       const linkContent = helper.fs.readJsonFile(linkPath);
       expect(linkContent).to.be.deep.equal(fixturePackageJson);
     });
@@ -190,17 +190,17 @@ describe('component with package.json as a file of the component', function () {
         helper.command.tagAllComponents();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
-        const fooPkg = helper.command.catComponent(`${helper.scopes.remoteScope}/foo/pkg@latest`);
+        const fooPkg = helper.command.catComponent(`${helper.scopes.remote}/foo/pkg@latest`);
         expect(fooPkg.mainFile).to.equal('package.json');
         expect(fooPkg.files[0].relativePath).to.equal('package.json');
       });
       it('should strip the wrap dir from the dependent', () => {
-        const barFoo = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo@latest`);
+        const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
         expect(barFoo.mainFile).to.equal('foo.js');
         expect(barFoo.files[0].relativePath).to.equal('foo.js');
       });
       it('should strip the wrap dir from the dependency relative paths', () => {
-        const barFoo = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/foo@latest`);
+        const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
@@ -222,7 +222,7 @@ describe('component with package.json as a file of the component', function () {
           // helper.command.importAllComponents(true);
         });
         it('should not add wrapDir for the author', () => {
-          expect(path.join(helper.scopes.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
+          expect(path.join(helper.scopes.localPath, WRAPPER_DIR)).to.not.have.a.path();
         });
         it('should not override the author package.json', () => {
           const packageJson = helper.packageJson.read();

@@ -10,15 +10,15 @@ export default class BitJsonHelper {
   constructor(scopes: ScopesData) {
     this.scopes = scopes;
   }
-  readBitJson(bitJsonDir: string = this.scopes.localScopePath) {
+  readBitJson(bitJsonDir: string = this.scopes.localPath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-  writeBitJson(bitJson: Object, bitJsonDir: string = this.scopes.localScopePath) {
+  writeBitJson(bitJson: Object, bitJsonDir: string = this.scopes.localPath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
-  addKeyValToBitJson(bitJsonDir: string = this.scopes.localScopePath, key: string, val: any) {
+  addKeyValToBitJson(bitJsonDir: string = this.scopes.localPath, key: string, val: any) {
     const bitJson = this.readBitJson(bitJsonDir);
     bitJson[key] = val;
     this.writeBitJson(bitJson, bitJsonDir);
@@ -35,7 +35,7 @@ export default class BitJsonHelper {
     return env[envName];
   }
   addFileToEnvInBitJson(
-    bitJsonPath: string = this.scopes.localScopePath,
+    bitJsonPath: string = this.scopes.localPath,
     fileName: string,
     filePath: string,
     envType: 'compiler' | 'tester'
@@ -43,7 +43,7 @@ export default class BitJsonHelper {
     this._addKeyValToEnvPropInBitJson(bitJsonPath, 'files', fileName, filePath, envType);
   }
   addToRawConfigOfEnvInBitJson(
-    bitJsonPath: string = this.scopes.localScopePath,
+    bitJsonPath: string = this.scopes.localPath,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
@@ -62,7 +62,7 @@ export default class BitJsonHelper {
     bitJson.componentsDefaultDirectory = content;
     this.writeBitJson(bitJson);
   }
-  corruptBitJson(bitJsonPath: string = path.join(this.scopes.localScopePath, 'bit.json')) {
+  corruptBitJson(bitJsonPath: string = path.join(this.scopes.localPath, 'bit.json')) {
     fs.writeFileSync(bitJsonPath, '"corrupted');
   }
   modifyFieldInBitJson(key: string, value: string) {
@@ -76,7 +76,7 @@ export default class BitJsonHelper {
     return envName;
   }
   _addKeyValToEnvPropInBitJson(
-    bitJsonDir: string = this.scopes.localScopePath,
+    bitJsonDir: string = this.scopes.localPath,
     propName: string,
     key: string,
     val: string,

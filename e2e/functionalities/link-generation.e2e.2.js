@@ -28,7 +28,7 @@ describe('link generation', function () {
     });
     it('should create a link file in the same place where it was a directory before', () => {
       expect(
-        path.join(helper.scopes.localScopePath, `node_modules/@bit/${helper.scopes.remoteScope}.bar.foo/bar`)
+        path.join(helper.scopes.localPath, `node_modules/@bit/${helper.scopes.remote}.bar.foo/bar`)
       ).to.be.a.file();
     });
   });
