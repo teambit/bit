@@ -95,6 +95,10 @@ export default class DependencyGraph {
       const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
         // $FlowFixMe
         const version = await modelComponent.loadVersion(versionNum, scope.objects);
+        if (!version) {
+          // a component might be in the scope with only the latest version
+          return;
+        }
         const id = modelComponent.toBitId().changeVersion(versionNum);
         this._addDependenciesToGraph(id, graph, version);
       });
@@ -104,19 +108,25 @@ export default class DependencyGraph {
     return graph;
   }
 
-  static async buildGraphFromWorkspace(consumer: Consumer): Promise<Graph> {
+  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest: boolean = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
+      const latestVersion = modelComponent.latest();
       const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+        if (onlyLatest && latestVersion !== versionNum) return;
         // $FlowFixMe
         const id = modelComponent.toBitId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find(comp => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
           componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects));
+        if (!version) {
+          // a component might be in the scope with only the latest version (happens when it's a nested dep)
+          return;
+        }
         this._addDependenciesToGraph(id, graph, version);
       });
       await Promise.all(buildVersionP);
@@ -150,7 +160,8 @@ export default class DependencyGraph {
    */
   getSubGraphOfConnectedComponents(id: BitId): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
-    const graphWithId = connectedGraphs.find(graph => graph.includes(id.toString()));
+    const idWithVersion = this._getIdWithLatestVersion(id);
+    const graphWithId = connectedGraphs.find(graph => graph.includes(idWithVersion.toString()));
     if (!graphWithId) {
       throw new Error(`${id.toString()} is missing from the dependency graph`);
     }

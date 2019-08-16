@@ -1,5 +1,5 @@
 /** @flow */
-import type Repository from './repository';
+import Repository from './repository';
 import BitObject from './object';
 
 export default class Ref {
