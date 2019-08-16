@@ -33,7 +33,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
       helper.env.importCompiler('bit.envs/compilers/flow@0.0.6');
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
-      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.runCmd('npm init -y');
       helper.command.runCmd('npm install chai -D');
       helper.command.tagAllComponents();
@@ -46,7 +46,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
-      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.importComponent('string/pad-left -p src/pad-left');
       scopeAfterImport = helper.scopeHelper.cloneLocalScope();
     });
@@ -83,7 +83,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should not add the dist.entry if it was not removed before', () => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
+        helper.bitJson.modifyField('dist', { target: 'dist', entry: 'any' });
         helper.command.importComponent('string/pad-left -p src/pad-left');
         helper.command.tagComponent('string/pad-left', 'msg', '-f');
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
@@ -152,7 +152,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           Object.keys(bitMap).forEach((id) => {
             expect(id).not.to.have.string('pad-left');
             expect(id).not.to.have.string('is-string');
@@ -171,9 +171,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const relativeSyntax = '../is-string/is-string';
         const customSyntax = 'is-string';
         fs.outputFileSync(padLeftFile, padLeftContent.replace(relativeSyntax, customSyntax));
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
 
         // an intermediate step, make sure, bit-diff is not throwing an error
         const diffOutput = helper.command.diff();
@@ -199,7 +199,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
-          helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           helper.command.importComponent('string/pad-left -p src/pad-left');
         });
         it('should not show the component as modified when imported', () => {
@@ -416,7 +416,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         );
       });
       it('should not change the rootDir in bitMap file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         const padLeft = bitMap[`${helper.scopes.remote}/string/pad-left@0.0.1`];
         expect(padLeft.rootDir).to.equal('src/pad-left');
       });
@@ -453,7 +453,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             }
           }
         };
-        helper.bitJson.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverrides(overrides);
         helper.command.tagAllComponents();
       });
       it('should save pad-left without is-string dependency', () => {
@@ -494,7 +494,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             helper.command.importComponent('string/pad-left');
           });
           it('should write the updated overrides into consumer bit.json', () => {
-            const bitJson = helper.bitJson.readBitJson();
+            const bitJson = helper.bitJson.read();
             const padLeftComp = `${helper.scopes.remote}/string/pad-left`;
             expect(bitJson.overrides).to.have.property(padLeftComp);
             expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
@@ -502,7 +502,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
           });
           it('should write the compiler and the tester as strings because they dont have special configuration', () => {
-            const bitJson = helper.bitJson.readBitJson();
+            const bitJson = helper.bitJson.read();
             const padLeftComp = `${helper.scopes.remote}/string/pad-left`;
             expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
             expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
@@ -515,7 +515,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importComponent('string/pad-left -p src/pad-left');
-        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+        helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       });
       it('should show a descriptive error when tagging the component', () => {
         const error = helper.general.runWithTryCatch('bit tag -a -s 2.0.0');

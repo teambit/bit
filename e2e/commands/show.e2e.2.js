@@ -17,7 +17,7 @@ describe('bit show command', function () {
   });
   describe('run before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then show component', () => {
-      helper.bitMap.createBitMap();
+      helper.bitMap.create();
       helper.fs.createFile('bar', 'foo.js');
       const output = helper.command.showComponent('bar/foo');
       expect(output).to.include('bar/foo');
@@ -189,13 +189,13 @@ describe('bit show command', function () {
       describe('when the compiler is changed in the consumer bit.json', () => {
         let bitJson;
         before(() => {
-          bitJson = helper.bitJson.readBitJson();
+          bitJson = helper.bitJson.read();
           const clonedBitJson = R.clone(bitJson);
           clonedBitJson.env.compiler = 'scope/namespace/name@0.0.1';
-          helper.bitJson.writeBitJson(clonedBitJson);
+          helper.bitJson.write(clonedBitJson);
         });
         after(() => {
-          helper.bitJson.writeBitJson(bitJson);
+          helper.bitJson.write(bitJson);
         });
         it('should display the compiler of the component', () => {
           const outputCompiler = output.compiler;
@@ -328,7 +328,7 @@ describe('bit show command', function () {
     });
 
     it('Should not show component if bit.json is corrupted', () => {
-      helper.bitJson.corruptBitJson();
+      helper.bitJson.corrupt();
       try {
         helper.command.runCmd('bit show comp/comp -j');
       } catch (err) {
@@ -352,9 +352,9 @@ describe('bit show command', function () {
     describe('when the consumer bit.json has a compiler', () => {
       let jsonOutput;
       before(() => {
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.env.compiler = 'scope/namespace/name@0.0.1';
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
         const output = helper.command.showComponent('bar/foo --json');
         jsonOutput = JSON.parse(output);
       });
@@ -371,19 +371,19 @@ describe('bit show command', function () {
       helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
-      const beforeRemoveBitMap = helper.bitMap.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.read();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       helper.fs.deletePath('bar/foo.js');
       const output = helper.command.showComponent('bar/foo -j');
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       const files = bitMap['bar/foo'].files;
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
       expect(JSON.parse(output).files).to.be.ofSize(1);
     });
     it('Should throw error that all files were removed', () => {
-      const beforeRemoveBitMap = helper.bitMap.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.read();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       helper.fs.deletePath('bar/index.js');
@@ -581,7 +581,7 @@ describe('bit show command', function () {
           }
         }
       };
-      helper.bitJson.addOverridesToBitJson(overrides);
+      helper.bitJson.addOverrides(overrides);
     });
     it('should not show the overrides data when --detailed was not used', () => {
       const barFoo = helper.command.showComponent('bar/foo');

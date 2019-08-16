@@ -17,10 +17,10 @@ export default class ExtensionsHelper {
 
   importAndConfigureExtension(id: string) {
     this.command.importExtension(id);
-    const bitJson = this.bitJson.readBitJson();
+    const bitJson = this.bitJson.read();
     // $FlowFixMe
     bitJson.extensions = { [id]: {} };
-    this.bitJson.writeBitJson(bitJson);
+    this.bitJson.write(bitJson);
   }
 
   importNpmPackExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {

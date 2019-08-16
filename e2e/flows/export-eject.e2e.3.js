@@ -41,7 +41,7 @@ chai.use(require('chai-fs'));
         ).to.be.a.path();
       });
       it('should delete the component from bit.map', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         Object.keys(bitMap).forEach((id) => {
           expect(id).not.to.have.string('foo');
         });

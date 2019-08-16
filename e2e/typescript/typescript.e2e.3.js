@@ -215,9 +215,9 @@ describe('typescript', function () {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.scopeHelper.addRemoteScope();
-          const bitJson = helper.bitJson.readBitJson();
+          const bitJson = helper.bitJson.read();
           bitJson.resolveModules = { modulesDirectories: ['src'] };
-          helper.bitJson.writeBitJson(bitJson);
+          helper.bitJson.write(bitJson);
           const isTypeFixture = "export default function isType() { return 'got is-type'; };";
           helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
           helper.command.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
@@ -303,9 +303,9 @@ describe('typescript', function () {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.scopeHelper.addRemoteScope();
-          const bitJson = helper.bitJson.readBitJson();
+          const bitJson = helper.bitJson.read();
           bitJson.resolveModules = { aliases: { '@': 'src' } };
-          helper.bitJson.writeBitJson(bitJson);
+          helper.bitJson.write(bitJson);
 
           const isTypeFixture = "export default function isType() { return 'got is-type'; };";
           helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
@@ -402,7 +402,7 @@ describe('typescript', function () {
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+        helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
         helper.command.importComponent('bar/foo');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -451,7 +451,7 @@ describe('typescript', function () {
             helper.scopeHelper.reInitLocalScope();
             npmCiRegistry.setCiScopeInBitJson();
             npmCiRegistry.setResolver();
-            helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+            helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
             helper.command.importComponent('bar/foo');
           });
           it('package.json of the dist should point to the dist file with .js extension (not .ts)', () => {

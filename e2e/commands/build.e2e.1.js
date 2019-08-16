@@ -154,7 +154,7 @@ describe('bit build', function () {
       describe('changing dist target', () => {
         let rebuildOutput;
         before(() => {
-          helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           rebuildOutput = helper.command.build();
         });
         it('should rebuild the component and save it on the specified target', () => {
@@ -233,7 +233,7 @@ describe('bit build', function () {
           });
           describe('importing when the dist is outside the components dir', () => {
             before(() => {
-              helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+              helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
               helper.command.importComponent('bar/foo -O');
               packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
             });

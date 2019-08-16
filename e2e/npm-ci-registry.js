@@ -96,10 +96,10 @@ EOD`;
    * them later on into @ci scope of Verdaccio registry
    */
   setCiScopeInBitJson() {
-    const bitJson = this.helper.bitJson.readBitJson();
+    const bitJson = this.helper.bitJson.read();
     // $FlowFixMe
     bitJson.bindingPrefix = '@ci';
-    this.helper.bitJson.writeBitJson(bitJson);
+    this.helper.bitJson.write(bitJson);
   }
 
   /**

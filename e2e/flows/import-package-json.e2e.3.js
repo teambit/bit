@@ -31,7 +31,7 @@ describe('component with package.json as a file of the component', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('foo/pkg');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
-      bitMap = helper.bitMap.readBitMap();
+      bitMap = helper.bitMap.read();
       componentMap = bitMap[`${helper.scopes.remote}/foo/pkg@0.0.1`];
     });
     it('should wrap the component files in a wrapper dir', () => {
@@ -95,7 +95,7 @@ describe('component with package.json as a file of the component', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
-      bitMap = helper.bitMap.readBitMap();
+      bitMap = helper.bitMap.read();
       componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
     });
     it('should keep the files inside the sharedDir and not strip that dir', () => {
@@ -139,7 +139,7 @@ describe('component with package.json as a file of the component', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
-      bitMap = helper.bitMap.readBitMap();
+      bitMap = helper.bitMap.read();
       componentMapBarFoo = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
       componentMapFooPkg = bitMap[`${helper.scopes.remote}/foo/pkg@0.0.1`];
     });

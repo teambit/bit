@@ -72,7 +72,7 @@ describe('bit checkout command', function () {
             expect(fooContent.toString()).to.equal(barFooV1);
           });
           it('should update bitmap with the used version', () => {
-            const bitMap = helper.bitMap.readBitMap();
+            const bitMap = helper.bitMap.read();
             expect(bitMap).to.have.property('bar/foo@0.0.5');
             expect(bitMap).to.not.have.property('bar/foo');
             expect(bitMap).to.not.have.property('bar/foo@0.0.10');
@@ -137,7 +137,7 @@ describe('bit checkout command', function () {
         let bitMap;
         before(() => {
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo');
-          bitMap = helper.bitMap.readBitMap();
+          bitMap = helper.bitMap.read();
         });
         it('should display a successful message', () => {
           expect(output).to.have.string(successOutput);
@@ -194,7 +194,7 @@ describe('bit checkout command', function () {
         let bitMap;
         before(() => {
           output = helper.command.checkoutVersion('0.0.1', 'bar/foo');
-          bitMap = helper.bitMap.readBitMap();
+          bitMap = helper.bitMap.read();
         });
         it('should display a successful message', () => {
           expect(output).to.have.string(successOutput);
@@ -357,7 +357,7 @@ describe('bit checkout command', function () {
       expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
     });
     it('should update bitmap to not track the new files', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('bar/foo@0.0.1');
       expect(bitMap).to.not.have.property('bar/foo@0.0.2');
       expect(bitMap['bar/foo@0.0.1'].files).to.be.lengthOf(1);
@@ -399,7 +399,7 @@ describe('bit checkout command', function () {
         expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
       });
       it('should update bitmap with the specified version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -426,7 +426,7 @@ describe('bit checkout command', function () {
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should update bitmap with the used version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -455,7 +455,7 @@ describe('bit checkout command', function () {
         expect(fileContent).to.be.equal(barFooV3);
       });
       it('should update bitmap with the used version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -483,7 +483,7 @@ describe('bit checkout command', function () {
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('bar/foo@0.0.1');
           const files = bitMap['bar/foo@0.0.1'].files;
           expect(files).to.be.lengthOf(2);
@@ -505,7 +505,7 @@ describe('bit checkout command', function () {
           expect(output).to.not.have.string('bar/foo2.js');
         });
         it('should not track the file in bitmap', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('bar/foo@0.0.1');
           const files = bitMap['bar/foo@0.0.1'].files;
           expect(files).to.be.lengthOf(1);
@@ -530,7 +530,7 @@ describe('bit checkout command', function () {
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep tracking the file in bitmap', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('bar/foo@0.0.1');
           const files = bitMap['bar/foo@0.0.1'].files;
           expect(files).to.be.lengthOf(2);
@@ -562,7 +562,7 @@ describe('bit checkout command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should update bitmap with the used version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -593,7 +593,7 @@ describe('bit checkout command', function () {
         expect(output).to.have.string(FileStatusWithoutChalk.merged);
       });
       it('should update bitmap with the used version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -660,7 +660,7 @@ describe('bit checkout command', function () {
         expect(output).to.have.string('0.0.1');
       });
       it('should update bitmap with the specified version for all components', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.have.property('bar/foo2@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo@0.0.2');
@@ -678,7 +678,7 @@ describe('bit checkout command', function () {
           expect(output).to.have.string('bar/foo2@0.0.3');
         });
         it('should update bitmap with each component to its latest', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('bar/foo@0.0.2');
           expect(bitMap).to.have.property('bar/foo2@0.0.3');
           expect(bitMap).to.not.have.property('bar/foo@0.0.1');

@@ -24,7 +24,7 @@ describe('bit status command', function () {
   });
   describe('before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then run  status ', () => {
-      helper.bitMap.createBitMap();
+      helper.bitMap.create();
       helper.fs.createFile('bar', 'foo.js');
       const output = helper.command.runCmd('bit status');
       expect(output).to.include('bar/foo');
@@ -418,7 +418,7 @@ describe('bit status command', function () {
       helper.fixtures.createComponentBarFoo();
     });
     it('Should not show status if bit.json is corrupted', () => {
-      helper.bitJson.corruptBitJson();
+      helper.bitJson.corrupt();
       try {
         helper.command.runCmd('bit status');
       } catch (err) {
@@ -438,11 +438,11 @@ describe('bit status command', function () {
         helper.fs.deletePath('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.bitMap.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.read();
         const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
         helper.command.runCmd('bit status');
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         const files = bitMap['bar/foo'].files;
         expect(files).to.be.ofSize(1);
         expect(files[0].name).to.equal('index.js');
@@ -483,7 +483,7 @@ describe('bit status command', function () {
         output = helper.command.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.bitMap.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.read();
         const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       });
@@ -518,7 +518,7 @@ describe('bit status command', function () {
         output = helper.command.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.bitMap.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.read();
         const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       });
@@ -577,7 +577,7 @@ describe('bit status command', function () {
       // an intermediate step, make sure bar/foo is before utils/is-string
       // so then when bit-javascript resolves dependencies of utils/is-string it finds them in the
       // cache
-      const bitMap = helper.bitMap.readBitMapWithoutVersion();
+      const bitMap = helper.bitMap.readWithoutVersion();
       const components = Object.keys(bitMap);
       expect(components[0]).to.equal('bar/foo');
       expect(components[1]).to.equal('utils/is-string');

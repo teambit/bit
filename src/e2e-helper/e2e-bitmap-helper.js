@@ -14,26 +14,26 @@ export default class BitMapHelper {
     this.fs = fsHelper;
   }
 
-  readBitMap(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment: boolean = true) {
+  read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     // $FlowFixMe
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
-  readBitMapWithoutVersion() {
-    const bitMap = this.readBitMap();
+  readWithoutVersion() {
+    const bitMap = this.read();
     delete bitMap.version;
     return bitMap;
   }
 
-  writeBitMap(bitMap: Object) {
+  write(bitMap: Object) {
     const bitMapPath = path.join(this.scopes.localPath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
-  deleteBitMap() {
+  delete() {
     return this.fs.deletePath(BIT_MAP);
   }
-  createBitMap(
+  create(
     cwd: string = this.scopes.localPath,
     // $FlowFixMe
     componentObject = {
@@ -61,7 +61,7 @@ export default class BitMapHelper {
     fs.ensureFileSync(bitmapFile);
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
-  printBitMapFilesInCaseOfError(files: Object[]): string {
+  printFilesInCaseOfError(files: Object[]): string {
     const filesStr = files.map(f => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;
   }

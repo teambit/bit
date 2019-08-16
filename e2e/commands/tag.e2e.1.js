@@ -30,7 +30,7 @@ describe('bit tag command', function () {
       helper.fs.createFile('bar', 'foo2.js', fixture);
       helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
-      helper.bitJson.corruptBitJson();
+      helper.bitJson.corrupt();
       try {
         helper.command.tagComponent('bar/foo2');
       } catch (err) {
@@ -46,9 +46,9 @@ describe('bit tag command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       bitMap['bar/foo'].mainFile = '';
-      helper.bitMap.writeBitMap(bitMap);
+      helper.bitMap.write(bitMap);
       try {
         helper.command.tagComponent('bar/foo');
       } catch (err) {
@@ -437,7 +437,7 @@ describe('bit tag command', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp/comp --skip-npm-install');
         helper.npm.addNpmPackage('lodash.isstring', '3.0.0');
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         componentRootDir = path.normalize(bitMap[`${helper.scopes.remote}/comp/comp@0.0.1`].rootDir);
       });
       it('should take the package version from package.json in the component dir if exists', () => {
@@ -827,12 +827,12 @@ describe('bit tag command', function () {
       helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should tag component only with the left files', () => {
-      const beforeRemoveBitMap = helper.bitMap.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.read();
       const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
       helper.fs.deletePath('bar/foo.js');
       helper.command.tagAllComponents();
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       const files = bitMap['bar/foo@0.0.1'].files;
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
@@ -853,7 +853,7 @@ describe('bit tag command', function () {
       expect(output).to.not.have.string('bar/foo');
     });
     it('Should throw error that all files were removed', () => {
-      const beforeRemoveBitMap = helper.bitMap.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.read();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       helper.fs.deletePath('bar/index.js');

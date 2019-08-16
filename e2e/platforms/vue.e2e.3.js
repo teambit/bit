@@ -118,9 +118,9 @@ describe('support vue files', function () {
   describe('custom module resolutions', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      const bitJson = helper.bitJson.readBitJson();
+      const bitJson = helper.bitJson.read();
       bitJson.resolveModules = { aliases: { '@': 'directives' } };
-      helper.bitJson.writeBitJson(bitJson);
+      helper.bitJson.write(bitJson);
 
       const autocompleteFixture = `<script>
 import autofocus from '@/autofocus';

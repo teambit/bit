@@ -135,7 +135,7 @@ describe('merge functionality', function () {
           expect(statusOutput).to.have.string('modified components');
         });
         it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
           expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
@@ -159,7 +159,7 @@ describe('merge functionality', function () {
           expect(statusOutput).to.not.have.string('modified components');
         });
         it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
           expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
@@ -183,7 +183,7 @@ describe('merge functionality', function () {
           expect(statusOutput).have.string('modified components');
         });
         it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
           expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
@@ -212,7 +212,7 @@ describe('merge functionality', function () {
           expect(statusOutput).to.not.have.string('modified components');
         });
         it('should update bitmap with the imported version', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
           expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });

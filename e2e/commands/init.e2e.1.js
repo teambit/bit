@@ -36,7 +36,7 @@ describe('run bit init', function () {
       helper.scopeHelper.reInitLocalScope();
     });
     before(() => {
-      helper.bitMap.createBitMap();
+      helper.bitMap.create();
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.scopeHelper.initLocalScope();
@@ -47,7 +47,7 @@ describe('run bit init', function () {
       expect(bitmapPath).to.be.a.file('missing bitmap');
     });
     it('bitmap should contain version"', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('version');
       expect(bitMap.version).to.equal(helper.general.getBitVersion());
     });
@@ -57,7 +57,7 @@ describe('run bit init', function () {
       helper.scopeHelper.reInitLocalScope();
     });
     it('should not contain some default properties', () => {
-      const bitJson = helper.bitJson.readBitJson();
+      const bitJson = helper.bitJson.read();
       expect(bitJson).to.not.have.property('dist');
       expect(bitJson).to.not.have.property('extensions');
       expect(bitJson).to.not.have.property('dependenciesDirectory');
@@ -86,7 +86,7 @@ describe('run bit init', function () {
         '-compiler': 'my-compiler',
         '-tester': 'my-tester'
       });
-      bitJson = helper.bitJson.readBitJson();
+      bitJson = helper.bitJson.read();
     });
     it('should set the default dir to my-comps', () => {
       expect(bitJson.componentsDefaultDirectory).to.equal('my-comps/{name}');
@@ -216,14 +216,14 @@ describe('run bit init', function () {
       });
       it('should create a new bitMap file', () => {
         helper.command.runCmd('bit init --reset');
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('version');
       });
     });
     describe('when bit.json file is invalid', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.bitJson.corruptBitJson();
+        helper.bitJson.corrupt();
       });
       it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.scopes.localPath, BIT_JSON);
@@ -233,7 +233,7 @@ describe('run bit init', function () {
       });
       it('should create a new bit.json file', () => {
         helper.command.runCmd('bit init --reset');
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         expect(bitJson).to.have.property('packageManager');
       });
     });
@@ -250,11 +250,11 @@ describe('run bit init', function () {
       helper.command.tagAllComponents(); // this creates objects in .bit dir
 
       // modify bit.json
-      bitJson = helper.bitJson.readBitJson();
+      bitJson = helper.bitJson.read();
       bitJson.packageManager = 'yarn';
-      helper.bitJson.writeBitJson(bitJson);
+      helper.bitJson.write(bitJson);
 
-      bitMap = helper.bitMap.readBitMap();
+      bitMap = helper.bitMap.read();
       localConsumerFiles = helper.fs.getConsumerFiles('*', true);
       localScope = helper.scopeHelper.cloneLocalScope();
     });
@@ -263,12 +263,12 @@ describe('run bit init', function () {
         helper.scopeHelper.initWorkspace();
       });
       it('should not change BitMap file', () => {
-        const currentBitMap = helper.bitMap.readBitMap();
+        const currentBitMap = helper.bitMap.read();
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
       it('should not change bit.json file', () => {
-        const currentBitJson = helper.bitJson.readBitJson();
+        const currentBitJson = helper.bitJson.read();
         expect(currentBitJson).to.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
@@ -283,12 +283,12 @@ describe('run bit init', function () {
         helper.command.runCmd('bit init --reset');
       });
       it('should not change BitMap file', () => {
-        const currentBitMap = helper.bitMap.readBitMap();
+        const currentBitMap = helper.bitMap.read();
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
       it('should not change bit.json file', () => {
-        const currentBitJson = helper.bitJson.readBitJson();
+        const currentBitJson = helper.bitJson.read();
         expect(currentBitJson).to.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
@@ -303,12 +303,12 @@ describe('run bit init', function () {
         helper.command.runCmd('bit init --reset-hard');
       });
       it('should recreate the BitMap file', () => {
-        const currentBitMap = helper.bitMap.readBitMap();
+        const currentBitMap = helper.bitMap.read();
         expect(currentBitMap).to.not.be.deep.equal(bitMap);
         expect(currentBitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should recreate the bit.json file', () => {
-        const currentBitJson = helper.bitJson.readBitJson();
+        const currentBitJson = helper.bitJson.read();
         expect(currentBitJson).to.not.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.not.be.equal('yarn');
       });
@@ -366,7 +366,7 @@ describe('run bit init', function () {
       });
       it('should create bit.json file', () => {
         expect(path.join(helper.scopes.localPath, 'bit.json')).to.be.a.file();
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         expect(bitJson).to.have.property('componentsDefaultDirectory');
       });
     });
@@ -400,7 +400,7 @@ describe('run bit init', function () {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.bitMap.createBitMap();
+        helper.bitMap.create();
         helper.fs.deletePath('.bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
@@ -414,7 +414,7 @@ describe('run bit init', function () {
         helper.scopeHelper.cleanLocalScope();
         helper.git.initNewGitRepo();
         helper.scopeHelper.initLocalScope();
-        helper.bitMap.createBitMap();
+        helper.bitMap.create();
         helper.fs.deletePath('.git/bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
@@ -427,7 +427,7 @@ describe('run bit init', function () {
       let innerDir;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        helper.bitMap.createBitMap();
+        helper.bitMap.create();
         innerDir = path.join(helper.scopes.localPath, 'inner');
         fs.mkdirSync(innerDir);
         helper.scopeHelper.initWorkspace(innerDir);

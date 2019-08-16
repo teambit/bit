@@ -103,7 +103,7 @@ describe('bit eject command', function () {
           expect(path.join(helper.scopes.localPath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           Object.keys(bitMap).forEach((id) => {
             expect(id).not.to.have.string('foo');
           });
@@ -289,7 +289,7 @@ describe('bit eject command', function () {
             expect(path.join(helper.scopes.localPath, 'utils', 'is-type.js')).to.be.a.file();
           });
           it('should delete the component from bit.map', () => {
-            const bitMap = helper.bitMap.readBitMap();
+            const bitMap = helper.bitMap.read();
             Object.keys(bitMap).forEach((id) => {
               expect(id).not.to.have.string('foo');
             });
@@ -332,7 +332,7 @@ describe('bit eject command', function () {
             expect(path.join(helper.scopes.localPath, 'components/bar/foo/bar/foo.js')).not.to.be.a.path();
           });
           it('should delete the component from bit.map', () => {
-            const bitMap = helper.bitMap.readBitMap();
+            const bitMap = helper.bitMap.read();
             Object.keys(bitMap).forEach((id) => {
               expect(id).not.to.have.string('foo');
             });
@@ -383,7 +383,7 @@ describe('bit eject command', function () {
               expect(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();
             });
             it('should delete the component from bit.map', () => {
-              const bitMap = helper.bitMap.readBitMap();
+              const bitMap = helper.bitMap.read();
               Object.keys(bitMap).forEach((id) => {
                 expect(id).not.to.have.string('is-string');
               });
@@ -406,8 +406,8 @@ describe('bit eject command', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeBeforeEjecting);
               packageJsonBefore = helper.packageJson.read();
-              bitMapBefore = helper.bitMap.readBitMap();
-              bitJsonBefore = helper.bitJson.readBitJson();
+              bitMapBefore = helper.bitMap.read();
+              bitJsonBefore = helper.bitJson.read();
             });
             describe('when getting the component status has failed', () => {
               let errorFailure;
@@ -432,11 +432,11 @@ describe('bit eject command', function () {
                 expect(packageJsonNow).to.deep.equal(packageJsonBefore);
               });
               it('should not change the .bitmap file', () => {
-                const bitMapNow = helper.bitMap.readBitMap();
+                const bitMapNow = helper.bitMap.read();
                 expect(bitMapNow).to.deep.equal(bitMapBefore);
               });
               it('should not change the bit.json file', () => {
-                const bitJsonNow = helper.bitJson.readBitJson();
+                const bitJsonNow = helper.bitJson.read();
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
             });
@@ -467,11 +467,11 @@ describe('bit eject command', function () {
                 expect(packageJsonNow).to.deep.equal(packageJsonWithChanges);
               });
               it('should not change the .bitmap file', () => {
-                const bitMapNow = helper.bitMap.readBitMap();
+                const bitMapNow = helper.bitMap.read();
                 expect(bitMapNow).to.deep.equal(bitMapBefore);
               });
               it('should not change the bit.json file', () => {
-                const bitJsonNow = helper.bitJson.readBitJson();
+                const bitJsonNow = helper.bitJson.read();
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
               it('should not delete the component files from the filesystem', () => {

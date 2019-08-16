@@ -262,12 +262,12 @@ describe('component id with wildcard', function () {
           expect(output).to.have.string('utils/is/type');
         });
         it('should checkout only the matched components', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/is/string@0.0.1');
           expect(bitMap).to.have.property('utils/is/type@0.0.1');
         });
         it('should not checkout the unmatched components', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/fs/read@0.0.5');
           expect(bitMap).to.have.property('utils/fs/write@0.0.5');
           expect(bitMap).to.have.property('bar/foo@0.0.5');

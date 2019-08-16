@@ -49,7 +49,7 @@ describe('bit import', function () {
       expect(importOutput).to.not.have.string('updated');
     });
     it('should add the component into bit.map file with the full id', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${helper.scopes.remote}/global/simple${VERSION_DELIMITER}0.0.1`);
     });
     // TODO: Validate all files exists in a folder with the component name
@@ -316,7 +316,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJson.setComponentsDirInBitJson('{scope}/-{name}-');
+          helper.bitJson.setComponentsDir('{scope}/-{name}-');
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('global/simple');
           output = helper.command.importComponent('global/simple');
@@ -330,7 +330,7 @@ describe('bit import', function () {
           ).and.not.empty;
         });
         it('bitmap should contain component with correct rootDir according to dsl', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           const cmponentId = `${helper.scopes.remote}/global/simple@0.0.1`;
           expect(bitMap).to.have.property(cmponentId);
           expect(bitMap[cmponentId].rootDir).to.equal(`${helper.scopes.remote}/-global/simple-`);
@@ -340,7 +340,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJson.setComponentsDirInBitJson('{non-exist-param}/{name}');
+          helper.bitJson.setComponentsDir('{non-exist-param}/{name}');
           helper.scopeHelper.addRemoteScope();
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple`);
         });
@@ -354,7 +354,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
-          helper.bitJson.setComponentsDirInBitJson('{namespace}/{name}');
+          helper.bitJson.setComponentsDir('{namespace}/{name}');
           helper.scopeHelper.addRemoteScope();
           output = helper.command.importComponent('global/simple');
         });
@@ -366,7 +366,7 @@ describe('bit import', function () {
             .empty;
         });
         it('bitmap should contain component with correct rootDir according to dsl', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           const componentId = `${helper.scopes.remote}/global/simple@0.0.1`;
           expect(bitMap).to.have.property(componentId);
           expect(bitMap[componentId].rootDir).to.equal('global/simple');
@@ -458,7 +458,7 @@ describe('bit import', function () {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
-            helper.bitJson.modifyFieldInBitJson('dist', { target: 'another-dist' });
+            helper.bitJson.modifyField('dist', { target: 'another-dist' });
             helper.command.importComponent('imprel/impreldist');
             localConsumerFiles = helper.fs.getConsumerFiles();
           });
@@ -547,10 +547,10 @@ describe('bit import', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitMap.writeBitMap(bitMap);
+      helper.bitMap.write(bitMap);
       helper.command.importComponent('bar/foo');
       localConsumerFiles = helper.fs.getConsumerFiles();
     });
@@ -686,7 +686,7 @@ describe('bit import', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         output = helper.command.importComponent('comp/with-deps');
-        bitMap = helper.bitMap.readBitMap();
+        bitMap = helper.bitMap.read();
       });
 
       it('should add all missing components to bit.map file', () => {
@@ -928,7 +928,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).not.to.include(oldLocation);
       });
       it('should update the rootDir in bit.map to the new location', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         const componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
         expect(componentMap.rootDir).to.equal('new-location');
       });
@@ -943,7 +943,7 @@ describe('bit import', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.bitJson.modifyField('dist', { target: 'dist' });
         helper.command.importComponent('bar/foo');
         localConsumerFiles = helper.fs.getConsumerFiles();
       });
@@ -1213,7 +1213,7 @@ describe('bit import', function () {
         expect(localConsumerFiles).not.to.include(oldLocation);
       });
       it('should update the rootDir in bit.map to the new location', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         const componentMap = bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`];
         expect(componentMap.rootDir).to.equal('new-location');
       });
@@ -1238,7 +1238,7 @@ console.log(barFoo.default());`;
         helper.command.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localPath, 'components/bar/foo'));
+        const bitJson = helper.bitJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.scopes.env}/compilers/babel@0.0.1`);
@@ -1338,11 +1338,11 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got is-type v2'); // notice the "v2"
       });
       it('should update the existing record in bit.map', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.2`);
       });
       it('should not create a new record in bit.map', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
       });
     });
@@ -1523,7 +1523,7 @@ console.log(barFoo.default());`;
         expect(localConsumerFiles).to.include(expectedLocation);
       });
       it('should update the existing record of is-type in bit.map from NESTED to IMPORTED', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
@@ -1560,7 +1560,7 @@ console.log(barFoo.default());`;
           expect(localConsumerFiles).to.include(expectedLocation);
         });
         it('should not delete is-type from bitMap', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         });
       });
@@ -1573,7 +1573,7 @@ console.log(barFoo.default());`;
         helper.command.importComponent('utils/is-string'); // imports is-type as a dependency
       });
       it('should keep the existing record of is-type in bit.map as IMPORTED', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@0.0.1`);
         expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
@@ -2136,9 +2136,9 @@ console.log(barFoo.default());`;
     describe('when componentsDefaultDirectory is invalid', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.componentsDefaultDirectory = '/components/{name}';
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.command.importComponent('any-comp');
@@ -2149,9 +2149,9 @@ console.log(barFoo.default());`;
     describe('when dependenciesDirectory is invalid', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.dependenciesDirectory = '/components/.dependencies';
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.command.importComponent('any-comp');
@@ -2261,7 +2261,7 @@ console.log(barFoo.default());`;
         helper.command.importComponent('bar/* --dependencies');
       });
       it('should import directly (not nested) all dependencies', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap)
           .to.have.property(`${helper.scopes.remote}/utils/is-string@0.0.1`)
           .that.has.property('origin')
@@ -2326,7 +2326,7 @@ console.log(barFoo.default());`;
         helper.command.importComponent('utils/is-type --dependents');
       });
       it('should import the dependent only once and with the highest version', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.2`);
         expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
       });

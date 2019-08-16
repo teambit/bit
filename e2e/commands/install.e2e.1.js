@@ -122,7 +122,7 @@ describe('run bit install', function () {
         describe('passing arguments via the consumer bit.json', () => {
           let output;
           before(() => {
-            helper.bitJson.modifyFieldInBitJson('packageManagerArgs', ['--production']);
+            helper.bitJson.modifyField('packageManagerArgs', ['--production']);
             output = helper.command.runCmd('bit install bar/foo');
           });
           it('npm should install the packages with the specified arguments', () => {
@@ -132,7 +132,7 @@ describe('run bit install', function () {
         describe('passing arguments via both the command line and consumer bit.json', () => {
           let output;
           before(() => {
-            helper.bitJson.modifyFieldInBitJson('packageManagerArgs', ['--production']);
+            helper.bitJson.modifyField('packageManagerArgs', ['--production']);
             output = helper.command.runCmd('bit install bar/foo -- --no-optional');
           });
           it('npm should install the packages according to the command line and ignore the consumer bit.json', () => {

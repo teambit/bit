@@ -59,13 +59,13 @@ describe('dependencies versions resolution', function () {
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
         helper.command.importComponent('bar/foo --conf');
         const bitJsonDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-        const bitJson = helper.bitJson.readBitJson(bitJsonDir);
+        const bitJson = helper.bitJson.read(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
             [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.2'
           }
         };
-        helper.bitJson.writeBitJson(bitJson, bitJsonDir);
+        helper.bitJson.write(bitJson, bitJsonDir);
       });
       it('should use the dependency version from bit.json', () => {
         const output = helper.command.showComponentParsed('bar/foo -c');
@@ -96,7 +96,7 @@ describe('dependencies versions resolution', function () {
     describe('when consumer config overrides the version of the imported component', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.overrides = {
           'bar/foo': {
             dependencies: {
@@ -104,7 +104,7 @@ describe('dependencies versions resolution', function () {
             }
           }
         };
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
       });
       it('should use the dependency version from the consumer config as it is imported', () => {
         const output = helper.command.showComponentParsed('bar/foo -c');
@@ -135,7 +135,7 @@ describe('dependencies versions resolution', function () {
     describe('when consumer config overrides with glob patterns for author', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(authorScope);
-        const bitJson = helper.bitJson.readBitJson();
+        const bitJson = helper.bitJson.read();
         bitJson.overrides = {
           'bar/*': {
             dependencies: {
@@ -143,7 +143,7 @@ describe('dependencies versions resolution', function () {
             }
           }
         };
-        helper.bitJson.writeBitJson(bitJson);
+        helper.bitJson.write(bitJson);
       });
       it('should use the dependency version from the consumer config', () => {
         const output = helper.command.showComponentParsed('bar/foo');

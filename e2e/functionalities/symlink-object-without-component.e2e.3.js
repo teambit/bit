@@ -42,7 +42,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit tag should throw a descriptive error', () => {
-    helper.bitMap.deleteBitMap();
+    helper.bitMap.delete();
     helper.fixtures.addComponentBarFoo();
     const output = helper.general.runWithTryCatch('bit tag -a');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');

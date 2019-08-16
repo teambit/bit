@@ -14,10 +14,10 @@ describe('bit import command with no ids', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitMap.writeBitMap(bitMap);
+      helper.bitMap.write(bitMap);
     });
     it('should display a successful message with the list of installed components', () => {
       const output = helper.command.importAllComponents(true);
@@ -42,10 +42,10 @@ describe('bit import command with no ids', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitMap.writeBitMap(bitMap);
+      helper.bitMap.write(bitMap);
       helper.command.importAllComponents(true);
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.fs.createFile('bar', 'foo.js', barFooFixtureV2);
@@ -104,10 +104,10 @@ describe('bit import command with no ids', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitMap.writeBitMap(bitMap);
+      helper.bitMap.write(bitMap);
     });
     it('should not try to import that component as it was not exported yet', () => {
       try {

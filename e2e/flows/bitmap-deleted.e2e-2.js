@@ -18,7 +18,7 @@ describe('user deleted only .bitmap file leaving the objects in place', function
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      helper.bitMap.deleteBitMap();
+      helper.bitMap.delete();
       scopeAfterDeletion = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit init', () => {

@@ -9,7 +9,7 @@ describe('bit list command', function () {
   });
   describe('list before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then list component', () => {
-      helper.bitMap.createBitMap();
+      helper.bitMap.create();
       helper.fs.createFile('bar', 'foo.js');
       const output = helper.command.listLocalScope();
       expect(output.includes('found 0 components')).to.be.true;

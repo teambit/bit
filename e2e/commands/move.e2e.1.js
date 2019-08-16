@@ -24,11 +24,11 @@ describe('bit move command', function () {
       expect(localConsumerFiles).not.to.include(oldPath);
     });
     it('should update the file path in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
     });
   });
@@ -41,7 +41,7 @@ describe('bit move command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
-      bitMap = helper.bitMap.readBitMap();
+      bitMap = helper.bitMap.read();
     });
     it('should move physically the file', () => {
       const localConsumerFiles = helper.fs.getConsumerFiles();
@@ -80,18 +80,18 @@ describe('bit move command', function () {
       });
     });
     it('should update the file path in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
 
       bitMap['bar/foo'].files.forEach((file) => {
         expect(file.relativePath.startsWith('utils')).to.be.true;
       });
     });
     it('should update the mainFile of bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo1.js');
     });
     it('should update the trackDir of bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].trackDir).to.equal('utils');
     });
   });
@@ -113,11 +113,11 @@ describe('bit move command', function () {
       expect(filesBeforeMove).to.deep.equal(filesAfterMove);
     });
     it('should update the file path in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
     });
   });
@@ -189,11 +189,11 @@ describe('bit move command', function () {
       expect(localConsumerFiles).not.to.include(oldPath);
     });
     it('should update the file path in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo@0.0.1'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['bar/foo@0.0.1'].mainFile).to.equal('utils/foo.js');
     });
     it('should recognize the component as modified', () => {
@@ -250,7 +250,7 @@ describe('bit move command', function () {
       });
     });
     it('should update the file path in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap[`${helper.scopes.remote}/bar/foo@0.0.1`].rootDir).to.equal('components/utils/foo');
     });
     it('should not recognize the component as modified', () => {

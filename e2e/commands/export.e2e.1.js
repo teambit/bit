@@ -23,7 +23,7 @@ describe('bit export command', function () {
       helper.command.exportComponent('bar/foo');
     });
     it('should write the exported component into bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo${VERSION_DELIMITER}0.0.1`);
     });
   });
@@ -430,7 +430,7 @@ describe('bit export command', function () {
       helper.command.exportAllComponents();
     });
     it('.bitmap should keep the current version and do not update to the latest version', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@1.0.0`);
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@2.0.0`);
     });

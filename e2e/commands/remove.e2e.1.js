@@ -19,7 +19,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.initNewLocalScope();
     });
     it('Should not remove component if bit.json is corrupted', () => {
-      helper.bitJson.corruptBitJson();
+      helper.bitJson.corrupt();
       try {
         helper.command.removeComponent('bar/foo2');
       } catch (err) {
@@ -43,7 +43,7 @@ describe('bit remove command', function () {
       expect(output).to.contain.string('bar/foo');
     });
     it('should not show in bitmap', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('bar/foo');
     });
     it('removed component should not be in new component when checking status', () => {
@@ -112,7 +112,7 @@ describe('bit remove command', function () {
       helper.command.removeComponent('bar/foo', '-t -s');
     });
     it('should  show in bitmap', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('bar/foo@0.0.1');
     });
     it('removed component should  be in new component', () => {
@@ -208,7 +208,7 @@ describe('bit remove command', function () {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/global/simple -s`);
       expect(output).to.contain.string('removed components');
       expect(output).to.contain.string(`${helper.scopes.remote}/global/simple`);
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/global/simple`);
     });
   });
@@ -298,14 +298,14 @@ describe('bit remove command', function () {
       expect(output).to.deep.includes({ id: 'utils/is-string', localVersion: '0.0.1' });
     });
     it('should still be in bitmap', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/is-string');
     });
     it('should remove entire component if specified version is the only one', () => {
       const output = helper.command.removeComponent('utils/is-string@0.0.1', '-f -s');
       expect(output).to.contain.string('successfully removed components');
       expect(output).to.contain.string('utils/is-string');
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('utils/is-string');
     });
   });
@@ -422,13 +422,13 @@ describe('bit remove command', function () {
       expect(importedDependeceDir).to.not.be.a.path();
     });
     it('bitmap should not contain component and dependences', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-string2`);
       expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/is-type`);
     });
 
     it('should remove imported component from bit.json', () => {
-      const bitJson = helper.bitJson.readBitJson();
+      const bitJson = helper.bitJson.read();
       expect(bitJson).to.not.have.property(`${helper.scopes.remote}/utils/is-string2`);
     });
   });

@@ -98,7 +98,7 @@ console.log(isType());`;
       helper.command.exportComponent('bar/foo');
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'testLink');
+      helper.bitJson.modifyField('bindingPrefix', 'testLink');
       helper.command.importComponent('bar/foo');
     });
     describe('auto linking', () => {
@@ -137,7 +137,7 @@ console.log(isType());`;
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'test');
+      helper.bitJson.modifyField('bindingPrefix', 'test');
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
     });
@@ -172,7 +172,7 @@ console.log(isType());`;
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
+      helper.bitJson.modifyField('bindingPrefix', 'bitTest');
       helper.command.importComponent('utils/is-string');
     });
     it('node_modules should contain custom dir name', () => {
@@ -192,7 +192,7 @@ console.log(isType());`;
       // is-string
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
+      helper.bitJson.modifyField('bindingPrefix', 'bitTest');
       helper.command.importComponent('utils/is-type');
       const isStringFixture = `const isType = require('bitTest/${
         helper.scopes.remote
@@ -205,7 +205,7 @@ console.log(isType());`;
       // is-string2
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('bitTest2/${
         helper.scopes.remote
@@ -217,7 +217,7 @@ console.log(isType());`;
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
       helper.command.importComponent('test/is-string2');
 
       const appJsFixture = `const isString2 = require('bitTest2/${

@@ -69,7 +69,7 @@ chai.use(require('chai-fs'));
       expect(path.join(helper.scopes.localPath, 'components', '.dependencies')).to.not.be.a.path();
     });
     it('should not write the dependencies in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${scopeId}/bar/foo@0.0.1`);
       expect(bitMap).to.not.have.property(`${scopeId}/utils/is-string@0.0.1`);
       expect(bitMap).to.not.have.property(`${scopeId}/utils/is-type@0.0.1`);
@@ -106,14 +106,14 @@ chai.use(require('chai-fs'));
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.bitJson.modifyFieldInBitJson('saveDependenciesAsComponents', true);
+      helper.bitJson.modifyField('saveDependenciesAsComponents', true);
       helper.command.runCmd(`bit import ${componentTestId}`);
     });
     it('should save the dependencies as bit components inside the component directory', () => {
       expect(path.join(helper.scopes.localPath, 'components', '.dependencies')).to.be.a.path();
     });
     it('should write the dependencies in bit.map', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(`${scopeId}/bar/foo@0.0.1`);
       expect(bitMap).to.have.property(`${scopeId}/utils/is-string@0.0.1`);
       expect(bitMap).to.have.property(`${scopeId}/utils/is-type@0.0.1`);

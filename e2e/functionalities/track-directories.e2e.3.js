@@ -20,7 +20,7 @@ describe('track directories functionality', function () {
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should add the directory as trackDir in bitmap file', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
     });
@@ -35,7 +35,7 @@ describe('track directories functionality', function () {
         expect(statusOutput).to.have.string('new components');
       });
       it('bit status should update bitmap and add the new file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         const files = bitMap['utils/bar'].files;
         expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
@@ -49,7 +49,7 @@ describe('track directories functionality', function () {
           statusOutput = helper.command.runCmd('bit status');
         });
         it('should rename the file in bitmap', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/bar');
           const files = bitMap['utils/bar'].files;
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
@@ -70,7 +70,7 @@ describe('track directories functionality', function () {
         expect(statusOutput).to.have.string('new components');
       });
       it('bit status should update bitmap and add the new file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         const files = bitMap['utils/bar'].files;
         expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
@@ -90,7 +90,7 @@ describe('track directories functionality', function () {
         expect(statusOutput).to.have.string('main-file was removed');
       });
       it('should not rename the file in bitmap file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         expect(bitMap['utils/bar'].files[0].relativePath).to.equal('utils/bar/foo.js');
       });
@@ -115,7 +115,7 @@ describe('track directories functionality', function () {
           expect(statusOutput).to.have.string('modified components');
         });
         it('bit status should update bitmap and add the new file', () => {
-          const bitMap = helper.bitMap.readBitMap();
+          const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/bar@0.0.1');
           const files = bitMap['utils/bar@0.0.1'].files;
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
@@ -134,7 +134,7 @@ describe('track directories functionality', function () {
         expect(output).to.have.string('added utils/a.js');
       });
       it('should remove the trackDir property from bitmap file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         expect(bitMap['utils/bar']).to.not.have.property('trackDir');
       });
@@ -148,7 +148,7 @@ describe('track directories functionality', function () {
         helper.command.importComponent('utils/bar');
       });
       it('should not remove the trackDir property from bitmap file', () => {
-        const bitMap = helper.bitMap.readBitMap();
+        const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/bar@0.0.1`);
         expect(bitMap[`${helper.scopes.remote}/utils/bar@0.0.1`]).to.have.property('trackDir');
       });
@@ -163,7 +163,7 @@ describe('track directories functionality', function () {
       helper.command.addComponent('utils/*', { n: 'utils' });
     });
     it('should add trackDir property for each one of the directories', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['utils/foo']).to.have.property('trackDir');
       expect(bitMap['utils/foo'].trackDir).to.equal('utils/foo');
 
@@ -184,7 +184,7 @@ describe('track directories functionality', function () {
       helper.command.runCmd('bit status');
     });
     it('should track the directories without changing the test files', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['utils/bar']).to.have.property('trackDir');
       expect(bitMap['utils/bar'].files).to.deep.include({
         relativePath: 'utils/bar/foo.spec.js',
@@ -207,12 +207,12 @@ describe('track directories functionality', function () {
       helper.command.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar']).to.not.have.property('trackDir');
     });
     it('should not add the excluded file', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap['utils/bar'].files[0].relativePath).to.equal('utils/bar/foo.js');
       expect(bitMap['utils/bar'].files).to.have.lengthOf(1);
     });
@@ -235,7 +235,7 @@ describe('track directories functionality', function () {
       barFooId = `${helper.scopes.remote}/bar/foo@0.0.1`;
     });
     it('should not add trackDir field', () => {
-      const bitMap = helper.bitMap.readBitMap();
+      const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(barFooId);
       expect(bitMap[barFooId]).to.not.have.property('trackDir');
     });
@@ -246,7 +246,7 @@ describe('track directories functionality', function () {
       before(() => {
         helper.fs.createFile('components/bar/foo', 'foo2.js');
         statusOutput = helper.command.runCmd('bit status');
-        bitMap = helper.bitMap.readBitMap();
+        bitMap = helper.bitMap.read();
         files = bitMap[barFooId].files;
       });
       it('bit status should show the component as modified', () => {
