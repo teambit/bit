@@ -366,9 +366,9 @@ describe('bit remove command', function () {
     const helper2 = new Helper();
 
     before(() => {
-      helper2.setNewLocalAndRemoteScopes();
+      helper2.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.scopeHelper.addRemoteScope(helper2.remoteScopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.remotePath);
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -387,8 +387,8 @@ describe('bit remove command', function () {
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
 
       helper.command.tagAllComponents();
-      helper.scopeHelper.addRemoteScope(helper2.remoteScopePath, helper.scopes.localPath);
-      helper.command.exportComponent('utils/is-type', helper2.remoteScope);
+      helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.localPath);
+      helper.command.exportComponent('utils/is-type', helper2.scopes.remote);
       helper.command.exportComponent('utils/is-string');
       helper.command.exportComponent('utils/is-string2');
     });
@@ -412,7 +412,7 @@ describe('bit remove command', function () {
         '.dependencies',
         'utils',
         'is-type',
-        helper2.remoteScope
+        helper2.scopes.remote
       );
 
       const output = helper.command.removeComponent('utils/is-string2 -s');
@@ -424,7 +424,7 @@ describe('bit remove command', function () {
     it('bitmap should not contain component and dependences', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-string2`);
-      expect(bitMap).to.not.have.property(`${helper2.remoteScope}/utils/is-type`);
+      expect(bitMap).to.not.have.property(`${helper2.scopes.remote}/utils/is-type`);
     });
 
     it('should remove imported component from bit.json', () => {
