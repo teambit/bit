@@ -9,7 +9,7 @@ import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 
 export default (async function paintGraph(id: string, options: Object): Promise<string> {
-  const { image, remote } = options;
+  const { image, remote, layout, allVersions } = options;
   const consumer: ?Consumer = await loadConsumerIfExist();
   if (!consumer && !remote) throw new ConsumerNotFound();
   const getBitId = (): ?BitId => {
@@ -20,7 +20,9 @@ export default (async function paintGraph(id: string, options: Object): Promise<
   };
   const bitId = getBitId();
   const graph = await getGraph();
-  const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph);
+  const config = {};
+  if (layout) config.layout = layout;
+  const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
   if (id) {
     visualDependencyGraph.highlightId(bitId);
   }
@@ -43,8 +45,10 @@ export default (async function paintGraph(id: string, options: Object): Promise<
       const componentDepGraph = await remoteScope.graph();
       return componentDepGraph.graph;
     }
+
+    const onlyLatest = !allVersions;
     // $FlowFixMe consumer must be set here
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer);
+    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, onlyLatest);
     const dependencyGraph = new DependencyGraph(workspaceGraph);
     if (id) {
       const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);

@@ -108,13 +108,15 @@ export default class DependencyGraph {
     return graph;
   }
 
-  static async buildGraphFromWorkspace(consumer: Consumer): Promise<Graph> {
+  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest: boolean = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
+      const latestVersion = modelComponent.latest();
       const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+        if (onlyLatest && latestVersion !== versionNum) return;
         // $FlowFixMe
         const id = modelComponent.toBitId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find(comp => comp.id.isEqual(id));
