@@ -8,15 +8,15 @@ describe('peer-dependencies functionality', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('when a package is a regular dependency and a peer dependency', () => {
     let catComponent;
     before(() => {
-      helper.reInitLocalScope();
-      helper.createPackageJson({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+      helper.scopeHelper.reInitLocalScope();
+      helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
-      helper.addNpmPackage('chai', '2.4');
+      helper.npm.addNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -39,15 +39,15 @@ describe('peer-dependencies functionality', function () {
     });
     describe('when the component is imported', () => {
       before(() => {
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitRemoteScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         const output = helper.command.importComponent('bar/foo');
         expect(output).to.have.string('requires a peer');
-        helper.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
+        helper.npm.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
       });
       it('should not be shown as modified', () => {
         const output = helper.command.runCmd('bit status');
@@ -55,9 +55,9 @@ describe('peer-dependencies functionality', function () {
       });
       describe('and the package.json of the component was changed to remove the peerDependencies', () => {
         before(() => {
-          helper.addKeyValueToPackageJson(
+          helper.packageJson.addKeyValue(
             { peerDependencies: {} },
-            path.join(helper.localScopePath, 'components/bar/foo')
+            path.join(helper.scopes.localScopePath, 'components/bar/foo')
           );
         });
         it('should be shown as modified', () => {
@@ -67,7 +67,7 @@ describe('peer-dependencies functionality', function () {
       });
       describe('and the package.json of the component does not exist', () => {
         before(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/package.json'));
+          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/package.json'));
         });
         it('should not be shown as modified', () => {
           const output = helper.command.runCmd('bit status');
@@ -79,10 +79,10 @@ describe('peer-dependencies functionality', function () {
 
   describe('when a package is only a peer dependency but not required in the code', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.createPackageJson({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+      helper.scopeHelper.reInitLocalScope();
+      helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
 
-      helper.addNpmPackage('chai', '2.4');
+      helper.npm.addNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();

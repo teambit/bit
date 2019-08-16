@@ -6,44 +6,44 @@ describe('bit remote command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('exporting a component to a global remote', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.reInitRemoteScope();
-      helper.command.runCmd(`bit remote add file://${helper.remoteScopePath} --global`);
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitRemoteScope();
+      helper.command.runCmd(`bit remote add file://${helper.scopes.remoteScopePath} --global`);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.cleanLocalScope();
+      helper.scopeHelper.cleanLocalScope();
     });
     after(() => {
-      helper.command.runCmd(`bit remote del ${helper.remoteScope} --global`);
+      helper.command.runCmd(`bit remote del ${helper.scopes.remoteScope} --global`);
     });
     it('bit status should throw an error ConsumerNotFound', () => {
       const error = new ConsumerNotFound();
       const func = () => helper.command.status();
-      helper.expectToThrow(func, error);
+      helper.general.expectToThrow(func, error);
     });
     it('bit list without --remote flag should throw an error ConsumerNotFound', () => {
       const error = new ConsumerNotFound();
       const func = () => helper.command.listLocalScope();
-      helper.expectToThrow(func, error);
+      helper.general.expectToThrow(func, error);
     });
     it('bit list with --remote flag should list the global remote successfully', () => {
       const output = helper.command.listRemoteScope();
       expect(output).to.have.string('found 1 components');
     });
     it('bit show should show the component and not throw an error about missing workspace', () => {
-      const output = helper.command.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+      const output = helper.command.showComponent(`${helper.scopes.remoteScope}/bar/foo --remote`);
       expect(output).to.have.string('bar/foo');
     });
     describe('bit deprecate with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.deprecateComponent(`${helper.remoteScope}/bar/foo`, '--remote');
+        output = helper.command.deprecateComponent(`${helper.scopes.remoteScope}/bar/foo`, '--remote');
       });
       it('should not throw an error', () => {
         expect(output).to.have.string('deprecated components');
@@ -55,7 +55,7 @@ describe('bit remote command', function () {
       describe('bit undeprecate with --remote flag', () => {
         let undeprecateOutput;
         before(() => {
-          undeprecateOutput = helper.command.undeprecateComponent(`${helper.remoteScope}/bar/foo`, '--remote');
+          undeprecateOutput = helper.command.undeprecateComponent(`${helper.scopes.remoteScope}/bar/foo`, '--remote');
         });
         it('should not throw an error', () => {
           expect(undeprecateOutput).to.have.string('undeprecated components');
@@ -69,7 +69,7 @@ describe('bit remote command', function () {
     describe('bit remove with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent(`${helper.remoteScope}/bar/foo`, '--silent --remote');
+        output = helper.command.removeComponent(`${helper.scopes.remoteScope}/bar/foo`, '--silent --remote');
       });
       it('should not throw an error', () => {
         expect(output).to.have.string('successfully removed');

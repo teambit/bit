@@ -6,7 +6,7 @@ describe('bit config', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   describe('set, get, delete configs', () => {
@@ -15,7 +15,7 @@ describe('bit config', function () {
     let delOutput;
 
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       setOutput = helper.command.runCmd('bit config set conf.key conf.value');
       getOutput = helper.command.runCmd('bit config get conf.key');
       delOutput = helper.command.runCmd('bit config del conf.key');
@@ -38,13 +38,13 @@ describe('bit config', function () {
 
   describe('git propogation', () => {
     before(() => {
-      helper.reInitLocalScope();
-      helper.initNewGitRepo();
+      helper.scopeHelper.reInitLocalScope();
+      helper.git.initNewGitRepo();
       helper.command.runCmd('bit config set conf.key bit-value');
       // Commented because of permission issue
-      // helper.addGitConfig('conf.key', 'git-system-val', 'system');
-      helper.addGitConfig('conf.key', 'git-global-val', 'global');
-      helper.addGitConfig('conf.key', 'git-local-val', 'local');
+      // helper.git.addGitConfig('conf.key', 'git-system-val', 'system');
+      helper.git.addGitConfig('conf.key', 'git-global-val', 'global');
+      helper.git.addGitConfig('conf.key', 'git-local-val', 'local');
     });
     it('should read config from bit if exists', () => {
       const confVal = helper.command.runCmd('bit config get conf.key');
@@ -56,15 +56,15 @@ describe('bit config', function () {
       expect(confVal).to.be.equal('git-local-val\n');
     });
     it('should read config from git-global if not exists in bit and git-local', () => {
-      helper.unsetGitConfig('conf.key', 'local');
+      helper.git.unsetGitConfig('conf.key', 'local');
       const confVal = helper.command.runCmd('bit config get conf.key');
       // Clean the global env
-      helper.unsetGitConfig('conf.key', 'global');
+      helper.git.unsetGitConfig('conf.key', 'global');
       expect(confVal).to.be.equal('git-global-val\n');
     });
     // Commented because of permission issue
     // it('should read config from git-system if not exists in bit', () => {
-    //   helper.unsetGitConfig('conf.key', 'global');
+    //   helper.git.unsetGitConfig('conf.key', 'global');
     //   helper.command.runCmd('bit config del conf.key');
     //   const confVal = helper.command.runCmd('bit config get conf.key');
     //   expect(confVal).to.be.equal('git-system-val\n');

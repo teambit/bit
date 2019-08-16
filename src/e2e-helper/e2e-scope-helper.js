@@ -25,12 +25,12 @@ export default class ScopeHelper {
     this.command = commandHelper;
     this.fs = fsHelper;
   }
-  cleanEnv() {
+  clean() {
     fs.emptyDirSync(this.scopes.localScopePath);
     fs.emptyDirSync(this.scopes.remoteScopePath);
   }
 
-  destroyEnv() {
+  destroy() {
     if (this.keepEnvs) return;
     fs.removeSync(this.scopes.localScopePath);
     fs.removeSync(this.scopes.remoteScopePath);

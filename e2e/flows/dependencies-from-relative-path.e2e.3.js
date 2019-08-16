@@ -5,14 +5,14 @@ describe('component that requires another component file by relative path', func
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('2 components requires different things from the same file of another component', () => {
     let output;
     let specifiersNames;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('import-relative-path');
       helper.command.addComponent('import-by-2-files/a1.js import-by-2-files/a2.js', {
         i: 'comp-a',

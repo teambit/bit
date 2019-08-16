@@ -17,10 +17,10 @@ describe('bit tag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bit.json', () => {
@@ -37,13 +37,13 @@ describe('bit tag command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
     });
   });
   describe('tag component with invalid mainFile in bitmap', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.readBitMap();
@@ -63,7 +63,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('components', 'patch.js');
         helper.fs.createFile('components', 'minor.js');
         helper.fs.createFile('components', 'major.js');
@@ -156,7 +156,7 @@ describe('bit tag command', function () {
     // waiting for 'bit remove' bug fix
     describe('tag all components', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('components', 'a.js');
         helper.fs.createFile('components', 'b.js');
         helper.command.addComponent('components/*.js', { n: 'components' });
@@ -265,9 +265,9 @@ describe('bit tag command', function () {
       });`;
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'foo.spec.js', failingTest);
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
-      scopeBeforeTagging = helper.cloneLocalScope();
+      scopeBeforeTagging = helper.scopeHelper.cloneLocalScope();
     });
     it('should throw error if the bit id does not exists', () => {
       let output;
@@ -344,7 +344,7 @@ describe('bit tag command', function () {
     describe('tagging with --force flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(scopeBeforeTagging);
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
         output = helper.command.tagWithoutMessage('bar/foo --force');
       });
       it('should tag successfully although the tests failed', () => {
@@ -358,7 +358,7 @@ describe('bit tag command', function () {
     describe('tagging with --skip-tests flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(scopeBeforeTagging);
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
         output = helper.command.tagWithoutMessage('bar/foo --skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
@@ -373,7 +373,7 @@ describe('bit tag command', function () {
     describe('tagging all with --skip-tests flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(scopeBeforeTagging);
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
         output = helper.command.tagAllComponents('--skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
@@ -402,7 +402,7 @@ describe('bit tag command', function () {
   describe('tag added component', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'file.js');
       helper.command.addComponent('file.js', { i: 'comp/comp' });
       output = helper.command.tagComponent('comp/comp');
@@ -421,24 +421,24 @@ describe('bit tag command', function () {
       let depObject;
       let componentRootDir;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
 
         const fileFixture = 'import get from "lodash.isstring"';
         helper.fs.createFile('src', 'file.js', fileFixture);
         helper.command.addComponent('src/file.js', { i: 'comp/comp' });
-        helper.addNpmPackage('lodash.isstring', '2.0.0');
+        helper.npm.addNpmPackage('lodash.isstring', '2.0.0');
 
         // Commit, export and import the component to make sure we have root folder defined in the bit.map
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitRemoteScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.tagComponent('comp/comp');
         helper.command.exportComponent('comp/comp');
-        helper.reInitLocalScope('comp/comp');
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope('comp/comp');
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp/comp --skip-npm-install');
-        helper.addNpmPackage('lodash.isstring', '3.0.0');
+        helper.npm.addNpmPackage('lodash.isstring', '3.0.0');
         const bitMap = helper.bitMap.readBitMap();
-        componentRootDir = path.normalize(bitMap[`${helper.remoteScope}/comp/comp@0.0.1`].rootDir);
+        componentRootDir = path.normalize(bitMap[`${helper.scopes.remoteScope}/comp/comp@0.0.1`].rootDir);
       });
       it('should take the package version from package.json in the component dir if exists', () => {
         const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'lodash.isstring': '^2.0.1' } });
@@ -494,7 +494,7 @@ describe('bit tag command', function () {
     describe('tag component after exporting 2 components', () => {
       let output;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
         helper.command.addComponent('file.js', { i: 'comp/comp' });
@@ -515,18 +515,18 @@ describe('bit tag command', function () {
       let output;
       let showOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
         helper.command.addComponent('file.js', { i: 'comp/comp' });
         helper.command.addComponent('file2.js', { i: 'comp/comp2' });
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp/comp');
         helper.command.importComponent('comp/comp2');
-        const fileFixture = `var a = require('@bit/${helper.remoteScope}.comp.comp2/file2')`;
+        const fileFixture = `var a = require('@bit/${helper.scopes.remoteScope}.comp.comp2/file2')`;
         helper.fs.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.command.tagComponent('comp/comp');
         showOutput = JSON.parse(helper.command.showComponentWithOptions('comp/comp', { j: '' }));
@@ -539,11 +539,11 @@ describe('bit tag command', function () {
         expect(deps.length).to.equal(1);
       });
       it('should increment the package.json version of the tagged component', () => {
-        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/comp/comp'));
         expect(packageJson.version).to.equal('0.0.2');
       });
       it('should not delete "bit" property from package.json', () => {
-        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/comp/comp'));
         expect(packageJson).to.have.property('bit');
       });
     });
@@ -552,18 +552,18 @@ describe('bit tag command', function () {
       let output;
       let showOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
         helper.command.addComponent('file.js', { i: 'comp/comp' });
         helper.command.addComponent('file2.js', { i: 'comp/comp2' });
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp/comp');
         helper.command.importComponent('comp/comp2');
-        const fileFixture = `var a = require('${helper.getRequireBitPath('comp', 'comp2')}')`;
+        const fileFixture = `var a = require('${helper.general.getRequireBitPath('comp', 'comp2')}')`;
         helper.fs.createFile('components/comp/comp', 'file.js', fileFixture);
         output = helper.command.tagComponent('comp/comp');
         showOutput = JSON.parse(helper.command.showComponentWithOptions('comp/comp', { j: '' }));
@@ -581,15 +581,15 @@ describe('bit tag command', function () {
   describe('after requiring an imported component with the relative syntax', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type');
 
       const isStringFixture =
@@ -607,7 +607,7 @@ describe('bit tag command', function () {
       expect(output).to.have.string(
         'components with relative import statements (please use absolute paths for imported components)'
       );
-      expect(output).to.have.string(`${helper.remoteScope}/utils/is-type@0.0.1`);
+      expect(output).to.have.string(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
     });
   });
 
@@ -620,7 +620,7 @@ describe('bit tag command', function () {
     describe('missing dependencies errors', () => {
       let output;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
         helper.fs.createFile('src', 'a.js', fileAfixture);
         const fileA2fixture =
@@ -675,7 +675,7 @@ describe('bit tag command', function () {
     describe('tag component with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
         helper.fs.createFile('src', 'a.js', fileAfixture);
         const fileA2fixture =
@@ -706,7 +706,7 @@ describe('bit tag command', function () {
     describe('tag all components with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const fileAfixture = "import a2 from './a2'; import a3 from './a3'";
         helper.fs.createFile('src', 'a.js', fileAfixture);
         const fileA2fixture =
@@ -747,7 +747,7 @@ describe('bit tag command', function () {
     });
 
     it('should add dependencies for files which are not the main files', () => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -782,7 +782,7 @@ describe('bit tag command', function () {
     });
 
     it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -821,7 +821,7 @@ describe('bit tag command', function () {
   });
   describe('with removed file/files', () => {
     beforeEach(() => {
-      helper.initNewLocalScope();
+      helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
       helper.command.addComponent('bar/', { i: 'bar/foo' });
@@ -861,13 +861,13 @@ describe('bit tag command', function () {
 
       const tagCmd = () => helper.command.tagAllComponents();
       const error = new MissingFilesFromComponent('bar/foo');
-      helper.expectToThrow(tagCmd, error);
+      helper.general.expectToThrow(tagCmd, error);
     });
   });
   describe('with --scope flag', () => {
     let localScope;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -878,18 +878,18 @@ describe('bit tag command', function () {
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
 
-      const fooBarFixture = `const isString = require('${helper.getRequireBitPath(
+      const fooBarFixture = `const isString = require('${helper.general.getRequireBitPath(
         'utils',
         'is-string'
       )}'); module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.fixtures.createComponentBarFoo(fooBarFixture);
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
@@ -941,7 +941,7 @@ describe('bit tag command', function () {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           output = helper.command.tagAllComponents('--scope 0.2.0');
         });
         it('should tag all components with the specified version including the imported components', () => {
@@ -959,7 +959,7 @@ describe('bit tag command', function () {
   });
   describe('with Windows end-of-line characters', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const impl = 'hello\r\n world\r\n';
       helper.fixtures.createComponentBarFoo(impl);
       helper.fixtures.addComponentBarFoo();
@@ -976,12 +976,12 @@ describe('bit tag command', function () {
   describe('tag a component without its dependencies', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.command.addComponent('utils/is-type.js');
       helper.command.addComponent('utils/is-string.js');
-      output = helper.runWithTryCatch('bit tag is-string');
+      output = helper.general.runWithTryCatch('bit tag is-string');
     });
     it('should show a descriptive error message', () => {
       expect(output).to.have.string('this dependency was not included in the tag command');

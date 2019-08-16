@@ -6,12 +6,12 @@ describe('bit dependency status', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('all files mapped', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
       helper.command.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
       helper.command.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });
@@ -24,8 +24,8 @@ describe('bit dependency status', function () {
   });
   describe('not all files mapped', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
       helper.command.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
       helper.command.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });

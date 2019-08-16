@@ -15,12 +15,12 @@ describe('bit ci-update', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   describe('component with tester and nested dependencies', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.fs.createFile('', 'level1.js', level1Fixture);
@@ -33,19 +33,22 @@ describe('bit ci-update', function () {
         "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.fs.createFile('', 'file.js', fileFixture);
       helper.fs.createFile('', 'file.spec.js', fileSpecFixture(true));
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.addComponent('file.js', { i: 'comp/comp', t: 'file.spec.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.command.runCmd(`bit ci-update ${helper.remoteScope}/comp/comp`, helper.remoteScopePath);
+      const output = helper.command.runCmd(
+        `bit ci-update ${helper.scopes.remoteScope}/comp/comp`,
+        helper.scopes.remoteScopePath
+      );
       expect(output).to.have.string('tests passed');
     });
   });
   describe('component with compiler, tester and nested dependencies', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
@@ -56,14 +59,17 @@ describe('bit ci-update', function () {
       helper.fixtures.addComponentBarFoo();
 
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.command.build(); // needed for building the dependencies
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.command.runCmd(`bit ci-update ${helper.remoteScope}/bar/foo`, helper.remoteScopePath);
+      const output = helper.command.runCmd(
+        `bit ci-update ${helper.scopes.remoteScope}/bar/foo`,
+        helper.scopes.remoteScopePath
+      );
       expect(output).to.have.string('tests passed');
     });
   });

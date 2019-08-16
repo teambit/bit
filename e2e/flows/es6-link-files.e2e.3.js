@@ -9,7 +9,7 @@ describe('es6 components with link files', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   /**
@@ -25,7 +25,7 @@ describe('es6 components with link files', function () {
   describe('when a component uses index file to import single members from a module', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
       helper.command.addComponent('utils/is-array.js', { i: 'utils/is-array' });
@@ -59,7 +59,7 @@ describe('es6 components with link files', function () {
     let npmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.fs.createFile('utils/is-string', 'is-string.js', isStringFixture);
@@ -86,14 +86,14 @@ export { isString };`
         helper.env.importCompiler();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         npmCiRegistry.setCiScopeInBitJson();
         helper.command.importComponent('bar/foo');
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -104,7 +104,7 @@ export { isString };`
             await npmCiRegistry.init();
             helper.command.importComponent('is-string/is-string');
             helper.extensions.importNpmPackExtension();
-            helper.removeRemoteScope();
+            helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('is-string/is-string');
             npmCiRegistry.publishComponent('bar/foo');
           });
@@ -113,31 +113,31 @@ export { isString };`
           });
           describe('installing a component using NPM', () => {
             before(() => {
-              helper.reInitLocalScope();
+              helper.scopeHelper.reInitLocalScope();
               helper.command.runCmd('npm init -y');
-              helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+              helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
             });
             it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
-                helper.remoteScope
+                helper.scopes.remoteScope
               }.bar.foo'); console.log(barFoo.default());`;
-              fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');
             });
           });
           describe('importing a component using Bit', () => {
             before(() => {
-              helper.reInitLocalScope();
+              helper.scopeHelper.reInitLocalScope();
               npmCiRegistry.setCiScopeInBitJson();
               npmCiRegistry.setResolver();
               helper.command.importComponent('bar/foo');
             });
             it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
-                helper.remoteScope
+                helper.scopes.remoteScope
               }.bar.foo'); console.log(barFoo.default());`;
-              fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+              fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-string and got foo');
             });
@@ -152,7 +152,7 @@ export { isString };`
   describe('multiple link files, different "default" import situation and recent babel compiler', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.fs.createFile('utils/is-string', 'is-string.js', isStringFixture);
       helper.fs.createFile('utils/is-string', 'index.js', "import isString from './is-string'; export { isString }; ");
@@ -173,13 +173,13 @@ export { isString };`
         helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -189,7 +189,7 @@ export { isString };`
   describe('when a component uses link file to import multiple members', () => {
     let utilIndexFixture;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -210,30 +210,30 @@ export { isString };`
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject(false);
-        helper.addRemoteScope();
+        helper.git.mimicGitCloneLocalProject(false);
+        helper.scopeHelper.addRemoteScope();
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo ');
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -243,7 +243,7 @@ export { isString };`
   describe('when a component uses link file to import multiple members with custom-module-resolution import', () => {
     let utilIndexFixture;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
@@ -268,19 +268,19 @@ export { isString };`
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo ');
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.localScopePath, 'components/bar/foo/node_modules/utils/index.js')
+          path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules/utils/index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -290,7 +290,7 @@ export { isString };`
   describe('when a component uses link file to import multiple members with export default as syntax', () => {
     let utilIndexFixture;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -311,30 +311,30 @@ export { isString };`
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject(false);
-        helper.addRemoteScope();
+        helper.git.mimicGitCloneLocalProject(false);
+        helper.scopeHelper.addRemoteScope();
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo ');
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -344,7 +344,7 @@ export { isString };`
   describe('when a component uses link file to import multiple members with export (without import) syntax', () => {
     let utilIndexFixture;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -364,30 +364,30 @@ export { isString };`
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
       before(() => {
-        helper.mimicGitCloneLocalProject(false);
-        helper.addRemoteScope();
+        helper.git.mimicGitCloneLocalProject(false);
+        helper.scopeHelper.addRemoteScope();
         helper.command.importAllComponents(true);
       });
       it('should not override the original link file', () => {
-        const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));
+        const currentUtilIndex = fs.readFileSync(path.join(helper.scopes.localScopePath, 'utils', 'index.js'));
         expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
       });
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo ');
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+          path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');
       });
@@ -397,7 +397,7 @@ export { isString };`
   describe('when a component uses link file to import members AND that link file is part of the component', () => {
     let utilIndexFixture;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -418,13 +418,13 @@ export { isString };`
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
       it('should generate the links correctly as if there was no link-file', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got is-array and got foo');
       });
@@ -433,7 +433,7 @@ export { isString };`
 
   describe('when the link file uses default-import and specific-import together', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -457,13 +457,13 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo ');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
@@ -472,7 +472,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
   // skipped for now. tree shaking is not possible for ES5.
   describe.skip('when the link file uses default-import and specific-import together and using ES6 and ES5 together', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -497,13 +497,13 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo ');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-array and got is-string and got foo');
     });
@@ -511,7 +511,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
 
   describe('when a component uses non-link files with default-import and specific-import together', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -532,14 +532,14 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo ');
     });
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');
 console.log(barFoo.default());`;
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(
         'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
@@ -549,7 +549,7 @@ console.log(barFoo.default());`;
 
   describe('when a component uses a link and non-link files with default-import and specific-import together', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.js', isArrayFixture);
@@ -577,14 +577,14 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo ');
     });
     it('should generate the links correctly', () => {
       const appJsFixture = `const barFoo = require('./components/bar/foo');
 console.log(barFoo.default());`;
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(
         'got is-array and got is-string and got is-boolean and got is-boolean2 and got is-boolean-default and got foo'

@@ -9,12 +9,12 @@ describe('support vue files', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   describe('tests scenarios ', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.copyFixtureComponents('vue');
     });
     describe('add vue files', () => {
@@ -90,7 +90,7 @@ describe('support vue files', function () {
     });
     describe('import vue components', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.copyFixtureComponents('vue');
         helper.command.addComponent(path.normalize('directives/*.js'));
         helper.command.addComponent(path.normalize('styles/*'));
@@ -103,21 +103,21 @@ describe('support vue files', function () {
       });
       it('should export tagged components', () => {
         const output = helper.command.exportAllComponents();
-        expect(output).to.have.string(`exported 9 components to scope ${helper.remoteScope}`);
+        expect(output).to.have.string(`exported 9 components to scope ${helper.scopes.remoteScope}`);
       });
       it('should import component', () => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope(helper.remoteScopePath);
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remoteScopePath);
         const output = helper.command.importComponent('vue/ui-autocomplete');
         expect(output).to.have.string('successfully imported one component');
-        expect(output).to.have.string(`${helper.remoteScope}/vue/ui-autocomplete`);
+        expect(output).to.have.string(`${helper.scopes.remoteScope}/vue/ui-autocomplete`);
         expect(output).to.have.string('0.0.1');
       });
     });
   });
   describe('custom module resolutions', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { aliases: { '@': 'directives' } };
       helper.bitJson.writeBitJson(bitJson);

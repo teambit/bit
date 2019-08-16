@@ -9,16 +9,16 @@ describe('big text file', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('Windows format (\\r\\n)', () => {
     let tagOutput;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bigFilePath = path.join(__dirname, '..', 'fixtures', 'big-text-file-fixture.txt');
       const bigFileContent = fs.readFileSync(bigFilePath).toString();
       const windowsFormatContent = bigFileContent.replace(/\r\n|\r|\n/g, '\r\n');
-      fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
       helper.fixtures.createComponentBarFoo();
       helper.command.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
       tagOutput = helper.command.tagComponent('bar/text');
@@ -31,15 +31,15 @@ describe('big text file', function () {
       before(() => {
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         importOutput = helper.command.importComponent('bar/text');
       });
       it('should work with no errors', () => {
         expect(importOutput).to.have.string('successfully imported one component');
       });
       it('should import the big file', () => {
-        const filePath = path.join(helper.localScopePath, 'components/bar/text/big-text-file.txt');
+        const filePath = path.join(helper.scopes.localScopePath, 'components/bar/text/big-text-file.txt');
         expect(filePath).to.be.a.file().and.not.empty;
       });
     });

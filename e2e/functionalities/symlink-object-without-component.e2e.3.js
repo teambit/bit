@@ -9,10 +9,10 @@ describe('scope with a symlink object reference to a non-exist component', funct
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFoo();
     helper.command.tagAllComponents();
@@ -33,18 +33,18 @@ describe('scope with a symlink object reference to a non-exist component', funct
     const scopeAfterDelete = helper.command.catScope(true);
     expect(scopeAfterDelete).to.have.lengthOf(1);
 
-    const indexJson = helper.getIndexJson();
+    const indexJson = helper.general.getIndexJson();
     const componentIndex = indexJson.filter(i => i.isSymlink === false);
-    helper.writeIndexJson(R.without(componentIndex, indexJson));
+    helper.general.writeIndexJson(R.without(componentIndex, indexJson));
   });
   it('bit import should throw a descriptive error', () => {
-    const output = helper.runWithTryCatch('bit import bar/foo');
+    const output = helper.general.runWithTryCatch('bit import bar/foo');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit tag should throw a descriptive error', () => {
     helper.bitMap.deleteBitMap();
     helper.fixtures.addComponentBarFoo();
-    const output = helper.runWithTryCatch('bit tag -a');
+    const output = helper.general.runWithTryCatch('bit tag -a');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit doctor should report this as an issue', () => {

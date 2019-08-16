@@ -27,17 +27,17 @@ describe('bit test command', function () {
   const helper = new Helper();
   let clonedScopePath;
   before(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
     // do not upgrade to v0.0.12 of mocha tester, there is a problem with this version.
     helper.env.importTester('bit.envs/testers/mocha@0.0.4');
-    clonedScopePath = helper.cloneLocalScope();
+    clonedScopePath = helper.scopeHelper.cloneLocalScope();
   });
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('when there are no tests', () => {
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
     });
@@ -48,8 +48,8 @@ describe('bit test command', function () {
   });
   describe('when tests are passed', () => {
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
@@ -74,7 +74,7 @@ describe('bit test command', function () {
   describe('when tests are failed', () => {
     let statusCode;
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(false));
       helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
@@ -107,7 +107,7 @@ describe('bit test command', function () {
   });
   describe('when an exception was thrown during the tests', () => {
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', "throw new Error('exception occurred with this spec file');");
       helper.command.addComponent('utils/is-type.js', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
@@ -179,8 +179,8 @@ describe('bit test command', function () {
     let statusCode;
     let outputLines;
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.fs.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
@@ -229,21 +229,21 @@ describe('bit test command', function () {
   describe('after importing a component with tests', () => {
     let localScope;
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.tagComponent('utils/is-type');
 
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitRemoteScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.exportComponent('utils/is-type');
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type');
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('when running bit-test without --verbose flag', () => {
       let output;
@@ -263,7 +263,7 @@ describe('bit test command', function () {
     describe('when running bit-test with --verbose flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         output = helper.command.testComponentWithOptions('utils/is-type', { '-verbose': '' });
       });
       it('should import the tester and run the tests successfully', () => {
@@ -282,7 +282,10 @@ describe('bit test command', function () {
     describe('when running bit ci-update', () => {
       let output;
       before(() => {
-        output = helper.command.runCmd(`bit ci-update ${helper.remoteScope}/utils/is-type`, helper.remoteScopePath);
+        output = helper.command.runCmd(
+          `bit ci-update ${helper.scopes.remoteScope}/utils/is-type`,
+          helper.scopes.remoteScopePath
+        );
       });
       it('should be able to run the tests on an isolated environment', () => {
         expect(output).to.have.string('tests passed');
@@ -296,11 +299,11 @@ describe('bit test command', function () {
     });
     describe('import with --conf', () => {
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.importComponent('utils/is-type --conf');
       });
       it('should save the tester with id only without files and config because it does not use them', () => {
-        const bitJson = helper.bitJson.readBitJson(path.join(helper.localScopePath, 'components/utils/is-type'));
+        const bitJson = helper.bitJson.readBitJson(path.join(helper.scopes.localScopePath, 'components/utils/is-type'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('tester');
         expect(bitJson.env.tester).to.have.string('testers/mocha');
@@ -318,8 +321,8 @@ describe('bit test command', function () {
     });`;
 
     before(() => {
-      helper.getClonedLocalScope(clonedScopePath);
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', testWithEs6);
       helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
@@ -345,7 +348,7 @@ describe('bit test command', function () {
   });
   describe('bit component with no tester', function () {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.fixtures.addComponentBarFoo();
     });
@@ -361,20 +364,20 @@ describe('bit test command', function () {
   describe('when there is no new or modified component', function () {
     before(() => {
       // Set imported component
-      helper.getClonedLocalScope(clonedScopePath);
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.command.addComponent('utils/is-type.js', { t: 'utils/is-type.spec.js', i: 'utils/is-type' });
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.command.tagComponent('utils/is-type');
 
-      helper.reInitRemoteScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitRemoteScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.exportComponent('utils/is-type');
 
-      helper.getClonedLocalScope(clonedScopePath);
-      helper.installNpmPackage('chai', '4.1.2');
-      helper.addRemoteScope();
+      helper.scopeHelper.getClonedLocalScope(clonedScopePath);
+      helper.npm.installNpmPackage('chai', '4.1.2');
+      helper.scopeHelper.addRemoteScope();
 
       helper.command.importComponent('utils/is-type');
 

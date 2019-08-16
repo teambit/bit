@@ -11,15 +11,15 @@ describe('dev-dependencies functionality', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('environment with compiler and tester', () => {
     let clonedScope;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
-      clonedScope = helper.cloneLocalScope();
+      clonedScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
       let barFoo;
@@ -32,7 +32,7 @@ describe('dev-dependencies functionality', function () {
         helper.fixtures.addComponentBarFoo();
 
         helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
-        helper.installNpmPackage('chai', '4.1.2');
+        helper.npm.installNpmPackage('chai', '4.1.2');
         helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
         helper.command.tagAllComponents();
@@ -69,7 +69,7 @@ describe('dev-dependencies functionality', function () {
       let localScope;
       before(() => {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
-        helper.getClonedLocalScope(clonedScope);
+        helper.scopeHelper.getClonedLocalScope(clonedScope);
         helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
@@ -89,11 +89,11 @@ describe('foo', () => {
   });
 });`
         );
-        helper.installNpmPackage('chai', '4.1.2');
+        helper.npm.installNpmPackage('chai', '4.1.2');
         helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
         helper.command.tagAllComponents();
-        localScope = helper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneLocalScope();
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
       });
       it('should save the dev-dependencies', () => {
@@ -127,8 +127,8 @@ describe('foo', () => {
       describe('export and import to a new scope', () => {
         before(() => {
           helper.command.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('tests should pass', () => {
@@ -142,7 +142,7 @@ describe('foo', () => {
         let bitsrcTester;
         before(() => {
           bitsrcTester = new BitsrcTester();
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           return bitsrcTester
             .loginToBitSrc()
             .then(() => bitsrcTester.createScope())
@@ -150,7 +150,7 @@ describe('foo', () => {
               scopeName = scope;
               scopeId = `${username}.${scopeName}`;
               helper.command.exportAllComponents(scopeId);
-              helper.reInitLocalScope();
+              helper.scopeHelper.reInitLocalScope();
               helper.command.runCmd(`bit import ${scopeId}/bar/foo`);
             });
         });
@@ -158,7 +158,7 @@ describe('foo', () => {
           return bitsrcTester.deleteScope(scopeName);
         });
         it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
-          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
           const id = `@bit/${scopeId}.utils.is-string`;
           expect(packageJson.dependencies).to.not.have.property(id);
           expect(packageJson.devDependencies).to.have.property(id);
@@ -169,7 +169,7 @@ describe('foo', () => {
   describe('dev-dependency of a nested component', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'foo.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-string.js', '');
@@ -184,8 +184,8 @@ describe('foo', () => {
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       output = helper.command.importComponent('bar/foo');
     });
     it('should be able to import with no errors', () => {
@@ -199,7 +199,7 @@ describe('foo', () => {
   describe('dev-dependency that requires prod-dependency', () => {
     let barFoo;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);

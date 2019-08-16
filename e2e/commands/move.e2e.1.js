@@ -7,13 +7,13 @@ describe('bit move command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('move a file', () => {
     const oldPath = path.join('bar', 'foo.js');
     const newPath = path.join('utils', 'foo.js');
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
@@ -37,7 +37,7 @@ describe('bit move command', function () {
     const newPath = path.join('bar', 'foo2.js');
     let bitMap;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
@@ -62,7 +62,7 @@ describe('bit move command', function () {
   });
   describe('move a directory', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
       helper.fs.createFile('bar', 'foo1.spec.js');
@@ -101,10 +101,10 @@ describe('bit move command', function () {
     let filesBeforeMove;
     let filesAfterMove;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      fs.moveSync(path.join(helper.localScopePath, oldPath), path.join(helper.localScopePath, newPath));
+      fs.moveSync(path.join(helper.scopes.localScopePath, oldPath), path.join(helper.scopes.localScopePath, newPath));
       filesBeforeMove = helper.fs.getConsumerFiles();
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
       filesAfterMove = helper.fs.getConsumerFiles();
@@ -124,7 +124,7 @@ describe('bit move command', function () {
   describe('when the source and destination files do not exist', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       try {
@@ -148,10 +148,10 @@ describe('bit move command', function () {
     let filesAfterMove;
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      fs.copySync(path.join(helper.localScopePath, fromPath), path.join(helper.localScopePath, toPath));
+      fs.copySync(path.join(helper.scopes.localScopePath, fromPath), path.join(helper.scopes.localScopePath, toPath));
       filesBeforeMove = helper.fs.getConsumerFiles();
       try {
         helper.command.runCmd(`bit move ${fromPath} ${toPath}`);
@@ -177,7 +177,7 @@ describe('bit move command', function () {
     const oldPath = path.join('bar', 'foo.js');
     const newPath = path.join('utils', 'foo.js');
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -205,7 +205,7 @@ describe('bit move command', function () {
   describe('when the destination starts with the source dir', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       output = helper.command.runCmd('bit move bar bar2');
@@ -217,10 +217,10 @@ describe('bit move command', function () {
   describe('when running from an inner directory', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      output = helper.command.runCmd('bit move foo.js myfoo.js', path.join(helper.localScopePath, 'bar'));
+      output = helper.command.runCmd('bit move foo.js myfoo.js', path.join(helper.scopes.localScopePath, 'bar'));
     });
     it('should not throw an error saying the path does not exist', () => {
       expect(output).to.have.string('moved component');
@@ -230,14 +230,14 @@ describe('bit move command', function () {
     const oldPath = path.join('components', 'bar');
     const newPath = path.join('components', 'utils');
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
     });
@@ -251,16 +251,16 @@ describe('bit move command', function () {
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.bitMap.readBitMap();
-      expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].rootDir).to.equal('components/utils/foo');
+      expect(bitMap[`${helper.scopes.remoteScope}/bar/foo@0.0.1`].rootDir).to.equal('components/utils/foo');
     });
     it('should not recognize the component as modified', () => {
       const output = helper.command.runCmd('bit status');
       expect(output.includes('modified components')).to.be.false;
     });
     it('should fix the links and be able to require the component with absolute syntax', () => {
-      const appJS = `const barFoo = require('${helper.getRequireBitPath('bar', 'foo')}');
+      const appJS = `const barFoo = require('${helper.general.getRequireBitPath('bar', 'foo')}');
 console.log(barFoo());`;
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJS);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJS);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got foo');
     });

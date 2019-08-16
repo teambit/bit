@@ -8,7 +8,7 @@ describe('typescript components with link files', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   /**
@@ -24,7 +24,7 @@ describe('typescript components with link files', function () {
   describe('when a component uses index file to import single members from a module', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
       helper.command.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
@@ -48,7 +48,7 @@ describe('typescript components with link files', function () {
 
   describe('when importing a component that uses link file', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler('bit.envs/compilers/react-typescript');
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
@@ -66,13 +66,13 @@ describe('typescript components with link files', function () {
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
     it('should rewrite the relevant part of the link file', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-string and got foo');
     });
@@ -84,7 +84,7 @@ describe('typescript components with link files', function () {
       this.skip;
     } else {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.env.importCompiler('bit.envs/compilers/react-typescript');
         const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
         helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
@@ -109,14 +109,14 @@ describe('typescript components with link files', function () {
 
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
       it('should rewrite the relevant part of the link file', () => {
         const appJsFixture = `const barFoo = require('./components/bar/foo');
   console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(
           'got is-array and got is-string and got is-boolean and got is-boolean2 and got foo'
@@ -124,8 +124,8 @@ describe('typescript components with link files', function () {
       });
       it('should be able to compile the main component with auto-generated .ts files without errors', () => {
         helper.env.importCompiler('bit.envs/compilers/react-typescript');
-        const barFooFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
-        const tscPath = helper.installAndGetTypeScriptCompilerDir();
+        const barFooFile = path.join(helper.scopes.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
+        const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
         const result = helper.command.runCmd(`tsc ${barFooFile}`, tscPath);
         // in case of compilation error it throws an exception
         expect(result.trim()).to.equal('');

@@ -20,25 +20,8 @@ import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import GitHelper from './e2e-git-helper';
 
-export { INTERACTIVE_KEYS } from '../interactive/utils/run-interactive-cmd';
-
-export const generateRandomStr = (size: number = 8): string => {
-  return Math.random()
-    .toString(36)
-    .slice(size * -1)
-    .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
-};
-
 export default class Helper {
   debugMode: boolean;
-  localScope: string;
-  scopes: ScopesData;
-  remoteScope: string;
-  remoteScopePath: string;
-  envScope: string;
-  envScopePath: string;
-  e2eDir: string;
-
   scopes: ScopesData;
   bitJson: BitJsonHelper;
   fs: FsHelper;
@@ -81,5 +64,12 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
 export const FileStatusWithoutChalk = R.fromPairs(
   Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );
+
+export function generateRandomStr(size: number = 8): string {
+  return Math.random()
+    .toString(36)
+    .slice(size * -1)
+    .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
+}
 
 export { VERSION_DELIMITER };

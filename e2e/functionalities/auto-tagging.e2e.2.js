@@ -13,7 +13,7 @@ describe('auto tagging functionality', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('after tagging dependencies only (not dependents)', () => {
     /**
@@ -32,7 +32,7 @@ describe('auto tagging functionality', function () {
     describe('as AUTHORED', () => {
       let clonedScope;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -48,21 +48,21 @@ describe('auto tagging functionality', function () {
         expect(tagOutput).to.have.string('utils/is-string');
         // notice how is-string is not manually tagged again!
         helper.command.exportAllComponents();
-        clonedScope = helper.cloneLocalScope();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        clonedScope = helper.scopeHelper.cloneLocalScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         // notice the "v2" (!)
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
       describe('auto-tagging after export', () => {
         before(() => {
-          helper.getClonedLocalScope(clonedScope);
+          helper.scopeHelper.getClonedLocalScope(clonedScope);
           const isTypeFixtureV3 = "module.exports = function isType() { return 'got is-type v3'; };";
           helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV3); // modify is-type
           const tagOutput = helper.command.tagComponent('utils/is-type');
@@ -78,7 +78,7 @@ describe('auto tagging functionality', function () {
     describe('as IMPORTED', () => {
       let tagOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -86,8 +86,8 @@ describe('auto tagging functionality', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
@@ -105,12 +105,12 @@ describe('auto tagging functionality', function () {
       it('should use the updated dependencies and print the results from the latest versions', () => {
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string');
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
       });
@@ -118,9 +118,9 @@ describe('auto tagging functionality', function () {
     describe('with dependents tests failing', () => {
       let tagOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.env.importTester('bit.envs/testers/mocha@0.0.12');
-        helper.installNpmPackage('chai', '4.1.2');
+        helper.npm.installNpmPackage('chai', '4.1.2');
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -130,8 +130,8 @@ describe('auto tagging functionality', function () {
         helper.command.tagAllComponents(); // tests are passing at this point
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
@@ -143,7 +143,7 @@ describe('auto tagging functionality', function () {
       describe('running all tests', () => {
         let testResults;
         before(() => {
-          testResults = helper.runWithTryCatch('bit test');
+          testResults = helper.general.runWithTryCatch('bit test');
         });
         it('should test also the auto tag pending components', () => {
           expect(testResults).to.have.string('utils/is-string');
@@ -206,7 +206,7 @@ describe('auto tagging functionality', function () {
     describe('as AUTHORED', () => {
       let tagOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -253,12 +253,12 @@ describe('auto tagging functionality', function () {
         before(() => {
           helper.command.exportAllComponents();
 
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('should use the updated dependencies and print the results from the latest versions', () => {
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
           const result = helper.command.runCmd('node app.js');
           // notice the "v2" (!)
           expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
@@ -268,7 +268,7 @@ describe('auto tagging functionality', function () {
     describe('as IMPORTED', () => {
       let tagOutput;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -278,8 +278,8 @@ describe('auto tagging functionality', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
@@ -299,11 +299,11 @@ describe('auto tagging functionality', function () {
       it('should use the updated dependencies and print the results from the latest versions', () => {
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
 
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo'); // notice the "v2"
       });
@@ -311,7 +311,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with long chain of dependencies, some are nested', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'require("./d")');
@@ -321,8 +321,8 @@ describe('auto tagging functionality', function () {
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/e');
       helper.command.importComponent('bar/d');
       helper.command.importComponent('bar/c');
@@ -332,10 +332,10 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show only the IMPORTED dependents of the modified component as auto-tag pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/c`);
-      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/d`);
-      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/b`); // it's nested
-      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/a`); // it's a dependent via nested
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remoteScope}/bar/c`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.scopes.remoteScope}/bar/d`);
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remoteScope}/bar/b`); // it's nested
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.scopes.remoteScope}/bar/a`); // it's a dependent via nested
     });
     describe('after tagging the components', () => {
       let tagOutput;
@@ -350,27 +350,27 @@ describe('auto tagging functionality', function () {
         expect(tagOutput).to.not.have.string('bar/a');
       });
       it('should update the dependencies and the flattenedDependencies of the IMPORTED dependents with the new versions', () => {
-        const barC = helper.command.catComponent(`${helper.remoteScope}/bar/c@latest`);
+        const barC = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/c@latest`);
         expect(barC.dependencies[0].id.name).to.equal('bar/d');
         expect(barC.dependencies[0].id.version).to.equal('0.0.2');
 
         expect(barC.flattenedDependencies).to.deep.include({
-          scope: helper.remoteScope,
+          scope: helper.scopes.remoteScope,
           name: 'bar/d',
           version: '0.0.2'
         });
         expect(barC.flattenedDependencies).to.deep.include({
-          scope: helper.remoteScope,
+          scope: helper.scopes.remoteScope,
           name: 'bar/e',
           version: '0.0.2'
         });
 
-        const barD = helper.command.catComponent(`${helper.remoteScope}/bar/d@latest`);
+        const barD = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/d@latest`);
         expect(barD.dependencies[0].id.name).to.equal('bar/e');
         expect(barD.dependencies[0].id.version).to.equal('0.0.2');
 
         expect(barD.flattenedDependencies).to.deep.include({
-          scope: helper.remoteScope,
+          scope: helper.scopes.remoteScope,
           name: 'bar/e',
           version: '0.0.2'
         });
@@ -383,7 +383,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with cyclic dependencies', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
@@ -436,7 +436,7 @@ describe('auto tagging functionality', function () {
   });
   describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'a.js', 'require("./b"); require("./c");');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'console.log("I am C v1")');
@@ -444,8 +444,8 @@ describe('auto tagging functionality', function () {
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/a');
       helper.command.importComponent('bar/b');
       helper.command.importComponent('bar/c');
@@ -458,8 +458,8 @@ describe('auto tagging functionality', function () {
     });
     it('bit-status should show the auto-tagged pending', () => {
       const status = helper.command.statusJson();
-      expect(status.autoTagPendingComponents).to.include(`${helper.remoteScope}/bar/a`);
-      expect(status.autoTagPendingComponents).to.include(`${helper.remoteScope}/bar/b`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remoteScope}/bar/a`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.scopes.remoteScope}/bar/b`);
     });
     describe('tagging the dependency', () => {
       let tagOutput;
@@ -469,7 +469,7 @@ describe('auto tagging functionality', function () {
       it('should bump the component version that is direct and indirect dependent only once', () => {
         expect(tagOutput).to.have.string('bar/a@0.0.2');
 
-        const barA = helper.command.catComponent(`${helper.remoteScope}/bar/a`);
+        const barA = helper.command.catComponent(`${helper.scopes.remoteScope}/bar/a`);
         const barAVersions = Object.keys(barA.versions);
         expect(barAVersions).to.include('0.0.1');
         expect(barAVersions).to.include('0.0.2');

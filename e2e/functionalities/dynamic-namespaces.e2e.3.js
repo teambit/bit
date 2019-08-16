@@ -8,7 +8,7 @@ describe('dynamic namespaces', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   const veryLongName = 'this/is/a/very/large/name/for/a/component';
   const veryShortName = 'short';
@@ -18,7 +18,7 @@ describe('dynamic namespaces', function () {
       let catComp;
 
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('bar', 'foo.js');
         const addOutput = helper.command.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
@@ -56,39 +56,39 @@ describe('dynamic namespaces', function () {
       describe('after import', () => {
         before(() => {
           helper.command.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent(componentName);
         });
         it('should create the directories according to the multiple namespaces', () => {
-          expect(path.join(helper.localScopePath, 'components', componentName)).to.be.a.path();
-          expect(path.join(helper.localScopePath, 'components', componentName, 'foo.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localScopePath, 'components', componentName)).to.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, 'components', componentName, 'foo.js')).to.be.a.file();
         });
       });
     });
   });
   describe('import a component with same id string as a local different component', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'foo.js');
       helper.command.addComponent('foo.js', { i: 'foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('bar', 'foo.js');
-      helper.command.addComponent('bar/foo.js', { i: `${helper.remoteScope}/foo` });
+      helper.command.addComponent('bar/foo.js', { i: `${helper.scopes.remoteScope}/foo` });
     });
     it('should throw an error and not allow the import', () => {
-      const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);
+      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/foo`);
       expect(output).to.have.string('unable to import');
       const bitMap = helper.bitMap.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.have.lengthOf(1);
     });
     it('should throw an error also after tagging', () => {
       helper.command.tagAllComponents();
-      const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);
+      const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remoteScope}/foo`);
       expect(output).to.have.string('unable to import');
     });
   });

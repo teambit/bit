@@ -18,13 +18,13 @@ describe('run bit install', function () {
     this.timeout(0);
     const helper = new Helper();
     after(() => {
-      helper.destroyEnv();
+      helper.scopeHelper.destroy();
     });
     describe('importing a component with dependency and a package dependency', () => {
       let localScope;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
-        helper.addNpmPackage('lodash.isstring', '4.0.0');
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.npm.addNpmPackage('lodash.isstring', '4.0.0');
         const isStringFixture = `const lodashIsString = require('lodash.isstring');
   module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
         helper.fs.createFile('utils', 'is-string.js', isStringFixture);
@@ -32,7 +32,7 @@ describe('run bit install', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        const requirePath = helper.getRequireBitPath('utils', 'is-string');
+        const requirePath = helper.general.getRequireBitPath('utils', 'is-string');
         const fooBarFixture = `const isString = require('${requirePath}');
   module.exports = function foo() { return isString() + ' and got foo'; };`;
         helper.fixtures.createComponentBarFoo(fooBarFixture);
@@ -41,17 +41,17 @@ describe('run bit install', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
 
         helper.command.runCmd('npm install --save lodash.isboolean');
-        const fooRequirePath = helper.getRequireBitPath('bar', 'foo');
+        const fooRequirePath = helper.general.getRequireBitPath('bar', 'foo');
         const appJsFixture = `const barFoo = require('${fooRequirePath}');
   const isBoolean = require('lodash.isboolean');
   console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        localScope = helper.cloneLocalScope();
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should print results from all dependencies (this is an intermediate check to make sure we are good so far)', () => {
         const result = helper.command.runCmd('node app.js');
@@ -60,8 +60,8 @@ describe('run bit install', function () {
       describe('cloning the project to somewhere else without the node-modules directories', () => {
         let output;
         before(() => {
-          helper.mimicGitCloneLocalProject();
-          helper.addRemoteScope();
+          helper.git.mimicGitCloneLocalProject();
+          helper.scopeHelper.addRemoteScope();
           helper.command.runCmd('bit import');
           // @todo: to reproduce issue #1746, remove the next line
           helper.fs.deletePath('package-lock.json');
@@ -75,22 +75,22 @@ describe('run bit install', function () {
         });
         describe('running bit install from an inner directory', () => {
           before(() => {
-            output = helper.command.runCmd('bit install', path.join(helper.localScopePath, 'components'));
+            output = helper.command.runCmd('bit install', path.join(helper.scopes.localScopePath, 'components'));
           });
           it('should not create another directory inside that inner directory', () => {
-            expect(path.join(helper.localScopePath, 'components', 'components')).to.not.be.a.path();
+            expect(path.join(helper.scopes.localScopePath, 'components', 'components')).to.not.be.a.path();
           });
           it('should install npm packages with absolute paths', () => {
             expect(output).to.not.have.a.string('successfully ran npm install at components/bar/foo');
-            expect(output).to.have.a.string(path.join(helper.localScopePath, 'components/bar/foo'));
+            expect(output).to.have.a.string(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
           });
         });
       });
       describe('deleting node_modules of one component and running bit install [id]', () => {
         let output;
         before(() => {
-          helper.getClonedLocalScope(localScope);
-          fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/node_modules'));
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules'));
           output = helper.command.runCmd('bit install bar/foo');
         });
         it('should npm install only the specified id', () => {
@@ -106,7 +106,7 @@ describe('run bit install', function () {
       });
       describe('with specific package-manager arguments', () => {
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
         });
         describe('passing arguments via the command line', () => {
           let output;

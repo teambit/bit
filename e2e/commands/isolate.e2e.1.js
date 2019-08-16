@@ -11,14 +11,14 @@ describe('run bit isolate', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   // TODO: Ipmlement! important! (there were conflicts during merge which not checked yet)
   // Validate each of the flags (espcially conf, dist, directory, noPackageJson)
   // Validate default flags
   describe('components with dependencies', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();

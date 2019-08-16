@@ -10,11 +10,11 @@ describe('bit doctor infra', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   before(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   describe('run all diagnoses', () => {
@@ -46,7 +46,7 @@ describe('bit doctor infra', function () {
           output = helper.command.doctor({ save: '', j: '' });
           parsedOutput = JSON.parse(output);
           const filePath = parsedOutput.savedFilePath;
-          const fileFullPath = path.join(helper.localScopePath, filePath);
+          const fileFullPath = path.join(helper.scopes.localScopePath, filePath);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
@@ -60,7 +60,7 @@ describe('bit doctor infra', function () {
           expect(output).to.have.string(`File written to ${fileName}`);
         });
         it('should create a non empty tar file in the file system', () => {
-          const fileFullPath = path.join(helper.localScopePath, fileName);
+          const fileFullPath = path.join(helper.scopes.localScopePath, fileName);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
@@ -72,7 +72,7 @@ describe('bit doctor infra', function () {
       const nonExistingDiagnosis = 'non-existing-diagnosis';
       const useFunc = () => helper.command.doctorOne(nonExistingDiagnosis, { j: '' });
       const error = new DiagnosisNotFound(nonExistingDiagnosis);
-      helper.expectToThrow(useFunc, error);
+      helper.general.expectToThrow(useFunc, error);
     });
   });
 

@@ -7,16 +7,16 @@ describe('bit untag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('untag single component', () => {
     let localScope;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 1 components');
     });
@@ -31,7 +31,7 @@ describe('bit untag command', function () {
     });
     describe('with multiple versions when specifying the version', () => {
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
@@ -59,7 +59,7 @@ describe('bit untag command', function () {
     });
     describe('with multiple versions when specifying the version as part of the id', () => {
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
@@ -79,7 +79,7 @@ describe('bit untag command', function () {
     describe('with multiple versions when not specifying the version', () => {
       describe('and all versions are local', () => {
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.tagComponent('bar/foo', undefined, '-f');
           const catComponent = helper.command.catComponent('bar/foo');
           expect(catComponent.versions).to.have.property('0.0.2');
@@ -94,9 +94,9 @@ describe('bit untag command', function () {
     });
     describe('when some versions are exported, some are local', () => {
       before(() => {
-        helper.getClonedLocalScope(localScope);
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.reInitRemoteScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.exportAllComponents();
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
@@ -113,7 +113,7 @@ describe('bit untag command', function () {
         });
         it('should throw an error', () => {
           expect(output).to.have.string(
-            `unable to untag ${helper.remoteScope}/bar/foo, the version 0.0.1 was exported already`
+            `unable to untag ${helper.scopes.remoteScope}/bar/foo, the version 0.0.1 was exported already`
           );
         });
       });
@@ -149,7 +149,7 @@ describe('bit untag command', function () {
   describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fs.createFile('bar', 'foo2.js');
@@ -158,7 +158,7 @@ describe('bit untag command', function () {
       helper.command.addComponent('bar/foo3.js', { i: 'bar/foo3' });
       helper.command.tagAllComponents();
       helper.command.exportComponent('bar/foo3');
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 3 components');
     });
@@ -179,7 +179,7 @@ describe('bit untag command', function () {
     describe('with specifying a version', () => {
       let untagOutput;
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.runCmd('bit tag --scope 0.0.5');
         untagOutput = helper.command.runCmd('bit untag 0.0.5 --all');
       });
@@ -197,13 +197,13 @@ describe('bit untag command', function () {
   describe('components with dependencies', () => {
     let localScope;
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('untag only the dependency', () => {
       describe('without force flag', () => {
@@ -233,9 +233,9 @@ describe('bit untag command', function () {
       describe('after exporting the component and tagging the scope', () => {
         let output;
         before(() => {
-          helper.getClonedLocalScope(localScope);
-          helper.reInitRemoteScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.reInitRemoteScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
           helper.command.runCmd('bit tag -s 1.0.5');
           try {
@@ -245,7 +245,7 @@ describe('bit untag command', function () {
           }
         });
         it('should show an error', () => {
-          expect(output).to.have.string(`unable to untag ${helper.remoteScope}/utils/is-type`);
+          expect(output).to.have.string(`unable to untag ${helper.scopes.remoteScope}/utils/is-type`);
         });
         describe('tagging after the export, then, un-tagging the local tag', () => {
           let packageJsonUtilsIsStringPath;
@@ -254,16 +254,16 @@ describe('bit untag command', function () {
             helper.command.tagScope('2.0.1');
             // an intermediate step, make sure the package.json is updated to that version
             packageJsonUtilsIsStringPath = path.join(
-              helper.localScopePath,
-              `node_modules/@bit/${helper.remoteScope}.utils.is-string`
+              helper.scopes.localScopePath,
+              `node_modules/@bit/${helper.scopes.remoteScope}.utils.is-string`
             );
-            const packageJson = helper.readPackageJson(packageJsonUtilsIsStringPath);
+            const packageJson = helper.packageJson.read(packageJsonUtilsIsStringPath);
             expect(packageJson.version).to.equal('2.0.1');
 
             helper.command.untag('-a 2.0.1');
           });
           it('should change the version in the author package.json', () => {
-            const packageJsonUtilsIsString = helper.readPackageJson(packageJsonUtilsIsStringPath);
+            const packageJsonUtilsIsString = helper.packageJson.read(packageJsonUtilsIsStringPath);
             expect(packageJsonUtilsIsString.version).to.equal('2.0.0');
           });
         });
@@ -272,7 +272,7 @@ describe('bit untag command', function () {
     describe('untag all components', () => {
       describe('when all components have only local versions', () => {
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.runCmd('bit untag --all');
         });
         it('should remove all the components because it does not leave a damaged component without dependency', () => {
@@ -283,7 +283,7 @@ describe('bit untag command', function () {
       describe('with specifying a version and the dependent has a different version than its dependency', () => {
         let untagOutput;
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.tagComponent('utils/is-string', undefined, '-f');
           try {
             helper.command.runCmd('bit untag 0.0.1 --all');
@@ -301,7 +301,7 @@ describe('bit untag command', function () {
     describe('untag only the dependent', () => {
       let untagOutput;
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         untagOutput = helper.command.runCmd('bit untag utils/is-string');
       });
       it('should untag successfully the dependent', () => {
@@ -316,14 +316,14 @@ describe('bit untag command', function () {
     describe('after import and tagging', () => {
       let scopeAfterImport;
       before(() => {
-        helper.getClonedLocalScope(localScope);
-        helper.reInitRemoteScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.reInitRemoteScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string');
-        scopeAfterImport = helper.cloneLocalScope();
+        scopeAfterImport = helper.scopeHelper.cloneLocalScope();
         helper.command.tagComponent('utils/is-string', undefined, '-f');
       });
       describe('untag using the id without scope-name', () => {
@@ -338,8 +338,8 @@ describe('bit untag command', function () {
       });
       describe('modify, tag and then untag all', () => {
         before(() => {
-          helper.getClonedLocalScope(scopeAfterImport);
-          helper.fs.modifyFile(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js'));
+          helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
+          helper.fs.modifyFile(path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js'));
           helper.command.tagAllComponents();
           helper.command.runCmd('bit untag --all');
         });

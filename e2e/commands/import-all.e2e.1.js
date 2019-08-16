@@ -5,18 +5,18 @@ describe('bit import command with no ids', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('with a component in bit.map', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
       const bitMap = helper.bitMap.readBitMap();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitMap.writeBitMap(bitMap);
     });
     it('should display a successful message with the list of installed components', () => {
@@ -37,19 +37,19 @@ describe('bit import command with no ids', function () {
   describe('with components in bit.map when they are modified locally', () => {
     let localScope;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
       const bitMap = helper.bitMap.readBitMap();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitMap.writeBitMap(bitMap);
       helper.command.importAllComponents(true);
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.fs.createFile('bar', 'foo.js', barFooFixtureV2);
-      localScope = helper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('without any flag', () => {
       // should import objects only
@@ -68,7 +68,7 @@ describe('bit import command with no ids', function () {
     describe('with --override flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         output = helper.command.runCmd('bit import --override');
       });
       it('should display a successful message', () => {
@@ -84,7 +84,7 @@ describe('bit import command with no ids', function () {
     describe('with --merge=manual flag', () => {
       let output;
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         output = helper.command.runCmd('bit import --merge=manual');
       });
       it('should display a successful message', () => {
@@ -100,13 +100,13 @@ describe('bit import command with no ids', function () {
 
   describe('with an AUTHORED component which was only tagged but not exported', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       const bitMap = helper.bitMap.readBitMap();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitMap.writeBitMap(bitMap);
     });
     it('should not try to import that component as it was not exported yet', () => {

@@ -44,6 +44,6 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localScopePath, dir));
       }
     });
-    this.scopeHelper.initWorkspace();
+    this.scopehelper.scopeHelper.initWorkspace();
   }
 }

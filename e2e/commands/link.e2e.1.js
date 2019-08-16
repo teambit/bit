@@ -10,14 +10,14 @@ describe('bit link', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   describe('author components', () => {
     describe('before export', () => {
       let linkOutput;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
         helper.fixtures.addComponentUtilsIsType();
@@ -25,12 +25,12 @@ describe('bit link', function () {
       });
       it('should not create any link because there is no scope yet (until export)', () => {
         expect(linkOutput).to.have.string('nothing to link because the component was not exported yet');
-        expect(path.join(helper.localScopePath, 'node_modules')).to.not.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, 'node_modules')).to.not.be.a.path();
       });
     });
     describe('after export', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
         helper.fixtures.addComponentUtilsIsType();
@@ -38,17 +38,19 @@ describe('bit link', function () {
         helper.command.exportAllComponents();
 
         // requiring is-type through the internal file (@bit/remoteScope.utils.is-type/utils/is-type)
-        const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/utils/is-type');
+        const isStringFixture = `const isType = require('@bit/${
+          helper.scopes.remoteScope
+        }.utils.is-type/utils/is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.fs.createFile('utils', 'is-string.js', isStringFixture);
         helper.fixtures.addComponentUtilsIsString();
         const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
 
         // requiring is-type through the main index file (@bit/remoteScope.utils.is-type)
-        const appJSMainFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type');
+        const appJSMainFixture = `const isType = require('@bit/${helper.scopes.remoteScope}.utils.is-type');
 console.log(isType());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app-main.js'), appJSMainFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app-main.js'), appJSMainFixture);
       });
       it('should generate links to all component files as part of the export process', () => {
         const result = helper.command.runCmd('node app.js');
@@ -60,7 +62,7 @@ console.log(isType());`;
       });
       describe('after deleting node_modules and running bit link', () => {
         before(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
+          fs.removeSync(path.join(helper.scopes.localScopePath, 'node_modules'));
           helper.command.runCmd('bit link');
         });
         it('should re-generate the links successfully', () => {
@@ -73,11 +75,11 @@ console.log(isType());`;
       });
       describe('after deleting node_modules and running bit link from an inner directory', () => {
         before(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
-          helper.command.runCmd('bit link', path.join(helper.localScopePath, 'utils'));
+          fs.removeSync(path.join(helper.scopes.localScopePath, 'node_modules'));
+          helper.command.runCmd('bit link', path.join(helper.scopes.localScopePath, 'utils'));
         });
         it('should not create the node_modules in the inner directory', () => {
-          expect(path.join(helper.localScopePath, 'utils', 'node_modules')).to.not.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, 'utils', 'node_modules')).to.not.be.a.path();
         });
         it('should re-generate the links successfully', () => {
           const result = helper.command.runCmd('node app.js');
@@ -91,76 +93,78 @@ console.log(isType());`;
   });
   describe('with custom bind name in bit.json', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportComponent('bar/foo');
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'testLink');
       helper.command.importComponent('bar/foo');
     });
     describe('auto linking', () => {
       it('node_modules should contain custom dir name', () => {
-        expect(path.join(helper.localScopePath, 'node_modules', 'testLink')).to.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, 'node_modules', 'testLink')).to.be.a.path();
       });
       it('should create symlink inside custom folder', () => {
         expect(
-          path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`)
+          path.join(helper.scopes.localScopePath, 'node_modules', 'testLink', `${helper.scopes.remoteScope}.bar.foo`)
         ).to.be.a.path();
       });
     });
     describe('manual linking', () => {
       before(() => {
-        fs.removeSync(path.join(helper.localScopePath, 'node_modules', 'testLink'));
+        fs.removeSync(path.join(helper.scopes.localScopePath, 'node_modules', 'testLink'));
         helper.command.runCmd('bit link');
       });
       it('node_modules should contain custom dir name', () => {
-        expect(path.join(helper.localScopePath, 'node_modules', 'testLink')).to.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, 'node_modules', 'testLink')).to.be.a.path();
       });
       it('should create symlink inside custom folder', () => {
         expect(
-          path.join(helper.localScopePath, 'node_modules', 'testLink', `${helper.remoteScope}.bar.foo`)
+          path.join(helper.scopes.localScopePath, 'node_modules', 'testLink', `${helper.scopes.remoteScope}.bar.foo`)
         ).to.be.a.path();
       });
     });
   });
   describe('import 2 components into same link dir', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar2', 'foo2.js');
       helper.fixtures.addComponentBarFoo();
       helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'test');
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.localScopePath, 'node_modules', 'test')).to.be.a.path();
-      expect(path.join(helper.localScopePath, 'node_modules', 'test', `${helper.remoteScope}.bar.foo`)).to.be.a.path();
+      expect(path.join(helper.scopes.localScopePath, 'node_modules', 'test')).to.be.a.path();
       expect(
-        path.join(helper.localScopePath, 'node_modules', 'test', `${helper.remoteScope}.bar2.foo2`)
+        path.join(helper.scopes.localScopePath, 'node_modules', 'test', `${helper.scopes.remoteScope}.bar.foo`)
+      ).to.be.a.path();
+      expect(
+        path.join(helper.scopes.localScopePath, 'node_modules', 'test', `${helper.scopes.remoteScope}.bar2.foo2`)
       ).to.be.a.path();
     });
   });
   describe('component with dependency tree of 2', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type');
-      const isStringFixture = `const isType = require('${helper.getRequireBitPath(
+      const isStringFixture = `const isType = require('${helper.general.getRequireBitPath(
         'utils',
         'is-type'
       )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
@@ -168,19 +172,19 @@ console.log(isType());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
       helper.command.importComponent('utils/is-string');
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.localScopePath, 'node_modules', 'bitTest')).to.be.a.path();
+      expect(path.join(helper.scopes.localScopePath, 'node_modules', 'bitTest')).to.be.a.path();
     });
   });
   describe('component with dependency tree of 3', () => {
     before(() => {
       // is-type
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -188,12 +192,12 @@ console.log(isType());`;
       helper.command.exportAllComponents();
 
       // is-string
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
       helper.command.importComponent('utils/is-type');
       const isStringFixture = `const isType = require('bitTest/${
-        helper.remoteScope
+        helper.scopes.remoteScope
       }.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.fixtures.addComponentUtilsIsString();
@@ -201,38 +205,38 @@ console.log(isType());`;
       helper.command.exportAllComponents();
 
       // is-string2
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('bitTest2/${
-        helper.remoteScope
+        helper.scopes.remoteScope
       }.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
       helper.command.addComponent('test/is-string2.js', { i: 'test/is-string2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.command.importComponent('test/is-string2');
 
       const appJsFixture = `const isString2 = require('bitTest2/${
-        helper.remoteScope
+        helper.scopes.remoteScope
       }.test.is-string2'); console.log(isString2());`;
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.localScopePath, 'node_modules', 'bitTest2')).to.be.a.path();
+      expect(path.join(helper.scopes.localScopePath, 'node_modules', 'bitTest2')).to.be.a.path();
     });
     it('node_modules should contain custom dir name2', () => {
       expect(
         path.join(
-          helper.localScopePath,
+          helper.scopes.localScopePath,
           'node_modules',
           'bitTest2',
-          `${helper.remoteScope}.test.is-string2`,
+          `${helper.scopes.remoteScope}.test.is-string2`,
           'node_modules',
           'bitTest2'
         )
@@ -241,11 +245,11 @@ console.log(isType());`;
     it('node_modules should contain custom dir name3', () => {
       expect(
         path.join(
-          helper.localScopePath,
+          helper.scopes.localScopePath,
           'node_modules',
           'bitTest2',
-          `${helper.remoteScope}.test.is-string2/node_modules/bitTest2/${
-            helper.remoteScope
+          `${helper.scopes.remoteScope}.test.is-string2/node_modules/bitTest2/${
+            helper.scopes.remoteScope
           }.utils.is-string/node_modules/bitTest`
         )
       ).to.be.a.path();
@@ -256,8 +260,8 @@ console.log(isType());`;
     });
     describe('bit link after deleting the current node_modules directories', () => {
       before(() => {
-        fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
-        fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
+        fs.removeSync(path.join(helper.scopes.localScopePath, 'node_modules'));
+        fs.removeSync(path.join(helper.scopes.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
         helper.command.runCmd('bit link');
       });
       it('should still print results from the dependency that uses require absolute syntax', () => {
@@ -267,12 +271,12 @@ console.log(isType());`;
     });
     describe('bit link after deleting the current node_modules directories from an inner directory', () => {
       before(() => {
-        fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
-        fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
-        helper.command.runCmd('bit link', path.join(helper.localScopePath, 'components'));
+        fs.removeSync(path.join(helper.scopes.localScopePath, 'node_modules'));
+        fs.removeSync(path.join(helper.scopes.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
+        helper.command.runCmd('bit link', path.join(helper.scopes.localScopePath, 'components'));
       });
       it('should not create node_modules directory inside the inner directory', () => {
-        expect(path.join(helper.localScopePath, 'components', 'node_modules')).not.to.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, 'components', 'node_modules')).not.to.be.a.path();
       });
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.command.runCmd('node app.js');

@@ -12,12 +12,12 @@ describe('cyclic dependencies', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('comp', 'a.js', fixtureA);
       helper.fs.createFile('comp', 'b.js', fixtureB);
       helper.command.addComponent('comp/a.js', { i: 'comp/a' });
@@ -48,8 +48,8 @@ describe('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp/a');
           importOutput = helper.command.importComponent('comp/b');
         });
@@ -72,7 +72,7 @@ describe('cyclic dependencies', function () {
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       // isString => isType
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -195,8 +195,8 @@ describe('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           importOutput = helper.command.importComponent('comp/a1');
         });
         it('should import successfully and not throw any error', () => {
@@ -217,13 +217,13 @@ describe('cyclic dependencies', function () {
   describe('same component require itself using module path (@bit/component-name)', () => {
     let tagOutput;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       // after export, the author now has a link from node_modules.
-      helper.fixtures.createComponentBarFoo(`require('${helper.getRequireBitPath('bar', 'foo')}');`);
+      helper.fixtures.createComponentBarFoo(`require('${helper.general.getRequireBitPath('bar', 'foo')}');`);
       tagOutput = helper.command.tagAllComponents();
     });
     it('should tag successfully with no error', () => {

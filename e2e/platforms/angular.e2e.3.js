@@ -8,11 +8,11 @@ const helper = new Helper();
 describe('angular', function () {
   this.timeout(0);
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('adding a component without its styles and templates', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile(
         'bar',
         'foo.ts',
@@ -59,9 +59,9 @@ export class AppModule {}
     let localWorkspace;
     before(() => {
       helper.command.runCmd('git clone https://github.com/ng-lightning/ng-lightning');
-      helper.command.runCmd('git checkout v4.8.1', path.join(helper.localScopePath, 'ng-lightning'));
-      localWorkspace = path.join(helper.localScopePath, 'ng-lightning/projects/ng-lightning');
-      helper.initWorkspace(localWorkspace);
+      helper.command.runCmd('git checkout v4.8.1', path.join(helper.scopes.localScopePath, 'ng-lightning'));
+      localWorkspace = path.join(helper.scopes.localScopePath, 'ng-lightning/projects/ng-lightning');
+      helper.scopeHelper.initWorkspace(localWorkspace);
       helper.command.runCmd('bit add src/lib/badges', localWorkspace);
     });
     describe('isolating a component that has public_api.js on the root dir', () => {

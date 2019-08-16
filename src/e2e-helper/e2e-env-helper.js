@@ -67,7 +67,7 @@ export default class EnvHelper {
     const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.scopeHelper.initWorkspace(tempScopePath);
+    this.scopehelper.scopeHelper.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(this.fixtures.getFixturesDir(), 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -80,20 +80,20 @@ export default class EnvHelper {
     this.command.runCmd('bit init --bare', this.scopes.envScopePath);
     this.command.runCmd(`bit remote add file://${this.scopes.envScopePath}`, tempScopePath);
     this.command.runCmd(`bit export ${this.scopes.envScope} compilers/dummy`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envScopePath);
+    this.scopehelper.scopeHelper.addRemoteScope(this.scopes.envScopePath);
     this.dummyCompilerCreated = true;
     return true;
   }
 
   createDummyTester(dummyType: string) {
-    if (this.dummyTesterCreated) return this.scopeHelper.addRemoteScope(this.scopes.envScopePath);
+    if (this.dummyTesterCreated) return this.scopehelper.scopeHelper.addRemoteScope(this.scopes.envScopePath);
 
     // TODO: this is not really a scope but a workspace
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.scopeHelper.initWorkspace(tempScopePath);
+    this.scopehelper.scopeHelper.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(this.fixtures.getFixturesDir(), 'testers', dummyType);
     const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
@@ -115,19 +115,19 @@ export default class EnvHelper {
     this.command.runCmd('bit init --bare', this.scopes.envScopePath);
     this.command.runCmd(`bit remote add file://${this.scopes.envScopePath}`, tempScopePath);
     this.command.runCmd(`bit export ${this.scopes.envScope} testers/dummy`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envScopePath);
+    this.scopehelper.scopeHelper.addRemoteScope(this.scopes.envScopePath);
     this.dummyTesterCreated = true;
     return true;
   }
 
   createCompiler() {
-    if (this.compilerCreated) return this.scopeHelper.addRemoteScope(this.scopes.envScopePath);
+    if (this.compilerCreated) return this.scopehelper.scopeHelper.addRemoteScope(this.scopes.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
     fs.emptyDirSync(tempScopePath);
 
-    this.scopeHelper.initWorkspace(tempScopePath);
+    this.scopehelper.scopeHelper.initWorkspace(tempScopePath);
 
     const sourceDir = path.join(this.fixtures.getFixturesDir(), 'compilers', 'babel');
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
@@ -163,7 +163,7 @@ export default class EnvHelper {
     this.command.runCmd('bit init --bare', this.scopes.envScopePath);
     this.command.runCmd(`bit remote add file://${this.scopes.envScopePath}`, tempScopePath);
     this.command.runCmd(`bit export ${this.scopes.envScope} compilers/babel`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envScopePath);
+    this.scopehelper.scopeHelper.addRemoteScope(this.scopes.envScopePath);
     this.compilerCreated = true;
     return true;
   }

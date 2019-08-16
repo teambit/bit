@@ -10,27 +10,27 @@ describe('workspace config', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('when the config exists in both bit.json and package.json', () => {
     let localScope;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.initNpm();
-      const packageJson = helper.readPackageJson();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.npm.initNpm();
+      const packageJson = helper.packageJson.read();
       packageJson.bit = {
         env: {},
         componentsDefaultDirectory: 'components/{name}',
         packageManager: 'npm'
       };
-      helper.writePackageJson(packageJson);
-      localScope = helper.cloneLocalScope();
+      helper.packageJson.write(packageJson);
+      localScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('when the config conflicts between bit.json and package.json', () => {
       before(() => {
@@ -38,29 +38,29 @@ describe('workspace config', function () {
         bitJson.componentsDefaultDirectory = 'customBitJson/{name}';
         helper.bitJson.writeBitJson(bitJson);
 
-        const packageJson = helper.readPackageJson();
+        const packageJson = helper.packageJson.read();
         packageJson.bit.componentsDefaultDirectory = 'customPackageJson/{name}';
-        helper.writePackageJson(packageJson);
+        helper.packageJson.write(packageJson);
       });
       it('should use the config from bit.json and not from package.json', () => {
         helper.command.importComponent('bar/foo');
-        expect(path.join(helper.localScopePath, 'customBitJson')).to.be.a.directory();
-        expect(path.join(helper.localScopePath, 'customPackageJson')).to.not.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, 'customBitJson')).to.be.a.directory();
+        expect(path.join(helper.scopes.localScopePath, 'customPackageJson')).to.not.be.a.path();
       });
     });
     describe('when Bit writes config data', () => {
       before(() => {
-        helper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.importComponent('bar/foo -c');
       });
       it('should write the config data to both bit.json and package.json', () => {
         const bitJson = helper.bitJson.readBitJson();
         expect(bitJson.env).to.have.property('compiler');
-        expect(bitJson.env.compiler).to.equal(`${helper.remoteScope}/bar/foo@0.0.1`);
+        expect(bitJson.env.compiler).to.equal(`${helper.scopes.remoteScope}/bar/foo@0.0.1`);
 
-        const packageJson = helper.readPackageJson();
+        const packageJson = helper.packageJson.read();
         expect(packageJson.bit.env).to.have.property('compiler');
-        expect(packageJson.bit.env.compiler).to.equal(`${helper.remoteScope}/bar/foo@0.0.1`);
+        expect(packageJson.bit.env.compiler).to.equal(`${helper.scopes.remoteScope}/bar/foo@0.0.1`);
       });
     });
   });
@@ -68,14 +68,14 @@ describe('workspace config', function () {
     describe('changing component dependencies versions', () => {
       let localScope;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'foo.js');
         helper.fs.createFile('', 'bar.js', "require('./foo');");
         helper.command.addComponent('foo.js');
         helper.command.addComponent('bar.js');
         helper.command.tagAllComponents();
         helper.command.tagScope('2.0.0');
-        localScope = helper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       describe('from bit.json', () => {
         before(() => {
@@ -111,11 +111,11 @@ describe('workspace config', function () {
       });
       describe('from package.json', () => {
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           helper.fs.deletePath('bit.json');
-          helper.initNpm();
-          helper.initWorkspace();
-          const packageJson = helper.readPackageJson();
+          helper.npm.initNpm();
+          helper.scopeHelper.initWorkspace();
+          const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('bit');
           packageJson.bit.overrides = {
             bar: {
@@ -124,11 +124,11 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.writePackageJson(packageJson);
+          helper.packageJson.write(packageJson);
         });
         it('bit status should not delete "bit.overrides" property of package.json', () => {
           helper.command.status();
-          const packageJson = helper.readPackageJson();
+          const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('bit');
           expect(packageJson.bit).to.have.property('overrides');
         });
@@ -151,10 +151,10 @@ describe('workspace config', function () {
     });
     describe('changing packages dependencies versions', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo('require("chai");');
         helper.fixtures.addComponentBarFoo();
-        helper.addNpmPackage('chai', '2.4.0');
+        helper.npm.addNpmPackage('chai', '2.4.0');
         const overrides = {
           'bar/foo': {
             dependencies: {
@@ -183,15 +183,15 @@ describe('workspace config', function () {
       let scopeAfterAdding;
       let remoteScopeEmpty;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('foo-dir', 'foo1.js');
         helper.fs.createFile('foo-dir', 'foo2.js');
         helper.fs.createFile('bar-dir', 'bar.js', "require('../foo-dir/foo1'); require('../foo-dir/foo2'); ");
         helper.command.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
         helper.command.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
         helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
-        scopeAfterAdding = helper.cloneLocalScope();
-        remoteScopeEmpty = helper.cloneRemoteScope();
+        scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
+        remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
       describe('ignoring the component file altogether', () => {
         let showBar;
@@ -241,7 +241,7 @@ describe('workspace config', function () {
           before(() => {
             const showBarStr = helper.command.runCmd(
               'bit show bar --json',
-              path.join(helper.localScopePath, 'bar-dir')
+              path.join(helper.scopes.localScopePath, 'bar-dir')
             );
             showBar = JSON.parse(showBarStr);
           });
@@ -297,14 +297,14 @@ describe('workspace config', function () {
         describe('when requiring with module path', () => {
           let showBar;
           before(() => {
-            helper.getClonedLocalScope(scopeAfterAdding);
+            helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
             helper.fs.createFile(
               'bar-dir',
               'bar.js',
-              `require('@bit/${helper.remoteScope}.utils.foo.foo1'); require('@bit/${
-                helper.remoteScope
+              `require('@bit/${helper.scopes.remoteScope}.utils.foo.foo1'); require('@bit/${
+                helper.scopes.remoteScope
               }.utils.foo.foo2'); `
             );
             const overrides = {
@@ -324,14 +324,16 @@ describe('workspace config', function () {
           it('should show the dependency component as ignored', () => {
             expect(showBar).to.have.property('manuallyRemovedDependencies');
             expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-            expect(showBar.manuallyRemovedDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+            expect(showBar.manuallyRemovedDependencies.dependencies).to.include(
+              `${helper.scopes.remoteScope}/utils/foo/foo1`
+            );
           });
         });
       });
       describe('ignoring a dependencies components by wildcards', () => {
         let showBar;
         before(() => {
-          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
           const overrides = {
             bar: {
               dependencies: {
@@ -386,7 +388,7 @@ describe('workspace config', function () {
       describe('ignoring a missing component', () => {
         let showBar;
         before(() => {
-          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
           helper.fs.createFile(
             'bar-dir',
             'bar.js',
@@ -419,14 +421,14 @@ describe('workspace config', function () {
       describe('ignoring an existing component required as a package', () => {
         let showBar;
         before(() => {
-          helper.getClonedLocalScope(scopeAfterAdding);
-          helper.getClonedRemoteScope(remoteScopeEmpty);
+          helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeEmpty);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
           helper.fs.createFile(
             'bar-dir',
             'bar.js',
-            `require('@bit/${helper.remoteScope}.utils.foo.foo1'); require('../foo-dir/foo2');`
+            `require('@bit/${helper.scopes.remoteScope}.utils.foo.foo1'); require('../foo-dir/foo2');`
           );
           const overrides = {
             bar: {
@@ -445,7 +447,9 @@ describe('workspace config', function () {
         it('should show the component dependency as ignored', () => {
           expect(showBar).to.have.property('manuallyRemovedDependencies');
           expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-          expect(showBar.manuallyRemovedDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include(
+            `${helper.scopes.remoteScope}/utils/foo/foo1`
+          );
         });
       });
     });
@@ -453,7 +457,7 @@ describe('workspace config', function () {
       describe('ignoring a missing package', () => {
         let showBar;
         before(() => {
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar-dir', 'bar.js', "require('non-exist-package')");
           helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
 
@@ -483,9 +487,9 @@ describe('workspace config', function () {
       describe('ignoring an existing package', () => {
         let showBar;
         before(() => {
-          helper.reInitLocalScope();
-          helper.addNpmPackage('existing-package');
-          helper.addNpmPackage('another-existing-package');
+          helper.scopeHelper.reInitLocalScope();
+          helper.npm.addNpmPackage('existing-package');
+          helper.npm.addNpmPackage('another-existing-package');
           helper.fs.createFile(
             'bar-dir',
             'bar.js',
@@ -515,9 +519,9 @@ describe('workspace config', function () {
       describe('ignoring an existing devDependency package', () => {
         let showBar;
         before(() => {
-          helper.reInitLocalScope();
-          helper.addNpmPackage('existing-package');
-          helper.addNpmPackage('another-existing-package');
+          helper.scopeHelper.reInitLocalScope();
+          helper.npm.addNpmPackage('existing-package');
+          helper.npm.addNpmPackage('another-existing-package');
           helper.fs.createFile('bar-dir', 'bar.js');
           helper.fs.createFile(
             'bar-dir',
@@ -555,10 +559,10 @@ describe('workspace config', function () {
         before(() => {
           // keep in mind that the 'chai' dependency is a regular package dependency, which
           // also saved as a peerDependency
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.addNpmPackage('chai', '2.4');
-          helper.createPackageJson({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+          helper.npm.addNpmPackage('chai', '2.4');
+          helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
           helper.fixtures.addComponentBarFoo();
           const overrides = {
             'bar/foo': {
@@ -589,7 +593,7 @@ describe('workspace config', function () {
     });
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'foo1.js');
         helper.fs.createFile('', 'foo2.js');
         helper.fs.createFile('', 'bar.js');
@@ -601,7 +605,7 @@ describe('workspace config', function () {
         helper.fs.createFile(
           '',
           'bar.js',
-          `require('@bit/${helper.remoteScope}.foo1'); require('@bit/${helper.remoteScope}.foo2');`
+          `require('@bit/${helper.scopes.remoteScope}.foo1'); require('@bit/${helper.scopes.remoteScope}.foo2');`
         );
 
         const overrides = {
@@ -617,7 +621,7 @@ describe('workspace config', function () {
         let output;
         let catBar;
         before(() => {
-          output = helper.runWithTryCatch('bit tag bar');
+          output = helper.general.runWithTryCatch('bit tag bar');
           catBar = helper.command.catComponent('bar@latest');
         });
         it('should be able to tag successfully', () => {
@@ -637,15 +641,15 @@ describe('workspace config', function () {
           expect(status).to.not.have.string('modified components');
         });
         describe('importing the component', () => {
-          const barRoot = path.join(helper.localScopePath, 'components/bar/');
+          const barRoot = path.join(helper.scopes.localScopePath, 'components/bar/');
           before(() => {
             helper.command.exportAllComponents();
-            helper.reInitLocalScope();
-            helper.addRemoteScope();
+            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('bar');
           });
           it('should write the overrides data into the package.json of the component', () => {
-            const packageJson = helper.readPackageJson(barRoot);
+            const packageJson = helper.packageJson.read(barRoot);
             expect(packageJson).to.have.property('bit');
             expect(packageJson.bit).to.have.property('overrides');
             expect(packageJson.bit.overrides).to.have.property('dependencies');
@@ -662,9 +666,9 @@ describe('workspace config', function () {
           });
           describe('changing the imported component to not ignore the dependency', () => {
             before(() => {
-              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/'));
+              const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/'));
               packageJson.bit.overrides.dependencies = {};
-              helper.writePackageJson(packageJson, barRoot);
+              helper.packageJson.write(packageJson, barRoot);
             });
             it('bit status should show the component as modified', () => {
               const status = helper.command.status();
@@ -688,9 +692,9 @@ describe('workspace config', function () {
     describe('author ignored package, imported changed to not ignore', () => {
       let authorScope;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-        helper.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('chai', '2.4');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -702,17 +706,17 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        authorScope = helper.cloneLocalScope();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        authorScope = helper.scopeHelper.cloneLocalScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        helper.addNpmPackage('chai', '2.4');
-        const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
-        const packageJson = helper.readPackageJson(componentDir);
+        helper.npm.addNpmPackage('chai', '2.4');
+        const componentDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+        const packageJson = helper.packageJson.read(componentDir);
         // an intermediate step to make sure we're good so far
         expect(packageJson.bit.overrides.dependencies).to.deep.equal({ chai: '-' });
         packageJson.bit.overrides.dependencies = {};
-        helper.writePackageJson(packageJson, componentDir);
+        helper.packageJson.write(packageJson, componentDir);
         // an intermediate step to make sure we're good so far
         const diff = helper.command.diff();
         expect(diff).to.have.string('- [ chai@- ]');
@@ -731,9 +735,9 @@ describe('workspace config', function () {
       describe('then, author re-import', () => {
         let scopeAfterReImport;
         before(() => {
-          helper.getClonedLocalScope(authorScope);
+          helper.scopeHelper.getClonedLocalScope(authorScope);
           helper.command.importComponent('bar/foo');
-          scopeAfterReImport = helper.cloneLocalScope();
+          scopeAfterReImport = helper.scopeHelper.cloneLocalScope();
         });
         it('bit status should not show the component as modified', () => {
           const status = helper.command.status();
@@ -765,7 +769,7 @@ describe('workspace config', function () {
         });
         describe('then author merge the first version', () => {
           before(() => {
-            helper.getClonedLocalScope(scopeAfterReImport);
+            helper.scopeHelper.getClonedLocalScope(scopeAfterReImport);
             helper.command.mergeVersion('0.0.1', 'bar/foo');
           });
           it('bit status should not show the component as modified', () => {
@@ -784,16 +788,16 @@ describe('workspace config', function () {
         });
         describe('when the consumer config is saved also in the package.json file', () => {
           before(() => {
-            helper.getClonedLocalScope(authorScope);
-            helper.initNpm();
-            const packageJson = helper.readPackageJson();
+            helper.scopeHelper.getClonedLocalScope(authorScope);
+            helper.npm.initNpm();
+            const packageJson = helper.packageJson.read();
             packageJson.dependencies = { chai: '2.4' };
             packageJson.bit = {
               env: {},
               componentsDefaultDirectory: 'components/{name}',
               packageManager: 'npm'
             };
-            helper.writePackageJson(packageJson);
+            helper.packageJson.write(packageJson);
             try {
               helper.command.importComponent('bar/foo --skip-npm-install');
             } catch (err) {
@@ -805,7 +809,7 @@ describe('workspace config', function () {
             expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
           });
           it('should also update package.json', () => {
-            const packageJson = helper.readPackageJson();
+            const packageJson = helper.packageJson.read();
             expect(packageJson.bit.overrides['bar/foo'].dependencies).to.be.empty;
           });
         });
@@ -813,9 +817,9 @@ describe('workspace config', function () {
     });
     describe('changing overrides of a component in consumer config after tag', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo("require('chai');");
-        helper.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('chai', '2.4');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -840,10 +844,10 @@ describe('workspace config', function () {
     });
     describe('changing order of the overrides dependencies after tag', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo("require('chai'); require('lodash')");
-        helper.addNpmPackage('chai', '2.4');
-        helper.addNpmPackage('lodash', '2.4');
+        helper.npm.addNpmPackage('chai', '2.4');
+        helper.npm.addNpmPackage('lodash', '2.4');
         helper.fixtures.addComponentBarFoo();
         const overrides = {
           'bar/foo': {
@@ -874,10 +878,10 @@ describe('workspace config', function () {
       describe('moving a package from dependencies to peerDependencies', () => {
         let showBar;
         before(() => {
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-          helper.addNpmPackage('chai', '2.4');
-          helper.createPackageJson({ dependencies: { chai: '2.4' } });
+          helper.npm.addNpmPackage('chai', '2.4');
+          helper.packageJson.create({ dependencies: { chai: '2.4' } });
           helper.fixtures.addComponentBarFoo();
           const overrides = {
             'bar/foo': {
@@ -913,7 +917,7 @@ describe('workspace config', function () {
       describe('adding a package with version that does not exist in package.json', () => {
         let showBar;
         before(() => {
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFoo();
           const overrides = {
@@ -938,7 +942,7 @@ describe('workspace config', function () {
       });
       describe('adding a package without version that does not exist in package.json', () => {
         before(() => {
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFoo();
           const overrides = {
@@ -951,14 +955,14 @@ describe('workspace config', function () {
           helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('should throw an error', () => {
-          const output = helper.runWithTryCatch('bit show bar/foo');
+          const output = helper.general.runWithTryCatch('bit show bar/foo');
           expect(output).to.have.string('unable to manually add the dependency "chai" into "bar/foo"');
         });
       });
       describe('adding a component with a version', () => {
         let showBar;
         before(() => {
-          helper.setNewLocalAndRemoteScopes();
+          helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
@@ -1003,17 +1007,17 @@ describe('workspace config', function () {
             let originalAuthorScope;
             before(() => {
               helper.command.exportAllComponents();
-              originalAuthorScope = helper.cloneLocalScope();
-              helper.reInitLocalScope();
-              helper.addRemoteScope();
+              originalAuthorScope = helper.scopeHelper.cloneLocalScope();
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope();
               helper.command.importComponent('bar');
             });
             it('should also import the manually added dependency', () => {
-              const fooPath = path.join(helper.localScopePath, 'components/.dependencies/foo');
+              const fooPath = path.join(helper.scopes.localScopePath, 'components/.dependencies/foo');
               expect(fooPath).to.be.a.directory();
             });
             it('should add the overrides data into package.json', () => {
-              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar'));
+              const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar'));
               expect(packageJson).to.have.property('bit');
               expect(packageJson.bit.overrides.dependencies).to.deep.equal({
                 [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '0.0.1'
@@ -1025,16 +1029,16 @@ describe('workspace config', function () {
             });
             describe('removing the manually added dependency from the imported', () => {
               before(() => {
-                const barPath = path.join(helper.localScopePath, 'components/bar');
-                const packageJson = helper.readPackageJson(barPath);
+                const barPath = path.join(helper.scopes.localScopePath, 'components/bar');
+                const packageJson = helper.packageJson.read(barPath);
                 packageJson.bit.overrides.dependencies = {};
-                helper.writePackageJson(packageJson, barPath);
+                helper.packageJson.write(packageJson, barPath);
               });
               it('bit diff should show the removed dependency', () => {
                 const diff = helper.command.diff();
                 expect(diff).to.have.string('--- Dependencies (0.0.1 original)');
                 expect(diff).to.have.string('+++ Dependencies (0.0.1 modified)');
-                expect(diff).to.have.string(`- [ ${helper.remoteScope}/foo@0.0.1 ]`);
+                expect(diff).to.have.string(`- [ ${helper.scopes.remoteScope}/foo@0.0.1 ]`);
                 expect(diff).to.have.string('--- Overrides Dependencies (0.0.1 original)');
                 expect(diff).to.have.string('+++ Overrides Dependencies (0.0.1 modified)');
                 expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo@0.0.1 ]`);
@@ -1043,8 +1047,8 @@ describe('workspace config', function () {
                 before(() => {
                   helper.command.tagAllComponents();
                   helper.command.exportAllComponents();
-                  helper.reInitLocalScope();
-                  helper.getClonedLocalScope(originalAuthorScope);
+                  helper.scopeHelper.reInitLocalScope();
+                  helper.scopeHelper.getClonedLocalScope(originalAuthorScope);
                   helper.command.importComponent('bar');
                 });
                 it('bit status should show a clean state', () => {
@@ -1072,7 +1076,7 @@ describe('workspace config', function () {
       describe('adding a component without a version', () => {
         let showBar;
         before(() => {
-          helper.setNewLocalAndRemoteScopes();
+          helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
           helper.command.addComponent('bar.js');
@@ -1117,16 +1121,16 @@ describe('workspace config', function () {
         describe('importing the component', () => {
           before(() => {
             helper.command.exportAllComponents();
-            helper.reInitLocalScope();
-            helper.addRemoteScope();
+            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('bar');
           });
           it('should also import the manually added dependency', () => {
-            const fooPath = path.join(helper.localScopePath, 'components/.dependencies/foo');
+            const fooPath = path.join(helper.scopes.localScopePath, 'components/.dependencies/foo');
             expect(fooPath).to.be.a.directory();
           });
           it('should add the overrides data into package.json', () => {
-            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar'));
+            const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar'));
             expect(packageJson).to.have.property('bit');
             expect(packageJson.bit.overrides.dependencies).to.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+' });
           });
@@ -1140,7 +1144,7 @@ describe('workspace config', function () {
     describe('override environments', () => {
       describe('default workspace compiler and different compilers for different components', () => {
         before(() => {
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar', 'foo-default.js');
           helper.fs.createFile('bar', 'foo1.js');
           helper.fs.createFile('bar', 'foo2.js');
@@ -1215,7 +1219,7 @@ describe('workspace config', function () {
     });
     describe('ignoring files with originallySharedDir', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         const fooFixture = 'require("../utils/is-string");';
         helper.fs.createFile('src/bar', 'foo.js', fooFixture);
         helper.fs.createFile('src/utils', 'is-string.js');
@@ -1236,8 +1240,8 @@ describe('workspace config', function () {
         expect(Object.keys(foo.overrides.dependencies)).to.have.lengthOf(1);
 
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('foo');
         // change the file to have it as modified.
         helper.fs.createFile('components/foo/bar', 'foo.js', `${fooFixture}\n console.log('hello');`);
@@ -1248,12 +1252,12 @@ describe('workspace config', function () {
       });
       it('the originallySharedDir should take into account the overrides file', () => {
         const bitMap = helper.bitMap.readBitMap();
-        expect(bitMap[`${helper.remoteScope}/foo@0.0.1`].originallySharedDir).to.equal('src');
+        expect(bitMap[`${helper.scopes.remoteScope}/foo@0.0.1`].originallySharedDir).to.equal('src');
         // without file overrides, the originallySharedDir is 'src/bar'.
       });
       it('should write the dependencies without the sharedDir', () => {
-        const componentDir = path.join(helper.localScopePath, 'components/foo');
-        const packageJson = helper.readPackageJson(componentDir);
+        const componentDir = path.join(helper.scopes.localScopePath, 'components/foo');
+        const packageJson = helper.packageJson.read(componentDir);
         expect(packageJson.bit.overrides.dependencies).to.deep.equal({ 'file://utils/*': '-' });
       });
       describe('tagging the component', () => {
@@ -1261,7 +1265,7 @@ describe('workspace config', function () {
           helper.command.tagAllComponents();
         });
         it('should add back the sharedDir into the overrides', () => {
-          const catFoo = helper.command.catComponent(`${helper.remoteScope}/foo@latest`);
+          const catFoo = helper.command.catComponent(`${helper.scopes.remoteScope}/foo@latest`);
           expect(catFoo.overrides.dependencies).to.deep.equal({ 'file://src/utils/*': '-' });
         });
       });
@@ -1269,13 +1273,13 @@ describe('workspace config', function () {
     describe('adding overrides data on consumer-config to imported component', () => {
       let overrides;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         overrides = {
           'bar/*': {
@@ -1308,7 +1312,7 @@ describe('workspace config', function () {
       });
       describe('when the overrides data on consumer config excluded the imported component', () => {
         before(() => {
-          overrides['bar/*'].exclude = [`${helper.remoteScope}/*`];
+          overrides['bar/*'].exclude = [`${helper.scopes.remoteScope}/*`];
           helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('bit status should not show the component as modified', () => {
@@ -1327,7 +1331,7 @@ describe('workspace config', function () {
     });
     describe('override package.json values', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         const overrides = {
@@ -1348,13 +1352,13 @@ describe('workspace config', function () {
         before(() => {
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
-          authorScope = helper.cloneLocalScope();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          authorScope = helper.scopeHelper.cloneLocalScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('should write the values into package.json file', () => {
-          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
           expect(packageJson)
             .to.have.property('bin')
             .that.equals('my-bin-file.js');
@@ -1365,10 +1369,10 @@ describe('workspace config', function () {
         });
         describe('changing the value in the package.json directly (not inside overrides)', () => {
           before(() => {
-            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
-            const packageJson = helper.readPackageJson(compDir);
+            const compDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+            const packageJson = helper.packageJson.read(compDir);
             packageJson.bin = 'my-new-file.js';
-            helper.writePackageJson(packageJson, compDir);
+            helper.packageJson.write(packageJson, compDir);
           });
           it('should not show the component as modified', () => {
             const status = helper.command.status();
@@ -1377,10 +1381,10 @@ describe('workspace config', function () {
         });
         describe('changing the value in the package.json inside overrides', () => {
           before(() => {
-            const compDir = path.join(helper.localScopePath, 'components/bar/foo');
-            const packageJson = helper.readPackageJson(compDir);
+            const compDir = path.join(helper.scopes.localScopePath, 'components/bar/foo');
+            const packageJson = helper.packageJson.read(compDir);
             packageJson.bit.overrides.bin = 'my-new-file.js';
-            helper.writePackageJson(packageJson, compDir);
+            helper.packageJson.write(packageJson, compDir);
           });
           it('should show the component as modified', () => {
             const status = helper.command.status();
@@ -1395,7 +1399,7 @@ describe('workspace config', function () {
             before(() => {
               helper.command.tagAllComponents();
               helper.command.exportAllComponents();
-              helper.getClonedLocalScope(authorScope);
+              helper.scopeHelper.getClonedLocalScope(authorScope);
               helper.command.importComponent('bar/foo');
             });
             it('should not show the component as modified', () => {
@@ -1405,7 +1409,7 @@ describe('workspace config', function () {
             it('author bit.json should be rewritten to include a rule of the specific component', () => {
               const bitJson = helper.bitJson.readBitJson();
               expect(bitJson.overrides)
-                .to.have.property(`${helper.remoteScope}/bar/foo`)
+                .to.have.property(`${helper.scopes.remoteScope}/bar/foo`)
                 .that.deep.equals({ bin: 'my-new-file.js' });
             });
             it('bit show should display the modified field and not the original one', () => {
@@ -1422,7 +1426,7 @@ describe('workspace config', function () {
       let show;
       let overrides;
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
@@ -1494,7 +1498,7 @@ describe('workspace config', function () {
     });
     describe('using "exclude" to exclude component from a rule', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
       });
@@ -1533,31 +1537,31 @@ describe('workspace config', function () {
   describe('basic validations', () => {
     describe('when overrides is not an object', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = ['dependencies'];
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides to be object, got array');
       });
     });
     describe('when overrides of a component is not an object', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = {
           bar: 1234
         };
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.bar to be object, got number');
       });
     });
     describe('when a forbidden field is added into overrides of a component', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = {
           bar: {
             name: 'foo' // the name field of package.json is not permitted to change
@@ -1566,13 +1570,13 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('found a forbidden field "name" inside "overrides.bar" property');
       });
     });
     describe('when a non-compliant package.json field is added into overrides of a component', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         const overrides = {
@@ -1583,7 +1587,7 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('bit tag should throw an error', () => {
-        const output = helper.runWithTryCatch('bit tag -a');
+        const output = helper.general.runWithTryCatch('bit tag -a');
         expect(output).to.have.string(
           'unable to save Version object, "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
         );
@@ -1591,7 +1595,7 @@ describe('workspace config', function () {
     });
     describe('when a dependency field is not an object', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = {
           bar: {
             dependencies: 1234
@@ -1600,13 +1604,13 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.bar.dependencies to be object, got number');
       });
     });
     describe('when a dependency rule is not a string', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = {
           foo: {
             dependencies: {
@@ -1617,13 +1621,13 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.foo.dependencies.bar to be string, got boolean');
       });
     });
     describe('when "exclude" prop that is not an array', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         const overrides = {
           '*': {
             exclude: 'bar'
@@ -1632,7 +1636,7 @@ describe('workspace config', function () {
         helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
-        const output = helper.runWithTryCatch('bit list');
+        const output = helper.general.runWithTryCatch('bit list');
         expect(output).to.have.string('expected overrides.*.exclude to be array, got string');
       });
     });

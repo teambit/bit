@@ -10,16 +10,16 @@ describe('bit watch command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('watch', () => {
     let scopeAfterBuild;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.env.importDummyCompiler();
       helper.command.build();
-      scopeAfterBuild = helper.cloneLocalScope();
+      scopeAfterBuild = helper.scopeHelper.cloneLocalScope();
     });
     describe('as author', () => {
       let watchRunner;
@@ -58,12 +58,12 @@ describe('bit watch command', function () {
       } else {
         let watchRunner;
         before(async () => {
-          helper.getClonedLocalScope(scopeAfterBuild);
+          helper.scopeHelper.getClonedLocalScope(scopeAfterBuild);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
-          helper.addRemoteEnvironment();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteEnvironment();
           helper.command.importManyComponents(['bar/foo', 'utils/is-string', 'utils/is-type']);
           helper.command.build('--no-cache'); // it'll also install the compiler
           watchRunner = new WatchRunner(helper);
@@ -78,7 +78,7 @@ describe('bit watch command', function () {
             await watchRunner.waitForWatchToRebuildComponent();
           });
           it('should create a dist file for that new file', () => {
-            const expectedFile = path.join(helper.localScopePath, 'components/utils/is-string/dist/new-file.js');
+            const expectedFile = path.join(helper.scopes.localScopePath, 'components/utils/is-string/dist/new-file.js');
             expect(expectedFile).to.be.a.file();
           });
           describe('changing the new file', () => {

@@ -17,13 +17,13 @@ describe('bit eject command', function () {
   const bitsrcTester = new BitsrcTester();
   describe('local component', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
     });
     describe('non existing component', () => {
       it('show an error saying the component was not found', () => {
         const useFunc = () => helper.command.ejectComponents('utils/non-exist');
         const error = new MissingBitMapComponent('utils/non-exist');
-        helper.expectToThrow(useFunc, error);
+        helper.general.expectToThrow(useFunc, error);
       });
     });
     describe('tagged component before export', () => {
@@ -40,8 +40,8 @@ describe('bit eject command', function () {
       });
       describe('after export', () => {
         before(() => {
-          helper.reInitRemoteScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitRemoteScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
           output = helper.command.ejectComponents('bar/foo');
         });
@@ -71,13 +71,13 @@ describe('bit eject command', function () {
       let scopeBeforeEject;
       let remoteScopeName;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.command.tagAllComponents();
         remoteScopeName = `${username}.${scopeName}`;
         helper.command.exportAllComponents(remoteScopeName);
-        scopeBeforeEject = helper.cloneLocalScope();
+        scopeBeforeEject = helper.scopeHelper.cloneLocalScope();
       });
       describe('eject from consumer root', () => {
         before(() => {
@@ -87,7 +87,7 @@ describe('bit eject command', function () {
           expect(ejectOutput).to.have.string(successEjectMessage);
         });
         it('should save the component in package.json', () => {
-          const packageJson = helper.readPackageJson();
+          const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
           const packageName = `@bit/${username}.${scopeName}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
@@ -95,12 +95,12 @@ describe('bit eject command', function () {
         });
         it('should have the component files as a package (in node_modules)', () => {
           const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'foo.js');
-          expect(path.join(helper.localScopePath, fileInPackage)).to.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
         });
         it('should delete the original component files from the file-system', () => {
-          expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
           const bitMap = helper.bitMap.readBitMap();
@@ -128,14 +128,14 @@ describe('bit eject command', function () {
       });
       describe('eject from an inner directory', () => {
         before(() => {
-          helper.getClonedLocalScope(scopeBeforeEject);
-          ejectOutput = helper.command.runCmd('bit eject bar/foo', path.join(helper.localScopePath, 'bar'));
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
+          ejectOutput = helper.command.runCmd('bit eject bar/foo', path.join(helper.scopes.localScopePath, 'bar'));
         });
         it('should indicate that the eject was successful', () => {
           expect(ejectOutput).to.have.string(successEjectMessage);
         });
         it('should save the component in package.json', () => {
-          const packageJson = helper.readPackageJson();
+          const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
           const packageName = `@bit/${username}.${scopeName}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
@@ -143,12 +143,12 @@ describe('bit eject command', function () {
         });
         it('should have the component files as a package (in node_modules)', () => {
           const fileInPackage = path.join('node_modules/@bit', `${username}.${scopeName}.bar.foo`, 'foo.js');
-          expect(path.join(helper.localScopePath, fileInPackage)).to.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
         });
         it('should delete the original component files from the file-system', () => {
-          expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+          expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
         });
         it('bit status should show a clean state', () => {
           const output = helper.command.runCmd('bit status');
@@ -157,7 +157,7 @@ describe('bit eject command', function () {
       });
       describe('eject two components, the additional one has not been exported yet', () => {
         before(() => {
-          helper.getClonedLocalScope(scopeBeforeEject);
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
           helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
@@ -171,13 +171,13 @@ describe('bit eject command', function () {
       describe('two components, one exported, one modified', () => {
         let scopeAfterModification;
         before(() => {
-          helper.getClonedLocalScope(scopeBeforeEject);
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
           helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
           helper.command.exportAllComponents(`${username}.${scopeName}`);
           helper.fs.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2
-          scopeAfterModification = helper.cloneLocalScope();
+          scopeAfterModification = helper.scopeHelper.cloneLocalScope();
         });
         describe('eject without --force flag', () => {
           before(() => {
@@ -190,7 +190,7 @@ describe('bit eject command', function () {
         });
         describe('eject with --force flag', () => {
           before(() => {
-            helper.getClonedLocalScope(scopeAfterModification);
+            helper.scopeHelper.getClonedLocalScope(scopeAfterModification);
             ejectOutput = helper.command.ejectComponentsParsed('bar/foo bar/foo2', '--force');
           });
           it('should indicate that both components where ejected', () => {
@@ -200,7 +200,7 @@ describe('bit eject command', function () {
         });
         describe('two components, one exported, one staged', () => {
           before(() => {
-            helper.getClonedLocalScope(scopeAfterModification);
+            helper.scopeHelper.getClonedLocalScope(scopeAfterModification);
             helper.command.tagAllComponents();
           });
           describe('eject without --force flag', () => {
@@ -232,7 +232,7 @@ describe('bit eject command', function () {
     describe('export components with dependencies', () => {
       let remoteScopeName;
       before(() => {
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
@@ -268,7 +268,7 @@ describe('bit eject command', function () {
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
           it('should save the ejected component only in package.json', () => {
-            const packageJson = helper.readPackageJson();
+            const packageJson = helper.packageJson.read();
             expect(packageJson).to.have.property('dependencies');
             expect(Object.keys(packageJson.dependencies)).to.have.lengthOf(1);
             const packageName = `@bit/${username}.${scopeName}.bar.foo`;
@@ -277,16 +277,16 @@ describe('bit eject command', function () {
           });
           it('should have the component files as a package (in node_modules)', () => {
             const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'bar/foo.js');
-            expect(path.join(helper.localScopePath, fileInPackage)).to.be.a.path();
+            expect(path.join(helper.scopes.localScopePath, fileInPackage)).to.be.a.path();
             const fileContent = helper.fs.readFile(fileInPackage);
             expect(fileContent).to.equal(fixtures.barFooFixture);
           });
           it('should delete the ejected component files from the file-system', () => {
-            expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
+            expect(path.join(helper.scopes.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
           });
           it('should not delete the non-ejected component files from the file-system', () => {
-            expect(path.join(helper.localScopePath, 'utils', 'is-string.js')).to.be.a.file();
-            expect(path.join(helper.localScopePath, 'utils', 'is-type.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localScopePath, 'utils', 'is-string.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localScopePath, 'utils', 'is-type.js')).to.be.a.file();
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.readBitMap();
@@ -303,7 +303,7 @@ describe('bit eject command', function () {
       describe('as imported', () => {
         describe('importing and ejecting the dependent', () => {
           before(() => {
-            helper.reInitLocalScope();
+            helper.scopeHelper.reInitLocalScope();
             helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
             // an intermediate step, make sure the workspace is clean
             const statusOutput = helper.command.status();
@@ -318,7 +318,7 @@ describe('bit eject command', function () {
             );
           });
           it('should bring the modified version (v2) as a package', () => {
-            const packageJson = helper.readPackageJson();
+            const packageJson = helper.packageJson.read();
             expect(packageJson).to.have.property('dependencies');
             const packageName = `@bit/${remoteScopeName}.bar.foo`;
             expect(packageJson.dependencies).to.have.property(packageName);
@@ -329,7 +329,7 @@ describe('bit eject command', function () {
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
           it('should delete the imported component files from the file-system', () => {
-            expect(path.join(helper.localScopePath, 'components/bar/foo/bar/foo.js')).not.to.be.a.path();
+            expect(path.join(helper.scopes.localScopePath, 'components/bar/foo/bar/foo.js')).not.to.be.a.path();
           });
           it('should delete the component from bit.map', () => {
             const bitMap = helper.bitMap.readBitMap();
@@ -349,7 +349,7 @@ describe('bit eject command', function () {
         describe('importing the dependency directly', () => {
           let scopeBeforeEjecting;
           before(() => {
-            helper.reInitLocalScope();
+            helper.scopeHelper.reInitLocalScope();
             helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
             helper.command.runCmd(`bit import ${remoteScopeName}/utils/is-string`);
             // an intermediate step, make sure the workspace is clean
@@ -362,14 +362,14 @@ describe('bit eject command', function () {
               'app.js',
               `const barFoo = require('@bit/${remoteScopeName}.bar.foo'); console.log(barFoo());`
             );
-            scopeBeforeEjecting = helper.cloneLocalScope();
+            scopeBeforeEjecting = helper.scopeHelper.cloneLocalScope();
           });
           describe('ejecting the dependency successfully', () => {
             before(() => {
               helper.command.ejectComponents('utils/is-string');
             });
             it('should bring the modified version (v2) as a package', () => {
-              const packageJson = helper.readPackageJson();
+              const packageJson = helper.packageJson.read();
               expect(packageJson).to.have.property('dependencies');
               const packageName = `@bit/${remoteScopeName}.utils.is-string`;
               expect(packageJson.dependencies).to.have.property(packageName);
@@ -380,7 +380,9 @@ describe('bit eject command', function () {
               expect(result.trim()).to.have.string('got is-type and got is-string v2 and got foo');
             });
             it('should delete the imported component files from the file-system', () => {
-              expect(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();
+              expect(
+                path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js')
+              ).not.to.be.a.path();
             });
             it('should delete the component from bit.map', () => {
               const bitMap = helper.bitMap.readBitMap();
@@ -404,8 +406,8 @@ describe('bit eject command', function () {
             let bitMapBefore;
             let bitJsonBefore;
             before(() => {
-              helper.getClonedLocalScope(scopeBeforeEjecting);
-              packageJsonBefore = helper.readPackageJson();
+              helper.scopeHelper.getClonedLocalScope(scopeBeforeEjecting);
+              packageJsonBefore = helper.packageJson.read();
               bitMapBefore = helper.bitMap.readBitMap();
               bitJsonBefore = helper.bitJson.readBitJson();
             });
@@ -413,12 +415,18 @@ describe('bit eject command', function () {
               let errorFailure;
               before(() => {
                 const renameMainComponentFile = () => {
-                  const currentFile = path.join(helper.localScopePath, 'components/utils/is-string/is-string.js');
-                  const renamedFile = path.join(helper.localScopePath, 'components/utils/is-string/is-string2.js');
+                  const currentFile = path.join(
+                    helper.scopes.localScopePath,
+                    'components/utils/is-string/is-string.js'
+                  );
+                  const renamedFile = path.join(
+                    helper.scopes.localScopePath,
+                    'components/utils/is-string/is-string2.js'
+                  );
                   fs.moveSync(currentFile, renamedFile);
                 };
                 renameMainComponentFile();
-                errorFailure = helper.runWithTryCatch('bit eject utils/is-string');
+                errorFailure = helper.general.runWithTryCatch('bit eject utils/is-string');
               });
               it('should indicate with the error message that no changes have been done yet', () => {
                 expect(errorFailure).to.have.string('no action has been done');
@@ -428,7 +436,7 @@ describe('bit eject command', function () {
                 expect(errorFailure).to.have.string('was removed');
               });
               it('should not change the package.json file', () => {
-                const packageJsonNow = helper.readPackageJson();
+                const packageJsonNow = helper.packageJson.read();
                 expect(packageJsonNow).to.deep.equal(packageJsonBefore);
               });
               it('should not change the .bitmap file', () => {
@@ -444,14 +452,14 @@ describe('bit eject command', function () {
               let errorFailure;
               let packageJsonWithChanges;
               before(() => {
-                helper.getClonedLocalScope(scopeBeforeEjecting);
+                helper.scopeHelper.getClonedLocalScope(scopeBeforeEjecting);
                 packageJsonWithChanges = R.clone(packageJsonBefore);
                 const addNonExistVersionToPackageJson = () => {
                   packageJsonWithChanges.dependencies[`@bit/${scopeName}.bar.foo`] = '1.1.1';
-                  helper.writePackageJson(packageJsonWithChanges);
+                  helper.packageJson.write(packageJsonWithChanges);
                 };
                 addNonExistVersionToPackageJson();
-                errorFailure = helper.runWithTryCatch('bit eject utils/is-string');
+                errorFailure = helper.general.runWithTryCatch('bit eject utils/is-string');
               });
               it('should indicate with the error message that package.json has been restored', () => {
                 expect(errorFailure).to.have.string('your package.json (if existed) has been restored');
@@ -463,7 +471,7 @@ describe('bit eject command', function () {
                 expect(errorFailure).to.have.string('failed running npm install');
               });
               it('should not change the package.json file', () => {
-                const packageJsonNow = helper.readPackageJson();
+                const packageJsonNow = helper.packageJson.read();
                 expect(packageJsonNow).to.deep.equal(packageJsonWithChanges);
               });
               it('should not change the .bitmap file', () => {
@@ -475,7 +483,9 @@ describe('bit eject command', function () {
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
               it('should not delete the component files from the filesystem', () => {
-                expect(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js')).to.be.a.file();
+                expect(
+                  path.join(helper.scopes.localScopePath, 'components/utils/is-string/is-string.js')
+                ).to.be.a.file();
               });
             });
           });

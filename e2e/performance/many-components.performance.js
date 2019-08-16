@@ -40,11 +40,11 @@ describe('many components', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('basic commands', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {

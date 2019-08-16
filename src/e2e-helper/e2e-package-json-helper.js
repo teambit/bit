@@ -8,31 +8,27 @@ export default class PackageJsonHelper {
   constructor(scopes: ScopesData) {
     this.scopes = scopes;
   }
-
-  corruptPackageJson(packageJsonPath: string = path.join(this.scopes.localScopePath, 'package.json')) {
-    fs.writeFileSync(packageJsonPath, '{ corrupted');
-  }
-
-  createPackageJson(data: Object, location: string = this.scopes.localScopePath) {
-    const packageJsonPath = path.join(location, 'package.json');
-    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
-  }
-
-  addKeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.scopes.localScopePath)) {
-    const pkgJson = this.readPackageJson(pkgJsonPath);
-    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
-  }
-  readPackageJson(packageJsonFolder: string = this.scopes.localScopePath) {
+  read(packageJsonFolder: string = this.scopes.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
   }
-  writePackageJson(packageJson: Object, packageJsonFolder: string = this.scopes.localScopePath) {
+  write(packageJson: Object, packageJsonFolder: string = this.scopes.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
   }
-
+  create(data: Object, location: string = this.scopes.localScopePath) {
+    const packageJsonPath = path.join(location, 'package.json');
+    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
+  }
+  corrupt(packageJsonPath: string = path.join(this.scopes.localScopePath, 'package.json')) {
+    fs.writeFileSync(packageJsonPath, '{ corrupted');
+  }
+  addKeyValue(data: Object, pkgJsonPath: string = path.join(this.scopes.localScopePath)) {
+    const pkgJson = this.read(pkgJsonPath);
+    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
+  }
   readComponentPackageJson(id: string) {
     const packageJsonFolderPath = path.join(this.scopes.localScopePath, 'components', id);
-    return this.readPackageJson(packageJsonFolderPath);
+    return this.read(packageJsonFolderPath);
   }
 }

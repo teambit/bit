@@ -10,19 +10,19 @@ describe('copy workspace with env', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('coping a workspace with a compiler to another directory', () => {
     let copiedPath;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.env.importCompiler('bit.envs/compilers/react-typescript');
 
-      copiedPath = helper.cloneLocalScope();
+      copiedPath = helper.scopeHelper.cloneLocalScope();
       // remove the original workspace so then symlinks get invalid
-      fs.removeSync(helper.localScopePath);
+      fs.removeSync(helper.scopes.localScopePath);
     });
     it('bit status should throw an exception', () => {
       const func = () => helper.command.runCmd('bit status', copiedPath);

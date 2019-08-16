@@ -6,7 +6,7 @@ describe('imported component that depends on authored component', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   /**
    * at the end, is-type is authored. is-string-is imported. is-string requires is-type
@@ -15,13 +15,13 @@ describe('imported component that depends on authored component', function () {
   describe('with dist outside the components dir', () => {
     let output;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-string.js', '');
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.command.importComponent('utils/is-string');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
@@ -29,7 +29,7 @@ describe('imported component that depends on authored component', function () {
       helper.env.importCompiler();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      const fixture = `require('@bit/${helper.remoteScope}.utils.is-type');`;
+      const fixture = `require('@bit/${helper.scopes.remoteScope}.utils.is-type');`;
       helper.fs.createFile('components/utils/is-string', 'is-string.js', fixture);
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

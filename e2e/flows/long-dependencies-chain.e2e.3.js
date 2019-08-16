@@ -9,20 +9,20 @@ describe('flow of a long-dependencies-chain', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('a component bar4/foo4 (or any other number set in sizeOfChain) has a dependency bar3/foo3, which has a dependency bar2/foo2 and so on', () => {
     if (process.env.APPVEYOR === 'True') {
       this.skip;
     } else {
       before(() => {
-        helper.reInitRemoteScope();
+        helper.scopeHelper.reInitRemoteScope();
         for (let i = 0; i < sizeOfChain; i += 1) {
           const file = `foo${i}`;
           const dir = `bar${i}`;
 
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
 
           let impl;
           if (i > 0) {
@@ -30,7 +30,7 @@ describe('flow of a long-dependencies-chain', function () {
             const previousFile = `foo${i - 1}`;
             const previousDir = `bar${i - 1}`;
             helper.command.importComponent(`${previousDir}/${previousFile}`);
-            impl = `const foo = require('${helper.getRequireBitPath(previousDir, previousFile)}');
+            impl = `const foo = require('${helper.general.getRequireBitPath(previousDir, previousFile)}');
           module.exports = function ${file}() { return foo() + ' and got ${file}'; };
           `;
           } else {
@@ -44,12 +44,12 @@ describe('flow of a long-dependencies-chain', function () {
         }
       });
       it('should display results from its direct dependency and the long chain of indirect dependencies', () => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         const lastComponent = `bar${sizeOfChain - 1}/foo${sizeOfChain - 1}`;
         helper.command.importComponent(lastComponent);
         const appJsFixture = `const barFoo = require('./components/${lastComponent}'); console.log(barFoo());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         const arrayOfSizeOfChain = [...Array(sizeOfChain).keys()];
         const expectedResult = arrayOfSizeOfChain.map(num => `got foo${num}`).join(' and ');

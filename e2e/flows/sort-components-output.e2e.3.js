@@ -15,11 +15,11 @@ describe('basic flow with dependencies', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('after adding components', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       helper.fixtures.addComponentUtilsIsType();
@@ -101,12 +101,24 @@ describe('basic flow with dependencies', function () {
       });
       describe('after deleting the components', () => {
         before(() => {
-          fs.moveSync(path.join(helper.localScopePath, 'utils'), path.join(helper.localScopePath, 'utils-bak'));
-          fs.moveSync(path.join(helper.localScopePath, 'bar'), path.join(helper.localScopePath, 'bar-bak'));
+          fs.moveSync(
+            path.join(helper.scopes.localScopePath, 'utils'),
+            path.join(helper.scopes.localScopePath, 'utils-bak')
+          );
+          fs.moveSync(
+            path.join(helper.scopes.localScopePath, 'bar'),
+            path.join(helper.scopes.localScopePath, 'bar-bak')
+          );
         });
         after(() => {
-          fs.moveSync(path.join(helper.localScopePath, 'utils-bak'), path.join(helper.localScopePath, 'utils'));
-          fs.moveSync(path.join(helper.localScopePath, 'bar-bak'), path.join(helper.localScopePath, 'bar'));
+          fs.moveSync(
+            path.join(helper.scopes.localScopePath, 'utils-bak'),
+            path.join(helper.scopes.localScopePath, 'utils')
+          );
+          fs.moveSync(
+            path.join(helper.scopes.localScopePath, 'bar-bak'),
+            path.join(helper.scopes.localScopePath, 'bar')
+          );
         });
         describe('bit status', () => {
           let output;
@@ -129,7 +141,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('with missing dependencies', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isTypeFixture = "const missingDep = require('./non-existA');";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =
@@ -154,7 +166,7 @@ describe('basic flow with dependencies', function () {
   });
   describe('with auto-tag pending', () => {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       const isTypeFixture = "console.log('got is-type v1')";
       helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =

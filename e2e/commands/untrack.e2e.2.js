@@ -12,7 +12,7 @@ describe('bit untrack command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then run untrack ', () => {
@@ -24,7 +24,7 @@ describe('bit untrack command', function () {
   });
   describe('untrack components by id', () => {
     beforeEach(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
     });
     // this is the only test in 'untrack.e2e.js' that uses readBitMap() to test the creation of the 'version' property.
     // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
@@ -102,7 +102,7 @@ describe('bit untrack command', function () {
         output = err.toString();
       }
       expect(output).to.include('error: invalid bit.json: ');
-      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
+      expect(output).to.include(`${path.join(helper.scopes.localScopePath, 'bit.json')}`);
     });
   });
 });

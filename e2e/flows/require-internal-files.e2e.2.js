@@ -10,11 +10,11 @@ describe('component that requires another component internal (not main) file', f
   const helper = new Helper();
   const npmCiRegistry = new NpmCiRegistry(helper);
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('without compiler (no dist)', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       helper.fs.createFile('src/utils', 'is-type.js', '');
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
@@ -39,13 +39,13 @@ describe('component that requires another component internal (not main) file', f
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
     describe('when dependencies are saved as components', () => {
       before(() => {
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should be able to require the main and the internal files and print the results', () => {
         const result = helper.command.runCmd('node app.js');
@@ -56,21 +56,23 @@ describe('component that requires another component internal (not main) file', f
       before(async () => {
         await npmCiRegistry.init();
         helper.extensions.importNpmPackExtension();
-        helper.removeRemoteScope();
+        helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('bar/foo');
 
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.command.runCmd('npm init -y');
-        helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const appJsFixture = `const barFoo = require('@ci/${
+          helper.scopes.remoteScope
+        }.bar.foo'); console.log(barFoo());`;
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -78,8 +80,8 @@ describe('component that requires another component internal (not main) file', f
   });
   describe('with compiler', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.setRemoteScopeAsDifferentDir();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setRemoteScopeAsDifferentDir();
       helper.env.importCompiler();
       npmCiRegistry.setCiScopeInBitJson();
       helper.fs.createFile('src/utils', 'is-type.js', '');
@@ -105,13 +107,13 @@ describe('component that requires another component internal (not main) file', f
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
     describe('when dependencies are saved as components', () => {
       before(() => {
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
       });
       it('should be able to require the main and the internal files and print the results', () => {
         const result = helper.command.runCmd('node app.js');
@@ -122,23 +124,23 @@ describe('component that requires another component internal (not main) file', f
       before(async () => {
         await npmCiRegistry.init();
         helper.extensions.importNpmPackExtension();
-        helper.removeRemoteScope();
+        helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('bar/foo');
 
-        helper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScope();
         helper.command.runCmd('npm init -y');
-        helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = `const barFoo = require('@ci/${
-          helper.remoteScope
+          helper.scopes.remoteScope
         }.bar.foo'); console.log(barFoo.default());`;
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });

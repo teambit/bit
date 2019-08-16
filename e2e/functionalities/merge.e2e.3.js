@@ -7,11 +7,11 @@ describe('merge functionality', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('re-exporting/importing an existing version', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -22,37 +22,37 @@ describe('merge functionality', function () {
 
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
-      const scopeWithV1 = helper.cloneLocalScope();
+      const scopeWithV1 = helper.scopeHelper.cloneLocalScope();
       helper.command.tagComponent('bar/foo', 'msg', '-f');
       helper.command.tagComponent('bar2/foo2', 'msg', '-f');
       helper.command.exportAllComponents(); // v2 is exported
 
-      helper.getClonedLocalScope(scopeWithV1);
+      helper.scopeHelper.getClonedLocalScope(scopeWithV1);
       helper.command.tagComponent('bar/foo', 'msg', '-f');
       helper.command.tagComponent('bar2/foo2', 'msg', '-f');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
       const idsAndVersions = [
-        { id: `${helper.remoteScope}/bar/foo`, versions: ['0.0.2'] },
-        { id: `${helper.remoteScope}/bar2/foo2`, versions: ['0.0.2'] }
+        { id: `${helper.scopes.remoteScope}/bar/foo`, versions: ['0.0.2'] },
+        { id: `${helper.scopes.remoteScope}/bar2/foo2`, versions: ['0.0.2'] }
       ];
       const error = new MergeConflictOnRemote(idsAndVersions);
-      helper.expectToThrow(exportFunc, error);
+      helper.general.expectToThrow(exportFunc, error);
     });
     it('should throw MergeConflict error when importing the component', () => {
       const importFunc = () => helper.command.importComponent('bar/foo');
-      const error = new MergeConflict(`${helper.remoteScope}/bar/foo`, ['0.0.2']);
-      helper.expectToThrow(importFunc, error);
+      const error = new MergeConflict(`${helper.scopes.remoteScope}/bar/foo`, ['0.0.2']);
+      helper.general.expectToThrow(importFunc, error);
     });
   });
   describe('import an older version of a component', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
@@ -61,17 +61,17 @@ describe('merge functionality', function () {
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
-      const clonedScope = helper.cloneRemoteScope();
+      const clonedScope = helper.scopeHelper.cloneRemoteScope();
 
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type'); // v2
 
-      helper.getClonedRemoteScope(clonedScope);
+      helper.scopeHelper.getClonedRemoteScope(clonedScope);
       helper.command.importComponent('utils/is-string'); // v1
     });
     it('the second import should not override the previously imported component', () => {
@@ -83,7 +83,7 @@ describe('merge functionality', function () {
   });
   describe('importing a component with --merge flag', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
@@ -92,14 +92,14 @@ describe('merge functionality', function () {
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-type@0.0.1');
     });
     describe('using invalid value for merge flag', () => {
       let output;
       before(() => {
-        output = helper.runWithTryCatch('bit import utils/is-type --merge=invalid');
+        output = helper.general.runWithTryCatch('bit import utils/is-type --merge=invalid');
       });
       it('should throw an error', () => {
         expect(output).to.have.string('merge must be one of the following');
@@ -109,7 +109,7 @@ describe('merge functionality', function () {
       let localScope;
       before(() => {
         helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV3);
-        localScope = helper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       describe('merge with strategy=manual', () => {
         let output;
@@ -136,15 +136,15 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
         });
       });
       describe('merge with strategy=theirs', () => {
         let output;
         let fileContent;
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           output = helper.command.importComponent('utils/is-type --merge=theirs');
           fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
         });
@@ -160,15 +160,15 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
         });
       });
       describe('merge with strategy=ours', () => {
         let output;
         let fileContent;
         before(() => {
-          helper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedLocalScope(localScope);
           output = helper.command.importComponent('utils/is-type --merge=ours');
           fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
         });
@@ -184,8 +184,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
         });
       });
     });
@@ -213,8 +213,8 @@ describe('merge functionality', function () {
         });
         it('should update bitmap with the imported version', () => {
           const bitMap = helper.bitMap.readBitMap();
-          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-          expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.2`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remoteScope}/utils/is-type@0.0.1`);
         });
       });
     });

@@ -12,12 +12,12 @@ describe('capsule', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('new components with dependencies (untagged)', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
@@ -32,9 +32,9 @@ describe('capsule', function () {
     });
   });
   describe('new components with package dependencies (untagged)', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponentsAndPackages();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
@@ -45,9 +45,9 @@ describe('capsule', function () {
     });
   });
   describe('tagged components with dependencies (before export)', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.command.tagAllComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -59,11 +59,11 @@ describe('capsule', function () {
     });
   });
   describe('components with peer packages', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.installNpmPackage('left-pad', '1.3.0');
-      helper.createPackageJson({ peerDependencies: { 'left-pad': '1.3.0' } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.npm.installNpmPackage('left-pad', '1.3.0');
+      helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
       helper.fs.createFile(
         'utils',
         'is-type.js',
@@ -81,11 +81,11 @@ describe('capsule', function () {
     });
   });
   describe('components with peer packages of the dependencies', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.installNpmPackage('left-pad', '1.3.0');
-      helper.createPackageJson({ peerDependencies: { 'left-pad': '1.3.0' } });
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.npm.installNpmPackage('left-pad', '1.3.0');
+      helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
       helper.fs.createFile(
         'utils',
         'is-type.js',
@@ -115,9 +115,9 @@ describe('capsule', function () {
     });
   });
   describe('exported components with dependencies', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -130,15 +130,15 @@ describe('capsule', function () {
     });
   });
   describe('imported components with dependencies', () => {
-    const capsuleDir = helper.generateRandomTmpDirName();
+    const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
@@ -151,7 +151,7 @@ describe('capsule', function () {
   describe('build into capsule', () => {
     let afterImportingCompiler;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
       helper.fs.createFile('utils', 'is-type.js', strToAdd + fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
@@ -160,25 +160,25 @@ describe('capsule', function () {
       helper.fixtures.createComponentBarFoo(strToAdd + fixtures.barFooFixture);
       helper.fixtures.addComponentBarFoo();
       helper.env.importDummyCompiler('capsule');
-      afterImportingCompiler = helper.cloneLocalScope();
+      afterImportingCompiler = helper.scopeHelper.cloneLocalScope();
       helper.command.build();
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
       const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
     describe('using the new compiler API', () => {
       before(() => {
-        helper.getClonedLocalScope(afterImportingCompiler);
+        helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
         helper.env.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
         const output = helper.command.build();
         expect(output).to.have.string('using the new compiler API');
       });
       it('should be able to require the component and its dependencies from the dist directory', () => {
         const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -187,9 +187,9 @@ describe('capsule', function () {
       let capsuleDir;
       let afterChangingCompiler;
       before(() => {
-        helper.getClonedLocalScope(afterImportingCompiler);
+        helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
         helper.env.changeDummyCompilerCode('shouldBuildDependencies: false', 'shouldBuildDependencies: true');
-        afterChangingCompiler = helper.cloneLocalScope();
+        afterChangingCompiler = helper.scopeHelper.cloneLocalScope();
         const buildOutput = helper.command.build('bar/foo --no-cache');
         capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
       });
@@ -200,12 +200,12 @@ describe('capsule', function () {
         expect(isTypeDist).to.be.a.file();
       });
       it('should not write the same paths written to the capsule into the author workspace', () => {
-        expect(path.join(helper.localScopePath, '.dependencies')).to.not.be.a.path();
+        expect(path.join(helper.scopes.localScopePath, '.dependencies')).to.not.be.a.path();
       });
       it('should be able to require the component and its dependencies from the dist directory', () => {
         helper.command.build();
         const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
@@ -234,7 +234,7 @@ describe('capsule', function () {
       describe('when there is a circle dependencies', () => {
         let buildOutput;
         before(() => {
-          helper.getClonedLocalScope(afterChangingCompiler);
+          helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
           helper.fs.createFile('circle', 'comp-a.js', "require('./comp-b');");
           helper.fs.createFile('circle', 'comp-b.js', "require('./comp-c');");
           helper.fs.createFile('circle', 'comp-c.js', "require('./comp-a');");
@@ -243,7 +243,7 @@ describe('capsule', function () {
           helper.command.addComponent('circle/comp-b.js');
           helper.command.addComponent('circle/comp-c.js');
           helper.command.addComponent('circle/comp-d.js'); // comp-d has no deps, so is not part of the circle
-          buildOutput = helper.runWithTryCatch('bit build comp-a');
+          buildOutput = helper.general.runWithTryCatch('bit build comp-a');
         });
         it('should throw an error saying there is cyclic dependencies', () => {
           expect(buildOutput).to.have.string('cyclic dependencies');
@@ -261,7 +261,7 @@ describe('capsule', function () {
   });
   describe('tag with capsule compiler that saves link files into the dists', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
       helper.fs.createFile('utils', 'is-type.js', strToAdd + fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
@@ -293,30 +293,30 @@ describe('capsule', function () {
         const fileHash = distLink.file;
         const content = helper.command.catObject(fileHash);
         // expect the link file to include the full name including the scope name
-        expect(content).to.have.string(`@bit/${helper.remoteScope}.utils.is-string`);
+        expect(content).to.have.string(`@bit/${helper.scopes.remoteScope}.utils.is-string`);
         expect(content).to.not.have.string('@bit/utils.is-string');
       });
       describe('importing the component to another workspace', () => {
         before(() => {
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('should write the dist link file from the scope and not the generated one', () => {
           const fileContent = helper.fs.readFile('components/bar/foo/dist/utils/is-string.js');
           expect(fileContent).to.not.have.string(AUTO_GENERATED_STAMP);
-          expect(fileContent).to.have.string(`@bit/${helper.remoteScope}.utils.is-string`);
+          expect(fileContent).to.have.string(`@bit/${helper.scopes.remoteScope}.utils.is-string`);
         });
       });
     });
   });
   describe('test in capsule', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponents();
       helper.env.importDummyTester('capsule');
 
-      helper.installNpmPackage('chai', '4.1.2');
+      helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });

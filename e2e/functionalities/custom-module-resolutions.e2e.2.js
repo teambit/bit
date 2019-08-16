@@ -11,11 +11,11 @@ describe('custom module resolutions', function () {
   this.timeout(0);
   let helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('using custom module directory', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.bitJson.writeBitJson(bitJson);
@@ -48,11 +48,11 @@ describe('custom module resolutions', function () {
     describe('isolation the component using the capsule', () => {
       let capsuleDir;
       before(() => {
-        capsuleDir = helper.generateRandomTmpDirName();
+        capsuleDir = helper.general.generateRandomTmpDirName();
         helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       });
       it('should not delete the dependencies file paths', () => {
-        const packageJson = helper.readPackageJson(capsuleDir);
+        const packageJson = helper.packageJson.read(capsuleDir);
         expect(packageJson.dependencies)
           .to.have.property('@bit/utils.is-string')
           .that.equal(path.normalize('file:.dependencies/utils/is-string'));
@@ -66,10 +66,10 @@ describe('custom module resolutions', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -80,12 +80,12 @@ describe('custom module resolutions', function () {
         expect(output).to.not.have.string('modified');
       });
       it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        const packageJson = helper.packageJson.read(path.join(helper.scopes.localScopePath, 'components/bar/foo'));
         expect(packageJson).to.have.property('bit');
         expect(packageJson.bit).to.have.property('resolveAliases');
         expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
         expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-          `@bit/${helper.remoteScope}.utils.is-string`
+          `@bit/${helper.scopes.remoteScope}.utils.is-string`
         );
       });
       describe('importing the component using isolated environment', () => {
@@ -105,8 +105,8 @@ describe('custom module resolutions', function () {
         let packDir;
         before(() => {
           helper.extensions.importNpmPackExtension();
-          packDir = path.join(helper.localScopePath, 'pack');
-          helper.command.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+          packDir = path.join(helper.scopes.localScopePath, 'pack');
+          helper.command.runCmd(`bit npm-pack ${helper.scopes.remoteScope}/bar/foo -o -k -d ${packDir}`);
         });
         it('should create the specified directory', () => {
           expect(packDir).to.be.a.path();
@@ -115,18 +115,18 @@ describe('custom module resolutions', function () {
           expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should add the postinstall script to the package.json file', () => {
-          const packageJson = helper.readPackageJson(packDir);
+          const packageJson = helper.packageJson.read(packDir);
           expect(packageJson).to.have.property('scripts');
           expect(packageJson.scripts).to.have.property('postinstall');
           expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
         });
         it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-          const packageJson = helper.readPackageJson(packDir);
+          const packageJson = helper.packageJson.read(packDir);
           expect(packageJson).to.have.property('bit');
           expect(packageJson.bit).to.have.property('resolveAliases');
           expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
           expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-            `@bit/${helper.remoteScope}.utils.is-string`
+            `@bit/${helper.scopes.remoteScope}.utils.is-string`
           );
         });
       });
@@ -135,7 +135,7 @@ describe('custom module resolutions', function () {
   describe('using custom module directory when two files in the same component requires each other', () => {
     describe('with dependencies', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         const bitJson = helper.bitJson.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
         helper.bitJson.writeBitJson(bitJson);
@@ -174,10 +174,10 @@ describe('custom module resolutions', function () {
           expect(catComponent.customResolvedPaths[0].importSource).to.equal('utils/is-string');
           helper.command.exportAllComponents();
 
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
         });
         it('should generate the non-relative links correctly', () => {
           const result = helper.command.runCmd('node app.js');
@@ -191,7 +191,7 @@ describe('custom module resolutions', function () {
     });
     describe('without dependencies', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         const bitJson = helper.bitJson.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
         helper.bitJson.writeBitJson(bitJson);
@@ -227,10 +227,10 @@ describe('custom module resolutions', function () {
         before(() => {
           helper.command.exportAllComponents();
 
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
         });
         it('should generate the non-relative links correctly', () => {
           const result = helper.command.runCmd('node app.js');
@@ -244,8 +244,8 @@ describe('custom module resolutions', function () {
           let packDir;
           before(() => {
             helper.extensions.importNpmPackExtension();
-            packDir = path.join(helper.localScopePath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+            packDir = path.join(helper.scopes.localScopePath, 'pack');
+            helper.command.runCmd(`bit npm-pack ${helper.scopes.remoteScope}/bar/foo -o -k -d ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
@@ -254,7 +254,7 @@ describe('custom module resolutions', function () {
             expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
           });
           it('should add the postinstall script to the package.json file', () => {
-            const packageJson = helper.readPackageJson(packDir);
+            const packageJson = helper.packageJson.read(packDir);
             expect(packageJson).to.have.property('scripts');
             expect(packageJson.scripts).to.have.property('postinstall');
             expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
@@ -266,8 +266,8 @@ describe('custom module resolutions', function () {
             expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-            const packageJson = helper.readPackageJson(packDir);
-            const packageName = helper.getRequireBitPath('bar', 'foo');
+            const packageJson = helper.packageJson.read(packDir);
+            const packageName = helper.general.getRequireBitPath('bar', 'foo');
             expect(packageJson.bit.resolveAliases)
               .to.have.property('utils/is-string')
               .that.equal(`${packageName}/utils/is-string.js`);
@@ -282,7 +282,7 @@ describe('custom module resolutions', function () {
   describe('using custom module directory when a component uses an internal file of another component', () => {
     const npmCiRegistry = new NpmCiRegistry(helper);
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.bitJson.writeBitJson(bitJson);
@@ -327,10 +327,10 @@ describe('custom module resolutions', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -344,21 +344,23 @@ describe('custom module resolutions', function () {
         before(async () => {
           await npmCiRegistry.init();
           helper.extensions.importNpmPackExtension();
-          helper.removeRemoteScope();
+          helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('utils/is-type');
           npmCiRegistry.publishComponent('utils/is-string');
           npmCiRegistry.publishComponent('bar/foo');
 
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
         });
         after(() => {
           npmCiRegistry.destroy();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
-          const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const appJsFixture = `const barFoo = require('@ci/${
+            helper.scopes.remoteScope
+          }.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), appJsFixture);
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
@@ -370,14 +372,14 @@ describe('custom module resolutions', function () {
     before(() => {
       helper = new Helper();
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.bitJson.writeBitJson(bitJson);
       npmCiRegistry.setCiScopeInBitJson();
 
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      const destPngFile = path.join(helper.localScopePath, 'src/assets', 'png_fixture.png');
+      const destPngFile = path.join(helper.scopes.localScopePath, 'src/assets', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const barFooFixture = "require('assets/png_fixture.png');";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
@@ -392,8 +394,8 @@ describe('custom module resolutions', function () {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
       });
       it('should not show the component as modified', () => {
@@ -401,7 +403,10 @@ describe('custom module resolutions', function () {
         expect(output).to.not.have.string('modified');
       });
       it('should create a symlink on node_modules pointing to the binary file', () => {
-        const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/node_modules/assets/png_fixture.png');
+        const expectedDest = path.join(
+          helper.scopes.localScopePath,
+          'components/bar/foo/node_modules/assets/png_fixture.png'
+        );
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
@@ -411,20 +416,20 @@ describe('custom module resolutions', function () {
         before(async () => {
           await npmCiRegistry.init();
           helper.extensions.importNpmPackExtension();
-          helper.removeRemoteScope();
+          helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('bar/foo');
 
-          helper.reInitLocalScope();
+          helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
-          helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+          helper.command.runCmd(`npm install @ci/${helper.scopes.remoteScope}.bar.foo`);
         });
         after(() => {
           npmCiRegistry.destroy();
         });
         it('should be able to install the package successfully and generate the symlink to the file', () => {
           const expectedDest = path.join(
-            helper.localScopePath,
-            `node_modules/@ci/${helper.remoteScope}.bar.foo/node_modules/assets/png_fixture.png`
+            helper.scopes.localScopePath,
+            `node_modules/@ci/${helper.scopes.remoteScope}.bar.foo/node_modules/assets/png_fixture.png`
           );
           expect(expectedDest).to.be.a.file();
 
@@ -437,7 +442,7 @@ describe('custom module resolutions', function () {
   describe('using alias', () => {
     let scopeAfterAdding;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { aliases: { '@': 'src' } };
       helper.bitJson.writeBitJson(bitJson);
@@ -452,7 +457,7 @@ describe('custom module resolutions', function () {
       helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
-      scopeAfterAdding = helper.cloneLocalScope();
+      scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.command.runCmd('bit status');
@@ -470,7 +475,7 @@ describe('custom module resolutions', function () {
     });
     describe('when there is already a package with the same name of the alias and is possible to resolve to the package', () => {
       before(() => {
-        helper.addNpmPackage('@'); // makes sure the package is there
+        helper.npm.addNpmPackage('@'); // makes sure the package is there
         helper.fs.outputFile('node_modules/@/utils/is-string.js', ''); // makes sure it's possible to resolve to the package
       });
       // @see https://github.com/teambit/bit/issues/1779
@@ -487,14 +492,14 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.getClonedLocalScope(scopeAfterAdding);
+        helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        fs.outputFileSync(path.join(helper.scopes.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should generate the non-relative links correctly', () => {
         const result = helper.command.runCmd('node app.js');
@@ -506,7 +511,7 @@ describe('custom module resolutions', function () {
       });
       describe('deleting the link generated for the custom-module-resolution', () => {
         before(() => {
-          fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/node_modules'));
+          fs.removeSync(path.join(helper.scopes.localScopePath, 'components/bar/foo/node_modules'));
         });
         it('bit status should show it as missing links and not as missing packages dependencies', () => {
           const output = helper.command.runCmd('bit status');

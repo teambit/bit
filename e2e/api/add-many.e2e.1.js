@@ -76,7 +76,7 @@ describe('bit add many programmatically', function () {
     }
   ];
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   this.timeout(0);
   let nodeStartOutput;
@@ -84,11 +84,11 @@ describe('bit add many programmatically', function () {
   let status;
   describe('should transfer wrong and right script path', function () {
     before(() => {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('add-many');
     });
     it('should transfer right script path ', async function () {
-      const result = await api.addMany(components, helper.localScopePath);
+      const result = await api.addMany(components, helper.scopes.localScopePath);
       nodeStartOutputObj = result;
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
       expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
@@ -98,10 +98,10 @@ describe('bit add many programmatically', function () {
   });
   describe('should add many components programmatically, process.cwd() is inside project path', function () {
     before(async function () {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('add-many');
       const innerScriptPathRelative = 'add_many_test_files/inner_folder';
-      const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
+      const innerScriptPathAbsolute = path.join(helper.scopes.localScopePath, innerScriptPathRelative);
       nodeStartOutputObj = await api.addMany(componentsInside, innerScriptPathAbsolute);
       status = helper.command.status();
     });
@@ -143,12 +143,12 @@ describe('bit add many programmatically', function () {
   });
   describe('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
     before(async function () {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('add-many');
       const newDirPath = helper.fs.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.fixtures.copyFixtureComponents(scriptRelativePath, newDirPath);
-      nodeStartOutputObj = await api.addMany(components, helper.localScopePath);
+      nodeStartOutputObj = await api.addMany(components, helper.scopes.localScopePath);
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
       status = helper.command.status();
     });
@@ -248,7 +248,7 @@ describe('bit add many programmatically', function () {
       }
     ];
     before(function () {
-      helper.reInitLocalScope();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('add-many');
       helper.fs.createFile('foo', 'c.js');
       helper.fs.createFile('foo/gitignoredir', 'c.js');
@@ -258,16 +258,16 @@ describe('bit add many programmatically', function () {
       helper.fixtures.copyFixtureComponents(scriptRelativePath, newDirPath);
     });
     it('should not add a component if it is in gitignore', async function () {
-      helper.writeGitIgnore(['**/add_many_test_files/c.js']);
+      helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
       nodeStartOutput = undefined;
       try {
-        nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.localScopePath);
+        nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.scopes.localScopePath);
       } catch (err) {
         expect(err.name).to.equal('NoFiles');
         nodeStartOutput = err.message;
       }
       expect(nodeStartOutput).to.be.empty;
-      // nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.localScopePath);
+      // nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.scopes.localScopePath);
     });
     it('should add a component if its pattern not matches to .gitignore', async function () {
       const componentsUnmatched = [
@@ -276,26 +276,26 @@ describe('bit add many programmatically', function () {
           main: 'foo/c.js'
         }
       ];
-      helper.writeGitIgnore(['**/add_many_test_files/c.js']);
-      nodeStartOutputObj = await api.addMany(componentsUnmatched, helper.localScopePath);
+      helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
+      nodeStartOutputObj = await api.addMany(componentsUnmatched, helper.scopes.localScopePath);
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].name).to.equal('c.js');
     });
     it('should add a component on root level if its pattern not matches to .gitignore', async function () {
-      helper.writeGitIgnore(['**/add_many_test_files/c.js']);
-      nodeStartOutputObj = await api.addMany(componentsRootLevel, helper.localScopePath);
+      helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
+      nodeStartOutputObj = await api.addMany(componentsRootLevel, helper.scopes.localScopePath);
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].name).to.equal('c.js');
     });
     it('should not add a component on root level if its pattern matches to gitignore', async function () {
-      helper.writeGitIgnore(['/c.js']);
+      helper.git.writeGitIgnore(['/c.js']);
       let addMany;
       try {
-        addMany = await api.addMany(componentsRootLevel, helper.localScopePath);
+        addMany = await api.addMany(componentsRootLevel, helper.scopes.localScopePath);
       } catch (err) {
         expect(err.name).to.equal('ExcludedMainFile');
       }
@@ -303,15 +303,15 @@ describe('bit add many programmatically', function () {
       expect(addMany).to.be.undefined;
     });
     it('should add a component with gitignore on root but not inner folder', async function () {
-      helper.writeGitIgnore(['/bar']);
-      nodeStartOutputObj = await api.addMany(componentsInner, helper.localScopePath);
+      helper.git.writeGitIgnore(['/bar']);
+      nodeStartOutputObj = await api.addMany(componentsInner, helper.scopes.localScopePath);
       expect(nodeStartOutputObj).to.be.an('array');
     });
     it('should not add a component with gitignore in inner folder', async function () {
-      helper.writeGitIgnore(['/foo/gitignoredir']);
+      helper.git.writeGitIgnore(['/foo/gitignoredir']);
       let addMany;
       try {
-        addMany = await api.addMany(componentsInner, helper.localScopePath);
+        addMany = await api.addMany(componentsInner, helper.scopes.localScopePath);
       } catch (err) {
         expect(err.name).to.equal('ExcludedMainFile');
       }
@@ -330,7 +330,7 @@ describe('bit add many programmatically', function () {
       ];
       let addMany;
       try {
-        addMany = await api.addMany(componentsIgnoreConst, helper.localScopePath);
+        addMany = await api.addMany(componentsIgnoreConst, helper.scopes.localScopePath);
       } catch (err) {
         expect(err.name).to.equal('NoFiles');
       }
