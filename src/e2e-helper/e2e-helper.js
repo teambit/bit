@@ -45,9 +45,9 @@ export default class Helper {
     this.bitJson = new BitJsonHelper(this.scopes);
     this.config = new ConfigHelper(this.command);
     this.bitMap = new BitMapHelper(this.scopes, this.fs);
-    this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper);
     this.extensions = new ExtensionsHelper(this.scopes, this.command, this.bitJson);
     this.fixtures = new FixtureHelper(this.fs, this.command, this.npm, this.scopes, this.debugMode);
+    this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures);
     this.general = new GeneralHelper(this.scopes, this.npm, this.command);
     this.npm = new NpmHelper(this.scopes, this.fs, this.command);
     this.packageJson = new PackageJsonHelper(this.scopes);

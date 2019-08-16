@@ -21,6 +21,9 @@ export default class FsHelper {
   getObjectFiles() {
     return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
   }
+  /**
+   * @deprecated use outputFile instead
+   */
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, folder, name);
     fs.outputFileSync(filePath, impl);

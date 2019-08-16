@@ -1701,7 +1701,7 @@ console.log(barFoo.default());`;
       helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`);
 
       fs.removeSync(helper.scopes.localPath);
-      helper.setLocalScope(authorScope);
+      helper.scopes.setLocalScope(authorScope);
       helper.command.importComponent('utils/is-string');
       localConsumerFiles = glob
         .sync(path.normalize('**/*.js'), { cwd: helper.scopes.localPath })

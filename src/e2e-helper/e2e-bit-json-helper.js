@@ -10,11 +10,11 @@ export default class BitJsonHelper {
   constructor(scopes: ScopesData) {
     this.scopes = scopes;
   }
-  read(bitJsonDir: string = this.scopes.localPath) {
+  read(bitJsonDir?: string = this.scopes.localPath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-  write(bitJson: Object, bitJsonDir: string = this.scopes.localPath) {
+  write(bitJson: Object, bitJsonDir?: string = this.scopes.localPath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
