@@ -85,7 +85,7 @@ describe('bit add many programmatically', function () {
   describe('should transfer wrong and right script path', function () {
     before(() => {
       helper.reInitLocalScope();
-      helper.copyFixtureComponents('add-many');
+      helper.fixtures.copyFixtureComponents('add-many');
     });
     it('should transfer right script path ', async function () {
       const result = await api.addMany(components, helper.localScopePath);
@@ -99,11 +99,11 @@ describe('bit add many programmatically', function () {
   describe('should add many components programmatically, process.cwd() is inside project path', function () {
     before(async function () {
       helper.reInitLocalScope();
-      helper.copyFixtureComponents('add-many');
+      helper.fixtures.copyFixtureComponents('add-many');
       const innerScriptPathRelative = 'add_many_test_files/inner_folder';
       const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
       nodeStartOutputObj = await api.addMany(componentsInside, innerScriptPathAbsolute);
-      status = helper.status();
+      status = helper.command.status();
     });
     it('should add a component, with id and no spec', function () {
       expect(nodeStartOutputObj).to.be.array();
@@ -124,7 +124,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[1].addedComponents[0].files[1].test).to.equal(true);
       expect(nodeStartOutputObj[1].addedComponents[0].files[1].name).to.equal('h.spec.js');
       expect(status).to.have.string('h ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('h', { j: '' }));
+      const compData = JSON.parse(helper.command.showComponentWithOptions('h', { j: '' }));
       expect(compData).to.not.property('Specs');
     });
     it('should add a component with excluded test file', function () {
@@ -144,13 +144,13 @@ describe('bit add many programmatically', function () {
   describe('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
     before(async function () {
       helper.reInitLocalScope();
-      helper.copyFixtureComponents('add-many');
-      const newDirPath = helper.createNewDirectory();
+      helper.fixtures.copyFixtureComponents('add-many');
+      const newDirPath = helper.fs.createNewDirectory();
       const scriptRelativePath = 'add-many';
-      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
+      helper.fixtures.copyFixtureComponents(scriptRelativePath, newDirPath);
       nodeStartOutputObj = await api.addMany(components, helper.localScopePath);
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
-      status = helper.status();
+      status = helper.command.status();
     });
     it('should add a component with no id and no spec', function () {
       expect(nodeStartOutputObj).to.be.array();
@@ -162,7 +162,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(status).to.have.string('add_many_test_files/c ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/c', { j: '' }));
+      const compData = JSON.parse(helper.command.showComponentWithOptions('add_many_test_files/c', { j: '' }));
       expect(compData).to.not.property('Specs');
     });
     it('should add a component with spec file', function () {
@@ -175,7 +175,9 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[3].addedComponents[0].files[1].test).to.equal(true);
       expect(nodeStartOutputObj[3].addedComponents[0].files[1].name).to.equal('a.spec.js');
       expect(status).to.have.string('add_many_test_files/my_defined_id ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/my_defined_id', { j: '' }));
+      const compData = JSON.parse(
+        helper.command.showComponentWithOptions('add_many_test_files/my_defined_id', { j: '' })
+      );
       expect(compData).to.have.property('files');
       expect(compData.files[1].relativePath).to.equal(path.normalize('add_many_test_files/a.spec.js'));
     });
@@ -184,7 +186,9 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[3]).to.have.property('addedComponents');
       expect(nodeStartOutputObj[3].addedComponents[0].id).to.equal('add_many_test_files/my_defined_id');
       expect(status).to.have.string('add_many_test_files/my_defined_id ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/my_defined_id', { j: '' }));
+      const compData = JSON.parse(
+        helper.command.showComponentWithOptions('add_many_test_files/my_defined_id', { j: '' })
+      );
       expect(compData).to.have.property('name');
       expect(compData.name).to.equal('add_many_test_files/my_defined_id');
     });
@@ -193,7 +197,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[4]).to.have.property('addedComponents');
       expect(nodeStartOutputObj[4].addedComponents[0].id).to.equal('my_namespace/b');
       expect(status).to.have.string('my_namespace/b ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('my_namespace/b', { j: '' }));
+      const compData = JSON.parse(helper.command.showComponentWithOptions('my_namespace/b', { j: '' }));
       expect(compData).to.have.property('name');
       expect(compData.name).to.equal('my_namespace/b');
     });
@@ -205,7 +209,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.ofSize(1);
       expect(nodeStartOutputObj[2].addedComponents[0].files[0].test).to.equal(false);
       expect(status).to.have.string('add_many_test_files/d ... ok');
-      const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/d', { j: '' }));
+      const compData = JSON.parse(helper.command.showComponentWithOptions('add_many_test_files/d', { j: '' }));
       expect(compData).to.not.property('Specs');
     });
     it('should add a component with many files', function () {
@@ -245,13 +249,13 @@ describe('bit add many programmatically', function () {
     ];
     before(function () {
       helper.reInitLocalScope();
-      helper.copyFixtureComponents('add-many');
-      helper.createFile('foo', 'c.js');
-      helper.createFile('foo/gitignoredir', 'c.js');
-      helper.createFileOnRootLevel('c.js');
-      newDirPath = helper.createNewDirectory();
+      helper.fixtures.copyFixtureComponents('add-many');
+      helper.fs.createFile('foo', 'c.js');
+      helper.fs.createFile('foo/gitignoredir', 'c.js');
+      helper.fs.createFileOnRootLevel('c.js');
+      newDirPath = helper.fs.createNewDirectory();
       const scriptRelativePath = 'add-many';
-      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
+      helper.fixtures.copyFixtureComponents(scriptRelativePath, newDirPath);
     });
     it('should not add a component if it is in gitignore', async function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);

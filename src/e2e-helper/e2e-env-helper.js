@@ -30,7 +30,7 @@ export default class EnvHelper {
       this.createCompiler();
     }
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
+    // this.helper.config.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
@@ -55,7 +55,7 @@ export default class EnvHelper {
 
   importTester(id: string) {
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
+    // this.helper.config.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     this.command.runCmd(`bit import ${id} --tester`);
   }
 

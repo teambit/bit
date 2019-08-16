@@ -29,7 +29,7 @@ describe('flow of a long-dependencies-chain', function () {
             // require the previous component
             const previousFile = `foo${i - 1}`;
             const previousDir = `bar${i - 1}`;
-            helper.importComponent(`${previousDir}/${previousFile}`);
+            helper.command.importComponent(`${previousDir}/${previousFile}`);
             impl = `const foo = require('${helper.getRequireBitPath(previousDir, previousFile)}');
           module.exports = function ${file}() { return foo() + ' and got ${file}'; };
           `;
@@ -37,20 +37,20 @@ describe('flow of a long-dependencies-chain', function () {
             impl = `module.exports = function ${file}() { return 'got ${file}'; };`;
           }
 
-          helper.createFile(dir, `${file}.js`, impl);
-          helper.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
-          helper.tagComponent(`${dir}/${file}`);
-          helper.exportComponent(`${dir}/${file}`);
+          helper.fs.createFile(dir, `${file}.js`, impl);
+          helper.command.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
+          helper.command.tagComponent(`${dir}/${file}`);
+          helper.command.exportComponent(`${dir}/${file}`);
         }
       });
       it('should display results from its direct dependency and the long chain of indirect dependencies', () => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         const lastComponent = `bar${sizeOfChain - 1}/foo${sizeOfChain - 1}`;
-        helper.importComponent(lastComponent);
+        helper.command.importComponent(lastComponent);
         const appJsFixture = `const barFoo = require('./components/${lastComponent}'); console.log(barFoo());`;
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js');
+        const result = helper.command.runCmd('node app.js');
         const arrayOfSizeOfChain = [...Array(sizeOfChain).keys()];
         const expectedResult = arrayOfSizeOfChain.map(num => `got foo${num}`).join(' and ');
         expect(result.trim()).to.equal(expectedResult);

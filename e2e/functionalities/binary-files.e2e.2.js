@@ -20,24 +20,24 @@ describe('binary files', function () {
     let destPngFile;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.runCmd('bit add bar -m foo.js -i bar/foo');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.runCmd('bit add bar -m foo.js -i bar/foo');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should export it with no errors', () => {
-      const output = helper.listRemoteScope();
+      const output = helper.command.listRemoteScope();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     describe('after importing the file', () => {
       before(() => {
-        helper.importComponent('bar/foo');
+        helper.command.importComponent('bar/foo');
       });
       it('the size of the binary file should not be changed', () => {
         const currentStats = fs.statSync(destPngFile);
@@ -56,12 +56,12 @@ describe('binary files', function () {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.runCmd('bit add bar -m png_fixture.png -i bar/foo');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/foo');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should export it with no errors', () => {
-      const output = helper.listRemoteScope();
+      const output = helper.command.listRemoteScope();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
@@ -89,7 +89,7 @@ describe('binary files', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.command.importComponent('bar/foo');
       });
       it('the size of the binary file should not be changed', () => {
         const currentStats = fs.statSync(path.join(helper.localScopePath, 'components/bar/foo/png_fixture.png'));
@@ -109,16 +109,16 @@ describe('binary files', function () {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.runCmd('bit add bar -m png_fixture.png -i bar/png');
+      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/png');
       const fixture = 'require("./png_fixture.png")';
-      helper.createFile('bar', 'foo.js', fixture);
-      helper.addComponent('bar/foo.js', { i: 'bar/foo' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('bar', 'foo.js', fixture);
+      helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/png_fixture.png');
@@ -129,7 +129,7 @@ describe('binary files', function () {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.status();
+      const status = helper.command.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
   });
@@ -147,16 +147,16 @@ describe('binary files', function () {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("bar/png_fixture.png")';
-      helper.createFile('src/foo', 'foo.js', fixture);
-      helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('src/foo', 'foo.js', fixture);
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/node_modules/bar/png_fixture.png');
@@ -167,7 +167,7 @@ describe('binary files', function () {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.status();
+      const status = helper.command.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
@@ -175,14 +175,14 @@ describe('binary files', function () {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.importNpmPackExtension();
+        helper.extensions.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
 
         helper.reInitLocalScope();
-        helper.runCmd('npm init -y');
-        helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        helper.command.runCmd('npm init -y');
+        helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
 
         barFooPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.foo`);
         barPngPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.png`);
@@ -213,16 +213,16 @@ describe('binary files', function () {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("../bar/png_fixture.png")';
-      helper.createFile('src/foo', 'foo.js', fixture);
-      helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('src/foo', 'foo.js', fixture);
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/bar/png_fixture.png');
@@ -233,7 +233,7 @@ describe('binary files', function () {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.status();
+      const status = helper.command.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
@@ -241,7 +241,7 @@ describe('binary files', function () {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.importNpmPackExtension();
+        helper.extensions.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -254,8 +254,8 @@ describe('binary files', function () {
       describe('installing a component using NPM', () => {
         before(() => {
           helper.reInitLocalScope();
-          helper.runCmd('npm init -y');
-          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+          helper.command.runCmd('npm init -y');
+          helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
           expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
@@ -273,7 +273,7 @@ describe('binary files', function () {
           helper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
-          helper.importComponent('bar/foo');
+          helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
@@ -299,17 +299,17 @@ describe('binary files', function () {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
       const fixture = 'require("../bar/png_fixture.png")';
-      helper.createFile('src/foo', 'foo.js', fixture);
-      helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.importDummyCompiler();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('src/foo', 'foo.js', fixture);
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
+      helper.env.importDummyCompiler();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/bar/png_fixture.png');
@@ -320,7 +320,7 @@ describe('binary files', function () {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.status();
+      const status = helper.command.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
@@ -328,7 +328,7 @@ describe('binary files', function () {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.importNpmPackExtension();
+        helper.extensions.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -342,8 +342,8 @@ describe('binary files', function () {
       describe('installing a component using NPM', () => {
         before(() => {
           helper.reInitLocalScope();
-          helper.runCmd('npm init -y');
-          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+          helper.command.runCmd('npm init -y');
+          helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
           expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
@@ -361,7 +361,7 @@ describe('binary files', function () {
           helper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
-          helper.importComponent('bar/foo');
+          helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
@@ -397,18 +397,18 @@ describe('binary files', function () {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
-      helper.runCmd('bit add src/bar -m index.js -i bar/png');
+      helper.fs.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
+      helper.command.runCmd('bit add src/bar -m index.js -i bar/png');
       const fixture = 'require("../bar/png_fixture.png")';
-      helper.createFile('src/foo', 'foo.js', fixture);
-      helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.importDummyCompiler();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('src/foo', 'foo.js', fixture);
+      helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
+      helper.env.importDummyCompiler();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/bar/png_fixture.png');
@@ -419,7 +419,7 @@ describe('binary files', function () {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.status();
+      const status = helper.command.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
@@ -427,7 +427,7 @@ describe('binary files', function () {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.importNpmPackExtension();
+        helper.extensions.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -441,8 +441,8 @@ describe('binary files', function () {
       describe('installing a component using NPM', () => {
         before(() => {
           helper.reInitLocalScope();
-          helper.runCmd('npm init -y');
-          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+          helper.command.runCmd('npm init -y');
+          helper.command.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
         });
         it('should generate .bit.postinstall.js file', () => {
           expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
@@ -460,7 +460,7 @@ describe('binary files', function () {
           helper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
-          helper.importComponent('bar/foo');
+          helper.command.importComponent('bar/foo');
         });
         it('should create a symlink pointing to the package of the unsupported file', () => {
           const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
@@ -488,17 +488,17 @@ describe('binary files', function () {
   describe('export an md file with the same name as another js file with compiler (bug #1628)', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('bar', 'my-comp.md', 'some md5 content');
-      helper.createFile('bar', 'my-comp.js');
-      helper.runCmd('bit add bar -m my-comp.js -i bar/foo');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
-      helper.importDummyCompiler();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('bar', 'my-comp.md', 'some md5 content');
+      helper.fs.createFile('bar', 'my-comp.js');
+      helper.command.runCmd('bit add bar -m my-comp.js -i bar/foo');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.env.importDummyCompiler();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should not overwrite the md file with an auto-generated content', () => {
-      const mdContent = helper.readFile('bar/my-comp.md');
+      const mdContent = helper.fs.readFile('bar/my-comp.md');
       expect(mdContent).to.not.have.string(AUTO_GENERATED_STAMP);
       expect(mdContent).to.have.string('some md5 content');
     });

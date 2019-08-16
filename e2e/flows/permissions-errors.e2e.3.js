@@ -14,8 +14,8 @@ describe.skip('permissions', function () {
   describe('adding a component with sudo', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      const output = helper.runCmd('sudo bit add bar/foo.js');
+      helper.fixtures.createComponentBarFoo();
+      const output = helper.command.runCmd('sudo bit add bar/foo.js');
       expect(output).to.have.string('Warning');
       expect(output).to.have.string('root');
     });

@@ -11,11 +11,11 @@ describe('show api', function () {
   describe('show()', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.tagScope('1.0.0');
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.tagScope('1.0.0');
+      helper.command.exportAllComponents();
     });
     describe('with no options', () => {
       it('should return an object of the component with the latest version', async () => {

@@ -13,15 +13,15 @@ describe('bit remote command', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath} --global`);
+      helper.command.runCmd(`bit remote add file://${helper.remoteScopePath} --global`);
     });
     it('should be shown when running "bit remote"', () => {
-      const output = helper.runCmd('bit remote');
+      const output = helper.command.runCmd('bit remote');
       expect(output).to.have.string(helper.remoteScope);
     });
     it('should be shown from any other workspace as well', () => {
       helper.reInitLocalScope();
-      const output = helper.runCmd('bit remote');
+      const output = helper.command.runCmd('bit remote');
       expect(output).to.have.string(helper.remoteScope);
     });
     describe('deleting remote', () => {
@@ -39,10 +39,10 @@ describe('bit remote command', function () {
         );
       });
       it('should successfully delete the global remote when "--global" flag was used', () => {
-        const output = helper.runCmd(`bit remote del ${helper.remoteScope} --global`);
+        const output = helper.command.runCmd(`bit remote del ${helper.remoteScope} --global`);
         expect(output).to.have.string('successfully removed remote');
 
-        const remotes = helper.runCmd('bit remote');
+        const remotes = helper.command.runCmd('bit remote');
         expect(remotes).to.not.have.string(helper.remoteScope);
       });
     });
@@ -51,21 +51,21 @@ describe('bit remote command', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
-      helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+      helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
     });
     it('should be shown when running "bit remote"', () => {
-      const output = helper.runCmd('bit remote');
+      const output = helper.command.runCmd('bit remote');
       expect(output).to.have.string(helper.remoteScope);
     });
     it('should not be shown from other workspace', () => {
       helper.reInitLocalScope();
-      const output = helper.runCmd('bit remote');
+      const output = helper.command.runCmd('bit remote');
       expect(output).to.not.have.string(helper.remoteScope);
     });
     describe('deleting remote', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
       });
       it('deleting the remote with "--global" flag should throw an error', () => {
         const output = helper.runWithTryCatch(`bit remote del ${helper.remoteScope} --global`);
@@ -76,17 +76,17 @@ describe('bit remote command', function () {
         );
       });
       it('should successfully delete the remote when "--global" flag was not used', () => {
-        const output = helper.runCmd(`bit remote del ${helper.remoteScope}`);
+        const output = helper.command.runCmd(`bit remote del ${helper.remoteScope}`);
         expect(output).to.have.string('successfully removed remote');
 
-        const remotes = helper.runCmd('bit remote');
+        const remotes = helper.command.runCmd('bit remote');
         expect(remotes).to.not.have.string(helper.remoteScope);
       });
     });
   });
   describe('adding a non exist local remote with relative path', () => {
     it('should throw ScopeNotFound error', () => {
-      const func = () => helper.runCmd('bit remote add file://non-exist-dir');
+      const func = () => helper.command.runCmd('bit remote add file://non-exist-dir');
       const error = new ScopeNotFound(path.join(helper.localScopePath, 'non-exist-dir'));
       helper.expectToThrow(func, error);
     });

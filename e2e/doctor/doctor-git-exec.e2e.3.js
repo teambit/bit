@@ -18,7 +18,7 @@ describe('bit doctor - git exec validation', function () {
   describe('without configuration changes', () => {
     let parsedOutput;
     before(() => {
-      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {
@@ -35,11 +35,11 @@ describe('bit doctor - git exec validation', function () {
   describe('with wrong git path', () => {
     let parsedOutput;
     before(() => {
-      const oldGitPath = helper.getGitPath();
+      const oldGitPath = helper.config.getGitPath();
       // Set the git path to a place where there is no git (the local scope)
-      helper.setGitPath(helper.localScopePath);
-      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
-      helper.restoreGitPath(oldGitPath);
+      helper.config.setGitPath(helper.localScopePath);
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      helper.config.restoreGitPath(oldGitPath);
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {

@@ -58,7 +58,7 @@ describe('run bit init - interactive', function () {
       let bitJson;
       before(async () => {
         helper.cleanLocalScope();
-        helper.createNewDirectoryInLocalWorkspace('my-comps');
+        helper.fs.createNewDirectoryInLocalWorkspace('my-comps');
         const inputs = [
           {
             triggerText: PACKAGE_MANAGER_MSG_Q,
@@ -93,7 +93,7 @@ describe('run bit init - interactive', function () {
       const compilerName = 'my-compiler';
       before(async () => {
         // helper.reInitLocalScope();
-        // helper.createDummyCompiler();
+        // helper.env.createDummyCompiler();
         // We adding the remote scope as global because we need it to be identified on a clean folder during the init process
         // (it will be delete few lines below right after the init)
         // helper.addRemoteEnvironment(true);
@@ -130,32 +130,32 @@ describe('run bit init - interactive', function () {
       let configsBackup;
       before(() => {
         // Backup the user config because they are global, we will restore them in the end
-        configsBackup = helper.backupConfigs([CFG_INTERACTIVE, CFG_INIT_INTERACTIVE]);
+        configsBackup = helper.config.backupConfigs([CFG_INTERACTIVE, CFG_INIT_INTERACTIVE]);
       });
       beforeEach(() => {
         helper.cleanLocalScope();
-        helper.delConfig(CFG_INTERACTIVE);
-        helper.delConfig(CFG_INIT_INTERACTIVE);
+        helper.command.delConfig(CFG_INTERACTIVE);
+        helper.command.delConfig(CFG_INIT_INTERACTIVE);
       });
       after(() => {
-        helper.restoreConfigs(configsBackup);
+        helper.config.restoreConfigs(configsBackup);
       });
       it('should prefer interactive.init config over interactive config', async () => {
-        helper.setConfig(CFG_INTERACTIVE, true);
-        helper.setConfig(CFG_INIT_INTERACTIVE, false);
+        helper.command.setConfig(CFG_INTERACTIVE, true);
+        helper.command.setConfig(CFG_INIT_INTERACTIVE, false);
         const output = helper.initWorkspace();
         // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
         expect(output).to.have.string('successfully initialized');
       });
       it('should should show interactive when interactive config set to true', async () => {
-        helper.setConfig(CFG_INTERACTIVE, true);
+        helper.command.setConfig(CFG_INTERACTIVE, true);
         const output = helper.initWorkspace();
         // We don't enter anything we just want to see that any question has been asked
         expect(output).to.have.string(PACKAGE_MANAGER_MSG_Q);
       });
       it('should not show interactive by default', async () => {
-        helper.delConfig(CFG_INTERACTIVE);
-        helper.delConfig(CFG_INIT_INTERACTIVE);
+        helper.command.delConfig(CFG_INTERACTIVE);
+        helper.command.delConfig(CFG_INIT_INTERACTIVE);
         const output = helper.initWorkspace();
         expect(output).to.have.string('successfully initialized');
       });

@@ -21,49 +21,49 @@ describe('bit ci-update', function () {
   describe('component with tester and nested dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
-      helper.createFile('', 'level1.js', level1Fixture);
+      helper.fs.createFile('', 'level1.js', level1Fixture);
       const level0Fixture =
         "var level1 = require('./level1'); module.exports = function level0() { return 'level0 ' + level1(); };";
-      helper.createFile('', 'level0.js', level0Fixture);
-      helper.addComponent('level0.js', { i: 'dep/level0' });
-      helper.addComponent('level1.js', { i: 'dep/level1' });
+      helper.fs.createFile('', 'level0.js', level0Fixture);
+      helper.command.addComponent('level0.js', { i: 'dep/level0' });
+      helper.command.addComponent('level1.js', { i: 'dep/level1' });
       const fileFixture =
         "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
-      helper.createFile('', 'file.js', fileFixture);
-      helper.createFile('', 'file.spec.js', fileSpecFixture(true));
+      helper.fs.createFile('', 'file.js', fileFixture);
+      helper.fs.createFile('', 'file.spec.js', fileSpecFixture(true));
       helper.installNpmPackage('chai', '4.1.2');
-      helper.addComponent('file.js', { i: 'comp/comp', t: 'file.spec.js' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.addComponent('file.js', { i: 'comp/comp', t: 'file.spec.js' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/comp/comp`, helper.remoteScopePath);
+      const output = helper.command.runCmd(`bit ci-update ${helper.remoteScope}/comp/comp`, helper.remoteScopePath);
       expect(output).to.have.string('tests passed');
     });
   });
   describe('component with compiler, tester and nested dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/babel@0.0.20');
-      helper.importTester('bit.envs/testers/mocha@0.0.12');
-      helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-      helper.addComponentUtilsIsType();
-      helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
-      helper.addComponentUtilsIsString();
-      helper.createComponentBarFoo(fixtures.barFooES6);
-      helper.addComponentBarFoo();
+      helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
+      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.createComponentBarFoo(fixtures.barFooES6);
+      helper.fixtures.addComponentBarFoo();
 
-      helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
+      helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
       helper.installNpmPackage('chai', '4.1.2');
-      helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
-      helper.build(); // needed for building the dependencies
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+      helper.command.build(); // needed for building the dependencies
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
-      const output = helper.runCmd(`bit ci-update ${helper.remoteScope}/bar/foo`, helper.remoteScopePath);
+      const output = helper.command.runCmd(`bit ci-update ${helper.remoteScope}/bar/foo`, helper.remoteScopePath);
       expect(output).to.have.string('tests passed');
     });
   });

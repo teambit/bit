@@ -20,7 +20,7 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * To get it work, the following steps are mandatory.
  * 1. before tagging the components, run `this.setCiScopeInBitJson()`.
  * 2. import the components to a new scope.
- * 3. run `helper.importNpmPackExtension();`
+ * 3. run `helper.extensions.importNpmPackExtension();`
  * 4. run `helper.removeRemoteScope();` otherwise, it'll save components as dependencies
  * 5. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
@@ -88,7 +88,7 @@ EOD`;
   }
 
   _registerToCiScope() {
-    this.helper.runCmd('npm config set @ci:registry http://localhost:4873');
+    this.helper.command.runCmd('npm config set @ci:registry http://localhost:4873');
   }
 
   /**
@@ -114,7 +114,7 @@ EOD`;
    */
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
     const packDir = path.join(this.helper.localScopePath, 'pack');
-    const result = this.helper.runCmd(
+    const result = this.helper.command.runCmd(
       `bit npm-pack ${this.helper.remoteScope}/${componentName}@${componentVersion} -o -k -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
@@ -126,7 +126,7 @@ EOD`;
     tar.x({ file: tarballFilePath, C: packDir, sync: true });
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
-    this.helper.runCmd('npm publish', extractedDir);
+    this.helper.command.runCmd('npm publish', extractedDir);
   }
 
   /**
@@ -138,12 +138,12 @@ EOD`;
    */
   setResolver() {
     const scopeJsonPath = '.bit/scope.json';
-    const scopeJson = this.helper.readJsonFile(scopeJsonPath);
+    const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
     const resolverPath = path.join(this.helper.localScopePath, 'resolver.js');
     // $FlowFixMe
     scopeJson.resolverPath = resolverPath;
-    this.helper.createJsonFile(scopeJsonPath, scopeJson);
-    this.helper.createFile('', 'resolver.js', this._getResolverContent());
+    this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
+    this.helper.fs.createFile('', 'resolver.js', this._getResolverContent());
   }
 
   _getResolverContent() {

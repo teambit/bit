@@ -21,21 +21,21 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fixtures.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentUtilsIsString();
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fixtures.addComponentUtilsIsString();
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.createComponentBarFoo(fooBarFixture);
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(fooBarFixture);
+      helper.fixtures.addComponentBarFoo();
     });
     describe('bit status', () => {
       let output;
       before(() => {
-        output = helper.runCmd('bit status');
+        output = helper.command.runCmd('bit status');
       });
       it('should show all of them under new components', () => {
         expect(output).to.not.have.string('no new components');
@@ -46,17 +46,17 @@ describe('basic flow with dependencies', function () {
       });
     });
     it('bit list should not show any component', () => {
-      const output = helper.listLocalScope();
+      const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 0 components');
     });
     describe('after tagging the components', () => {
       before(() => {
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
       });
       describe('bit status', () => {
         let output;
         before(() => {
-          output = helper.runCmd('bit status');
+          output = helper.command.runCmd('bit status');
         });
         it('should show all of them under staged components', () => {
           expect(output).to.not.have.string('no staged components');
@@ -67,24 +67,24 @@ describe('basic flow with dependencies', function () {
         });
       });
       it('bit list should show the components sorted alphabetically', () => {
-        const output = helper.listLocalScope();
+        const output = helper.command.listLocalScope();
         expectComponentsToBeSortedAlphabetically(output);
       });
       describe('after modifying the components', () => {
         before(() => {
           const isTypeFixture = "module.exports = function isType() { return 'got is-type v2'; };";
-          helper.createFile('utils', 'is-type.js', isTypeFixture);
+          helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
           const isStringFixture =
             "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-          helper.createFile('utils', 'is-string.js', isStringFixture);
+          helper.fs.createFile('utils', 'is-string.js', isStringFixture);
           const fooBarFixture =
             "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-          helper.createFile('bar', 'foo.js', fooBarFixture);
+          helper.fs.createFile('bar', 'foo.js', fooBarFixture);
         });
         describe('bit status', () => {
           let output;
           before(() => {
-            output = helper.runCmd('bit status');
+            output = helper.command.runCmd('bit status');
           });
           it('should show all of them under staged components', () => {
             expect(output).to.not.have.string('no staged components');
@@ -95,7 +95,7 @@ describe('basic flow with dependencies', function () {
           });
         });
         it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.listLocalScope();
+          const output = helper.command.listLocalScope();
           expectComponentsToBeSortedAlphabetically(output);
         });
       });
@@ -111,7 +111,7 @@ describe('basic flow with dependencies', function () {
         describe('bit status', () => {
           let output;
           before(() => {
-            output = helper.runCmd('bit status');
+            output = helper.command.runCmd('bit status');
           });
           it('should show all of them under deleted components', () => {
             expect(output).to.have.string('component files were deleted');
@@ -121,7 +121,7 @@ describe('basic flow with dependencies', function () {
           });
         });
         it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.listLocalScope();
+          const output = helper.command.listLocalScope();
           expectComponentsToBeSortedAlphabetically(output);
         });
       });
@@ -131,21 +131,21 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.reInitLocalScope();
       const isTypeFixture = "const missingDep = require('./non-existA');";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =
         "const isType = require('./non-existB.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       const fooBarFixture =
         "const isString = require('./non-existsC.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-      helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponentUtilsIsType();
-      helper.addComponentUtilsIsString();
-      helper.addComponentBarFoo();
+      helper.fs.createFile('bar', 'foo.js', fooBarFixture);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.addComponentBarFoo();
     });
     describe('bit status', () => {
       let output;
       before(() => {
-        output = helper.runCmd('bit status');
+        output = helper.command.runCmd('bit status');
       });
       it('should show the components sorted alphabetically', () => {
         expectComponentsToBeSortedAlphabetically(output);
@@ -156,24 +156,24 @@ describe('basic flow with dependencies', function () {
     before(() => {
       helper.reInitLocalScope();
       const isTypeFixture = "console.log('got is-type v1')";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       const fooBarFixture =
         "const isString = require('../utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
-      helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponentUtilsIsType();
-      helper.addComponentUtilsIsString();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
+      helper.fs.createFile('bar', 'foo.js', fooBarFixture);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
       const isTypeFixtureV2 = "console.log('got is-type v2')";
-      helper.createFile('utils', 'is-type.js', isTypeFixtureV2);
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2);
     });
     describe('bit status', () => {
       let output;
       before(() => {
-        output = helper.runCmd('bit status');
+        output = helper.command.runCmd('bit status');
       });
       it('should show all of them under deleted components', () => {
         expect(output).to.not.have.string('no auto-tag pending components');

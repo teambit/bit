@@ -24,7 +24,7 @@ describe('bit diff command', function () {
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
-      const diffFunc = () => helper.runCmd('bit diff utils/non-exist');
+      const diffFunc = () => helper.command.runCmd('bit diff utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(diffFunc, error);
     });
@@ -37,28 +37,28 @@ describe('bit diff command', function () {
   });
   describe('after the component was created', () => {
     before(() => {
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
     });
     it('before tagging it should indicate that there is no diff for that component', () => {
-      const output = helper.diff('bar/foo');
+      const output = helper.command.diff('bar/foo');
       expect(output).to.have.string(noDiffMessage);
       expect(output).to.have.string('bar/foo');
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllComponents('', '0.0.5');
+        helper.command.tagAllComponents('', '0.0.5');
       });
       it('should still indicate that there is no diff for that component', () => {
-        const output = helper.diff('bar/foo');
+        const output = helper.command.diff('bar/foo');
         expect(output).to.have.string(noDiffMessage);
         expect(output).to.have.string('bar/foo');
       });
       describe('and component was modified', () => {
         let diffOutput;
         before(() => {
-          helper.createComponentBarFoo(barFooV2);
-          diffOutput = helper.diff('bar/foo');
+          helper.fixtures.createComponentBarFoo(barFooV2);
+          diffOutput = helper.command.diff('bar/foo');
         });
         it('should show a success message', () => {
           expect(diffOutput).to.have.string(successDiffMessage);
@@ -76,15 +76,15 @@ describe('bit diff command', function () {
           expect(diffOutput).to.have.string("+module.exports = function foo() { return 'got foo v2'; };");
         });
         it('should show a success message also when running from an inner directory', () => {
-          const outputInner = helper.runCmd('bit diff bar/foo', path.join(helper.localScopePath, 'bar'));
+          const outputInner = helper.command.runCmd('bit diff bar/foo', path.join(helper.localScopePath, 'bar'));
           expect(outputInner).to.have.string(successDiffMessage);
         });
         describe('when git path is configured incorrectly', () => {
           before(() => {
-            helper.runCmd('bit config set git_path /non/exist/location');
+            helper.command.runCmd('bit config set git_path /non/exist/location');
           });
           after(() => {
-            helper.runCmd('bit config set git_path git');
+            helper.command.runCmd('bit config set git_path git');
           });
           it('should throw an error GitNotFound', () => {
             const output = helper.runWithTryCatch('bit diff bar/foo');
@@ -97,22 +97,22 @@ describe('bit diff command', function () {
   describe('when there are several modified components and non modified components', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
-      helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponentUtilsIsType();
-      helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponentUtilsIsString();
-      helper.tagAllComponents();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.fixtures.addComponentUtilsIsString();
+      helper.command.tagAllComponents();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
-      helper.createComponentBarFoo(barFooV2);
-      helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
     });
     describe('running bit diff with no ids', () => {
       let output;
       before(() => {
-        output = helper.diff();
+        output = helper.command.diff();
       });
       it('should show diff for all modified components', () => {
         expect(output).to.have.string('bar/foo');
@@ -129,7 +129,7 @@ describe('bit diff command', function () {
     describe('running bit diff with multiple ids', () => {
       let output;
       before(() => {
-        output = helper.diff('utils/is-type utils/is-string');
+        output = helper.command.diff('utils/is-type utils/is-string');
       });
       it('should show diff for the modified components only', () => {
         expect(output).to.have.string(fixtures.isType);
@@ -148,14 +148,14 @@ describe('bit diff command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.createFile('bar', 'foo2.js', barFooV2);
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.fs.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.localScopePath, 'bar/foo.js'));
-      helper.addComponent('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
-      helper.runCmd('bit status'); // to clean bitmap file
-      output = helper.diff('bar/foo');
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
+      helper.command.runCmd('bit status'); // to clean bitmap file
+      output = helper.command.diff('bar/foo');
     });
     it('should indicate the deleted files as deleted', () => {
       expect(output).to.have.string(`--- ${barFooFile} (0.0.1 original)`);
@@ -186,8 +186,8 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between the previous version and the last version', () => {
       before(() => {
-        helper.tagAllComponents();
-        output = helper.diff('bar/foo 0.0.1 0.0.2');
+        helper.command.tagAllComponents();
+        output = helper.command.diff('bar/foo 0.0.1 0.0.2');
       });
       it('should indicate the deleted files as deleted', () => {
         expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
@@ -215,14 +215,14 @@ describe('bit diff command', function () {
         });
       });
       it('should have the same output as running diff of the previous version', () => {
-        const diffOfVersionOutput = helper.diff('bar/foo 0.0.1');
+        const diffOfVersionOutput = helper.command.diff('bar/foo 0.0.1');
         expect(diffOfVersionOutput).to.be.equal(output);
       });
     });
     describe('running bit diff between current version and version 0.0.1', () => {
       before(() => {
-        helper.tagAllComponents(undefined, undefined, false);
-        output = helper.diff('bar/foo 0.0.1');
+        helper.command.tagAllComponents(undefined, undefined, false);
+        output = helper.command.diff('bar/foo 0.0.1');
       });
       it('should indicate the deleted files as deleted', () => {
         expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
@@ -250,7 +250,7 @@ describe('bit diff command', function () {
         });
       });
       it('should have the same output as running diff of the previous version', () => {
-        const diffOfVersionOutput = helper.diff('bar/foo 0.0.1');
+        const diffOfVersionOutput = helper.command.diff('bar/foo 0.0.1');
         expect(diffOfVersionOutput).to.be.equal(output);
       });
     });
@@ -258,25 +258,25 @@ describe('bit diff command', function () {
   describe('component with multiple versions', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo(); // 0.0.1
-      helper.createComponentBarFoo(barFooV2);
-      helper.tagComponentBarFoo(); // 0.0.2
-      helper.createComponentBarFoo(barFooV3);
-      helper.tagComponentBarFoo(); // 0.0.3
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo(); // 0.0.1
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.fixtures.tagComponentBarFoo(); // 0.0.2
+      helper.fixtures.createComponentBarFoo(barFooV3);
+      helper.fixtures.tagComponentBarFoo(); // 0.0.3
     });
     describe('diff between a non-exist version and current version', () => {
       it('should throw an VersionNotFound error', () => {
         const error = new VersionNotFound('1.0.6');
-        const diffFunc = () => helper.diff('bar/foo 1.0.6');
+        const diffFunc = () => helper.command.diff('bar/foo 1.0.6');
         helper.expectToThrow(diffFunc, error);
       });
     });
     describe('diff between an earlier version and current version', () => {
       let output;
       before(() => {
-        output = helper.diff('bar/foo 0.0.1');
+        output = helper.command.diff('bar/foo 0.0.1');
       });
       it('should show the earlier version with leading - (minus sign)', () => {
         expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
@@ -290,7 +290,7 @@ describe('bit diff command', function () {
     describe('diff between two different versions', () => {
       let output;
       before(() => {
-        output = helper.diff('bar/foo 0.0.1 0.0.2');
+        output = helper.command.diff('bar/foo 0.0.1 0.0.2');
       });
       it('should show the first version with leading - (minus sign)', () => {
         expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
@@ -321,21 +321,21 @@ describe('bit diff command', function () {
   describe('component with dependencies', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createFile('utils', 'is-string.js');
-      helper.createComponentBarFoo('import isString from "../utils/is-string"');
-      helper.addComponentUtilsIsString();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.runCmd('bit move utils utility');
-      helper.createComponentBarFoo('import isString from "../utility/is-string"');
+      helper.fs.createFile('utils', 'is-string.js');
+      helper.fixtures.createComponentBarFoo('import isString from "../utils/is-string"');
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.runCmd('bit move utils utility');
+      helper.fixtures.createComponentBarFoo('import isString from "../utility/is-string"');
     });
     it('should not indicate relativePaths changes when --verbose is not used', () => {
-      const output = helper.diff('bar/foo');
+      const output = helper.command.diff('bar/foo');
       expect(output).to.not.have.string('sourceRelativePath');
       expect(output).to.not.have.string('destinationRelativePath');
     });
     it('should indicate relativePaths changes when --verbose is used', () => {
-      const output = helper.diff('bar/foo --verbose');
+      const output = helper.command.diff('bar/foo --verbose');
       expect(output).to.have.string('- "sourceRelativePath": "utils/is-string.js",');
       expect(output).to.have.string('+ "sourceRelativePath": "utility/is-string.js",');
     });

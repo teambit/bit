@@ -12,27 +12,27 @@ describe('component id with wildcard', function () {
     let scopeAfterAdd;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('utils/is', 'string.js');
-      helper.createFile('utils/is', 'type.js');
-      helper.createFile('utils/fs', 'read.js');
-      helper.createFile('utils/fs', 'write.js');
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.addComponent('utils/is/*', { n: 'utils/is' });
-      helper.addComponent('utils/fs/*', { n: 'utils/fs' });
+      helper.fs.createFile('utils/is', 'string.js');
+      helper.fs.createFile('utils/is', 'type.js');
+      helper.fs.createFile('utils/fs', 'read.js');
+      helper.fs.createFile('utils/fs', 'write.js');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.addComponent('utils/is/*', { n: 'utils/is' });
+      helper.command.addComponent('utils/fs/*', { n: 'utils/fs' });
       scopeAfterAdd = helper.cloneLocalScope();
     });
     describe('tag with wildcard', () => {
       describe('when wildcard does not match any component', () => {
         it('should not tag any component', () => {
-          const output = helper.tagComponent('none/*');
+          const output = helper.command.tagComponent('none/*');
           expect(output).to.have.string('0 component(s) tagged');
         });
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.tagComponent('"utils/is/*"');
+          output = helper.command.tagComponent('"utils/is/*"');
         });
         it('should indicate the tagged components', () => {
           expect(output).to.have.string('2 component(s) tagged');
@@ -40,7 +40,7 @@ describe('component id with wildcard', function () {
           expect(output).to.have.string('utils/is/type');
         });
         it('should tag only the matched components', () => {
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(2);
           expect(status.newComponents).to.have.lengthOf(3);
         });
@@ -52,21 +52,21 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should not untrack any component', () => {
-          const output = helper.untrackComponent('none/*');
+          const output = helper.command.untrackComponent('none/*');
           expect(output).to.have.string('no components untracked');
         });
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.untrackComponent('"utils/fs/*"');
+          output = helper.command.untrackComponent('"utils/fs/*"');
         });
         it('should indicate the untracked components', () => {
           expect(output).to.have.string('utils/fs/read');
           expect(output).to.have.string('utils/fs/write');
         });
         it('should untrack only the matched components', () => {
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           expect(status.newComponents).to.have.lengthOf(3);
         });
       });
@@ -74,11 +74,11 @@ describe('component id with wildcard', function () {
     describe('remove with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.removeComponent('none/* -s');
+          const removeFunc = () => helper.command.removeComponent('none/* -s');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.expectToThrow(removeFunc, error);
         });
@@ -87,17 +87,17 @@ describe('component id with wildcard', function () {
         let output;
         before(() => {
           // as an intermediate step, make sure all components are staged
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(5);
 
-          output = helper.removeComponent('"utils/fs/*" -s');
+          output = helper.command.removeComponent('"utils/fs/*" -s');
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
           expect(output).to.have.string('utils/fs/write');
         });
         it('should remove only the matched components', () => {
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(3);
         });
       });
@@ -105,16 +105,16 @@ describe('component id with wildcard', function () {
     describe('remove from remote with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
-        helper.exportAllComponents();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
 
         // as an intermediate step, make sure the remote scope has all components
-        const ls = helper.listRemoteScopeParsed();
+        const ls = helper.command.listRemoteScopeParsed();
         expect(ls).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.removeComponent(`${helper.remoteScope}/none/* --silent --remote`);
+          const removeFunc = () => helper.command.removeComponent(`${helper.remoteScope}/none/* --silent --remote`);
           const error = new NoIdMatchWildcard([`${helper.remoteScope}/none/*`]);
           helper.expectToThrow(removeFunc, error);
         });
@@ -122,14 +122,14 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
           expect(output).to.have.string('utils/fs/write');
         });
         it('should remove only the matched components', () => {
-          const ls = helper.listRemoteScopeParsed();
+          const ls = helper.command.listRemoteScopeParsed();
           expect(ls).to.have.lengthOf(3);
         });
       });
@@ -138,29 +138,29 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
         helper.reInitRemoteScope();
-        helper.tagAllComponents();
-        helper.exportAllComponents();
-        helper.removeComponent(`${helper.remoteScope}/* -s`);
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.command.removeComponent(`${helper.remoteScope}/* -s`);
 
         // as an intermediate step, make sure the remote scope has all components
-        const ls = helper.listRemoteScopeParsed();
+        const ls = helper.command.listRemoteScopeParsed();
         expect(ls).to.have.lengthOf(5);
 
         // as an intermediate step, make sure the local scope does not have any components
-        const lsLocal = helper.listLocalScopeParsed();
+        const lsLocal = helper.command.listLocalScopeParsed();
         expect(lsLocal).to.have.lengthOf(0);
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.remoteScope}/utils/fs/* --silent --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
           expect(output).to.have.string('utils/fs/write');
         });
         it('should remove only the matched components', () => {
-          const ls = helper.listRemoteScopeParsed();
+          const ls = helper.command.listRemoteScopeParsed();
           expect(ls).to.have.lengthOf(3);
         });
       });
@@ -169,32 +169,32 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
         helper.reInitRemoteScope();
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
 
         // as an intermediate step, make sure all components are staged
-        const status = helper.statusJson();
+        const status = helper.command.statusJson();
         expect(status.stagedComponents).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should not export any component', () => {
-          const output = helper.exportComponent('"none/*"', undefined, false);
+          const output = helper.command.exportComponent('"none/*"', undefined, false);
           expect(output).to.have.string('nothing to export');
         });
       });
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.exportComponent('"*/fs/*"');
+          output = helper.command.exportComponent('"*/fs/*"');
         });
         it('should indicate the exported components', () => {
           expect(output).to.have.string('exported 2 components');
         });
         it('should export only the matched components', () => {
-          const ls = helper.listRemoteScopeParsed();
+          const ls = helper.command.listRemoteScopeParsed();
           expect(ls).to.have.lengthOf(2);
         });
         it('should not export the non matched components', () => {
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           // (staged components were not exported)
           expect(status.stagedComponents).to.have.lengthOf(3);
           expect(status.stagedComponents).to.include('bar/foo');
@@ -206,10 +206,10 @@ describe('component id with wildcard', function () {
     describe('untag with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
 
         // as an intermediate step, make sure all components are staged
-        const status = helper.statusJson();
+        const status = helper.command.statusJson();
         expect(status.stagedComponents).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
@@ -221,7 +221,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.untag('"*/is/*"');
+          output = helper.command.untag('"*/is/*"');
         });
         it('should indicate the untagged components', () => {
           expect(output).to.have.string('2 component(s) were untagged');
@@ -229,7 +229,7 @@ describe('component id with wildcard', function () {
           expect(output).to.have.string('utils/is/type');
         });
         it('should untag only the matched components', () => {
-          const status = helper.statusJson();
+          const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(3);
           expect(status.newComponents).to.have.lengthOf(2);
         });
@@ -238,16 +238,16 @@ describe('component id with wildcard', function () {
     describe('checkout with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
-        helper.tagScope('0.0.5');
+        helper.command.tagAllComponents();
+        helper.command.tagScope('0.0.5');
 
         // as an intermediate step, make sure all components are staged
-        const status = helper.statusJson();
+        const status = helper.command.statusJson();
         expect(status.stagedComponents).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const checkoutFunc = () => helper.checkout('0.0.1 "none/*"');
+          const checkoutFunc = () => helper.command.checkout('0.0.1 "none/*"');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.expectToThrow(checkoutFunc, error);
         });
@@ -255,19 +255,19 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.checkout('0.0.1 "utils/is/*"');
+          output = helper.command.checkout('0.0.1 "utils/is/*"');
         });
         it('should indicate the checked out components', () => {
           expect(output).to.have.string('utils/is/string');
           expect(output).to.have.string('utils/is/type');
         });
         it('should checkout only the matched components', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('utils/is/string@0.0.1');
           expect(bitMap).to.have.property('utils/is/type@0.0.1');
         });
         it('should not checkout the unmatched components', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('utils/fs/read@0.0.5');
           expect(bitMap).to.have.property('utils/fs/write@0.0.5');
           expect(bitMap).to.have.property('bar/foo@0.0.5');
@@ -277,16 +277,16 @@ describe('component id with wildcard', function () {
     describe('merge with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
-        helper.tagScope('0.0.5');
+        helper.command.tagAllComponents();
+        helper.command.tagScope('0.0.5');
 
         // as an intermediate step, make sure all components are staged
-        const status = helper.statusJson();
+        const status = helper.command.statusJson();
         expect(status.stagedComponents).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const mergeFunc = () => helper.mergeVersion('0.0.1 "none/*"');
+          const mergeFunc = () => helper.command.mergeVersion('0.0.1 "none/*"');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.expectToThrow(mergeFunc, error);
         });
@@ -294,7 +294,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.mergeVersion('0.0.1', '"utils/is/*"');
+          output = helper.command.mergeVersion('0.0.1', '"utils/is/*"');
         });
         it('should indicate the merged components', () => {
           expect(output).to.have.string('utils/is/string');
@@ -310,21 +310,21 @@ describe('component id with wildcard', function () {
     describe('diff with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
-        helper.createFile('utils/is', 'string.js', '');
-        helper.createFile('utils/is', 'type.js', '');
-        helper.createFile('utils/fs', 'read.js', '');
-        helper.createFile('utils/fs', 'write.js', '');
-        helper.createComponentBarFoo('');
+        helper.command.tagAllComponents();
+        helper.fs.createFile('utils/is', 'string.js', '');
+        helper.fs.createFile('utils/is', 'type.js', '');
+        helper.fs.createFile('utils/fs', 'read.js', '');
+        helper.fs.createFile('utils/fs', 'write.js', '');
+        helper.fixtures.createComponentBarFoo('');
 
         // as an intermediate step, make sure all components are modified (so then they should show
         // an output for diff command)
-        const status = helper.statusJson();
+        const status = helper.command.statusJson();
         expect(status.modifiedComponent).to.have.lengthOf(5);
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const diffFunc = () => helper.diff('"none/*"');
+          const diffFunc = () => helper.command.diff('"none/*"');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.expectToThrow(diffFunc, error);
         });
@@ -332,7 +332,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.diff('"utils/is/*"');
+          output = helper.command.diff('"utils/is/*"');
         });
         it('should show diff only for the matched components', () => {
           expect(output).to.have.string('utils/is/string');
@@ -349,8 +349,8 @@ describe('component id with wildcard', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
-        output = helper.listLocalScope('--namespace "bar/*"');
+        helper.command.tagAllComponents();
+        output = helper.command.listLocalScope('--namespace "bar/*"');
       });
       it('should list only for the matched components', () => {
         expect(output).to.have.string('bar/foo');
@@ -363,10 +363,10 @@ describe('component id with wildcard', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
         helper.reInitRemoteScope();
-        helper.exportAllComponents();
-        output = helper.listRemoteScope(true, '--namespace "bar/*"');
+        helper.command.exportAllComponents();
+        output = helper.command.listRemoteScope(true, '--namespace "bar/*"');
       });
       it('should list only for the matched components', () => {
         expect(output).to.have.string('bar/foo');

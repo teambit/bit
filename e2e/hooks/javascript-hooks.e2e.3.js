@@ -13,26 +13,26 @@ const fooImplPath = path.join(helper.localScopePath, 'inline_components', 'globa
 function expectLinksInComponentLevel() {
   const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
   fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-  const result = helper.runCmd('node app.js');
+  const result = helper.command.runCmd('node app.js');
   expect(result.trim()).to.equal('got foo');
 }
 
 function expectLinksInNamespaceLevel() {
   const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.foo());";
   fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-  const result = helper.runCmd('node app.js');
+  const result = helper.command.runCmd('node app.js');
   expect(result.trim()).to.equal('got foo');
 }
 
 function expectLinksInRootLevel() {
   const appJs = "const bit = require('bit'); console.log(bit.global.foo());";
   fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-  const result = helper.runCmd('node app.js');
+  const result = helper.command.runCmd('node app.js');
   expect(result.trim()).to.equal('got foo');
 }
 
 function createFile(name, impl) {
-  helper.runCmd(`bit create ${name} --json`);
+  helper.command.runCmd(`bit create ${name} --json`);
   const componentFixture = impl || `module.exports = function ${name}() { return 'got ${name}'; };`;
   fs.outputFileSync(path.join(helper.localScopePath, 'components', 'global', name, 'impl.js'), componentFixture);
 }
@@ -48,16 +48,16 @@ describe('javascript-hooks', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile(path.join('utils', 'internals'), 'is-type.js', isTypeFixture);
+      helper.fs.createFile(path.join('utils', 'internals'), 'is-type.js', isTypeFixture);
       const isStringFixture =
         "const isType = require('./internals/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.command.addComponent('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
+      helper.command.importComponent('utils/is-string');
     });
     it('should be able to require the main file using require(bit/) syntax', () => {
       const appJsFixture = `const isString = require('${helper.getRequireBitPath(
@@ -65,7 +65,7 @@ describe('javascript-hooks', function () {
         'is-string'
       )}'); console.log(isString());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
+      const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string');
     });
     it('should be able to require the internal file using require(bit/) syntax', () => {
@@ -73,7 +73,7 @@ describe('javascript-hooks', function () {
         helper.remoteScope
       }.utils.is-string/internals/is-type'); console.log(isType());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
+      const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type');
     });
   });
@@ -97,9 +97,9 @@ describe('javascript-hooks', function () {
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.importCompiler();
+        helper.env.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.runCmd('bit build foo');
+        helper.command.runCmd('bit build foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -118,7 +118,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.tagComponent('foo');
+        helper.command.tagComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -133,11 +133,11 @@ describe('javascript-hooks', function () {
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.importCompiler();
+        helper.env.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.tagComponent('foo'); // does the build as well
+        helper.command.tagComponent('foo'); // does the build as well
         // todo: tag should run the build
-        helper.runCmd('bit build foo');
+        helper.command.runCmd('bit build foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -156,10 +156,10 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.tagComponent('foo');
+        helper.command.tagComponent('foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.exportComponent('foo');
+        helper.command.exportComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -175,14 +175,14 @@ describe('javascript-hooks', function () {
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.importCompiler();
+        helper.env.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.tagComponent('foo'); // does the build as well
+        helper.command.tagComponent('foo'); // does the build as well
         // todo: tag should run the build
-        helper.runCmd('bit build foo');
+        helper.command.runCmd('bit build foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.exportComponent('foo');
+        helper.command.exportComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -201,13 +201,13 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.tagComponent('foo');
+        helper.command.tagComponent('foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.exportComponent('foo');
+        helper.command.exportComponent('foo');
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('global/foo');
+        helper.command.importComponent('global/foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -222,18 +222,18 @@ describe('javascript-hooks', function () {
     describe.skip('with build', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.importCompiler();
+        helper.env.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.tagComponent('foo');
+        helper.command.tagComponent('foo');
         // todo: tag should run the build
-        helper.runCmd('bit build foo');
+        helper.command.runCmd('bit build foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.exportComponent('foo');
+        helper.command.exportComponent('foo');
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('global/foo');
+        helper.command.importComponent('global/foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -249,17 +249,17 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.initWorkspace();
-        helper.runCmd('bit import bit.envs/testers/mocha --tester');
-        helper.runCmd('bit create foo --json --specs');
+        helper.command.runCmd('bit import bit.envs/testers/mocha --tester');
+        helper.command.runCmd('bit create foo --json --specs');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit tag foo tag-msg'); // run the test as well
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.command.runCmd('bit tag foo tag-msg'); // run the test as well
+        helper.command.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
         fs.emptyDirSync(helper.localScopePath); // a new local scope
         helper.initWorkspace();
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.runCmd(`bit import @${helper.remoteScope}/global/foo`);
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -276,10 +276,10 @@ describe('javascript-hooks', function () {
         helper.cleanEnv();
         helper.initWorkspace();
         createFile('foo');
-        helper.tagComponent('foo');
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.exportComponent('foo');
+        helper.command.tagComponent('foo');
+        helper.command.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.exportComponent('foo');
 
         const barComponentFixture =
           "const foo = require('bit/global/foo'); module.exports = function bar() { return 'got bar and ' + foo(); };";
@@ -287,31 +287,31 @@ describe('javascript-hooks', function () {
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
         helper.addBitJsonDependencies(barJsonPath, { [`${helper.remoteScope}/global/foo`]: '0.0.1' });
-        helper.tagComponent('bar');
-        helper.exportComponent('bar');
+        helper.command.tagComponent('bar');
+        helper.command.exportComponent('bar');
       });
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('global/bar');
+        helper.command.importComponent('global/bar');
       });
       describe('of depth=1, "bar" depends on "foo"', () => {
         it('should create links in the component level', () => {
           const appJs = "const bar = require('bit/global/bar'); console.log(bar());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got bar and got foo');
         });
         it('should create links in the namespace level', () => {
           const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.bar());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got bar and got foo');
         });
         it('should create links in the root level', () => {
           const appJs = "const bit = require('bit'); console.log(bit.global.bar());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got bar and got foo');
         });
       });
@@ -323,29 +323,29 @@ describe('javascript-hooks', function () {
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
           helper.addBitJsonDependencies(bazJsonPath, { [`${helper.remoteScope}/global/bar`]: '0.0.1' });
-          helper.tagComponent('baz');
-          helper.exportComponent('baz');
+          helper.command.tagComponent('baz');
+          helper.command.exportComponent('baz');
 
           helper.reInitLocalScope();
           helper.addRemoteScope();
-          helper.importComponent('global/baz');
+          helper.command.importComponent('global/baz');
         });
         it('should create links in the component level', () => {
           const appJs = "const baz = require('bit/global/baz'); console.log(baz());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
         });
         it('should create links in the namespace level', () => {
           const appJs = "const bitGlobal = require('bit/global'); console.log(bitGlobal.baz());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
         });
         it('should create links in the root level', () => {
           const appJs = "const bit = require('bit'); console.log(bit.global.baz());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got baz and got bar and got foo');
         });
       });
@@ -355,44 +355,44 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.cleanEnv();
         helper.initWorkspace();
-        helper.runCmd('bit create foo');
+        helper.command.runCmd('bit create foo');
         const fooComponentV1 = "module.exports = function foo() { return 'got foo v1'; };";
         fs.writeFileSync(fooImplPath, fooComponentV1);
-        helper.runCmd('bit tag foo tag-msg1');
-        helper.runCmd('bit modify @this/global/foo');
+        helper.command.runCmd('bit tag foo tag-msg1');
+        helper.command.runCmd('bit modify @this/global/foo');
         const fooComponentV2 = "module.exports = function foo() { return 'got foo v2'; };";
         fs.writeFileSync(fooImplPath, fooComponentV2);
-        helper.runCmd('bit tag foo tag-msg2');
-        helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
-        helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
+        helper.command.runCmd('bit tag foo tag-msg2');
+        helper.command.runCmd('bit init --bare', helper.remoteScopePath);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
       });
       const prepareCleanLocalEnv = () => {
         fs.emptyDirSync(helper.localScopePath); // a new local scope
         helper.initWorkspace();
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.command.runCmd(`bit remote add file://${helper.remoteScopePath}`);
       };
       describe('importing without mentioning the version', () => {
         before(() => {
           prepareCleanLocalEnv();
-          helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
+          helper.command.runCmd(`bit import @${helper.remoteScope}/global/foo`);
         });
         it('should create links in the component level of the latest version', () => {
           const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got foo v2');
         });
       });
       describe('importing a specific version', () => {
         before(() => {
           prepareCleanLocalEnv();
-          helper.runCmd(`bit import @${helper.remoteScope}/global/foo${VERSION_DELIMITER}1`);
+          helper.command.runCmd(`bit import @${helper.remoteScope}/global/foo${VERSION_DELIMITER}1`);
         });
         it('should create links in the component level of that specific version', () => {
           const appJs = "const foo = require('bit/global/foo'); console.log(foo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJs);
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got foo v1');
         });
       });

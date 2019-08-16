@@ -14,14 +14,14 @@ describe('component config', function () {
   describe('when importing a component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponentUtilsIsType();
-      helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponentUtilsIsString();
-      helper.createComponentBarFoo(fixtures.barFooFixture);
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
     });
@@ -29,7 +29,7 @@ describe('component config', function () {
       let scopeAfterImport;
       let packageJson;
       before(() => {
-        helper.importComponent('bar/foo');
+        helper.command.importComponent('bar/foo');
         scopeAfterImport = helper.cloneLocalScope();
         packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
       });
@@ -54,12 +54,12 @@ describe('component config', function () {
           helper.bitJson.writeBitJson(bitJson);
         });
         it('Bit should not explode', () => {
-          helper.showComponent('bar/foo');
-          helper.status();
-          helper.listLocalScope();
-          helper.createFile('components/bar/foo/bar', 'foo.js', 'console.log("hello");');
-          helper.tagAllComponents();
-          helper.exportAllComponents();
+          helper.command.showComponent('bar/foo');
+          helper.command.status();
+          helper.command.listLocalScope();
+          helper.fs.createFile('components/bar/foo/bar', 'foo.js', 'console.log("hello");');
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
         });
       });
       describe('changing the environments on package.json', () => {
@@ -72,7 +72,7 @@ describe('component config', function () {
           helper.writePackageJson(packageJson, componentDir);
         });
         it('diff should show the newly added compiler', () => {
-          const diff = helper.diff('bar/foo');
+          const diff = helper.command.diff('bar/foo');
           expect(diff).to.have.string('--- Compiler');
           expect(diff).to.have.string('+++ Compiler');
           expect(diff).to.have.string('+ my-scope/compiler/my-compiler');
@@ -81,7 +81,7 @@ describe('component config', function () {
     });
     describe('importing with --conf flag', () => {
       before(() => {
-        helper.importComponent('bar/foo --conf -O');
+        helper.command.importComponent('bar/foo --conf -O');
       });
       it('should write the configuration data also to bit.json file', () => {
         expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.file();

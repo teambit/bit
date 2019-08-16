@@ -24,9 +24,9 @@ describe('bit status command', function () {
   });
   describe('before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then run  status ', () => {
-      helper.createBitMap();
-      helper.createFile('bar', 'foo.js');
-      const output = helper.runCmd('bit status');
+      helper.bitMap.createBitMap();
+      helper.fs.createFile('bar', 'foo.js');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.include('bar/foo');
     });
   });
@@ -36,7 +36,7 @@ describe('bit status command', function () {
       helper.initWorkspace();
     });
     it('should indicate that there are no components', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
   });
@@ -45,10 +45,10 @@ describe('bit status command', function () {
     before(() => {
       helper.cleanEnv();
       helper.initWorkspace();
-      helper.createFile(path.join('components', 'bar'), 'foo.js');
+      helper.fs.createFile(path.join('components', 'bar'), 'foo.js');
     });
     it('should indicate that there are no components and should not throw an error', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
   });
@@ -56,9 +56,9 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      output = helper.command.runCmd('bit status');
     });
     it('should display that component as a new component', () => {
       expect(output.includes('new components')).to.be.true;
@@ -75,12 +75,12 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
-      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.fixtures.createComponentBarFoo();
+      helper.fs.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
     });
     it('Should show missing dependencies', () => {
-      output = helper.runCmd('bit status');
+      output = helper.command.runCmd('bit status');
       expect(output).to.have.string('untracked file dependencies');
       expect(output).to.have.string('bar/foo2.js -> bar/foo.js');
     });
@@ -89,11 +89,11 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createFile('bar', 'foo.js', 'var React = require("react")');
-      helper.addComponentBarFoo();
+      helper.fs.createFile('bar', 'foo.js', 'var React = require("react")');
+      helper.fixtures.addComponentBarFoo();
     });
     it('Should show missing package dependencies', () => {
-      output = helper.runCmd('bit status');
+      output = helper.command.runCmd('bit status');
       expect(output).to.have.string('missing packages dependencies');
       expect(output).to.have.string('bar/foo.js -> react');
     });
@@ -102,10 +102,10 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      output = helper.command.runCmd('bit status');
     });
     it('should display that component as a staged component', () => {
       expect(output.includes('no staged components')).to.be.false;
@@ -124,12 +124,12 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
       // modify the component
-      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
+      output = helper.command.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
       expect(output.includes('no modified components')).to.be.false;
@@ -153,11 +153,11 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
+      output = helper.command.runCmd('bit status');
     });
     it('should not display that component as new', () => {
       expect(output.includes('new components')).to.be.false;
@@ -173,13 +173,13 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
       // modify the component
-      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
+      output = helper.command.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
       expect(output.includes('no modified components')).to.be.false;
@@ -198,14 +198,14 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
       // modify the component
-      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
-      helper.tagComponentBarFoo();
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
+      helper.fixtures.tagComponentBarFoo();
+      output = helper.command.runCmd('bit status');
     });
     it('should not display that component as modified', () => {
       expect(output.includes('modified components')).to.be.false;
@@ -222,14 +222,14 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
-      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
+      helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
+      output = helper.command.runCmd('bit status');
     });
     it('should not display that component as modified', () => {
       expect(output.includes('modified components')).to.be.false;
@@ -245,14 +245,14 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
-      output = helper.runCmd('bit status');
+      helper.command.importComponent('bar/foo');
+      output = helper.command.runCmd('bit status');
     });
     it('should not display that component as new', () => {
       expect(output.includes('new components')).to.be.false;
@@ -269,7 +269,7 @@ describe('bit status command', function () {
         helper.initWorkspace();
       });
       it('should indicate that running "bit import" should solve the issue', () => {
-        output = helper.runCmd('bit status');
+        output = helper.command.runCmd('bit status');
         expect(output).to.have.string(importPendingMsg);
       });
     });
@@ -278,19 +278,19 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('', 'file.js');
-      helper.addComponent('file.js', { i: 'comp/comp' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createFile('', 'file.js');
+      helper.command.addComponent('file.js', { i: 'comp/comp' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('comp/comp');
+      helper.command.importComponent('comp/comp');
       const filefixture = '//some change to file';
-      helper.createFile('components/comp/comp', 'file.js', filefixture);
-      helper.tagComponent('comp/comp');
+      helper.fs.createFile('components/comp/comp', 'file.js', filefixture);
+      helper.command.tagComponent('comp/comp');
       const filefixture2 = '//some other change to file';
-      helper.createFile('components/comp/comp', 'file.js', filefixture2);
-      output = helper.runCmd('bit status');
+      helper.fs.createFile('components/comp/comp', 'file.js', filefixture2);
+      output = helper.command.runCmd('bit status');
     });
     it('should not display that component as new', () => {
       expect(output.includes('new components')).to.be.false;
@@ -308,14 +308,14 @@ describe('bit status command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fixtures.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentUtilsIsString();
-      helper.tagAllComponents();
-      output = helper.runCmd('bit status');
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fixtures.addComponentUtilsIsString();
+      helper.command.tagAllComponents();
+      output = helper.command.runCmd('bit status');
     });
     it('should not display any component as new', () => {
       expect(output.includes('new components')).to.be.false;
@@ -334,19 +334,19 @@ describe('bit status command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponentUtilsIsType();
-      helper.tagComponent('utils/is-type');
-      helper.exportComponent('utils/is-type');
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.command.tagComponent('utils/is-type');
+      helper.command.exportComponent('utils/is-type');
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('utils/is-type');
+      helper.command.importComponent('utils/is-type');
 
       const isStringFixture =
         "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentUtilsIsString();
-      output = helper.runCmd('bit status');
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fixtures.addComponentUtilsIsString();
+      output = helper.command.runCmd('bit status');
     });
     it('should not display missing files for the imported component', () => {
       expect(output).to.not.have.string('The following files dependencies are not tracked by bit');
@@ -359,25 +359,25 @@ describe('bit status command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponentUtilsIsType();
-      helper.tagComponent('utils/is-type');
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.command.tagComponent('utils/is-type');
 
       const isStringInternalFixture =
         "import isType from './is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
+      helper.fs.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
       const isStringFixture = "import iString from './is-string-internal';";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js utils/is-string-internal.js', {
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.command.addComponent('utils/is-string.js utils/is-string-internal.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string'
       });
-      helper.tagComponent('utils/is-string');
-      helper.exportAllComponents();
+      helper.command.tagComponent('utils/is-string');
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
-      output = helper.runCmd('bit status');
+      helper.command.importComponent('utils/is-string');
+      output = helper.command.runCmd('bit status');
     });
     it('should not show imported component as modified', () => {
       expect(output.includes('modified components')).to.be.false;
@@ -387,15 +387,15 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
-      helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportComponent('bar/foo');
+      helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.mimicGitCloneLocalProject(false);
       helper.addRemoteScope();
-      helper.runCmd('bit import --merge');
-      output = helper.runCmd('bit status');
+      helper.command.runCmd('bit import --merge');
+      output = helper.command.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
       // this also makes sure that bit install does not override existing files
@@ -415,12 +415,12 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.initNewLocalScope();
-      helper.createComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
     });
     it('Should not show status if bit.json is corrupted', () => {
       helper.bitJson.corruptBitJson();
       try {
-        helper.runCmd('bit status');
+        helper.command.runCmd('bit status');
       } catch (err) {
         output = err.toString();
       }
@@ -432,40 +432,40 @@ describe('bit status command', function () {
     describe('when some of the files were deleted', () => {
       before(() => {
         helper.initNewLocalScope();
-        helper.createComponentBarFoo();
-        helper.createFile('bar', 'index.js');
-        helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deletePath('bar/foo.js');
+        helper.fixtures.createComponentBarFoo();
+        helper.fs.createFile('bar', 'index.js');
+        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.fs.deletePath('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.readBitMap();
         const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
-        helper.runCmd('bit status');
-        const bitMap = helper.readBitMap();
+        helper.command.runCmd('bit status');
+        const bitMap = helper.bitMap.readBitMap();
         const files = bitMap['bar/foo'].files;
         expect(files).to.be.ofSize(1);
         expect(files[0].name).to.equal('index.js');
       });
       it('Should show "non-existing dependency" when deleting a file that is required by other files', () => {
-        helper.createFile('bar', 'foo1.js');
-        helper.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
-        helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deletePath('bar/foo1.js');
-        const output = helper.runCmd('bit status');
+        helper.fs.createFile('bar', 'foo1.js');
+        helper.fs.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
+        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.fs.deletePath('bar/foo1.js');
+        const output = helper.command.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
         expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
       });
       describe('when mainFile is deleted', () => {
         before(() => {
           helper.reInitLocalScope();
-          helper.createFile('bar', 'index.js');
-          helper.createFile('bar', 'foo.js');
-          helper.addComponent('bar/', { i: 'bar/foo' });
-          helper.deletePath('bar/index.js');
+          helper.fs.createFile('bar', 'index.js');
+          helper.fs.createFile('bar', 'foo.js');
+          helper.command.addComponent('bar/', { i: 'bar/foo' });
+          helper.fs.deletePath('bar/index.js');
         });
         it('should show an error indicating the mainFile was deleting', () => {
-          const output = helper.runCmd('bit status');
+          const output = helper.command.runCmd('bit status');
           expect(output).to.have.string(statusInvalidComponentsMsg);
           expect(output).to.have.string('main-file was removed');
         });
@@ -475,15 +475,15 @@ describe('bit status command', function () {
       let output;
       before(() => {
         helper.initNewLocalScope();
-        helper.createComponentBarFoo();
-        helper.createFile('bar', 'index.js');
-        helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deletePath('bar/index.js');
-        helper.deletePath('bar/foo.js');
-        output = helper.runCmd('bit status');
+        helper.fixtures.createComponentBarFoo();
+        helper.fs.createFile('bar', 'index.js');
+        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.fs.deletePath('bar/index.js');
+        helper.fs.deletePath('bar/foo.js');
+        output = helper.command.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.readBitMap();
         const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       });
@@ -501,7 +501,7 @@ describe('bit status command', function () {
       });
       describe('running bit diff', () => {
         it('should throw an exception MissingFilesFromComponent', () => {
-          const diffFunc = () => helper.diff('bar/foo');
+          const diffFunc = () => helper.command.diff('bar/foo');
           const error = new MissingFilesFromComponent('bar/foo');
           helper.expectToThrow(diffFunc, error);
         });
@@ -511,14 +511,14 @@ describe('bit status command', function () {
       let output;
       before(() => {
         helper.initNewLocalScope();
-        helper.createComponentBarFoo();
-        helper.createFile('bar', 'index.js');
-        helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deletePath('bar');
-        output = helper.runCmd('bit status');
+        helper.fixtures.createComponentBarFoo();
+        helper.fs.createFile('bar', 'index.js');
+        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.fs.deletePath('bar');
+        output = helper.command.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
-        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMap = helper.bitMap.readBitMap();
         const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
         expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
       });
@@ -536,7 +536,7 @@ describe('bit status command', function () {
       });
       describe('running bit diff', () => {
         it('should throw an exception ComponentNotFoundInPath', () => {
-          const diffFunc = () => helper.diff('bar/foo');
+          const diffFunc = () => helper.command.diff('bar/foo');
           const error = new ComponentNotFoundInPath('bar');
           helper.expectToThrow(diffFunc, error);
         });
@@ -548,9 +548,9 @@ describe('bit status command', function () {
     before(() => {
       helper.reInitLocalScope();
       const fooFixture = "require ('@bit/scope.bar.baz');";
-      helper.createComponentBarFoo(fooFixture);
-      helper.addComponentBarFoo();
-      output = helper.runCmd('bit status');
+      helper.fixtures.createComponentBarFoo(fooFixture);
+      helper.fixtures.addComponentBarFoo();
+      output = helper.command.runCmd('bit status');
     });
     it('should show the missing component as missing', () => {
       expect(output).to.have.string('missing components');
@@ -569,20 +569,20 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentUtilsIsString();
-      helper.createComponentBarFoo(fixtures.barFooFixture);
-      helper.addComponentBarFoo();
-      helper.addComponentUtilsIsString();
+      helper.fixtures.createComponentUtilsIsString();
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentUtilsIsString();
 
       // an intermediate step, make sure bar/foo is before utils/is-string
       // so then when bit-javascript resolves dependencies of utils/is-string it finds them in the
       // cache
-      const bitMap = helper.readBitMapWithoutVersion();
+      const bitMap = helper.bitMap.readBitMapWithoutVersion();
       const components = Object.keys(bitMap);
       expect(components[0]).to.equal('bar/foo');
       expect(components[1]).to.equal('utils/is-string');
 
-      output = helper.status();
+      output = helper.command.status();
     });
     it('should show missing utils/is-type', () => {
       expect(output).to.have.string('non-existing dependency files');
@@ -592,11 +592,11 @@ describe('bit status command', function () {
   describe('dynamic import', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo('const a = "./b"; import(a); require(a);');
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo('const a = "./b"; import(a); require(a);');
+      helper.fixtures.addComponentBarFoo();
     });
     it('status should not show the component as missing packages', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.not.have.a.string(statusFailureMsg);
     });
   });

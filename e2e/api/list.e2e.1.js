@@ -11,10 +11,10 @@ describe('api', function () {
   describe('list()', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should list the ids of the remote scope', async () => {
       const result = await api.list(helper.remoteScopePath);

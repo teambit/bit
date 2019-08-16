@@ -17,50 +17,50 @@ describe('bit show command', function () {
   });
   describe('run before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then show component', () => {
-      helper.createBitMap();
-      helper.createFile('bar', 'foo.js');
-      const output = helper.showComponent('bar/foo');
+      helper.bitMap.createBitMap();
+      helper.fs.createFile('bar', 'foo.js');
+      const output = helper.command.showComponent('bar/foo');
       expect(output).to.include('bar/foo');
     });
   });
   describe('local component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler();
+      helper.env.importCompiler();
 
-      helper.createFile('utils', 'is-string.js');
-      helper.addComponentUtilsIsString();
-      helper.tagComponent('utils/is-string');
+      helper.fs.createFile('utils', 'is-string.js');
+      helper.fixtures.addComponentUtilsIsString();
+      helper.command.tagComponent('utils/is-string');
 
       helper.addNpmPackage();
 
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.createFile('src', 'mainFile.js', fooBarFixture);
-      helper.createFile('src/utils', 'utilFile.js');
-      helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
-      helper.tagComponent('comp/comp');
+      helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
+      helper.fs.createFile('src/utils', 'utilFile.js');
+      helper.command.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
+      helper.command.tagComponent('comp/comp');
     });
 
     describe('show deprecated local component', () => {
       let output;
       it('should not show deprecated component if not deprecated ', () => {
-        output = helper.runCmd('bit show comp/comp');
+        output = helper.command.runCmd('bit show comp/comp');
         expect(output).to.not.include('Deprecated');
       });
 
       it('should show deprecated component', () => {
-        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+        output = JSON.parse(helper.command.runCmd('bit show comp/comp -j'));
         expect(output).to.include({ deprecated: false });
       });
       it('should show deprecated component', () => {
-        helper.deprecateComponent('comp/comp');
-        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+        helper.command.deprecateComponent('comp/comp');
+        output = JSON.parse(helper.command.runCmd('bit show comp/comp -j'));
         expect(output).to.include({ deprecated: true });
       });
       it('should show local deprecated component without -j', () => {
-        helper.deprecateComponent('comp/comp');
-        output = helper.runCmd('bit show comp/comp');
+        helper.command.deprecateComponent('comp/comp');
+        output = helper.command.runCmd('bit show comp/comp');
         expect(output).to.include('Deprecated');
       });
     });
@@ -69,7 +69,7 @@ describe('bit show command', function () {
       let output;
 
       before(() => {
-        output = helper.runCmd('bit show comp/comp');
+        output = helper.command.runCmd('bit show comp/comp');
       });
 
       it('should render the id correctly', () => {
@@ -124,7 +124,7 @@ describe('bit show command', function () {
       let output;
 
       before(() => {
-        output = JSON.parse(helper.runCmd('bit show comp/comp -j'));
+        output = JSON.parse(helper.command.runCmd('bit show comp/comp -j'));
       });
 
       it('should include the name correctly', () => {
@@ -214,14 +214,14 @@ describe('bit show command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       scopeBeforeShow = helper.cloneLocalScope();
-      output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+      output = helper.command.showComponent(`${helper.remoteScope}/bar/foo --remote`);
     });
     describe('single version as cli output (no -v or -j flags)', () => {
       it('should render the id correctly', () => {
@@ -243,10 +243,10 @@ describe('bit show command', function () {
         // triggered an error
         before(() => {
           helper.getClonedLocalScope(scopeBeforeShow);
-          output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+          output = helper.command.showComponent(`${helper.remoteScope}/bar/foo --remote`);
           expect(output).to.have.string('Id');
           expect(output).to.have.string('bar/foo@0.0.1');
-          output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+          output = helper.command.showComponent(`${helper.remoteScope}/bar/foo --remote`);
         });
         it('should still work and show the component with no errors', () => {
           expect(output).to.have.string('Id');
@@ -283,18 +283,18 @@ describe('bit show command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportAllComponents();
-      helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportAllComponents();
+      helper.command.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
     });
     it('should show the component as deprecated when using "--remote" flag', () => {
-      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
       expect(output).to.include({ deprecated: true });
     });
     it('should not show the component as deprecated when not using "--remote" flag', () => {
-      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
       expect(output).to.include({ deprecated: false });
     });
   });
@@ -302,17 +302,17 @@ describe('bit show command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportAllComponents();
     });
     it('should indicate a component as non-deprecated when using "--remote" flag', () => {
-      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
       expect(output).to.include({ deprecated: false });
     });
     it('should indicate a component as non-deprecated when not using "--remote flag', () => {
-      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+      output = JSON.parse(helper.command.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
       expect(output).to.include({ deprecated: false });
     });
   });
@@ -320,17 +320,17 @@ describe('bit show command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler();
+      helper.env.importCompiler();
 
-      helper.createFile('utils', 'is-string.js');
-      helper.addComponentUtilsIsString();
-      helper.tagComponent('utils/is-string');
+      helper.fs.createFile('utils', 'is-string.js');
+      helper.fixtures.addComponentUtilsIsString();
+      helper.command.tagComponent('utils/is-string');
     });
 
     it('Should not show component if bit.json is corrupted', () => {
       helper.bitJson.corruptBitJson();
       try {
-        helper.runCmd('bit show comp/comp -j');
+        helper.command.runCmd('bit show comp/comp -j');
       } catch (err) {
         output = err.toString();
       }
@@ -341,13 +341,13 @@ describe('bit show command', function () {
   describe('local component without compiler', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
+      helper.command.importComponent('bar/foo');
     });
     describe('when the consumer bit.json has a compiler', () => {
       let jsonOutput;
@@ -355,7 +355,7 @@ describe('bit show command', function () {
         const bitJson = helper.bitJson.readBitJson();
         bitJson.env.compiler = 'scope/namespace/name@0.0.1';
         helper.bitJson.writeBitJson(bitJson);
-        const output = helper.showComponent('bar/foo --json');
+        const output = helper.command.showComponent('bar/foo --json');
         jsonOutput = JSON.parse(output);
       });
       it('should not show the consumer compiler', () => {
@@ -366,30 +366,30 @@ describe('bit show command', function () {
   describe('with removed file/files', () => {
     beforeEach(() => {
       helper.initNewLocalScope();
-      helper.createComponentBarFoo();
-      helper.createFile('bar', 'index.js');
-      helper.addComponent('bar/', { i: 'bar/foo' });
+      helper.fixtures.createComponentBarFoo();
+      helper.fs.createFile('bar', 'index.js');
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
-      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deletePath('bar/foo.js');
-      const output = helper.showComponent('bar/foo -j');
-      const bitMap = helper.readBitMap();
+      helper.fs.deletePath('bar/foo.js');
+      const output = helper.command.showComponent('bar/foo -j');
+      const bitMap = helper.bitMap.readBitMap();
       const files = bitMap['bar/foo'].files;
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
       expect(JSON.parse(output).files).to.be.ofSize(1);
     });
     it('Should throw error that all files were removed', () => {
-      const beforeRemoveBitMap = helper.readBitMap();
+      const beforeRemoveBitMap = helper.bitMap.readBitMap();
       const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
-      helper.deletePath('bar/index.js');
-      helper.deletePath('bar/foo.js');
+      helper.fs.deletePath('bar/index.js');
+      helper.fs.deletePath('bar/foo.js');
 
-      const showCmd = () => helper.showComponent('bar/foo');
+      const showCmd = () => helper.command.showComponent('bar/foo');
       const error = new MissingFilesFromComponent('bar/foo');
       helper.expectToThrow(showCmd, error);
     });
@@ -397,26 +397,26 @@ describe('bit show command', function () {
   describe('with --compare flag', () => {
     before(() => {
       helper.initNewLocalScope();
-      helper.createComponentBarFoo();
-      helper.createFile('bar', 'index.js');
-      helper.addComponent('bar/', { i: 'bar/foo' });
+      helper.fixtures.createComponentBarFoo();
+      helper.fs.createFile('bar', 'index.js');
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
-        const showCmd = () => helper.showComponent('bar/foo --compare');
+        const showCmd = () => helper.command.showComponent('bar/foo --compare');
         expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
       });
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
-        const showCmd = () => helper.showComponent('bar/foo --compare');
+        const showCmd = () => helper.command.showComponent('bar/foo --compare');
         expect(showCmd).not.to.throw();
       });
       it('model and file-system should have the same main file and files, regardless the originallySharedDir (bar)', () => {
-        const result = helper.showComponent('bar/foo --compare --json');
+        const result = helper.command.showComponent('bar/foo --compare --json');
         const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
@@ -427,20 +427,20 @@ describe('bit show command', function () {
     });
     describe('when importing a component', () => {
       before(() => {
-        helper.tagAllComponents(undefined, undefined, false);
+        helper.command.tagAllComponents(undefined, undefined, false);
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo@0.0.1');
+        helper.command.importComponent('bar/foo@0.0.1');
       });
       it('Should not throw an error "nothing to compare no previous versions found"', () => {
-        const showCmd = () => helper.showComponent('bar/foo --compare');
+        const showCmd = () => helper.command.showComponent('bar/foo --compare');
         expect(showCmd).not.to.throw();
       });
       it('model and file-system should have the same main file and files, regardless the originallySharedDir (bar)', () => {
-        const result = helper.showComponent('bar/foo --compare --json');
+        const result = helper.command.showComponent('bar/foo --compare --json');
         const { componentFromFileSystem, componentFromModel } = JSON.parse(result);
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
@@ -455,27 +455,27 @@ describe('bit show command', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponentUtilsIsType();
-        helper.tagComponent('utils/is-type');
-        helper.tagComponent('utils/is-type', 'msg', '-f');
-        helper.exportAllComponents();
+        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+        helper.fixtures.addComponentUtilsIsType();
+        helper.command.tagComponent('utils/is-type');
+        helper.command.tagComponent('utils/is-type', 'msg', '-f');
+        helper.command.exportAllComponents();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('utils/is-type@0.0.1');
+        helper.command.importComponent('utils/is-type@0.0.1');
 
         const isStringFixture = `const isType = require('${helper.getRequireBitPath(
           'utils',
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-        helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponentUtilsIsString();
-        helper.tagAllComponents();
+        helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+        helper.fixtures.addComponentUtilsIsString();
+        helper.command.tagAllComponents();
       });
       describe('when a component uses an old version of a dependency', () => {
         it('should indicate that the remote version is larger than the current version', () => {
-          const output = helper.showComponent('utils/is-string --outdated --json');
+          const output = helper.command.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
           expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.1');
           expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.2');
@@ -484,10 +484,10 @@ describe('bit show command', function () {
       });
       describe('when the dependency was updated locally but not exported yet', () => {
         before(() => {
-          helper.tagComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
+          helper.command.tagComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
         });
         it('should indicate that the current version is larger than the remote version', () => {
-          const output = helper.showComponent('utils/is-string --outdated --json');
+          const output = helper.command.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
           expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.3');
           expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.3');
@@ -496,10 +496,10 @@ describe('bit show command', function () {
       });
       describe('when the dependency is up to date', () => {
         before(() => {
-          helper.exportAllComponents();
+          helper.command.exportAllComponents();
         });
         it('should indicate that all versions are the same', () => {
-          const output = helper.showComponent('utils/is-string --outdated --json');
+          const output = helper.command.showComponent('utils/is-string --outdated --json');
           const outputParsed = JSON.parse(output);
           expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.3');
           expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.3');
@@ -511,33 +511,33 @@ describe('bit show command', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponentUtilsIsType();
-        helper.tagComponent('utils/is-type');
-        helper.tagComponent('utils/is-type', 'msg', '-f');
-        helper.exportAllComponents();
+        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+        helper.fixtures.addComponentUtilsIsType();
+        helper.command.tagComponent('utils/is-type');
+        helper.command.tagComponent('utils/is-type', 'msg', '-f');
+        helper.command.exportAllComponents();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('utils/is-type@0.0.1');
+        helper.command.importComponent('utils/is-type@0.0.1');
 
         const isStringFixture = `const isType = require('${helper.getRequireBitPath(
           'utils',
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
-        helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponentUtilsIsString();
-        helper.tagAllComponents();
-        helper.exportAllComponents();
+        helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+        helper.fixtures.addComponentUtilsIsString();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
         // @todo: add a test case before importing the component. Currently there is a bug that it downloads the
         // component into the model in such a case
-        helper.importComponent('utils/is-string@0.0.1');
+        helper.command.importComponent('utils/is-string@0.0.1');
       });
       it('should show the remote and local versions', () => {
-        const output = helper.showComponent(`${helper.remoteScope}/utils/is-string --outdated --json`);
+        const output = helper.command.showComponent(`${helper.remoteScope}/utils/is-string --outdated --json`);
         const outputParsed = JSON.parse(output);
         expect(outputParsed.dependencies[0].currentVersion).to.equal('0.0.1');
         expect(outputParsed.dependencies[0].localVersion).to.equal('0.0.2');
@@ -549,13 +549,13 @@ describe('bit show command', function () {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportAllComponents();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.command.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {
-      output = helper.runCmd('bit show bar/foo -v');
+      output = helper.command.runCmd('bit show bar/foo -v');
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({
@@ -565,15 +565,15 @@ describe('bit show command', function () {
     });
     // TODO: complete tests after feature is finished
     it.skip('Should show versions of a remote component using scope name when you are not the author', () => {
-      output = helper.runCmd('bit show bit.envs/compilers/babel -v');
+      output = helper.command.runCmd('bit show bit.envs/compilers/babel -v');
       console.log(output);
     });
   });
   describe('component with overrides data', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
       const overrides = {
         'bar/foo': {
           dependencies: {
@@ -584,11 +584,11 @@ describe('bit show command', function () {
       helper.bitJson.addOverridesToBitJson(overrides);
     });
     it('should not show the overrides data when --detailed was not used', () => {
-      const barFoo = helper.showComponent('bar/foo');
+      const barFoo = helper.command.showComponent('bar/foo');
       expect(barFoo).to.not.have.string('overrides');
     });
     it('should show the overrides data when --detailed was used', () => {
-      const barFoo = helper.showComponent('bar/foo --detailed');
+      const barFoo = helper.command.showComponent('bar/foo --detailed');
       expect(barFoo).to.have.string('Overrides Dependencies');
     });
   });
@@ -612,9 +612,9 @@ Circle.propTypes = {
 Circle.defaultProps = {
     color: '#fff'
 }`;
-      helper.createComponentBarFoo(classReactFixture);
-      helper.addComponentBarFoo();
-      barFoo = helper.showComponent();
+      helper.fixtures.createComponentBarFoo(classReactFixture);
+      helper.fixtures.addComponentBarFoo();
+      barFoo = helper.command.showComponent();
     });
     it('should show the properties data', () => {
       expect(barFoo).to.have.string('Properties');
@@ -628,25 +628,25 @@ Circle.defaultProps = {
   describe('show with --dependents and --dependencies flag', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.populateWorkspaceWithComponents();
-      helper.createFile('bar-dep', 'bar.js');
-      helper.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
-      helper.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
-      helper.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
-      helper.addComponent('baz/baz.js');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fs.createFile('bar-dep', 'bar.js');
+      helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
+      helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
+      helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
+      helper.command.addComponent('baz/baz.js');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
     });
     describe('with local scope', () => {
       before(() => {
-        helper.importComponent('*');
+        helper.command.importComponent('*');
       });
       describe('when using --dependents', () => {
         let show;
         before(() => {
-          show = helper.showComponentParsed('utils/is-string --dependents');
+          show = helper.command.showComponentParsed('utils/is-string --dependents');
         });
         it('should show the dependents only', () => {
           expect(show)
@@ -671,7 +671,7 @@ Circle.defaultProps = {
       describe('when using --dependencies', () => {
         let show;
         before(() => {
-          show = helper.showComponentParsed('utils/is-string --dependencies');
+          show = helper.command.showComponentParsed('utils/is-string --dependencies');
         });
         it('should show the dependencies only', () => {
           expect(show)
@@ -698,7 +698,7 @@ Circle.defaultProps = {
       describe('when using --dependents', () => {
         let show;
         before(() => {
-          show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependents`);
+          show = helper.command.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependents`);
         });
         it('should show the dependents only', () => {
           expect(show)
@@ -723,7 +723,7 @@ Circle.defaultProps = {
       describe('when using --dependencies', () => {
         let show;
         before(() => {
-          show = helper.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependencies`);
+          show = helper.command.showComponentParsed(`${helper.remoteScope}/utils/is-string --remote --dependencies`);
         });
         it('should show the dependencies only', () => {
           expect(show)
@@ -747,8 +747,8 @@ Circle.defaultProps = {
     let show;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.populateWorkspaceWithComponents();
-      show = helper.showComponentParsed('utils/is-string --dependents --dependencies');
+      helper.fixtures.populateWorkspaceWithComponents();
+      show = helper.command.showComponentParsed('utils/is-string --dependents --dependencies');
     });
     it('should show all dependents and dependencies', () => {
       expect(show)

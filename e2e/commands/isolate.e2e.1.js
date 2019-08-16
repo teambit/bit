@@ -20,33 +20,33 @@ describe('run bit isolate', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fixtures.addComponentUtilsIsType();
 
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentUtilsIsString();
+      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fixtures.addComponentUtilsIsString();
 
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.createComponentBarFoo(fooBarFixture);
-      helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(fooBarFixture);
+      helper.fs.createFile('bar', 'foo.js', fooBarFixture);
+      helper.fixtures.addComponentBarFoo();
 
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
     });
     describe('with the same parameters as pack is using', () => {
       let isolatePath;
       before(() => {
-        isolatePath = helper.isolateComponent('bar/foo', '-olw');
+        isolatePath = helper.command.isolateComponent('bar/foo', '-olw');
       });
       it('should be able to generate the links correctly and require the dependencies', () => {
         const appJsFixture = `const barFoo = require('./');
 console.log(barFoo());`;
         fs.outputFileSync(path.join(isolatePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js', isolatePath);
+        const result = helper.command.runCmd('node app.js', isolatePath);
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });

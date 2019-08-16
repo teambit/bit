@@ -13,10 +13,10 @@ describe('scope components index mechanism', function () {
   describe('when a scope has no components', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.listLocalScope();
+      helper.command.listLocalScope();
     });
     it('the index.json file should be an empty array', () => {
-      expect(helper.indexJsonPath()).to.be.a.file();
+      expect(helper.general.indexJsonPath()).to.be.a.file();
       const indexJson = helper.getIndexJson();
       expect(indexJson).to.deep.equal([]);
     });
@@ -24,9 +24,9 @@ describe('scope components index mechanism', function () {
   describe('after tagging a component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
       const indexJson = helper.getIndexJson();
@@ -41,7 +41,7 @@ describe('scope components index mechanism', function () {
     });
     describe('after exporting the component', () => {
       before(() => {
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
       });
       it('should create a new record with the new scope', () => {
         const indexJson = helper.getIndexJson();
@@ -54,20 +54,20 @@ describe('scope components index mechanism', function () {
         expect(indexItem.isSymlink).to.be.true;
       });
       it('bit list should show only one component', () => {
-        const list = helper.listLocalScopeParsed();
+        const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
         expect(list[0].id).to.contain(helper.remoteScope);
       });
       describe('removing the component', () => {
         before(() => {
-          helper.removeComponent('bar/foo', '-s');
+          helper.command.removeComponent('bar/foo', '-s');
         });
         it('should remove the record from index.json', () => {
           const indexJson = helper.getIndexJson();
           expect(indexJson).to.have.lengthOf(0);
         });
         it('bit list should show zero components', () => {
-          const list = helper.listLocalScopeParsed();
+          const list = helper.command.listLocalScopeParsed();
           expect(list).to.have.lengthOf(0);
         });
       });
@@ -75,7 +75,7 @@ describe('scope components index mechanism', function () {
         before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
-          helper.importComponent('bar/foo');
+          helper.command.importComponent('bar/foo');
         });
         it('should populate the index.json', () => {
           const indexJson = helper.getIndexJson();
@@ -83,14 +83,14 @@ describe('scope components index mechanism', function () {
         });
         describe('removing the component', () => {
           before(() => {
-            helper.removeComponent('bar/foo', '-s');
+            helper.command.removeComponent('bar/foo', '-s');
           });
           it('should remove the record from index.json', () => {
             const indexJson = helper.getIndexJson();
             expect(indexJson).to.have.lengthOf(0);
           });
           it('bit list should show zero components', () => {
-            const list = helper.listLocalScopeParsed();
+            const list = helper.command.listLocalScopeParsed();
             expect(list).to.have.lengthOf(0);
           });
         });
@@ -100,34 +100,34 @@ describe('scope components index mechanism', function () {
   describe('changing the index.json file manually to be empty', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
 
       // as an intermediate step, make sure bit list shows one component
-      const list = helper.listLocalScopeParsed();
+      const list = helper.command.listLocalScopeParsed();
       expect(list).to.have.lengthOf(1);
 
       helper.writeIndexJson([]);
     });
     it('bit list should show zero results as it uses the index.json file', () => {
-      const list = helper.listLocalScopeParsed();
+      const list = helper.command.listLocalScopeParsed();
       expect(list).to.have.lengthOf(0);
     });
     it('bit cat-scope should still show the component as it should not be affected by the cache', () => {
-      const catScope = helper.catScope();
+      const catScope = helper.command.catScope();
       expect(catScope).to.have.lengthOf(1);
     });
     describe('running bit init --reset', () => {
       before(() => {
-        helper.runCmd('bit init --reset');
+        helper.command.runCmd('bit init --reset');
       });
       it('should rebuild index.json with the missing components', () => {
         const indexJson = helper.getIndexJson();
         expect(indexJson).to.have.lengthOf(1);
       });
       it('bit list should show 1 component', () => {
-        const list = helper.listLocalScopeParsed();
+        const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
     });
@@ -136,24 +136,24 @@ describe('scope components index mechanism', function () {
     describe('adding a non-exist component to index.json', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.createComponentBarFoo();
-        helper.addComponentBarFoo();
-        helper.tagAllComponents();
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFoo();
+        helper.command.tagAllComponents();
         const indexJsonWithBarFoo = helper.getIndexJson();
-        helper.untag('bar/foo');
+        helper.command.untag('bar/foo');
         helper.writeIndexJson(indexJsonWithBarFoo);
         // now, index.json has barFoo, however the scope doesn't have it
       });
       it('bit status should throw an error', () => {
         // used to show "Cannot read property 'scope' of null"
-        const error = new OutdatedIndexJson('bar/foo', helper.indexJsonPath());
-        const statusCmd = () => helper.status();
+        const error = new OutdatedIndexJson('bar/foo', helper.general.indexJsonPath());
+        const statusCmd = () => helper.command.status();
         helper.expectToThrow(statusCmd, error);
       });
       it('bit ls should throw an error', () => {
         // used to show "Cannot read property 'toBitIdWithLatestVersion' of null"
-        const error = new OutdatedIndexJson('bar/foo', helper.indexJsonPath());
-        const statusCmd = () => helper.status();
+        const error = new OutdatedIndexJson('bar/foo', helper.general.indexJsonPath());
+        const statusCmd = () => helper.command.status();
         helper.expectToThrow(statusCmd, error);
       });
     });

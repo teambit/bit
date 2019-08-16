@@ -15,10 +15,10 @@ describe('user deleted only .bitmap file leaving the objects in place', function
     let scopeAfterDeletion;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.deleteBitMap();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.bitMap.deleteBitMap();
       scopeAfterDeletion = helper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -33,7 +33,7 @@ describe('user deleted only .bitmap file leaving the objects in place', function
         helper.getClonedLocalScope(scopeAfterDeletion);
       });
       it('should init successfully', () => {
-        const output = helper.runCmd('bit init --force');
+        const output = helper.command.runCmd('bit init --force');
         expect(output).to.have.string('successfully initialized');
       });
     });

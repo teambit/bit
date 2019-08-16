@@ -27,25 +27,25 @@ describe('run bit install', function () {
         helper.addNpmPackage('lodash.isstring', '4.0.0');
         const isStringFixture = `const lodashIsString = require('lodash.isstring');
   module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
-        helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponentUtilsIsString();
-        helper.tagAllComponents();
-        helper.exportAllComponents();
+        helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+        helper.fixtures.addComponentUtilsIsString();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
 
         const requirePath = helper.getRequireBitPath('utils', 'is-string');
         const fooBarFixture = `const isString = require('${requirePath}');
   module.exports = function foo() { return isString() + ' and got foo'; };`;
-        helper.createComponentBarFoo(fooBarFixture);
-        helper.createFile('bar', 'foo.js', fooBarFixture);
-        helper.addComponentBarFoo();
-        helper.tagAllComponents();
-        helper.exportAllComponents();
+        helper.fixtures.createComponentBarFoo(fooBarFixture);
+        helper.fs.createFile('bar', 'foo.js', fooBarFixture);
+        helper.fixtures.addComponentBarFoo();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.command.importComponent('bar/foo');
 
-        helper.runCmd('npm install --save lodash.isboolean');
+        helper.command.runCmd('npm install --save lodash.isboolean');
         const fooRequirePath = helper.getRequireBitPath('bar', 'foo');
         const appJsFixture = `const barFoo = require('${fooRequirePath}');
   const isBoolean = require('lodash.isboolean');
@@ -54,7 +54,7 @@ describe('run bit install', function () {
         localScope = helper.cloneLocalScope();
       });
       it('should print results from all dependencies (this is an intermediate check to make sure we are good so far)', () => {
-        const result = helper.runCmd('node app.js');
+        const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
       });
       describe('cloning the project to somewhere else without the node-modules directories', () => {
@@ -62,20 +62,20 @@ describe('run bit install', function () {
         before(() => {
           helper.mimicGitCloneLocalProject();
           helper.addRemoteScope();
-          helper.runCmd('bit import');
+          helper.command.runCmd('bit import');
           // @todo: to reproduce issue #1746, remove the next line
-          helper.deletePath('package-lock.json');
-          output = helper.runCmd('bit install');
+          helper.fs.deletePath('package-lock.json');
+          output = helper.command.runCmd('bit install');
         });
         it('bit install should npm-install all missing node-modules and link all components', () => {
           expect(output).to.have.string('successfully ran npm install');
           expect(output).to.have.string('found 2 components');
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
         });
         describe('running bit install from an inner directory', () => {
           before(() => {
-            output = helper.runCmd('bit install', path.join(helper.localScopePath, 'components'));
+            output = helper.command.runCmd('bit install', path.join(helper.localScopePath, 'components'));
           });
           it('should not create another directory inside that inner directory', () => {
             expect(path.join(helper.localScopePath, 'components', 'components')).to.not.be.a.path();
@@ -91,7 +91,7 @@ describe('run bit install', function () {
         before(() => {
           helper.getClonedLocalScope(localScope);
           fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/node_modules'));
-          output = helper.runCmd('bit install bar/foo');
+          output = helper.command.runCmd('bit install bar/foo');
         });
         it('should npm install only the specified id', () => {
           expect(output).to.have.string('successfully ran npm install at components/bar/foo');
@@ -100,7 +100,7 @@ describe('run bit install', function () {
           expect(output).to.have.string('found 2 components'); // 1 is for bar/foo and 2 for its dep is-string
         });
         it('all links should be in place', () => {
-          const result = helper.runCmd('node app.js');
+          const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
         });
       });
@@ -111,7 +111,7 @@ describe('run bit install', function () {
         describe('passing arguments via the command line', () => {
           let output;
           before(() => {
-            output = helper.runCmd('bit install bar/foo -- --no-optional');
+            output = helper.command.runCmd('bit install bar/foo -- --no-optional');
           });
           it('npm should install the packages with the specified arguments', () => {
             expect(output).to.have.string(
@@ -123,7 +123,7 @@ describe('run bit install', function () {
           let output;
           before(() => {
             helper.bitJson.modifyFieldInBitJson('packageManagerArgs', ['--production']);
-            output = helper.runCmd('bit install bar/foo');
+            output = helper.command.runCmd('bit install bar/foo');
           });
           it('npm should install the packages with the specified arguments', () => {
             expect(output).to.have.string('successfully ran npm install at components/bar/foo with args: --production');
@@ -133,7 +133,7 @@ describe('run bit install', function () {
           let output;
           before(() => {
             helper.bitJson.modifyFieldInBitJson('packageManagerArgs', ['--production']);
-            output = helper.runCmd('bit install bar/foo -- --no-optional');
+            output = helper.command.runCmd('bit install bar/foo -- --no-optional');
           });
           it('npm should install the packages according to the command line and ignore the consumer bit.json', () => {
             expect(output).to.have.string(

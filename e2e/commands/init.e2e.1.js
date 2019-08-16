@@ -25,7 +25,7 @@ describe('run bit init', function () {
   describe('running bit init with path', () => {
     before(() => {
       helper.cleanLocalScope();
-      helper.runCmd('bit init my-dir');
+      helper.command.runCmd('bit init my-dir');
     });
     it('should init Bit at that path', () => {
       expect(path.join(helper.localScopePath, 'my-dir/bit.json')).to.be.a.file();
@@ -36,7 +36,7 @@ describe('run bit init', function () {
       helper.reInitLocalScope();
     });
     before(() => {
-      helper.createBitMap();
+      helper.bitMap.createBitMap();
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.initLocalScope();
@@ -47,7 +47,7 @@ describe('run bit init', function () {
       expect(bitmapPath).to.be.a.file('missing bitmap');
     });
     it('bitmap should contain version"', () => {
-      const bitMap = helper.readBitMap();
+      const bitMap = helper.bitMap.readBitMap();
       expect(bitMap).to.have.property('version');
       expect(bitMap.version).to.equal(helper.getBitVersion());
     });
@@ -182,7 +182,7 @@ describe('run bit init', function () {
     });
     describe('running any command other than bit init', () => {
       it('should throw an exception ScopeJsonNotFound', () => {
-        const func = () => helper.runCmd('bit ls');
+        const func = () => helper.command.runCmd('bit ls');
         const error = new ScopeJsonNotFound(scopeJsonPath);
         helper.expectToThrow(func, error);
       });
@@ -210,13 +210,13 @@ describe('run bit init', function () {
         fs.outputFileSync(bitMapPath, invalidBitMap);
       });
       it('bit status should throw an exception InvalidBitMap', () => {
-        const statusCmd = () => helper.runCmd('bit status');
+        const statusCmd = () => helper.command.runCmd('bit status');
         const error = new InvalidBitMap(bitMapPath, 'Unexpected token t');
         helper.expectToThrow(statusCmd, error);
       });
       it('should create a new bitMap file', () => {
-        helper.runCmd('bit init --reset');
-        const bitMap = helper.readBitMap();
+        helper.command.runCmd('bit init --reset');
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('version');
       });
     });
@@ -227,12 +227,12 @@ describe('run bit init', function () {
       });
       it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.localScopePath, BIT_JSON);
-        const statusCmd = () => helper.runCmd('bit status');
+        const statusCmd = () => helper.command.runCmd('bit status');
         const error = new InvalidBitJson(bitJsonPath, 'Unexpected token t');
         helper.expectToThrow(statusCmd, error);
       });
       it('should create a new bit.json file', () => {
-        helper.runCmd('bit init --reset');
+        helper.command.runCmd('bit init --reset');
         const bitJson = helper.bitJson.readBitJson();
         expect(bitJson).to.have.property('packageManager');
       });
@@ -245,17 +245,17 @@ describe('run bit init', function () {
     let localConsumerFiles;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo(); // this modifies bitMap
-      helper.tagAllComponents(); // this creates objects in .bit dir
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo(); // this modifies bitMap
+      helper.command.tagAllComponents(); // this creates objects in .bit dir
 
       // modify bit.json
       bitJson = helper.bitJson.readBitJson();
       bitJson.packageManager = 'yarn';
       helper.bitJson.writeBitJson(bitJson);
 
-      bitMap = helper.readBitMap();
-      localConsumerFiles = helper.getConsumerFiles('*', true);
+      bitMap = helper.bitMap.readBitMap();
+      localConsumerFiles = helper.fs.getConsumerFiles('*', true);
       localScope = helper.cloneLocalScope();
     });
     describe('bit init', () => {
@@ -263,7 +263,7 @@ describe('run bit init', function () {
         helper.initWorkspace();
       });
       it('should not change BitMap file', () => {
-        const currentBitMap = helper.readBitMap();
+        const currentBitMap = helper.bitMap.readBitMap();
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
@@ -273,17 +273,17 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
     describe('bit init --reset', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.runCmd('bit init --reset');
+        helper.command.runCmd('bit init --reset');
       });
       it('should not change BitMap file', () => {
-        const currentBitMap = helper.readBitMap();
+        const currentBitMap = helper.bitMap.readBitMap();
         expect(currentBitMap).to.be.deep.equal(bitMap);
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
@@ -293,17 +293,17 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
       it('should not change .bit directory', () => {
-        const currentFiles = helper.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true);
         expect(currentFiles).to.be.deep.equal(localConsumerFiles);
       });
     });
     describe('bit init --reset-hard', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.runCmd('bit init --reset-hard');
+        helper.command.runCmd('bit init --reset-hard');
       });
       it('should recreate the BitMap file', () => {
-        const currentBitMap = helper.readBitMap();
+        const currentBitMap = helper.bitMap.readBitMap();
         expect(currentBitMap).to.not.be.deep.equal(bitMap);
         expect(currentBitMap).to.not.have.property('bar/foo@0.0.1');
       });
@@ -313,7 +313,7 @@ describe('run bit init', function () {
         expect(currentBitJson.packageManager).to.not.be.equal('yarn');
       });
       it('should recreate .bit directory', () => {
-        const currentFiles = helper.getConsumerFiles('*', true);
+        const currentFiles = helper.fs.getConsumerFiles('*', true);
         expect(currentFiles).to.not.be.deep.equal(localConsumerFiles);
       });
       it('.bit/objects directory should be empty', () => {
@@ -324,7 +324,7 @@ describe('run bit init', function () {
         expect(path.join(helper.localScopePath, 'bar/foo.js')).to.be.a.file();
       });
       it('bit status should show nothing-to-tag', () => {
-        const output = helper.runCmd('bit status');
+        const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
@@ -346,11 +346,11 @@ describe('run bit init', function () {
         expect(path.join(helper.localScopePath, 'bit.json')).to.not.be.a.path();
       });
       it('should preserve the default npm indentation of 2', () => {
-        const packageJson = helper.readFile('package.json');
+        const packageJson = helper.fs.readFile('package.json');
         expect(detectIndent(packageJson).amount).to.equal(2);
       });
       it('should preserve the new line at the end of json as it was created by npm', () => {
-        const packageJson = helper.readFile('package.json');
+        const packageJson = helper.fs.readFile('package.json');
         expect(packageJson.endsWith('\n')).to.be.true;
       });
     });
@@ -358,7 +358,7 @@ describe('run bit init', function () {
       before(() => {
         helper.cleanLocalScope();
         helper.initNpm();
-        helper.runCmd('bit init --standalone');
+        helper.command.runCmd('bit init --standalone');
       });
       it('should not write the bit.json content into the package.json file', () => {
         const packageJson = helper.readPackageJson();
@@ -391,7 +391,7 @@ describe('run bit init', function () {
         helper.initWorkspace();
       });
       it('should preserve the original indentation and keep it as 4', () => {
-        const packageJson = helper.readFile('package.json');
+        const packageJson = helper.fs.readFile('package.json');
         expect(detectIndent(packageJson).amount).to.equal(4);
       });
     });
@@ -400,11 +400,11 @@ describe('run bit init', function () {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.createBitMap();
-        helper.deletePath('.bit');
+        helper.bitMap.createBitMap();
+        helper.fs.deletePath('.bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
-        const lsCmd = () => helper.listLocalScope();
+        const lsCmd = () => helper.command.listLocalScope();
         expect(lsCmd).to.not.throw();
         expect(path.join(helper.localScopePath, '.bit')).to.be.a.directory();
       });
@@ -414,11 +414,11 @@ describe('run bit init', function () {
         helper.cleanLocalScope();
         helper.initNewGitRepo();
         helper.initLocalScope();
-        helper.createBitMap();
-        helper.deletePath('.git/bit');
+        helper.bitMap.createBitMap();
+        helper.fs.deletePath('.git/bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
-        const lsCmd = () => helper.listLocalScope();
+        const lsCmd = () => helper.command.listLocalScope();
         expect(lsCmd).to.not.throw();
         expect(path.join(helper.localScopePath, '.git/bit')).to.be.a.directory();
       });
@@ -427,7 +427,7 @@ describe('run bit init', function () {
       let innerDir;
       before(() => {
         helper.reInitLocalScope();
-        helper.createBitMap();
+        helper.bitMap.createBitMap();
         innerDir = path.join(helper.localScopePath, 'inner');
         fs.mkdirSync(innerDir);
         helper.initWorkspace(innerDir);
@@ -435,7 +435,7 @@ describe('run bit init', function () {
         fs.removeSync(path.join(helper.localScopePath, '.bit'));
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir in the inner directory', () => {
-        const lsCmd = () => helper.runCmd('bit ls ', innerDir);
+        const lsCmd = () => helper.command.runCmd('bit ls ', innerDir);
         expect(lsCmd).to.not.throw();
         expect(path.join(helper.localScopePath, 'inner/.bit')).to.be.a.directory();
       });

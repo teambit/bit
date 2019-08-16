@@ -23,22 +23,22 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     let remoteScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const sourceDir = path.join(helper.getFixturesDir(), 'components');
+      const sourceDir = path.join(helper.fixtures.getFixturesDir(), 'components');
       const destination = path.join(helper.localScopePath, 'src');
       fs.copySync(path.join(sourceDir, 'is-string'), path.join(destination, 'is-string'));
       fs.copySync(path.join(sourceDir, 'pad-left'), path.join(destination, 'pad-left'));
 
-      helper.addComponent('src/is-string -t src/is-string/is-string.spec.js -i string/is-string');
-      helper.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
+      helper.command.addComponent('src/is-string -t src/is-string/is-string.spec.js -i string/is-string');
+      helper.command.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
 
-      helper.importCompiler('bit.envs/compilers/flow@0.0.6');
-      helper.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importCompiler('bit.envs/compilers/flow@0.0.6');
+      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
-      helper.runCmd('npm init -y');
-      helper.runCmd('npm install chai -D');
-      helper.tagAllComponents();
+      helper.command.runCmd('npm init -y');
+      helper.command.runCmd('npm install chai -D');
+      helper.command.tagAllComponents();
       scopeBeforeExport = helper.cloneLocalScope();
-      helper.exportAllComponents();
+      helper.command.exportAllComponents();
 
       originalScope = helper.cloneLocalScope();
       remoteScope = helper.cloneRemoteScope();
@@ -47,15 +47,15 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.addRemoteScope();
       scopeBeforeImport = helper.cloneLocalScope();
       helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
-      helper.importComponent('string/pad-left -p src/pad-left');
+      helper.command.importComponent('string/pad-left -p src/pad-left');
       scopeAfterImport = helper.cloneLocalScope();
     });
     it('should be able to run the tests', () => {
-      const output = helper.testComponent('string/pad-left');
+      const output = helper.command.testComponent('string/pad-left');
       expect(output).to.have.string('tests passed');
     });
     it('should save the paths in the model as Linux format', () => {
-      const isString = helper.catComponent(`${helper.remoteScope}/string/is-string@latest`);
+      const isString = helper.command.catComponent(`${helper.remoteScope}/string/is-string@latest`);
       expect(isString.docs[0].filePath).to.equal('src/is-string/is-string.js');
       expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
       isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
@@ -70,32 +70,32 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         fs.outputFileSync(padLeftFile, padLeftContent.replace(relativeSyntax, absoluteSyntax));
 
         // an intermediate step, make sure, bit-diff is not throwing an error
-        const diffOutput = helper.diff();
+        const diffOutput = helper.command.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
-        helper.tagAllComponents();
-        helper.exportAllComponents();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
-        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should not add the dist.entry if it was not removed before', () => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
-        helper.importComponent('string/pad-left -p src/pad-left');
-        helper.tagComponent('string/pad-left', 'msg', '-f');
-        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        helper.command.importComponent('string/pad-left -p src/pad-left');
+        helper.command.tagComponent('string/pad-left', 'msg', '-f');
+        const padLeftModel = helper.command.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       describe('importing back to the original repo', () => {
         before(() => {
           helper.getClonedLocalScope(originalScope);
-          helper.importComponent('string/pad-left');
+          helper.command.importComponent('string/pad-left');
         });
         it('should be able to pass the tests', () => {
-          const output = helper.testComponent('string/pad-left');
+          const output = helper.command.testComponent('string/pad-left');
           expect(output).to.have.string('tests passed');
         });
       });
@@ -113,19 +113,19 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               scopeName = scope;
               isStringId = `${username}.${scopeName}.string.is-string`;
               padLeftId = `${username}.${scopeName}.string.pad-left`;
-              helper.exportAllComponents(`${username}.${scopeName}`);
+              helper.command.exportAllComponents(`${username}.${scopeName}`);
               helper.reInitLocalScope();
-              helper.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
-              helper.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
+              helper.command.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
+              helper.command.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
 
-              helper.runCmd('bit tag -a -s 2.0.0');
+              helper.command.runCmd('bit tag -a -s 2.0.0');
 
               // as an intermediate step, make sure bit status doesn't show them as modified
               // it's a very important step which covers a few bugs
-              const output = helper.runCmd('bit status');
+              const output = helper.command.runCmd('bit status');
               expect(output).to.not.have.a.string('modified');
 
-              exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
+              exportOutput = helper.command.exportAllComponents(`${username}.${scopeName} --eject`);
             });
         });
         after(() => {
@@ -152,7 +152,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           Object.keys(bitMap).forEach((id) => {
             expect(id).not.to.have.string('pad-left');
             expect(id).not.to.have.string('is-string');
@@ -176,20 +176,20 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.bitJson.writeBitJson(bitJson);
 
         // an intermediate step, make sure, bit-diff is not throwing an error
-        const diffOutput = helper.diff();
+        const diffOutput = helper.command.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
         originalScopeWithCustomResolveBeforeExport = helper.cloneLocalScope();
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
         originalScopeWithCustomResolve = helper.cloneLocalScope();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
-        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should indicate that the dependency used custom-module-resolution', () => {
-        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        const padLeftModel = helper.command.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         const relativePath = padLeftModel.dependencies[0].relativePaths[0];
         expect(relativePath).to.have.property('isCustomResolveUsed');
         expect(relativePath).to.have.property('importSource');
@@ -200,10 +200,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
-          helper.importComponent('string/pad-left -p src/pad-left');
+          helper.command.importComponent('string/pad-left -p src/pad-left');
         });
         it('should not show the component as modified when imported', () => {
-          const status = helper.runCmd('bit status');
+          const status = helper.command.runCmd('bit status');
           expect(status).to.not.have.string('modified');
         });
         describe('changing the component', () => {
@@ -213,22 +213,22 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             fs.outputFileSync(padLeftFile, `${padLeftContent}\n`);
 
             // intermediate step, make sure the component is modified
-            const status = helper.runCmd('bit status');
+            const status = helper.command.runCmd('bit status');
             expect(status).to.have.string('modified');
           });
           it('should be able to pass the tests', () => {
-            const output = helper.testComponent('string/pad-left');
+            const output = helper.command.testComponent('string/pad-left');
             expect(output).to.have.string('tests passed');
           });
           describe('tag and export, then import back to the original repo', () => {
             before(() => {
-              helper.tagAllComponents();
-              helper.exportAllComponents();
+              helper.command.tagAllComponents();
+              helper.command.exportAllComponents();
               helper.getClonedLocalScope(originalScopeWithCustomResolve);
-              helper.importComponent('string/pad-left');
+              helper.command.importComponent('string/pad-left');
             });
             it('should not show the component as modified when imported', () => {
-              const status = helper.runCmd('bit status');
+              const status = helper.command.runCmd('bit status');
               expect(status).to.not.have.string('modified');
             });
             it('should be able to pass the tests', () => {
@@ -237,9 +237,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               // webpack configured to have "src" as the module resolved directory
               let output;
               if (process.platform === 'win32') {
-                output = helper.runCmd('set "NODE_PATH=dist" && bit test string/pad-left');
+                output = helper.command.runCmd('set "NODE_PATH=dist" && bit test string/pad-left');
               } else {
-                output = helper.runCmd('NODE_PATH=dist bit test string/pad-left');
+                output = helper.command.runCmd('NODE_PATH=dist bit test string/pad-left');
               }
               expect(output).to.have.string('tests passed');
             });
@@ -265,10 +265,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               scopeName = scope;
               isStringId = `${username}.${scopeName}.string.is-string`;
               padLeftId = `${username}.${scopeName}.string.pad-left`;
-              helper.exportAllComponents(`${username}.${scopeName}`);
+              helper.command.exportAllComponents(`${username}.${scopeName}`);
               helper.reInitLocalScope();
               helper.initNpm();
-              helper.runCmd(`npm i @bit/${username}.${scopeName}/string/pad-left`);
+              helper.command.runCmd(`npm i @bit/${username}.${scopeName}/string/pad-left`);
             });
         });
         after(() => {
@@ -296,23 +296,23 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.getClonedRemoteScope(remoteScope);
         const padLeftPath = path.join(helper.localScopePath, 'src/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPath, '\n console.log("modified");');
-        helper.tagAllComponents('--force'); // 0.0.2
-        helper.exportAllComponents();
+        helper.command.tagAllComponents('--force'); // 0.0.2
+        helper.command.exportAllComponents();
 
         helper.getClonedLocalScope(scopeAfterImport);
         const padLeftPathImported = path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPathImported, '\n console.log("imported-modified");');
-        helper.tagAllComponents('--force');
+        helper.command.tagAllComponents('--force');
         try {
-          helper.exportAllComponents();
+          helper.command.exportAllComponents();
         } catch (err) {
           expect(err.toString()).to.have.string('conflict');
         }
 
-        helper.runCmd('bit untag string/pad-left 0.0.2'); // current state: 0.0.1 + modification
-        helper.importComponent('string/pad-left --objects');
-        output = helper.checkoutVersion('0.0.2', 'string/pad-left', '--manual');
-        localConsumerFiles = helper.getConsumerFiles();
+        helper.command.runCmd('bit untag string/pad-left 0.0.2'); // current state: 0.0.1 + modification
+        helper.command.importComponent('string/pad-left --objects');
+        output = helper.command.checkoutVersion('0.0.2', 'string/pad-left', '--manual');
+        localConsumerFiles = helper.fs.getConsumerFiles();
       });
       it('bit-use should not add any file', () => {
         expect(output).to.not.have.string(FileStatusWithoutChalk.added);
@@ -334,20 +334,20 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
-        helper.testComponent('string/pad-left');
+        helper.command.testComponent('string/pad-left');
         fs.appendFileSync(
           path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js'),
           '\n console.log("modified");'
         );
-        helper.tagAllComponents('--force');
+        helper.command.tagAllComponents('--force');
         mergeCommandScope = helper.cloneLocalScope();
       });
       describe('using --manual strategy', () => {
         let output;
         let localConsumerFiles;
         before(() => {
-          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--manual');
-          localConsumerFiles = helper.getConsumerFiles();
+          output = helper.command.mergeVersion('0.0.1', 'string/pad-left', '--manual');
+          localConsumerFiles = helper.fs.getConsumerFiles();
         });
         it('should leave the file in a conflict state and', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.manual);
@@ -368,7 +368,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         let output;
         before(() => {
           helper.getClonedLocalScope(mergeCommandScope);
-          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--ours');
+          output = helper.command.mergeVersion('0.0.1', 'string/pad-left', '--ours');
         });
         it('should leave the file intact', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
@@ -380,8 +380,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         let localConsumerFiles;
         before(() => {
           helper.getClonedLocalScope(mergeCommandScope);
-          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--theirs');
-          localConsumerFiles = helper.getConsumerFiles();
+          output = helper.command.mergeVersion('0.0.1', 'string/pad-left', '--theirs');
+          localConsumerFiles = helper.fs.getConsumerFiles();
         });
         it('should update the file', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.updated);
@@ -406,12 +406,12 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
-        helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
-        helper.tagAllComponents('--force'); // 0.0.2
-        helper.checkoutVersion('0.0.1', 'string/pad-left', undefined, path.join(helper.localScopePath, 'src'));
+        helper.fs.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
+        helper.command.tagAllComponents('--force'); // 0.0.2
+        helper.command.checkoutVersion('0.0.1', 'string/pad-left', undefined, path.join(helper.localScopePath, 'src'));
       });
       it('should not change the rootDir in bitMap file', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         const padLeft = bitMap[`${helper.remoteScope}/string/pad-left@0.0.1`];
         expect(padLeft.rootDir).to.equal('src/pad-left');
       });
@@ -420,20 +420,20 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
-        helper.importComponent('string/is-string -p src/is-string');
-        helper.tagAllComponents('-s 0.0.2');
+        helper.command.importComponent('string/is-string -p src/is-string');
+        helper.command.tagAllComponents('-s 0.0.2');
         const padLeftDir = path.join(helper.localScopePath, 'src/pad-left');
         const packageJson = helper.readPackageJson(padLeftDir);
         packageJson.dependencies[`@bit/${helper.remoteScope}.string.is-string`] = '0.0.1';
         helper.writePackageJson(packageJson, padLeftDir);
       });
       it('bit diff should show the dependencies difference', () => {
-        const diff = helper.diff();
+        const diff = helper.command.diff();
         expect(diff).to.have.string(`- [ ${helper.remoteScope}/string/is-string@0.0.2 ]`);
         expect(diff).to.have.string(`+ [ ${helper.remoteScope}/string/is-string@0.0.1 ]`);
       });
       it('should be able to tag the component with no error thrown', () => {
-        const output = helper.tagAllComponents();
+        const output = helper.command.tagAllComponents();
         expect(output).to.has.string('1 component(s) tagged');
       });
     });
@@ -449,15 +449,15 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           }
         };
         helper.bitJson.addOverridesToBitJson(overrides);
-        helper.tagAllComponents();
+        helper.command.tagAllComponents();
       });
       it('should save pad-left without is-string dependency', () => {
-        const padLeft = helper.catComponent('string/pad-left@latest');
+        const padLeft = helper.command.catComponent('string/pad-left@latest');
         expect(padLeft.dependencies).to.have.lengthOf(0);
       });
       it('should save the overrides data in both components', () => {
-        const padLeft = helper.catComponent('string/pad-left@latest');
-        const isString = helper.catComponent('string/is-string@latest');
+        const padLeft = helper.command.catComponent('string/pad-left@latest');
+        const isString = helper.command.catComponent('string/is-string@latest');
         const expectedOverrides = { dependencies: { 'file://src/**/*': '-' } };
         expect(padLeft.overrides).to.deep.equal(expectedOverrides);
         expect(isString.overrides).to.deep.equal(expectedOverrides);
@@ -465,14 +465,14 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       describe('import in another workspace', () => {
         let authorAfterExport;
         before(() => {
-          helper.exportAllComponents();
+          helper.command.exportAllComponents();
           authorAfterExport = helper.cloneLocalScope();
           helper.reInitLocalScope();
           helper.addRemoteScope();
-          helper.importComponent('string/pad-left');
+          helper.command.importComponent('string/pad-left');
         });
         it('should not show the component as modified', () => {
-          const status = helper.status();
+          const status = helper.command.status();
           expect(status).to.have.string(statusWorkspaceIsCleanMsg);
         });
         describe('re-import for author after changing the overrides of the imported', () => {
@@ -481,12 +481,12 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             const packageJson = helper.readPackageJson(padLeftDir);
             packageJson.bit.overrides.dependencies['@bit/string/*'] = '-';
             helper.writePackageJson(packageJson, padLeftDir);
-            helper.tagAllComponents('--force'); // must force. the tests fails as the is-string dep is not there
-            helper.exportAllComponents();
+            helper.command.tagAllComponents('--force'); // must force. the tests fails as the is-string dep is not there
+            helper.command.exportAllComponents();
             helper.reInitLocalScope();
             helper.getClonedLocalScope(authorAfterExport);
             helper.addRemoteScope();
-            helper.importComponent('string/pad-left');
+            helper.command.importComponent('string/pad-left');
           });
           it('should write the updated overrides into consumer bit.json', () => {
             const bitJson = helper.bitJson.readBitJson();
@@ -509,7 +509,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.getClonedLocalScope(scopeBeforeImport);
         helper.getClonedRemoteScope(remoteScope);
-        helper.importComponent('string/pad-left -p src/pad-left');
+        helper.command.importComponent('string/pad-left -p src/pad-left');
         helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       });
       it('should show a descriptive error when tagging the component', () => {
@@ -520,7 +520,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       describe('running bit import --merge', () => {
         before(() => {
-          helper.runCmd('bit import --merge');
+          helper.command.runCmd('bit import --merge');
         });
         it('should rebuild the dist directory for all components and dependencies', () => {
           const distDir = path.join(helper.localScopePath, 'dist');
@@ -531,7 +531,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
         });
         it('should be able to tag the components', () => {
-          const tagCmd = () => helper.tagScope('2.0.0');
+          const tagCmd = () => helper.command.tagScope('2.0.0');
           expect(tagCmd).to.not.throw();
         });
       });

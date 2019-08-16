@@ -17,8 +17,8 @@ describe('environments with dependencies', function () {
   before(() => {
     helper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
-    helper.copyFixtureFile(compiler);
-    helper.addComponent('compiler.js', {
+    helper.fixtures.copyFixtureFile(compiler);
+    helper.command.addComponent('compiler.js', {
       i: compilerId
     });
     helper.reInitEnvsScope();
@@ -28,19 +28,19 @@ describe('environments with dependencies', function () {
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
     helper.addNpmPackage('resolve', '1.7.1');
-    helper.tagAllComponents();
-    helper.exportAllComponents(helper.envScope);
+    helper.command.tagAllComponents();
+    helper.command.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
     helper.addRemoteScope();
     helper.initNpm();
     helper.addRemoteEnvironment();
-    helper.importCompiler(`${helper.envScope}/${compilerId}`);
-    helper.copyFixtureFile(path.join('compilers', 'webpack', 'base.config.js'));
-    helper.copyFixtureFile(path.join('compilers', 'webpack', 'dev.config.js'));
+    helper.env.importCompiler(`${helper.envScope}/${compilerId}`);
+    helper.fixtures.copyFixtureFile(path.join('compilers', 'webpack', 'base.config.js'));
+    helper.fixtures.copyFixtureFile(path.join('compilers', 'webpack', 'dev.config.js'));
     helper.addNpmPackage('webpack-merge', '4.1.4');
     helper.addNpmPackage('webpack', '4.16.5');
-    helper.createComponentBarFoo();
-    helper.addComponentBarFoo();
+    helper.fixtures.createComponentBarFoo();
+    helper.fixtures.addComponentBarFoo();
     scopeBeforeTagging = helper.cloneLocalScope();
   });
   after(() => {
@@ -51,7 +51,7 @@ describe('environments with dependencies', function () {
       helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('should show the dependency file as untracked', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.string(statusFailureMsg);
       expect(output).to.have.string('untracked');
       expect(output).to.have.string('dev.config.js -> base.config.js');
@@ -60,12 +60,12 @@ describe('environments with dependencies', function () {
   describe('when a dependency file is not in the file system', () => {
     before(() => {
       helper.getClonedLocalScope(scopeBeforeTagging);
-      helper.deletePath('base.config.js');
+      helper.fs.deletePath('base.config.js');
       helper.bitJson.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
       helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('should show the component as an invalid component', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.string(statusInvalidComponentsMsg);
       expect(output).to.have.string('extension file is missing');
     });
@@ -77,7 +77,7 @@ describe('environments with dependencies', function () {
       helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('bit status should not show any missing', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.not.have.string(statusFailureMsg);
       expect(output).to.not.have.string(statusInvalidComponentsMsg);
     });
@@ -88,15 +88,15 @@ describe('environments with dependencies', function () {
       helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
 
       helper.addNpmPackage('webpack', '4.16.4');
-      helper.addComponent('base.config.js', { i: 'webpack/base' });
+      helper.command.addComponent('base.config.js', { i: 'webpack/base' });
     });
     it('bit status should not show any missing', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.not.have.string(statusFailureMsg);
       expect(output).to.not.have.string(statusInvalidComponentsMsg);
     });
     it('bit show should show compiler dependency', () => {
-      const showJson = helper.showComponentParsed('bar/foo');
+      const showJson = helper.command.showComponentParsed('bar/foo');
       expect(showJson)
         .to.have.property('compilerDependencies')
         .that.is.an('array');
@@ -105,16 +105,16 @@ describe('environments with dependencies', function () {
       expect(envDependency.id).to.equal('webpack/base');
     });
     it('bit show should show compiler package dependency', () => {
-      const showJson = helper.showComponentParsed('bar/foo');
+      const showJson = helper.command.showComponentParsed('bar/foo');
       expect(showJson).to.have.property('compilerPackageDependencies');
       expect(showJson.compilerPackageDependencies).to.have.property('webpack-merge');
     });
     describe('after tagging the components', () => {
       let catComponent;
       before(() => {
-        const output = helper.tagAllComponents();
+        const output = helper.command.tagAllComponents();
         expect(output).to.have.string('2 component(s) tagged');
-        catComponent = helper.catComponent('bar/foo@latest');
+        catComponent = helper.command.catComponent('bar/foo@latest');
       });
       it('should save the compilerDependencies in the model', () => {
         expect(catComponent).to.have.property('compilerDependencies');
@@ -138,19 +138,19 @@ describe('environments with dependencies', function () {
       describe.skip('importing the component to another scope', () => {
         let scopeAfterImport;
         before(() => {
-          helper.exportAllComponents();
+          helper.command.exportAllComponents();
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.addRemoteEnvironment();
-          helper.importComponent('bar/foo');
+          helper.command.importComponent('bar/foo');
           scopeAfterImport = helper.cloneLocalScope();
         });
         it('should also import the environment component', () => {
-          const output = helper.listLocalScope('--scope');
+          const output = helper.command.listLocalScope('--scope');
           expect(output).to.have.string('webpack/base');
         });
         it('should not show the component as modified', () => {
-          const output = helper.runCmd('bit status');
+          const output = helper.command.runCmd('bit status');
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should not generate the links for environment component when --conf was not used', () => {
@@ -165,30 +165,30 @@ describe('environments with dependencies', function () {
         });
         describe('ejecting the environment configuration to component dir', () => {
           before(() => {
-            helper.ejectConf('bar/foo');
+            helper.command.ejectConf('bar/foo');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
         describe('ejecting the environment configuration to a directory outside the component dir', () => {
           before(() => {
             helper.getClonedLocalScope(scopeAfterImport);
-            helper.ejectConf('bar/foo -p my-conf-dir');
+            helper.command.ejectConf('bar/foo -p my-conf-dir');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
         describe('ejecting the environment configuration to a an inner component dir directory', () => {
           before(() => {
             helper.getClonedLocalScope(scopeAfterImport);
-            helper.ejectConf('bar/foo -p {COMPONENT_DIR}/my-inner-dir');
+            helper.command.ejectConf('bar/foo -p {COMPONENT_DIR}/my-inner-dir');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
@@ -198,10 +198,10 @@ describe('environments with dependencies', function () {
           const configurationFile = path.join(componentDir, 'dev.config.js');
           before(() => {
             helper.getClonedLocalScope(scopeAfterImport);
-            helper.importComponent('bar/foo --conf');
+            helper.command.importComponent('bar/foo --conf');
           });
           it('should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
           it('should generate the links for environment component', () => {
@@ -209,7 +209,7 @@ describe('environments with dependencies', function () {
           });
           describe('injecting the configuration back', () => {
             before(() => {
-              helper.injectConf('bar/foo');
+              helper.command.injectConf('bar/foo');
             });
             it('should remove not only the configuration files but also the generated links', () => {
               expect(configurationFile).to.not.be.a.path();
@@ -220,10 +220,10 @@ describe('environments with dependencies', function () {
         describe('importing with --conf [path] flag for saving the configuration files in another directory', () => {
           before(() => {
             helper.getClonedLocalScope(scopeAfterImport);
-            helper.importComponent('bar/foo --conf my-config-dir');
+            helper.command.importComponent('bar/foo --conf my-config-dir');
           });
           it('should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
           it('should generate the links for environment component', () => {
@@ -236,7 +236,7 @@ describe('environments with dependencies', function () {
           });
           describe('running inject-conf', () => {
             before(() => {
-              helper.injectConf('bar/foo');
+              helper.command.injectConf('bar/foo');
             });
             it('should delete not only the configuration files but also the link file', () => {
               const linkFile = path.join(helper.localScopePath, 'my-config-dir/base.config.js');

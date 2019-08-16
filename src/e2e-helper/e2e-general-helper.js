@@ -24,10 +24,10 @@ export default class GeneralHelper {
     return path.join(this.scopes.localScopePath, '.bit/index.json');
   }
   getIndexJson() {
-    return fs.readJsonSync(this.indexJsonPath());
+    return fs.readJsonSync(this.helper.general.indexJsonPath());
   }
   writeIndexJson(indexJson: Object) {
-    return ensureAndWriteJson(this.indexJsonPath(), indexJson);
+    return ensureAndWriteJson(this.helper.general.indexJsonPath(), indexJson);
   }
   installAndGetTypeScriptCompilerDir(): string {
     this.npm.installNpmPackage('typescript');

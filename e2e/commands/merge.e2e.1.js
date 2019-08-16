@@ -24,15 +24,15 @@ describe('bit merge command', function () {
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
-      const mergeFunc = () => helper.runCmd('bit merge 1.0.0 utils/non-exist');
+      const mergeFunc = () => helper.command.runCmd('bit merge 1.0.0 utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(mergeFunc, error);
     });
   });
   describe('after the component was created', () => {
     before(() => {
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       // @todo: create a new Exception ComponentHasNoVersion
@@ -41,7 +41,7 @@ describe('bit merge command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllComponents('', '0.0.5');
+        helper.command.tagAllComponents('', '0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -51,7 +51,7 @@ describe('bit merge command', function () {
       });
       describe('and component was modified', () => {
         before(() => {
-          helper.createComponentBarFoo(barFooV2);
+          helper.fixtures.createComponentBarFoo(barFooV2);
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.runWithTryCatch('bit merge 0.0.5 bar/foo');
@@ -64,22 +64,22 @@ describe('bit merge command', function () {
     let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponentUtilsIsType();
-      helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponentUtilsIsString();
-      helper.createComponentBarFoo(fixtures.barFooFixture);
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fixtures.addComponentUtilsIsType();
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
 
-      helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
-      helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
-      helper.createComponentBarFoo(fixtures.barFooFixtureV2);
-      helper.tagAllComponents();
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixtureV2);
+      helper.command.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     it('as an intermediate step, make sure the dependencies are correct', () => {
-      const barFoo = helper.catComponent('bar/foo@0.0.2');
+      const barFoo = helper.command.catComponent('bar/foo@0.0.2');
       expect(barFoo.dependencies).to.have.lengthOf(1);
       expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
       expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
@@ -92,15 +92,15 @@ describe('bit merge command', function () {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooAuthor);
       });
       it('as an intermediate step, make sure all components have v2', () => {
-        const result = helper.runCmd('node app.js');
+        const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
       });
       describe('merging a previous version with --manual flag', () => {
         let output;
         let bitMap;
         before(() => {
-          output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
-          bitMap = helper.readBitMap();
+          output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
+          bitMap = helper.bitMap.readBitMap();
         });
         it('should display a successful message', () => {
           expect(output).to.have.string(successOutput);
@@ -108,16 +108,16 @@ describe('bit merge command', function () {
           expect(output).to.have.string('bar/foo');
         });
         it('should write the conflicts for the main component only', () => {
-          const fileContentBarFoo = helper.readFile('bar/foo.js');
+          const fileContentBarFoo = helper.fs.readFile('bar/foo.js');
           expect(fileContentBarFoo).to.have.string(fixtures.barFooFixtureV2);
           expect(fileContentBarFoo).to.have.string(fixtures.barFooFixture);
           expect(fileContentBarFoo).to.have.string('<<<<<<< 0.0.2');
           expect(fileContentBarFoo).to.have.string('>>>>>>> 0.0.1');
         });
         it('should not change the dependencies', () => {
-          const fileContentIsString = helper.readFile('utils/is-string.js');
+          const fileContentIsString = helper.fs.readFile('utils/is-string.js');
           expect(fileContentIsString).to.have.string(fixtures.isStringV2);
-          const fileContentIsType = helper.readFile('utils/is-type.js');
+          const fileContentIsType = helper.fs.readFile('utils/is-type.js');
           expect(fileContentIsType).to.have.string(fixtures.isTypeV2);
         });
         it('should not change the bitmap file', () => {
@@ -129,7 +129,7 @@ describe('bit merge command', function () {
           expect(bitMap).to.not.have.property('utils/is-type@0.0.1');
         });
         it('should show the main component as modified', () => {
-          const statusOutput = helper.runCmd('bit status');
+          const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
         });
         it('should not write package.json file', () => {
@@ -147,24 +147,24 @@ describe('bit merge command', function () {
       let localScopeAfterImport;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        helper.command.importComponent('bar/foo');
 
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
         localScopeAfterImport = helper.cloneLocalScope();
       });
       it('as an intermediate step, make sure all components have v2', () => {
-        const result = helper.runCmd('node app.js');
+        const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
       });
       describe('merging a previous version of the main component', () => {
         let output;
         let bitMap;
         before(() => {
-          output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
-          bitMap = helper.readBitMap();
+          output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
+          bitMap = helper.bitMap.readBitMap();
         });
         it('should display a successful message', () => {
           expect(output).to.have.string(successOutput);
@@ -175,7 +175,7 @@ describe('bit merge command', function () {
           expect(output).to.not.have.string('npm');
         });
         it('should write the conflicts for the main component', () => {
-          const fileContentBarFoo = helper.readFile('components/bar/foo/bar/foo.js');
+          const fileContentBarFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
           expect(fileContentBarFoo).to.have.string(fixtures.barFooFixtureV2);
           expect(fileContentBarFoo).to.have.string(fixtures.barFooFixture);
           expect(fileContentBarFoo).to.have.string('<<<<<<< 0.0.2');
@@ -194,7 +194,7 @@ describe('bit merge command', function () {
           expect(bitMap).to.not.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
         });
         it('should show the component as modified', () => {
-          const statusOutput = helper.runCmd('bit status');
+          const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
         });
         it('should not write bit.json file', () => {
@@ -205,20 +205,20 @@ describe('bit merge command', function () {
         let localScopeAfterModified;
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
-          helper.createFile('components/bar/foo/bar', 'foo.js', barFooV3);
+          helper.fs.createFile('components/bar/foo/bar', 'foo.js', barFooV3);
           localScopeAfterModified = helper.cloneLocalScope();
         });
         describe('when using --manual flag', () => {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
+            output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
           });
           it('should indicate that there are conflicts', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.manual);
           });
           it('bit status should indicate that there are issues with the file', () => {
-            const statusOutput = helper.runCmd('bit status');
+            const statusOutput = helper.command.runCmd('bit status');
             expect(statusOutput).to.have.string('error found while parsing the file');
             expect(statusOutput).to.have.string('bar/foo.js');
             expect(statusOutput).to.have.string('Unexpected token');
@@ -233,7 +233,7 @@ describe('bit merge command', function () {
             expect(tagOutput).to.have.string('error found while parsing the file');
           });
           it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
-            const tagOutput = helper.tagAllComponents('--ignore-unresolved-dependencies');
+            const tagOutput = helper.command.tagAllComponents('--ignore-unresolved-dependencies');
             expect(tagOutput).to.have.string('1 component(s) tagged');
           });
         });
@@ -241,7 +241,7 @@ describe('bit merge command', function () {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
+            output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--ours');
           });
           it('should indicate that the file was not changed', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
@@ -255,7 +255,7 @@ describe('bit merge command', function () {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+            output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
           });
           it('should indicate that the file was updated', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.updated);
@@ -269,8 +269,8 @@ describe('bit merge command', function () {
       describe('merging a version when import included bit.json file', () => {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
-          helper.importComponent('bar/foo --conf');
-          helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+          helper.command.importComponent('bar/foo --conf');
+          helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not delete the bit.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
@@ -279,8 +279,8 @@ describe('bit merge command', function () {
       describe('merging a version when import did not write package.json file', () => {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
-          helper.importComponent('bar/foo --ignore-package-json');
-          helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+          helper.command.importComponent('bar/foo --ignore-package-json');
+          helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not write package.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
@@ -292,17 +292,17 @@ describe('bit merge command', function () {
     let localScope;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.createComponentBarFoo(barFooV2);
-      helper.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.fixtures.tagComponentBarFoo();
       localScope = helper.cloneLocalScope();
     });
     describe('using manual strategy', () => {
       let output;
       before(() => {
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -322,13 +322,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.have.string('>>>>>>> 0.0.1'); // incoming-change
       });
       it('should not change bitmap version', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });
@@ -336,7 +336,7 @@ describe('bit merge command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
       });
       it('should indicate that the file has updated', () => {
         expect(output).to.have.string(successOutput);
@@ -349,13 +349,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should not update bitmap', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });
@@ -363,7 +363,7 @@ describe('bit merge command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--ours');
       });
       it('should indicate that the merge was successful', () => {
         expect(output).to.have.string(successOutput);
@@ -378,13 +378,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.be.equal(barFooV2);
       });
       it('should not update bitmap', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should not show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.not.have.string('modified components');
       });
     });
@@ -392,21 +392,21 @@ describe('bit merge command', function () {
       let scopeWithAddedFile;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.createFile('bar', 'foo2.js');
-        helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
+        helper.fs.createFile('bar', 'foo2.js');
+        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
         scopeWithAddedFile = helper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
+          output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that the new file was not changed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.2');
           const files = bitMap['bar/foo@0.0.2'].files;
           expect(files).to.be.lengthOf(2);
@@ -421,7 +421,7 @@ describe('bit merge command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+          output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should indicate that the new file was not changed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
@@ -429,7 +429,7 @@ describe('bit merge command', function () {
         });
         it('should keep track the file in bitmap', () => {
           // @todo: should we change the behavior to not track it?
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.2');
           const files = bitMap['bar/foo@0.0.2'].files;
           expect(files).to.be.lengthOf(2);
@@ -440,7 +440,7 @@ describe('bit merge command', function () {
           expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
         });
         it('should show the component as modified', () => {
-          const statusOutput = helper.runCmd('bit status');
+          const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
         });
       });
@@ -448,14 +448,14 @@ describe('bit merge command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
+          output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should indicate that the new file was not changed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep tracking the file in bitmap', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.2');
           const files = bitMap['bar/foo@0.0.2'].files;
           expect(files).to.be.lengthOf(2);
@@ -471,25 +471,25 @@ describe('bit merge command', function () {
       let scopeWithRemovedFile;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.createFile('bar', 'foo2.js');
-        helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
-        helper.tagAllComponents(); // 0.0.3
+        helper.fs.createFile('bar', 'foo2.js');
+        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
+        helper.command.tagAllComponents(); // 0.0.3
         fs.removeSync(path.join(helper.localScopePath, 'bar/foo2.js'));
-        helper.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
-        helper.tagAllComponents(); // 0.0.4 without bar/foo2.js
+        helper.fixtures.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
+        helper.command.tagAllComponents(); // 0.0.4 without bar/foo2.js
         scopeWithRemovedFile = helper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.mergeVersion('0.0.3', 'bar/foo', '--manual');
+          output = helper.command.mergeVersion('0.0.3', 'bar/foo', '--manual');
         });
         it('should indicate that the file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.4');
           const files = bitMap['bar/foo@0.0.4'].files;
           expect(files).to.be.lengthOf(2);
@@ -504,14 +504,14 @@ describe('bit merge command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithRemovedFile);
-          output = helper.mergeVersion('0.0.3', 'bar/foo', '--theirs');
+          output = helper.command.mergeVersion('0.0.3', 'bar/foo', '--theirs');
         });
         it('should indicate that the file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.4');
           const files = bitMap['bar/foo@0.0.4'].files;
           expect(files).to.be.lengthOf(2);
@@ -522,7 +522,7 @@ describe('bit merge command', function () {
           expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
         });
         it('should show the component as modified', () => {
-          const statusOutput = helper.runCmd('bit status');
+          const statusOutput = helper.command.runCmd('bit status');
           expect(statusOutput).to.have.string('modified components');
         });
       });
@@ -530,14 +530,14 @@ describe('bit merge command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithRemovedFile);
-          output = helper.mergeVersion('0.0.3', 'bar/foo', '--ours');
+          output = helper.command.mergeVersion('0.0.3', 'bar/foo', '--ours');
         });
         it('should not add the deleted file', () => {
           expect(output).to.not.have.string(FileStatusWithoutChalk.added);
           expect(output).to.not.have.string('bar/foo2.js');
         });
         it('should not track the deleted file in bitmap', () => {
-          const bitMap = helper.readBitMap();
+          const bitMap = helper.bitMap.readBitMap();
           expect(bitMap).to.have.property('bar/foo@0.0.4');
           const files = bitMap['bar/foo@0.0.4'].files;
           expect(files).to.be.lengthOf(1);
@@ -553,19 +553,19 @@ describe('bit merge command', function () {
     let localScope;
     before(() => {
       helper.reInitLocalScope();
-      helper.createComponentBarFoo(barFooV1);
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.createComponentBarFoo(barFooV2);
-      helper.tagComponentBarFoo();
-      helper.createComponentBarFoo(barFooV3);
+      helper.fixtures.createComponentBarFoo(barFooV1);
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV2);
+      helper.fixtures.tagComponentBarFoo();
+      helper.fixtures.createComponentBarFoo(barFooV3);
       localScope = helper.cloneLocalScope();
     });
     describe('using manual strategy', () => {
       let output;
       let fileContent;
       before(() => {
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--manual');
         fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
       });
       it('should indicate that the file has conflicts', () => {
@@ -588,13 +588,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.have.string(barFooV3);
       });
       it('should not change bitmap version', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });
@@ -602,7 +602,7 @@ describe('bit merge command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--theirs');
       });
       it('should indicate that the file has updated', () => {
         expect(output).to.have.string(successOutput);
@@ -615,7 +615,7 @@ describe('bit merge command', function () {
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });
@@ -623,7 +623,7 @@ describe('bit merge command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo', '--ours');
       });
       it('should indicate that the version was merged', () => {
         expect(output).to.have.string(successOutput);
@@ -638,13 +638,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.be.equal(barFooV3);
       });
       it('should not change bitmap', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should still show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });
@@ -654,13 +654,13 @@ describe('bit merge command', function () {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        helper.createComponentBarFoo(barFooV1);
-        helper.addComponentBarFoo();
-        helper.tagComponentBarFoo();
-        helper.createComponentBarFoo(barFooV2);
-        helper.tagComponentBarFoo();
-        helper.createComponentBarFoo(barFooV1);
-        output = helper.mergeVersion('0.0.1', 'bar/foo');
+        helper.fixtures.createComponentBarFoo(barFooV1);
+        helper.fixtures.addComponentBarFoo();
+        helper.fixtures.tagComponentBarFoo();
+        helper.fixtures.createComponentBarFoo(barFooV2);
+        helper.fixtures.tagComponentBarFoo();
+        helper.fixtures.createComponentBarFoo(barFooV1);
+        output = helper.command.mergeVersion('0.0.1', 'bar/foo');
       });
       it('should indicate that the version is merged', () => {
         expect(output).to.have.string(successOutput);
@@ -672,13 +672,13 @@ describe('bit merge command', function () {
         expect(fileContent).to.be.equal(barFooV1);
       });
       it('should not change bitmap', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.2');
         expect(bitMap).to.not.have.property('bar/foo');
         expect(bitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should show the component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
+        const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
       });
     });

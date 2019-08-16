@@ -27,10 +27,10 @@ chai.use(require('chai-fs'));
     describe('as author', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.createComponentBarFoo();
-        helper.addComponentBarFoo();
-        helper.tagAllComponents();
-        helper.exportAllComponents(`${username}.${scopeName} --eject`);
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFoo();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents(`${username}.${scopeName} --eject`);
       });
       it('should delete the original component files from the file-system', () => {
         expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
@@ -41,7 +41,7 @@ chai.use(require('chai-fs'));
         ).to.be.a.path();
       });
       it('should delete the component from bit.map', () => {
-        const bitMap = helper.readBitMap();
+        const bitMap = helper.bitMap.readBitMap();
         Object.keys(bitMap).forEach((id) => {
           expect(id).not.to.have.string('foo');
         });

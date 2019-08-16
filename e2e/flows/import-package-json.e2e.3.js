@@ -21,17 +21,17 @@ describe('component with package.json as a file of the component', function () {
     let componentMap;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createJsonFile('package.json', fixturePackageJson);
-      const addOutput = helper.addComponent('package.json', { i: 'foo/pkg' });
+      helper.fs.createJsonFile('package.json', fixturePackageJson);
+      const addOutput = helper.command.addComponent('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('foo/pkg');
-      consumerFiles = helper.getConsumerFiles('*.{js,json}');
-      bitMap = helper.readBitMap();
+      helper.command.importComponent('foo/pkg');
+      consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
+      bitMap = helper.bitMap.readBitMap();
       componentMap = bitMap[`${helper.remoteScope}/foo/pkg@0.0.1`];
     });
     it('should wrap the component files in a wrapper dir', () => {
@@ -52,26 +52,26 @@ describe('component with package.json as a file of the component', function () {
       expect(componentMap.wrapDir).to.equal(WRAPPER_DIR);
     });
     it('bit status should not show the component as modified', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
     describe('having files in the rootDir outside the wrapDir', () => {
       before(() => {
-        helper.createFile('components/foo/pkg', 'bar.js');
+        helper.fs.createFile('components/foo/pkg', 'bar.js');
       });
       it('should not automatically add them to the component', () => {
-        const output = helper.runCmd('bit status');
+        const output = helper.command.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
       });
       it('should prevent users from deliberately adding them', () => {
-        const output = helper.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
+        const output = helper.command.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
         expect(output).to.have.string('no files to track');
       });
     });
     describe('importing the component using isolated environment', () => {
       let isolatePath;
       before(() => {
-        isolatePath = helper.isolateComponent('foo/pkg', '-olw');
+        isolatePath = helper.command.isolateComponent('foo/pkg', '-olw');
       });
       it('should create the package.json file in the wrap dir', () => {
         expect(path.join(isolatePath, WRAPPER_DIR, 'package.json')).to.be.a.file();
@@ -84,18 +84,18 @@ describe('component with package.json as a file of the component', function () {
     let componentMap;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createJsonFile('bar/package.json', fixturePackageJson);
-      helper.createFile('bar', 'foo.js');
-      const addOutput = helper.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
+      helper.fs.createJsonFile('bar/package.json', fixturePackageJson);
+      helper.fs.createFile('bar', 'foo.js');
+      const addOutput = helper.command.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
-      consumerFiles = helper.getConsumerFiles('*.{js,json}');
-      bitMap = helper.readBitMap();
+      helper.command.importComponent('bar/foo');
+      consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
+      bitMap = helper.bitMap.readBitMap();
       componentMap = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
     });
     it('should keep the files inside the sharedDir and not strip that dir', () => {
@@ -106,13 +106,13 @@ describe('component with package.json as a file of the component', function () {
       expect(componentMap).to.not.have.property('originallySharedDir');
     });
     it('bit status should not show the component as modified', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
     describe('importing the component using isolated environment', () => {
       let isolatePath;
       before(() => {
-        isolatePath = helper.isolateComponent('bar/foo', '-olw');
+        isolatePath = helper.command.isolateComponent('bar/foo', '-olw');
       });
       it('should keep the package.json file in the shared dir', () => {
         expect(path.join(isolatePath, 'bar', 'package.json')).to.be.a.file();
@@ -128,18 +128,18 @@ describe('component with package.json as a file of the component', function () {
     const fooFixture = 'require("./package.json");';
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createJsonFile('package.json', fixturePackageJson);
-      helper.addComponent('package.json', { i: 'foo/pkg' });
-      helper.createFile('', 'foo.js', fooFixture);
-      helper.addComponent('foo.js', { i: 'bar/foo' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
+      helper.fs.createJsonFile('package.json', fixturePackageJson);
+      helper.command.addComponent('package.json', { i: 'foo/pkg' });
+      helper.fs.createFile('', 'foo.js', fooFixture);
+      helper.command.addComponent('foo.js', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
       afterExportScope = helper.cloneLocalScope();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.importComponent('bar/foo');
-      consumerFiles = helper.getConsumerFiles('*.{js,json}');
-      bitMap = helper.readBitMap();
+      helper.command.importComponent('bar/foo');
+      consumerFiles = helper.fs.getConsumerFiles('*.{js,json}');
+      bitMap = helper.bitMap.readBitMap();
       componentMapBarFoo = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       componentMapFooPkg = bitMap[`${helper.remoteScope}/foo/pkg@0.0.1`];
     });
@@ -157,7 +157,7 @@ describe('component with package.json as a file of the component', function () {
     it('should generate a link to the correct path of its dependency package.json file', () => {
       const linkPath = path.join('components/bar/foo', WRAPPER_DIR, 'package.json');
       expect(path.join(helper.localScopePath, linkPath)).to.be.a.path();
-      const linkContent = helper.readJsonFile(linkPath);
+      const linkContent = helper.fs.readJsonFile(linkPath);
       expect(linkContent).to.be.deep.equal(fixturePackageJson);
     });
     it('should save the wrapDir attribute of the dependency', () => {
@@ -179,47 +179,47 @@ describe('component with package.json as a file of the component', function () {
         helper.getClonedLocalScope(afterExportScope);
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('bar/foo');
-        helper.importComponent('foo/pkg');
+        helper.command.importComponent('bar/foo');
+        helper.command.importComponent('foo/pkg');
 
         // an intermediate step, make sure the components are not modified
-        const output = helper.runCmd('bit status');
+        const output = helper.command.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
 
-        helper.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
-        helper.tagAllComponents();
+        helper.fs.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
+        helper.command.tagAllComponents();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
-        const fooPkg = helper.catComponent(`${helper.remoteScope}/foo/pkg@latest`);
+        const fooPkg = helper.command.catComponent(`${helper.remoteScope}/foo/pkg@latest`);
         expect(fooPkg.mainFile).to.equal('package.json');
         expect(fooPkg.files[0].relativePath).to.equal('package.json');
       });
       it('should strip the wrap dir from the dependent', () => {
-        const barFoo = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);
+        const barFoo = helper.command.catComponent(`${helper.remoteScope}/bar/foo@latest`);
         expect(barFoo.mainFile).to.equal('foo.js');
         expect(barFoo.files[0].relativePath).to.equal('foo.js');
       });
       it('should strip the wrap dir from the dependency relative paths', () => {
-        const barFoo = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);
+        const barFoo = helper.command.catComponent(`${helper.remoteScope}/bar/foo@latest`);
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
 
       describe('export the updated components and re-import them for author', () => {
         before(() => {
-          helper.exportAllComponents();
+          helper.command.exportAllComponents();
           helper.getClonedLocalScope(afterExportScope);
 
           // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
           // authored (as expected) but foo/pkg as nested. then, after running the import for
           // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
           // but leave it as authored
-          helper.importComponent('bar/foo');
-          helper.importComponent('foo/pkg');
+          helper.command.importComponent('bar/foo');
+          helper.command.importComponent('foo/pkg');
 
           // scenario 2: import all components from .bitmap, we have a bug as well, for some
           // reason, it imports the objects but doesn't update the file system.
-          // helper.importAllComponents(true);
+          // helper.command.importAllComponents(true);
         });
         it('should not add wrapDir for the author', () => {
           expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
@@ -229,19 +229,19 @@ describe('component with package.json as a file of the component', function () {
           expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
         });
         it('should not show the component as modified', () => {
-          const output = helper.runCmd('bit status');
+          const output = helper.command.runCmd('bit status');
           expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
         });
         describe('running bit link', () => {
           before(() => {
-            helper.runCmd('bit link');
+            helper.command.runCmd('bit link');
           });
           it('should not override the author package.json', () => {
             const packageJson = helper.readPackageJson();
             expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
           });
           it('should not show the component as modified', () => {
-            const output = helper.runCmd('bit status');
+            const output = helper.command.runCmd('bit status');
             expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
           });
         });

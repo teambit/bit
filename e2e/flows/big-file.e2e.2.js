@@ -19,9 +19,9 @@ describe('big text file', function () {
       const bigFileContent = fs.readFileSync(bigFilePath).toString();
       const windowsFormatContent = bigFileContent.replace(/\r\n|\r|\n/g, '\r\n');
       fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
-      helper.createComponentBarFoo();
-      helper.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
-      tagOutput = helper.tagComponent('bar/text');
+      helper.fixtures.createComponentBarFoo();
+      helper.command.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
+      tagOutput = helper.command.tagComponent('bar/text');
     });
     it('tagging the component should not throw any error', () => {
       expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -29,11 +29,11 @@ describe('big text file', function () {
     describe('exporting and importing the component', () => {
       let importOutput;
       before(() => {
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
 
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        importOutput = helper.importComponent('bar/text');
+        importOutput = helper.command.importComponent('bar/text');
       });
       it('should work with no errors', () => {
         expect(importOutput).to.have.string('successfully imported one component');
