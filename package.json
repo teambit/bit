@@ -81,6 +81,7 @@
     "fs-extra": "^6.0.0",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
+    "graphviz": "0.0.9",
     "group-array": "^0.3.4",
     "ignore": "^3.3.7",
     "inquirer": "^6.5.0",
