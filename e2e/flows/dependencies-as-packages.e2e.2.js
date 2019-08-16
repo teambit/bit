@@ -309,7 +309,7 @@ chai.use(require('chai-fs'));
         describe('import with dist outside the component directory', () => {
           before(() => {
             helper.getClonedLocalScope(beforeImportScope);
-            helper.modifyFieldInBitJson('dist', { target: 'dist' });
+            helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
             helper.importComponent('bar/foo');
           });
           it('bit status should not show any error', () => {

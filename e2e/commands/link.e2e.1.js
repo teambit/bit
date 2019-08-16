@@ -98,7 +98,7 @@ console.log(isType());`;
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'testLink');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'testLink');
       helper.importComponent('bar/foo');
     });
     describe('auto linking', () => {
@@ -137,7 +137,7 @@ console.log(isType());`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'test');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'test');
       helper.importComponent('bar/foo');
       helper.importComponent('bar2/foo2');
     });
@@ -170,7 +170,7 @@ console.log(isType());`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'bitTest');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
       helper.importComponent('utils/is-string');
     });
     it('node_modules should contain custom dir name', () => {
@@ -190,7 +190,7 @@ console.log(isType());`;
       // is-string
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'bitTest');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest');
       helper.importComponent('utils/is-type');
       const isStringFixture = `const isType = require('bitTest/${
         helper.remoteScope
@@ -203,7 +203,7 @@ console.log(isType());`;
       // is-string2
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('bitTest2/${
         helper.remoteScope
@@ -215,7 +215,7 @@ console.log(isType());`;
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.importComponent('test/is-string2');
 
       const appJsFixture = `const isString2 = require('bitTest2/${

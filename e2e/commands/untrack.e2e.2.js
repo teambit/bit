@@ -95,7 +95,7 @@ describe('bit untrack command', function () {
     });
     it('Should not show component if bit.json is corrupted', () => {
       let output;
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.untrackComponent();
       } catch (err) {

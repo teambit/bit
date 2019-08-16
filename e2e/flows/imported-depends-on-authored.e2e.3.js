@@ -22,7 +22,7 @@ describe('imported component that depends on authored component', function () {
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.importComponent('utils/is-string');
       helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponentUtilsIsType();

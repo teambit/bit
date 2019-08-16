@@ -300,7 +300,7 @@ describe('bit test command', function () {
         helper.importComponent('utils/is-type --conf');
       });
       it('should save the tester with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/utils/is-type'));
+        const bitJson = helper.bitJson.readBitJson(path.join(helper.localScopePath, 'components/utils/is-type'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('tester');
         expect(bitJson.env.tester).to.have.string('testers/mocha');

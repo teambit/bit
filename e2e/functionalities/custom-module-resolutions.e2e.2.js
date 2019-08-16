@@ -16,9 +16,9 @@ describe('custom module resolutions', function () {
   describe('using custom module directory', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       helper.createFile('src/utils', 'is-type.js', fixtures.isType);
       const isStringFixture =
@@ -136,9 +136,9 @@ describe('custom module resolutions', function () {
     describe('with dependencies', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
 
         helper.createFile('src/utils', 'is-type.js', fixtures.isType);
         const isStringFixture =
@@ -192,9 +192,9 @@ describe('custom module resolutions', function () {
     describe('without dependencies', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
 
         helper.createFile('src/utils', 'is-type.js', fixtures.isType);
         const isStringFixture =
@@ -283,9 +283,9 @@ describe('custom module resolutions', function () {
     const npmCiRegistry = new NpmCiRegistry(helper);
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
       npmCiRegistry.setCiScopeInBitJson();
       helper.createFile('src/utils', 'is-type.js', '');
       helper.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
@@ -371,9 +371,9 @@ describe('custom module resolutions', function () {
       helper = new Helper();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.setNewLocalAndRemoteScopes();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
       npmCiRegistry.setCiScopeInBitJson();
 
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
@@ -438,9 +438,9 @@ describe('custom module resolutions', function () {
     let scopeAfterAdding;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { aliases: { '@': 'src' } };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       helper.createFile('src/utils', 'is-type.js', fixtures.isType);
       const isStringFixture =

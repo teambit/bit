@@ -140,9 +140,9 @@ describe('binary files', function () {
       helper.setNewLocalAndRemoteScopes();
 
       npmCiRegistry.setCiScopeInBitJson();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');

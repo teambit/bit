@@ -418,7 +418,7 @@ describe('bit status command', function () {
       helper.createComponentBarFoo();
     });
     it('Should not show status if bit.json is corrupted', () => {
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.runCmd('bit status');
       } catch (err) {

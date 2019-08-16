@@ -407,7 +407,7 @@ describe('bit eject command', function () {
               helper.getClonedLocalScope(scopeBeforeEjecting);
               packageJsonBefore = helper.readPackageJson();
               bitMapBefore = helper.readBitMap();
-              bitJsonBefore = helper.readBitJson();
+              bitJsonBefore = helper.bitJson.readBitJson();
             });
             describe('when getting the component status has failed', () => {
               let errorFailure;
@@ -436,7 +436,7 @@ describe('bit eject command', function () {
                 expect(bitMapNow).to.deep.equal(bitMapBefore);
               });
               it('should not change the bit.json file', () => {
-                const bitJsonNow = helper.readBitJson();
+                const bitJsonNow = helper.bitJson.readBitJson();
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
             });
@@ -471,7 +471,7 @@ describe('bit eject command', function () {
                 expect(bitMapNow).to.deep.equal(bitMapBefore);
               });
               it('should not change the bit.json file', () => {
-                const bitJsonNow = helper.readBitJson();
+                const bitJsonNow = helper.bitJson.readBitJson();
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
               it('should not delete the component files from the filesystem', () => {

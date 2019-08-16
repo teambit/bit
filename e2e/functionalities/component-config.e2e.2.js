@@ -45,13 +45,13 @@ describe('component config', function () {
         before(() => {
           helper.getClonedLocalScope(scopeAfterImport);
           const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
-          const bitJson = helper.readBitJson(componentDir);
+          const bitJson = helper.bitJson.readBitJson(componentDir);
           bitJson.dependencies = { [`${helper.remoteScope}/utils/is-string`]: '0.0.1' };
-          helper.writeBitJson(bitJson, componentDir);
+          helper.bitJson.writeBitJson(bitJson, componentDir);
 
-          const consumerBitJson = helper.readBitJson();
+          const consumerBitJson = helper.bitJson.readBitJson();
           consumerBitJson.dependencies = { [`${helper.remoteScope}/bar/foo`]: '0.0.1' };
-          helper.writeBitJson(bitJson);
+          helper.bitJson.writeBitJson(bitJson);
         });
         it('Bit should not explode', () => {
           helper.showComponent('bar/foo');
@@ -87,7 +87,7 @@ describe('component config', function () {
         expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.file();
       });
       it('bit.json should not include the "dependencies" property anymore', () => {
-        const bitJson = helper.readBitJson('components/bar/foo');
+        const bitJson = helper.bitJson.readBitJson('components/bar/foo');
         expect(bitJson).to.not.have.property('dependencies');
         expect(bitJson).to.not.have.property('packageDependencies');
       });

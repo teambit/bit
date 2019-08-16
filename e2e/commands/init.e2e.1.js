@@ -57,7 +57,7 @@ describe('run bit init', function () {
       helper.reInitLocalScope();
     });
     it('should not contain some default properties', () => {
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       expect(bitJson).to.not.have.property('dist');
       expect(bitJson).to.not.have.property('extensions');
       expect(bitJson).to.not.have.property('dependenciesDirectory');
@@ -86,7 +86,7 @@ describe('run bit init', function () {
         '-compiler': 'my-compiler',
         '-tester': 'my-tester'
       });
-      bitJson = helper.readBitJson();
+      bitJson = helper.bitJson.readBitJson();
     });
     it('should set the default dir to my-comps', () => {
       expect(bitJson.componentsDefaultDirectory).to.equal('my-comps/{name}');
@@ -223,7 +223,7 @@ describe('run bit init', function () {
     describe('when bit.json file is invalid', () => {
       before(() => {
         helper.reInitLocalScope();
-        helper.corruptBitJson();
+        helper.bitJson.corruptBitJson();
       });
       it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.localScopePath, BIT_JSON);
@@ -233,7 +233,7 @@ describe('run bit init', function () {
       });
       it('should create a new bit.json file', () => {
         helper.runCmd('bit init --reset');
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         expect(bitJson).to.have.property('packageManager');
       });
     });
@@ -250,9 +250,9 @@ describe('run bit init', function () {
       helper.tagAllComponents(); // this creates objects in .bit dir
 
       // modify bit.json
-      bitJson = helper.readBitJson();
+      bitJson = helper.bitJson.readBitJson();
       bitJson.packageManager = 'yarn';
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       bitMap = helper.readBitMap();
       localConsumerFiles = helper.getConsumerFiles('*', true);
@@ -268,7 +268,7 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
       it('should not change bit.json file', () => {
-        const currentBitJson = helper.readBitJson();
+        const currentBitJson = helper.bitJson.readBitJson();
         expect(currentBitJson).to.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
@@ -288,7 +288,7 @@ describe('run bit init', function () {
         expect(currentBitMap).to.have.property('bar/foo@0.0.1');
       });
       it('should not change bit.json file', () => {
-        const currentBitJson = helper.readBitJson();
+        const currentBitJson = helper.bitJson.readBitJson();
         expect(currentBitJson).to.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.be.equal('yarn');
       });
@@ -308,7 +308,7 @@ describe('run bit init', function () {
         expect(currentBitMap).to.not.have.property('bar/foo@0.0.1');
       });
       it('should recreate the bit.json file', () => {
-        const currentBitJson = helper.readBitJson();
+        const currentBitJson = helper.bitJson.readBitJson();
         expect(currentBitJson).to.not.be.deep.equal(bitJson);
         expect(currentBitJson.packageManager).to.not.be.equal('yarn');
       });
@@ -366,7 +366,7 @@ describe('run bit init', function () {
       });
       it('should create bit.json file', () => {
         expect(path.join(helper.localScopePath, 'bit.json')).to.be.a.file();
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         expect(bitJson).to.have.property('componentsDefaultDirectory');
       });
     });

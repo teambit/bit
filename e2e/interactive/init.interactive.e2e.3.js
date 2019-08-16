@@ -43,7 +43,7 @@ describe('run bit init - interactive', function () {
         expect(output).to.have.string('successfully initialized a bit workspace');
         const bitmapPath = path.join(helper.localScopePath, '.bitmap');
         expect(bitmapPath).to.be.a.file('missing bitmap');
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         expect(bitJson.packageManager).to.equal('npm');
         expect(bitJson.componentsDefaultDirectory).to.equal('components/{name}');
         expect(bitJson.env).to.be.empty;
@@ -71,7 +71,7 @@ describe('run bit init - interactive', function () {
           }
         ];
         await helper.initInteractive(inputs);
-        bitJson = helper.readBitJson();
+        bitJson = helper.bitJson.readBitJson();
       });
       it('should set the package manager to yarn', () => {
         expect(bitJson.packageManager).to.equal('yarn');
@@ -115,7 +115,7 @@ describe('run bit init - interactive', function () {
         ];
         await helper.initInteractive(inputs);
         // helper.removeRemoteEnvironment(true);
-        bitJson = helper.readBitJson();
+        bitJson = helper.bitJson.readBitJson();
       });
       it('should set the compiler entered by the user without the "bit import" prefix', () => {
         expect(bitJson.env.compiler).to.equal(compilerName);

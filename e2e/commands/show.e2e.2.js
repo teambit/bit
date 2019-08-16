@@ -189,13 +189,13 @@ describe('bit show command', function () {
       describe('when the compiler is changed in the consumer bit.json', () => {
         let bitJson;
         before(() => {
-          bitJson = helper.readBitJson();
+          bitJson = helper.bitJson.readBitJson();
           const clonedBitJson = R.clone(bitJson);
           clonedBitJson.env.compiler = 'scope/namespace/name@0.0.1';
-          helper.writeBitJson(clonedBitJson);
+          helper.bitJson.writeBitJson(clonedBitJson);
         });
         after(() => {
-          helper.writeBitJson(bitJson);
+          helper.bitJson.writeBitJson(bitJson);
         });
         it('should display the compiler of the component', () => {
           const outputCompiler = output.compiler;
@@ -328,7 +328,7 @@ describe('bit show command', function () {
     });
 
     it('Should not show component if bit.json is corrupted', () => {
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.runCmd('bit show comp/comp -j');
       } catch (err) {
@@ -352,9 +352,9 @@ describe('bit show command', function () {
     describe('when the consumer bit.json has a compiler', () => {
       let jsonOutput;
       before(() => {
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.env.compiler = 'scope/namespace/name@0.0.1';
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
         const output = helper.showComponent('bar/foo --json');
         jsonOutput = JSON.parse(output);
       });
@@ -581,7 +581,7 @@ describe('bit show command', function () {
           }
         }
       };
-      helper.addOverridesToBitJson(overrides);
+      helper.bitJson.addOverridesToBitJson(overrides);
     });
     it('should not show the overrides data when --detailed was not used', () => {
       const barFoo = helper.showComponent('bar/foo');

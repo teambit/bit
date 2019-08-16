@@ -30,7 +30,7 @@ describe('bit tag command', function () {
       helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.tagComponent('bar/foo2');
       } catch (err) {

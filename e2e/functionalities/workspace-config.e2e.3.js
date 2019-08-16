@@ -34,9 +34,9 @@ describe('workspace config', function () {
     });
     describe('when the config conflicts between bit.json and package.json', () => {
       before(() => {
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.componentsDefaultDirectory = 'customBitJson/{name}';
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
 
         const packageJson = helper.readPackageJson();
         packageJson.bit.componentsDefaultDirectory = 'customPackageJson/{name}';
@@ -54,7 +54,7 @@ describe('workspace config', function () {
         helper.importComponent('bar/foo -c');
       });
       it('should write the config data to both bit.json and package.json', () => {
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.remoteScope}/bar/foo@0.0.1`);
 
@@ -86,7 +86,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('bit diff should show the tagged dependency version vs the version from overrides', () => {
           const diff = helper.diff('bar');
@@ -162,7 +162,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('should show the overridden package version', () => {
         const bar = helper.showComponentParsed('bar/foo');
@@ -203,7 +203,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should not add any dependency to the component', () => {
@@ -225,7 +225,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should not add the removed dependency to the component', () => {
@@ -261,7 +261,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should remove all dependencies matching the glob pattern', () => {
@@ -284,7 +284,7 @@ describe('workspace config', function () {
                 }
               }
             };
-            helper.addOverridesToBitJson(overrides);
+            helper.bitJson.addOverridesToBitJson(overrides);
           });
           it('should throw an error', () => {
             const showCmd = () => helper.showComponentParsed('bar');
@@ -311,7 +311,7 @@ describe('workspace config', function () {
                 }
               }
             };
-            helper.addOverridesToBitJson(overrides);
+            helper.bitJson.addOverridesToBitJson(overrides);
             showBar = helper.showComponentParsed('bar');
           });
           it('should not add the removed dependency to the component', () => {
@@ -336,7 +336,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should not ignore the dependencies as we do not support ignoring dependencies components by wildcards', () => {
@@ -367,7 +367,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing files', () => {
@@ -400,7 +400,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing component', () => {
@@ -432,7 +432,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should ignore the specified component dependency', () => {
@@ -464,7 +464,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing packages', () => {
@@ -492,7 +492,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -526,7 +526,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should ignore the specified package but keep other packages intact', () => {
@@ -560,7 +560,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar/foo');
         });
         it('should ignore the specified peer package', () => {
@@ -604,7 +604,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       describe('tagging the component', () => {
         let output;
@@ -692,7 +692,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
         helper.tagAllComponents();
         helper.exportAllComponents();
         authorScope = helper.cloneLocalScope();
@@ -733,7 +733,7 @@ describe('workspace config', function () {
           expect(status).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should save the new overrides to the consumer config', () => {
-          const bitJson = helper.readBitJson();
+          const bitJson = helper.bitJson.readBitJson();
           expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
         });
         describe('then author checkout to the first version', () => {
@@ -751,7 +751,7 @@ describe('workspace config', function () {
             expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
           });
           it('should save the overrides of the first version into consumer config', () => {
-            const bitJson = helper.readBitJson();
+            const bitJson = helper.bitJson.readBitJson();
             expect(bitJson.overrides['bar/foo'].dependencies).to.not.be.empty;
             expect(bitJson.overrides['bar/foo'].dependencies).to.deep.equal({ chai: '-' });
           });
@@ -771,7 +771,7 @@ describe('workspace config', function () {
             expect(showBar.manuallyRemovedDependencies).to.be.empty;
           });
           it('should not change the consumer config', () => {
-            const bitJson = helper.readBitJson();
+            const bitJson = helper.bitJson.readBitJson();
             expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
           });
         });
@@ -794,7 +794,7 @@ describe('workspace config', function () {
             }
           });
           it('should still update bit.json', () => {
-            const bitJson = helper.readBitJson();
+            const bitJson = helper.bitJson.readBitJson();
             expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
           });
           it('should also update package.json', () => {
@@ -817,14 +817,14 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
         helper.tagAllComponents();
         const overridesChanged = {
           'bar/foo': {
             dependencies: {}
           }
         };
-        helper.addOverridesToBitJson(overridesChanged);
+        helper.bitJson.addOverridesToBitJson(overridesChanged);
       });
       it('bit status should show the component as modified', () => {
         const status = helper.status();
@@ -846,7 +846,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
         helper.tagAllComponents();
         const overridesChangedOrder = {
           'bar/foo': {
@@ -856,7 +856,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overridesChangedOrder);
+        helper.bitJson.addOverridesToBitJson(overridesChangedOrder);
       });
       it('bit status should not show the component as modified', () => {
         const status = helper.status();
@@ -882,7 +882,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar/foo');
         });
         it('should ignore the specified package from dependencies', () => {
@@ -916,7 +916,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar/foo');
         });
         it('should add the specified package to peerDependencies', () => {
@@ -941,7 +941,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('should throw an error', () => {
           const output = helper.runWithTryCatch('bit show bar/foo');
@@ -963,7 +963,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should show the component as manually added dependency', () => {
@@ -1045,7 +1045,7 @@ describe('workspace config', function () {
                   expect(status).to.have.string(statusWorkspaceIsCleanMsg);
                 });
                 it('should remove the added dependencies from consumer-config', () => {
-                  const bitJson = helper.readBitJson();
+                  const bitJson = helper.bitJson.readBitJson();
                   expect(bitJson.overrides.bar.dependencies).to.be.empty;
                 });
                 it('should remove the dependency from the model', () => {
@@ -1077,7 +1077,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
         it('should show the component as manually added dependency', () => {
@@ -1138,7 +1138,7 @@ describe('workspace config', function () {
           helper.createFile('bar', 'foo1.js');
           helper.createFile('bar', 'foo2.js');
           helper.addComponent('bar/*');
-          const bitJson = helper.readBitJson();
+          const bitJson = helper.bitJson.readBitJson();
           bitJson.env = { compiler: 'my-scope/default-compiler@0.0.1' };
           bitJson.overrides = {
             foo1: {
@@ -1152,7 +1152,7 @@ describe('workspace config', function () {
               }
             }
           };
-          helper.writeBitJson(bitJson);
+          helper.bitJson.writeBitJson(bitJson);
         });
         it('should set the compiler with no overrides to the workspace default', () => {
           const fooDefault = helper.showComponentParsed('foo-default');
@@ -1178,7 +1178,7 @@ describe('workspace config', function () {
                 }
               }
             };
-            helper.addOverridesToBitJson(overrides);
+            helper.bitJson.addOverridesToBitJson(overrides);
           });
           it('should remove the compiler to that component', () => {
             const foo1 = helper.showComponentParsed('foo1');
@@ -1197,7 +1197,7 @@ describe('workspace config', function () {
                 }
               }
             };
-            helper.addOverridesToBitJson(overrides);
+            helper.bitJson.addOverridesToBitJson(overrides);
           });
           it('should not override the env to that component and should use the workspace default', () => {
             const foo1 = helper.showComponentParsed('foo1');
@@ -1221,7 +1221,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
         helper.tagAllComponents();
         // intermediate step, make sure the dependency is-string is ignored
         const foo = helper.catComponent('foo@latest');
@@ -1280,10 +1280,10 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
-        const bitJson = helper.readBitJson();
+        helper.bitJson.addOverridesToBitJson(overrides);
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.env = { compiler: 'bit.env/my-special-compiler2@0.0.1' };
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
       });
       it('bit status should show the component as modified', () => {
         const status = helper.status();
@@ -1302,7 +1302,7 @@ describe('workspace config', function () {
       describe('when the overrides data on consumer config excluded the imported component', () => {
         before(() => {
           overrides['bar/*'].exclude = [`${helper.remoteScope}/*`];
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('bit status should not show the component as modified', () => {
           const status = helper.status();
@@ -1328,7 +1328,7 @@ describe('workspace config', function () {
             bin: 'my-bin-file.js'
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('bit show should show the overrides', () => {
         const show = helper.showComponentParsed('bar/foo');
@@ -1396,7 +1396,7 @@ describe('workspace config', function () {
               expect(status).to.not.have.string('modified components');
             });
             it('author bit.json should be rewritten to include a rule of the specific component', () => {
-              const bitJson = helper.readBitJson();
+              const bitJson = helper.bitJson.readBitJson();
               expect(bitJson.overrides)
                 .to.have.property(`${helper.remoteScope}/bar/foo`)
                 .that.deep.equals({ bin: 'my-new-file.js' });
@@ -1441,7 +1441,7 @@ describe('workspace config', function () {
             propagate: true
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
         show = helper.showComponentParsed();
       });
       it('should not save the "propagate" field', () => {
@@ -1472,7 +1472,7 @@ describe('workspace config', function () {
       describe('propagate with exclude', () => {
         before(() => {
           overrides['bar/*'].exclude = ['bar/foo'];
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('should consider the exclude prop and show the overrides accordingly', () => {
           const output = helper.showComponentParsed();
@@ -1499,7 +1499,7 @@ describe('workspace config', function () {
               exclude: ['bar/foo']
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('should exclude the excluded component from the overrides value', () => {
           const show = helper.showComponentParsed('bar/foo');
@@ -1514,7 +1514,7 @@ describe('workspace config', function () {
               exclude: ['bar/*']
             }
           };
-          helper.addOverridesToBitJson(overrides);
+          helper.bitJson.addOverridesToBitJson(overrides);
         });
         it('should exclude the excluded component from the overrides value', () => {
           const show = helper.showComponentParsed('bar/foo');
@@ -1528,7 +1528,7 @@ describe('workspace config', function () {
       before(() => {
         helper.reInitLocalScope();
         const overrides = ['dependencies'];
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
@@ -1541,7 +1541,7 @@ describe('workspace config', function () {
         const overrides = {
           bar: 1234
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
@@ -1556,7 +1556,7 @@ describe('workspace config', function () {
             name: 'foo' // the name field of package.json is not permitted to change
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
@@ -1573,7 +1573,7 @@ describe('workspace config', function () {
             private: 'foo' // according to npm specs it should be boolean
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('bit tag should throw an error', () => {
         const output = helper.runWithTryCatch('bit tag -a');
@@ -1590,7 +1590,7 @@ describe('workspace config', function () {
             dependencies: 1234
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
@@ -1607,7 +1607,7 @@ describe('workspace config', function () {
             }
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
@@ -1622,7 +1622,7 @@ describe('workspace config', function () {
             exclude: 'bar'
           }
         };
-        helper.addOverridesToBitJson(overrides);
+        helper.bitJson.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');

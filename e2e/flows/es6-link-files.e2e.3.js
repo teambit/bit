@@ -245,9 +245,9 @@ export { isString };`
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('src/utils', 'is-array.js', isArrayFixture);

@@ -67,13 +67,13 @@ describe('envs', function () {
     helper.importTester(`${helper.envScope}/${testerId}`);
     const babelrcFixture = path.join('compilers', 'new-babel', '.babelrc');
     helper.copyFixtureFile(babelrcFixture);
-    helper.addFileToEnvInBitJson(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
-    helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', COMPILER_ENV_TYPE);
-    helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', COMPILER_ENV_TYPE);
+    helper.bitJson.addFileToEnvInBitJson(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
+    helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', COMPILER_ENV_TYPE);
+    helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', COMPILER_ENV_TYPE);
     helper.createFile('', 'mocha-config.opts', '{"someConfKey": "someConfVal"}');
-    helper.addFileToEnvInBitJson(undefined, 'config', './mocha-config.opts', TESTER_ENV_TYPE);
-    helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', TESTER_ENV_TYPE);
-    helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
+    helper.bitJson.addFileToEnvInBitJson(undefined, 'config', './mocha-config.opts', TESTER_ENV_TYPE);
+    helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', TESTER_ENV_TYPE);
+    helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
     helper.createFile('', 'pass.spec.js', fixtures.passTest);
     helper.addComponent('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
@@ -221,8 +221,8 @@ describe('envs', function () {
         helper.addRemoteEnvironment();
         helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
         fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
-        helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
-        helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
+        helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
+        helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
         helper.tagAllComponents();
         helper.exportAllComponents();
         helper.getClonedLocalScope(authorScopeBeforeChanges);
@@ -242,7 +242,7 @@ describe('envs', function () {
         helper.expectToThrow(ejectFunc, error);
       });
       it('should write the modified envs into consumer config overrides', () => {
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         const compName = `${helper.remoteScope}/comp/my-comp`;
         expect(bitJson.overrides).to.have.property(compName);
         expect(bitJson.overrides[compName]).to.have.property('env');
@@ -273,10 +273,10 @@ describe('envs', function () {
         });
         describe('attach back to consumer config', () => {
           before(() => {
-            const bitJson = helper.readBitJson();
+            const bitJson = helper.bitJson.readBitJson();
             const compName = `${helper.remoteScope}/comp/my-comp`;
             delete bitJson.overrides[compName];
-            helper.writeBitJson(bitJson);
+            helper.bitJson.writeBitJson(bitJson);
             componentFilesystem = helper.showComponentParsed('comp/my-comp');
             compilerLoaded = componentFilesystem.compiler;
             testerLoaded = componentFilesystem.tester;
@@ -308,16 +308,16 @@ describe('envs', function () {
           helper.ejectConf('comp/my-comp', { p: 'my-config-dir' });
         });
         it('should delete the component from the consumer config overrides', () => {
-          const bitJson = helper.readBitJson();
+          const bitJson = helper.bitJson.readBitJson();
           expect(bitJson).to.not.have.property('overrides');
         });
         describe('changing compiler config for author inside ejected config dir', () => {
           before(() => {
             const configDir = path.join(helper.localScopePath, 'my-config-dir');
-            const bitJson = helper.readBitJson(configDir);
+            const bitJson = helper.bitJson.readBitJson(configDir);
             const fullCompilerId = `${helper.envScope}/${compilerId}@0.0.1`;
             bitJson.env.compiler[fullCompilerId].rawConfig.a = 'compiler-changed';
-            helper.writeBitJson(bitJson, configDir);
+            helper.bitJson.writeBitJson(bitJson, configDir);
             componentFilesystem = helper.showComponentParsed('comp/my-comp');
           });
           it('should load the config from the customized config dir', () => {
@@ -542,19 +542,19 @@ describe('envs', function () {
       });
       describe('changing envs raw config', () => {
         it('should show the component as modified after changing compiler raw config', () => {
-          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', COMPILER_ENV_TYPE);
+          helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', COMPILER_ENV_TYPE);
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
         it('should show the component as modified after changing tester raw config', () => {
-          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', TESTER_ENV_TYPE);
+          helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', TESTER_ENV_TYPE);
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
         it('bit-diff should show compiler config differences', () => {
-          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', COMPILER_ENV_TYPE);
+          helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', COMPILER_ENV_TYPE);
           const diff = helper.diff('comp/my-comp');
           expect(diff).to.have.string('--- Compiler configuration (0.0.1 original)');
           expect(diff).to.have.string('+++ Compiler configuration (0.0.1 modified)');
@@ -562,7 +562,7 @@ describe('envs', function () {
           expect(diff).to.have.string('+ "a": "c",');
         });
         it('bit-diff should show tester config differences', () => {
-          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', TESTER_ENV_TYPE);
+          helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', TESTER_ENV_TYPE);
           const diff = helper.diff('comp/my-comp');
           expect(diff).to.have.string('--- Tester configuration (0.0.1 original)');
           expect(diff).to.have.string('+++ Tester configuration (0.0.1 modified)');
@@ -570,7 +570,7 @@ describe('envs', function () {
           expect(diff).to.have.string('+ "a": "c",');
         });
         it('should show error if the raw config is not valid', () => {
-          helper.addToRawConfigOfEnvInBitJson(undefined, 'bablercPath', 5, COMPILER_ENV_TYPE);
+          helper.bitJson.addToRawConfigOfEnvInBitJson(undefined, 'bablercPath', 5, COMPILER_ENV_TYPE);
           const fullCompilerId = `${helper.envScope}/${compilerId}@0.0.1`;
           const schemaRawError = 'data.bablercPath should be string';
           const schemaError = new ExtensionSchemaError(fullCompilerId, schemaRawError);
@@ -1162,14 +1162,14 @@ describe('envs', function () {
           let bitJson;
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
-            bitJson = helper.readBitJson(fullComponentFolder);
+            bitJson = helper.bitJson.readBitJson(fullComponentFolder);
           });
           it('should write the compiler dynamic config as raw config', () => {
-            const env = helper.getEnvFromBitJsonByType(bitJson, COMPILER_ENV_TYPE);
+            const env = helper.bitJson.getEnvFromBitJsonByType(bitJson, COMPILER_ENV_TYPE);
             expect(env.rawConfig).to.include(envConfigOriginal);
           });
           it('should write the tester dynamic config as raw config', () => {
-            const env = helper.getEnvFromBitJsonByType(bitJson, TESTER_ENV_TYPE);
+            const env = helper.bitJson.getEnvFromBitJsonByType(bitJson, TESTER_ENV_TYPE);
             expect(env.rawConfig).to.include(envConfigOriginal);
           });
         });
@@ -1181,8 +1181,8 @@ describe('envs', function () {
           });
           describe('changing envs of imported component', () => {
             before(() => {
-              helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
-              helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
+              helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
+              helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
               helper.tagAllComponents();
               componentModel = helper.catComponent(compId);
             });
@@ -1221,7 +1221,7 @@ describe('envs', function () {
           //         }
           //       }
           //     };
-          //     helper.addKeyValToBitJson(undefined, 'env', mockEnvs);
+          //     helper.bitJson.addKeyValToBitJson(undefined, 'env', mockEnvs);
           //     componentModel = helper.showComponentParsed('comp/my-comp');
           //     compilerModel = componentModel.compiler;
           //     testerModel = componentModel.tester;
@@ -1279,7 +1279,7 @@ describe('envs', function () {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
           });
           it('should show the component as modified if compiler config has been changed', () => {
-            helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
+            helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'compiler', COMPILER_ENV_TYPE);
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
@@ -1289,7 +1289,7 @@ describe('envs', function () {
             expect(diffOutput).to.have.string('+ "a": "compiler"');
           });
           it('should show the component as modified if tester config has been changed', () => {
-            helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
+            helper.bitJson.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
@@ -1336,7 +1336,7 @@ describe('envs', function () {
             before(() => {
               helper.getClonedLocalScope(importedScopeBeforeChanges);
               fs.moveSync(path.join(fullComponentFolder, '.babelrc'), path.join(fullComponentFolder, '.babelrc2'));
-              helper.addFileToEnvInBitJson(fullComponentFolder, '.babelrc', './.babelrc2', COMPILER_ENV_TYPE);
+              helper.bitJson.addFileToEnvInBitJson(fullComponentFolder, '.babelrc', './.babelrc2', COMPILER_ENV_TYPE);
             });
             it('should show the component as modified', () => {
               const statusOutput = helper.status();
@@ -1375,7 +1375,7 @@ describe('envs', function () {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.addRemoteEnvironment();
-          helper.addKeyValToBitJson(
+          helper.bitJson.addKeyValToBitJson(
             helper.localScopePath,
             'ejectedEnvsDirectory',
             `${ejectedEnvsDirectory}/{ENV_TYPE}`
@@ -1488,8 +1488,8 @@ describe('envs with relative paths', function () {
     helper.copyFixtureFile(path.join('compilers', 'webpack-relative', 'dev.config.js'));
     helper.addNpmPackage('webpack-merge', '4.1.4');
     helper.addNpmPackage('webpack', '4.16.5');
-    helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base/base.config.js', 'compiler');
-    helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+    helper.bitJson.addFileToEnvInBitJson(undefined, 'base.config.js', './base/base.config.js', 'compiler');
+    helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     helper.createComponentBarFoo();
     helper.addComponentBarFoo();
   });
@@ -1533,7 +1533,7 @@ describe('add an env with an invalid env name', function () {
   before(() => {
     helper.reInitLocalScope();
     helper.importDummyCompiler();
-    const bitJson = helper.readBitJson();
+    const bitJson = helper.bitJson.readBitJson();
     bitJson.env = {
       compiler: {
         dummy: {
@@ -1547,7 +1547,7 @@ describe('add an env with an invalid env name', function () {
         }
       }
     };
-    helper.writeBitJson(bitJson);
+    helper.bitJson.writeBitJson(bitJson);
     const objectFiles = helper.getObjectFiles();
     numOfObjectsBeforeTagging = objectFiles.length;
     helper.createComponentBarFoo();

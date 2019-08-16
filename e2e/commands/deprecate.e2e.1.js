@@ -15,7 +15,7 @@ describe('bit deprecate and undeprecate commands', function () {
       helper.initNewLocalScope();
     });
     it('should not deprecate component if bit.json is corrupted', () => {
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.deprecateComponent('bar/foo2');
       } catch (err) {

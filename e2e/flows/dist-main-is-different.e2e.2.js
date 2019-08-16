@@ -102,7 +102,7 @@ describe('mainFile of the dist is different than the source', function () {
           helper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           helper.addRemoteScope();
-          helper.modifyFieldInBitJson('dist', { target: 'dist' });
+          helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
           helper.importComponent('bar/foo');
         });
         it('should be able to require the component and its dependencies using the main dist file', () => {

@@ -77,7 +77,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist' });
+      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
       helper.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -130,7 +130,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as author', () => {
       // this tests also the node_modules generated link for authored component. See similar test without dist in link.e2e file.
       before(() => {
-        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
         helper.build();
         helper.tagAllComponents();
         helper.exportAllComponents();
@@ -151,7 +151,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
         helper.importComponent('bar/foo');
         scopeAfterImport = helper.cloneLocalScope();
       });
@@ -192,7 +192,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             helper.exportAllComponents();
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.modifyFieldInBitJson('dist', { target: 'dist' });
+            helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
             helper.importComponent('bar/foo');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -240,7 +240,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as author', () => {
       describe('with dist.entry populated', () => {
         before(() => {
-          helper.modifyFieldInBitJson('dist', { entry: 'src' });
+          helper.bitJson.modifyFieldInBitJson('dist', { entry: 'src' });
           helper.build();
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
         });
@@ -252,7 +252,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
           helper.getClonedLocalScope(clonedScope);
-          helper.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
+          helper.bitJson.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
           helper.build();
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
         });
@@ -277,7 +277,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       });
       describe('with dist.entry populated', () => {
         before(() => {
-          helper.modifyFieldInBitJson('dist', { entry: 'src' });
+          helper.bitJson.modifyFieldInBitJson('dist', { entry: 'src' });
           helper.build('bar/foo');
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
         });
@@ -293,7 +293,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
           helper.getClonedLocalScope(clonedScope);
-          helper.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
+          helper.bitJson.modifyFieldInBitJson('dist', { entry: 'src', target: 'my-dist' });
           helper.build('bar/foo');
           localConsumerFiles = helper.getConsumerFiles('*.{js,ts}', false);
         });
@@ -347,7 +347,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist' });
+      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
       helper.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -371,9 +371,9 @@ export default function foo() { return isString() + ' and got foo'; };`;
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.reInitRemoteScope();
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.writeBitJson(bitJson);
 
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createFile('src/utils', 'is-type.js', isTypeFixture);
@@ -391,7 +391,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      helper.modifyFieldInBitJson('dist', { target: 'dist' });
+      helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
       helper.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -431,7 +431,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           helper.exportAllComponents();
           helper.getClonedLocalScope(scopeWithCompiler);
           if (distIsOutside) {
-            helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+            helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
           }
           helper.importComponent('utils/is-string');
 
@@ -504,7 +504,7 @@ describe('dist-outside-components when no compiler has been set up', function ()
   const helper = new Helper();
   before(() => {
     helper.reInitLocalScope();
-    helper.modifyFieldInBitJson('dist', { target: 'dist' });
+    helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
     helper.createComponentBarFoo();
     helper.addComponentBarFoo();
     helper.tagComponentBarFoo();

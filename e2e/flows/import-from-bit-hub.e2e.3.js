@@ -106,7 +106,7 @@ chai.use(require('chai-fs'));
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.modifyFieldInBitJson('saveDependenciesAsComponents', true);
+      helper.bitJson.modifyFieldInBitJson('saveDependenciesAsComponents', true);
       helper.runCmd(`bit import ${componentTestId}`);
     });
     it('should save the dependencies as bit components inside the component directory', () => {

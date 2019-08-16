@@ -48,7 +48,7 @@ describe('environments with dependencies', function () {
   });
   describe('when a dependency file is not included in bit.json', () => {
     before(() => {
-      helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('should show the dependency file as untracked', () => {
       const output = helper.runCmd('bit status');
@@ -61,8 +61,8 @@ describe('environments with dependencies', function () {
     before(() => {
       helper.getClonedLocalScope(scopeBeforeTagging);
       helper.deletePath('base.config.js');
-      helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
-      helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('should show the component as an invalid component', () => {
       const output = helper.runCmd('bit status');
@@ -73,8 +73,8 @@ describe('environments with dependencies', function () {
   describe('when all files exist and included in bit.json', () => {
     before(() => {
       helper.getClonedLocalScope(scopeBeforeTagging);
-      helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
-      helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
     it('bit status should not show any missing', () => {
       const output = helper.runCmd('bit status');
@@ -85,7 +85,7 @@ describe('environments with dependencies', function () {
   describe('when a dependency file is a Bit component', () => {
     before(() => {
       helper.getClonedLocalScope(scopeBeforeTagging);
-      helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+      helper.bitJson.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
 
       helper.addNpmPackage('webpack', '4.16.4');
       helper.addComponent('base.config.js', { i: 'webpack/base' });

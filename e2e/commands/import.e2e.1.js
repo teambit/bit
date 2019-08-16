@@ -312,7 +312,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.reInitLocalScope();
-          helper.setComponentsDirInBitJson('{scope}/-{name}-');
+          helper.bitJson.setComponentsDirInBitJson('{scope}/-{name}-');
           helper.addRemoteScope();
           helper.importComponent('global/simple');
           output = helper.importComponent('global/simple');
@@ -336,7 +336,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.reInitLocalScope();
-          helper.setComponentsDirInBitJson('{non-exist-param}/{name}');
+          helper.bitJson.setComponentsDirInBitJson('{non-exist-param}/{name}');
           helper.addRemoteScope();
           output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
         });
@@ -350,7 +350,7 @@ describe('bit import', function () {
         let output;
         before(() => {
           helper.reInitLocalScope();
-          helper.setComponentsDirInBitJson('{namespace}/{name}');
+          helper.bitJson.setComponentsDirInBitJson('{namespace}/{name}');
           helper.addRemoteScope();
           output = helper.importComponent('global/simple');
         });
@@ -454,7 +454,7 @@ describe('bit import', function () {
           before(() => {
             helper.reInitLocalScope();
             helper.addRemoteScope();
-            helper.modifyFieldInBitJson('dist', { target: 'another-dist' });
+            helper.bitJson.modifyFieldInBitJson('dist', { target: 'another-dist' });
             helper.importComponent('imprel/impreldist');
             localConsumerFiles = helper.getConsumerFiles();
           });
@@ -939,7 +939,7 @@ describe('bit import', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist' });
         helper.importComponent('bar/foo');
         localConsumerFiles = helper.getConsumerFiles();
       });
@@ -1234,7 +1234,7 @@ console.log(barFoo.default());`;
         helper.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        const bitJson = helper.bitJson.readBitJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.envScope}/compilers/babel@0.0.1`);
@@ -1951,7 +1951,7 @@ console.log(barFoo.default());`;
       helper.exportComponent('comp/with-deps');
       helper.reInitLocalScope();
       helper.addRemoteScope(helper.remoteScopePath);
-      helper.manageWorkspaces();
+      helper.bitJson.manageWorkspaces();
       helper.importComponent('comp/with-deps');
       helper.addKeyValueToPackageJson({ customField: 'bit is awsome' });
     });
@@ -2003,7 +2003,7 @@ console.log(barFoo.default());`;
     it('Should save workspaces with custom import path ', () => {
       helper.reInitLocalScope();
       helper.addRemoteScope(helper.remoteScopePath);
-      helper.manageWorkspaces();
+      helper.bitJson.manageWorkspaces();
       helper.importComponent('comp/with-deps -p test');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test');
@@ -2132,9 +2132,9 @@ console.log(barFoo.default());`;
     describe('when componentsDefaultDirectory is invalid', () => {
       before(() => {
         helper.reInitLocalScope();
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.componentsDefaultDirectory = '/components/{name}';
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.importComponent('any-comp');
@@ -2145,9 +2145,9 @@ console.log(barFoo.default());`;
     describe('when dependenciesDirectory is invalid', () => {
       before(() => {
         helper.reInitLocalScope();
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.dependenciesDirectory = '/components/.dependencies';
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.importComponent('any-comp');

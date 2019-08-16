@@ -57,13 +57,13 @@ describe('dependencies versions resolution', function () {
         helper.getClonedLocalScope(scopeAfterImport);
         helper.importComponent('bar/foo --conf');
         const bitJsonDir = path.join(helper.localScopePath, 'components/bar/foo');
-        const bitJson = helper.readBitJson(bitJsonDir);
+        const bitJson = helper.bitJson.readBitJson(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
             [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.2'
           }
         };
-        helper.writeBitJson(bitJson, bitJsonDir);
+        helper.bitJson.writeBitJson(bitJson, bitJsonDir);
       });
       it('should use the dependency version from bit.json', () => {
         const output = helper.showComponentParsed('bar/foo -c');
@@ -94,7 +94,7 @@ describe('dependencies versions resolution', function () {
     describe('when consumer config overrides the version of the imported component', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterImport);
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.overrides = {
           'bar/foo': {
             dependencies: {
@@ -102,7 +102,7 @@ describe('dependencies versions resolution', function () {
             }
           }
         };
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
       });
       it('should use the dependency version from the consumer config as it is imported', () => {
         const output = helper.showComponentParsed('bar/foo -c');
@@ -133,7 +133,7 @@ describe('dependencies versions resolution', function () {
     describe('when consumer config overrides with glob patterns for author', () => {
       before(() => {
         helper.getClonedLocalScope(authorScope);
-        const bitJson = helper.readBitJson();
+        const bitJson = helper.bitJson.readBitJson();
         bitJson.overrides = {
           'bar/*': {
             dependencies: {
@@ -141,7 +141,7 @@ describe('dependencies versions resolution', function () {
             }
           }
         };
-        helper.writeBitJson(bitJson);
+        helper.bitJson.writeBitJson(bitJson);
       });
       it('should use the dependency version from the consumer config', () => {
         const output = helper.showComponentParsed('bar/foo');

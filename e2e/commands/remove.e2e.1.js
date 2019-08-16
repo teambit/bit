@@ -19,7 +19,7 @@ describe('bit remove command', function () {
       helper.initNewLocalScope();
     });
     it('Should not remove component if bit.json is corrupted', () => {
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.removeComponent('bar/foo2');
       } catch (err) {
@@ -239,7 +239,7 @@ describe('bit remove command', function () {
       helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
-      helper.manageWorkspaces();
+      helper.bitJson.manageWorkspaces();
       helper.addRemoteScope();
       helper.importComponent('global/simple -p ./test');
       helper.removeComponent('global/simple -s');
@@ -426,7 +426,7 @@ describe('bit remove command', function () {
     });
 
     it('should remove imported component from bit.json', () => {
-      const bitJson = helper.readBitJson();
+      const bitJson = helper.bitJson.readBitJson();
       expect(bitJson).to.not.have.property(`${helper.remoteScope}/utils/is-string2`);
     });
   });

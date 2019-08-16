@@ -243,7 +243,7 @@ describe('bit add command', function () {
     });
     it('Should not add component if bit.json is corrupted', () => {
       helper.createFile('bar', 'foo2.js');
-      helper.corruptBitJson();
+      helper.bitJson.corruptBitJson();
       try {
         helper.addComponent(path.normalize('bar/foo2.js'));
       } catch (err) {

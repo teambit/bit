@@ -215,9 +215,9 @@ describe('typescript', function () {
           helper.setNewLocalAndRemoteScopes();
           helper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.addRemoteScope();
-          const bitJson = helper.readBitJson();
+          const bitJson = helper.bitJson.readBitJson();
           bitJson.resolveModules = { modulesDirectories: ['src'] };
-          helper.writeBitJson(bitJson);
+          helper.bitJson.writeBitJson(bitJson);
           const isTypeFixture = "export default function isType() { return 'got is-type'; };";
           helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
           helper.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
@@ -303,9 +303,9 @@ describe('typescript', function () {
           helper.setNewLocalAndRemoteScopes();
           helper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.addRemoteScope();
-          const bitJson = helper.readBitJson();
+          const bitJson = helper.bitJson.readBitJson();
           bitJson.resolveModules = { aliases: { '@': 'src' } };
-          helper.writeBitJson(bitJson);
+          helper.bitJson.writeBitJson(bitJson);
 
           const isTypeFixture = "export default function isType() { return 'got is-type'; };";
           helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
@@ -402,7 +402,7 @@ describe('typescript', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+        helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
         helper.importComponent('bar/foo');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -451,7 +451,7 @@ describe('typescript', function () {
             helper.reInitLocalScope();
             npmCiRegistry.setCiScopeInBitJson();
             npmCiRegistry.setResolver();
-            helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+            helper.bitJson.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
             helper.importComponent('bar/foo');
           });
           it('package.json of the dist should point to the dist file with .js extension (not .ts)', () => {
