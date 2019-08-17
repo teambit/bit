@@ -39,19 +39,19 @@ export default class Helper {
   constructor() {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.scopes = new ScopesData(); // generates dirs and scope names
+    this.bitJson = new BitJsonHelper(this.scopes);
+    this.packageJson = new PackageJsonHelper(this.scopes);
     this.fs = new FsHelper(this.scopes);
     this.command = new CommandHelper(this.scopes, this.debugMode);
-    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs);
-    this.bitJson = new BitJsonHelper(this.scopes);
-    this.config = new ConfigHelper(this.command);
     this.bitMap = new BitMapHelper(this.scopes, this.fs);
+    this.git = new GitHelper(this.scopes, this.command, this.scopeHelper);
+    this.config = new ConfigHelper(this.command);
+    this.npm = new NpmHelper(this.scopes, this.fs, this.command);
+    this.scopeHelper = new ScopeHelper(this.debugMode, this.scopes, this.command, this.fs);
     this.extensions = new ExtensionsHelper(this.scopes, this.command, this.bitJson);
     this.fixtures = new FixtureHelper(this.fs, this.command, this.npm, this.scopes, this.debugMode);
     this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures);
-    this.npm = new NpmHelper(this.scopes, this.fs, this.command);
     this.general = new GeneralHelper(this.scopes, this.npm, this.command);
-    this.packageJson = new PackageJsonHelper(this.scopes);
-    this.git = new GitHelper(this.scopes, this.command, this.scopeHelper);
   }
 }
 
