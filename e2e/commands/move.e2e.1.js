@@ -135,9 +135,7 @@ describe('bit move command', function () {
     });
     it('should throw an error', () => {
       expect(output).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } move bar/non-exist-source.js utils/non-exist-dest.js\nboth paths from (bar/non-exist-source.js) and to (utils/non-exist-dest.js) do not exist\n`
+        'move bar/non-exist-source.js utils/non-exist-dest.js\nboth paths from (bar/non-exist-source.js) and to (utils/non-exist-dest.js) do not exist'
       );
     });
   });
@@ -164,9 +162,7 @@ describe('bit move command', function () {
       const barFooPath = path.join('bar', 'foo.js');
       const utilsFooPath = path.join('utils', 'foo.js');
       expect(output).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${barFooPath}) and to (${utilsFooPath}) already exist\n`
+        `unable to move because both paths from (${barFooPath}) and to (${utilsFooPath}) already exist`
       );
     });
     it('should not physically move any file', () => {

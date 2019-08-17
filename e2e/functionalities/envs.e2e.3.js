@@ -15,6 +15,7 @@ import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
 import ExtensionSchemaError from '../../src/extensions/exceptions/extension-schema-error';
 import ExtensionLoadError from '../../src/extensions/exceptions/extension-load-error';
+import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -184,7 +185,7 @@ describe('envs', function () {
     });
     it('should build the component successfully', () => {
       const output = helper.command.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
-      const alignedOutput = Helper.alignOutput(output);
+      const alignedOutput = GeneralHelper.alignOutput(output);
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
@@ -369,7 +370,7 @@ describe('envs', function () {
               statusCode = err.status;
             }
             expect(statusCode).to.not.equal(0);
-            const alignedOuput = Helper.alignOutput(output);
+            const alignedOuput = GeneralHelper.alignOutput(output);
             const tmpFolder = path.join(helper.scopes.localPath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
             const writingRegEx = new RegExp('writing config files to', 'g');
             const writingCount = (alignedOuput.match(writingRegEx) || []).length;
@@ -613,7 +614,7 @@ describe('envs', function () {
         // Changing the component to make sure we really run a rebuild and not taking the dist from the models
         helper.fs.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
         const output = helper.command.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
-        const alignedOuput = Helper.alignOutput(output);
+        const alignedOuput = GeneralHelper.alignOutput(output);
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
         const tmpFolder = path.join(helper.scopes.localPath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
@@ -640,7 +641,7 @@ describe('envs', function () {
           let alignedOuput;
           before(() => {
             output = helper.command.testComponentWithOptions('comp/my-comp', { v: '' });
-            alignedOuput = Helper.alignOutput(output);
+            alignedOuput = GeneralHelper.alignOutput(output);
           });
           it('should show tests passed', () => {
             expect(output).to.have.string('tests passed');

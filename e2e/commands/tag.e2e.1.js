@@ -146,9 +146,7 @@ describe('bit tag command', function () {
         helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
         const tagWithExisting = () => helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
         expect(tagWithExisting).to.throw(
-          `Command failed: ${
-            helper.bitBin
-          } tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n`
+          'tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n'
         );
       });
     });
@@ -277,9 +275,7 @@ describe('bit tag command', function () {
         output = err.message;
       }
       expect(output).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } tag non/existing  \nerror: component "non/existing" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)\n`
+        "error: component \"non/existing\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
     });
     it.skip('should print warning if the a driver is not installed', () => {
