@@ -80,7 +80,7 @@ describe('run bit init', function () {
     let bitJson;
     before(() => {
       helper.scopeHelper.cleanLocalScope();
-      helper.scopehelper.scopeHelper.initLocalScopeWithOptions({
+      helper.scopeHelper.initLocalScopeWithOptions({
         '-default-directory': 'my-comps',
         '-package-manager': 'yarn',
         '-compiler': 'my-compiler',
@@ -123,7 +123,7 @@ describe('run bit init', function () {
       it('should not nest the bit folder inside .git if --standalone provided', () => {
         helper.scopeHelper.cleanLocalScope();
         helper.git.initNewGitRepo();
-        helper.scopehelper.scopeHelper.initLocalScopeWithOptions({ '-standalone': '' });
+        helper.scopeHelper.initLocalScopeWithOptions({ '-standalone': '' });
         const gitScopeDir = path.join(gitFolder, BIT_GIT_DIR);
         const scopeDir = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR);
         expect(scopeDir).to.be.a.directory('bit dir is missing');
@@ -164,7 +164,7 @@ describe('run bit init', function () {
       // it('should not create git hooks if --standalone provided', () => {
       //   helper.scopeHelper.cleanLocalScope();
       //   helper.git.initNewGitRepo();
-      //   const output = helper.scopehelper.scopeHelper.initLocalScopeWithOptions({ '-standalone': '' });
+      //   const output = helper.scopeHelper.initLocalScopeWithOptions({ '-standalone': '' });
       //   expect(output).to.not.have.string('hooks');
       //   GIT_HOOKS_NAMES.forEach((hookName) => {
       //     const hookPath = path.join(gitHooksFolder, hookName);
