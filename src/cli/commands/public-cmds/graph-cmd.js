@@ -5,7 +5,7 @@ import { paintGraph } from '../../../api/consumer';
 
 export default class Graph extends Command {
   name = 'graph [id]';
-  description = 'generate an image file with the dependencies graph';
+  description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
   alias = '';
   opts = [
     ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],
