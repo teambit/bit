@@ -170,7 +170,7 @@
     "eslint-plugin-import": "^2.11.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.8.2",
-    "flow-bin": "^0.75.0",
+    "flow-bin": "^0.82.0",
     "flow-coverage-report": "^0.6.1",
     "gh-release": "^3.5.0",
     "husky": "^0.14.3",

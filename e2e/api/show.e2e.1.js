@@ -6,20 +6,20 @@ describe('show api', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('show()', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagAllComponents();
-      helper.tagScope('1.0.0');
-      helper.exportAllComponents();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.tagScope('1.0.0');
+      helper.command.exportAllComponents();
     });
     describe('with no options', () => {
       it('should return an object of the component with the latest version', async () => {
-        const result = await api.show(helper.remoteScopePath, `${helper.remoteScope}/bar/foo@0.0.1`);
+        const result = await api.show(helper.scopes.remotePath, `${helper.scopes.remote}/bar/foo@0.0.1`);
         expect(result).to.be.an('object');
         expect(result)
           .to.have.property('name')
@@ -28,7 +28,7 @@ describe('show api', function () {
     });
     describe('with versions = true', () => {
       it('should return an array of all versions of the component', async () => {
-        const result = await api.show(helper.remoteScopePath, `${helper.remoteScope}/bar/foo@0.0.1`, {
+        const result = await api.show(helper.scopes.remotePath, `${helper.scopes.remote}/bar/foo@0.0.1`, {
           versions: true
         });
         expect(result)

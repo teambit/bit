@@ -9,10 +9,10 @@ describe('bit extension system', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   beforeEach(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   it.skip('Exception from hook should not affect others which are registers for that hook', () => {});

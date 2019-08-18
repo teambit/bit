@@ -7,18 +7,18 @@ describe('bit doctor - git exec validation', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   before(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   // This test case assume you have proper configuration of git executable
   describe('without configuration changes', () => {
     let parsedOutput;
     before(() => {
-      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {
@@ -35,11 +35,11 @@ describe('bit doctor - git exec validation', function () {
   describe('with wrong git path', () => {
     let parsedOutput;
     before(() => {
-      const oldGitPath = helper.getGitPath();
+      const oldGitPath = helper.config.getGitPath();
       // Set the git path to a place where there is no git (the local scope)
-      helper.setGitPath(helper.localScopePath);
-      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
-      helper.restoreGitPath(oldGitPath);
+      helper.config.setGitPath(helper.scopes.localPath);
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      helper.config.restoreGitPath(oldGitPath);
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {
@@ -49,7 +49,7 @@ describe('bit doctor - git exec validation', function () {
       expect(parsedOutput.examineResult.bareResult.valid).to.be.false;
     });
     it('should show the symptoms correctly', () => {
-      const formattedSymptoms = `git executable not found (path '${helper.localScopePath}')`;
+      const formattedSymptoms = `git executable not found (path '${helper.scopes.localPath}')`;
       expect(parsedOutput.examineResult.formattedSymptoms).to.equal(formattedSymptoms);
     });
     it('should show the suggestion for fix correctly', () => {

@@ -10,16 +10,16 @@ describe('bit watch command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('watch', () => {
     let scopeAfterBuild;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.populateWorkspaceWithComponents();
-      helper.importDummyCompiler();
-      helper.build();
-      scopeAfterBuild = helper.cloneLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.env.importDummyCompiler();
+      helper.command.build();
+      scopeAfterBuild = helper.scopeHelper.cloneLocalScope();
     });
     describe('as author', () => {
       let watchRunner;
@@ -32,20 +32,20 @@ describe('bit watch command', function () {
       });
       describe('changing a file', () => {
         before(() => {
-          helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
+          helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
         });
         it('should update the dist', async () => {
           await watchRunner.waitForWatchToRebuildComponent();
-          const distContent = helper.readFile('dist/utils/is-string.js');
+          const distContent = helper.fs.readFile('dist/utils/is-string.js');
           expect(distContent).to.equal(fixtures.isStringV2);
         });
         describe('changing it again', () => {
           before(() => {
-            helper.createFile('utils', 'is-string.js', fixtures.isStringV3);
+            helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV3);
           });
           it('should update the dist again', async () => {
             await watchRunner.waitForWatchToRebuildComponent();
-            const distContent = helper.readFile('dist/utils/is-string.js');
+            const distContent = helper.fs.readFile('dist/utils/is-string.js');
             expect(distContent).to.equal(fixtures.isStringV3);
           });
         });
@@ -58,14 +58,14 @@ describe('bit watch command', function () {
       } else {
         let watchRunner;
         before(async () => {
-          helper.getClonedLocalScope(scopeAfterBuild);
-          helper.tagAllComponents();
-          helper.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
-          helper.addRemoteEnvironment();
-          helper.importManyComponents(['bar/foo', 'utils/is-string', 'utils/is-type']);
-          helper.build('--no-cache'); // it'll also install the compiler
+          helper.scopeHelper.getClonedLocalScope(scopeAfterBuild);
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteEnvironment();
+          helper.command.importManyComponents(['bar/foo', 'utils/is-string', 'utils/is-type']);
+          helper.command.build('--no-cache'); // it'll also install the compiler
           watchRunner = new WatchRunner(helper);
           await watchRunner.watch();
         });
@@ -74,22 +74,22 @@ describe('bit watch command', function () {
         });
         describe('adding a file to a tracked directory', () => {
           before(async () => {
-            helper.outputFile('components/utils/is-string/new-file.js', 'console.log();');
+            helper.fs.outputFile('components/utils/is-string/new-file.js', 'console.log();');
             await watchRunner.waitForWatchToRebuildComponent();
           });
           it('should create a dist file for that new file', () => {
-            const expectedFile = path.join(helper.localScopePath, 'components/utils/is-string/dist/new-file.js');
+            const expectedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/dist/new-file.js');
             expect(expectedFile).to.be.a.file();
           });
           describe('changing the new file', () => {
             it('should rebuild the changed component', async () => {
-              helper.outputFile('components/utils/is-string/new-file.js', 'console.log("v2");');
+              helper.fs.outputFile('components/utils/is-string/new-file.js', 'console.log("v2");');
               await watchRunner.waitForWatchToPrintMsg('utils/is-string');
             });
           });
           describe('remove a file from the tracked directory', () => {
             it('should recognize the deletion and rebuild the component that had that file', async () => {
-              helper.deletePath('components/utils/is-string/new-file.js');
+              helper.fs.deletePath('components/utils/is-string/new-file.js');
               await watchRunner.waitForWatchToPrintMsg('utils/is-string');
             });
           });

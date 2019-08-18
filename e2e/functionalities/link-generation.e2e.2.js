@@ -8,26 +8,28 @@ describe('link generation', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('authored components when changing from a directory into a file', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.createFile('', 'foo1.js');
-      helper.createFile('bar', 'foo2.js');
-      helper.addComponent('foo1.js bar/foo2.js', { i: 'bar/foo', m: 'foo1.js' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
-      helper.deletePath('bar');
-      helper.status(); // removes the old directory 'bar' from .bitmap
-      helper.createFile('', 'bar');
-      helper.addComponent('bar', { i: 'bar/foo' });
-      helper.tagAllComponents();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.createFile('', 'foo1.js');
+      helper.fs.createFile('bar', 'foo2.js');
+      helper.command.addComponent('foo1.js bar/foo2.js', { i: 'bar/foo', m: 'foo1.js' });
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.fs.deletePath('bar');
+      helper.command.status(); // removes the old directory 'bar' from .bitmap
+      helper.fs.createFile('', 'bar');
+      helper.command.addComponent('bar', { i: 'bar/foo' });
+      helper.command.tagAllComponents();
       // a previous bug was throwing an error upon export "EISDIR: illegal operation on a directory, read"
-      helper.exportAllComponents();
+      helper.command.exportAllComponents();
     });
     it('should create a link file in the same place where it was a directory before', () => {
-      expect(path.join(helper.localScopePath, `node_modules/@bit/${helper.remoteScope}.bar.foo/bar`)).to.be.a.file();
+      expect(
+        path.join(helper.scopes.localPath, `node_modules/@bit/${helper.scopes.remote}.bar.foo/bar`)
+      ).to.be.a.file();
     });
   });
 });

@@ -15,10 +15,10 @@ export default class WatchRunner {
     this.helper = helper;
   }
   watch(): Promise<void> {
-    const cmd = `${this.helper.bitBin} watch --verbose`;
+    const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     return new Promise((resolve, reject) => {
-      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.localScopePath, detached: true });
+      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath, detached: true });
       this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(STARTED_WATCHING_MSG)) {
