@@ -4,7 +4,7 @@ import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { AUTO_GENERATED_STAMP, COMPILER_ENV_TYPE } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -172,6 +172,9 @@ describe('capsule', function () {
     describe('using the new compiler API', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
+        const babelrcFixture = path.join('compilers', 'new-babel', '.babelrc');
+        helper.fixtures.copyFixtureFile(babelrcFixture);
+        helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
         helper.env.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
         const output = helper.command.build();
         expect(output).to.have.string('using the new compiler API');
