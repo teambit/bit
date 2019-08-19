@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
 import path from 'path';
@@ -225,7 +226,11 @@ export default class ComponentWriter {
       });
       this.component.dataToPersist.merge(env.dataToPersist);
     });
-    if (!this.writeConfig && !this.configDir && this.component.componentMap) {
+
+    const areThereEnvFiles =
+      (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
+      (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
+    if (areThereEnvFiles && !this.writeConfig && !this.configDir && this.component.componentMap) {
       this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
       this.component.componentMap.setConfigDir(this.configDir);
     }
