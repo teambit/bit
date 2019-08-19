@@ -17,7 +17,6 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import RemovePath from '../component/sources/remove-path';
 import AbstractConfig from '../config/abstract-config';
-import ComponentWithDependencies from '../../scope/component-dependencies';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
 export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath?: string, dataToPersist: DataToPersist };

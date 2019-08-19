@@ -179,8 +179,8 @@ export async function getAllComponentsLinks({
   componentsWithDependencies.map(async (componentWithDependencies) => {
     const component = componentWithDependencies.component;
     [component.compilerDependencies, component.testerDependencies].map(async (deps) => {
-      // $FlowFixMe writtenPath is set here
       const links = await linkGenerator.getLinksByDependencies(
+        // $FlowFixMe writtenPath is set here
         component.writtenPath,
         component,
         deps,

@@ -430,7 +430,7 @@ async function getLinksByDependencies(
   componentWithDependencies?: ComponentWithDependencies
 ): Promise<LinkFile[]> {
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const getDependencyComponent = async () => {
+    const getDependencyComponent = async (): Promise<?Component> => {
       if (componentWithDependencies) {
         return componentWithDependencies.allDependencies.find(d => d.id.isEqual(dependency.id));
       }
@@ -440,6 +440,7 @@ async function getLinksByDependencies(
       return consumer.loadComponentFromModel(dependency.id);
     };
     const dependencyComponent = await getDependencyComponent();
+    if (!dependencyComponent) throw new Error(`getLinksByDependencies failed finding ${dependency.id}`);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
