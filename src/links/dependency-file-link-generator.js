@@ -216,7 +216,7 @@ export default class DependencyFileLinkGenerator {
     }
     const distFileIsNotFound =
       !this.dependencyComponent.dists.isEmpty() &&
-      !this.dependencyComponent.dists.hasFile(this.relativePath.destinationRelativePath);
+      !this.dependencyComponent.dists.hasFileParallelToSrcFile(this.relativePath.destinationRelativePath);
     if (distFileIsNotFound) {
       return this._getPackageName();
     }

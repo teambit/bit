@@ -95,8 +95,9 @@ export default class Dists {
     return this.distsRootDir;
   }
 
-  hasFile(file: PathLinux): boolean {
-    return this.dists.some(dist => dist.relative === file);
+  hasFileParallelToSrcFile(srcFile: PathLinux): boolean {
+    const distFile = searchFilesIgnoreExt(this.dists, path.normalize(srcFile));
+    return Boolean(distFile);
   }
 
   static getDistDirWhenDistIsOutsideCompDir(
