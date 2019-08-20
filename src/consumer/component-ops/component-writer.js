@@ -1,8 +1,8 @@
 // @flow
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
-import * as RA from 'ramda-adjunct';
 import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
@@ -27,7 +27,6 @@ import BitMap from '../bit-map/bit-map';
 import ConfigDir from '../bit-map/config-dir';
 import EnvExtension from '../../extensions/env-extension';
 import ComponentConfig from '../config/component-config';
-import { populateEnvFilesToWrite } from './eject-conf';
 import PackageJsonFile from '../component/package-json-file';
 
 export type ComponentWriterProps = {
@@ -56,7 +55,7 @@ export default class ComponentWriter {
   override: boolean;
   isolated: ?boolean;
   origin: ComponentOrigin;
-  consumer: ?Consumer;
+  consumer: ?Consumer; // when using capsule, the consumer is not defined
   bitMap: BitMap;
   writeBitDependencies: boolean;
   deleteBitDirContent: ?boolean;
@@ -216,38 +215,22 @@ export default class ComponentWriter {
   }
 
   async _populateEnvFilesIfNeeded() {
+    [this.component.compiler, this.component.tester].forEach((env) => {
+      if (!env) return;
+      env.populateDataToPersist({
+        configDir: this.writeToPath,
+        consumer: this.consumer,
+        deleteOldFiles: false,
+        verbose: false,
+        envType: env.envType
+      });
+      this.component.dataToPersist.merge(env.dataToPersist);
+    });
+
     const areThereEnvFiles =
       (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
       (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
-    if (!areThereEnvFiles) {
-      return;
-    }
-
-    if (this.component.compiler) {
-      await populateEnvFilesToWrite({
-        configDir: this.writeToPath,
-        env: this.component.compiler,
-        consumer: this.consumer,
-        component: this.component,
-        deleteOldFiles: false,
-        verbose: false
-      });
-      // $FlowFixMe
-      this.component.dataToPersist.merge(this.component.compiler.dataToPersist);
-    }
-    if (this.component.tester) {
-      await populateEnvFilesToWrite({
-        configDir: this.writeToPath,
-        env: this.component.tester,
-        consumer: this.consumer,
-        component: this.component,
-        deleteOldFiles: false,
-        verbose: false
-      });
-      // $FlowFixMe
-      this.component.dataToPersist.merge(this.component.tester.dataToPersist);
-    }
-    if (!this.writeConfig && !this.configDir && this.component.componentMap) {
+    if (areThereEnvFiles && !this.writeConfig && !this.configDir && this.component.componentMap) {
       this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
       this.component.componentMap.setConfigDir(this.configDir);
     }
