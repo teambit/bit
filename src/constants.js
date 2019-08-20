@@ -390,3 +390,6 @@ export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
 
 export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
+
+export const WILDCARD_HELP = (command: string) =>
+  `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;

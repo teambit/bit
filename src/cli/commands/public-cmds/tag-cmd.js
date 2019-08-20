@@ -4,7 +4,7 @@ import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import type { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
-import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
@@ -15,7 +15,7 @@ export default class Tag extends Command {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
-  the id can be used with wildcards (e.g. bit tag "utils/*")`;
+  ${WILDCARD_HELP('tag')}`;
   alias = 't';
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
