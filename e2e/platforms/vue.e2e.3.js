@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -9,32 +9,32 @@ describe('support vue files', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   describe('tests scenarios ', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.copyFixtureComponents('vue');
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.copyFixtureComponents('vue');
     });
     describe('add vue files', () => {
       before(() => {
-        helper.addComponent('directives/*.js');
-        helper.addComponent('styles/*');
-        helper.addComponent('UiAutocomplete.vue');
-        helper.runCmd('npm i fuzzysearch');
+        helper.command.addComponent('directives/*.js');
+        helper.command.addComponent('styles/*');
+        helper.command.addComponent('UiAutocomplete.vue');
+        helper.command.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
-        const output = helper.runCmd('bit s');
+        const output = helper.command.runCmd('bit s');
         expect(output).to.have.string('untracked file dependencies');
         expect(output).to.have.string('UiAutocomplete.vue -> UiAutocompleteSuggestion.vue, UiIcon.vue');
       });
       describe('after adding the missing files', () => {
         let output;
         before(() => {
-          helper.addComponent('UiAutocompleteSuggestion.vue');
-          helper.addComponent('UiIcon.vue');
-          output = helper.status();
+          helper.command.addComponent('UiAutocompleteSuggestion.vue');
+          helper.command.addComponent('UiIcon.vue');
+          output = helper.command.status();
         });
         it('should say that all is resolved', () => {
           expect(output.includes('no new components')).to.be.false;
@@ -54,84 +54,84 @@ describe('support vue files', function () {
     });
     describe('add vue files that import stylus files ', () => {
       before(() => {
-        helper.addComponent(path.normalize('StylusExample.vue'));
+        helper.command.addComponent(path.normalize('StylusExample.vue'));
       });
       it('should find missing vue dependencies', () => {
-        const output = helper.runCmd('bit s');
+        const output = helper.command.runCmd('bit s');
         expect(output).to.have.string(' untracked file dependencies');
         expect(output).to.have.string('StylusExample.vue -> stylus/main.styl');
       });
       it('should find missing vue dependencies', () => {
-        helper.addComponent(path.normalize('stylus/main.styl'));
-        const output = helper.runCmd('bit s');
+        helper.command.addComponent(path.normalize('stylus/main.styl'));
+        const output = helper.command.runCmd('bit s');
         expect(output).to.have.string(' untracked file dependencies');
         expect(output).to.have.string('stylus/main.styl -> stylus/second.styl');
       });
       it('should say that all is resolved', () => {
-        helper.addComponent(path.normalize('stylus/second.styl'));
-        const output = helper.runCmd('bit s');
+        helper.command.addComponent(path.normalize('stylus/second.styl'));
+        const output = helper.command.runCmd('bit s');
         expect(output.includes('no new components')).to.be.false;
       });
       it('should display that component as a new component', () => {
-        const output = helper.runCmd('bit s');
+        const output = helper.command.runCmd('bit s');
         expect(output.includes('new components')).to.be.true;
         expect(output.includes('stylus-example')).to.be.true;
         expect(output.includes('main')).to.be.true;
         expect(output.includes('second')).to.be.true;
       });
       it('should not display that component as modified', () => {
-        const output = helper.runCmd('bit s');
+        const output = helper.command.runCmd('bit s');
         expect(output.includes('modified components')).to.be.false;
       });
       it('should not display that component as staged', () => {
-        const output = helper.runCmd('bit s');
+        const output = helper.command.runCmd('bit s');
         expect(output.includes('staged components')).to.be.false;
       });
     });
     describe('import vue components', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
-        helper.copyFixtureComponents('vue');
-        helper.addComponent(path.normalize('directives/*.js'));
-        helper.addComponent(path.normalize('styles/*'));
-        helper.addComponent('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
-        helper.runCmd('npm i fuzzysearch');
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.copyFixtureComponents('vue');
+        helper.command.addComponent(path.normalize('directives/*.js'));
+        helper.command.addComponent(path.normalize('styles/*'));
+        helper.command.addComponent('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
+        helper.command.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
-        const output = helper.tagAllComponents();
+        const output = helper.command.tagAllComponents();
         expect(output).to.have.string('9 component(s) tagged');
       });
       it('should export tagged components', () => {
-        const output = helper.exportAllComponents();
-        expect(output).to.have.string(`exported 9 components to scope ${helper.remoteScope}`);
+        const output = helper.command.exportAllComponents();
+        expect(output).to.have.string(`exported 9 components to scope ${helper.scopes.remote}`);
       });
       it('should import component', () => {
-        helper.reInitLocalScope();
-        helper.addRemoteScope(helper.remoteScopePath);
-        const output = helper.importComponent('vue/ui-autocomplete');
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        const output = helper.command.importComponent('vue/ui-autocomplete');
         expect(output).to.have.string('successfully imported one component');
-        expect(output).to.have.string(`${helper.remoteScope}/vue/ui-autocomplete`);
+        expect(output).to.have.string(`${helper.scopes.remote}/vue/ui-autocomplete`);
         expect(output).to.have.string('0.0.1');
       });
     });
   });
   describe('custom module resolutions', () => {
     before(() => {
-      helper.reInitLocalScope();
-      const bitJson = helper.readBitJson();
+      helper.scopeHelper.reInitLocalScope();
+      const bitJson = helper.bitJson.read();
       bitJson.resolveModules = { aliases: { '@': 'directives' } };
-      helper.writeBitJson(bitJson);
+      helper.bitJson.write(bitJson);
 
       const autocompleteFixture = `<script>
 import autofocus from '@/autofocus';
 </script>`;
-      helper.createFile('UI', 'Autocomplete.vue', autocompleteFixture);
-      helper.createFile('directives', 'autofocus.js', 'export default {}');
-      helper.addComponent('UI/Autocomplete.vue', { i: 'ui/autocomplete' });
-      helper.addComponent('directives/autofocus.js', { i: 'directives/autofocus' });
+      helper.fs.createFile('UI', 'Autocomplete.vue', autocompleteFixture);
+      helper.fs.createFile('directives', 'autofocus.js', 'export default {}');
+      helper.command.addComponent('UI/Autocomplete.vue', { i: 'ui/autocomplete' });
+      helper.command.addComponent('directives/autofocus.js', { i: 'directives/autofocus' });
     });
     it('should recognize dependencies using "@" as an alias', () => {
-      const output = helper.showComponentParsed('ui/autocomplete');
+      const output = helper.command.showComponentParsed('ui/autocomplete');
       expect(output.dependencies).to.have.lengthOf(1);
       const dependency = output.dependencies[0];
       expect(dependency.id).to.equal('directives/autofocus');
@@ -141,7 +141,7 @@ import autofocus from '@/autofocus';
       expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
     });
     it('bit status should not warn about missing packages', () => {
-      const output = helper.runCmd('bit status');
+      const output = helper.command.runCmd('bit status');
       expect(output).to.not.have.string('missing');
     });
   });

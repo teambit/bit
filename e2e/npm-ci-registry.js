@@ -5,7 +5,7 @@ import path from 'path';
 import execa from 'execa';
 import tar from 'tar';
 import { ChildProcess } from 'child_process';
-import Helper from './e2e-helper';
+import Helper from '../src/e2e-helper/e2e-helper';
 
 const isAppVeyor = process.env.APPVEYOR === 'True';
 export const supportNpmCiRegistryTesting = !isAppVeyor;
@@ -20,8 +20,8 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * To get it work, the following steps are mandatory.
  * 1. before tagging the components, run `this.setCiScopeInBitJson()`.
  * 2. import the components to a new scope.
- * 3. run `helper.importNpmPackExtension();`
- * 4. run `helper.removeRemoteScope();` otherwise, it'll save components as dependencies
+ * 3. run `helper.extensions.importNpmPackExtension();`
+ * 4. run `helper.scopeHelper.removeRemoteScope();` otherwise, it'll save components as dependencies
  * 5. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
  *
@@ -88,7 +88,7 @@ EOD`;
   }
 
   _registerToCiScope() {
-    this.helper.runCmd('npm config set @ci:registry http://localhost:4873');
+    this.helper.command.runCmd('npm config set @ci:registry http://localhost:4873');
   }
 
   /**
@@ -96,10 +96,10 @@ EOD`;
    * them later on into @ci scope of Verdaccio registry
    */
   setCiScopeInBitJson() {
-    const bitJson = this.helper.readBitJson();
+    const bitJson = this.helper.bitJson.read();
     // $FlowFixMe
     bitJson.bindingPrefix = '@ci';
-    this.helper.writeBitJson(bitJson);
+    this.helper.bitJson.write(bitJson);
   }
 
   /**
@@ -113,9 +113,9 @@ EOD`;
    * published and ready to be consumed later on when running 'npm install package-name'.
    */
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
-    const packDir = path.join(this.helper.localScopePath, 'pack');
-    const result = this.helper.runCmd(
-      `bit npm-pack ${this.helper.remoteScope}/${componentName}@${componentVersion} -o -k -d ${packDir}`
+    const packDir = path.join(this.helper.scopes.localPath, 'pack');
+    const result = this.helper.command.runCmd(
+      `bit npm-pack ${this.helper.scopes.remote}/${componentName}@${componentVersion} -o -k -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
     const resultParsed = JSON.parse(result);
@@ -126,7 +126,7 @@ EOD`;
     tar.x({ file: tarballFilePath, C: packDir, sync: true });
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
-    this.helper.runCmd('npm publish', extractedDir);
+    this.helper.command.runCmd('npm publish', extractedDir);
   }
 
   /**
@@ -138,20 +138,20 @@ EOD`;
    */
   setResolver() {
     const scopeJsonPath = '.bit/scope.json';
-    const scopeJson = this.helper.readJsonFile(scopeJsonPath);
-    const resolverPath = path.join(this.helper.localScopePath, 'resolver.js');
+    const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
+    const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
     // $FlowFixMe
     scopeJson.resolverPath = resolverPath;
-    this.helper.createJsonFile(scopeJsonPath, scopeJson);
-    this.helper.createFile('', 'resolver.js', this._getResolverContent());
+    this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
+    this.helper.fs.createFile('', 'resolver.js', this._getResolverContent());
   }
 
   _getResolverContent() {
-    return `module.exports = () => Promise.resolve('file://${this.helper.remoteScopePath}');`;
+    return `module.exports = () => Promise.resolve('file://${this.helper.scopes.remotePath}');`;
   }
 
   _validateRegistryScope(dir: string) {
-    const packageJson = this.helper.readPackageJson(dir);
+    const packageJson = this.helper.packageJson.read(dir);
     // $FlowFixMe name must be set
     if (!packageJson.name.startsWith('@ci')) {
       throw new Error('expect package.json name to start with "@ci" in order to publish it to @ci scope');

@@ -425,13 +425,22 @@ async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
-  consumer: Consumer,
-  bitMap: BitMap
+  consumer: ?Consumer,
+  bitMap: BitMap,
+  componentWithDependencies?: ComponentWithDependencies
 ): Promise<LinkFile[]> {
-  // @todo: isolate consumer from this function for the Capsule.
-  if (!consumer) throw new Error('getLinksByDependencies expects to get Consumer');
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
+    const getDependencyComponent = async (): Promise<?Component> => {
+      if (componentWithDependencies) {
+        return componentWithDependencies.allDependencies.find(d => d.id.isEqual(dependency.id));
+      }
+      if (!consumer) {
+        throw new Error('getLinksByDependencies expects to get Consumer or componentWithDependencies');
+      }
+      return consumer.loadComponentFromModel(dependency.id);
+    };
+    const dependencyComponent = await getDependencyComponent();
+    if (!dependencyComponent) throw new Error(`getLinksByDependencies failed finding ${dependency.id}`);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,

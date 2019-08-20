@@ -4,9 +4,10 @@ import serializeError from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
 import path from 'path';
-import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
+import chalk from 'chalk';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -60,6 +61,14 @@ export const createExtensionLogger = (extensionName: string) => {
   });
   extensionsLoggers.set(extensionName, extLogger);
   return extLogger;
+};
+
+export const printWarning = (msg: string) => {
+  const cfgNoWarnings = getSync(CFG_NO_WARNINGS);
+  if (cfgNoWarnings !== 'true') {
+    // eslint-disable-next-line no-console
+    console.log(chalk.yellow(`Warning: ${msg}`));
+  }
 };
 
 // @credit Kegsay from https://github.com/winstonjs/winston/issues/228

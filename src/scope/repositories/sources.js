@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import type Scope from '../scope';
@@ -146,7 +145,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
-        const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())) : null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
         return objectRepo.persist();

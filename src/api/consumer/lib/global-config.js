@@ -49,7 +49,7 @@ export async function get(key: string): Promise<?string> {
     return config;
   };
   const config = await getConfigObject();
-  const val = config.get(key);
+  const val = config ? config.get(key) : undefined;
   if (!R.isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
@@ -69,7 +69,7 @@ export function getSync(key: string): ?string {
     return config;
   };
   const config = getConfigObject();
-  const val = config.get(key);
+  const val = config ? config.get(key) : undefined;
   if (!R.isNil(val)) return val;
   try {
     const gitVal = gitconfig.get.sync(key);

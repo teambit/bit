@@ -170,6 +170,7 @@ export default class ManyComponentsWriter {
       : this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
       if (!this.consumer) {
+        componentWithDeps.component.dists.writeDistsFiles = this.writeDists;
         return {
           origin: COMPONENT_ORIGINS.IMPORTED
         };
@@ -185,7 +186,7 @@ export default class ManyComponentsWriter {
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
-      // also, don't write dists file for imported component, unless the user used '--dist' flag
+      // also, don't write dists file for imported component when a user used `--ignore-dist` flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
         configDir: this.configDir || configDirFromComponentMap,

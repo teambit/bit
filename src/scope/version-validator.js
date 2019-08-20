@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import { PJV } from 'package-json-validator';
 import packageNameValidate from 'validate-npm-package-name';
 import validateType from '../utils/validate-type';
 import { BitId, BitIds } from '../bit-id';
@@ -7,8 +8,10 @@ import VersionInvalid from './exceptions/version-invalid';
 import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
-import ComponentOverrides from '../consumer/config/component-overrides';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import { dependenciesFields, nonPackageJsonFields } from '../consumer/config/consumer-overrides';
+import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
+import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -127,8 +130,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
     throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
-  const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
-  dependenciesInstances.forEach((dependenciesType) => {
+  DEPENDENCIES_TYPES.forEach((dependenciesType) => {
     // $FlowFixMe
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(
@@ -174,18 +176,36 @@ export default function validateVersionInstance(version: Version): void {
   if (version.bindingPrefix) {
     validateType(message, version.bindingPrefix, 'bindingPrefix', 'string');
   }
-  const overridesAllowedKeys = ComponentOverrides.componentOverridesDataFields();
-  const validateOverrides = (dependencies: Object, fieldName) => {
+  const npmSpecs = PJV.getSpecMap('npm');
+  const validatePackageJsonField = (fieldName: string, fieldValue: any): ?string => {
+    if (!npmSpecs[fieldName]) {
+      // it's not a standard package.json field, can't validate
+      return null;
+    }
+    const validateResult = PJV.validateType(fieldName, npmSpecs[fieldName], fieldValue);
+    if (!validateResult.length) return null;
+    return validateResult.join(', ');
+  };
+  const validateOverrides = (fieldValue: Object, fieldName: string) => {
     const field = `overrides.${fieldName}`;
-    validateType(message, dependencies, field, 'object');
-    Object.keys(dependencies).forEach((key) => {
-      validateType(message, key, `property name of ${field}`, 'string');
-      validateType(message, dependencies[key], `version of "${field}.${key}"`, 'string');
-    });
+    if (dependenciesFields.includes(fieldName)) {
+      validateType(message, fieldValue, field, 'object');
+      Object.keys(fieldValue).forEach((key) => {
+        validateType(message, key, `property name of ${field}`, 'string');
+        validateType(message, fieldValue[key], `version of "${field}.${key}"`, 'string');
+      });
+    } else if (!nonPackageJsonFields.includes(fieldName)) {
+      const result = validatePackageJsonField(fieldName, fieldValue);
+      if (result) {
+        throw new VersionInvalid(
+          `${message}, "${field}" is a package.json field but is not compliant with npm requirements. ${result}`
+        );
+      }
+    }
   };
   Object.keys(version.overrides).forEach((field) => {
-    if (!overridesAllowedKeys.includes(field)) {
-      throw new VersionInvalid(`${message}, the "overrides" has unidentified key "${field}"`);
+    if (componentOverridesForbiddenFields.includes(field)) {
+      throw new VersionInvalid(`${message}, the "overrides" has a forbidden key "${field}"`);
     }
     // $FlowFixMe
     validateOverrides(version.overrides[field], field);
@@ -196,6 +216,12 @@ export default function validateVersionInstance(version: Version): void {
     validateType(message, prop, 'property name of packageJson', 'string');
     if (forbiddenPackageJsonProps.includes(prop)) {
       throw new VersionInvalid(`${message}, the packageJsonChangedProps should not override the prop ${prop}`);
+    }
+    const result = validatePackageJsonField(prop, version.packageJsonChangedProps[prop]);
+    if (result) {
+      throw new VersionInvalid(
+        `${message}, the generated package.json field "${prop}" is not compliant with npm requirements. ${result}`
+      );
     }
   });
 }

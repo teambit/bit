@@ -85,6 +85,7 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.overridesDependencies = parsePackages(overrides.dependencies);
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
+  obj.overridesPackageJsonProps = JSON.stringify(component.overrides.componentOverridesPackageJsonData);
   return obj;
 }
 

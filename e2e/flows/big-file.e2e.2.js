@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -9,19 +9,19 @@ describe('big text file', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('Windows format (\\r\\n)', () => {
     let tagOutput;
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bigFilePath = path.join(__dirname, '..', 'fixtures', 'big-text-file-fixture.txt');
       const bigFileContent = fs.readFileSync(bigFilePath).toString();
       const windowsFormatContent = bigFileContent.replace(/\r\n|\r|\n/g, '\r\n');
-      fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
-      helper.createComponentBarFoo();
-      helper.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
-      tagOutput = helper.tagComponent('bar/text');
+      fs.outputFileSync(path.join(helper.scopes.localPath, 'bar', 'big-text-file.txt'), windowsFormatContent);
+      helper.fixtures.createComponentBarFoo();
+      helper.command.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
+      tagOutput = helper.command.tagComponent('bar/text');
     });
     it('tagging the component should not throw any error', () => {
       expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -29,17 +29,17 @@ describe('big text file', function () {
     describe('exporting and importing the component', () => {
       let importOutput;
       before(() => {
-        helper.exportAllComponents();
+        helper.command.exportAllComponents();
 
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        importOutput = helper.importComponent('bar/text');
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        importOutput = helper.command.importComponent('bar/text');
       });
       it('should work with no errors', () => {
         expect(importOutput).to.have.string('successfully imported one component');
       });
       it('should import the big file', () => {
-        const filePath = path.join(helper.localScopePath, 'components/bar/text/big-text-file.txt');
+        const filePath = path.join(helper.scopes.localPath, 'components/bar/text/big-text-file.txt');
         expect(filePath).to.be.a.file().and.not.empty;
       });
     });

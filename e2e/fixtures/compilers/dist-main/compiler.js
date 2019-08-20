@@ -19,6 +19,28 @@ function compile(files, distPath) {
     return { dists, mainFile: mainDist.relative };
 }
 
-module.exports = {
-  compile
-};
+const newCompilerApi = {
+  init: ({ rawConfig, dynamicConfig, api }) => {
+    logger = api.getLogger();
+    return { write: true };
+  },
+  action: ({
+    files,
+    rawConfig,
+    dynamicConfig,
+    configFiles,
+    api,
+    context
+  }) => {
+    // don't remove the next line, it is important for the tests to make sure the new api is used
+    console.log('using the new compiler API');
+    const distPath = path.join(context.rootDistDir, 'dist');
+    return compile(files, distPath, context);
+  }
+}
+
+const currentCompilerApi = { compile };
+
+const isNewAPI = false;
+
+module.exports = isNewAPI ? newCompilerApi : currentCompilerApi;

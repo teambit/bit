@@ -7,13 +7,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1934](https://github.com/teambit/bit/issues/1934) fix capsule compilers when configured to work with custom files
+- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
+- [#1924](https://github.com/teambit/bit/issues/1924) avoid generating old dists files when using capsule compilers
+
+## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
+​
+### New
+​
+- [#1867](https://github.com/teambit/bit/issues/1867) apply workspace overrides config on imported components
+- [#1863](https://github.com/teambit/bit/issues/1863) allow excluding components from `overrides` rules
+- [#1865](https://github.com/teambit/bit/issues/1865) allow adding `package.json` props via `overrides`
 - [#1837](https://github.com/teambit/bit/issues/1837) enable executing commands on remote components outside of bit-workspace
+- [#913](https://github.com/teambit/bit/issues/913) add new flags to bit init `-c|--compiler`, `-t|--tester`, `-d|--default-directory`, `-p|--package-manager`
+- [#1889](https://github.com/teambit/bit/issues/1889) auto add `@types/package-name` to the dependencies of TS components
+- added `no_warnings` config to eliminate some warnings from being written to the stdout
+​
+### Changes
+​
+- remove Angular dependencies from bit-javascript, instead, use TS compiler to parse Angular Decorators
+- [#1892](https://github.com/teambit/bit/issues/1892) deprecating `bit list --bare` and replace with `bit list --raw`
 - [#1774](https://github.com/teambit/bit/issues/1774) improve access errors and warn when sudo is used
-
-## [14.2.4-dev.1] - 2019-07-30
-
-- do not delete trackDir when a component is imported
+- change shortcut flag to `bit init` standalone from `t` to `T`
+​
+### Bug fixes
+​
+- safer access to bit global config
+- [#1903](https://github.com/teambit/bit/issues/1903) fix importing dependents to not override dependencies
 - fix capsule to respect the `override` property of vinyl files
+- [#1925](https://github.com/teambit/bit/issues/1925) update bit-javascript to fix Angular non-relative paths from decorators
+​
+### Experimental
+​
+- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit show` to display them all recursively
+- [#1908](https://github.com/teambit/bit/issues/1908) new bit init interactive
+Collapse
 
 ## [[14.2.3] - 2019-07-28](https://github.com/teambit/bit/releases/tag/v14.2.3)
 

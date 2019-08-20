@@ -176,6 +176,22 @@ export async function getAllComponentsLinks({
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   dataToPersist.merge(nodeModuleLinks);
 
+  componentsWithDependencies.map(async (componentWithDependencies) => {
+    const component = componentWithDependencies.component;
+    [component.compilerDependencies, component.testerDependencies].map(async (deps) => {
+      const links = await linkGenerator.getLinksByDependencies(
+        // $FlowFixMe writtenPath is set here
+        component.writtenPath,
+        component,
+        deps,
+        consumer,
+        bitMap,
+        componentWithDependencies
+      );
+      dataToPersist.addManyFiles(links);
+    });
+  });
+
   if (consumer) {
     const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));
     const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);

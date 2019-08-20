@@ -106,6 +106,10 @@ const allCommands = [
       {
         name: 'list',
         description: 'list components on a local or a remote scope.'
+      },
+      {
+        name: 'graph',
+        description: 'EXPERIMENTAL. generate an image file with the dependencies graph.'
       }
     ]
   },

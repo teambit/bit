@@ -307,5 +307,31 @@ describe('Version', () => {
       version.packageJsonChangedProps = [1, 2, 3, 4];
       expect(validateFunc).to.throw('expected packageJsonChangedProps to be object, got array');
     });
+    it('should throw when packageJsonChangedProps has a non-compliant npm value', () => {
+      version.packageJsonChangedProps = { bin: 1234 };
+      expect(validateFunc).to.throw('the generated package.json field "bin" is not compliant with npm requirements');
+    });
+    it('should not throw when packageJsonChangedProps has a compliant npm value', () => {
+      version.packageJsonChangedProps = { bin: 'my-file.js' };
+      expect(validateFunc).to.not.throw();
+    });
+    it('should throw when overrides has a "system" field (field that Bit uses internally for consumer overrides)', () => {
+      version.overrides = { exclude: ['*'] };
+      expect(validateFunc).to.throw('the "overrides" has a forbidden key "exclude"');
+    });
+    it('should throw when overrides has a package.json field that is non-compliant npm value', () => {
+      version.overrides = { bin: 1234 };
+      expect(validateFunc).to.throw(
+        '"overrides.bin" is a package.json field but is not compliant with npm requirements'
+      );
+    });
+    it('should not throw when overrides has a package.json field that is compliant npm value', () => {
+      version.overrides = { bin: 'my-file.js' };
+      expect(validateFunc).to.not.throw();
+    });
+    it('should show the original error from package-json-validator when overrides has a package.json field that is non-compliant npm value', () => {
+      version.overrides = { scripts: false };
+      expect(validateFunc).to.throw('Type for field scripts, was expected to be object, not boolean');
+    });
   });
 });

@@ -47,6 +47,7 @@ import {
   HashNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
+import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
@@ -324,6 +325,11 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     InvalidBitJson,
     err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
 consider running ${chalk.bold('bit init --reset')} to recreate the file`
+  ],
+  [
+    InvalidPackageManager,
+    err => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
+please specify 'npm' or 'yarn'`
   ],
   [
     InvalidPackageJson,

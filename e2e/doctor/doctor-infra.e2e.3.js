@@ -1,6 +1,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 import DiagnosisNotFound from '../../src/api/consumer/lib/exceptions/diagnosis-not-found';
 
 chai.use(require('chai-fs'));
@@ -10,11 +10,11 @@ describe('bit doctor infra', function () {
   const helper = new Helper();
 
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
 
   before(() => {
-    helper.reInitLocalScope();
+    helper.scopeHelper.reInitLocalScope();
   });
 
   describe('run all diagnoses', () => {
@@ -22,7 +22,7 @@ describe('bit doctor infra', function () {
     let parsedOutput;
 
     before(() => {
-      output = helper.doctor({ j: '' });
+      output = helper.command.doctor({ j: '' });
       parsedOutput = JSON.parse(output);
     });
     it('should return all the fields for each check', () => {
@@ -36,17 +36,17 @@ describe('bit doctor infra', function () {
     describe('save results as tar file', () => {
       describe('with default file name', () => {
         before(() => {
-          output = helper.doctor({ save: '' });
+          output = helper.command.doctor({ save: '' });
         });
         it('should print the output file name', () => {
           expect(output).to.have.string('File written to doctor-results-');
           expect(output).to.have.string('.tar');
         });
         it('should create a non empty tar file in the file system', () => {
-          output = helper.doctor({ save: '', j: '' });
+          output = helper.command.doctor({ save: '', j: '' });
           parsedOutput = JSON.parse(output);
           const filePath = parsedOutput.savedFilePath;
-          const fileFullPath = path.join(helper.localScopePath, filePath);
+          const fileFullPath = path.join(helper.scopes.localPath, filePath);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
@@ -54,13 +54,13 @@ describe('bit doctor infra', function () {
         const fileNameWithoutExt = 'doc-file';
         const fileName = `${fileNameWithoutExt}.tar`;
         before(() => {
-          output = helper.doctor({ save: fileNameWithoutExt });
+          output = helper.command.doctor({ save: fileNameWithoutExt });
         });
         it('should print the output file name with tar extension', () => {
           expect(output).to.have.string(`File written to ${fileName}`);
         });
         it('should create a non empty tar file in the file system', () => {
-          const fileFullPath = path.join(helper.localScopePath, fileName);
+          const fileFullPath = path.join(helper.scopes.localPath, fileName);
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
@@ -70,9 +70,9 @@ describe('bit doctor infra', function () {
   describe('run one diagnosis', () => {
     it('should show error when the diagnosis not exist', () => {
       const nonExistingDiagnosis = 'non-existing-diagnosis';
-      const useFunc = () => helper.doctorOne(nonExistingDiagnosis, { j: '' });
+      const useFunc = () => helper.command.doctorOne(nonExistingDiagnosis, { j: '' });
       const error = new DiagnosisNotFound(nonExistingDiagnosis);
-      helper.expectToThrow(useFunc, error);
+      helper.general.expectToThrow(useFunc, error);
     });
   });
 
@@ -81,7 +81,7 @@ describe('bit doctor infra', function () {
     let parsedOutput;
 
     before(() => {
-      output = helper.doctorList({ j: '' });
+      output = helper.command.doctorList({ j: '' });
       parsedOutput = JSON.parse(output);
     });
     it('should return all the fields for each check item', () => {

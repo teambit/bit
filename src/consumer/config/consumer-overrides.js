@@ -13,13 +13,16 @@ export type ConsumerOverridesOfComponent = {
   devDependencies?: Object,
   peerDependencies?: Object,
   env?: Object,
-  propagate?: boolean // whether propagate to a more general rule
+  propagate?: boolean, // whether propagate to a more general rule,
+  [string]: any // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
-const consumerOverridesPermittedFields = [...dependenciesFields, 'env'];
+export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
+export const overridesBitInternalFields = ['propagate', 'exclude', 'env'];
+export const nonPackageJsonFields = [...dependenciesFields, ...overridesBitInternalFields];
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
@@ -31,15 +34,10 @@ export default class ConsumerOverrides {
     return new ConsumerOverrides(overrides);
   }
   getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
-    const getMatches = (): string[] => {
-      const exactMatch = this.findExactMatch(bitId);
-      const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this.isMatchByWildcard(bitId, idStr));
-      const allMatches = matchByGlobPattern.sort(ConsumerOverrides.sortWildcards);
-      if (exactMatch) allMatches.unshift(exactMatch);
-      return allMatches;
-    };
-    const matches = getMatches();
-    if (!matches.length) return null;
+    const matches = this._getAllRulesMatchedById(bitId);
+    if (!matches.length) {
+      return null;
+    }
     const overrideValues = matches.map(match => this.overrides[match]);
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
@@ -47,28 +45,57 @@ export default class ConsumerOverrides {
       if (!current.propagate) {
         stopPropagation = true;
       }
-      consumerOverridesPermittedFields.forEach((field) => {
-        if (!current[field]) return;
-        if (!acc[field]) acc[field] = {};
-        if (field === 'env') {
-          ['compiler', 'tester'].forEach((envField) => {
-            // $FlowFixMe we made sure before that current.env is set
-            if (acc.env[envField] || !current.env[envField]) return;
-            acc.env[envField] = current.env[envField];
-          });
-        } else if (dependenciesFields.includes(field)) {
-          // $FlowFixMe
-          acc[field] = Object.assign(current[field], acc[field]);
-        } else {
-          throw new Error(`consumer-overrides, ${field} does not have a merge strategy`);
-        }
-      });
+      this._updateSpecificOverridesWithGeneralOverrides(current, acc);
       return acc;
     }, {});
   }
-  isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
+  _updateSpecificOverridesWithGeneralOverrides(generalOverrides: Object, specificOverrides: Object) {
+    const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
+    Object.keys(generalOverrides).forEach((field) => {
+      switch (field) {
+        case 'env':
+          if (!specificOverrides[field]) specificOverrides[field] = {};
+          ['compiler', 'tester'].forEach((envField) => {
+            if (specificOverrides.env[envField] || !generalOverrides.env[envField]) return;
+            specificOverrides.env[envField] = generalOverrides.env[envField];
+          });
+          break;
+        case 'propagate':
+        case 'exclude':
+          // it's a system field, do nothing
+          break;
+        default:
+          if (isObjectAndNotArray(specificOverrides[field]) && isObjectAndNotArray(generalOverrides[field])) {
+            specificOverrides[field] = Object.assign(generalOverrides[field], specificOverrides[field]);
+          } else if (!specificOverrides[field]) {
+            specificOverrides[field] = generalOverrides[field];
+          }
+        // when specificOverrides[field] is set and not an object, do not override it by the general one
+      }
+    });
+  }
+  _getAllRulesMatchedById(bitId: BitId): string[] {
+    const exactMatch = this.findExactMatch(bitId);
+    const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this._isMatchByWildcard(bitId, idStr));
+    const nonExcluded = matchByGlobPattern.filter(match => !this._isExcluded(this.overrides[match], bitId));
+    const allMatches = nonExcluded.sort(ConsumerOverrides.sortWildcards);
+    if (exactMatch) allMatches.unshift(exactMatch);
+    return allMatches;
+  }
+  _isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
+  }
+  _isExcluded(overridesValues: Object, bitId: BitId) {
+    if (!overridesValues.exclude || !overridesValues.exclude.length) {
+      return false;
+    }
+    return overridesValues.exclude.some(
+      excludeRule =>
+        this._isMatchByWildcard(bitId, excludeRule) ||
+        bitId.toStringWithoutVersion() === excludeRule ||
+        bitId.toStringWithoutScopeAndVersion() === excludeRule
+    );
   }
   /**
    * sort from the more specific (more namespaces) to the more generic (less namespaces)
@@ -154,14 +181,16 @@ export default class ConsumerOverrides {
     function validateComponentOverride(id, override) {
       validateUserInputType(message, override, `overrides.${id}`, 'object');
       Object.keys(override).forEach((field) => {
-        if (!consumerOverridesPermittedFields.includes(field)) {
-          throw new GeneralError(`${message} found an unrecognized field "${field}" inside "overrides.${id}" property.
-only the following fields are allowed: ${consumerOverridesPermittedFields.join(', ')}.`);
+        if (overridesForbiddenFields.includes(field)) {
+          throw new GeneralError(`${message} found a forbidden field "${field}" inside "overrides.${id}" property.
+the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
         }
         if (dependenciesFields.includes(field)) {
           validateDependencyField(field, override, id);
         } else if (field === 'env') {
           validateEnv(override, id);
+        } else if (field === 'exclude') {
+          validateUserInputType(message, override.exclude, `overrides.${id}.exclude`, 'array');
         }
       });
     }

@@ -6,6 +6,7 @@ import catObject from './lib/cat-object';
 import catComponent from './lib/cat-component';
 import scopeList from './lib/scope-list';
 import scopeShow from './lib/scope-show';
+import graph from './lib/graph';
 import buildInScope from './lib/build-in-scope';
 import testInScope from './lib/test-in-scope';
 import modifyCIProps from './lib/modify-ci-props';
@@ -27,6 +28,7 @@ export {
   put,
   scopeList,
   scopeShow,
+  graph,
   fetch,
   modifyCIProps,
   ciUpdateAction,
