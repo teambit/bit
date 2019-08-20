@@ -95,6 +95,10 @@ export default class Dists {
     return this.distsRootDir;
   }
 
+  hasFile(file: PathLinux): boolean {
+    return this.dists.some(dist => dist.relative === file);
+  }
+
   static getDistDirWhenDistIsOutsideCompDir(
     workspaceConfig: WorkspaceConfig,
     componentRootDir: PathLinux
