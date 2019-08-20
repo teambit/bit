@@ -14,6 +14,16 @@ describe('bit build', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+  describe('without any component in the workspace', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.build();
+    });
+    it('should indicate that there is nothing to build', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('nothing to build');
+    });
+  });
   describe('as author', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
