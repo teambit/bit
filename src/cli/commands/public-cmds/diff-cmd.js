@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { diff } from '../../../api/consumer';
 import type { DiffResults } from '../../../consumer/component-ops/components-diff';
+import { WILDCARD_HELP } from '../../../constants';
 
 export default class Diff extends Command {
   name = 'diff [values...]';
@@ -11,7 +12,7 @@ export default class Diff extends Command {
   bit diff [ids...] => compare the specified components against their modified states
   bit diff [id] [version] => compare the specified version to used or modified files
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files
-  the id can be used with wildcards (e.g. bit diff "utils/*")`;
+  ${WILDCARD_HELP('diff')}`;
   alias = '';
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;

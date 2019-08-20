@@ -4,13 +4,13 @@ import R from 'ramda';
 import Command from '../../command';
 import { untrack } from '../../../api/consumer';
 import GeneralError from '../../../error/general-error';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
   description = `untrack a new component(s)
   https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html
-  the id can be used with wildcards (e.g. bit untrack "utils/*")`;
+  ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
   opts = [['a', 'all', 'revert add for all tracked components']];
   loader = true;
