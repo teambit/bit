@@ -10,13 +10,15 @@ import { ComponentWithDependencies } from '../../../scope';
 import type { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import type { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = `import components into your current workspace.\n  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html`;
+  description = `import components into your current workspace.
+  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html
+  ${WILDCARD_HELP('import')}`;
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],

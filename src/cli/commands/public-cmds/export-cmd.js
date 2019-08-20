@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 
@@ -12,7 +12,7 @@ export default class Export extends Command {
   name = 'export <remote> [id...]';
   description = `export components to a remote scope.
   https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
-  the id can be used with wildcards (e.g. bit export remote-scope "utils/*")`;
+  ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
   opts = [['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages']];
   loader = true;
