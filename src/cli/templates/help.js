@@ -181,9 +181,9 @@ const baseTemplate = (commands) => {
   ${chalk.grey(
     'bit is a free and open source tool for turning components from existing source-code to a collection of reusable components.'
   )}
-  ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
+  ${chalk.grey('easily share, reuse, maintain and discover code components from any project.')}
 
-  ${chalk.grey(`Bit documentation: https://${BASE_DOCS_DOMAIN}`)}
+  ${chalk.grey(`bit documentation: https://${BASE_DOCS_DOMAIN}`)}
 
 ${commandsTemplate(commands)}
 
