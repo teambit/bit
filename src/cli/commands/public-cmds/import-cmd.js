@@ -34,6 +34,7 @@ export default class Import extends Command {
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
+    ['j', 'json', 'return the output as JSON'],
     ['', 'ignore-dist', "skip writing the component's build files during import"],
     [
       '',
@@ -73,6 +74,7 @@ export default class Import extends Command {
       environment = false,
       override = false,
       verbose = false,
+      json = false,
       ignoreDist = false,
       conf,
       skipNpmInstall = false,
@@ -90,6 +92,7 @@ export default class Import extends Command {
       environment?: boolean,
       override?: boolean,
       verbose?: boolean,
+      json?: boolean,
       ignoreDist?: boolean,
       conf?: string,
       skipNpmInstall?: boolean,
@@ -143,9 +146,11 @@ export default class Import extends Command {
     if (typeof conf === 'string') {
       importOptions.configDir = conf;
     }
-    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults =>
-      R.assoc('displayDependencies', displayDependencies, importResults)
-    );
+    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults => ({
+      displayDependencies,
+      json,
+      ...importResults
+    }));
   }
 
   report({
@@ -153,7 +158,8 @@ export default class Import extends Command {
     envComponents,
     importDetails,
     warnings,
-    displayDependencies
+    displayDependencies,
+    json
   }: {
     dependencies?: ComponentWithDependencies[],
     envComponents?: Component[],
@@ -163,8 +169,12 @@ export default class Import extends Command {
       notInNodeModules: [],
       notInBoth: []
     },
-    displayDependencies?: boolean
+    displayDependencies: boolean,
+    json: boolean
   }): string {
+    if (json) {
+      return JSON.stringify({ importDetails, warnings }, null, 4);
+    }
     let dependenciesOutput;
     let envComponentsOutput;
 

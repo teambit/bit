@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1937](https://github.com/teambit/bit/issues/1937) introduce `--json` flag for `bit import`
 - [#1916](https://github.com/teambit/bit/issues/1916) do not throw an error when there are no components to build
 - [#1934](https://github.com/teambit/bit/issues/1934) fix capsule compilers when configured to work with custom files
 - [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
