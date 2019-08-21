@@ -74,30 +74,9 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit init ${value}`);
   }
   setNewLocalAndRemoteScopes() {
-    if (!this.cache) {
-      this.reInitLocalScope();
-      this.reInitRemoteScope();
-      this.addRemoteScope();
-      this.cache = {
-        localScopePath: path.join(this.scopes.e2eDir, generateRandomStr()),
-        remoteScopePath: path.join(this.scopes.e2eDir, generateRandomStr())
-      };
-      if (this.debugMode) {
-        console.log(
-          chalk.green(`not in the cache. cloning a scope from ${this.scopes.localPath} to ${this.cache.localScopePath}`)
-        );
-      }
-      fs.copySync(this.scopes.localPath, this.cache.localScopePath);
-      fs.copySync(this.scopes.remotePath, this.cache.remoteScopePath);
-    } else {
-      if (this.debugMode) {
-        console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.scopes.localPath}`));
-      }
-      fs.removeSync(this.scopes.localPath);
-      fs.removeSync(this.scopes.remotePath);
-      fs.copySync(this.cache.localScopePath, this.scopes.localPath);
-      fs.copySync(this.cache.remoteScopePath, this.scopes.remotePath);
-    }
+    this.reInitLocalScope();
+    this.reInitRemoteScope();
+    this.addRemoteScope();
   }
 
   initNewLocalScope(deleteCurrentScope: boolean = true) {
