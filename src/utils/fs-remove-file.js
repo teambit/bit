@@ -2,6 +2,7 @@
 import fs from 'fs-extra';
 import pathLib from 'path';
 import logger from '../logger/logger';
+import readDirIgnoreDsStore from './fs/read-dir-ignore-ds-store';
 
 export default (async function removeFile(path: string, propagateDirs: boolean = false): Promise<boolean> {
   try {
@@ -15,7 +16,7 @@ export default (async function removeFile(path: string, propagateDirs: boolean =
   }
   if (!propagateDirs) return true;
   const { dir } = pathLib.parse(path);
-  const files = await fs.readdir(dir);
+  const files = await readDirIgnoreDsStore(dir);
   if (files.length !== 0) return true;
   logger.info(`fs-remove-file, deleting empty directory ${dir}`);
   await fs.remove(dir);

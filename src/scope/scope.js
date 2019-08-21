@@ -6,7 +6,7 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import { propogateUntil, currentDirName, pathHasAll, first } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   OBJECTS_DIR,
@@ -149,7 +149,7 @@ export default class Scope {
     }
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
-    const versions = fs.readdirSync(componentFullPath);
+    const versions = readDirSyncIgnoreDsStore(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*');
     return pathLib.join(relativePath, latestVersion);
   }
