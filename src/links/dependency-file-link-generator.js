@@ -180,13 +180,7 @@ export default class DependencyFileLinkGenerator {
     relativePathInDependency: PathOsBased,
     depRootDir: ?PathOsBasedAbsolute
   }): LinkFileType {
-    const mainFile: PathOsBased = this.dependencyComponent.dists.calculateMainDistFile(
-      this.dependencyComponent.mainFile
-    );
-    let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
-    if (relativePathInDependency === mainFile) {
-      actualFilePath = depRootDir ? path.join(depRootDir, mainFile) : mainFile;
-    }
+    const actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = this.relativePath.importSpecifiers;
     const linkContent = this.getLinkContent(relativeFilePath);
@@ -218,6 +212,12 @@ export default class DependencyFileLinkGenerator {
 
   _getPackagePath(): string {
     if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
+      return this._getPackageName();
+    }
+    const distFileIsNotFound =
+      !this.dependencyComponent.dists.isEmpty() &&
+      !this.dependencyComponent.dists.hasFileParallelToSrcFile(this.relativePath.destinationRelativePath);
+    if (distFileIsNotFound) {
       return this._getPackageName();
     }
     // the link is to an internal file, not to the main file

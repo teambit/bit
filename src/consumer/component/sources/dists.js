@@ -95,6 +95,11 @@ export default class Dists {
     return this.distsRootDir;
   }
 
+  hasFileParallelToSrcFile(srcFile: PathLinux): boolean {
+    const distFile = searchFilesIgnoreExt(this.dists, path.normalize(srcFile));
+    return Boolean(distFile);
+  }
+
   static getDistDirWhenDistIsOutsideCompDir(
     workspaceConfig: WorkspaceConfig,
     componentRootDir: PathLinux

@@ -144,4 +144,32 @@ describe('component that requires another component internal (not main) file', f
       });
     });
   });
+  describe('with a bundler compiler (generates dists non parallel to the original files)', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.createFile('src/utils', 'is-type.js', '');
+      helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
+      helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+        i: 'utils/is-type',
+        m: 'src/utils/is-type.js'
+      });
+
+      const isStringFixture =
+        "const isType = require('./is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
+      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.env.importDummyCompiler('bundle');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('utils/is-string');
+    });
+    it('should not try to generate the link to the non-exist internal file but to the main package', () => {
+      const linkFile = helper.fs.readFile('components/utils/is-string/is-type-internal.js');
+      expect(linkFile).to.not.have.string('is-type-internal');
+      expect(linkFile).to.not.have.string('dist');
+    });
+  });
 });
