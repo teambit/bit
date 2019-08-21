@@ -6,7 +6,7 @@ export default (async function readDirIgnoreDsStore(dirPath: string): Promise<st
   return files.filter(file => file !== '.DS_Store');
 });
 
-export function readDirSyncIgnoreDsStore(dirPath: string): Promise<string[]> {
+export function readDirSyncIgnoreDsStore(dirPath: string): string[] {
   const files = fs.readdirSync(dirPath);
   return files.filter(file => file !== '.DS_Store');
 }
