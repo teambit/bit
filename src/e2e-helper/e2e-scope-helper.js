@@ -1,7 +1,6 @@
 // @flow
 /* eslint no-console: 0 */
 
-import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs-extra';
 import { generateRandomStr } from './e2e-helper';
