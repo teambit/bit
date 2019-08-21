@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix dist changing of bit-ids on export to make the replacement on exact matches only
 - [#1941](https://github.com/teambit/bit/issues/1941) ignore .DS_Store file when reading dirs
 
 ## [14.2.5-dev.1] - 2019-08-21]

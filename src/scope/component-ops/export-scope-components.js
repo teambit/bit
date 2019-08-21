@@ -219,7 +219,14 @@ async function changePartialNamesToFullNamesInDists(
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-      newDistString = newDistString.replace(new RegExp(pkgNameWithoutScope, 'g'), pkgNameWithScope);
+      const singleQuote = "'";
+      const doubleQuotes = '"';
+      [singleQuote, doubleQuotes].forEach((quoteType) => {
+        newDistString = newDistString.replace(
+          new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),
+          quoteType + pkgNameWithScope + quoteType
+        );
+      });
     });
     if (newDistString !== distString) {
       return Source.from(Buffer.from(newDistString));

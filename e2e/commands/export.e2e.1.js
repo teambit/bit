@@ -490,4 +490,34 @@ describe('bit export command', function () {
       }
     });
   });
+  describe('export a component where the require id in the dist files are without a scope-name', () => {
+    let distContent;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('bar.js', 'require("./bar-dep")');
+      helper.fs.outputFile('bar-dep.js');
+      helper.command.addComponent('bar.js');
+      helper.command.addComponent('bar-dep.js');
+      helper.env.importDummyCompiler('add-scope-name');
+      helper.command.tagAllComponents();
+
+      // an intermediate step, make sure the compiler wrote the dist with two packages.
+      // one with the same name as the dependency id.
+      // second with a non-exist id. (which expected not to be changed later)
+      const distFile = helper.fs.readFile('dist/bar.js');
+      expect(distFile).to.have.string('require("@bit/bar-dep");');
+      expect(distFile).to.have.string('require("@bit/bar-non-exist");');
+
+      helper.command.exportAllComponents();
+      const bar = helper.command.catComponent('bar@latest');
+      const distObject = bar.dists[0].file;
+      distContent = helper.command.catObject(distObject);
+    });
+    it('should replace the ids without scope name to ids with scope name upon export', () => {
+      expect(distContent).to.have.string(`"@bit/${helper.scopes.remote}.bar-dep"`);
+    });
+    it('should not replace other ids that only has the prefix of other ids/deps', () => {
+      expect(distContent).to.not.have.string(`"@bit/${helper.scopes.remote}.bar-non-exist"`);
+    });
+  });
 });
