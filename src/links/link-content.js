@@ -31,7 +31,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 const fileExtensionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
 export const JAVASCRIPT_FLAVORS_EXTENSIONS = ['js', 'ts', 'jsx', 'tsx'];
-export const EXTENSIONS_TO_STRIP_FROM_PACKAGES = ['js', 'ts', 'jsx', 'tsx'];
+export const EXTENSIONS_TO_STRIP_FROM_PACKAGES = ['js', 'ts', 'jsx', 'tsx', 'd.ts'];
 export const EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES = ['ts', 'jsx', 'tsx'];
 
 export function isSupportedExtension(filePath: string) {
