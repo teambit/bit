@@ -58,6 +58,7 @@ import getLatestVersionNumber from './resolveLatestVersion';
 import calculateFileInfo from './fs/file-info';
 import getWithoutExt from './fs/fs-no-ext';
 import getExt from './fs/get-ext';
+import readDirIgnoreDsStore, { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
 import outputJsonFile from './fs-output-json-sync';
 import searchFilesIgnoreExt from './fs/search-files-ignore-ext';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, pathResolveToLinux } from './path';
@@ -102,6 +103,8 @@ export {
   writeFile,
   mkdirp,
   cleanObject,
+  readDirIgnoreDsStore,
+  readDirSyncIgnoreDsStore,
   cleanBang,
   prependBang,
   forEach,
