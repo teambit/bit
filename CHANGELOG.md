@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- generate node_modules links upon build for new components
+
 ## [[14.2.5] - 2019-08-22](https://github.com/teambit/bit/releases/tag/v14.2.5)
 
 ### New
