@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.5-dev.2] - 2019-08-22
+
 - fix dist changing of bit-ids on export to make the replacement on exact matches only
 - [#1941](https://github.com/teambit/bit/issues/1941) ignore .DS_Store file when reading dirs
 
-## [14.2.5-dev.1] - 2019-08-21]
+## [14.2.5-dev.1] - 2019-08-21
 
 - [#1912](https://github.com/teambit/bit/issues/1912) fix linking to an internal and non-exist dist file to fallback to the main package
 - [#1937](https://github.com/teambit/bit/issues/1937) introduce `--json` flag for `bit import`
