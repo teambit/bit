@@ -23,9 +23,9 @@ describe('bit link', function () {
         helper.fixtures.addComponentUtilsIsType();
         linkOutput = helper.command.runCmd('bit link');
       });
-      it('should not create any link because there is no scope yet (until export)', () => {
-        expect(linkOutput).to.have.string('nothing to link because the component was not exported yet');
-        expect(path.join(helper.scopes.localPath, 'node_modules')).to.not.be.a.path();
+      it('should create links while the paths do not have scope name (until export)', () => {
+        expect(linkOutput).to.have.string('node_modules/@bit/utils.is-type/utils/is-type.js');
+        expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
       });
     });
     describe('after export', () => {

@@ -25,10 +25,12 @@ describe('bit build', function () {
     });
   });
   describe('as author', () => {
+    let scopeBeforeTagging;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
+      scopeBeforeTagging = helper.scopeHelper.cloneLocalScope();
     });
     it('should not be able to build without importing a build env', () => {
       const output = helper.command.build();
@@ -61,7 +63,7 @@ describe('bit build', function () {
           helper.fixtures.createComponentBarFoo();
         });
         it('should catch them and throw ExternalBuildError with the stack data', () => {
-          const buildOutput = helper.general.runWithTryCatch('bit build');
+          buildOutput = helper.general.runWithTryCatch('bit build');
           expect(buildOutput).to.have.string('bit failed to build');
           expect(buildOutput).to.have.string('SyntaxError'); // error from the stack
         });
@@ -136,6 +138,7 @@ describe('bit build', function () {
       });
       describe('after exporting the component', () => {
         before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
         });

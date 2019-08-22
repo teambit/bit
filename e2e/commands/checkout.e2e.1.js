@@ -165,9 +165,6 @@ describe('bit checkout command', function () {
         it('should not write package.json file', () => {
           expect(path.join(helper.scopes.localPath, 'package.json')).to.not.be.a.path();
         });
-        it('should not create node_modules directory', () => {
-          expect(path.join(helper.scopes.localPath, 'node_modules')).to.not.be.a.path();
-        });
         it('should not write package-lock.json file', () => {
           expect(path.join(helper.scopes.localPath, 'package-lock.json')).to.not.be.a.path();
         });
