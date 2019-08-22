@@ -7,24 +7,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.2.5-dev.2] - 2019-08-22
+## [[14.2.5] - 2019-08-22](https://github.com/teambit/bit/releases/tag/v14.2.5)
+
+### New
+
+- [#1937](https://github.com/teambit/bit/issues/1937) introduce `--json` flag for `bit import`
+
+### Bug fixes
 
 - fix dist changing of bit-ids on export to make the replacement on exact matches only
 - [#1941](https://github.com/teambit/bit/issues/1941) ignore .DS_Store file when reading dirs
-
-## [14.2.5-dev.1] - 2019-08-21
-
 - [#1912](https://github.com/teambit/bit/issues/1912) fix linking to an internal and non-exist dist file to fallback to the main package
-- [#1937](https://github.com/teambit/bit/issues/1937) introduce `--json` flag for `bit import`
 - [#1916](https://github.com/teambit/bit/issues/1916) do not throw an error when there are no components to build
 - [#1934](https://github.com/teambit/bit/issues/1934) fix capsule compilers when configured to work with custom files
-- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
 - [#1924](https://github.com/teambit/bit/issues/1924) avoid generating old dists files when using capsule compilers
+
+### Experimental
+
+- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
 
 ## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
 ​
 ### New
-​
+
 - [#1867](https://github.com/teambit/bit/issues/1867) apply workspace overrides config on imported components
 - [#1863](https://github.com/teambit/bit/issues/1863) allow excluding components from `overrides` rules
 - [#1865](https://github.com/teambit/bit/issues/1865) allow adding `package.json` props via `overrides`
