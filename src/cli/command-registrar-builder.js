@@ -9,6 +9,7 @@ import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
 import Export from './commands/public-cmds/export-cmd';
+import Fork from './commands/public-cmds/fork-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Commit from './commands/public-cmds/tag-cmd';
 import Import from './commands/public-cmds/import-cmd';
@@ -69,6 +70,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Import(),
       new Install(),
       new Export(),
+      new Fork(),
       new Status(),
       new List(),
       new Config(),

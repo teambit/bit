@@ -63,8 +63,8 @@ export default class ScopeComponentsImporter {
 
   async importManyWithoutDependencies(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
-    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
-    Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
+    logger.debug(`importManyWithoutDependencies. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
+    Analytics.addBreadCrumb('importManyWithoutDependencies', `Ids: ${Analytics.hashData(ids)}`);
 
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -89,7 +89,11 @@ export default class ScopeComponentsImporter {
    * currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
    * ask for the older versions.
    */
-  async importManyWithAllVersions(ids: BitIds, cache?: boolean = true): Promise<VersionDependencies[]> {
+  async importManyWithAllVersions(
+    ids: BitIds,
+    cache?: boolean = true,
+    allDepsVersions: boolean = false
+  ): Promise<VersionDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
@@ -106,7 +110,9 @@ export default class ScopeComponentsImporter {
       });
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
     });
-    await this.importManyWithoutDependencies(allIdsWithAllVersions);
+    allDepsVersions
+      ? await this.importMany(allIdsWithAllVersions, cache)
+      : await this.importManyWithoutDependencies(allIdsWithAllVersions);
 
     return versionDependenciesArr;
   }
@@ -252,7 +258,6 @@ export default class ScopeComponentsImporter {
     localFetch: boolean,
     context?: Object
   }): Promise<VersionDependencies> {
-    // if (!id) return Promise.resolve();
     enrichContextFromGlobal(context);
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {

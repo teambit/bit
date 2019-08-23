@@ -52,7 +52,8 @@ export async function exportMany(
   scope: Scope,
   ids: BitIds,
   remoteName: ?string,
-  context: Object = {}
+  context: Object = {},
+  fork: boolean = false
 ): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
@@ -73,7 +74,7 @@ export async function exportMany(
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
-      convertNonScopeToCorrectScope(scope, componentAndObject, remoteNameStr);
+      convertToCorrectScope(scope, componentAndObject, remoteNameStr, fork);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
       componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();
@@ -142,13 +143,18 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
  * to the bare-scope name.
  * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
  */
-function convertNonScopeToCorrectScope(
+function convertToCorrectScope(
   scope: Scope,
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
-  remoteScope: string
+  remoteScope: string,
+  fork: boolean
 ): void {
   const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
-    if (dependencyId.scope) return dependencyId;
+    if ((!fork && dependencyId.scope) || (fork && dependencyId.scope === remoteScope)) {
+      // if it's not forking (export command), change the scope only when the id has no scope.
+      // for fork, change also when the scope exist
+      return dependencyId;
+    }
     const depId = ModelComponent.fromBitId(dependencyId);
     // todo: use 'load' for async and switch the foreach with map.
     const dependencyObject = scope.objects.loadSync(depId.hash());
@@ -176,7 +182,7 @@ function convertNonScopeToCorrectScope(
       const hashAfter = object.hash().toString();
       if (hashBefore !== hashAfter) {
         logger.debugAndAddBreadCrumb(
-          'scope._convertNonScopeToCorrectScope',
+          'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
           { id: componentsObjects.component.id().toString() }
         );

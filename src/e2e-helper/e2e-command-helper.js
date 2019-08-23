@@ -46,6 +46,10 @@ export default class CommandHelper {
     const output = this.runCmd(`bit list ${this.scopes.remote} --json ${options}`);
     return JSON.parse(output);
   }
+  listScopeParsed(scope: string, options: string = '') {
+    const output = this.runCmd(`bit list ${scope} --json ${options}`);
+    return JSON.parse(output);
+  }
 
   catScope(includeExtraData: boolean = false) {
     const extraData = includeExtraData ? '--json-extra' : '';
@@ -118,6 +122,9 @@ export default class CommandHelper {
   }
   exportToLastScope(ids?: string) {
     return this.runCmd(`bit export ${ids || ''} --last-scope`);
+  }
+  fork(remoteScope: string, options?: string = '') {
+    return this.runCmd(`bit fork ${remoteScope} ${options}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
