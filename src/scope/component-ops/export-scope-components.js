@@ -48,42 +48,58 @@ export async function exportManyBareScope(
   return mergedIds;
 }
 
-export async function exportMany(scope: Scope, ids: BitIds, remoteName: string, context: Object = {}): Promise<BitIds> {
+export async function exportMany(
+  scope: Scope,
+  ids: BitIds,
+  remoteName: ?string,
+  context: Object = {}
+): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  const remotes: Remotes = await getScopeRemotes(scope);
-  const remote: Remote = await remotes.resolve(remoteName, scope);
-  const componentObjects = await pMapSeries(ids, id => scope.sources.getObjects(id));
-  const componentsAndObjects = [];
   enrichContextFromGlobal(context);
-  const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
-    const componentAndObject = componentObject.toObjects(scope.objects);
-    componentAndObject.component.clearStateData();
-    convertNonScopeToCorrectScope(scope, componentAndObject, remoteName);
-    await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
-    componentsAndObjects.push(componentAndObject);
-    const componentBuffer = await componentAndObject.component.compress();
-    const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
-    return new ComponentObjects(componentBuffer, objectsBuffer);
-  });
-  const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
-  let exportedIds;
-  try {
-    exportedIds = await remote.pushMany(manyObjects, context);
-    logger.debugAndAddBreadCrumb(
-      'exportMany',
-      'successfully pushed all ids to the bare-scope, going to save them back to local scope'
-    );
-  } catch (err) {
-    logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
-    return Promise.reject(err);
+  const remotes: Remotes = await getScopeRemotes(scope);
+  if (remoteName) {
+    return exportIntoRemote(remoteName, ids);
   }
-  await Promise.all(ids.map(id => scope.sources.removeComponentById(id)));
-  ids.map(id => scope.createSymlink(id, remoteName));
-  componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
-  await scope.objects.persist();
-  // remove version. exported component might have multiple versions exported
-  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
-  return BitIds.uniqFromArray(idsWithRemoteScope);
+  const groupedByScope = ids.toGroupByScopeName();
+  const results = await pMapSeries(Object.keys(groupedByScope), scopeName =>
+    exportIntoRemote(scopeName, groupedByScope[scopeName])
+  );
+  return BitIds.uniqFromArray(R.flatten(results));
+
+  async function exportIntoRemote(remoteNameStr: string, bitIds: BitIds) {
+    const remote: Remote = await remotes.resolve(remoteNameStr, scope);
+    const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
+    const componentsAndObjects = [];
+    const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
+      const componentAndObject = componentObject.toObjects(scope.objects);
+      componentAndObject.component.clearStateData();
+      convertNonScopeToCorrectScope(scope, componentAndObject, remoteNameStr);
+      await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
+      componentsAndObjects.push(componentAndObject);
+      const componentBuffer = await componentAndObject.component.compress();
+      const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+      return new ComponentObjects(componentBuffer, objectsBuffer);
+    });
+    const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
+    let exportedIds;
+    try {
+      exportedIds = await remote.pushMany(manyObjects, context);
+      logger.debugAndAddBreadCrumb(
+        'exportMany',
+        'successfully pushed all ids to the bare-scope, going to save them back to local scope'
+      );
+    } catch (err) {
+      logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
+      return Promise.reject(err);
+    }
+    await Promise.all(bitIds.map(id => scope.sources.removeComponentById(id)));
+    bitIds.map(id => scope.createSymlink(id, remoteNameStr));
+    componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
+    await scope.objects.persist();
+    // remove version. exported component might have multiple versions exported
+    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    return BitIds.uniqFromArray(idsWithRemoteScope);
+  }
 }
 
 /**
