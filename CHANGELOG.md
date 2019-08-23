@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- (experimental) support exporting components without mentioning a remote by exporting to their last remotes
+
 ## [[14.2.5] - 2019-08-22](https://github.com/teambit/bit/releases/tag/v14.2.5)
 
 ### New

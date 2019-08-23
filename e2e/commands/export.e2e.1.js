@@ -520,4 +520,116 @@ describe('bit export command', function () {
       expect(distContent).to.not.have.string(`"@bit/${helper.scopes.remote}.bar-non-exist"`);
     });
   });
+  describe('without specifying a remote', () => {
+    describe('some components are new and some are tagged', () => {
+      let localScopeBefore;
+      let remoteScopeBefore;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fs.outputFile('foo1.js');
+        helper.fs.outputFile('foo2.js');
+        helper.command.addComponent('foo1.js');
+        helper.command.addComponent('foo2.js');
+        helper.command.tagAllComponents();
+        helper.command.exportComponent('foo1');
+        helper.command.tagScope('1.0.0');
+        localScopeBefore = helper.scopeHelper.cloneLocalScope();
+        remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
+      });
+      describe('export with id and --last-scope flag', () => {
+        it('when the id has scope (were exported before), it should export it successfully', () => {
+          const output = helper.command.exportToLastScope('foo1');
+          expect(output).to.have.string('exported the following 1 component');
+        });
+        it('when the id does not have scope (it is new), it should show a warning', () => {
+          const output = helper.command.exportToLastScope('foo2');
+          expect(output).to.have.string('the following component(s) were not exported');
+        });
+      });
+      describe('export with no ids, no remote and no flags', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully the id that has a scope (was exported before)', () => {
+          expect(output).to.have.string('exported the following 1 component');
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(1);
+          expect(remoteList[0].id).to.have.string('foo1');
+        });
+        it('should show a warning about ids with missing scope', () => {
+          expect(output).to.have.string('the following component(s) were not exported');
+          expect(output).to.have.string('foo2');
+        });
+      });
+    });
+    describe('some components were exported to one scope and other to another scope', () => {
+      let localScopeBefore;
+      let remoteScopeBefore;
+      let anotherRemote;
+      let anotherRemotePath;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+        anotherRemote = scopeName;
+        anotherRemotePath = scopePath;
+        helper.scopeHelper.addRemoteScope(scopePath);
+        helper.fs.outputFile('foo1.js');
+        helper.fs.outputFile('foo2.js');
+        helper.command.addComponent('foo1.js');
+        helper.command.addComponent('foo2.js');
+        helper.command.tagAllComponents();
+        helper.command.exportComponent('foo1');
+        helper.command.runCmd(`bit export ${anotherRemote} foo2`);
+        helper.command.tagScope('2.0.0');
+        localScopeBefore = helper.scopeHelper.cloneLocalScope();
+        remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
+      });
+      describe('export with no ids, no remote and no flags', () => {
+        let output;
+        before(() => {
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully all ids, each to its own remote', () => {
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(1);
+          expect(remoteList[0].id).to.have.string('foo1');
+
+          const anotherRemoteListJson = helper.command.runCmd(`bit list ${anotherRemote} --json`);
+          const anotherRemoteList = JSON.parse(anotherRemoteListJson);
+          expect(anotherRemoteList).to.have.lengthOf(1);
+          expect(anotherRemoteList[0].id).to.have.string('foo2');
+        });
+        it('should output the exported component ids with their different remotes', () => {
+          expect(output).to.have.string(`${helper.scopes.remote}/foo1`);
+          expect(output).to.have.string(`${anotherRemote}/foo2`);
+        });
+      });
+      describe('export with ids, no remote and the flag --last-scope', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          output = helper.command.exportToLastScope('foo1 foo2');
+        });
+        it('should export successfully all ids, each to its own remote', () => {
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(1);
+          expect(remoteList[0].id).to.have.string('foo1');
+
+          const anotherRemoteListJson = helper.command.runCmd(`bit list ${anotherRemote} --json`);
+          const anotherRemoteList = JSON.parse(anotherRemoteListJson);
+          expect(anotherRemoteList).to.have.lengthOf(1);
+          expect(anotherRemoteList[0].id).to.have.string('foo2');
+        });
+        it('should output the exported component ids with their different remotes', () => {
+          expect(output).to.have.string(`${helper.scopes.remote}/foo1`);
+          expect(output).to.have.string(`${anotherRemote}/foo2`);
+        });
+      });
+    });
+  });
 });

@@ -114,9 +114,9 @@ export default class ScopeHelper {
     return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
 
-  reInitRemoteScope() {
-    fs.emptyDirSync(this.scopes.remotePath);
-    return this.command.runCmd('bit init --bare', this.scopes.remotePath);
+  reInitRemoteScope(scopePath?: string = this.scopes.remotePath) {
+    fs.emptyDirSync(scopePath);
+    return this.command.runCmd('bit init --bare', scopePath);
   }
 
   /**

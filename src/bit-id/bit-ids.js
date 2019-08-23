@@ -86,6 +86,10 @@ export default class BitIds extends Array<BitId> {
     return this.map(id => id.toString()).join(', ');
   }
 
+  toGroupByScopeName(): { [scopeName: string]: BitId[] } {
+    return R.groupBy(R.prop('scope'), this);
+  }
+
   static fromObject(dependencies: { [string]: string }) {
     const array = [];
 
