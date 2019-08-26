@@ -220,6 +220,32 @@ describe('capsule', function () {
         const count = result.match(regex);
         expect(count).to.have.lengthOf(1);
       });
+      /**
+       * the idea here is that is-type is first built as a dependency of is-string, so its dists are set.
+       * then, it is written as an individual, so then "writeDistsFile" prop is set to true.
+       * then, it is written as a dependency as a result of bar/foo, where we do need its dists to be written
+       */
+      describe('changing the order of the components in .bitmap so then is-type is built after is-string and before bar-foo', () => {
+        let newCapsuleDir;
+        before(() => {
+          const bitMap = helper.bitMap.read();
+          const newBitMap = {
+            'utils/is-string': bitMap['utils/is-string'],
+            'utils/is-type': bitMap['utils/is-type'],
+            'bar/foo': bitMap['bar/foo'],
+            version: bitMap.version
+          };
+          helper.bitMap.write(newBitMap);
+          const buildOutput = helper.command.build();
+          newCapsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
+        });
+        it('should write all dependencies dists into the capsule', () => {
+          const isStringDist = path.join(newCapsuleDir, '.dependencies/utils/is-string/dist/is-string.js');
+          const isTypeDist = path.join(newCapsuleDir, '.dependencies/utils/is-type/dist/is-type.js');
+          expect(isStringDist).to.be.a.file();
+          expect(isTypeDist).to.be.a.file();
+        });
+      });
       describe('tag, export, tag, untag then tag', () => {
         before(() => {
           helper.command.tagAllComponents();
