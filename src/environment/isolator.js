@@ -53,6 +53,10 @@ export default class Isolator {
         if (!dep.dists || dep.dists.isEmpty()) {
           await dep.build({ scope: this.scope, consumer: this.consumer });
           dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
+        } else {
+          // needed for cases when a component is isolated as an individual first, then as a dependency.
+          // because when it is isolated in the first time, the 'writeDistsFiles' is manually set to false
+          dep.dists.writeDistsFiles = true;
         }
       });
     }
