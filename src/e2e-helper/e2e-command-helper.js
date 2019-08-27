@@ -9,6 +9,7 @@ import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
 import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
+import { CURRENT_UPSTREAM } from '../constants';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -120,11 +121,11 @@ export default class CommandHelper {
   exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope}`);
   }
-  exportToLastScope(ids?: string) {
-    return this.runCmd(`bit export ${ids || ''} --last-scope`);
+  exportToCurrentScope(ids?: string) {
+    return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
-  fork(remoteScope: string, options?: string = '') {
-    return this.runCmd(`bit fork ${remoteScope} ${options}`);
+  export(options?: string = '') {
+    return this.runCmd(`bit export ${options}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);

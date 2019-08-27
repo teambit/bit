@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
-import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 
@@ -12,27 +12,29 @@ export default class Export extends Command {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
-  bit export [id...] --last-scope => export given ids to their last exported remote
-  bit export => export all ids to their last exported remote
+  bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
+  bit export => export all ids to their current scope
   https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
-    ['o', 'last-scope', 'EXPERIMENTAL. export to the last exported remote (omit the [remote] when this flag is used)']
+    ['d', 'include-dependencies', "include the component's dependencies as part of the export to the remote scope"],
+    ['f', 'force', 'force changing a component remote when exporting multiple components'],
+    ['s', 'set-current-upstream', "ensure the component's remote scope is set according to the target location"]
   ];
   loader = true;
   migration = true;
 
-  action([remote, ids]: [string, string[]], { eject, lastScope }: any): Promise<*> {
-    if (lastScope && remote) {
-      ids.push(remote); // when --last-scope is used, the first argument is actually an id
+  action(
+    [remote, ids]: [string, string[]],
+    { eject, includeDependencies, setCurrentUpstream, force }: any
+  ): Promise<*> {
+    const currentScope = !remote || remote === CURRENT_UPSTREAM;
+    if (currentScope && remote) {
       remote = '';
     }
-    if (!remote && !ids.length) {
-      lastScope = true; // when "bit export" was used with no args, export all to the last scope
-    }
-    return exportAction(ids, remote, eject, lastScope).then(results => ({
+    return exportAction(ids, remote, eject, includeDependencies, setCurrentUpstream, force).then(results => ({
       ...results,
       remote
     }));
@@ -51,7 +53,9 @@ export default class Export extends Command {
     ejectResults: ?EjectResults,
     remote: string
   }): string {
-    if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) { return chalk.yellow('nothing to export'); }
+    if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
+      return chalk.yellow('nothing to export');
+    }
     const exportOutput = () => {
       if (R.isEmpty(componentsIds)) return '';
       if (remote) return chalk.green(`exported ${componentsIds.length} components to scope ${chalk.bold(remote)}`);
@@ -70,7 +74,9 @@ export default class Export extends Command {
       if (R.isEmpty(missingScope)) return '';
       const ids = missingScope.map(id => id.toString()).join(', ');
       return chalk.yellow(
-        `the following component(s) were not exported: ${chalk.bold(ids)}.\nplease specify <remote> to export them\n\n`
+        `the following component(s) were not exported: ${chalk.bold(
+          ids
+        )}.\nplease specify <remote> to export them, or set a "defaultCollection" in your workspace config\n\n`
       );
     };
     const ejectOutput = () => {

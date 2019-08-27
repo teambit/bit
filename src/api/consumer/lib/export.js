@@ -15,8 +15,20 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 
-export default (async function exportAction(ids?: string[], remote: ?string, eject: ?boolean) {
-  const { updatedIds: componentsIds, nonExistOnBitMap, missingScope } = await exportComponents(ids, remote);
+export default (async function exportAction(
+  ids?: string[],
+  remote: ?string,
+  eject: ?boolean,
+  includeDependencies: boolean,
+  setCurrentUpstream: ?boolean,
+  force: ?boolean
+) {
+  const { updatedIds: componentsIds, nonExistOnBitMap, missingScope } = await exportComponents(
+    ids,
+    remote,
+    includeDependencies,
+    setCurrentUpstream
+  );
   let ejectResults;
   if (eject) ejectResults = await ejectExportedComponents(componentsIds);
   return { componentsIds, nonExistOnBitMap, missingScope, ejectResults };
@@ -24,15 +36,20 @@ export default (async function exportAction(ids?: string[], remote: ?string, eje
 
 async function exportComponents(
   ids: ?(string[]),
-  remote: ?string
+  remote: ?string,
+  includeDependencies: boolean,
+  setCurrentUpstream: boolean
 ): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
+  if (consumer.config.defaultCollection) {
+    remote = consumer.config.defaultCollection;
+  }
   const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote);
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope };
 
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
-  const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
+  const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined, includeDependencies);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, componentsIds);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);

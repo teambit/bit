@@ -15,7 +15,8 @@ import {
   DEFAULT_BIT_VERSION,
   SCOPE_JSON,
   COMPONENT_ORIGINS,
-  NODE_PATH_SEPARATOR
+  NODE_PATH_SEPARATOR,
+  CURRENT_UPSTREAM
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -688,6 +689,9 @@ export default class Scope {
   static ensure(path: PathOsBasedAbsolute, name: ?string, groupName: ?string): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
+    if (name === CURRENT_UPSTREAM) {
+      throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
+    }
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     const repository = Repository.create({ scopePath: path, scopeJson });
     return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));

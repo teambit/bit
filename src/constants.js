@@ -393,3 +393,5 @@ export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
 
 export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
+
+export const CURRENT_UPSTREAM = 'current';

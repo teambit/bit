@@ -3,7 +3,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import detectIndent from 'detect-indent';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON, CURRENT_UPSTREAM } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
@@ -439,6 +439,20 @@ describe('run bit init', function () {
         expect(lsCmd).to.not.throw();
         expect(path.join(helper.scopes.localPath, 'inner/.bit')).to.be.a.directory();
       });
+    });
+  });
+  describe('init --bare when a directory is a reserved name', () => {
+    before(() => {
+      helper.scopeHelper.initLocalScope();
+      helper.scopeHelper.cleanLocalScope();
+      helper.fs.createNewDirectoryInLocalWorkspace(CURRENT_UPSTREAM);
+    });
+    it('should throw an error', () => {
+      const output = helper.general.runWithTryCatch(
+        'bit init --bare',
+        path.join(helper.scopes.localPath, CURRENT_UPSTREAM)
+      );
+      expect(output).to.have.string(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     });
   });
 });

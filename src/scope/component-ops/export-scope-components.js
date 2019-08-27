@@ -53,10 +53,16 @@ export async function exportMany(
   ids: BitIds,
   remoteName: ?string,
   context: Object = {},
-  fork: boolean = false
+  includeDependencies: boolean = false // kind of fork. by default dependencies only cached, with this, their scope-name is changed
 ): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
+  if (includeDependencies) {
+    const dependenciesIds = await getDependenciesImportIfNeeded();
+    ids.push(...dependenciesIds);
+    // $FlowFixMe
+    ids = BitIds.uniqFromArray(ids);
+  }
   const remotes: Remotes = await getScopeRemotes(scope);
   if (remoteName) {
     return exportIntoRemote(remoteName, ids);
@@ -74,7 +80,7 @@ export async function exportMany(
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
-      convertToCorrectScope(scope, componentAndObject, remoteNameStr, fork);
+      convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
       componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();
@@ -100,6 +106,15 @@ export async function exportMany(
     // remove version. exported component might have multiple versions exported
     const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
     return BitIds.uniqFromArray(idsWithRemoteScope);
+  }
+
+  async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
+    const scopeComponentImporter = new ScopeComponentsImporter(scope);
+    const versionsDependencies = await scopeComponentImporter.importManyWithAllVersions(ids, true, true);
+    const allDependencies = R.flatten(
+      versionsDependencies.map(versionDependencies => versionDependencies.allDependencies)
+    );
+    return allDependencies.map(componentVersion => componentVersion.component.toBitId());
   }
 }
 
@@ -151,8 +166,8 @@ function convertToCorrectScope(
 ): void {
   const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
     if ((!fork && dependencyId.scope) || (fork && dependencyId.scope === remoteScope)) {
-      // if it's not forking (export command), change the scope only when the id has no scope.
-      // for fork, change also when the scope exist
+      // if it's not forking, change the scope only when the id has no scope.
+      // for fork (export with --include-dependencies), change also when the scope exist
       return dependencyId;
     }
     const depId = ModelComponent.fromBitId(dependencyId);

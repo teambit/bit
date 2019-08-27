@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { CURRENT_UPSTREAM } from '../../src/constants';
 
 describe('bit export command', function () {
   this.timeout(0);
@@ -536,13 +537,13 @@ describe('bit export command', function () {
         localScopeBefore = helper.scopeHelper.cloneLocalScope();
         remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
       });
-      describe('export with id and --last-scope flag', () => {
+      describe(`export with id and "${CURRENT_UPSTREAM}" keyword`, () => {
         it('when the id has scope (were exported before), it should export it successfully', () => {
-          const output = helper.command.exportToLastScope('foo1');
+          const output = helper.command.exportToCurrentScope('foo1');
           expect(output).to.have.string('exported the following 1 component');
         });
         it('when the id does not have scope (it is new), it should show a warning', () => {
-          const output = helper.command.exportToLastScope('foo2');
+          const output = helper.command.exportToCurrentScope('foo2');
           expect(output).to.have.string('the following component(s) were not exported');
         });
       });
@@ -562,6 +563,25 @@ describe('bit export command', function () {
         it('should show a warning about ids with missing scope', () => {
           expect(output).to.have.string('the following component(s) were not exported');
           expect(output).to.have.string('foo2');
+        });
+      });
+      describe('export with no remote and no flags when workspace config has defaultCollection set', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.bitJson.addKeyVal(undefined, 'defaultCollection', helper.scopes.remote);
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully both, the id with and without the scope', () => {
+          expect(output).to.have.string('exported the following 2 component');
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(2);
+          expect(remoteList[0].id).to.have.string('foo1');
+          expect(remoteList[1].id).to.have.string('foo2');
+        });
+        it('should not show a warning about ids with missing scope', () => {
+          expect(output).to.not.have.string('the following component(s) were not exported');
         });
       });
     });
@@ -613,7 +633,7 @@ describe('bit export command', function () {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
           helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
-          output = helper.command.exportToLastScope('foo1 foo2');
+          output = helper.command.exportToCurrentScope('foo1 foo2');
         });
         it('should export successfully all ids, each to its own remote', () => {
           const remoteList = helper.command.listRemoteScopeParsed();
@@ -628,6 +648,37 @@ describe('bit export command', function () {
         it('should output the exported component ids with their different remotes', () => {
           expect(output).to.have.string(`${helper.scopes.remote}/foo1`);
           expect(output).to.have.string(`${anotherRemote}/foo2`);
+        });
+      });
+    });
+    describe('export with --include-dependencies flag', () => {
+      let forkScope;
+      let forkScopePath;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateWorkspaceWithComponents();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+        forkScope = scopeName;
+        forkScopePath = scopePath;
+        helper.scopeHelper.addRemoteScope(forkScopePath);
+      });
+      describe('with id and --include-dependencies flag', () => {
+        let forkScopeIds;
+        before(() => {
+          helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
+          const forkScopeList = helper.command.listScopeParsed(forkScope);
+          forkScopeIds = forkScopeList.map(c => c.id);
+        });
+        it('should fork the component', () => {
+          expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
+        });
+        it('should fork the dependencies', () => {
+          expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-type`);
+        });
+        it('should not fork other components', () => {
+          expect(forkScopeIds).to.not.deep.include(`${forkScope}/bar/foo`);
         });
       });
     });

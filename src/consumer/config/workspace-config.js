@@ -41,6 +41,7 @@ export type WorkspaceConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
+  defaultCollection?: string,
   overrides?: ConsumerOverrides
 };
 
@@ -61,6 +62,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   resolveModules: ?ResolveModulesConfig;
   overrides: ConsumerOverrides;
   packageJsonObject: ?Object; // workspace package.json if exists (parsed)
+  defaultCollection: ?string; // default remote scope to export to
 
   constructor({
     compiler,
@@ -80,6 +82,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
+    defaultCollection,
     overrides = ConsumerOverrides.load()
   }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
@@ -103,6 +106,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
     this.resolveModules = resolveModules;
+    this.defaultCollection = defaultCollection;
     this.overrides = overrides;
   }
 
@@ -119,6 +123,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces: this.useWorkspaces,
       manageWorkspaces: this.manageWorkspaces,
       resolveModules: this.resolveModules,
+      defaultCollection: this.defaultCollection,
       overrides: this.overrides.overrides
     });
     if (this.distEntry || this.distTarget) {
@@ -135,6 +140,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
       if (key === 'resolveModules') return !R.isEmpty(val);
+      if (key === 'defaultCollection') return Boolean(val);
       if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
@@ -196,6 +202,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces,
       manageWorkspaces,
       resolveModules,
+      defaultCollection,
       overrides
     } = object;
 
@@ -217,6 +224,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       resolveModules,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist),
+      defaultCollection,
       overrides: ConsumerOverrides.load(overrides)
     });
   }
