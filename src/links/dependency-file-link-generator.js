@@ -218,6 +218,22 @@ export default class DependencyFileLinkGenerator {
       !this.dependencyComponent.dists.isEmpty() &&
       !this.dependencyComponent.dists.hasFileParallelToSrcFile(this.relativePath.destinationRelativePath);
     if (distFileIsNotFound) {
+      // temporary workaround for Angular compiler when all dists have the prefix of the component id
+      const distFileWithDependencyPrefix = path.join(
+        this.dependencyId.toStringWithoutVersion(),
+        this.relativePath.destinationRelativePath
+      );
+      if (
+        !this.dependencyComponent.dists.isEmpty() &&
+        this.dependencyComponent.dists.hasFileParallelToSrcFile(distFileWithDependencyPrefix)
+      ) {
+        const distFile = searchFilesIgnoreExt(
+          this.dependencyComponent.dists.get(),
+          distFileWithDependencyPrefix,
+          'relative'
+        );
+        return this._getPackagePathToInternalFile(distFile);
+      }
       return this._getPackageName();
     }
     // the link is to an internal file, not to the main file
@@ -228,9 +244,9 @@ export default class DependencyFileLinkGenerator {
     return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
   }
 
-  _getPackagePathToInternalFile() {
+  _getPackagePathToInternalFile(filePath?: string = this.relativePath.destinationRelativePath) {
     const packageName = this._getPackageName();
-    const internalFileInsidePackage = this._getInternalFileInsidePackage();
+    const internalFileInsidePackage = this._getInternalFileInsidePackage(filePath);
     const ext = getExt(internalFileInsidePackage);
     const internalFileWithoutExt = EXTENSIONS_TO_STRIP_FROM_PACKAGES.includes(ext)
       ? getWithoutExt(internalFileInsidePackage)
@@ -238,7 +254,7 @@ export default class DependencyFileLinkGenerator {
     return `${packageName}/${internalFileWithoutExt}`;
   }
 
-  _getInternalFileInsidePackage() {
+  _getInternalFileInsidePackage(filePath: string) {
     const dependencySavedLocallyAndDistIsOutside = this.dependencyComponentMap && !this.shouldDistsBeInsideTheComponent;
     const distPrefix =
       this.dependencyComponent.dists.isEmpty() ||
@@ -246,7 +262,7 @@ export default class DependencyFileLinkGenerator {
       dependencySavedLocallyAndDistIsOutside
         ? ''
         : `${DEFAULT_DIST_DIRNAME}/`;
-    return distPrefix + this.relativePath.destinationRelativePath;
+    return distPrefix + filePath;
   }
 
   _getCustomResolveMapping() {
