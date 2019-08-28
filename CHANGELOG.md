@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix dist replacements upon export (for angular compiler) to support require statements to an internal path
+
 ## [14.2.6-dev.1] - 2019-08-26
 
 - [#1947](https://github.com/teambit/bit/issues/1947) workaround an angular-compiler issue when the dists have a prefix
