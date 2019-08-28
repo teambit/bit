@@ -51,7 +51,9 @@ export default class Export extends Command {
     ejectResults: ?EjectResults,
     remote: string
   }): string {
-    if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) { return chalk.yellow('nothing to export'); }
+    if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
+      return chalk.yellow('nothing to export');
+    }
     const exportOutput = () => {
       if (R.isEmpty(componentsIds)) return '';
       if (remote) return chalk.green(`exported ${componentsIds.length} components to scope ${chalk.bold(remote)}`);

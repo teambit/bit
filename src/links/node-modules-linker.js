@@ -22,6 +22,7 @@ import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { getPathRelativeRegardlessCWD } from '../utils/path';
+import RemovePath from '../consumer/component/sources/remove-path';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -131,18 +132,15 @@ export default class NodeModuleLinker {
   async _populateNestedComponentsLinks(component: Component): Promise<void> {
     await this._populateDependenciesAndMissingLinks(component);
   }
-  /**
-   * authored components are linked only when they were exported before
-   */
+
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
-    if (!componentId.scope) return; // scope is a must to generate the link
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
       const isMain = file === component.componentMap.mainFile;
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
-      const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
+      const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true), file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
@@ -159,7 +157,20 @@ export default class NodeModuleLinker {
         this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
       }
     });
+    this._deleteOldLinksOfIdWithoutScope(component);
     this._createPackageJsonForAuthor(component);
+  }
+  /**
+   * for AUTHORED components, when a component is new, upon build, we generate links on
+   * node_modules. The path doesn't have the scope-name as it doesn't exist yet. (e.g. @bit/foo).
+   * Later on, when the component is exported and has a scope-name, the path is complete.
+   * (e.g. @bit/scope.foo). At this stage, this function deletes the old-partial paths.
+   */
+  _deleteOldLinksOfIdWithoutScope(component: Component) {
+    if (component.id.scope) {
+      const previousDest = getNodeModulesPathOfComponent(component.bindingPrefix, component.id.changeScope(null), true);
+      this.dataToPersist.removePath(new RemovePath(previousDest));
+    }
   }
   /**
    * for IMPORTED and NESTED components
@@ -300,7 +311,7 @@ export default class NodeModuleLinker {
   _createPackageJsonForAuthor(component: Component) {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
-    const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
+    const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true));
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
   }

@@ -13,10 +13,14 @@ export default class FsHelper {
     this.scopes = scopes;
   }
 
-  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
-    return glob
-      .sync(path.normalize(`**/${ext}`), { cwd: this.scopes.localPath, dot: includeDot })
-      .map(x => path.normalize(x));
+  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true, includeNodeModules: boolean = true) {
+    const params = { cwd: this.scopes.localPath, dot: includeDot };
+    if (!includeNodeModules) {
+      // $FlowFixMe
+      params.ignore = 'node_modules/**/*';
+    }
+
+    return glob.sync(path.normalize(`**/${ext}`), params).map(x => path.normalize(x));
   }
   getObjectFiles() {
     return glob.sync(path.normalize('*/*'), { cwd: path.join(this.scopes.localPath, '.bit/objects') });
