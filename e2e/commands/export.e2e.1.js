@@ -651,9 +651,10 @@ describe('bit export command', function () {
         });
       });
     });
-    describe('export with --include-dependencies flag', () => {
+    describe('export to a different scope', () => {
       let forkScope;
       let forkScopePath;
+      let localScope;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.populateWorkspaceWithComponents();
@@ -663,6 +664,7 @@ describe('bit export command', function () {
         forkScope = scopeName;
         forkScopePath = scopePath;
         helper.scopeHelper.addRemoteScope(forkScopePath);
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       describe('with id and --include-dependencies flag', () => {
         let forkScopeIds;
@@ -679,6 +681,32 @@ describe('bit export command', function () {
         });
         it('should not fork other components', () => {
           expect(forkScopeIds).to.not.deep.include(`${forkScope}/bar/foo`);
+        });
+      });
+      describe('export staged component without --set-current-upstream', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.reInitRemoteScope(forkScopePath);
+          helper.command.tagScope('1.0.0');
+          output = helper.command.export(`${forkScope} utils/is-type`);
+        });
+        it('should show a success message', () => {
+          expect(output).to.have.string('exported 1 components');
+        });
+        it('should leave the component in "staged" stage', () => {
+          expect(helper.command.statusComponentIsStaged(`${helper.scopes.remote}/utils/is-type`)).to.be.true;
+        });
+        it('should not change the scope name to the new remote', () => {
+          const list = helper.command.listLocalScopeParsed();
+          const ids = list.map(i => i.id);
+          expect(ids).to.include(`${helper.scopes.remote}/utils/is-type`);
+          expect(ids).to.not.include(`${forkScope}/utils/is-type`);
+        });
+        it('should not change the component scope in the .bitmap file', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@1.0.0`);
+          expect(bitMap).to.not.have.property(`${forkScope}/utils/is-type@1.0.0`);
         });
       });
     });

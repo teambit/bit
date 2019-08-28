@@ -27,7 +27,8 @@ export default (async function exportAction(
     ids,
     remote,
     includeDependencies,
-    setCurrentUpstream
+    setCurrentUpstream,
+    force
   );
   let ejectResults;
   if (eject) ejectResults = await ejectExportedComponents(componentsIds);
@@ -38,31 +39,40 @@ async function exportComponents(
   ids: ?(string[]),
   remote: ?string,
   includeDependencies: boolean,
-  setCurrentUpstream: boolean
+  setCurrentUpstream: boolean,
+  force: boolean
 ): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.config.defaultCollection) {
     remote = consumer.config.defaultCollection;
   }
-  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote);
+  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, force);
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope };
 
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
-  const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined, includeDependencies);
-  const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, componentsIds);
+  const { exported, updatedLocally } = await exportMany(
+    consumer.scope,
+    idsToExport,
+    remote,
+    undefined,
+    includeDependencies
+  );
+  const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
-  Analytics.setExtraData('num_components', componentsIds.length);
+  Analytics.setExtraData('num_components', exported.length);
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap, missingScope };
+  const exportedIds = exported.filter(id => !nonExistOnBitMap.has(id));
+  // $FlowFixMe
+  return { updatedIds: exportedIds, nonExistOnBitMap, missingScope };
 }
 
-function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[], nonExistOnBitMap: BitId[] } {
+function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[], nonExistOnBitMap: BitIds } {
   const updatedIds = [];
-  const nonExistOnBitMap = [];
+  const nonExistOnBitMap = new BitIds();
   componentsIds.forEach((componentsId) => {
     const resultId = bitMap.updateComponentId(componentsId, true);
     if (resultId.hasVersion()) updatedIds.push(resultId);
@@ -74,7 +84,8 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
 async function getComponentsToExport(
   ids: ?(string[]),
   consumer: Consumer,
-  remote: ?string
+  remote: ?string,
+  force: boolean
 ): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);

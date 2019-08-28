@@ -39,7 +39,7 @@ export default class CommandHelper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
-  listLocalScopeParsed(options: string = '') {
+  listLocalScopeParsed(options: string = ''): Object[] {
     const output = this.runCmd(`bit list --json ${options}`);
     return JSON.parse(output);
   }
@@ -195,6 +195,11 @@ export default class CommandHelper {
   statusJson() {
     const status = this.runCmd('bit status --json');
     return JSON.parse(status);
+  }
+
+  statusComponentIsStaged(id: string): boolean {
+    const status = this.statusJson();
+    return status.stagedComponents.includes(id);
   }
 
   showComponent(id: string = 'bar/foo') {
