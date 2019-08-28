@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - generate node_modules links upon build for new components
+- fix dist replacements upon export (for angular compiler) to support require statements to an internal path
 
 ## [14.2.6-dev.1] - 2019-08-26
 

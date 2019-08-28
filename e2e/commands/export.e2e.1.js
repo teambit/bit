@@ -519,6 +519,9 @@ describe('bit export command', function () {
     it('should not replace other ids that only has the prefix of other ids/deps', () => {
       expect(distContent).to.not.have.string(`"@bit/${helper.scopes.remote}.bar-non-exist"`);
     });
+    it('should replace the ids without scope name to ids with scope name even when it points to an internal file', () => {
+      expect(distContent).to.have.string(`"@bit/${helper.scopes.remote}.bar-dep/internal-path"`);
+    });
   });
   describe('without specifying a remote', () => {
     describe('some components are new and some are tagged', () => {

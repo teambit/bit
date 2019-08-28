@@ -11,7 +11,7 @@ function compile(files, distPath) {
       const distFile = file.clone();
       distFile.base = distPath;
       distFile.path = path.join(distPath, file.relative);
-      distFile.contents = Buffer.from('require("@bit/bar-dep"); require("@bit/bar-non-exist");');
+      distFile.contents = Buffer.from('require("@bit/bar-dep"); require("@bit/bar-non-exist"); require("@bit/bar-dep/internal-path");');
       return distFile;
     });
 }
