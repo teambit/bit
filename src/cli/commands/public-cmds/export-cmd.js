@@ -28,13 +28,13 @@ export default class Export extends Command {
 
   action(
     [remote, ids]: [string, string[]],
-    { eject, includeDependencies, setCurrentUpstream, force }: any
+    { eject = false, includeDependencies = false, setCurrentUpstream = false, force = false }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
     }
-    return exportAction(ids, remote, eject, includeDependencies, setCurrentUpstream, force).then(results => ({
+    return exportAction({ ids, remote, eject, includeDependencies, setCurrentUpstream, force }).then(results => ({
       ...results,
       remote
     }));

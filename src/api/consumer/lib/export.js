@@ -15,33 +15,33 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 
-export default (async function exportAction(
+export default (async function exportAction(params: {
   ids?: string[],
   remote: ?string,
-  eject: ?boolean,
+  eject: boolean,
   includeDependencies: boolean,
-  setCurrentUpstream: ?boolean,
-  force: ?boolean
-) {
-  const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(
-    ids,
-    remote,
-    includeDependencies,
-    setCurrentUpstream,
-    force
-  );
+  setCurrentUpstream: boolean,
+  force: boolean
+}) {
+  const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
   let ejectResults;
-  if (eject) ejectResults = await ejectExportedComponents(updatedIds);
+  if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
   return { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
 });
 
-async function exportComponents(
+async function exportComponents({
+  ids,
+  remote,
+  includeDependencies,
+  setCurrentUpstream,
+  force
+}: {
   ids: ?(string[]),
   remote: ?string,
   includeDependencies: boolean,
   setCurrentUpstream: boolean,
   force: boolean
-): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
+}): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.config.defaultCollection) {
     remote = consumer.config.defaultCollection;
@@ -56,7 +56,8 @@ async function exportComponents(
     idsToExport,
     remote,
     undefined,
-    includeDependencies
+    includeDependencies,
+    setCurrentUpstream
   );
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);

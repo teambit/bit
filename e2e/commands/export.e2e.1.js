@@ -709,6 +709,32 @@ describe('bit export command', function () {
           expect(bitMap).to.not.have.property(`${forkScope}/utils/is-type@1.0.0`);
         });
       });
+      describe('export staged component with --set-current-upstream', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.reInitRemoteScope(forkScopePath);
+          helper.command.tagScope('1.0.0');
+          output = helper.command.export(`${forkScope} utils/is-type --set-current-upstream`);
+        });
+        it('should show a success message', () => {
+          expect(output).to.have.string('exported 1 components');
+        });
+        it('should not leave the component in "staged" stage', () => {
+          expect(helper.command.statusComponentIsStaged(`${helper.scopes.remote}/utils/is-type`)).to.be.false;
+        });
+        it('should change the scope name to the new remote', () => {
+          const list = helper.command.listLocalScopeParsed();
+          const ids = list.map(i => i.id);
+          expect(ids).to.not.include(`${helper.scopes.remote}/utils/is-type`);
+          expect(ids).to.include(`${forkScope}/utils/is-type`);
+        });
+        it('should change the component scope in the .bitmap file', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@1.0.0`);
+          expect(bitMap).to.have.property(`${forkScope}/utils/is-type@1.0.0`);
+        });
+      });
     });
   });
 });
