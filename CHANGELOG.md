@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - generate node_modules links upon build for new components
 
+## [14.2.6-dev.1] - 2019-08-26
+
+- [#1947](https://github.com/teambit/bit/issues/1947) workaround an angular-compiler issue when the dists have a prefix
+- (experimental) support exporting components without mentioning a remote by exporting to their last remotes
+
 ## [[14.2.5] - 2019-08-22](https://github.com/teambit/bit/releases/tag/v14.2.5)
 
 ### New

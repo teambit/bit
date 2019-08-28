@@ -15,23 +15,23 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 
-export default (async function exportAction(ids?: string[], remote: string, eject: ?boolean) {
-  const { updatedIds: componentsIds, nonExistOnBitMap } = await exportComponents(ids, remote);
+export default (async function exportAction(ids?: string[], remote: ?string, eject: ?boolean) {
+  const { updatedIds: componentsIds, nonExistOnBitMap, missingScope } = await exportComponents(ids, remote);
   let ejectResults;
   if (eject) ejectResults = await ejectExportedComponents(componentsIds);
-  return { componentsIds, nonExistOnBitMap, ejectResults };
+  return { componentsIds, nonExistOnBitMap, missingScope, ejectResults };
 });
 
 async function exportComponents(
-  ids?: string[],
-  remote: string
-): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[] }> {
+  ids: ?(string[]),
+  remote: ?string
+): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
-  const idsToExport = await getComponentsToExport(ids, consumer, remote);
+  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote);
+  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope };
+
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
-  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [] };
-
   const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, componentsIds);
   await linkComponents(updatedIds, consumer);
@@ -40,7 +40,7 @@ async function exportComponents(
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap };
+  return { updatedIds, nonExistOnBitMap, missingScope };
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[], nonExistOnBitMap: BitId[] } {
@@ -54,9 +54,18 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
   return { updatedIds, nonExistOnBitMap };
 }
 
-async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
+async function getComponentsToExport(
+  ids: ?(string[]),
+  consumer: Consumer,
+  remote: ?string
+): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
+  const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds, missingScope: BitId[] } => {
+    if (remote) return { idsToExport: bitIds, missingScope: [] };
+    const [missingScope, idsToExport] = R.splitWhen(id => id.hasScope(), bitIds);
+    return { idsToExport, missingScope };
+  };
   if (!ids || !ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
@@ -65,20 +74,20 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
       : exportPendingComponents;
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
-    return componentsToExport;
+    return filterNonScopeIfNeeded(componentsToExport);
   }
   const idsToExportP = ids.map(async (id) => {
     const parsedId = await getParsedId(consumer, id);
     const status = await consumer.getComponentStatusById(parsedId);
     // don't allow to re-export an exported component unless it's being exported to another scope
-    if (!status.staged && parsedId.scope === remote) {
+    if (remote && !status.staged && parsedId.scope === remote) {
       throw new IdExportedAlready(parsedId.toString(), remote);
     }
     return parsedId;
   });
   loader.start(BEFORE_EXPORT); // show single export
   const idsToExport = await Promise.all(idsToExportP);
-  return BitIds.fromArray(idsToExport);
+  return filterNonScopeIfNeeded(BitIds.fromArray(idsToExport));
 }
 
 async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {

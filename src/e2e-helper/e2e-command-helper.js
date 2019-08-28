@@ -108,13 +108,17 @@ export default class CommandHelper {
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
-
   exportComponent(id: string, scope: string = this.scopes.remote, assert: boolean = true) {
     const result = this.runCmd(`bit export ${scope} ${id}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
-
+  exportAllComponents(scope: string = this.scopes.remote) {
+    return this.runCmd(`bit export ${scope}`);
+  }
+  exportToLastScope(ids?: string) {
+    return this.runCmd(`bit export ${ids || ''} --last-scope`);
+  }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
   }
@@ -124,11 +128,6 @@ export default class CommandHelper {
     const jsonResult = result.substring(jsonStart);
     return JSON.parse(jsonResult);
   }
-
-  exportAllComponents(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope}`);
-  }
-
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
