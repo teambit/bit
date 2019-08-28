@@ -23,7 +23,7 @@ export default (async function exportAction(
   setCurrentUpstream: ?boolean,
   force: ?boolean
 ) {
-  const { updatedIds: componentsIds, nonExistOnBitMap, missingScope } = await exportComponents(
+  const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(
     ids,
     remote,
     includeDependencies,
@@ -31,8 +31,8 @@ export default (async function exportAction(
     force
   );
   let ejectResults;
-  if (eject) ejectResults = await ejectExportedComponents(componentsIds);
-  return { componentsIds, nonExistOnBitMap, missingScope, ejectResults };
+  if (eject) ejectResults = await ejectExportedComponents(updatedIds);
+  return { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
 });
 
 async function exportComponents(
@@ -41,13 +41,13 @@ async function exportComponents(
   includeDependencies: boolean,
   setCurrentUpstream: boolean,
   force: boolean
-): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[] }> {
+): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.config.defaultCollection) {
     remote = consumer.config.defaultCollection;
   }
   const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, force);
-  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope };
+  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
 
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
@@ -65,9 +65,8 @@ async function exportComponents(
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  const exportedIds = exported.filter(id => !nonExistOnBitMap.has(id));
   // $FlowFixMe
-  return { updatedIds: exportedIds, nonExistOnBitMap, missingScope };
+  return { updatedIds, nonExistOnBitMap, missingScope, exported };
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[], nonExistOnBitMap: BitIds } {
