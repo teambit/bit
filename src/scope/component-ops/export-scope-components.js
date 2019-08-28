@@ -89,7 +89,16 @@ export async function exportMany(
       componentAndObject.component.clearStateData();
       convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
-      componentsAndObjects.push(componentAndObject);
+      const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
+      componentAndObject.component.addRemote(remoteObj);
+
+      if (idsToChangeLocally.hasWithoutScope(componentAndObject.component.toBitId())) {
+        componentsAndObjects.push(componentAndObject);
+      } else {
+        const componentAndObjectCloned = componentObject.toObjects(scope.objects);
+        componentAndObjectCloned.component.addRemote(remoteObj);
+        componentsAndObjects.push(componentAndObjectCloned);
+      }
       const componentBuffer = await componentAndObject.component.compress();
       const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
       return new ComponentObjects(componentBuffer, objectsBuffer);
@@ -108,11 +117,7 @@ export async function exportMany(
     }
     await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
     idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
-    componentsAndObjects.forEach((componentObject) => {
-      if (idsToChangeLocally.hasWithoutScope(componentObject.component.toBitId())) {
-        scope.sources.put(componentObject);
-      }
-    });
+    componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
     const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));

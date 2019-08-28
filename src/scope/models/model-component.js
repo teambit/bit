@@ -38,6 +38,7 @@ type State = {
 };
 
 type Versions = { [string]: Ref };
+type Remote = { url: string, name: string, date: string };
 
 export type ComponentProps = {
   scope: ?string,
@@ -50,7 +51,8 @@ export type ComponentProps = {
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */
   local?: boolean, // get deleted after export
-  state?: State // get deleted after export
+  state?: State, // get deleted after export
+  remotes: Remote[]
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -68,6 +70,7 @@ export default class Component extends BitObject {
   bindingPrefix: string;
   local: ?boolean;
   state: State;
+  remotes: Remote[];
 
   constructor(props: ComponentProps) {
     super();
@@ -80,6 +83,7 @@ export default class Component extends BitObject {
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.local = props.local;
     this.state = props.state || {};
+    this.remotes = props.remotes || [];
   }
 
   get versionArray(): Ref[] {
@@ -98,6 +102,22 @@ export default class Component extends BitObject {
 
   hasVersion(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  /**
+   * add a new remote if it is not there already
+   */
+  addRemote(remote: Remote): void {
+    if (!remote.name || !remote.url || !remote.date) {
+      throw new TypeError(
+        `model-component.addRemote get an invalid remote. name: ${remote.name}, url: ${remote.url}, date: ${
+          remote.date
+        }`
+      );
+    }
+    if (!this.remotes.find(r => r.url === remote.url)) {
+      this.remotes.push(remote);
+    }
   }
 
   /**
@@ -233,7 +253,8 @@ export default class Component extends BitObject {
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      bindingPrefix: this.bindingPrefix
+      bindingPrefix: this.bindingPrefix,
+      remotes: this.remotes
     };
     if (this.local) componentObject.local = this.local;
     if (!isEmpty(this.state)) componentObject.state = this.state;
@@ -431,7 +452,8 @@ export default class Component extends BitObject {
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
-      state: rawComponent.state
+      state: rawComponent.state,
+      remotes: rawComponent.remotes
     });
   }
 

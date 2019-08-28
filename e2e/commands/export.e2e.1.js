@@ -708,6 +708,14 @@ describe('bit export command', function () {
           expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/is-type@1.0.0`);
           expect(bitMap).to.not.have.property(`${forkScope}/utils/is-type@1.0.0`);
         });
+        it('should save all remotes in the objects', () => {
+          const isType = helper.command.catComponent('utils/is-type');
+          expect(isType)
+            .to.have.property('remotes')
+            .that.have.lengthOf(2);
+          expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
+          expect(isType.remotes[1].name).to.equal(forkScope);
+        });
       });
       describe('export staged component with --set-current-upstream', () => {
         let output;
@@ -733,6 +741,14 @@ describe('bit export command', function () {
           const bitMap = helper.bitMap.read();
           expect(bitMap).to.not.have.property(`${helper.scopes.remote}/utils/is-type@1.0.0`);
           expect(bitMap).to.have.property(`${forkScope}/utils/is-type@1.0.0`);
+        });
+        it('should save all remotes in the objects', () => {
+          const isType = helper.command.catComponent('utils/is-type');
+          expect(isType)
+            .to.have.property('remotes')
+            .that.have.lengthOf(2);
+          expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
+          expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
     });
