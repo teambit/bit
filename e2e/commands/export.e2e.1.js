@@ -568,12 +568,12 @@ describe('bit export command', function () {
           expect(output).to.have.string('foo2');
         });
       });
-      describe('export with no remote and no flags when workspace config has defaultCollection set', () => {
+      describe('export with no remote and no flags when workspace config has defaultScope set', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.bitJson.addKeyVal(undefined, 'defaultCollection', helper.scopes.remote);
+          helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
           output = helper.command.runCmd('bit export');
         });
         it('should export successfully both, the id with and without the scope', () => {
@@ -686,7 +686,7 @@ describe('bit export command', function () {
           expect(forkScopeIds).to.not.deep.include(`${forkScope}/bar/foo`);
         });
       });
-      describe('export staged component without --set-current-upstream', () => {
+      describe('export staged component without --set-current-scope', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
@@ -720,13 +720,13 @@ describe('bit export command', function () {
           expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
-      describe('export staged component with --set-current-upstream', () => {
+      describe('export staged component with --set-current-scope', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
           helper.command.tagScope('1.0.0');
-          output = helper.command.export(`${forkScope} utils/is-type --set-current-upstream`);
+          output = helper.command.export(`${forkScope} utils/is-type --set-current-scope`);
         });
         it('should show a success message', () => {
           expect(output).to.have.string('exported 1 components');

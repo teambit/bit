@@ -38,7 +38,7 @@ type State = {
 };
 
 type Versions = { [string]: Ref };
-type Remote = { url: string, name: string, date: string };
+type ScopeListItem = { url: string, name: string, date: string };
 
 export type ComponentProps = {
   scope: ?string,
@@ -52,7 +52,7 @@ export type ComponentProps = {
    */
   local?: boolean, // get deleted after export
   state?: State, // get deleted after export
-  remotes: Remote[]
+  scopesList: ScopeListItem[]
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -70,7 +70,7 @@ export default class Component extends BitObject {
   bindingPrefix: string;
   local: ?boolean;
   state: State;
-  remotes: Remote[];
+  scopesList: ScopeListItem[];
 
   constructor(props: ComponentProps) {
     super();
@@ -83,7 +83,7 @@ export default class Component extends BitObject {
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.local = props.local;
     this.state = props.state || {};
-    this.remotes = props.remotes || [];
+    this.scopesList = props.scopesList || [];
   }
 
   get versionArray(): Ref[] {
@@ -107,16 +107,16 @@ export default class Component extends BitObject {
   /**
    * add a new remote if it is not there already
    */
-  addRemote(remote: Remote): void {
-    if (!remote.name || !remote.url || !remote.date) {
+  addScopeListItem(scopeListItem: ScopeListItem): void {
+    if (!scopeListItem.name || !scopeListItem.url || !scopeListItem.date) {
       throw new TypeError(
-        `model-component.addRemote get an invalid remote. name: ${remote.name}, url: ${remote.url}, date: ${
-          remote.date
-        }`
+        `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${
+          scopeListItem.url
+        }, date: ${scopeListItem.date}`
       );
     }
-    if (!this.remotes.find(r => r.url === remote.url)) {
-      this.remotes.push(remote);
+    if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
+      this.scopesList.push(scopeListItem);
     }
   }
 
@@ -254,7 +254,7 @@ export default class Component extends BitObject {
       lang: this.lang,
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
-      remotes: this.remotes
+      remotes: this.scopesList
     };
     if (this.local) componentObject.local = this.local;
     if (!isEmpty(this.state)) componentObject.state = this.state;
@@ -453,7 +453,7 @@ export default class Component extends BitObject {
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      remotes: rawComponent.remotes
+      scopesList: rawComponent.remotes
     });
   }
 

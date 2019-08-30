@@ -90,13 +90,13 @@ export async function exportMany(
       convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
-      componentAndObject.component.addRemote(remoteObj);
+      componentAndObject.component.addScopeListItem(remoteObj);
 
       if (idsToChangeLocally.hasWithoutScope(componentAndObject.component.toBitId())) {
         componentsAndObjects.push(componentAndObject);
       } else {
         const componentAndObjectCloned = componentObject.toObjects(scope.objects);
-        componentAndObjectCloned.component.addRemote(remoteObj);
+        componentAndObjectCloned.component.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObjectCloned);
       }
       const componentBuffer = await componentAndObject.component.compress();

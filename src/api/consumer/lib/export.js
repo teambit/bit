@@ -20,7 +20,7 @@ export default (async function exportAction(params: {
   remote: ?string,
   eject: boolean,
   includeDependencies: boolean,
-  setCurrentUpstream: boolean,
+  setCurrentScope: boolean,
   force: boolean
 }) {
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -33,18 +33,18 @@ async function exportComponents({
   ids,
   remote,
   includeDependencies,
-  setCurrentUpstream,
+  setCurrentScope,
   force
 }: {
   ids: ?(string[]),
   remote: ?string,
   includeDependencies: boolean,
-  setCurrentUpstream: boolean,
+  setCurrentScope: boolean,
   force: boolean
 }): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
-  if (consumer.config.defaultCollection) {
-    remote = consumer.config.defaultCollection;
+  if (consumer.config.defaultScope) {
+    remote = consumer.config.defaultScope;
   }
   const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, force);
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
@@ -57,7 +57,7 @@ async function exportComponents({
     remote,
     undefined,
     includeDependencies,
-    setCurrentUpstream
+    setCurrentScope
   );
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);

@@ -21,20 +21,20 @@ export default class Export extends Command {
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['d', 'include-dependencies', "include the component's dependencies as part of the export to the remote scope"],
     ['f', 'force', 'force changing a component remote when exporting multiple components'],
-    ['s', 'set-current-upstream', "ensure the component's remote scope is set according to the target location"]
+    ['s', 'set-current-scope', "ensure the component's remote scope is set according to the target location"]
   ];
   loader = true;
   migration = true;
 
   action(
     [remote, ids]: [string, string[]],
-    { eject = false, includeDependencies = false, setCurrentUpstream = false, force = false }: any
+    { eject = false, includeDependencies = false, setCurrentScope = false, force = false }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
     }
-    return exportAction({ ids, remote, eject, includeDependencies, setCurrentUpstream, force }).then(results => ({
+    return exportAction({ ids, remote, eject, includeDependencies, setCurrentScope, force }).then(results => ({
       ...results,
       remote
     }));
@@ -76,7 +76,7 @@ export default class Export extends Command {
       return chalk.yellow(
         `the following component(s) were not exported: ${chalk.bold(
           ids
-        )}.\nplease specify <remote> to export them, or set a "defaultCollection" in your workspace config\n\n`
+        )}.\nplease specify <remote> to export them, or set a "defaultScope" in your workspace config\n\n`
       );
     };
     const ejectOutput = () => {
