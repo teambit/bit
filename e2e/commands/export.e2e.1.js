@@ -685,6 +685,14 @@ describe('bit export command', function () {
         it('should not fork other components', () => {
           expect(forkScopeIds).to.not.deep.include(`${forkScope}/bar/foo`);
         });
+        it('bit show should display the remote details', () => {
+          const show = helper.command.showComponentParsed('utils/is-string');
+          expect(show)
+            .to.have.property('scopesList')
+            .with.lengthOf(2);
+          expect(show.scopesList[0].name).to.equal(helper.scopes.remote);
+          expect(show.scopesList[1].name).to.equal(forkScope);
+        });
       });
       describe('export staged component without --set-current-scope', () => {
         let output;

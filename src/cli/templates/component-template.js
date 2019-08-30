@@ -39,6 +39,7 @@ export default function paintComponent(
 
   function paintWithoutCompare() {
     const printableComponent = componentToPrintableForDiff(component);
+    printableComponent.scopesList = (component.scopesList || []).map(s => s.name).join('\n');
     const rows = getFields()
       .map((field) => {
         const arr = [];
@@ -138,7 +139,12 @@ export default function paintComponent(
       'deprecated'
     ];
     if (detailed) {
-      const extraFields = ['overridesDependencies', 'overridesDevDependencies', 'overridesPeerDependencies'];
+      const extraFields = [
+        'overridesDependencies',
+        'overridesDevDependencies',
+        'overridesPeerDependencies',
+        'scopesList'
+      ];
       fields.push(...extraFields);
     }
     return fields;

@@ -38,7 +38,7 @@ type State = {
 };
 
 type Versions = { [string]: Ref };
-type ScopeListItem = { url: string, name: string, date: string };
+export type ScopeListItem = { url: string, name: string, date: string };
 
 export type ComponentProps = {
   scope: ?string,
@@ -376,7 +376,8 @@ export default class Component extends BitObject {
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
-      deprecated: this.deprecated
+      deprecated: this.deprecated,
+      scopesList: clone(this.scopesList)
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
