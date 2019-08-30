@@ -77,7 +77,10 @@ export async function exportMany(
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
   };
 
-  async function exportIntoRemote(remoteNameStr: string, bitIds: BitIds) {
+  async function exportIntoRemote(
+    remoteNameStr: string,
+    bitIds: BitIds
+  ): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
@@ -104,7 +107,7 @@ export async function exportMany(
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
-    let exportedIds;
+    let exportedIds: string[];
     try {
       exportedIds = await remote.pushMany(manyObjects, context);
       logger.debugAndAddBreadCrumb(
@@ -120,10 +123,10 @@ export async function exportMany(
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
     return {
       exported: BitIds.uniqFromArray(idsWithRemoteScope),
-      updatedLocally: idsWithRemoteScope.filter(id => idsToChangeLocally.hasWithoutScope(id))
+      updatedLocally: BitIds.uniqFromArray(idsWithRemoteScope.filter(id => idsToChangeLocally.hasWithoutScope(id)))
     };
   }
 
@@ -182,13 +185,13 @@ function convertToCorrectScope(
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
   remoteScope: string,
   fork: boolean,
-  bitIds: BitIds
+  exportingIds: BitIds
 ): void {
   const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
     if (dependencyId.scope === remoteScope) {
       return dependencyId; // nothing has changed
     }
-    if (!dependencyId.scope || fork || bitIds.hasWithoutVersion(dependencyId)) {
+    if (!dependencyId.scope || fork || exportingIds.hasWithoutVersion(dependencyId)) {
       const depId = ModelComponent.fromBitId(dependencyId);
       // todo: use 'load' for async and switch the foreach with map.
       const dependencyObject = scope.objects.loadSync(depId.hash());

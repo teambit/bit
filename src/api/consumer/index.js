@@ -9,7 +9,6 @@ import { build, buildAll } from './lib/build';
 import importAction from './lib/import';
 import installAction from './lib/install';
 import exportAction from './lib/export';
-import forkAction from './lib/fork';
 import getConsumerComponent from './lib/get-consumer-component';
 import getScopeComponent from './lib/get-scope-component';
 import test from './lib/test';
@@ -40,7 +39,6 @@ export {
   isolate,
   config,
   exportAction,
-  forkAction,
   remove,
   deprecate,
   undeprecate,

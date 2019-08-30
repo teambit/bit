@@ -17,7 +17,7 @@ import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
 
 export default (async function exportAction(params: {
-  ids?: string[],
+  ids: string[],
   remote: ?string,
   eject: boolean,
   includeDependencies: boolean,
@@ -39,7 +39,7 @@ async function exportComponents({
   includeNonStaged,
   force
 }: {
-  ids: ?(string[]),
+  ids: string[],
   remote: ?string,
   includeDependencies: boolean,
   setCurrentScope: boolean,
@@ -110,7 +110,7 @@ async function getComponentsToExport(
     if (!force && remote) {
       componentsToExport.forEach((id) => {
         if (id.scope && id.scope !== remote) {
-          throw new GeneralError(
+          throw new GeneralError( // $FlowFixMe
             `a component "${id.toString()}" is about to change the scope to "${remote}", if this is done deliberately, please use "--force" flag`
           );
         }

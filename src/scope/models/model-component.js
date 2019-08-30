@@ -52,7 +52,7 @@ export type ComponentProps = {
    */
   local?: boolean, // get deleted after export
   state?: State, // get deleted after export
-  scopesList: ScopeListItem[]
+  scopesList?: ScopeListItem[]
 };
 
 const VERSION_ZERO = '0.0.0';
