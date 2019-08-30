@@ -754,7 +754,7 @@ describe('bit export command', function () {
           expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
-      describe('export all without --force flag', () => {
+      describe('export all with/without --force flag', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.scopeHelper.reInitRemoteScope(forkScopePath);
@@ -781,6 +781,38 @@ describe('bit export command', function () {
           it('should export them all successfully', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
             expect(remoteScope).to.have.lengthOf(3);
+          });
+        });
+      });
+      describe('workspace has some as staged and some as non-staged', () => {
+        let localScopeWithFoo2;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.reInitRemoteScope(forkScopePath);
+          helper.fs.outputFile('foo2.js');
+          helper.command.addComponent('foo2.js');
+          helper.command.tagComponent('foo2');
+          localScopeWithFoo2 = helper.scopeHelper.cloneLocalScope();
+        });
+        describe('export without --all flag', () => {
+          before(() => {
+            helper.command.export(`${forkScope} --force`);
+          });
+          it('should export only the staged component', () => {
+            const remoteScope = helper.command.listScopeParsed(forkScope);
+            expect(remoteScope).to.have.lengthOf(1);
+            expect(remoteScope[0].id).to.have.string('foo2');
+          });
+        });
+        describe('export with --all flag', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScopeWithFoo2);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.command.export(`${forkScope} --force --all`);
+          });
+          it('should export all even non-staged components', () => {
+            const remoteScope = helper.command.listScopeParsed(forkScope);
+            expect(remoteScope).to.have.lengthOf(4);
           });
         });
       });

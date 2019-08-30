@@ -35,7 +35,15 @@ export default class Export extends Command {
     if (currentScope && remote) {
       remote = '';
     }
-    return exportAction({ ids, remote, eject, includeDependencies, setCurrentScope, all, force }).then(results => ({
+    return exportAction({
+      ids,
+      remote,
+      eject,
+      includeDependencies,
+      setCurrentScope,
+      includeNonStaged: all,
+      force
+    }).then(results => ({
       ...results,
       remote
     }));
