@@ -113,6 +113,7 @@ async function setFutureVersions(
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
+      // $FlowFixMe
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance

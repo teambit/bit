@@ -130,7 +130,7 @@ export default class Show extends Command {
       if (component.scopesList) {
         componentFromFileSystem.scopesList = component.scopesList;
       }
-      const componentFromModel = makeComponentReadable(componentModel);
+      const componentFromModel = componentModel ? makeComponentReadable(componentModel) : undefined;
       const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
       return JSON.stringify(jsonObject, null, '  ');
     }
