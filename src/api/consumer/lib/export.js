@@ -14,6 +14,7 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 import { exportMany } from '../../../scope/component-ops/export-scope-components';
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
+import GeneralError from '../../../error/general-error';
 
 export default (async function exportAction(params: {
   ids?: string[],
@@ -21,6 +22,7 @@ export default (async function exportAction(params: {
   eject: boolean,
   includeDependencies: boolean,
   setCurrentScope: boolean,
+  includeNonStaged: boolean,
   force: boolean
 }) {
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -34,19 +36,21 @@ async function exportComponents({
   remote,
   includeDependencies,
   setCurrentScope,
+  includeNonStaged,
   force
 }: {
   ids: ?(string[]),
   remote: ?string,
   includeDependencies: boolean,
   setCurrentScope: boolean,
+  includeNonStaged: boolean,
   force: boolean
 }): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.config.defaultScope) {
     remote = consumer.config.defaultScope;
   }
-  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, force);
+  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, includeNonStaged, force);
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
 
   // todo: what happens when some failed? we might consider avoid Promise.all
@@ -85,6 +89,7 @@ async function getComponentsToExport(
   ids: ?(string[]),
   consumer: Consumer,
   remote: ?string,
+  includeNonStaged: boolean,
   force: boolean
 ): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);
@@ -96,10 +101,21 @@ async function getComponentsToExport(
   };
   if (!ids || !ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
-    const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
+    const exportPendingComponents: BitIds = includeNonStaged
+      ? await componentsList.listNonNewComponentsIds()
+      : await componentsList.listExportPendingComponentsIds();
     const componentsToExport = idsHaveWildcard // $FlowFixMe ids are set at this point
       ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
       : exportPendingComponents;
+    if (!force && remote) {
+      componentsToExport.forEach((id) => {
+        if (id.scope && id.scope !== remote) {
+          throw new GeneralError(
+            `a component "${id.toString()}" is about to change the scope to "${remote}", if this is done deliberately, please use "--force" flag`
+          );
+        }
+      });
+    }
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
     return filterNonScopeIfNeeded(componentsToExport);

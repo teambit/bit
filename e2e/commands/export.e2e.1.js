@@ -754,6 +754,36 @@ describe('bit export command', function () {
           expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
+      describe('export all without --force flag', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.reInitRemoteScope(forkScopePath);
+          helper.command.tagScope('1.0.0');
+        });
+        describe('without --force flag', () => {
+          let output;
+          before(() => {
+            output = helper.general.runWithTryCatch(`bit export ${forkScope}`);
+          });
+          it('should throw an error warning about the scope change and suggesting to use --force', () => {
+            expect(output).to.have.string('is about to change the scope');
+            expect(output).to.have.string('please use "--force" flag');
+          });
+          it('should not export anything', () => {
+            const remoteScope = helper.command.listScopeParsed(forkScope);
+            expect(remoteScope).to.have.lengthOf(0);
+          });
+        });
+        describe('with --force', () => {
+          before(() => {
+            helper.command.export(`${forkScope} --force`);
+          });
+          it('should export them all successfully', () => {
+            const remoteScope = helper.command.listScopeParsed(forkScope);
+            expect(remoteScope).to.have.lengthOf(3);
+          });
+        });
+      });
     });
   });
 });

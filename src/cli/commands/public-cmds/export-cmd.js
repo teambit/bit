@@ -13,7 +13,7 @@ export default class Export extends Command {
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
   bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
-  bit export => export all ids to their current scope
+  bit export => export all staged components to their current scope
   https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
@@ -21,6 +21,7 @@ export default class Export extends Command {
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['d', 'include-dependencies', "include the component's dependencies as part of the export to the remote scope"],
     ['f', 'force', 'force changing a component remote when exporting multiple components'],
+    ['a', 'all', 'export all components include non-staged'],
     ['s', 'set-current-scope', "ensure the component's remote scope is set according to the target location"]
   ];
   loader = true;
@@ -28,13 +29,13 @@ export default class Export extends Command {
 
   action(
     [remote, ids]: [string, string[]],
-    { eject = false, includeDependencies = false, setCurrentScope = false, force = false }: any
+    { eject = false, includeDependencies = false, setCurrentScope = false, all = false, force = false }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
     }
-    return exportAction({ ids, remote, eject, includeDependencies, setCurrentScope, force }).then(results => ({
+    return exportAction({ ids, remote, eject, includeDependencies, setCurrentScope, all, force }).then(results => ({
       ...results,
       remote
     }));

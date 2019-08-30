@@ -87,7 +87,7 @@ export async function exportMany(
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
-      convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies);
+      convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
@@ -181,21 +181,23 @@ function convertToCorrectScope(
   scope: Scope,
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
   remoteScope: string,
-  fork: boolean
+  fork: boolean,
+  bitIds: BitIds
 ): void {
   const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
-    if ((!fork && dependencyId.scope) || (fork && dependencyId.scope === remoteScope)) {
-      // if it's not forking, change the scope only when the id has no scope.
-      // for fork (export with --include-dependencies), change also when the scope exist
-      return dependencyId;
+    if (dependencyId.scope === remoteScope) {
+      return dependencyId; // nothing has changed
     }
-    const depId = ModelComponent.fromBitId(dependencyId);
-    // todo: use 'load' for async and switch the foreach with map.
-    const dependencyObject = scope.objects.loadSync(depId.hash());
-    if (dependencyObject instanceof Symlink) {
-      return dependencyId.changeScope(dependencyObject.realScope);
+    if (!dependencyId.scope || fork || bitIds.hasWithoutVersion(dependencyId)) {
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
+      }
+      return dependencyId.changeScope(remoteScope);
     }
-    return dependencyId.changeScope(remoteScope);
+    return dependencyId;
   };
 
   const getBitIdsWithUpdatedScope = (bitIds: BitIds): BitIds => {
