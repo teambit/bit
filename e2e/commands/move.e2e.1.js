@@ -74,7 +74,7 @@ describe('bit move command', function () {
       helper.command.runCmd('bit move bar utils');
     });
     it('should move physically the directory', () => {
-      const localConsumerFiles = helper.fs.getConsumerFiles();
+      const localConsumerFiles = helper.fs.getConsumerFiles(undefined, undefined, false);
       localConsumerFiles.forEach((file) => {
         expect(file.startsWith('utils')).to.be.true;
       });
@@ -105,9 +105,9 @@ describe('bit move command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       fs.moveSync(path.join(helper.scopes.localPath, oldPath), path.join(helper.scopes.localPath, newPath));
-      filesBeforeMove = helper.fs.getConsumerFiles();
+      filesBeforeMove = helper.fs.getConsumerFiles(undefined, undefined, false);
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
-      filesAfterMove = helper.fs.getConsumerFiles();
+      filesAfterMove = helper.fs.getConsumerFiles(undefined, undefined, false);
     });
     it('should not physically move any file', () => {
       expect(filesBeforeMove).to.deep.equal(filesAfterMove);

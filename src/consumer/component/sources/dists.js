@@ -180,7 +180,7 @@ export default class Dists {
       ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
       : component.componentMap;
     if (!componentMap) throw new Error('writeDistsLinks expect componentMap to be defined');
-    if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return;
+    if (componentMap.origin === COMPONENT_ORIGINS.NESTED) return;
     const dataToPersist = await getLinksInDistToWrite(component, componentMap, consumer, consumer.bitMap);
     dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();

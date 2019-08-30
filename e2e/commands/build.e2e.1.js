@@ -25,26 +25,35 @@ describe('bit build', function () {
     });
   });
   describe('as author', () => {
+    let scopeBeforeTagging;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
+      scopeBeforeTagging = helper.scopeHelper.cloneLocalScope();
     });
     it('should not be able to build without importing a build env', () => {
       const output = helper.command.build();
       expect(output).to.have.string('nothing to build');
     });
-    describe('after importing a compiler', () => {
+    describe('build after importing a compiler', () => {
+      let buildOutput;
       before(() => {
         const output = helper.env.importCompiler();
         expect(output).to.have.string(
           `the following component environments were installed\n- ${helper.scopes.env}/compilers/babel@`
         );
+        buildOutput = helper.command.build();
       });
       it('should successfully import and build using the babel compiler', () => {
-        const buildOutput = helper.command.build();
         expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js.map'));
         expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js'));
+      });
+      it('should create links to node_modules with partial-ids (id without scope)', () => {
+        const nodeModuleDir = path.join(helper.scopes.localPath, 'node_modules/@bit/bar.foo');
+        expect(nodeModuleDir).to.be.a.directory();
+        expect(path.join(nodeModuleDir, 'package.json')).to.be.a.file();
+        expect(path.join(nodeModuleDir, 'bar/foo.js')).to.be.a.file();
       });
       describe('when an exception is thrown during the build', () => {
         before(() => {
@@ -54,7 +63,7 @@ describe('bit build', function () {
           helper.fixtures.createComponentBarFoo();
         });
         it('should catch them and throw ExternalBuildError with the stack data', () => {
-          const buildOutput = helper.general.runWithTryCatch('bit build');
+          buildOutput = helper.general.runWithTryCatch('bit build');
           expect(buildOutput).to.have.string('bit failed to build');
           expect(buildOutput).to.have.string('SyntaxError'); // error from the stack
         });
@@ -125,6 +134,23 @@ describe('bit build', function () {
             expect(distFileFullPath).to.be.a.file();
             expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
           });
+        });
+      });
+      describe('after exporting the component', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeTagging);
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+        });
+        it('should delete the generated links on node-modules', () => {
+          const nodeModuleDir = path.join(helper.scopes.localPath, 'node_modules/@bit/bar.foo');
+          expect(nodeModuleDir).to.not.be.a.path();
+        });
+        it('should generate new links on node-modules with full-id (include scope name)', () => {
+          const nodeModuleDir = path.join(helper.scopes.localPath, `node_modules/@bit/${helper.scopes.remote}.bar.foo`);
+          expect(nodeModuleDir).to.be.a.directory();
+          expect(path.join(nodeModuleDir, 'package.json')).to.be.a.file();
+          expect(path.join(nodeModuleDir, 'bar/foo.js')).to.be.a.file();
         });
       });
     });

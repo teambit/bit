@@ -10,11 +10,9 @@ export async function build(id: string, noCache: boolean, verbose: boolean): Pro
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);
   const component: Component = await consumer.loadComponent(bitId);
-  const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
-  if (result === null) return null;
-  const distFilePaths = await component.dists.writeDists(component, consumer);
+  const results = await consumer.scope.buildMultiple([component], consumer, noCache, verbose);
   await consumer.onDestroy();
-  return distFilePaths;
+  return results[0].buildResults;
 }
 
 export async function buildAll(noCache: boolean, verbose: boolean): Promise<Object> {

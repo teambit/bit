@@ -278,9 +278,15 @@ async function changePartialNamesToFullNamesInDists(
       const singleQuote = "'";
       const doubleQuotes = '"';
       [singleQuote, doubleQuotes].forEach((quoteType) => {
+        // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
         newDistString = newDistString.replace(
           new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),
           quoteType + pkgNameWithScope + quoteType
+        );
+        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+        newDistString = newDistString.replace(
+          new RegExp(`${quoteType}${pkgNameWithoutScope}/`, 'g'),
+          `${quoteType}${pkgNameWithScope}/`
         );
       });
     });
