@@ -24,7 +24,7 @@ describe('bit link', function () {
         linkOutput = helper.command.runCmd('bit link');
       });
       it('should create links while the paths do not have scope name (until export)', () => {
-        expect(linkOutput).to.have.string('node_modules/@bit/utils.is-type/utils/is-type.js');
+        expect(linkOutput).to.have.string(path.normalize('node_modules/@bit/utils.is-type/utils/is-type.js'));
         expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
       });
     });
