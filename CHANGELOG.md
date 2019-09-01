@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1959](https://github.com/teambit/bit/issues/1959) improve message when running `bit build` when compiler not configured
+
 ## [14.2.6-dev.2] - 2019-08-28
 
 - generate node_modules links upon build for new components
