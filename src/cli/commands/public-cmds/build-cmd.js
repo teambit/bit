@@ -39,7 +39,10 @@ export default class Build extends Command {
     if (typeof res === 'object') {
       // got from build-all
       // $FlowFixMe - res is an object
-      if (empty(res)) return chalk.yellow('nothing to build');
+      if (empty(res)) {
+        return chalk.yellow(`nothing to build
+learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components.html`);
+      }
       return Object.keys(res)
         .map((component) => {
           const title = chalk.bold(component);

@@ -55,6 +55,18 @@
     "type": "git",
     "url": "https://github.com/teambit/bit"
   },
+  "keywords": [
+    "bit",
+    "components",
+    "collaboration",
+    "web",
+    "react",
+    "react-components",
+    "angular",
+    "angular-components",
+    "vue",
+    "vue-components"
+  ],
   "dependencies": {
     "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
