@@ -20,7 +20,7 @@ import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
-import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS } from './link-content';
+import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS, EXTENSIONS_NOT_SUPPORT_DIRS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
@@ -371,9 +371,12 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const mainFileExt = getExt(mainFile);
   if (JAVASCRIPT_FLAVORS_EXTENSIONS.includes(mainFileExt) && component.packageJsonFile) {
-    // throw new Error('hi')
     // if the main file is a javascript kind of file and the component has package.json file, no
     // need for an entry-point file because the "main" attribute of package.json takes care of that
+    return [];
+  }
+  if (EXTENSIONS_NOT_SUPPORT_DIRS.includes(mainFileExt)) {
+    // some extensions (such as .scss according to node-sass) don't know to resolve by an entry-point
     return [];
   }
   const files = [];
