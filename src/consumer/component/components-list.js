@@ -211,6 +211,14 @@ export default class ComponentsList {
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
 
+  async listNonNewComponentsIds(): Promise<BitIds> {
+    const authoredAndImported = await this._getAuthoredAndImportedFromFS();
+    // $FlowFixMe
+    const newComponents: BitIds = await this.listNewComponents();
+    const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
+    return BitIds.fromArray(nonNewComponents.map(c => c.id));
+  }
+
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
     const authoredAndImported = this.bitMap.getAuthoredAndImportedBitIds();
     const updatedIdsP = ids.map(async (id: BitId) => {

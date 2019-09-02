@@ -9,6 +9,7 @@ import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
 import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
+import { CURRENT_UPSTREAM } from '../constants';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -38,12 +39,16 @@ export default class CommandHelper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
-  listLocalScopeParsed(options: string = '') {
+  listLocalScopeParsed(options: string = ''): Object[] {
     const output = this.runCmd(`bit list --json ${options}`);
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options: string = '') {
     const output = this.runCmd(`bit list ${this.scopes.remote} --json ${options}`);
+    return JSON.parse(output);
+  }
+  listScopeParsed(scope: string, options: string = '') {
+    const output = this.runCmd(`bit list ${scope} --json ${options}`);
     return JSON.parse(output);
   }
 
@@ -116,8 +121,11 @@ export default class CommandHelper {
   exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope}`);
   }
-  exportToLastScope(ids?: string) {
-    return this.runCmd(`bit export ${ids || ''} --last-scope`);
+  exportToCurrentScope(ids?: string) {
+    return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
+  }
+  export(options?: string = '') {
+    return this.runCmd(`bit export ${options}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
@@ -187,6 +195,11 @@ export default class CommandHelper {
   statusJson() {
     const status = this.runCmd('bit status --json');
     return JSON.parse(status);
+  }
+
+  statusComponentIsStaged(id: string): boolean {
+    const status = this.statusJson();
+    return status.stagedComponents.includes(id);
   }
 
   showComponent(id: string = 'bar/foo') {

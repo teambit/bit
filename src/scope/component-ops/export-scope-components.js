@@ -52,10 +52,18 @@ export async function exportMany(
   scope: Scope,
   ids: BitIds,
   remoteName: ?string,
-  context: Object = {}
-): Promise<BitIds> {
+  context: Object = {},
+  includeDependencies: boolean = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
+  changeLocallyAlthoughRemoteIsDifferent: boolean = false // by default only if remote stays the same the component is changed from staged to exported
+): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
+  if (includeDependencies) {
+    const dependenciesIds = await getDependenciesImportIfNeeded();
+    ids.push(...dependenciesIds);
+    // $FlowFixMe
+    ids = BitIds.uniqFromArray(ids);
+  }
   const remotes: Remotes = await getScopeRemotes(scope);
   if (remoteName) {
     return exportIntoRemote(remoteName, ids);
@@ -64,24 +72,42 @@ export async function exportMany(
   const results = await pMapSeries(Object.keys(groupedByScope), scopeName =>
     exportIntoRemote(scopeName, groupedByScope[scopeName])
   );
-  return BitIds.uniqFromArray(R.flatten(results));
+  return {
+    exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
+    updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
+  };
 
-  async function exportIntoRemote(remoteNameStr: string, bitIds: BitIds) {
+  async function exportIntoRemote(
+    remoteNameStr: string,
+    bitIds: BitIds
+  ): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
+    const idsToChangeLocally = BitIds.fromArray(
+      bitIds.filter(id => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
+    );
     const componentsAndObjects = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
-      convertNonScopeToCorrectScope(scope, componentAndObject, remoteNameStr);
+      convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
-      componentsAndObjects.push(componentAndObject);
+      const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
+      componentAndObject.component.addScopeListItem(remoteObj);
+
+      if (idsToChangeLocally.hasWithoutScope(componentAndObject.component.toBitId())) {
+        componentsAndObjects.push(componentAndObject);
+      } else {
+        const componentAndObjectCloned = componentObject.toObjects(scope.objects);
+        componentAndObjectCloned.component.addScopeListItem(remoteObj);
+        componentsAndObjects.push(componentAndObjectCloned);
+      }
       const componentBuffer = await componentAndObject.component.compress();
       const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
-    let exportedIds;
+    let exportedIds: string[];
     try {
       exportedIds = await remote.pushMany(manyObjects, context);
       logger.debugAndAddBreadCrumb(
@@ -92,13 +118,25 @@ export async function exportMany(
       logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-    await Promise.all(bitIds.map(id => scope.sources.removeComponentById(id)));
-    bitIds.map(id => scope.createSymlink(id, remoteNameStr));
-    componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
+    await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
+    idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
+    componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
-    return BitIds.uniqFromArray(idsWithRemoteScope);
+    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    return {
+      exported: BitIds.uniqFromArray(idsWithRemoteScope),
+      updatedLocally: BitIds.uniqFromArray(idsWithRemoteScope.filter(id => idsToChangeLocally.hasWithoutScope(id)))
+    };
+  }
+
+  async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
+    const scopeComponentImporter = new ScopeComponentsImporter(scope);
+    const versionsDependencies = await scopeComponentImporter.importManyWithAllVersions(ids, true, true);
+    const allDependencies = R.flatten(
+      versionsDependencies.map(versionDependencies => versionDependencies.allDependencies)
+    );
+    return allDependencies.map(componentVersion => componentVersion.component.toBitId());
   }
 }
 
@@ -142,20 +180,27 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
  * to the bare-scope name.
  * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
  */
-function convertNonScopeToCorrectScope(
+function convertToCorrectScope(
   scope: Scope,
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
-  remoteScope: string
+  remoteScope: string,
+  fork: boolean,
+  exportingIds: BitIds
 ): void {
   const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
-    if (dependencyId.scope) return dependencyId;
-    const depId = ModelComponent.fromBitId(dependencyId);
-    // todo: use 'load' for async and switch the foreach with map.
-    const dependencyObject = scope.objects.loadSync(depId.hash());
-    if (dependencyObject instanceof Symlink) {
-      return dependencyId.changeScope(dependencyObject.realScope);
+    if (dependencyId.scope === remoteScope) {
+      return dependencyId; // nothing has changed
     }
-    return dependencyId.changeScope(remoteScope);
+    if (!dependencyId.scope || fork || exportingIds.hasWithoutVersion(dependencyId)) {
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
+      }
+      return dependencyId.changeScope(remoteScope);
+    }
+    return dependencyId;
   };
 
   const getBitIdsWithUpdatedScope = (bitIds: BitIds): BitIds => {
@@ -176,7 +221,7 @@ function convertNonScopeToCorrectScope(
       const hashAfter = object.hash().toString();
       if (hashBefore !== hashAfter) {
         logger.debugAndAddBreadCrumb(
-          'scope._convertNonScopeToCorrectScope',
+          'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
           { id: componentsObjects.component.id().toString() }
         );

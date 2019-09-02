@@ -34,6 +34,10 @@ export default class BitIds extends Array<BitId> {
     return Boolean(this.searchWithoutVersion(bitId));
   }
 
+  hasWithoutScope(bitId: BitId): boolean {
+    return Boolean(this.searchWithoutScope(bitId));
+  }
+
   search(bitId: BitId): ?BitId {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }

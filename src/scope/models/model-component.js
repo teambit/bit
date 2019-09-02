@@ -38,6 +38,7 @@ type State = {
 };
 
 type Versions = { [string]: Ref };
+export type ScopeListItem = { url: string, name: string, date: string };
 
 export type ComponentProps = {
   scope: ?string,
@@ -50,7 +51,8 @@ export type ComponentProps = {
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */
   local?: boolean, // get deleted after export
-  state?: State // get deleted after export
+  state?: State, // get deleted after export
+  scopesList?: ScopeListItem[]
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -68,6 +70,7 @@ export default class Component extends BitObject {
   bindingPrefix: string;
   local: ?boolean;
   state: State;
+  scopesList: ScopeListItem[];
 
   constructor(props: ComponentProps) {
     super();
@@ -80,6 +83,7 @@ export default class Component extends BitObject {
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.local = props.local;
     this.state = props.state || {};
+    this.scopesList = props.scopesList || [];
   }
 
   get versionArray(): Ref[] {
@@ -98,6 +102,22 @@ export default class Component extends BitObject {
 
   hasVersion(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  /**
+   * add a new remote if it is not there already
+   */
+  addScopeListItem(scopeListItem: ScopeListItem): void {
+    if (!scopeListItem.name || !scopeListItem.url || !scopeListItem.date) {
+      throw new TypeError(
+        `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${
+          scopeListItem.url
+        }, date: ${scopeListItem.date}`
+      );
+    }
+    if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
+      this.scopesList.push(scopeListItem);
+    }
   }
 
   /**
@@ -233,7 +253,8 @@ export default class Component extends BitObject {
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      bindingPrefix: this.bindingPrefix
+      bindingPrefix: this.bindingPrefix,
+      remotes: this.scopesList
     };
     if (this.local) componentObject.local = this.local;
     if (!isEmpty(this.state)) componentObject.state = this.state;
@@ -355,7 +376,8 @@ export default class Component extends BitObject {
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
-      deprecated: this.deprecated
+      deprecated: this.deprecated,
+      scopesList: clone(this.scopesList)
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
@@ -431,7 +453,8 @@ export default class Component extends BitObject {
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
-      state: rawComponent.state
+      state: rawComponent.state,
+      scopesList: rawComponent.remotes
     });
   }
 

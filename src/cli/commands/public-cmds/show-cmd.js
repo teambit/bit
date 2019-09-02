@@ -2,7 +2,7 @@
 import Command from '../../command';
 import { show } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
-import ConsumerComponent from '../../../consumer/component';
+import ConsumerComponent from '../../../consumer/component/consumer-component';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
@@ -94,6 +94,9 @@ export default class Show extends Command {
       // $FlowFixMe
       return JSON.stringify(components.map(c => c.toObject()), null, '  ');
     }
+    if (component.componentFromModel) {
+      component.scopesList = component.componentFromModel.scopesList;
+    }
     if (json) {
       const makeEnvFilesReadable = (env) => {
         if (!env) return undefined;
@@ -124,7 +127,10 @@ export default class Show extends Command {
       if (dependentsInfo) {
         componentFromFileSystem.dependentsInfo = dependentsInfo;
       }
-      const componentFromModel = makeComponentReadable(componentModel);
+      if (component.scopesList) {
+        componentFromFileSystem.scopesList = component.scopesList;
+      }
+      const componentFromModel = componentModel ? makeComponentReadable(componentModel) : undefined;
       const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
       return JSON.stringify(jsonObject, null, '  ');
     }
