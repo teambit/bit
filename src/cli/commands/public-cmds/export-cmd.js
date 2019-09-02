@@ -7,6 +7,7 @@ import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
+import GeneralError from '../../../error/general-error';
 
 export default class Export extends Command {
   name = 'export [remote] [id...]';
@@ -22,18 +23,35 @@ export default class Export extends Command {
     ['d', 'include-dependencies', "include the component's dependencies as part of the export to the remote scope"],
     ['f', 'force', 'force changing a component remote when exporting multiple components'],
     ['a', 'all', 'export all components include non-staged'],
-    ['s', 'set-current-scope', "ensure the component's remote scope is set according to the target location"]
+    ['s', 'set-current-scope', "ensure the component's remote scope is set according to the target location"],
+    [
+      'c',
+      'codemod',
+      'when exporting to a different scope, replace import/require statements in the source code to the new scope'
+    ]
   ];
   loader = true;
   migration = true;
 
   action(
     [remote, ids]: [string, string[]],
-    { eject = false, includeDependencies = false, setCurrentScope = false, all = false, force = false }: any
+    {
+      eject = false,
+      includeDependencies = false,
+      setCurrentScope = false,
+      all = false,
+      force = false,
+      codemod = false
+    }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
+    }
+    if (codemod && !includeDependencies) {
+      throw new GeneralError(
+        'to use --codemod, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
+      );
     }
     return exportAction({
       ids,
@@ -42,6 +60,7 @@ export default class Export extends Command {
       includeDependencies,
       setCurrentScope,
       includeNonStaged: all,
+      codemod,
       force
     }).then(results => ({
       ...results,

@@ -824,6 +824,41 @@ describe('bit export command', function () {
           });
         });
       });
+      describe('with --codemod flag', () => {
+        describe('without --set-current-scope', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fixtures.createComponentUtilsIsString(fixtures.isStringModulePath(helper.scopes.remote));
+            helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
+            helper.command.tagScope('1.0.0');
+            helper.command.export(`${forkScope} --include-dependencies --force --codemod`);
+          });
+          it('should not change the files locally on the workspace', () => {
+            const barFoo = helper.fs.readFile('bar/foo.js');
+            expect(barFoo).to.equal(fixtures.barFooModulePath(helper.scopes.remote));
+          });
+          it('should not change the objects locally', () => {
+            const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            const fileHash = barFoo.files[0].file;
+            const fileContent = helper.command.catObject(fileHash);
+            expect(fileContent).to.have.string(helper.scopes.remote);
+            expect(fileContent).to.not.have.string(forkScope);
+          });
+          describe('importing the component from the fork scope to a new workspace', () => {
+            before(() => {
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope(forkScopePath);
+              helper.command.runCmd(`bit import ${forkScope}/bar/foo`);
+            });
+            it('should write the source code with the changed source of the forked scope', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
+              expect(barFoo).to.have.string(forkScope);
+              expect(barFoo).to.not.have.string(helper.scopes.remote);
+            });
+          });
+        });
+      });
     });
   });
 });

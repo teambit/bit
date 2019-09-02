@@ -23,6 +23,7 @@ export default (async function exportAction(params: {
   includeDependencies: boolean,
   setCurrentScope: boolean,
   includeNonStaged: boolean,
+  codemod: boolean,
   force: boolean
 }) {
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -37,6 +38,7 @@ async function exportComponents({
   includeDependencies,
   setCurrentScope,
   includeNonStaged,
+  codemod,
   force
 }: {
   ids: string[],
@@ -44,6 +46,7 @@ async function exportComponents({
   includeDependencies: boolean,
   setCurrentScope: boolean,
   includeNonStaged: boolean,
+  codemod: boolean,
   force: boolean
 }): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
@@ -55,14 +58,14 @@ async function exportComponents({
 
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
-  const { exported, updatedLocally } = await exportMany(
-    consumer.scope,
-    idsToExport,
-    remote,
-    undefined,
+  const { exported, updatedLocally } = await exportMany({
+    scope: consumer.scope,
+    ids: idsToExport,
+    remoteName: remote,
     includeDependencies,
-    setCurrentScope
-  );
+    changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
+    codemod
+  });
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
