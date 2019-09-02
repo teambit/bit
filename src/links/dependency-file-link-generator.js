@@ -12,7 +12,8 @@ import type ComponentMap from '../consumer/bit-map/component-map';
 import {
   getLinkToPackageContent,
   EXTENSIONS_TO_STRIP_FROM_PACKAGES,
-  EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES
+  EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES,
+  EXTENSIONS_NOT_SUPPORT_DIRS
 } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
@@ -211,33 +212,43 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
+    const ext = getExt(this.relativePath.destinationRelativePath);
+    if (
+      this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile) &&
+      !EXTENSIONS_NOT_SUPPORT_DIRS.includes(ext)
+    ) {
       return this._getPackageName();
     }
     const distFileIsNotFound =
       !this.dependencyComponent.dists.isEmpty() &&
       !this.dependencyComponent.dists.hasFileParallelToSrcFile(this.relativePath.destinationRelativePath);
     if (distFileIsNotFound) {
-      // temporary workaround for Angular compiler when all dists have the prefix of the component id
-      const distFileWithDependencyPrefix = path.join(
-        this.dependencyId.toStringWithoutVersion(),
-        this.relativePath.destinationRelativePath
-      );
-      if (
-        !this.dependencyComponent.dists.isEmpty() &&
-        this.dependencyComponent.dists.hasFileParallelToSrcFile(distFileWithDependencyPrefix)
-      ) {
-        const distFile = searchFilesIgnoreExt(
-          this.dependencyComponent.dists.get(),
-          distFileWithDependencyPrefix,
-          'relative'
-        );
-        return this._getPackagePathToInternalFile(distFile);
-      }
-      return this._getPackageName();
+      return this._getPackagePathByDistWithComponentPrefix();
     }
     // the link is to an internal file, not to the main file
     return this._getPackagePathToInternalFile();
+  }
+
+  /**
+   * temporary workaround for Angular compiler when all dists have the prefix of the component id
+   */
+  _getPackagePathByDistWithComponentPrefix() {
+    const distFileWithDependencyPrefix = path.join(
+      this.dependencyId.toStringWithoutVersion(),
+      this.relativePath.destinationRelativePath
+    );
+    if (
+      !this.dependencyComponent.dists.isEmpty() &&
+      this.dependencyComponent.dists.hasFileParallelToSrcFile(distFileWithDependencyPrefix)
+    ) {
+      const distFile = searchFilesIgnoreExt(
+        this.dependencyComponent.dists.get(),
+        distFileWithDependencyPrefix,
+        'relative'
+      );
+      return this._getPackagePathToInternalFile(distFile);
+    }
+    return this._getPackageName();
   }
 
   _getPackageName() {
