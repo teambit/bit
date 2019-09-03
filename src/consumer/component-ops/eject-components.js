@@ -50,13 +50,13 @@ export default class EjectComponents {
       notExportedComponents: new BitIds(),
       selfHostedExportedComponents: new BitIds()
     };
-    this._validateIdsHaveScopesAndVersions();
   }
 
   async eject(): Promise<EjectResults> {
     await this.decideWhichComponentsToEject();
     logger.debugAndAddBreadCrumb('eject-components.eject', `${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
+      this._validateIdsHaveScopesAndVersions();
       this.originalPackageJson = await PackageJsonFile.load(this.consumer.getPath());
       await this.removeComponentsFromPackageJsonAndNodeModules();
       await this.addComponentsAsPackagesToPackageJson();
@@ -198,7 +198,7 @@ got the following error: ${originalErrorMessage}`);
   }
 
   _validateIdsHaveScopesAndVersions() {
-    this.componentsIds.forEach((id) => {
+    this.componentsToEject.forEach((id) => {
       if (!id.hasScope() || !id.hasVersion()) {
         throw new TypeError(`EjectComponents expects ids with scope and version, got ${id.toString()}`);
       }
