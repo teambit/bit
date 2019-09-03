@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--codemod` for `bit export` to replace the import/require statements in the source to the newly exported scope
+- [#1965](https://github.com/teambit/bit/issues/1965) fix generated links for `.scss` and `.sass` packages to point to the main file
 - [#1956](https://github.com/teambit/bit/issues/1956) support `defaultScope` settings in workspace config for `bit export` to use when no scope was entered
 - [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--include-dependencies` for `bit export` to be able to fork (kind of) a component to another scope
 - [#1959](https://github.com/teambit/bit/issues/1959) improve message when running `bit build` when compiler not configured
