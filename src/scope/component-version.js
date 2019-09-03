@@ -14,12 +14,14 @@ import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir
 import CustomError from '../error/custom-error';
 
 export default class ComponentVersion {
-  component: ModelComponent;
-  version: string;
+  +component: ModelComponent;
+  +version: string;
 
   constructor(component: ModelComponent, version: string) {
+    if (!version) { throw new TypeError(`ComponentVersion expects "version" to be defined (failed for ${component.id()})`); }
     this.component = component;
     this.version = version;
+    Object.freeze(this);
   }
 
   getVersion(repository: Repository): Promise<Version> {

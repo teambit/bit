@@ -50,6 +50,7 @@ export default class EjectComponents {
       notExportedComponents: new BitIds(),
       selfHostedExportedComponents: new BitIds()
     };
+    this._validateIdsHaveScopesAndVersions();
   }
 
   async eject(): Promise<EjectResults> {
@@ -120,7 +121,7 @@ export default class EjectComponents {
       const componentsVersions = await Promise.all(
         this.componentsToEject.map(async (bitId) => {
           const modelComponent = await this.consumer.scope.getModelComponent(bitId);
-          // $FlowFixMe componentsToEject has scope and version
+          // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
           return new ComponentVersion(modelComponent, bitId.version);
         })
       );
@@ -194,5 +195,13 @@ please use bit remove command to remove them.`,
     throw new Error(`${message}
 
 got the following error: ${originalErrorMessage}`);
+  }
+
+  _validateIdsHaveScopesAndVersions() {
+    this.componentsIds.forEach((id) => {
+      if (!id.hasScope() || !id.hasVersion()) {
+        throw new TypeError(`EjectComponents expects ids with scope and version, got ${id.toString()}`);
+      }
+    });
   }
 }
