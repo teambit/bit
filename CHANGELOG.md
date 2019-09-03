@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1966](https://github.com/teambit/bit/issues/1966) prevent intermediate console printing when `--json` flag is used
+
 ## [14.2.6-dev.3] - 2019-09-03
 
 - [#1965](https://github.com/teambit/bit/issues/1965) fix generated links for `.scss` and `.sass` packages to point to the main file

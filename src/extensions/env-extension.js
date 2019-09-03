@@ -122,7 +122,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
-    logger.debug('env-extension', 'toBitJsonObject');
+    logger.debug('env-extension, toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
@@ -196,7 +196,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {
-    logger.debug('env-extension', 'reload');
+    logger.debug('env-extension, reload');
     if (context) {
       this.context = context;
     }
@@ -289,7 +289,7 @@ export default class EnvExtension extends BaseExtension {
   static async loadFromSerializedModelObject(
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
-    logger.debug('env-extension', 'loadFromModelObject');
+    logger.debug('env-extension, loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];

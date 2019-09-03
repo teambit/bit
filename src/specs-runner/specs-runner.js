@@ -34,7 +34,7 @@ export default (async function run({
 }): Promise<?SpecsResultsWithMetaData> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
-    logger.debug('specs-runner.run', 'running tests on one child process without ids');
+    logger.debug('specs-runner.run, running tests on one child process without ids');
     return runOnChildProcess({
       includeUnmodified,
       verbose
@@ -42,7 +42,7 @@ export default (async function run({
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process with ids');
-    logger.debug('specs-runner.run', 'running tests on one child process with ids');
+    logger.debug('specs-runner.run, running tests on one child process with ids');
     return runOnChildProcess({
       ids,
       includeUnmodified: false, // no meaning to pass this when there is specific ids
@@ -50,7 +50,7 @@ export default (async function run({
     });
   }
   Analytics.addBreadCrumb('specs-runner.run', 'running tests on child process for each component');
-  logger.debug('specs-runner.run', 'running tests on child process for each component');
+  logger.debug('specs-runner.run, running tests on child process for each component');
   const allRunnersP = ids.map(id =>
     runOnChildProcess({
       ids: [id],
