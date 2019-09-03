@@ -319,8 +319,8 @@ const installAction = async ({
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
-  console.log(chalk.yellow(stdout)); // eslint-disable-line
-  console.log(chalk.yellow(stderr)); // eslint-disable-line
+  logger.console.info(chalk.yellow(stdout)); // eslint-disable-line
+  logger.console.info(chalk.yellow(stderr)); // eslint-disable-line
 };
 
 async function getNpmVersion(): Promise<?string> {

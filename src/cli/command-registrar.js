@@ -65,6 +65,10 @@ function execAction(command, concrete, args) {
   if (command.loader) {
     loader.on();
   }
+  if (flags.json) {
+    loader.off();
+    logger.shouldWriteToConsole = false;
+  }
   const migrateWrapper = (run: boolean) => {
     if (run) {
       logger.debug('Checking if a migration is needed');

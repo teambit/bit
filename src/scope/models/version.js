@@ -331,7 +331,7 @@ export default class Version extends BitObject {
   }
 
   validateBeforePersisting(versionStr: string): void {
-    logger.debug('validating version object: ', this.hash().hash);
+    logger.debug(`validating version object, hash: ${this.hash().hash}`);
     const version = Version.parse(versionStr);
     version.validate();
   }

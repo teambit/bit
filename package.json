@@ -155,7 +155,7 @@
     "validate-npm-package-name": "^3.0.0",
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
-    "winston": "^2.4.0",
+    "winston": "^3.2.1",
     "yn": "^2.0.0"
   },
   "devDependencies": {
