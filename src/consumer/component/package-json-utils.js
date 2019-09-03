@@ -19,6 +19,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
+import BitMap from '../bit-map/bit-map';
 
 /**
  * Add components as dependencies to root package.json
@@ -98,27 +99,8 @@ export async function changeDependenciesToRelativeSyntax(
   }
 }
 
-export async function write(
-  consumer: Consumer,
-  component: Component,
-  bitDir: string,
-  writeBitDependencies?: boolean = false,
-  excludeRegistryPrefix?: boolean
-): Promise<PackageJsonFile> {
-  const { packageJson, distPackageJson } = preparePackageJsonToWrite(
-    consumer,
-    component,
-    bitDir,
-    writeBitDependencies,
-    excludeRegistryPrefix
-  );
-  await packageJson.write();
-  if (distPackageJson) await distPackageJson.write();
-  return packageJson;
-}
-
 export function preparePackageJsonToWrite(
-  consumer: ?Consumer,
+  bitMap: BitMap,
   component: Component,
   bitDir: string,
   override?: boolean = true,
@@ -129,7 +111,7 @@ export function preparePackageJsonToWrite(
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = consumer ? getPackageDependency(consumer, dep.id, component.id) : null;
+      const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
       acc[packageName] = packageDependency;
       return acc;
@@ -260,8 +242,8 @@ function getPackageDependencyValue(
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): ?string {
-  const parentComponentMap = consumer.bitMap.getComponent(parentId);
-  const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
+function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): ?string {
+  const parentComponentMap = bitMap.getComponent(parentId);
+  const dependencyComponentMap = bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }

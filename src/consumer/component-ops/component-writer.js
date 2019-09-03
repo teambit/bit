@@ -154,7 +154,7 @@ export default class ComponentWriter {
       (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
     ) {
       const { packageJson, distPackageJson } = preparePackageJsonToWrite(
-        this.consumer,
+        this.bitMap,
         this.component,
         this.writeToPath,
         this.override,
