@@ -333,19 +333,20 @@ export default class EnvExtension extends BaseExtension {
   }): Promise<?EnvExtension> {
     logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
+    const componentHasWrittenConfig = componentConfig && componentConfig.componentHasWrittenConfig;
     // $FlowFixMe
-    if (componentConfig && componentConfig.componentHasWrittenConfig) {
+    if (componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
-      if (componentConfig[envType]) {
-        const envConfig = { [envType]: componentConfig[envType] };
-        const configPath = path.dirname(componentConfig.path);
-        logger.debug(`env-extension loading ${envType} from component config`);
-        return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
+      if (Object.keys(componentConfig[envType])[0] === MANUALLY_REMOVE_ENVIRONMENT) {
+        logger.debug(`env-extension, ${envType} was manually removed from the component config`);
+        return null;
       }
-      logger.debug(`env-extension ${envType} doesn't exist in component config`);
-      return null;
+      const envConfig = { [envType]: componentConfig[envType] };
+      const configPath = path.dirname(componentConfig.path);
+      logger.debug(`env-extension loading ${envType} from component config`);
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
-    if (!isAuthor && componentFromModel && componentFromModel[envType]) {
+    if (!componentHasWrittenConfig && !isAuthor && componentFromModel && componentFromModel[envType]) {
       // config was not written into component dir, load the config from the model
       logger.debug(`env-extension, loading ${envType} from the model`);
       return componentFromModel[envType];
