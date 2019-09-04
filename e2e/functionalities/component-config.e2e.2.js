@@ -20,10 +20,12 @@ describe('component config', function () {
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
       helper.fixtures.addComponentBarFoo();
+      helper.env.importDummyCompiler();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteEnvironment();
     });
     describe('importing without --conf flag', () => {
       let scopeAfterImport;
@@ -76,6 +78,52 @@ describe('component config', function () {
           expect(diff).to.have.string('--- Compiler');
           expect(diff).to.have.string('+++ Compiler');
           expect(diff).to.have.string('+ my-scope/compiler/my-compiler');
+        });
+      });
+      describe('when workspace config has a compiler set for this component', () => {
+        before(() => {
+          const overrides = {
+            'bar/*': {
+              env: {
+                compiler: 'bit.env/my-workspace-compiler@0.0.1'
+              }
+            }
+          };
+          helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
+          helper.bitJson.addOverrides(overrides);
+        });
+        describe('and the component config has the environment with minus sign', () => {
+          before(() => {
+            const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
+            packageJson.bit.env = {
+              compiler: '-'
+            };
+            helper.packageJson.write(packageJson, componentDir);
+          });
+          it('diff should show the removed compiler', () => {
+            const diff = helper.command.diff('bar/foo');
+            expect(diff).to.have.string('--- Compiler');
+            expect(diff).to.have.string('+++ Compiler');
+            expect(diff).to.have.string(`- ${helper.scopes.env}/compilers/dummy@0.0.1`);
+          });
+          it('bit show should not show any compiler', () => {
+            const show = helper.command.showComponent();
+            expect(show).to.not.have.string('Compiler');
+          });
+        });
+        describe('and the environment key is removed from component config', () => {
+          before(() => {
+            const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
+            packageJson.bit.env = {};
+            helper.packageJson.write(packageJson, componentDir);
+          });
+          it('diff should show the removed component-compiler and added workspace-compiler', () => {
+            const diff = helper.command.diff('bar/foo');
+            expect(diff).to.have.string('--- Compiler');
+            expect(diff).to.have.string('+++ Compiler');
+            expect(diff).to.have.string(`- ${helper.scopes.env}/compilers/dummy@0.0.1`);
+            expect(diff).to.have.string('+ bit.env/my-workspace-compiler@0.0.1');
+          });
         });
       });
     });

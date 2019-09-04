@@ -342,6 +342,7 @@ export default class EnvExtension extends BaseExtension {
         return null;
       }
       const envConfig = { [envType]: componentConfig[envType] };
+      // $FlowFixMe we made sure before that componentConfig is defined
       const configPath = path.dirname(componentConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
