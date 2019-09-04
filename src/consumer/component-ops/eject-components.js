@@ -56,6 +56,7 @@ export default class EjectComponents {
     await this.decideWhichComponentsToEject();
     logger.debugAndAddBreadCrumb('eject-components.eject', `${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
+      this._validateIdsHaveScopesAndVersions();
       this.originalPackageJson = await PackageJsonFile.load(this.consumer.getPath());
       await this.removeComponentsFromPackageJsonAndNodeModules();
       await this.addComponentsAsPackagesToPackageJson();
@@ -120,7 +121,7 @@ export default class EjectComponents {
       const componentsVersions = await Promise.all(
         this.componentsToEject.map(async (bitId) => {
           const modelComponent = await this.consumer.scope.getModelComponent(bitId);
-          // $FlowFixMe componentsToEject has scope and version
+          // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
           return new ComponentVersion(modelComponent, bitId.version);
         })
       );
@@ -194,5 +195,13 @@ please use bit remove command to remove them.`,
     throw new Error(`${message}
 
 got the following error: ${originalErrorMessage}`);
+  }
+
+  _validateIdsHaveScopesAndVersions() {
+    this.componentsToEject.forEach((id) => {
+      if (!id.hasScope() || !id.hasVersion()) {
+        throw new TypeError(`EjectComponents expects ids with scope and version, got ${id.toString()}`);
+      }
+    });
   }
 }

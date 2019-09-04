@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.2.6-dev.2",
+  "version": "14.2.6-dev.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -155,7 +155,7 @@
     "validate-npm-package-name": "^3.0.0",
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
-    "winston": "^2.4.0",
+    "winston": "^3.2.1",
     "yn": "^2.0.0"
   },
   "devDependencies": {

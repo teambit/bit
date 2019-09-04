@@ -214,14 +214,7 @@ export default function paintComponent(
       c.cyan('Immediate Dependency'),
       c.cyan('Dependent type')
     ]);
-    const allDependenciesRows = dependentsInfo.map((dependent: DependenciesInfo) => {
-      const row = [];
-      row.push(dependent.id);
-      row.push(dependent.depth);
-      row.push(dependent.parent);
-      row.push(dependent.dependencyType);
-      return row;
-    });
+    const allDependenciesRows = getAllDependenciesRows(dependentsInfo);
 
     const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
     return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
@@ -239,17 +232,21 @@ export default function paintComponent(
       c.cyan('Immediate Dependent'),
       c.cyan('Dependency type')
     ]);
-    const allDependenciesRows = dependenciesInfo.map((dependency: DependenciesInfo) => {
-      const row = [];
-      row.push(dependency.id);
-      row.push(dependency.depth);
-      row.push(dependency.parent);
-      row.push(dependency.dependencyType);
-      return row;
-    });
+    const allDependenciesRows = getAllDependenciesRows(dependenciesInfo);
 
     const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
     return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
+  }
+
+  function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[]): Array<string[]> {
+    return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
+      const row = [];
+      row.push(dependency.id.toString());
+      row.push(dependency.depth.toString());
+      row.push(dependency.parent === component.id.toString() ? '<self>' : dependency.parent);
+      row.push(dependency.dependencyType);
+      return row;
+    });
   }
 
   function calculatePadRightLength(str: string, columnWidth: number): string {

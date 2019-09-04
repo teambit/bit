@@ -13,15 +13,29 @@ import chalk from 'chalk';
 // in case the extension developer use api.logger more than once
 const extensionsLoggers = new Map();
 
+const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
+
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
-  json: yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }),
-  // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
-  level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
+  format: jsonFormat
+    ? winston.format.combine(winston.format.timestamp(), winston.format.json())
+    : winston.format.combine(
+      winston.format.metadata(),
+      winston.format.colorize(),
+      winston.format.timestamp(),
+      winston.format.splat(), // does nothing?
+      winston.format.errors({ stack: true }),
+      winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
+      winston.format.printf(
+        info =>
+          `${info.timestamp} ${info.level}: ${info.message} ${
+            Object.keys(info.metadata).length ? JSON.stringify(info.metadata, null, 2) : ''
+          }`
+      )
+    ),
+  level: 'debug',
   maxsize: 10 * 1024 * 1024, // 10MB
   maxFiles: 10,
-  colorize: true,
-  prettyPrint: true,
   // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
   // The filename will always have the most recent log lines. The larger the appended number, the older the log file
   tailable: true
@@ -31,7 +45,7 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log')
 });
 
-const logger = new winston.Logger({
+const logger = winston.createLogger({
   transports: [new winston.transports.File(baseFileTransportOpts)],
   exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
   exitOnError: false
@@ -54,7 +68,7 @@ export const createExtensionLogger = (extensionName: string) => {
     filename: path.join(GLOBAL_LOGS, 'extensions.log'),
     label: extensionName
   });
-  const extLogger = new winston.Logger({
+  const extLogger = winston.createLogger({
     transports: [new winston.transports.File(extensionFileTransportOpts)],
     exceptionHandlers: [new winston.transports.File(extensionFileTransportOpts)],
     exitOnError: false
@@ -71,8 +85,6 @@ export const printWarning = (msg: string) => {
   }
 };
 
-// @credit Kegsay from https://github.com/winstonjs/winston/issues/228
-// it solves an issue when exiting the code explicitly and the log file is not written
 logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
   await Analytics.sendData();
   let level;
@@ -84,26 +96,20 @@ logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
     level = 'error';
     msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
   }
-  logger.log(level, msg, () => {
-    let numFlushes = 0;
-    let numFlushed = 0;
-    Object.keys(logger.transports).forEach((k) => {
-      if (logger.transports[k]._stream) {
-        numFlushes += 1;
-        logger.transports[k]._stream.once('finish', () => {
-          numFlushed += 1;
-          if (numFlushes === numFlushed) {
-            process.exit(code);
-          }
-        });
-        logger.transports[k]._stream.end();
-      }
-    });
-    if (numFlushes === 0) {
-      process.exit(code);
-    }
-  });
+  logger[level](msg);
+  await waitForLogger();
+  process.exit(code);
 };
+
+/**
+ * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
+ * it solves an issue when exiting the code explicitly and the log file is not written
+ */
+async function waitForLogger() {
+  const loggerDone = new Promise(resolve => logger.on('finish', resolve));
+  logger.end();
+  return loggerDone;
+}
 
 function addBreakCrumb(category: string, message: string, data: Object = {}, extraData) {
   const hashedData = {};
@@ -135,7 +141,7 @@ function addToLoggerAndToBreadCrumb(
   if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
   if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
   const messageWithData = data ? format(message, data) : message;
-  logger[level](category, messageWithData, extraData);
+  logger[level](`${category}, ${messageWithData}`, extraData);
   addBreakCrumb(category, message, data, extraData);
 }
 
@@ -161,5 +167,37 @@ if (process.env.BIT_LOG) {
     });
   }
 }
+
+/**
+ * useful when in the middle of the process, Bit needs to print to the console.
+ * it's better than using `console.log` because, this way, it's possible to turn it on/off
+ */
+winston.loggers.add('consoleOnly', {
+  format: winston.format.combine(winston.format.printf(info => info.message)),
+  transports: [new winston.transports.Console({ level: 'silly' })]
+});
+
+logger.shouldWriteToConsole = true;
+logger.console = {
+  debug(...args) {
+    this._logIfNeeded('debug', ...args);
+  },
+  info(...args) {
+    this._logIfNeeded('info', ...args);
+  },
+  warn(...args) {
+    this._logIfNeeded('warn', ...args);
+  },
+  error(...args) {
+    this._logIfNeeded('error', ...args);
+  },
+  _logIfNeeded(level, ...args) {
+    if (!logger.shouldWriteToConsole) {
+      logger[level](...args);
+      return;
+    }
+    winston.loggers.get('consoleOnly')[level](...args);
+  }
+};
 
 export default logger;
