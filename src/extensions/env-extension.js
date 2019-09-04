@@ -331,15 +331,19 @@ export default class EnvExtension extends BaseExtension {
     envType: EnvType,
     context?: Object
   }): Promise<?EnvExtension> {
-    logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
+    logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
     // $FlowFixMe
-    if (componentConfig && componentConfig.componentHasWrittenConfig && componentConfig[envType]) {
+    if (componentConfig && componentConfig.componentHasWrittenConfig) {
       // load from component config.
-      const envConfig = { [envType]: componentConfig[envType] };
-      const configPath = path.dirname(componentConfig.path);
-      logger.debug(`env-extension loading ${envType} from component config`);
-      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
+      if (componentConfig[envType]) {
+        const envConfig = { [envType]: componentConfig[envType] };
+        const configPath = path.dirname(componentConfig.path);
+        logger.debug(`env-extension loading ${envType} from component config`);
+        return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
+      }
+      logger.debug(`env-extension ${envType} doesn't exist in component config`);
+      return null;
     }
     if (!isAuthor && componentFromModel && componentFromModel[envType]) {
       // config was not written into component dir, load the config from the model
