@@ -12,7 +12,7 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bit_src&url=https://bitsrc.io&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Component platform](https://bit.dev) • [Discover components](https://bit.dev/components) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Docs](https://docs.bit.dev) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bit.dev/)
+[Component platform](https://bit.dev) • [Discover components](https://bit.dev/components) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Docs](https://docs.bit.dev) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bit.dev/) • [Slack](https://join.slack.com/t/bit-dev-community/shared_invite/enQtNzM2NzQ3MTQzMTg3LWI2YmFmZjQwMTkxNmFmNTVkYzU2MGI2YjgwMmJlZDdkNWVhOGIzZDFlYjg4MGRmOTM4ODAxNTIxMTMwNWVhMzg)
 
 ## About  
 
