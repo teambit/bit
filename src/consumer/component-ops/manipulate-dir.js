@@ -36,8 +36,11 @@ export async function getManipulateDirForExistingComponents(
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
   }
-  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
-  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
+  // if no component-map, it was probably installed as a package, still strip the shared dir
+  // it is needed to be stripped for the capsule.
+  const origin = componentMap ? componentMap.origin : COMPONENT_ORIGINS.NESTED;
+  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
+  const wrapDir = getWrapDirIfNeeded(origin, version);
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach((dependency) => {
