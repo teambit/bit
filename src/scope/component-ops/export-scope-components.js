@@ -99,7 +99,7 @@ export async function exportMany({
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
-      await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds);
+      await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
@@ -194,14 +194,15 @@ async function convertToCorrectScope(
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
   remoteScope: string,
   fork: boolean,
-  exportingIds: BitIds
+  exportingIds: BitIds,
+  codemod: boolean
 ): Promise<void> {
   // $FlowFixMe
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
   await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
       const hashBefore = objectVersion.hash().toString();
-      await _replaceSrcOfVersionIfNeeded(objectVersion);
+      if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
       changeDependencyScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
@@ -253,10 +254,10 @@ async function convertToCorrectScope(
   async function _replaceSrcOfVersionIfNeeded(version: Version) {
     await Promise.all(
       version.files.map(async (file) => {
-        const newDistObject = await _createNewFileIfNeeded(version, file);
-        if (newDistObject) {
-          file.file = newDistObject.hash();
-          componentsObjects.objects.push(newDistObject);
+        const newFileObject = await _createNewFileIfNeeded(version, file);
+        if (newFileObject) {
+          file.file = newFileObject.hash();
+          componentsObjects.objects.push(newFileObject);
         }
         return null;
       })
