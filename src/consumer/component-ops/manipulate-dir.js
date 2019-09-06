@@ -38,8 +38,7 @@ export async function getManipulateDirForExistingComponents(
   }
   // if no component-map, it was probably installed as a package, still strip the shared dir
   // it is needed to be stripped for the capsule.
-  const origin = componentMap ? componentMap.origin : COMPONENT_ORIGINS.NESTED;
-  const isAuthored = origin === COMPONENT_ORIGINS.AUTHORED;
+  const isAuthored = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
   const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
   const wrapDir = getWrapDirIfNeeded(isAuthored, version);
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
@@ -209,19 +208,6 @@ function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
   return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
 }
 
-/**
- * an authored component that is now imported, is still authored.
- * however, nested component that is now imported directly, is actually imported.
- * if there is no entry for this component in bitmap, it is imported.
- */
-function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
-  if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
-  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
-    return COMPONENT_ORIGINS.IMPORTED;
-  }
-  return bitmapOrigin;
-}
-
 async function getManipulateDirItemFromComponentVersion(
   componentVersion: ComponentVersion,
   bitMap: BitMap,
@@ -237,9 +223,7 @@ async function getManipulateDirItemFromComponentVersion(
   const componentMap: ?ComponentMap = isDependency
     ? bitMap.getComponentIfExist(id)
     : bitMap.getComponentPreferNonNested(id);
-  const bitmapOrigin = componentMap ? componentMap.origin : null;
-  const origin = getComponentOrigin(bitmapOrigin, isDependency);
-  const isAuthored = origin === COMPONENT_ORIGINS.AUTHORED;
+  const isAuthored = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
   const version: Version = await componentVersion.getVersion(repository);
   const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
   const wrapDir = getWrapDirIfNeeded(isAuthored, version);
