@@ -39,19 +39,23 @@ export async function getManipulateDirForExistingComponents(
   // if no component-map, it was probably installed as a package, still strip the shared dir
   // it is needed to be stripped for the capsule.
   const origin = componentMap ? componentMap.origin : COMPONENT_ORIGINS.NESTED;
-  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
-  const wrapDir = getWrapDirIfNeeded(origin, version);
+  const isAuthored = origin === COMPONENT_ORIGINS.AUTHORED;
+  const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
+  const wrapDir = getWrapDirIfNeeded(isAuthored, version);
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
-  dependencies.forEach((dependency) => {
-    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
-    const manipulateDirDep: ManipulateDirItem = {
-      id: dependency.id,
-      originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
-      wrapDir: depComponentMap ? depComponentMap.wrapDir : null
-    };
-    manipulateDirData.push(manipulateDirDep);
-  });
+  await Promise.all(
+    dependencies.map(async (dependency) => {
+      const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
+      // const depVersion = depComponentMap ? null : await getDependencyComponentVersion(consumer, dependency.id);
+      const manipulateDirDep: ManipulateDirItem = {
+        id: dependency.id,
+        originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
+        wrapDir: depComponentMap ? depComponentMap.wrapDir : null
+      };
+      manipulateDirData.push(manipulateDirDep);
+    })
+  );
   return manipulateDirData;
 }
 
@@ -159,8 +163,8 @@ function _calculateSharedDir(
   return sharedStartDirectories.join(pathSep);
 }
 
-function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+function getOriginallySharedDirIfNeeded(isAuthored: boolean, version: Version): ?PathLinux {
+  if (isAuthored) return null;
   return calculateOriginallySharedDirForVersion(version);
 }
 
@@ -188,8 +192,8 @@ function isWrapperDirNeededForConsumerComponent(component: Component) {
   );
 }
 
-function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+function getWrapDirIfNeeded(isAuthored: boolean, version: Version): ?PathLinux {
+  if (isAuthored) return null;
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
 }
 
@@ -235,9 +239,10 @@ async function getManipulateDirItemFromComponentVersion(
     : bitMap.getComponentPreferNonNested(id);
   const bitmapOrigin = componentMap ? componentMap.origin : null;
   const origin = getComponentOrigin(bitmapOrigin, isDependency);
+  const isAuthored = origin === COMPONENT_ORIGINS.AUTHORED;
   const version: Version = await componentVersion.getVersion(repository);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
-  const wrapDir = getWrapDirIfNeeded(origin, version);
+  const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
+  const wrapDir = getWrapDirIfNeeded(isAuthored, version);
   return { id, originallySharedDir, wrapDir };
 }
 
