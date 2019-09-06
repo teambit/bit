@@ -2,7 +2,6 @@
 import path from 'path';
 import R from 'ramda';
 import type BitMap from '../bit-map/bit-map';
-import type { ComponentOrigin } from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import type { Version } from '../../scope/models';
 import type { PathLinux, PathOsBased } from '../../utils/path';

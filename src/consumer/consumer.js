@@ -301,9 +301,17 @@ export default class Consumer {
   async loadComponentFromModel(id: BitId): Promise<Component> {
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    // we don't have a choice, we must load all dependencies. without loading them, we don't know
+    // what their originalSharedDir are. although a componentMap has this info, but it's not
+    // available when importing dependencies as packages.
+    const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      [versionDependencies],
+      this.scope.objects
+    );
 
-    const componentVersion = modelComponent.toComponentVersion(id.version);
-    const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
     return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, manipulateDirData);
   }
 

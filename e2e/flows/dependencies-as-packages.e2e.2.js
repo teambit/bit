@@ -241,7 +241,7 @@ chai.use(require('chai-fs'));
             );
             fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
           });
-          it.skip('should have the components and dependencies installed correctly with all the links', () => {
+          it('should have the components and dependencies installed correctly with all the links', () => {
             const result = helper.command.runCmd('node app.js', capsuleDir);
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
