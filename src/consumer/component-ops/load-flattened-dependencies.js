@@ -43,6 +43,10 @@ export default (async function loadFlattenedDependencies(
     if (!forCapsule) {
       return consumer.loadComponentFromModel(dependencyId);
     }
+    // for capsule, a dependency might have been installed as a package in the workspace, and as
+    // such doesn't have a componentMap, which result in not stripping the sharedDir.
+    // using the loadComponentWithDependenciesFromModel, all dependencies are loaded and their
+    // shared dir is stripped. (see e2e-test of 'isolating with capsule' in dependencies-as-packages.e2e file)
     const componentWithDependenciesFromModel = await consumer.loadComponentWithDependenciesFromModel(dependencyId);
     return componentWithDependenciesFromModel.component.clone();
   }
