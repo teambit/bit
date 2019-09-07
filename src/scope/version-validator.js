@@ -103,7 +103,11 @@ export default function validateVersionInstance(version: Version): void {
     if (file.relativePath === version.mainFile) foundMainFile = true;
   });
   if (!foundMainFile) {
-    throw new VersionInvalid(`${message}, unable to find the mainFile ${version.mainFile} in the files list`);
+    throw new VersionInvalid(
+      `${message}, unable to find the mainFile ${version.mainFile} in the following files list: ${filesPaths.join(
+        ', '
+      )}`
+    );
   }
   const duplicateFiles = filesPaths.filter(
     file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
