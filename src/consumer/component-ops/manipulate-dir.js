@@ -2,6 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import type BitMap from '../bit-map/bit-map';
+import type { ComponentOrigin } from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import type { Version } from '../../scope/models';
 import type { PathLinux, PathOsBased } from '../../utils/path';
@@ -35,25 +36,19 @@ export async function getManipulateDirForExistingComponents(
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
   }
-  // if no component-map, it was probably installed as a package, still strip the shared dir
-  // it is needed to be stripped for the capsule.
-  const isAuthored = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
-  const wrapDir = getWrapDirIfNeeded(isAuthored, version);
+  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
+  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
-  await Promise.all(
-    dependencies.map(async (dependency) => {
-      const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
-      // const depVersion = depComponentMap ? null : await getDependencyComponentVersion(consumer, dependency.id);
-      const manipulateDirDep: ManipulateDirItem = {
-        id: dependency.id,
-        originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
-        wrapDir: depComponentMap ? depComponentMap.wrapDir : null
-      };
-      manipulateDirData.push(manipulateDirDep);
-    })
-  );
+  dependencies.forEach((dependency) => {
+    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
+    const manipulateDirDep: ManipulateDirItem = {
+      id: dependency.id,
+      originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
+      wrapDir: depComponentMap ? depComponentMap.wrapDir : null
+    };
+    manipulateDirData.push(manipulateDirDep);
+  });
   return manipulateDirData;
 }
 
@@ -161,8 +156,8 @@ function _calculateSharedDir(
   return sharedStartDirectories.join(pathSep);
 }
 
-function getOriginallySharedDirIfNeeded(isAuthored: boolean, version: Version): ?PathLinux {
-  if (isAuthored) return null;
+function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return calculateOriginallySharedDirForVersion(version);
 }
 
@@ -190,8 +185,8 @@ function isWrapperDirNeededForConsumerComponent(component: Component) {
   );
 }
 
-function getWrapDirIfNeeded(isAuthored: boolean, version: Version): ?PathLinux {
-  if (isAuthored) return null;
+function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
 }
 
@@ -205,6 +200,19 @@ function getWrapDirIfNeeded(isAuthored: boolean, version: Version): ?PathLinux {
  */
 function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
   return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
+}
+
+/**
+ * an authored component that is now imported, is still authored.
+ * however, nested component that is now imported directly, is actually imported.
+ * if there is no entry for this component in bitmap, it is imported.
+ */
+function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
+  if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
+  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
+    return COMPONENT_ORIGINS.IMPORTED;
+  }
+  return bitmapOrigin;
 }
 
 async function getManipulateDirItemFromComponentVersion(
@@ -222,10 +230,11 @@ async function getManipulateDirItemFromComponentVersion(
   const componentMap: ?ComponentMap = isDependency
     ? bitMap.getComponentIfExist(id)
     : bitMap.getComponentPreferNonNested(id);
-  const isAuthored = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
+  const bitmapOrigin = componentMap ? componentMap.origin : null;
+  const origin = getComponentOrigin(bitmapOrigin, isDependency);
   const version: Version = await componentVersion.getVersion(repository);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthored, version);
-  const wrapDir = getWrapDirIfNeeded(isAuthored, version);
+  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
+  const wrapDir = getWrapDirIfNeeded(origin, version);
   return { id, originallySharedDir, wrapDir };
 }
 

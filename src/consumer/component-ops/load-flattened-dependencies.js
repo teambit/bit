@@ -40,8 +40,11 @@ export default (async function loadFlattenedDependencies(
     if (couldBeModified) {
       return forCapsule ? consumer.loadComponentForCapsule(dependencyId) : consumer.loadComponent(dependencyId);
     }
-    const componentFromModel = await consumer.loadComponentFromModel(dependencyId);
-    return forCapsule ? componentFromModel.clone() : componentFromModel;
+    if (!forCapsule) {
+      return consumer.loadComponentFromModel(dependencyId);
+    }
+    const componentWithDependenciesFromModel = await consumer.loadComponentWithDependenciesFromModel(dependencyId);
+    return componentWithDependenciesFromModel.component.clone();
   }
 
   async function loadFlattened(deps: Component[]) {
