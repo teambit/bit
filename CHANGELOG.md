@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.6-dev.4] - 2019-09-06
+
 - [#1972](https://github.com/teambit/bit/issues/1972) fix generated links to nested dependencies in the capsule
 - [#1721](https://github.com/teambit/bit/issues/1721) enable removing/workspace-propagating a compiler/tester from component's config
 - [#1966](https://github.com/teambit/bit/issues/1966) prevent intermediate console printing when `--json` flag is used
