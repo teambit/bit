@@ -287,6 +287,23 @@ describe('capsule', function () {
         });
       });
     });
+    describe('build imported component', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('bar/foo');
+      });
+      it('should be able to require the component and its dependencies from the dist directory', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo/dist/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
   });
   describe('tag with capsule compiler that saves link files into the dists', () => {
     before(() => {

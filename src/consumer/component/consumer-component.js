@@ -865,7 +865,7 @@ export default class Component {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
-    const getDependenciesComponents = (ids: BitIds): Component[] => {
+    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
       return Promise.all(
         ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
