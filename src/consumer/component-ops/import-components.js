@@ -426,6 +426,7 @@ export default class ImportComponents {
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
+      addToRootPackageJson: this.options.writePackageJson, // no point to add to root if it doesn't have package.json
       writeConfig: this.options.writeConfig,
       configDir: this.options.configDir,
       writeDists: this.options.writeDists,
