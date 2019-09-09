@@ -753,6 +753,7 @@ describe('bit import', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        helper.npm.initNpm();
         helper.command.importComponentWithOptions('comp/with-deps', { '-ignore-package-json': '' });
       });
       it('should not write a package.json in the component dir', () => {
@@ -771,6 +772,15 @@ describe('bit import', function () {
           'package.json'
         );
         expect(fs.existsSync(packageJsonPath)).to.be.false;
+      });
+      it('npm install should not throw an error on the second install', () => {
+        // the first one creates the package-lock.json, the error used to be on the second install
+        helper.command.runCmd('npm install');
+        helper.command.runCmd('npm install'); // if it throws an error this will fail
+      });
+      it('should not add a record into the workspace package.json file', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson.dependencies).to.be.undefined;
       });
     });
 
