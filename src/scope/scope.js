@@ -487,8 +487,7 @@ export default class Scope {
   }
 
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return this.getModelComponentIfExist(id).then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id.toString());
+    return this.getModelComponent(id).then((componentModel) => {
       return componentModel.collectLogs(this.objects);
     });
   }

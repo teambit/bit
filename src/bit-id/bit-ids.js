@@ -92,9 +92,14 @@ export default class BitIds extends Array<BitId> {
 
   toGroupByScopeName(): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
-      if (!current.scope) { throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`); }
+      const scopeName = current.scope;
+      if (!scopeName) {
+        throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
+      }
       // $FlowFixMe
-      acc[current.scope] = acc[current.scope] ? acc[current.scope].push(current) : new BitIds(current);
+      if (acc[scopeName]) acc[current.scope].push(current);
+      // $FlowFixMe
+      else acc[scopeName] = new BitIds(current);
       return acc;
     }, {});
   }
