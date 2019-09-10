@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1988](https://github.com/teambit/bit/issues/1988) avoid adding a component to root package.json when importing with `--ignore-package-json` flag
+- [#1990](https://github.com/teambit/bit/issues/1990) auto add `@types/package-name` for *.tsx files
 
 ## [14.2.6-dev.4] - 2019-09-06
 

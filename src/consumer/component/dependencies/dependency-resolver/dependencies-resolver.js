@@ -1012,7 +1012,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * distinction.
    */
   _addTypesPackagesForTypeScript(packages: Object, originFile: PathLinuxRelative): void {
-    const isTypeScript = getExt(originFile) === 'ts';
+    const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const packageJson = this._getPackageJson();
     if (!packageJson) return;
