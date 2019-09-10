@@ -76,7 +76,7 @@ export const paintLog = ({
   return (
     c.yellow(`tag ${tag}\n`) +
     paintAuthor(email, username) +
-    c.white(`date: ${date}\n`) +
+    (date ? c.white(`date: ${date}\n`) : '') +
     (message ? c.white(`\n      ${message}\n`) : '')
   );
 };

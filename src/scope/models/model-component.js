@@ -180,11 +180,12 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return repo.findMany(this.versionArray).then((versions) => {
-      const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
-      return indexedLogs;
-    });
+  async collectLogs(repo: Repository): Promise<{ [number]: ?{ message: string, date: string, hash: string } }> {
+    // $FlowFixMe
+    const versions: Version[] = await repo.findMany(this.versionArray);
+    const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
+    const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
+    return indexedLogs;
   }
 
   /**
