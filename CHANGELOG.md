@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fail early when exporting nested dependency
+- fix an error "Cannot read property log of null" upon bit log
+
 ## [14.2.6-dev.5] - 2019-09-10
 
 - [#1988](https://github.com/teambit/bit/issues/1988) avoid adding a component to root package.json when importing with `--ignore-package-json` flag

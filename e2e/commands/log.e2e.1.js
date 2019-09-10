@@ -28,5 +28,12 @@ describe('bit log', function () {
       expect(output).to.have.string('2.0.0');
       expect(output).to.have.string('new-tagging-message');
     });
+    describe('exporting NESTED component which does not have all its versions', () => {
+      it('should not throw an error about object not found, but a descriptive one', () => {
+        const output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} utils/is-string`);
+        expect(output).not.to.have.string('ENOENT');
+        expect(output).to.have.string('unable to export');
+      });
+    });
   });
 });
