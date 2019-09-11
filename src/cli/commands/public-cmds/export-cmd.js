@@ -19,10 +19,18 @@ export default class Export extends Command {
   alias = 'e';
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
-    ['d', 'include-dependencies', "include the component's dependencies as part of the export to the remote scope"],
     ['f', 'force', 'force changing a component remote when exporting multiple components'],
     ['a', 'all', 'export all components include non-staged'],
-    ['s', 'set-current-scope', "ensure the component's remote scope is set according to the target location"]
+    [
+      'd',
+      'include-dependencies',
+      "EXPERIMENTAL. include the component's dependencies as part of the export to the remote scope"
+    ],
+    [
+      's',
+      'set-current-scope',
+      "EXPERIMENTAL. ensure the component's remote scope is set according to the target location"
+    ]
   ];
   loader = true;
   migration = true;
