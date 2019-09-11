@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ​
 ### Experimental
 - [#1956](https://github.com/teambit/bit/issues/1956) add `--include-dependencies`flag for `bit export` to be export all component-dependencies to the remote scope
-- - [#1956](https://github.com/teambit/bit/issues/1956) support exporting components without mentioning a remote by exporting to their last remotes
+- [#1956](https://github.com/teambit/bit/issues/1956) support exporting components without mentioning a remote by exporting to their last remotes
 
 ## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
 ​
