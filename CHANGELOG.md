@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.2.6-dev.6] - 2019-09-10
+
 - fail early when exporting nested dependency
 - fix an error "Cannot read property log of null" upon bit log
 
