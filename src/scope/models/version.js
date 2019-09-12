@@ -298,6 +298,7 @@ export default class Version extends BitObject {
           delete pkgEnv[dependencyType];
         }
       });
+      return pkgEnv;
     };
 
     return filterObject(
