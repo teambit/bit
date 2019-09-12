@@ -5,15 +5,11 @@ import {
   MANUALLY_REMOVE_DEPENDENCY,
   MANUALLY_ADD_DEPENDENCY,
   OVERRIDE_FILE_PREFIX,
-  OVERRIDE_COMPONENT_PREFIX
+  OVERRIDE_COMPONENT_PREFIX,
+  DEPENDENCIES_FIELDS
 } from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
-import {
-  dependenciesFields,
-  overridesBitInternalFields,
-  nonPackageJsonFields,
-  overridesForbiddenFields
-} from './consumer-overrides';
+import { overridesBitInternalFields, nonPackageJsonFields, overridesForbiddenFields } from './consumer-overrides';
 
 // consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
@@ -168,7 +164,7 @@ export default class ComponentOverrides {
   }
   stripOriginallySharedDir(sharedDir: ?string) {
     if (!sharedDir) return;
-    dependenciesFields.forEach((field) => {
+    DEPENDENCIES_FIELDS.forEach((field) => {
       if (!this.overrides[field]) return;
       Object.keys(this.overrides[field]).forEach((rule) => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
@@ -186,7 +182,7 @@ export default class ComponentOverrides {
   }
   addOriginallySharedDir(sharedDir: ?string) {
     if (!sharedDir) return;
-    dependenciesFields.forEach((field) => {
+    DEPENDENCIES_FIELDS.forEach((field) => {
       if (!this.overrides[field]) return;
       Object.keys(this.overrides[field]).forEach((rule) => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;

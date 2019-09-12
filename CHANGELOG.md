@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1981](https://github.com/teambit/bit/issues/1981) allow compilers to add all dependencies types and not only devDependencies
+
 ## [[14.3.0] - 2019-09-11](https://github.com/teambit/bit/releases/tag/v14.3.0)
 
 ### New

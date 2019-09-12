@@ -395,3 +395,5 @@ export const WILDCARD_HELP = (command: string) =>
   `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
 
 export const CURRENT_UPSTREAM = 'current';
+
+export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];

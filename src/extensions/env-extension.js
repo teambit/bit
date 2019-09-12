@@ -23,7 +23,7 @@ import type { EnvExtensionObject } from '../consumer/config/abstract-config';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
+import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
 import type WorkspaceConfig from '../consumer/config/workspace-config';
@@ -39,6 +39,9 @@ import type Consumer from '../consumer/consumer';
 import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
 import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
+import GeneralError from '../error/general-error';
+
+export type EnvPackages = { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
@@ -231,22 +234,36 @@ export default class EnvExtension extends BaseExtension {
     return envExtensionProps;
   }
 
-  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?Object {
+  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?EnvPackages {
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
-    if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
-      try {
-        const dynamicPackageDependencies = getDynamicPackageDependencies({
-          rawConfig: envExtensionProps.rawConfig,
-          dynamicConfig: envExtensionProps.dynamicConfig,
-          configFiles: envExtensionProps.files,
-          context: envExtensionProps.context
-        });
-        return dynamicPackageDependencies;
-      } catch (err) {
-        throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
-      }
+    if (!getDynamicPackageDependencies || typeof getDynamicPackageDependencies !== 'function') {
+      return undefined;
     }
-    return undefined;
+    let dynamicPackageDependencies;
+    try {
+      dynamicPackageDependencies = getDynamicPackageDependencies({
+        rawConfig: envExtensionProps.rawConfig,
+        dynamicConfig: envExtensionProps.dynamicConfig,
+        configFiles: envExtensionProps.files,
+        context: envExtensionProps.context
+      });
+    } catch (err) {
+      throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
+    }
+    if (!dynamicPackageDependencies) return undefined;
+    if (typeof dynamicPackageDependencies !== 'object') {
+      throw new GeneralError('expect getDynamicPackageDependencies to return an object');
+    }
+    // old format returned an object of the packages, without any separation between
+    // dependencies, devDependencies and peerDependencies
+    const usesOldFormat = Object.keys(dynamicPackageDependencies).some(field => !DEPENDENCIES_FIELDS.includes(field));
+    if (usesOldFormat) {
+      throw new GeneralError(
+        `getDynamicPackageDependencies expects to return the following keys only: [${DEPENDENCIES_FIELDS.join(', ')}]`
+      );
+    }
+
+    return dynamicPackageDependencies;
   }
 
   // $FlowFixMe

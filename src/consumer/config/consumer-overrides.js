@@ -7,6 +7,7 @@ import { validateUserInputType } from '../../utils/validate-type';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import AbstractConfig from './abstract-config';
+import { DEPENDENCIES_FIELDS } from '../../constants';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Object,
@@ -18,11 +19,9 @@ export type ConsumerOverridesOfComponent = {
 };
 
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
-
-export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
 export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
 export const overridesBitInternalFields = ['propagate', 'exclude', 'env'];
-export const nonPackageJsonFields = [...dependenciesFields, ...overridesBitInternalFields];
+export const nonPackageJsonFields = [...DEPENDENCIES_FIELDS, ...overridesBitInternalFields];
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
@@ -185,7 +184,7 @@ export default class ConsumerOverrides {
           throw new GeneralError(`${message} found a forbidden field "${field}" inside "overrides.${id}" property.
 the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
         }
-        if (dependenciesFields.includes(field)) {
+        if (DEPENDENCIES_FIELDS.includes(field)) {
           validateDependencyField(field, override, id);
         } else if (field === 'env') {
           validateEnv(override, id);

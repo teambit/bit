@@ -239,6 +239,18 @@ describe('Version', () => {
       version.peerPackageDependencies = true;
       expect(validateFunc).to.throw('to be object, got boolean');
     });
+    it('should throw for invalid key inside compilerPackageDependencies', () => {
+      version.compilerPackageDependencies = { lodash: '2.0.0' };
+      expect(validateFunc).to.throw(
+        'the property lodash inside compilerPackageDependencies is invalid, allowed values are dependencies, devDependencies, peerDependencies'
+      );
+    });
+    it('should throw for invalid type inside compilerPackageDependencies.dependencies', () => {
+      version.compilerPackageDependencies = { dependencies: { lodash: 2 } };
+      expect(validateFunc).to.throw(
+        'expected compilerPackageDependencies.dependencies.lodash to be string, got number'
+      );
+    });
     it('should throw for invalid dist object', () => {
       version.dists = 'invalid dists';
       expect(validateFunc).to.throw('to be array, got string');

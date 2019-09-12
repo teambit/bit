@@ -20,7 +20,7 @@ import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import type { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import EnvExtension from '../../extensions/env-extension';
+import type { EnvPackages } from '../../extensions/env-extension';
 
 type CiProps = {
   error: Object,
@@ -66,8 +66,8 @@ export type VersionProps = {
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
-  compilerPackageDependencies?: { [string]: string },
-  testerPackageDependencies?: { [string]: string },
+  compilerPackageDependencies?: EnvPackages,
+  testerPackageDependencies?: EnvPackages,
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[],
   overrides: ComponentOverridesData,
@@ -99,8 +99,8 @@ export default class Version extends BitObject {
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
-  compilerPackageDependencies: { [string]: string };
-  testerPackageDependencies: { [string]: string };
+  compilerPackageDependencies: EnvPackages;
+  testerPackageDependencies: EnvPackages;
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
   overrides: ComponentOverridesData;
@@ -174,8 +174,6 @@ export default class Version extends BitObject {
         key === 'testerDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
-        key === 'compilerPackageDependencies' ||
-        key === 'testerPackageDependencies' ||
         key === 'overrides'
       ) {
         return !R.isEmpty(val);
@@ -198,8 +196,6 @@ export default class Version extends BitObject {
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
-          compilerPackageDependencies: obj.compilerPackageDependencies,
-          testerPackageDependencies: obj.testerPackageDependencies,
           bindingPrefix: obj.bindingPrefix,
           overrides: obj.overrides
         },
@@ -537,14 +533,14 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
-      compilerPackageDependencies: {
-        ...component.compilerPackageDependencies,
-        ...compilerDynamicPakageDependencies
-      },
-      testerPackageDependencies: {
-        ...component.testerPackageDependencies,
-        ...testerDynamicPakageDependencies
-      },
+      compilerPackageDependencies: R.mergeDeepRight(
+        component.compilerPackageDependencies || {},
+        compilerDynamicPakageDependencies || {}
+      ),
+      testerPackageDependencies: R.mergeDeepRight(
+        component.testerPackageDependencies || {},
+        testerDynamicPakageDependencies || {}
+      ),
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
