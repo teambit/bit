@@ -147,14 +147,23 @@ export default class DependencyResolver {
     this.component.setTesterDependencies(this.allDependencies.testerDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
-    this.component.compilerPackageDependencies.devDependencies = R.merge(
-      this.allPackagesDependencies.compilerPackageDependencies,
-      this.component.compilerPackageDependencies.devDependencies
-    );
-    this.component.testerPackageDependencies.devDependencies = R.merge(
-      this.allPackagesDependencies.testerPackageDependencies,
-      this.component.testerPackageDependencies.devDependencies
-    );
+    if (this.componentFromModel && !shouldProcessEnvDependencies(this.component.compiler)) {
+      this.component.compilerPackageDependencies = this.componentFromModel.compilerPackageDependencies;
+    } else {
+      this.component.compilerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.compilerPackageDependencies,
+        this.component.compilerPackageDependencies.devDependencies
+      );
+    }
+    if (this.componentFromModel && !shouldProcessEnvDependencies(this.component.tester)) {
+      this.component.testerPackageDependencies = this.componentFromModel.testerPackageDependencies;
+    } else {
+      this.component.testerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.testerPackageDependencies,
+        this.component.testerPackageDependencies.devDependencies
+      );
+    }
+
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
@@ -884,11 +893,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!this.componentFromModel) return;
     if (!shouldProcessEnvDependencies(this.component.compiler)) {
       this.allDependencies.compilerDependencies = this.componentFromModel.compilerDependencies.get();
-      this.allPackagesDependencies.compilerPackageDependencies = this.componentFromModel.compilerPackageDependencies;
+      // this.allPackagesDependencies.compilerPackageDependencies = this.componentFromModel.compilerPackageDependencies;
     }
     if (!shouldProcessEnvDependencies(this.component.tester)) {
       this.allDependencies.testerDependencies = this.componentFromModel.testerDependencies.get();
-      this.allPackagesDependencies.testerPackageDependencies = this.componentFromModel.testerPackageDependencies;
+      // this.allPackagesDependencies.testerPackageDependencies = this.componentFromModel.testerPackageDependencies;
     }
   }
 
