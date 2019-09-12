@@ -7,7 +7,12 @@ import type { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import type { Doclet } from '../../jsdoc/parser';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
+import {
+  DEFAULT_BUNDLE_FILENAME,
+  DEFAULT_BINDINGS_PREFIX,
+  COMPONENT_ORIGINS,
+  DEPENDENCIES_FIELDS
+} from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import type { PathLinux, PathLinuxRelative } from '../../utils/path';
@@ -287,6 +292,14 @@ export default class Version extends BitObject {
       return result;
     };
 
+    const _removeEmptyPackagesEnvs = (pkgEnv) => {
+      DEPENDENCIES_FIELDS.forEach((dependencyType) => {
+        if (pkgEnv[dependencyType] && R.isEmpty(pkgEnv[dependencyType])) {
+          delete pkgEnv[dependencyType];
+        }
+      });
+    };
+
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
@@ -316,8 +329,8 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        compilerPackageDependencies: this.compilerPackageDependencies,
-        testerPackageDependencies: this.testerPackageDependencies,
+        compilerPackageDependencies: _removeEmptyPackagesEnvs(this.compilerPackageDependencies),
+        testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps
