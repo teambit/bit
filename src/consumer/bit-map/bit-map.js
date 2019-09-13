@@ -35,6 +35,7 @@ import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
 import WorkspaceConfig from '../config/workspace-config';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -73,13 +74,15 @@ export default class BitMap {
   setComponent(bitId: BitId, componentMap: ComponentMap) {
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
+      throw new ShowDoctorError(
+        `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
+      );
     }
     if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
       // make sure there are no duplications (same name)
       const similarIds = this.findSimilarIds(bitId, true);
       if (similarIds.length) {
-        throw new GeneralError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
 
@@ -624,7 +627,7 @@ export default class BitMap {
   addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
     if (!this.components[componentIdStr]) {
-      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
+      throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
     this.components[componentIdStr].files = files;
@@ -677,7 +680,7 @@ export default class BitMap {
       return id;
     }
     if (similarIds.length > 1) {
-      throw new GeneralError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
+      throw new ShowDoctorError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
     const oldId: BitId = similarIds[0];
@@ -767,7 +770,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new GeneralError(errorMsg);
+      throw new ShowDoctorError(errorMsg);
     }
 
     this.markAsChanged();

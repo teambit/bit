@@ -9,7 +9,6 @@ import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
-import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
 import {
   COMPONENT_ORIGINS,
@@ -28,6 +27,7 @@ import ConfigDir from '../bit-map/config-dir';
 import EnvExtension from '../../extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -116,7 +116,7 @@ export default class ComponentWriter {
 
   async populateComponentsFilesToWrite(): Promise<Object> {
     if (!this.component.files || !this.component.files.length) {
-      throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+      throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();

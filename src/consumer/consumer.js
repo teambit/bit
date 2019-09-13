@@ -70,13 +70,8 @@ import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
-import {
-  deprecateRemote,
-  deprecateMany,
-  undeprecateRemote,
-  undeprecateMany
-} from '../scope/component-ops/components-deprecation';
 import type { AutoTagResult } from '../scope/component-ops/auto-tag';
+import ShowDoctorError from '../error/show-doctor-error';
 
 type ConsumerProps = {
   projectPath: string,
@@ -585,10 +580,10 @@ export default class Consumer {
       // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);
       // it looks like it's exactly the same code but it's not working from some reason
       const versionRef = componentFromModel.versions[versionFromFs];
-      if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${idStr}`);
+      if (!versionRef) throw new ShowDoctorError(`version ${versionFromFs} was not found in ${idStr}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       if (!versionFromModel) {
-        throw new GeneralError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
+        throw new ShowDoctorError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
       }
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;

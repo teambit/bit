@@ -23,6 +23,7 @@ import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -253,7 +254,7 @@ export default class ImportComponents {
         );
       }
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
-      if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
+      if (!modelComponent) throw new ShowDoctorError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
       const versionDifference = R.difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
@@ -324,7 +325,7 @@ export default class ImportComponents {
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.sources.get(component.id);
     if (!componentModel) {
-      throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
+      throw new ShowDoctorError(`component ${component.id.toString()} wasn't found in the model`);
     }
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);

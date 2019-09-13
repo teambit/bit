@@ -5,10 +5,10 @@ import type { Compilers, Testers } from './abstract-config';
 import type WorkspaceConfig from './workspace-config';
 import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type Component from '../component/consumer-component';
-import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 type ConfigProps = {
   lang?: string,
@@ -53,7 +53,7 @@ export default class ComponentConfig extends AbstractConfig {
       typeof this.tester !== 'object' ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
       );
     }
@@ -127,7 +127,7 @@ export default class ComponentConfig extends AbstractConfig {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
         return file;
       } catch (e) {
-        throw new GeneralError(
+        throw new ShowDoctorError(
           `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
         );
       }
@@ -139,7 +139,7 @@ export default class ComponentConfig extends AbstractConfig {
         if (!file.fileExist) return null;
         return file;
       } catch (e) {
-        throw new GeneralError(
+        throw new ShowDoctorError(
           `package.json at ${AbstractConfig.composePackageJsonPath(
             componentDir
           )} is not a valid JSON file, consider to re-import the file to re-generate the file`

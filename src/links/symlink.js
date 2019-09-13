@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import BitId from '../bit-id/bit-id';
-import GeneralError from '../error/general-error';
+import ShowDoctorError from '../error/show-doctor-error';
 
 export default class Symlink {
   src: string; // current existing path
@@ -26,7 +26,7 @@ export default class Symlink {
     const srcExists = fs.existsSync(this.src);
     if (!srcExists) {
       const componentId = this.componentId ? this.componentId.toString() : '';
-      throw new GeneralError(`unable to link ${componentId}, the file ${this.src} is missing from the filesystem.
+      throw new ShowDoctorError(`unable to link ${componentId}, the file ${this.src} is missing from the filesystem.
 it happens when the "dist" directory is set to be outside the components directory, either by changing this settings later or by cloning the project without the dist directory
 to rebuild the "dist" directory for all components, please run "bit import --merge".`);
     }

@@ -1,6 +1,6 @@
 /** @flow */
 import semver from 'semver';
-import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
+import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
@@ -28,6 +28,7 @@ import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 type State = {
   versions?: {
@@ -295,7 +296,7 @@ export default class Component extends BitObject {
     const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
     }
@@ -322,7 +323,7 @@ export default class Component extends BitObject {
     const loadFileInstance = ClassName => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = ((await loadP: any): Source);
-      if (!content) throw new GeneralError(`failed loading file ${file.relativePath} from the model`);
+      if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
