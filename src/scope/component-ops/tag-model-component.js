@@ -25,6 +25,7 @@ import type { AutoTagResult } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
 import { buildComponentsGraph } from '../graph/components-graph';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 async function getFlattenedDependencies(
   scope: Scope,
@@ -236,7 +237,7 @@ export default (async function tagModelComponent({
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
-        if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
+        if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
         const latest = modelComponent.latest();
         if (latest !== component.version) {
           return {

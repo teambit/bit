@@ -47,6 +47,7 @@ import MissingMainFileMultipleComponents from './exceptions/missing-main-file-mu
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
+import ShowDoctorError from '../../../error/show-doctor-error';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
@@ -182,7 +183,7 @@ export default class AddComponents {
     if (isSupportedExtension(fileRelativePath)) return false;
     const componentFromModel = await this.consumer.loadComponentFromModelIfExist(componentId);
     if (!componentFromModel) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `failed finding ${componentId.toString()} in the model although the component is imported, try running "bit import ${componentId.toString()} --objects" to get the component saved in the model`
       );
     }

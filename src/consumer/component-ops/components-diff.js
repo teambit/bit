@@ -10,6 +10,7 @@ import diffFiles from '../../utils/diff-files';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import { Version } from '../../scope/models';
 import { diffBetweenComponentsObjects } from './components-object-diff';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 type FileDiff = { filePath: string, diffOutput: string };
 export type FieldsDiff = { fieldName: string, diffOutput: string };
@@ -23,7 +24,7 @@ export default (async function componentsDiff(
   verbose: boolean // whether show internal components diff, such as sourceRelativePath
 ): Promise<DiffResults[]> {
   const { components } = await consumer.loadComponents(ids);
-  if (!components) throw new GeneralError('failed loading the components');
+  if (!components) throw new ShowDoctorError('failed loading the components');
   const tmp = new Tmp(consumer.scope);
 
   // try to resolve ids scope of by components array

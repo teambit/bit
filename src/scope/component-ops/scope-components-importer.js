@@ -18,6 +18,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import type ConsumerComponent from '../../consumer/component';
 import { splitBy } from '../../utils';
 import type { ModelComponent, Version } from '../models';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 const removeNils = R.reject(R.isNil);
 
@@ -143,7 +144,7 @@ export default class ScopeComponentsImporter {
       );
       if (component.scope === this.scope.name) {
         // it should have been fetched locally, since it wasn't found, this is an error
-        throw new GeneralError(
+        throw new ShowDoctorError(
           `Version ${versionComp.version} of ${component.id().toString()} was not found in scope ${this.scope.name}`
         );
       }
@@ -193,7 +194,7 @@ export default class ScopeComponentsImporter {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
 
     if (localOnly && !id.isLocal(this.scope.name)) {
-      throw new GeneralError('cannot load bit from remote scope, please import first');
+      throw new GeneralError('cannot load a component from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
   }

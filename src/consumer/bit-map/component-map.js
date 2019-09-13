@@ -11,10 +11,10 @@ import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
 import type { AddContext } from '../component-ops/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
-import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import ConfigDir from './config-dir';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -113,7 +113,7 @@ export default class ComponentMap {
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`
       );
     }

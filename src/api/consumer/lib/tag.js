@@ -10,6 +10,7 @@ import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
 import Component from '../../../consumer/component';
 import type { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import GeneralError from '../../../error/general-error';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -153,6 +154,7 @@ function _validateVersion(version) {
   if (version) {
     const validVersion = semver.valid(version);
     if (!validVersion) throw new InvalidVersion(version);
+    if (semver.prerelease(version)) throw new GeneralError(`error: a prerelease version "${version}" is not supported`);
     return validVersion;
   }
   return null;
