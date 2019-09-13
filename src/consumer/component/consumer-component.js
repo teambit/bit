@@ -865,7 +865,7 @@ export default class Component {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
-    const getDependenciesComponents = (ids: BitIds): Component[] => {
+    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
       return Promise.all(
         ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
@@ -1099,25 +1099,20 @@ export default class Component {
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
-    // Load the compilerPackageDependencies/testerPackageDependencies from the actual compiler / tester or from the model
-    // if they are not loaded (aka not installed)
-    // We load it from model to prevent case when component is modified becasue changes in envsPackageDependencies
-    // That occur as a result that we import component but didn't import its envs so we can't
-    // calculate the envsPackageDependencies (without install the env, which we don't want)
+    // load the compilerPackageDependencies/testerPackageDependencies from the actual compiler/tester
+    // if they're not installed, load them from the model
     const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
-    const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
     const modelCompilerPackageDependencies = componentFromModel
       ? componentFromModel.compilerPackageDependencies || {}
       : {};
+    const compilerPackageDependencies = R.isEmpty(compilerDynamicPackageDependencies)
+      ? modelCompilerPackageDependencies
+      : compilerDynamicPackageDependencies;
+    const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
     const modelTesterPackageDependencies = componentFromModel ? componentFromModel.testerPackageDependencies || {} : {};
-    const compilerPackageDependencies = {
-      ...modelCompilerPackageDependencies,
-      ...compilerDynamicPackageDependencies
-    };
-    const testerPackageDependencies = {
-      ...modelTesterPackageDependencies,
-      ...testerDynamicPackageDependencies
-    };
+    const testerPackageDependencies = R.isEmpty(testerDynamicPackageDependencies)
+      ? modelTesterPackageDependencies
+      : testerDynamicPackageDependencies;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;

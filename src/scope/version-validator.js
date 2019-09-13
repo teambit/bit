@@ -9,9 +9,10 @@ import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
-import { dependenciesFields, nonPackageJsonFields } from '../consumer/config/consumer-overrides';
+import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
 import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_FIELDS } from '../constants';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -74,6 +75,24 @@ export default function validateVersionInstance(version: Version): void {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
     R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
   };
+  const _validateEnvPackages = (envPackages, fieldName) => {
+    validateType(message, envPackages, fieldName, 'object');
+    Object.keys(envPackages).forEach((dependencyType) => {
+      if (!DEPENDENCIES_FIELDS.includes(dependencyType)) {
+        throw new VersionInvalid(
+          `${message}, the property ${dependencyType} inside ${fieldName} is invalid, allowed values are ${DEPENDENCIES_FIELDS.join(
+            ', '
+          )}`
+        );
+      }
+      validateType(message, envPackages[dependencyType], `${fieldName}.${dependencyType}`, 'object');
+      // $FlowFixMe
+      Object.keys(envPackages[dependencyType]).forEach((pkg) => {
+        // $FlowFixMe
+        validateType(message, envPackages[dependencyType][pkg], `${fieldName}.${dependencyType}.${pkg}`, 'string');
+      });
+    });
+  };
   const validateFile = (file, isDist: boolean = false) => {
     const field = isDist ? 'dist-file' : 'file';
     validateType(message, file, field, 'object');
@@ -103,7 +122,11 @@ export default function validateVersionInstance(version: Version): void {
     if (file.relativePath === version.mainFile) foundMainFile = true;
   });
   if (!foundMainFile) {
-    throw new VersionInvalid(`${message}, unable to find the mainFile ${version.mainFile} in the files list`);
+    throw new VersionInvalid(
+      `${message}, unable to find the mainFile ${version.mainFile} in the following files list: ${filesPaths.join(
+        ', '
+      )}`
+    );
   }
   const duplicateFiles = filesPaths.filter(
     file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
@@ -116,8 +139,8 @@ export default function validateVersionInstance(version: Version): void {
   _validatePackageDependencies(version.packageDependencies);
   _validatePackageDependencies(version.devPackageDependencies);
   _validatePackageDependencies(version.peerPackageDependencies);
-  _validatePackageDependencies(version.compilerPackageDependencies);
-  _validatePackageDependencies(version.testerPackageDependencies);
+  _validateEnvPackages(version.compilerPackageDependencies, 'compilerPackageDependencies');
+  _validateEnvPackages(version.testerPackageDependencies, 'testerPackageDependencies');
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
     // $FlowFixMe
@@ -188,7 +211,7 @@ export default function validateVersionInstance(version: Version): void {
   };
   const validateOverrides = (fieldValue: Object, fieldName: string) => {
     const field = `overrides.${fieldName}`;
-    if (dependenciesFields.includes(fieldName)) {
+    if (DEPENDENCIES_FIELDS.includes(fieldName)) {
       validateType(message, fieldValue, field, 'object');
       Object.keys(fieldValue).forEach((key) => {
         validateType(message, key, `property name of ${field}`, 'string');

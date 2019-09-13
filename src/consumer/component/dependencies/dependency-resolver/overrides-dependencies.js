@@ -4,7 +4,8 @@ import {
   COMPONENT_ORIGINS,
   MANUALLY_REMOVE_DEPENDENCY,
   MANUALLY_ADD_DEPENDENCY,
-  OVERRIDE_COMPONENT_PREFIX
+  OVERRIDE_COMPONENT_PREFIX,
+  DEPENDENCIES_FIELDS
 } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -12,7 +13,6 @@ import type Component from '../../../component/consumer-component';
 import type Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
-import { dependenciesFields } from '../../../config/consumer-overrides';
 import type { FileType, AllDependencies } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
@@ -107,7 +107,7 @@ export default class OverridesDependencies {
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     const components = {};
     const packages = {};
-    dependenciesFields.forEach((depField) => {
+    DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
       const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
       Object.keys(overrides[depField]).forEach((dependency) => {
@@ -166,7 +166,7 @@ export default class OverridesDependencies {
         return dependencyValue;
       }
       if (!packageJson) return null;
-      for (const depField of dependenciesFields) {
+      for (const depField of DEPENDENCIES_FIELDS) {
         if (packageJson[depField]) {
           const found = Object.keys(packageJson[depField]).find(pkg => pkg === dependency);
           if (found) return packageJson[depField][dependency];

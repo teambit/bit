@@ -231,6 +231,21 @@ chai.use(require('chai-fs'));
             });
           });
         });
+        describe('isolating with capsule', () => {
+          let capsuleDir;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterImportScope);
+            capsuleDir = helper.general.generateRandomTmpDirName();
+            helper.command.runCmd(
+              `bit isolate ${helper.scopes.remote}/bar/foo --use-capsule --directory ${capsuleDir}`
+            );
+            fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
+          });
+          it('should have the components and dependencies installed correctly with all the links', () => {
+            const result = helper.command.runCmd('node app.js', capsuleDir);
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+        });
       });
     });
     describe('components with nested dependencies and compiler', () => {

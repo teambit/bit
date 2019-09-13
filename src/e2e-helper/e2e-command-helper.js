@@ -234,7 +234,9 @@ export default class CommandHelper {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
   }
-
+  log(id: string) {
+    return this.runCmd(`bit log ${id}`);
+  }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }

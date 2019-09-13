@@ -653,6 +653,27 @@ describe('bit export command', function () {
           expect(output).to.have.string(`${anotherRemote}/foo2`);
         });
       });
+      describe('adding one component as a dependency of the other', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.fs.outputFile('foo1.js', "require('./foo2');");
+          helper.command.tagScope('3.0.0');
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
+          output = helper.general.runWithTryCatch('bit export');
+        });
+        // before, it was throwing an error "exportingIds.hasWithoutVersion is not a function"
+        // this makes sure, it doesn't throw this error anymore.
+        // @todo: currently, it throws an error about component-not-found, that's because it tries
+        // to export the dependency and the dependent at the same time. If the dependent is
+        // exported first, in the remote of the dependent it fails because it's not able to find
+        // the dependency as it was not exported yet.
+        it('should throw an error about component was not found', () => {
+          expect(output).to.have.string('was not found');
+        });
+      });
     });
     describe('export to a different scope', () => {
       let forkScope;

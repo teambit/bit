@@ -119,8 +119,8 @@ describe('envs', function () {
       componentFilesystem = helper.command.catComponent('comp/my-comp@0.0.1');
       compilerLoaded = componentFilesystem.compiler;
       testerLoaded = componentFilesystem.tester;
-      compilerPackageDependencies = componentFilesystem.compilerPackageDependencies;
-      testerPackageDependencies = componentFilesystem.testerPackageDependencies;
+      compilerPackageDependencies = componentFilesystem.compilerPackageDependencies.devDependencies;
+      testerPackageDependencies = componentFilesystem.testerPackageDependencies.devDependencies;
     });
     describe('storing envs metadata in the models for author', () => {
       it('should store the compiler name in the model', () => {

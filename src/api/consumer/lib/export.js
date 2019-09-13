@@ -126,6 +126,11 @@ async function getComponentsToExport(
   const idsToExportP = ids.map(async (id) => {
     const parsedId = await getParsedId(consumer, id);
     const status = await consumer.getComponentStatusById(parsedId);
+    if (status.nested) {
+      throw new GeneralError(
+        `unable to export "${parsedId.toString()}", the component is not fully available. please use "bit import" first`
+      );
+    }
     // don't allow to re-export an exported component unless it's being exported to another scope
     if (remote && !status.staged && parsedId.scope === remote) {
       throw new IdExportedAlready(parsedId.toString(), remote);

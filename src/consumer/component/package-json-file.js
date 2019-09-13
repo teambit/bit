@@ -80,13 +80,21 @@ export default class PackageJsonFile {
       version: component.version,
       homepage: component._getHomepage(),
       main: component.mainFile,
-      dependencies: component.packageDependencies,
+      dependencies: {
+        ...component.packageDependencies,
+        ...component.compilerPackageDependencies.dependencies,
+        ...component.testerPackageDependencies.dependencies
+      },
       devDependencies: {
         ...component.devPackageDependencies,
-        ...component.compilerPackageDependencies,
-        ...component.testerPackageDependencies
+        ...component.compilerPackageDependencies.devDependencies,
+        ...component.testerPackageDependencies.devDependencies
       },
-      peerDependencies: component.peerPackageDependencies,
+      peerDependencies: {
+        ...component.peerPackageDependencies,
+        ...component.compilerPackageDependencies.peerDependencies,
+        ...component.testerPackageDependencies.peerDependencies
+      },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     };
     return new PackageJsonFile(filePath, packageJsonObject, false);

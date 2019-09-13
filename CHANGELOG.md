@@ -8,44 +8,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--codemod` for `bit export` to replace the import/require statements in the source to the newly exported scope
-- [#1721](https://github.com/teambit/bit/issues/1721) enable removing/workspace-propagating a compiler/tester from component's config
-- [#1966](https://github.com/teambit/bit/issues/1966) prevent intermediate console printing when `--json` flag is used
+- [#1981](https://github.com/teambit/bit/issues/1981) allow compilers to add all dependencies types and not only devDependencies
 
-## [14.2.6-dev.3] - 2019-09-03
-
-- [#1965](https://github.com/teambit/bit/issues/1965) fix generated links for `.scss` and `.sass` packages to point to the main file
-- [#1956](https://github.com/teambit/bit/issues/1956) support `defaultScope` settings in workspace config for `bit export` to use when no scope was entered
-- [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--include-dependencies` for `bit export` to be able to fork (kind of) a component to another scope
-- [#1959](https://github.com/teambit/bit/issues/1959) improve message when running `bit build` when compiler not configured
-
-## [14.2.6-dev.2] - 2019-08-28
-
-- generate node_modules links upon build for new components
-- fix dist replacements upon export (for angular compiler) to support require statements to an internal path
-
-## [14.2.6-dev.1] - 2019-08-26
-
-- [#1947](https://github.com/teambit/bit/issues/1947) workaround an angular-compiler issue when the dists have a prefix
-- (experimental) support exporting components without mentioning a remote by exporting to their last remotes
-
-## [[14.2.5] - 2019-08-22](https://github.com/teambit/bit/releases/tag/v14.2.5)
+## [[14.3.0] - 2019-09-11](https://github.com/teambit/bit/releases/tag/v14.3.0)
 
 ### New
-
-- [#1937](https://github.com/teambit/bit/issues/1937) introduce `--json` flag for `bit import`
-
+- [#1956](https://github.com/teambit/bit/issues/1956) add `defaultScope` settings in workspace config for `bit export` to use when no remote scope defined for component
+- [#1990](https://github.com/teambit/bit/issues/1990) auto add `@types/package-name` for *.tsx files
+​
+### Changes
+- generate `node_modules` links upon build for new components
+​
 ### Bug fixes
-
-- fix dist changing of bit-ids on export to make the replacement on exact matches only
-- [#1941](https://github.com/teambit/bit/issues/1941) ignore .DS_Store file when reading dirs
-- [#1912](https://github.com/teambit/bit/issues/1912) fix linking to an internal and non-exist dist file to fallback to the main package
-- [#1916](https://github.com/teambit/bit/issues/1916) do not throw an error when there are no components to build
-- [#1934](https://github.com/teambit/bit/issues/1934) fix capsule compilers when configured to work with custom files
-- [#1924](https://github.com/teambit/bit/issues/1924) avoid generating old dists files when using capsule compilers
-
+- fail early when exporting nested dependency
+- fix an error "Cannot read property log of null" upon bit log
+- [#1988](https://github.com/teambit/bit/issues/1988) avoid adding a component to root package.json when importing with `--ignore-package-json` flag
+- [#1972](https://github.com/teambit/bit/issues/1972) fix generated links to nested dependencies in the capsule
+- [#1966](https://github.com/teambit/bit/issues/1966) prevent intermediate console printing when `--json` flag is used
+- [#1721](https://github.com/teambit/bit/issues/1721) enable removing/workspace-propagating a compiler/tester from component's config
+- [#1965](https://github.com/teambit/bit/issues/1965) fix generated links for `.scss` and `.sass` packages to point to the main file
+- [#1959](https://github.com/teambit/bit/issues/1959) improve message when running `bit build` when compiler not configured
+- fix dist replacements upon export (for angular compiler) to support require statements to an internal path
+- [#1947](https://github.com/teambit/bit/issues/1947) workaround an angular-compiler issue when the dists have a prefix
+​
 ### Experimental
-
-- [#1885](https://github.com/teambit/bit/issues/1885) introduce new flags `--dependents` and `--dependencies` for `bit import` to import them all directly
+- [#1956](https://github.com/teambit/bit/issues/1956) add `--include-dependencies`flag for `bit export` to be export all component-dependencies to the remote scope
+- [#1956](https://github.com/teambit/bit/issues/1956) support exporting components without mentioning a remote by exporting to their last remotes
 
 ## [[14.2.4] - 2019-08-13](https://github.com/teambit/bit/releases/tag/v14.2.4)
 ​
