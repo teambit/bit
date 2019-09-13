@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import { COMPONENT_ORIGINS } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
@@ -21,7 +21,6 @@ import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
-import { dependenciesFields } from '../../../config/consumer-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -148,14 +147,19 @@ export default class DependencyResolver {
     this.component.setTesterDependencies(this.allDependencies.testerDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
-    this.component.compilerPackageDependencies = R.merge(
-      this.allPackagesDependencies.compilerPackageDependencies,
-      this.component.compilerPackageDependencies
-    );
-    this.component.testerPackageDependencies = R.merge(
-      this.allPackagesDependencies.testerPackageDependencies,
-      this.component.testerPackageDependencies
-    );
+    if (shouldProcessEnvDependencies(this.component.compiler)) {
+      this.component.compilerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.compilerPackageDependencies,
+        this.component.compilerPackageDependencies.devDependencies
+      );
+    }
+    if (shouldProcessEnvDependencies(this.component.tester)) {
+      this.component.testerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.testerPackageDependencies,
+        this.component.testerPackageDependencies.devDependencies
+      );
+    }
+
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
@@ -223,7 +227,7 @@ export default class DependencyResolver {
     const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
-    dependenciesFields.forEach((depField) => {
+    DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         // $FlowFixMe
         components[depField].forEach(id => this.allDependencies[depField].push({ id, relativePaths: [] }));
@@ -885,11 +889,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!this.componentFromModel) return;
     if (!shouldProcessEnvDependencies(this.component.compiler)) {
       this.allDependencies.compilerDependencies = this.componentFromModel.compilerDependencies.get();
-      this.allPackagesDependencies.compilerPackageDependencies = this.componentFromModel.compilerPackageDependencies;
     }
     if (!shouldProcessEnvDependencies(this.component.tester)) {
       this.allDependencies.testerDependencies = this.componentFromModel.testerDependencies.get();
-      this.allPackagesDependencies.testerPackageDependencies = this.componentFromModel.testerPackageDependencies;
     }
   }
 
@@ -1025,7 +1027,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       });
     };
     Object.keys(packages).forEach((packageName) => {
-      dependenciesFields.forEach(depField => addIfNeeded(depField, packageName));
+      DEPENDENCIES_FIELDS.forEach(depField => addIfNeeded(depField, packageName));
     });
   }
 

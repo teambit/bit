@@ -107,7 +107,8 @@ describe('environments with dependencies', function () {
     it('bit show should show compiler package dependency', () => {
       const showJson = helper.command.showComponentParsed('bar/foo');
       expect(showJson).to.have.property('compilerPackageDependencies');
-      expect(showJson.compilerPackageDependencies).to.have.property('webpack-merge');
+      expect(showJson.compilerPackageDependencies).to.have.property('devDependencies');
+      expect(showJson.compilerPackageDependencies.devDependencies).to.have.property('webpack-merge');
     });
     describe('after tagging the components', () => {
       let catComponent;

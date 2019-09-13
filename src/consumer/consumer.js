@@ -23,7 +23,8 @@ import {
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
-  LATEST
+  LATEST,
+  DEPENDENCIES_FIELDS
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -65,7 +66,6 @@ import type { Remotes } from '../remotes';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
@@ -524,7 +524,7 @@ export default class Consumer {
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
-      dependenciesFields.forEach((field) => {
+      DEPENDENCIES_FIELDS.forEach((field) => {
         if (overrides[field]) overrides[field] = sortObject(overrides[field]);
       });
     }
