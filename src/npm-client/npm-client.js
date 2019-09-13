@@ -9,8 +9,8 @@ import path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
-import GeneralError from '../error/general-error';
 import { Analytics } from '../analytics/analytics';
+import ShowDoctorError from '../error/show-doctor-error';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -146,7 +146,7 @@ const _installInOneDirectory = ({
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
       return Promise.reject(
-        new GeneralError(
+        new ShowDoctorError(
           `${stderr}\n\n${chalk.yellow(
             `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
           )}`

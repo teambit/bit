@@ -21,6 +21,7 @@ import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
+import ShowDoctorError from '../../../../error/show-doctor-error';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -302,7 +303,7 @@ export default class DependencyResolver {
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
         if (!this.componentFromModel) {
-          throw new GeneralError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
+          throw new ShowDoctorError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
 Try to run "bit import ${this.component.id.toString()} --objects" to get the component saved in the model`);
         }
         ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
@@ -365,7 +366,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       .getAllDependencies()
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
-      throw new GeneralError( // $FlowFixMe
+      throw new ShowDoctorError( // $FlowFixMe
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
           this.componentFromModel.id
         }`
@@ -383,7 +384,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     );
     const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
     if (!relativePath) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }
