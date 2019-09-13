@@ -1,13 +1,12 @@
 /** @flow */
-import AbstractError from './abstract-error';
+import GeneralError from './general-error';
 
-export default class ShowDoctorError extends AbstractError {
+export default class ShowDoctorError extends GeneralError {
   msg: string;
   showDoctorMessage: boolean;
 
   constructor(msg: string) {
-    super();
-    this.msg = msg;
+    super(msg);
     this.showDoctorMessage = true;
   }
 }
