@@ -30,7 +30,6 @@ import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
-import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
