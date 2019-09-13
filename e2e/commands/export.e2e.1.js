@@ -892,18 +892,18 @@ describe('bit export command', function () {
           });
           it('should change the files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
-            expect(barFoo).to.equal(fixtures.barFooModulePath(helper.scopes.remote));
+            expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
           });
           it('should change the dist files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
-            expect(barFoo).to.equal(fixtures.barFooModulePath(helper.scopes.remote));
+            expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
           });
           it('should change the objects locally', () => {
-            const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
             const fileHash = barFoo.files[0].file;
             const fileContent = helper.command.catObject(fileHash);
-            expect(fileContent).to.have.string(helper.scopes.remote);
-            expect(fileContent).to.not.have.string(forkScope);
+            expect(fileContent).to.not.have.string(helper.scopes.remote);
+            expect(fileContent).to.have.string(forkScope);
           });
         });
       });

@@ -68,7 +68,7 @@ export default class ManyComponentsWriter {
   installNpmPackages: boolean;
   installPeerDependencies: boolean;
   addToRootPackageJson: boolean;
-  verbose: boolean;
+  verbose: boolean; // prints npm results
   excludeRegistryPrefix: boolean;
   dependenciesIdsCache: Object;
   writtenComponents: Component[];

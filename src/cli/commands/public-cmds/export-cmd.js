@@ -56,6 +56,11 @@ export default class Export extends Command {
     if (currentScope && remote) {
       remote = '';
     }
+    if (includeDependencies && !remote) {
+      throw new GeneralError(
+        'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
+      );
+    }
     if (codemod && !includeDependencies) {
       throw new GeneralError(
         'to use --codemod, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
