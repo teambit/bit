@@ -12,7 +12,7 @@ import { ModelComponent, Symlink, Version } from '../models';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
-import type Scope from '../scope';
+import Scope from '../scope';
 import { LATEST } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
@@ -252,8 +252,9 @@ async function convertToCorrectScope(
     return BitIds.fromArray(updatedIds);
   }
   async function _replaceSrcOfVersionIfNeeded(version: Version) {
+    const files = [...version.files, ...(version.dists || [])];
     await Promise.all(
-      version.files.map(async (file) => {
+      files.map(async (file) => {
         const newFileObject = await _createNewFileIfNeeded(version, file);
         if (newFileObject) {
           file.file = newFileObject.hash();
@@ -332,8 +333,13 @@ async function changePartialNamesToFullNamesInDists(
 
   async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<?Source> {
     const currentHash = dist.file;
+    // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
+    // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.
+    // currently, we require calculating the hash for each one of the source every time.
     // $FlowFixMe
-    const distObject: Source = await scope.objects.load(currentHash);
+    const distObject: Source =
+      (await currentHash.load(scope.objects)) ||
+      objects.filter(obj => obj instanceof Source).find(obj => obj.hash().toString() === currentHash.toString());
     const distString = distObject.contents.toString();
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
     const allIds = [...dependenciesIds, component.toBitId()];

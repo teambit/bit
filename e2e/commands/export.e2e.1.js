@@ -894,13 +894,21 @@ describe('bit export command', function () {
             const barFoo = helper.fs.readFile('bar/foo.js');
             expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
           });
-          it('should change the dist files locally on the workspace', () => {
-            const barFoo = helper.fs.readFile('bar/foo.js');
+          // turns out we don't write dists file for author (because author might has its own way of creating dists)
+          it.skip('should change the dist files locally on the workspace', () => {
+            const barFoo = helper.fs.readFile('dist/bar/foo.js');
             expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
           });
-          it('should change the objects locally', () => {
+          it('should change the files objects locally', () => {
             const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
             const fileHash = barFoo.files[0].file;
+            const fileContent = helper.command.catObject(fileHash);
+            expect(fileContent).to.not.have.string(helper.scopes.remote);
+            expect(fileContent).to.have.string(forkScope);
+          });
+          it('should change the dists objects locally', () => {
+            const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+            const fileHash = barFoo.dists[0].file;
             const fileContent = helper.command.catObject(fileHash);
             expect(fileContent).to.not.have.string(helper.scopes.remote);
             expect(fileContent).to.have.string(forkScope);
