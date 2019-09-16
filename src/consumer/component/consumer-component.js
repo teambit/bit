@@ -252,7 +252,7 @@ export default class Component {
     this.overrides = overrides;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
-    this._docs = docs;
+    this._docs = docs || [];
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
@@ -1123,7 +1123,7 @@ export default class Component {
     const files = await getLoadedFiles();
     const docsP = files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)));
     const docs = await Promise.all(docsP);
-    const flattenedDocs = R.flatten(docs);
+    const flattenedDocs = docs ? R.flatten(docs) : [];
 
     return new Component({
       name: id.name,
