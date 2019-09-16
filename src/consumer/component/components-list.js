@@ -6,9 +6,10 @@ import type Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
+import type { InvalidComponent } from '../component/consumer-component';
 import { BitId, BitIds } from '../../bit-id';
 import BitMap from '../bit-map/bit-map';
-import type Consumer from '../consumer';
+import Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
@@ -31,7 +32,7 @@ export default class ComponentsList {
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
   _fromObjectsIds: BitId[];
   _modelComponents: ModelComponent[];
-  _invalidComponents: string[];
+  _invalidComponents: InvalidComponent[];
   _modifiedComponents: Component[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
@@ -150,24 +151,6 @@ export default class ComponentsList {
 
     const { components } = await this.consumer.loadComponents(newComponentsIds, false);
     return components;
-  }
-
-  /**
-   * Authored exported components (easily identified by having a scope) which are not saved in the model are
-   * import-pending. Exclude them from the 'newComponents' and add them to 'importPendingComponents'.
-   */
-  async listNewComponentsAndImportPending() {
-    const allNewComponents: Component[] = await this.listNewComponents(true);
-    const newComponents = [];
-    const importPendingComponents = [];
-    allNewComponents.forEach((component) => {
-      if (component.id.scope) {
-        importPendingComponents.push(component);
-      } else {
-        newComponents.push(component);
-      }
-    });
-    return { newComponents, importPendingComponents };
   }
 
   async listCommitPendingOfAllScope(
