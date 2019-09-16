@@ -72,6 +72,7 @@ import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -113,7 +114,8 @@ export type ComponentProps = {
   deprecated: ?boolean,
   origin: ComponentOrigin,
   log?: ?Log,
-  scopesList?: ScopeListItem[]
+  scopesList?: ScopeListItem[],
+  componentFromModel?: ?Component
 };
 
 export default class Component {
@@ -155,7 +157,6 @@ export default class Component {
   wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
-  _componentFromModel: ?Component;
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
@@ -219,6 +220,7 @@ export default class Component {
     peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
+    componentFromModel,
     overrides,
     packageJsonFile,
     packageJsonChangedProps,
@@ -268,6 +270,7 @@ export default class Component {
     this.origin = origin;
     this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
+    this.componentFromModel = componentFromModel;
     this.validateComponent();
   }
 
@@ -296,20 +299,6 @@ export default class Component {
     newInstance.files = this.files.map(file => file.clone());
     newInstance.dists = this.dists.clone();
     return newInstance;
-  }
-
-  get componentFromModel(): ?Component {
-    if (this._componentFromModel) return this._componentFromModel;
-    if (this.loadedFromFileSystem && this.scope) {
-      throw new ShowDoctorError(`failed finding ${this.id.toString()} in the scope.
-try running "bit import ${this.id.toStringWithoutVersion()} --objects" to get the component saved in the scope.
-or, run "bit import" to save all components in the scope`);
-    }
-    return null;
-  }
-
-  set componentFromModel(componentFromModel: Component) {
-    this._componentFromModel = componentFromModel;
   }
 
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
@@ -871,6 +860,7 @@ or, run "bit import" to save all components in the scope`);
       MissingFilesFromComponent,
       ComponentNotFoundInPath,
       ComponentOutOfSync,
+      ComponentsPendingImport,
       ExtensionFileNotFound
     ];
     return invalidComponentErrors.some(errorType => err instanceof errorType);
@@ -1008,18 +998,22 @@ or, run "bit import" to save all components in the scope`);
     bitDir,
     componentMap,
     id,
-    consumer,
-    componentFromModel
+    consumer
   }: {
     bitDir: PathOsBasedAbsolute,
     componentMap: ComponentMap,
     id: BitId,
-    consumer: Consumer,
-    componentFromModel: ?Component
+    consumer: Consumer
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const workspaceConfig: WorkspaceConfig = consumer.config;
     const bitMap: BitMap = consumer.bitMap;
+    const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
+    if (!componentFromModel && id.scope) {
+      const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(null));
+      // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
+      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
+    }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
@@ -1154,6 +1148,7 @@ or, run "bit import" to save all components in the scope`);
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,
+      componentFromModel,
       componentMap,
       dists,
       mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,

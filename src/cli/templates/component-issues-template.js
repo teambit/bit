@@ -25,6 +25,8 @@ export function getInvalidComponentLabel(error: Error) {
       return 'component files were deleted (use "bit remove [component_id]" or "bit untrack [component_id]" to remove the component from your workspace)';
     case 'ExtensionFileNotFound': // $FlowFixMe error.path is set for ExtensionFileNotFound
       return `extension file is missing at ${chalk.bold(error.path)}`;
+    case 'ComponentsPendingImport':
+      return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
     default:
       return error.name;
   }
