@@ -1,7 +1,10 @@
 /** @flow */
+import path from 'path';
+import os from 'os';
 import chalk from 'chalk';
 import Command from '../../command';
 import { paintGraph } from '../../../api/consumer';
+import { generateRandomStr } from '../../../e2e-helper/e2e-helper';
 
 export default class Graph extends Command {
   name = 'graph [id]';
@@ -22,7 +25,9 @@ export default class Graph extends Command {
     [id]: [string],
     options: { image: ?string, remote: ?string, allVersions: ?boolean, layout: ?string }
   ): Promise<any> {
-    if (!options.image) throw new Error('please specify image path'); // todo: generate a path in tmp dir
+    if (!options.image) {
+      options.image = path.join(os.tmpdir(), `${generateRandomStr()}.png`);
+    }
     return paintGraph(id, options);
   }
 
