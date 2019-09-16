@@ -70,6 +70,8 @@
   "dependencies": {
     "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
+    "@vuedoc/parser": "^2.0.0-beta.5",
+    "acorn": "^6.2.1",
     "ajv": "^6.5.3",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",

@@ -2,7 +2,8 @@
 import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
 import type { PathLinux, PathOsBased } from '../utils/path';
-import { pathNormalizeToLinux } from '../utils';
+import { pathNormalizeToLinux, getExt } from '../utils';
+import vueParse from './vue-parser';
 
 const docgen = require('react-docgen');
 
@@ -10,8 +11,22 @@ export type Method = {
   name: string,
   description: string,
   args: [],
+  access: 'public' | 'private' | '',
   returns: {},
   modifiers: []
+};
+
+export type PropDefaultValue = {
+  value: string,
+  computed: boolean
+};
+
+export type DocProp = {
+  name: string,
+  description: string,
+  required: boolean,
+  type: string,
+  defaultValue: PropDefaultValue
 };
 
 export type Doclet = {
@@ -23,7 +38,7 @@ export type Doclet = {
   access?: string,
   examples?: Array,
   methods?: Method[],
-  properties?: Array,
+  properties?: DocProp[],
   static?: Boolean
 };
 
@@ -203,8 +218,11 @@ function stringifyType(prop: { name: string, value?: any }): string {
   return transformed;
 }
 
-export default function parse(data: string, filePath: PathOsBased): Doclet | [] {
+export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet | []> {
   const doclets: Array<Doclet> = [];
+  if (getExt(filePath) === 'vue') {
+    return vueParse(data, filePath);
+  }
   try {
     const reactDocs = docgen.parse(data);
     if (reactDocs) {

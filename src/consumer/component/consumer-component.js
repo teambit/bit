@@ -178,11 +178,6 @@ export default class Component {
   }
 
   get docs(): ?(Doclet[]) {
-    if (!this._docs) {
-      this._docs = R.flatten(
-        this.files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)))
-      );
-    }
     return this._docs;
   }
 
@@ -1125,6 +1120,10 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
+    const files = await getLoadedFiles();
+    const docsP = files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)));
+    const docs = await Promise.all(docsP);
+    const flattenedDocs = R.flatten(docs);
 
     return new Component({
       name: id.name,
@@ -1136,10 +1135,11 @@ export default class Component {
       tester,
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
-      files: await getLoadedFiles(),
+      files,
       loadedFromFileSystem: true,
       componentMap,
       dists,
+      docs: flattenedDocs,
       mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
