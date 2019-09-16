@@ -31,6 +31,7 @@ export default (async function status(): Promise<StatusResult> {
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
+  // $FlowFixMe
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
     .filter(c => c.error instanceof ComponentsPendingImport)
