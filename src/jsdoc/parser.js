@@ -4,6 +4,7 @@ import exampleTagParser from './example-tag-parser';
 import type { PathLinux, PathOsBased } from '../utils/path';
 import { pathNormalizeToLinux, getExt } from '../utils';
 import vueParse from './vue-parser';
+import logger from '../logger/logger';
 
 const docgen = require('react-docgen');
 
@@ -220,7 +221,7 @@ function stringifyType(prop: { name: string, value?: any }): string {
 
 export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet | []> {
   const doclets: Array<Doclet> = [];
-  if (getExt(filePath) === 'vue') {
+  if (filePath && getExt(filePath) === 'vue') {
     return vueParse(data, filePath);
   }
   try {
@@ -236,8 +237,10 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
       formatted.examples = doclets[0].examples;
       return formatted;
     }
-  } catch (err) {}
-
+  } catch (err) {
+    logger.debug(`failed parsing docs using docgen on path ${filePath} with error`);
+    logger.debug(err);
+  }
   try {
     /**
      * [ \t]*  => can start with any number of tabs
@@ -256,7 +259,8 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
     docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
+    logger.debug(`failed parsing docs using on path ${filePath} with error`);
+    logger.debug(e);
   }
-
   return doclets.filter(doclet => doclet.access === 'public');
 }
