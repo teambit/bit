@@ -71,6 +71,7 @@ import PackageJsonFile from './package-json-file';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -154,6 +155,7 @@ export default class Component {
   wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
+  _componentFromModel: ?Component;
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
@@ -294,6 +296,20 @@ export default class Component {
     newInstance.files = this.files.map(file => file.clone());
     newInstance.dists = this.dists.clone();
     return newInstance;
+  }
+
+  get componentFromModel(): ?Component {
+    if (this._componentFromModel) return this._componentFromModel;
+    if (this.loadedFromFileSystem && this.scope) {
+      throw new ShowDoctorError(`failed finding ${this.id.toString()} in the scope.
+try running "bit import ${this.id.toStringWithoutVersion()} --objects" to get the component saved in the scope.
+or, run "bit import" to save all components in the scope`);
+    }
+    return null;
+  }
+
+  set componentFromModel(componentFromModel: Component) {
+    this._componentFromModel = componentFromModel;
   }
 
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {

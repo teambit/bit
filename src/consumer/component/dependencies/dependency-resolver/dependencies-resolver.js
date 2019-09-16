@@ -302,10 +302,6 @@ export default class DependencyResolver {
         // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
-        if (!this.componentFromModel) {
-          throw new ShowDoctorError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
-Try to run "bit import ${this.component.id.toString()} --objects" to get the component saved in the model`);
-        }
         ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
           componentId,
           depFile,

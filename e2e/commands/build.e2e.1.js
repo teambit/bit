@@ -219,6 +219,19 @@ describe('bit build', function () {
         expect(buildOutput).to.have.string('compiler');
       });
     });
+    describe('build when the objects are missing', () => {
+      let errorMsg;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.fs.deletePath('.bit');
+        errorMsg = helper.general.runWithTryCatch('bit build');
+      });
+      it('should show a descriptive error suggestion to import the component with --objects flag', () => {
+        // before, it used to throw "Cannot read property 'flattenedDependencies' of null" error.
+        expect(errorMsg).to.have.string(`failed finding ${helper.scopes.remote}/bar/foo@0.0.1 in the scope`);
+        expect(errorMsg).to.have.string('--objects');
+      });
+    });
   });
   /**
    * this test uses the `pkg-json` compiler, which adds `{ foo: 'bar' }` to the package.json
