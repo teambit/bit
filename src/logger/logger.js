@@ -26,12 +26,7 @@ export const baseFileTransportOpts = {
       winston.format.splat(), // does nothing?
       winston.format.errors({ stack: true }),
       winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-      winston.format.printf(
-        info =>
-          `${info.timestamp} ${info.level}: ${info.message} ${
-            Object.keys(info.metadata).length ? JSON.stringify(info.metadata, null, 2) : ''
-          }`
-      )
+      winston.format.printf(info => customPrint(info))
     ),
   level: 'debug',
   maxsize: 10 * 1024 * 1024, // 10MB
@@ -40,6 +35,18 @@ export const baseFileTransportOpts = {
   // The filename will always have the most recent log lines. The larger the appended number, the older the log file
   tailable: true
 };
+
+function customPrint(info) {
+  const getMetadata = () => {
+    if (!Object.keys(info.metadata).length) return '';
+    try {
+      return JSON.stringify(info.metadata, null, 2);
+    } catch (err) {
+      return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
+    }
+  };
+  return `${info.timestamp} ${info.level}: ${info.message} ${getMetadata()}`;
+}
 
 const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log')
