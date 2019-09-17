@@ -54,7 +54,8 @@ export async function exportMany(
   remoteName: ?string,
   context: Object = {},
   includeDependencies: boolean = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
-  changeLocallyAlthoughRemoteIsDifferent: boolean = false // by default only if remote stays the same the component is changed from staged to exported
+  changeLocallyAlthoughRemoteIsDifferent: boolean = false, // by default only if remote stays the same the component is changed from staged to exported
+  defaultScope: ?string
 ): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
@@ -68,7 +69,7 @@ export async function exportMany(
   if (remoteName) {
     return exportIntoRemote(remoteName, ids);
   }
-  const groupedByScope = ids.toGroupByScopeName();
+  const groupedByScope = ids.toGroupByScopeName(defaultScope);
   const results = await pMapSeries(Object.keys(groupedByScope), scopeName =>
     exportIntoRemote(scopeName, groupedByScope[scopeName])
   );
