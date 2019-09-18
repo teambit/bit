@@ -960,7 +960,7 @@ describe('bit export command', function () {
             const result = helper.command.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
-          describe.skip('as imported', () => {
+          describe('as imported', () => {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeFork);
               helper.command.exportAllComponents();
@@ -974,11 +974,11 @@ describe('bit export command', function () {
               helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod --all`);
             });
             it('should change the files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the dist files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/dist/bar/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/dist/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the files objects locally', () => {

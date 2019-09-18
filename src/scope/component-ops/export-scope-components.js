@@ -106,9 +106,10 @@ export async function exportMany({
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
 
-      if (idsToChangeLocally.hasWithoutScope(componentAndObject.component.toBitId())) {
+      if (idsToChangeLocally.hasWithoutScopeAndVersion(componentAndObject.component.toBitId())) {
         componentsAndObjects.push(componentAndObject);
       } else {
+        // the component should not be changed locally. only add the new scope to the scope-list
         const componentAndObjectCloned = componentObject.toObjects(scope.objects);
         componentAndObjectCloned.component.addScopeListItem(remoteObj);
         componentsAndObjects.push(componentAndObjectCloned);
