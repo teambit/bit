@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Converting circular structure to JSON" error when logging a circular metadata object
 - fix exporting to a different scope than workspace configuration of `defaultScope`
 - fix exporting components with and without scope at the same time
 - [#1999](https://github.com/teambit/bit/issues/1999) show a descriptive error when a component is missing from the scope
