@@ -1,9 +1,11 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { CURRENT_UPSTREAM } from '../../src/constants';
+
+chai.use(require('chai-fs'));
 
 describe('bit export command', function () {
   this.timeout(0);
@@ -1002,6 +1004,15 @@ describe('bit export command', function () {
               expect(output).not.to.have.string(
                 'bit did not update the workspace as the component files are not tracked'
               );
+            });
+            it('should remove the old components from the package.json', () => {
+              const packageJson = helper.packageJson.read();
+              expect(packageJson.dependencies).to.not.have.property(`@bit/${helper.scopes.remote}.bar.foo`);
+              expect(packageJson.dependencies).to.have.property(`@bit/${forkScope}.bar.foo`);
+            });
+            it('should remove the old components from node_modules', () => {
+              const oldComp = `node_modules/@bit/${helper.scopes.remote}.bar.foo`;
+              expect(path.join(helper.scopes.localPath, oldComp)).not.to.be.a.path();
             });
             it('should be able to require the components and the dependencies', () => {
               const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;

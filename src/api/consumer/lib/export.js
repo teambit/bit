@@ -20,6 +20,7 @@ import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
+import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 
 export default (async function exportAction(params: {
   ids: string[],
@@ -78,7 +79,10 @@ async function exportComponents({
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
-  if (codemod) await reImportComponents(consumer, updatedIds);
+  if (codemod) {
+    await reImportComponents(consumer, updatedIds);
+    await cleanOldComponents(consumer, BitIds.fromArray(updatedIds), idsToExport);
+  }
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
@@ -226,6 +230,14 @@ async function reImportComponent(consumer: Consumer, id: BitId) {
     writePackageJson
   });
   await manyComponentsWriter.writeAll();
+}
+
+/**
+ * remove the components with the old scope from package.json and from node_modules
+ */
+async function cleanOldComponents(consumer: Consumer, updatedIds: BitIds, idsToExport: BitIds) {
+  const idsToClean = idsToExport.filter(id => updatedIds.hasWithoutScopeAndVersion(id));
+  await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(consumer, BitIds.fromArray(idsToClean));
 }
 
 async function _throwForModified(consumer: Consumer, ids: BitIds) {
