@@ -674,6 +674,45 @@ describe('bit export command', function () {
           expect(output).to.have.string('was not found');
         });
       });
+      describe('having another staged component without scope-name', () => {
+        let output;
+        let beforeExportScope;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.fs.outputFile('foo3.js');
+          helper.command.addComponent('foo3.js');
+          helper.command.tagAllComponents();
+          beforeExportScope = helper.scopeHelper.cloneLocalScope();
+        });
+        describe('without defaultScope', () => {
+          before(() => {
+            output = helper.command.export();
+          });
+          it('should not throw an error "toGroupByScopeName() expect ids to have a scope name"', () => {
+            expect(output).to.have.string('exported the following 2 component(s)');
+          });
+          it('should indicate that the component without scope-name was not exported', () => {
+            expect(output).to.have.string('the following component(s) were not exported: foo3');
+          });
+        });
+        describe('with defaultScope', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeExportScope);
+            helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+            helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+            helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+            output = helper.command.export();
+          });
+          it('should export them all successfully', () => {
+            expect(output).to.have.string('exported the following 3 component');
+          });
+          it('should export the non-scope into the defaultScope', () => {
+            expect(output).to.have.string(`${helper.scopes.remote}/foo3`);
+          });
+        });
+      });
     });
     describe('export to a different scope', () => {
       let forkScope;
@@ -965,6 +1004,25 @@ describe('bit export command', function () {
           });
         });
       });
+    });
+  });
+  describe('export with a remote that is not the same as defaultScope', () => {
+    let anotherRemote;
+    let anotherRemotePath;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+      anotherRemote = scopeName;
+      anotherRemotePath = scopePath;
+      helper.scopeHelper.addRemoteScope(anotherRemotePath);
+      helper.command.tagAllComponents();
+      helper.command.runCmd(`bit export ${anotherRemote} utils/is-type`);
+    });
+    it('should export to the specified remote', () => {
+      const list = helper.command.listScopeParsed(anotherRemote);
+      expect(list).to.have.lengthOf(1);
     });
   });
 });

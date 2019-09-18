@@ -57,7 +57,7 @@ export default class Status extends Command {
           modifiedComponent: modifiedComponent.map(c => c.id.toString()),
           stagedComponents: stagedComponents.map(c => c.id()),
           componentsWithMissingDeps: componentsWithMissingDeps.map(c => c.id.toString()),
-          importPendingComponents: importPendingComponents.map(c => c.id.toString()),
+          importPendingComponents: importPendingComponents.map(id => id.toString()),
           autoTagPendingComponents,
           invalidComponents,
           outdatedComponents: outdatedComponents.map(c => c.id.toString())

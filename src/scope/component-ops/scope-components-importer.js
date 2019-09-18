@@ -46,7 +46,7 @@ export default class ScopeComponentsImporter {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
-    const [externals, locals] = R.splitWhen(id => id.isLocal(this.scope.name), idsWithoutNils);
+    const [locals, externals] = R.partition(id => id.isLocal(this.scope.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
     const versionDeps = await pMapSeries(localDefs, (def) => {

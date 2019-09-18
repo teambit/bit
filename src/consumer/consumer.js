@@ -90,6 +90,7 @@ type ComponentStatus = {
   deleted: boolean,
   staged: boolean,
   notExist: boolean,
+  missingFromScope: boolean,
   nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
@@ -557,6 +558,10 @@ export default class Consumer {
           // the file/s have been deleted or the component doesn't exist in bit.map file
           if (componentFromModel) status.deleted = true;
           else status.notExist = true;
+          return status;
+        }
+        if (err instanceof ComponentsPendingImport) {
+          status.missingFromScope;
           return status;
         }
         throw err;
