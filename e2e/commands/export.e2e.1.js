@@ -957,6 +957,7 @@ describe('bit export command', function () {
             expect(fileContent).to.have.string(forkScope);
           });
           it('should be able to require the components and the dependencies', () => {
+            helper.command.build(); // to rewrite the dists. see above 'should change the dist files locally on the workspace'
             const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;
             helper.fs.outputFile('app.js', appJsFixture);
             const result = helper.command.runCmd('node app.js');
