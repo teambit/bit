@@ -7,6 +7,7 @@ import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
+import GeneralError from '../../../error/general-error';
 
 export default class Export extends Command {
   name = 'export [remote] [id...]';
@@ -30,6 +31,11 @@ export default class Export extends Command {
       's',
       'set-current-scope',
       "EXPERIMENTAL. ensure the component's remote scope is set according to the target location"
+    ],
+    [
+      'c',
+      'codemod',
+      'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
     ]
   ];
   loader = true;
@@ -37,11 +43,28 @@ export default class Export extends Command {
 
   action(
     [remote, ids]: [string, string[]],
-    { eject = false, includeDependencies = false, setCurrentScope = false, all = false, force = false }: any
+    {
+      eject = false,
+      includeDependencies = false,
+      setCurrentScope = false,
+      all = false,
+      force = false,
+      codemod = false
+    }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
+    }
+    if (includeDependencies && !remote) {
+      throw new GeneralError(
+        'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
+      );
+    }
+    if (codemod && !includeDependencies) {
+      throw new GeneralError(
+        'to use --codemod, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
+      );
     }
     return exportAction({
       ids,
@@ -50,10 +73,12 @@ export default class Export extends Command {
       includeDependencies,
       setCurrentScope,
       includeNonStaged: all,
+      codemod,
       force
     }).then(results => ({
       ...results,
-      remote
+      remote,
+      includeDependencies
     }));
   }
 
@@ -62,13 +87,15 @@ export default class Export extends Command {
     nonExistOnBitMap,
     missingScope,
     ejectResults,
-    remote
+    remote,
+    includeDependencies
   }: {
     componentsIds: BitId[],
     nonExistOnBitMap: BitId[],
     missingScope: BitId[],
     ejectResults: ?EjectResults,
-    remote: string
+    remote: string,
+    includeDependencies: boolean
   }): string {
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
@@ -81,10 +108,11 @@ export default class Export extends Command {
       );
     };
     const nonExistOnBitMapOutput = () => {
-      if (R.isEmpty(nonExistOnBitMap)) return '';
+      // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
+      if (R.isEmpty(nonExistOnBitMap) || includeDependencies) return '';
       const ids = nonExistOnBitMap.map(id => id.toString()).join(', ');
       return chalk.yellow(
-        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.`
+        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
       );
     };
     const missingScopeOutput = () => {

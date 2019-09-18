@@ -1,5 +1,8 @@
 /** @flow */
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
+import path from 'path';
+import fs from 'fs-extra';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
@@ -15,6 +18,9 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
+import { COMPONENT_ORIGINS } from '../../../constants';
+import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
+import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 
 export default (async function exportAction(params: {
   ids: string[],
@@ -23,6 +29,7 @@ export default (async function exportAction(params: {
   includeDependencies: boolean,
   setCurrentScope: boolean,
   includeNonStaged: boolean,
+  codemod: boolean,
   force: boolean
 }) {
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -37,6 +44,7 @@ async function exportComponents({
   includeDependencies,
   setCurrentScope,
   includeNonStaged,
+  codemod,
   force
 }: {
   ids: string[],
@@ -44,6 +52,7 @@ async function exportComponents({
   includeDependencies: boolean,
   setCurrentScope: boolean,
   includeNonStaged: boolean,
+  codemod: boolean,
   force: boolean
 }): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
@@ -57,21 +66,23 @@ async function exportComponents({
     force
   );
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
-
-  // todo: what happens when some failed? we might consider avoid Promise.all
-  // in case we don't have anything to export
-  const { exported, updatedLocally } = await exportMany(
-    consumer.scope,
-    idsToExport,
-    remote,
-    undefined,
+  if (codemod) _throwForModified(consumer, idsToExport);
+  const { exported, updatedLocally } = await exportMany({
+    scope: consumer.scope,
+    ids: idsToExport,
+    remoteName: remote,
     includeDependencies,
-    setCurrentScope,
+    changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
+    codemod,
     defaultScope
-  );
+  });
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
+  if (codemod) {
+    await reImportComponents(consumer, updatedIds);
+    await cleanOldComponents(consumer, BitIds.fromArray(updatedIds), idsToExport);
+  }
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
@@ -185,4 +196,57 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
   // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
   await consumer.onDestroy();
   return ejectResults;
+}
+
+async function reImportComponents(consumer: Consumer, ids: BitId[]) {
+  await pMapSeries(ids, id => reImportComponent(consumer, id));
+}
+
+async function reImportComponent(consumer: Consumer, id: BitId) {
+  const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
+  const componentMap = consumer.bitMap.getComponent(id);
+  const rootDir = componentMap.rootDir;
+  const shouldWritePackageJson = async (): Promise<boolean> => {
+    if (!rootDir) return false;
+    const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
+    return fs.exists(packageJsonPath);
+  };
+  const shouldInstallNpmPackages = (): boolean => {
+    return componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
+  };
+  const writePackageJson = await shouldWritePackageJson();
+
+  const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
+  componentWithDependencies.component.dependenciesSavedAsComponents =
+    shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
+
+  const manyComponentsWriter = new ManyComponentsWriter({
+    consumer,
+    componentsWithDependencies: [componentWithDependencies],
+    installNpmPackages: shouldInstallNpmPackages(),
+    override: true,
+    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
+    configDir: componentMap.configDir,
+    writePackageJson
+  });
+  await manyComponentsWriter.writeAll();
+}
+
+/**
+ * remove the components with the old scope from package.json and from node_modules
+ */
+async function cleanOldComponents(consumer: Consumer, updatedIds: BitIds, idsToExport: BitIds) {
+  const idsToClean = idsToExport.filter(id => updatedIds.hasWithoutScopeAndVersion(id));
+  await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(consumer, BitIds.fromArray(idsToClean));
+}
+
+async function _throwForModified(consumer: Consumer, ids: BitIds) {
+  await pMapSeries(ids, async (id) => {
+    const status = consumer.getComponentStatusById(id);
+    if (status.modified) {
+      throw new GeneralError(
+        `unable to perform codemod on "${id.toString()}" because it is modified, please tag or discard your changes before re-trying`
+      );
+    }
+  });
 }

@@ -1,9 +1,11 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { CURRENT_UPSTREAM } from '../../src/constants';
+
+chai.use(require('chai-fs'));
 
 describe('bit export command', function () {
   this.timeout(0);
@@ -881,6 +883,144 @@ describe('bit export command', function () {
           it('should export all even non-staged components', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
             expect(remoteScope).to.have.lengthOf(4);
+          });
+        });
+      });
+      describe('with --codemod flag', () => {
+        describe('without --set-current-scope', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fixtures.createComponentUtilsIsString(fixtures.isStringModulePath(helper.scopes.remote));
+            helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
+            helper.env.importDummyCompiler();
+            helper.command.tagScope('1.0.0');
+            helper.command.export(`${forkScope} --include-dependencies --force --codemod`);
+          });
+          it('should not change the files locally on the workspace', () => {
+            const barFoo = helper.fs.readFile('bar/foo.js');
+            expect(barFoo).to.equal(fixtures.barFooModulePath(helper.scopes.remote));
+          });
+          it('should not change the objects locally', () => {
+            const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            const fileHash = barFoo.files[0].file;
+            const fileContent = helper.command.catObject(fileHash);
+            expect(fileContent).to.have.string(helper.scopes.remote);
+            expect(fileContent).to.not.have.string(forkScope);
+          });
+          describe('importing the component from the fork scope to a new workspace', () => {
+            before(() => {
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope(forkScopePath);
+              helper.command.runCmd(`bit import ${forkScope}/bar/foo`);
+            });
+            it('should write the source code with the changed source of the forked scope', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
+              expect(barFoo).to.have.string(forkScope);
+              expect(barFoo).to.not.have.string(helper.scopes.remote);
+            });
+          });
+        });
+        describe('with --set-current-scope', () => {
+          let localBeforeFork;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fixtures.createComponentUtilsIsString(fixtures.isStringModulePath(helper.scopes.remote));
+            helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
+            helper.env.importDummyCompiler();
+            helper.command.tagScope('1.0.0');
+            localBeforeFork = helper.scopeHelper.cloneLocalScope();
+            helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod`);
+          });
+          it('should change the files locally on the workspace', () => {
+            const barFoo = helper.fs.readFile('bar/foo.js');
+            expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+          });
+          // turns out we don't write dists file for author (because author might has its own way of creating dists)
+          it.skip('should change the dist files locally on the workspace', () => {
+            const barFoo = helper.fs.readFile('dist/bar/foo.js');
+            expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+          });
+          it('should change the files objects locally', () => {
+            const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+            const fileHash = barFoo.files[0].file;
+            const fileContent = helper.command.catObject(fileHash);
+            expect(fileContent).to.not.have.string(helper.scopes.remote);
+            expect(fileContent).to.have.string(forkScope);
+          });
+          it('should change the dists objects locally', () => {
+            const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+            const fileHash = barFoo.dists[0].file;
+            const fileContent = helper.command.catObject(fileHash);
+            expect(fileContent).to.not.have.string(helper.scopes.remote);
+            expect(fileContent).to.have.string(forkScope);
+          });
+          it('should be able to require the components and the dependencies', () => {
+            helper.command.build(); // to rewrite the dists. see above 'should change the dist files locally on the workspace'
+            const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;
+            helper.fs.outputFile('app.js', appJsFixture);
+            const result = helper.command.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+          describe('as imported', () => {
+            let output;
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(localBeforeFork);
+              helper.command.exportAllComponents();
+
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope();
+              helper.command.importComponent('bar/foo');
+
+              helper.scopeHelper.reInitRemoteScope(forkScopePath);
+              helper.scopeHelper.addRemoteScope(forkScopePath);
+              output = helper.command.export(
+                `${forkScope} --include-dependencies --force --set-current-scope --codemod --all`
+              );
+            });
+            it('should change the files locally on the workspace', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
+              expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+            });
+            it('should change the dist files locally on the workspace', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/dist/foo.js');
+              expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+            });
+            it('should change the files objects locally', () => {
+              const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              const fileHash = barFoo.files[0].file;
+              const fileContent = helper.command.catObject(fileHash);
+              expect(fileContent).to.not.have.string(helper.scopes.remote);
+              expect(fileContent).to.have.string(forkScope);
+            });
+            it('should change the dists objects locally', () => {
+              const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              const fileHash = barFoo.dists[0].file;
+              const fileContent = helper.command.catObject(fileHash);
+              expect(fileContent).to.not.have.string(helper.scopes.remote);
+              expect(fileContent).to.have.string(forkScope);
+            });
+            it('should not show a warning about untracked files', () => {
+              expect(output).not.to.have.string(
+                'bit did not update the workspace as the component files are not tracked'
+              );
+            });
+            it('should remove the old components from the package.json', () => {
+              const packageJson = helper.packageJson.read();
+              expect(packageJson.dependencies).to.not.have.property(`@bit/${helper.scopes.remote}.bar.foo`);
+              expect(packageJson.dependencies).to.have.property(`@bit/${forkScope}.bar.foo`);
+            });
+            it('should remove the old components from node_modules', () => {
+              const oldComp = `node_modules/@bit/${helper.scopes.remote}.bar.foo`;
+              expect(path.join(helper.scopes.localPath, oldComp)).not.to.be.a.path();
+            });
+            it('should be able to require the components and the dependencies', () => {
+              const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;
+              helper.fs.outputFile('app.js', appJsFixture);
+              const result = helper.command.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+            });
           });
         });
       });
