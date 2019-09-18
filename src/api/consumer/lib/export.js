@@ -47,10 +47,15 @@ async function exportComponents({
   force: boolean
 }): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
-  if (consumer.config.defaultScope) {
-    remote = consumer.config.defaultScope;
-  }
-  const { idsToExport, missingScope } = await getComponentsToExport(ids, consumer, remote, includeNonStaged, force);
+  const defaultScope = consumer.config.defaultScope;
+  const { idsToExport, missingScope } = await getComponentsToExport(
+    ids,
+    consumer,
+    remote,
+    includeNonStaged,
+    defaultScope,
+    force
+  );
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
 
   // todo: what happens when some failed? we might consider avoid Promise.all
@@ -61,7 +66,8 @@ async function exportComponents({
     remote,
     undefined,
     includeDependencies,
-    setCurrentScope
+    setCurrentScope,
+    defaultScope
   );
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
@@ -90,14 +96,15 @@ async function getComponentsToExport(
   consumer: Consumer,
   remote: ?string,
   includeNonStaged: boolean,
+  defaultScope: ?string,
   force: boolean
 ): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
   const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds, missingScope: BitId[] } => {
     if (remote) return { idsToExport: bitIds, missingScope: [] };
-    const [missingScope, idsToExport] = R.splitWhen(id => id.hasScope(), bitIds);
-    return { idsToExport, missingScope };
+    const [idsToExport, missingScope] = R.partition(id => id.hasScope() || defaultScope, bitIds);
+    return { idsToExport: BitIds.fromArray(idsToExport), missingScope };
   };
   if (!ids || !ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);

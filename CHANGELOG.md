@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix "Converting circular structure to JSON" error when logging a circular metadata object
+- fix exporting to a different scope than workspace configuration of `defaultScope`
+- fix exporting components with and without scope at the same time
 - [#1999](https://github.com/teambit/bit/issues/1999) show a descriptive error when a component is missing from the scope
 - block tagging components with prerelease versions
 - [#1981](https://github.com/teambit/bit/issues/1981) allow compilers to add all dependencies types and not only devDependencies
