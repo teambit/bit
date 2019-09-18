@@ -35,7 +35,7 @@ export default class Export extends Command {
     [
       'c',
       'codemod',
-      'when exporting to a different scope, replace import/require statements in the source code to the new scope'
+      'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
     ]
   ];
   loader = true;

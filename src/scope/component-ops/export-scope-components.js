@@ -133,9 +133,12 @@ export async function exportMany({
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
     const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
-      exported: BitIds.uniqFromArray(idsWithRemoteScope),
-      updatedLocally: BitIds.uniqFromArray(idsWithRemoteScope.filter(id => idsToChangeLocally.hasWithoutScope(id)))
+      exported: idsWithRemoteScopeUniq,
+      updatedLocally: BitIds.fromArray(
+        idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))
+      )
     };
   }
 

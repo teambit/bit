@@ -881,6 +881,7 @@ describe('bit export command', function () {
           });
         });
         describe('with --set-current-scope', () => {
+          let localBeforeFork;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localScope);
             helper.scopeHelper.reInitRemoteScope(forkScopePath);
@@ -888,6 +889,7 @@ describe('bit export command', function () {
             helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
             helper.env.importDummyCompiler();
             helper.command.tagScope('1.0.0');
+            localBeforeFork = helper.scopeHelper.cloneLocalScope();
             helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod`);
           });
           it('should change the files locally on the workspace', () => {
@@ -912,6 +914,54 @@ describe('bit export command', function () {
             const fileContent = helper.command.catObject(fileHash);
             expect(fileContent).to.not.have.string(helper.scopes.remote);
             expect(fileContent).to.have.string(forkScope);
+          });
+          it('should be able to require the components and the dependencies', () => {
+            const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;
+            helper.fs.outputFile('app.js', appJsFixture);
+            const result = helper.command.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+          describe.skip('as imported', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(localBeforeFork);
+              helper.command.exportAllComponents();
+
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope();
+              helper.command.importComponent('bar/foo');
+
+              helper.scopeHelper.reInitRemoteScope(forkScopePath);
+              helper.scopeHelper.addRemoteScope(forkScopePath);
+              helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod --all`);
+            });
+            it('should change the files locally on the workspace', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
+              expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+            });
+            it('should change the dist files locally on the workspace', () => {
+              const barFoo = helper.fs.readFile('components/bar/foo/dist/bar/foo.js');
+              expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
+            });
+            it('should change the files objects locally', () => {
+              const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              const fileHash = barFoo.files[0].file;
+              const fileContent = helper.command.catObject(fileHash);
+              expect(fileContent).to.not.have.string(helper.scopes.remote);
+              expect(fileContent).to.have.string(forkScope);
+            });
+            it('should change the dists objects locally', () => {
+              const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              const fileHash = barFoo.dists[0].file;
+              const fileContent = helper.command.catObject(fileHash);
+              expect(fileContent).to.not.have.string(helper.scopes.remote);
+              expect(fileContent).to.have.string(forkScope);
+            });
+            it('should be able to require the components and the dependencies', () => {
+              const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;
+              helper.fs.outputFile('app.js', appJsFixture);
+              const result = helper.command.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+            });
           });
         });
       });
