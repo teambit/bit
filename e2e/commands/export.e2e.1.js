@@ -961,6 +961,7 @@ describe('bit export command', function () {
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
           describe('as imported', () => {
+            let output;
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeFork);
               helper.command.exportAllComponents();
@@ -971,7 +972,9 @@ describe('bit export command', function () {
 
               helper.scopeHelper.reInitRemoteScope(forkScopePath);
               helper.scopeHelper.addRemoteScope(forkScopePath);
-              helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod --all`);
+              output = helper.command.export(
+                `${forkScope} --include-dependencies --force --set-current-scope --codemod --all`
+              );
             });
             it('should change the files locally on the workspace', () => {
               const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
@@ -994,6 +997,11 @@ describe('bit export command', function () {
               const fileContent = helper.command.catObject(fileHash);
               expect(fileContent).to.not.have.string(helper.scopes.remote);
               expect(fileContent).to.have.string(forkScope);
+            });
+            it('should not show a warning about untracked files', () => {
+              expect(output).not.to.have.string(
+                'bit did not update the workspace as the component files are not tracked'
+              );
             });
             it('should be able to require the components and the dependencies', () => {
               const appJsFixture = `const barFoo = require('@bit/${forkScope}.bar.foo'); console.log(barFoo());`;

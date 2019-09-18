@@ -77,7 +77,8 @@ export default class Export extends Command {
       force
     }).then(results => ({
       ...results,
-      remote
+      remote,
+      includeDependencies
     }));
   }
 
@@ -86,13 +87,15 @@ export default class Export extends Command {
     nonExistOnBitMap,
     missingScope,
     ejectResults,
-    remote
+    remote,
+    includeDependencies
   }: {
     componentsIds: BitId[],
     nonExistOnBitMap: BitId[],
     missingScope: BitId[],
     ejectResults: ?EjectResults,
-    remote: string
+    remote: string,
+    includeDependencies: boolean
   }): string {
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');
@@ -105,10 +108,11 @@ export default class Export extends Command {
       );
     };
     const nonExistOnBitMapOutput = () => {
-      if (R.isEmpty(nonExistOnBitMap)) return '';
+      // if includeDependencies is true, the nonExistOnBitMap might be the dependencies
+      if (R.isEmpty(nonExistOnBitMap) || includeDependencies) return '';
       const ids = nonExistOnBitMap.map(id => id.toString()).join(', ');
       return chalk.yellow(
-        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.`
+        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.\n`
       );
     };
     const missingScopeOutput = () => {
