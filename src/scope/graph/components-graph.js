@@ -5,7 +5,6 @@ import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
 
 const Graph = graphLib.Graph;
 
@@ -45,6 +44,12 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
   ]);
   const componentId = componentWithDependencies.component.id.toString();
   let sortedComponents;
+  if (!graphLib.alg.isAcyclic(graphDeps)) {
+    const circle = graphLib.alg.findCycles(graphDeps);
+    throw new GeneralError(
+      `unable to topological sort dependencies of ${componentId}, it has the following cyclic dependencies\n${circle}`
+    );
+  }
   try {
     sortedComponents = graphLib.alg.topsort(graphDeps);
     const sortedComponentsIds = sortedComponents.map(s => graphDeps.node(s));
@@ -56,13 +61,6 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
     });
     componentWithDependencies.dependencies = dependencies;
   } catch (err) {
-    logger.error(err);
-    if (err.constructor && err.constructor.name && err.constructor.name === 'CycleException') {
-      const circle = graphLib.alg.findCycles(graphDeps);
-      throw new GeneralError(
-        `unable to topological sort dependencies of ${componentId}, it has the following cyclic dependencies\n${circle}`
-      );
-    }
     throw new GeneralError(`unable to topological sort dependencies of ${componentId}. Original error: ${err.message}`);
   }
 }

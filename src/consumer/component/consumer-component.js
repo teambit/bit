@@ -144,7 +144,7 @@ export default class Component {
   manuallyRemovedDependencies: OverriddenDependencies = {};
   manuallyAddedDependencies: OverriddenDependencies = {};
   overrides: ComponentOverrides;
-  _docs: ?(Doclet[]);
+  docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
   specsResults: ?(SpecsResults[]);
@@ -178,15 +178,6 @@ export default class Component {
       name: this.name,
       version: this.version
     });
-  }
-
-  get docs(): ?(Doclet[]) {
-    if (!this._docs) {
-      this._docs = R.flatten(
-        this.files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)))
-      );
-    }
-    return this._docs;
   }
 
   get driver(): Driver {
@@ -261,7 +252,7 @@ export default class Component {
     this.overrides = overrides;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
-    this._docs = docs;
+    this.docs = docs || [];
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
@@ -897,6 +888,17 @@ export default class Component {
     });
   }
 
+  /**
+   * Recalculate docs property based on the source files
+   * used usually when setting the source files manually
+   */
+  async recalculateDocs() {
+    const docsP = _getDocsForFiles(this.files);
+    const docs = await Promise.all(docsP);
+    const flattenedDocs = docs ? R.flatten(docs) : [];
+    this.docs = flattenedDocs;
+  }
+
   copyDependenciesFromModel(ids: string[]) {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
@@ -1135,6 +1137,10 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
+    const files = await getLoadedFiles();
+    const docsP = _getDocsForFiles(files);
+    const docs = await Promise.all(docsP);
+    const flattenedDocs = docs ? R.flatten(docs) : [];
 
     return new Component({
       name: id.name,
@@ -1146,11 +1152,12 @@ export default class Component {
       tester,
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
-      files: await getLoadedFiles(),
+      files,
       loadedFromFileSystem: true,
       componentFromModel,
       componentMap,
       dists,
+      docs: flattenedDocs,
       mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
@@ -1161,4 +1168,8 @@ export default class Component {
       packageJsonChangedProps
     });
   }
+}
+
+function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
+  return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }
