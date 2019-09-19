@@ -1,11 +1,11 @@
 // @flow
 
+import domain from 'domain';
 import vuedoc from '@vuedoc/parser';
 import type { PathOsBased } from '../utils/path';
 import type { Doclet } from './parser';
 import { pathNormalizeToLinux } from '../utils';
 import logger from '../logger/logger';
-import domain from 'domain';
 
 function formatProperty(prop) {
   const { name, description, type, required } = prop;
