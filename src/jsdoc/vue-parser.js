@@ -5,6 +5,7 @@ import type { PathOsBased } from '../utils/path';
 import type { Doclet } from './parser';
 import { pathNormalizeToLinux } from '../utils';
 import logger from '../logger/logger';
+import domain from 'domain';
 
 function formatProperty(prop) {
   const { name, description, type, required } = prop;
@@ -71,14 +72,39 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
   const options = {
     filecontent: data
   };
-  try {
-    const vueDocs = await vuedoc.parse(options);
-    const formattedDocs = fromVueDocs(vueDocs, filePath);
-    return formattedDocs;
-  } catch (e) {
-    logger.debug(`failed parsing vue docs on path ${filePath} with error`);
-    logger.debug(e);
-    // never mind, ignore the doc of this source
-  }
-  return [];
+
+  return new Promise((resolve) => {
+    try {
+      // Wrapping this call with a domain since the vue docs parser call process.nextTick directly
+      // see (https://gitlab.com/vuedoc/parser/blob/master/lib/parser/Parser.js#L72) which
+      // results in sometime throw an unhandled error outside the promise which make the main process hang.
+      // read more about it here:
+      // https://gitlab.com/vuedoc/parser/issues/56#note_219267637
+      const parsingDomain = domain.create();
+      parsingDomain
+        .on('error', (err) => {
+          logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`);
+          logger.debug(err);
+          // never mind, ignore the doc of this source
+          resolve([]);
+        })
+        .run(async () => {
+          try {
+            const vueDocs = await vuedoc.parse(options);
+            const formattedDocs = fromVueDocs(vueDocs, filePath);
+            resolve(formattedDocs);
+          } catch (e) {
+            logger.debug(`failed parsing vue docs on path ${filePath} with error`);
+            logger.debug(e);
+            // never mind, ignore the doc of this source
+            resolve([]);
+          }
+        });
+    } catch (e) {
+      logger.debug(`failed parsing vue docs on path ${filePath} with error`);
+      logger.debug(e);
+      // never mind, ignore the doc of this source
+      resolve([]);
+    }
+  });
 }
