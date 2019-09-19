@@ -90,15 +90,13 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
     let component;
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
         componentMap,
         id,
-        consumer: this.consumer,
-        componentFromModel
+        consumer: this.consumer
       });
     } catch (err) {
       if (throwOnFailure) throw err;
@@ -117,7 +115,6 @@ export default class ComponentLoader {
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
-    component.componentFromModel = componentFromModel;
     await this._handleOutOfSyncScenarios(component);
 
     if (!driverExists) {

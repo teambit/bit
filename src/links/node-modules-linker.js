@@ -3,7 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS, PACKAGE_JSON, DEFAULT_BINDINGS_PREFIX } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';

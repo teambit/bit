@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';

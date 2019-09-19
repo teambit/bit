@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { COMPONENT_DIST_PATH_TEMPLATE } from '../../src/constants';
+import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));
@@ -217,6 +218,18 @@ describe('bit build', function () {
       it('should indicate that compiler was installed', () => {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
+      });
+    });
+    describe('build when the objects are missing', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.fs.deletePath('.bit');
+      });
+      it('should throw ComponentsPendingImport error', () => {
+        // before, it used to throw "Cannot read property 'flattenedDependencies' of null" error.
+        const func = () => helper.command.build();
+        const error = new ComponentsPendingImport();
+        helper.general.expectToThrow(func, error);
       });
     });
   });

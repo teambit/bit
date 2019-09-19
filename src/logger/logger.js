@@ -1,4 +1,5 @@
 /** @flow */
+import chalk from 'chalk';
 import yn from 'yn';
 import serializeError from 'serialize-error';
 import format from 'string-format';
@@ -7,7 +8,6 @@ import path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
-import chalk from 'chalk';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -17,22 +17,7 @@ const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
-  format: jsonFormat
-    ? winston.format.combine(winston.format.timestamp(), winston.format.json())
-    : winston.format.combine(
-      winston.format.metadata(),
-      winston.format.colorize(),
-      winston.format.timestamp(),
-      winston.format.splat(), // does nothing?
-      winston.format.errors({ stack: true }),
-      winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-      winston.format.printf(
-        info =>
-          `${info.timestamp} ${info.level}: ${info.message} ${
-            Object.keys(info.metadata).length ? JSON.stringify(info.metadata, null, 2) : ''
-          }`
-      )
-    ),
+  format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
   level: 'debug',
   maxsize: 10 * 1024 * 1024, // 10MB
   maxFiles: 10,
@@ -40,6 +25,30 @@ export const baseFileTransportOpts = {
   // The filename will always have the most recent log lines. The larger the appended number, the older the log file
   tailable: true
 };
+
+export function getFormat() {
+  return winston.format.combine(
+    winston.format.metadata(),
+    winston.format.colorize(),
+    winston.format.timestamp(),
+    winston.format.splat(), // does nothing?
+    winston.format.errors({ stack: true }),
+    winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
+    winston.format.printf(info => customPrint(info))
+  );
+
+  function customPrint(info) {
+    const getMetadata = () => {
+      if (!Object.keys(info.metadata).length) return '';
+      try {
+        return JSON.stringify(info.metadata, null, 2);
+      } catch (err) {
+        return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
+      }
+    };
+    return `${info.timestamp} ${info.level}: ${info.message} ${getMetadata()}`;
+  }
+}
 
 const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log')
