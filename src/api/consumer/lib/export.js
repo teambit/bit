@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import yn from 'yn';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import fs from 'fs-extra';
@@ -21,6 +22,7 @@ import GeneralError from '../../../error/general-error';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
+import { forkComponentsPrompt } from '../../../prompts';
 
 export default (async function exportAction(params: {
   ids: string[],
@@ -117,6 +119,15 @@ async function getComponentsToExport(
     const [idsToExport, missingScope] = R.partition(id => id.hasScope() || defaultScope, bitIds);
     return { idsToExport: BitIds.fromArray(idsToExport), missingScope };
   };
+  const promptForFork = async (bitIds: BitIds | BitId[]) => {
+    if (force || !remote) return;
+    const idsToFork = bitIds.filter(id => id.scope && id.scope !== remote);
+    if (!idsToFork.length) return;
+    const forkPromptResult = await forkComponentsPrompt(idsToFork, remote)();
+    if (!yn(forkPromptResult.shouldFork)) {
+      throw new GeneralError('the operation has been canceled');
+    }
+  };
   if (!ids || !ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = includeNonStaged
@@ -125,15 +136,7 @@ async function getComponentsToExport(
     const componentsToExport = idsHaveWildcard // $FlowFixMe ids are set at this point
       ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
       : exportPendingComponents;
-    if (!force && remote) {
-      componentsToExport.forEach((id) => {
-        if (id.scope && id.scope !== remote) {
-          throw new GeneralError( // $FlowFixMe
-            `a component "${id.toString()}" is about to change the scope to "${remote}", if this is done deliberately, please use "--force" flag`
-          );
-        }
-      });
-    }
+    await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
     return filterNonScopeIfNeeded(componentsToExport);
@@ -154,6 +157,7 @@ async function getComponentsToExport(
   });
   loader.start(BEFORE_EXPORT); // show single export
   const idsToExport = await Promise.all(idsToExportP);
+  await promptForFork(idsToExport);
   return filterNonScopeIfNeeded(BitIds.fromArray(idsToExport));
 }
 

@@ -20,7 +20,6 @@ export default class Export extends Command {
   alias = 'e';
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
-    ['f', 'force', 'force changing a component remote when exporting multiple components'],
     ['a', 'all', 'export all components include non-staged'],
     [
       'd',
@@ -36,7 +35,8 @@ export default class Export extends Command {
       'c',
       'codemod',
       'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
-    ]
+    ],
+    ['f', 'force', 'force changing a component remote without asking for a confirmation']
   ];
   loader = true;
   migration = true;

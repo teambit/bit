@@ -125,7 +125,8 @@ export default class CommandHelper {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
   export(options?: string = '') {
-    return this.runCmd(`bit export ${options}`);
+    // --force just silents the prompt, which obviously needed for CIs
+    return this.runCmd(`bit export --force ${options}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
