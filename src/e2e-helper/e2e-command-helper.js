@@ -114,12 +114,12 @@ export default class CommandHelper {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert: boolean = true) {
-    const result = this.runCmd(`bit export ${scope} ${id}`);
+    const result = this.runCmd(`bit export ${scope} ${id} --force`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
   exportAllComponents(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope}`);
+    return this.runCmd(`bit export ${scope} --force`);
   }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
