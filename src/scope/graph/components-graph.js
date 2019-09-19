@@ -5,7 +5,6 @@ import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
-import logger from '../../logger/logger';
 
 const Graph = graphLib.Graph;
 
