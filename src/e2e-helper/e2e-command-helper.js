@@ -114,18 +114,19 @@ export default class CommandHelper {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert: boolean = true) {
-    const result = this.runCmd(`bit export ${scope} ${id}`);
+    const result = this.runCmd(`bit export ${scope} ${id} --force`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
   exportAllComponents(scope: string = this.scopes.remote) {
-    return this.runCmd(`bit export ${scope}`);
+    return this.runCmd(`bit export ${scope} --force`);
   }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
   export(options?: string = '') {
-    return this.runCmd(`bit export ${options}`);
+    // --force just silents the prompt, which obviously needed for CIs
+    return this.runCmd(`bit export --force ${options}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);

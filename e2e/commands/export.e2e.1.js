@@ -835,9 +835,10 @@ describe('bit export command', function () {
           before(() => {
             output = helper.general.runWithTryCatch(`bit export ${forkScope}`);
           });
-          it('should throw an error warning about the scope change and suggesting to use --force', () => {
-            expect(output).to.have.string('is about to change the scope');
-            expect(output).to.have.string('please use "--force" flag');
+          it('should prompt for a confirmation before forking', () => {
+            expect(output).to.have.string(
+              `bit is about to fork the following components and export them to ${forkScope}.`
+            );
           });
           it('should not export anything', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
@@ -846,7 +847,7 @@ describe('bit export command', function () {
         });
         describe('with --force', () => {
           before(() => {
-            helper.command.export(`${forkScope} --force`);
+            helper.command.export(`${forkScope}`);
           });
           it('should export them all successfully', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
@@ -866,7 +867,7 @@ describe('bit export command', function () {
         });
         describe('export without --all flag', () => {
           before(() => {
-            helper.command.export(`${forkScope} --force`);
+            helper.command.export(`${forkScope}`);
           });
           it('should export only the staged component', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
@@ -878,7 +879,7 @@ describe('bit export command', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localScopeWithFoo2);
             helper.scopeHelper.reInitRemoteScope(forkScopePath);
-            helper.command.export(`${forkScope} --force --all`);
+            helper.command.export(`${forkScope} --all`);
           });
           it('should export all even non-staged components', () => {
             const remoteScope = helper.command.listScopeParsed(forkScope);
@@ -895,7 +896,7 @@ describe('bit export command', function () {
             helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
             helper.env.importDummyCompiler();
             helper.command.tagScope('1.0.0');
-            helper.command.export(`${forkScope} --include-dependencies --force --codemod`);
+            helper.command.export(`${forkScope} --include-dependencies --codemod`);
           });
           it('should not change the files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
@@ -931,7 +932,7 @@ describe('bit export command', function () {
             helper.env.importDummyCompiler();
             helper.command.tagScope('1.0.0');
             localBeforeFork = helper.scopeHelper.cloneLocalScope();
-            helper.command.export(`${forkScope} --include-dependencies --force --set-current-scope --codemod`);
+            helper.command.export(`${forkScope} --include-dependencies --set-current-scope --codemod`);
           });
           it('should change the files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
@@ -975,9 +976,7 @@ describe('bit export command', function () {
 
               helper.scopeHelper.reInitRemoteScope(forkScopePath);
               helper.scopeHelper.addRemoteScope(forkScopePath);
-              output = helper.command.export(
-                `${forkScope} --include-dependencies --force --set-current-scope --codemod --all`
-              );
+              output = helper.command.export(`${forkScope} --include-dependencies --set-current-scope --codemod --all`);
             });
             it('should change the files locally on the workspace', () => {
               const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
