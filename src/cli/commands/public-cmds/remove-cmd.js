@@ -15,13 +15,17 @@ export default class Remove extends Command {
   ${WILDCARD_HELP('remove')}`;
   alias = 'rm';
   opts = [
-    ['f', 'force [boolean]', 'force remove (default = false)'],
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
     [
       'd',
       'delete-files [boolean]',
       'delete local component files (authored components only. for imported components the files are always deleted)'
+    ],
+    [
+      'f',
+      'force [boolean]',
+      'WARNING - it allows removing components even when other components depend on them, it will corrupt those dependents components (see the link above for more info)'
     ],
     ['s', 'silent [boolean]', 'skip confirmation']
   ];
