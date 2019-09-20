@@ -294,12 +294,7 @@ function commonJSLookup(options: Options) {
 
   appModulePath.addPath(moduleLookupDir);
 
-  // Make sure the partial is being resolved to the filename's context
-  // 3rd party modules will not be relative
   let partial = options.partial;
-  if (partial[0] === '.') {
-    partial = path.resolve(path.dirname(filename), partial);
-  }
 
   let result = '';
 
@@ -312,6 +307,12 @@ function commonJSLookup(options: Options) {
       return result;
     }
     debug('failed resolved using resolveConfig, fall back to the standard resolver');
+  }
+
+  // Make sure the partial is being resolved to the filename's context
+  // 3rd party modules will not be relative
+  if (partial[0] === '.') {
+    partial = path.resolve(path.dirname(filename), partial);
   }
 
   try {

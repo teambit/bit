@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.1.2-dev.1] - 2019-09-20
+
+- avoid recognizing any require/import starts with `.` as a custom-resolve-module on Windows
+
 ## [2.1.1] - 2019-08-14
 
 - remove angular dependencies. use typescript compiler to parse Angular Decorators
