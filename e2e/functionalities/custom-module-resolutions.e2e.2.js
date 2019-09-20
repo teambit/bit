@@ -278,6 +278,98 @@ describe('custom module resolutions', function () {
         });
       });
     });
+    // see https://github.com/teambit/bit/issues/2006 for a bug about it.
+    describe('when one alias is a parent of another one', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        const bitJson = helper.bitJson.read();
+        bitJson.resolveModules = { aliases: { '@': 'src' } };
+        helper.bitJson.write(bitJson);
+
+        helper.fs.createFile('src/utils', 'is-type.js', fixtures.isType);
+        const isStringFixture =
+          "const isType = require('@/utils/is-type');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+        const barFooFixture =
+          "const isString = require('@/utils');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+        const indexFixture = "module.exports = require('./is-string');";
+        helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
+        helper.fs.createFile('src/utils', 'index.js', indexFixture);
+        helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
+        helper.command.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.tagAllComponents();
+      });
+      it('bit status should not warn about missing packages', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.not.have.string('missing');
+      });
+      it('should show the customResolvedPaths correctly', () => {
+        const barFoo = helper.command.catComponent('bar/foo@latest');
+        expect(barFoo).to.have.property('customResolvedPaths');
+        expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
+        expect(barFoo.customResolvedPaths).to.deep.include({
+          destinationPath: 'src/utils/index.js',
+          importSource: '@/utils'
+        });
+        expect(barFoo.customResolvedPaths).to.deep.include({
+          destinationPath: 'src/utils/is-type.js',
+          importSource: '@/utils/is-type'
+        });
+      });
+      describe('importing the component', () => {
+        before(() => {
+          helper.command.exportAllComponents();
+
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('bar/foo');
+          fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
+        });
+        it('should generate the non-relative links correctly', () => {
+          const result = helper.command.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        it('should not show the component as modified', () => {
+          const output = helper.command.runCmd('bit status');
+          expect(output).to.not.have.string('modified');
+        });
+        describe('npm packing the component using an extension npm-pack', () => {
+          let packDir;
+          before(() => {
+            helper.extensions.importNpmPackExtension();
+            packDir = path.join(helper.scopes.localPath, 'pack');
+            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
+          });
+          it('should create the specified directory', () => {
+            expect(packDir).to.be.a.path();
+          });
+          it('should generate .bit.postinstall.js file', () => {
+            expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+          });
+          it('should add the postinstall script to the package.json file', () => {
+            const packageJson = helper.packageJson.read(packDir);
+            expect(packageJson).to.have.property('scripts');
+            expect(packageJson.scripts).to.have.property('postinstall');
+            expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
+          });
+          it('npm install should create the custom-resolved dir inside node_modules', () => {
+            helper.command.runCmd('npm i', packDir);
+            expect(path.join(packDir, 'node_modules/@/utils/index.js')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/@/utils/is-type')).to.be.a.file();
+            expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
+          });
+          it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
+            const packageJson = helper.packageJson.read(packDir);
+            const packageName = helper.general.getRequireBitPath('bar', 'foo');
+            expect(packageJson.bit.resolveAliases)
+              .to.have.property('@/utils')
+              .that.equal(`${packageName}/utils/index.js`);
+            expect(packageJson.bit.resolveAliases)
+              .to.have.property('@/utils/is-type')
+              .that.equal(`${packageName}/utils/is-type.js`);
+          });
+        });
+      });
+    });
   });
   describe('using custom module directory when a component uses an internal file of another component', () => {
     const npmCiRegistry = new NpmCiRegistry(helper);

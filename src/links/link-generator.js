@@ -295,33 +295,38 @@ function getInternalCustomResolvedLinks(
   if (!componentDir) {
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
   }
-  const getDestination = (importSource: string) => `node_modules/${importSource}`;
+  const getDestination = ({ destinationPath, importSource }) => {
+    const shouldAddIndexJsFile = destinationPath.endsWith(`${path.basename(importSource)}/index.js`);
+    return `node_modules/${importSource}${shouldAddIndexJsFile ? '/index.js' : ''}`;
+  };
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
   const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
-    const sourceAbs = path.join(componentDir, customPath.destinationPath);
-    const dest = getDestination(customPath.importSource);
-    const destAbs = path.join(componentDir, dest);
-    const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
-    const linkContent = getLinkToFileContent(destRelative);
+  return component.customResolvedPaths
+    .filter(customPath => isResolvePathsInvalid(customPath))
+    .map((customPath) => {
+      const sourceAbs = path.join(componentDir, customPath.destinationPath);
+      const dest = getDestination(customPath);
+      const destAbs = path.join(componentDir, dest);
+      const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
+      const linkContent = getLinkToFileContent(destRelative);
 
-    const postInstallSymlink = createNpmLinkFiles && !linkContent;
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
-    const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
-    const getSymlink = () => {
-      if (linkContent) return undefined;
-      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
-      return sourceAbs;
-    };
-    return {
-      linkPath: createNpmLinkFiles ? dest : destAbs,
-      linkContent,
-      postInstallLink: createNpmLinkFiles,
-      customResolveMapping,
-      symlinkTo: getSymlink(),
-      postInstallSymlink
-    };
-  });
+      const postInstallSymlink = createNpmLinkFiles && !linkContent;
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+      const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+      const getSymlink = () => {
+        if (linkContent) return undefined;
+        if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+        return sourceAbs;
+      };
+      return {
+        linkPath: createNpmLinkFiles ? dest : destAbs,
+        linkContent,
+        postInstallLink: createNpmLinkFiles,
+        customResolveMapping,
+        symlinkTo: getSymlink(),
+        postInstallSymlink
+      };
+    });
 }
 
 /**
