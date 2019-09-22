@@ -89,10 +89,10 @@ jobs:
       #   restore_cache:
       #     keys:
       #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      -
-        run:
-          name: 'install pkg to support local build'
-          command: 'sudo npm install -g pkg'
+      # -
+      #   run:
+      #     name: 'install pkg to support local build'
+      #     command: 'sudo npm install -g pkg@4.4.0'
       -
         run:
           name: 'Install npm dependencies'
@@ -161,42 +161,56 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg'
-      -
-        run:
-          name: 'save pkg targets names'
-          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
-      -
+        run: 'sudo npm i -g pkg@4.4.0'
+      # -
+      #   run:
+      #     name: 'save pkg targets names'
+      #     command: 'cat ./bit/package.json | jq .scripts.pkg:all | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
+      # -
         restore_cache:
           keys:
-            - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            # - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v2
       -
         run:
           name: 'set pkg path'
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
-      -
-        run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && sudo npm link ../bit-javascript'
+      # -
+      #   run:
+      #     name: 'npm link bit-javascript to bit'
+      #     command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
-      -
-        save_cache:
-          key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
-          paths:
-            - ~/pkg-cache
+      # -
+      #   save_cache:
+      #     key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+      #     paths:
+      #       - ~/pkg-cache
       -
         save_cache:
           key: pkg-cache-v2
           paths:
             - /home/circleci/pkg-cache
+      # -
+      #   run:
+      #     name: 'copy unsuported files'
+      #     command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
       -
-        run:
-          name: 'copy unsuported files'
-          command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases
+  build-debian: 
+    docker:
+      -
+        image: 'bitcli/debian-artifact-builder:latest'
+    resource_class: small
+    working_directory: ~/bit
+    steps:
+      -
+        run: './scripts/linux/debian/build-linux-deb.sh'
       -
         persist_to_workspace:
           root: .
@@ -480,30 +494,58 @@ workflows:
       - set_bitsrc_registry
       -
         install_npm_deps:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - checkout_code
       -
         install_bit_javascript_npm_deps:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - checkout_code
       -
         build:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - install_npm_deps
       -
         build_bit_javascript:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - install_bit_javascript_npm_deps
       -
         unit_test:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - build
       -
         unit_test_bit_javascript:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - build_bit_javascript
       -
         lint:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
           requires:
             - install_npm_deps
       # -
@@ -517,6 +559,7 @@ workflows:
             branches:
               ignore:
                 - performance-tests
+                - feature/ci-release-publishing
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -532,7 +575,33 @@ workflows:
           requires:
             - build
             - build_bit_javascript
-
+  deploy:
+    triggers:
+      - schedule:
+          cron: "0 9 * * *"
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+    jobs:
+      - checkout_code
+      -
+        install_npm_deps:
+          requires:
+            - checkout_code
+      -
+        build:
+          requires:
+            - install_npm_deps
+      -
+        pack:
+          requires:
+            - build
+            - install_npm_deps
+      -
+        build-debian:
+          requires:
+            - pack
   performance_tests:
     triggers:
       - schedule:
