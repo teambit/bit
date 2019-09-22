@@ -182,7 +182,7 @@ jobs:
       -
         run:
           name: 'Pack bit'
-          command: 'cd bit && npm run pkg'
+          command: 'cd bit && npm run pkg:all'
       # -
       #   save_cache:
       #     key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
