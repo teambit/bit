@@ -41,6 +41,7 @@
     "prepublishOnly": "npm run clean && npm run build",
     "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
     "release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos",
+    "release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease -y --dry-run",
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release"
   },

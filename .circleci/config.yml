@@ -202,6 +202,18 @@ jobs:
           root: .
           paths:
             - bit/releases
+  github-release: 
+    docker:
+      -
+        image: 'circleci/node:8.12.0'
+    resource_class: small
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'cd bit && npm run release:circle'
   build-debian: 
     docker:
       -
@@ -218,7 +230,7 @@ jobs:
         persist_to_workspace:
           root: .
           paths:
-            - bit/releases
+            - bit/releases/deb
   build-rpm: 
     docker:
       -
@@ -235,7 +247,7 @@ jobs:
         persist_to_workspace:
           root: .
           paths:
-            - bit/releases
+            - bit/releases/rpm
   publish_to_jfrog: 
     docker:
       -
@@ -258,12 +270,12 @@ jobs:
       -
         run:
           name: upload debian file
-          command: ./jfrog rt u "bit/releases/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
+          command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
 
       -
         run:
           name: upload rpm file
-          command: ./jfrog rt u "bit/releases/*.rpm" bit-yum/development/bit/${BIT_V}/bit-${BIT_V}-1.x86_64.rpm --flat=false
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_V}/bit-${BIT_V}-1.x86_64.rpm --flat=false
   build_bit_javascript:
     docker:
       -
@@ -663,6 +675,14 @@ workflows:
           requires:
             - build
             - install_npm_deps
+      -
+        github-release:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
+            - pack
       -
         build-rpm:
           filters:
