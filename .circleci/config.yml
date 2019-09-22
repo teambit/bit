@@ -209,7 +209,6 @@ jobs:
     resource_class: small
     working_directory: ~/bit
     steps:
-      GH_RELEASE_GITHUB_API_TOKEN
       -
         attach_workspace:
           at: ./
@@ -266,7 +265,7 @@ jobs:
           name: set bit version in env variable
           command: export BIT_VERSION=$(cat ./bit/package.json | jq .version -r)
       - run:
-          name: echo bit version 
+          name: echo bit version
           command: echo $BIT_VERSION
       - run:
           name: Install jFrog CLI
