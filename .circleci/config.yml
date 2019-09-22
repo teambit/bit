@@ -263,7 +263,7 @@ jobs:
       -
         run:
           name: upload rpm file
-          command: curl -fL https://getcli.jfrog.io | sh
+          command: ./jfrog rt u "bit/releases/*.rpm" bit-yum/development/bit/${BIT_V}/bit-${BIT_V}-1.x86_64.rpm --flat=false
   build_bit_javascript:
     docker:
       -
@@ -663,14 +663,14 @@ workflows:
           requires:
             - build
             - install_npm_deps
-      # -
-      #   build-rpm:
-      #     filters:
-      #       branches:
-      #         only:
-      #           - feature/ci-release-publishing
-      #     requires:
-      #       - pack
+      -
+        build-rpm:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
+            - pack
       -
         build-debian:
           filters:
@@ -686,7 +686,7 @@ workflows:
                 - feature/ci-release-publishing
           requires:
             - build-debian
-            # - build-rpm
+            - build-rpm
   performance_tests:
     triggers:
       - schedule:
