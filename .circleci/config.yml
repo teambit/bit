@@ -210,11 +210,11 @@ jobs:
     working_directory: ~/bit
     steps:
       -
-        run: 'ls -la ./bit/releases'
+        run: 'cd bit && ls -la releases'
       -
         run: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
       -
-        run: 'ls -la ./bit/releases'
+        run: 'cd bit && ls -la releases'
       -
         persist_to_workspace:
           root: .
