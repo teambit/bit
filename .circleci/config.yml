@@ -213,11 +213,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'cd bit && ls -la releases'
-      -
         run: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
-      -
-        run: 'cd bit && ls -la releases'
       -
         persist_to_workspace:
           root: .
@@ -234,11 +230,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'cd bit && ls -la releases'
-      -
         run: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
-      -
-        run: 'cd bit && ls -la releases'
       -
         persist_to_workspace:
           root: .
