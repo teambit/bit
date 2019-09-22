@@ -266,7 +266,7 @@ jobs:
           name: set bit version in env variable
           command: export BIT_VERSION=$(cat ./bit/package.json | jq .version -r)
       - run:
-          name: echo bit version
+          name: echo bit version 
           command: echo $BIT_VERSION
       - run:
           name: Install jFrog CLI
