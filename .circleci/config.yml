@@ -166,7 +166,7 @@ jobs:
       #   run:
       #     name: 'save pkg targets names'
       #     command: 'cat ./bit/package.json | jq .scripts.pkg:all | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
-      # -
+      -
         restore_cache:
           keys:
             # - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
