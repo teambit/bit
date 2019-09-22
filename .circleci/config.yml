@@ -576,30 +576,39 @@ workflows:
             - build
             - build_bit_javascript
   deploy:
-    triggers:
-      - schedule:
-          cron: "0 9 * * *"
-          filters:
-            branches:
-              only:
-                - feature/ci-release-publishing
     jobs:
       - checkout_code
       -
         install_npm_deps:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
           requires:
             - checkout_code
       -
         build:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
           requires:
             - install_npm_deps
       -
         pack:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
           requires:
             - build
             - install_npm_deps
       -
         build-debian:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
           requires:
             - pack
   performance_tests:
