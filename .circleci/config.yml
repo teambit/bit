@@ -210,6 +210,9 @@ jobs:
     working_directory: ~/bit
     steps:
       -
+        attach_workspace:
+          at: ./
+      -
         run: 'cd bit && ls -la releases'
       -
         run: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
@@ -220,6 +223,27 @@ jobs:
           root: .
           paths:
             - bit/releases
+  # publish_to_jfrog: 
+  #   docker:
+  #     -
+  #       image: 'circleci/node:8.12.0'
+  #   resource_class: small
+  #   working_directory: ~/bit
+  #   steps:
+  #     -
+  #       attach_workspace:
+  #         at: ./
+  #     - run:
+  #         name: Install jFrog CLI
+  #         command: curl -fL https://getcli.jfrog.io | sh
+  #     -
+  #       run:
+  #         name: upload debian file
+  #         command: curl -fL https://getcli.jfrog.io | sh
+  #     -
+  #       run:
+  #         name: upload rpm file
+  #         command: curl -fL https://getcli.jfrog.io | sh
   build_bit_javascript:
     docker:
       -
