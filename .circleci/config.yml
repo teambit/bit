@@ -223,6 +223,27 @@ jobs:
           root: .
           paths:
             - bit/releases
+  build-rpm: 
+    docker:
+      -
+        image: 'bitcli/rpm-artifact-builder:latest'
+    resource_class: small
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'cd bit && ls -la releases'
+      -
+        run: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
+      -
+        run: 'cd bit && ls -la releases'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases
   # publish_to_jfrog: 
   #   docker:
   #     -
@@ -643,6 +664,14 @@ workflows:
           requires:
             - build
             - install_npm_deps
+      -
+        build-rpm:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
+            - pack
       -
         build-debian:
           filters:
