@@ -209,9 +209,13 @@ jobs:
     resource_class: small
     working_directory: ~/bit
     steps:
+      GH_RELEASE_GITHUB_API_TOKEN
       -
         attach_workspace:
           at: ./
+      - run:
+          name: set GitHub token
+          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
   build-debian: 
@@ -260,7 +264,10 @@ jobs:
           at: ./
       - run:
           name: set bit version in env variable
-          command: export BIT_VERSION=$(cat ./package.json | jq .version -r)
+          command: export BIT_VERSION=$(cat ./bit/package.json | jq .version -r)
+      - run:
+          name: echo bit version
+          command: echo $BIT_VERSION
       - run:
           name: Install jFrog CLI
           command: curl -fL https://getcli.jfrog.io | sh
