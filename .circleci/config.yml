@@ -202,6 +202,21 @@ jobs:
           root: .
           paths:
             - bit/releases
+  npm-publish: 
+    docker:
+      -
+        image: 'circleci/node:8.12.0'
+    resource_class: small
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/bit/.npmrc
+      -
+        run: 'cd bit && npm publish --tag dev --dry-run'
   github-release: 
     docker:
       -
@@ -263,7 +278,7 @@ jobs:
           at: ./
       - run:
           name: set bit version in env variable
-          command: export BIT_VERSION=$(cat ./bit/package.json | jq .version -r)
+          command: 'cd bit && cat ./package.json | jq .version -r && export BIT_VERSION=$(cat ./package.json | jq .version -r)'
       - run:
           name: echo bit version
           command: echo $BIT_VERSION
@@ -673,6 +688,14 @@ workflows:
           requires:
             - install_npm_deps
       -
+        npm-publish:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
+            - build
+      -
         pack:
           filters:
             branches:
@@ -680,7 +703,6 @@ workflows:
                 - feature/ci-release-publishing
           requires:
             - build
-            - install_npm_deps
       -
         github-release:
           filters:
