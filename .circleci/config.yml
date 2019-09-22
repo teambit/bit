@@ -210,7 +210,11 @@ jobs:
     working_directory: ~/bit
     steps:
       -
-        run: './scripts/linux/debian/build-linux-deb.sh'
+        run: 'ls -la ./bit/releases'
+      -
+        run: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
+      -
+        run: 'ls -la ./bit/releases'
       -
         persist_to_workspace:
           root: .
@@ -489,9 +493,21 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - checkout_code
-      - set_ssh_key
-      - set_bitsrc_registry
+      - checkout_code:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
+      - set_ssh_key:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
+      - set_bitsrc_registry:
+          filters:
+            branches:
+              ignore:
+                - feature/ci-release-publishing
       -
         install_npm_deps:
           filters:
