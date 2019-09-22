@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.3.1-dev.1] - 2019-09-22
+
 - [#2013](https://github.com/teambit/bit/issues/2013) fix bit import when one module resolution alias is a directory of another alias
 - [#2004](https://github.com/teambit/bit/issues/2004) ask for approval before exporting a component to another scope (fork)
 - [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--codemod` for `bit export` to replace the import/require statements in the source to the newly exported scope
