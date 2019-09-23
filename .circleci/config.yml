@@ -147,6 +147,10 @@ jobs:
       -
         run:
           name: 'test'
+          command: 'semver'
+      -
+        run:
+          name: 'test'
           command: 'semver $BIT_VERSION -r x.x.x'
       -
         run:
