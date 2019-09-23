@@ -127,7 +127,7 @@ jobs:
           root: .
           paths:
             - bit-javascript/node_modules
-  validate-git-tag: 
+  validate-git-tag-version: 
     docker:
       -
         image: 'circleci/node:8.12.0'
@@ -702,12 +702,21 @@ workflows:
           requires:
             - checkout_code
       -
+        validate-git-tag-version:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
+            - checkout_code
+      -
         build:
           filters:
             branches:
               only:
                 - feature/ci-release-publishing
           requires:
+            - validate-git-tag-version
             - install_npm_deps
       -
         npm-publish:
