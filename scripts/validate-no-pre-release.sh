@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "validating $1"
+echo "validating $1 and $2"
 if [ $1 == $2 ]; then
   echo "Version is valid"
   exit 0;
