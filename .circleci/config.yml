@@ -134,6 +134,15 @@ jobs:
     resource_class: small
     working_directory: ~/bit
     steps:
+      - run:
+          name: echo bit version
+          command: cd bit && cat ./package.json | jq .version -r 
+      - run:
+          name: set bit version in env variable
+          command: 'cd bit && BIT_VERSION=$(cat ./package.json | jq .version -r)'
+      - run:
+          name: echo bit version
+          command: echo $BIT_VERSION
       -
         run:
           name: 'save SHA to a file'
@@ -276,15 +285,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      - run:
-          name: echo bit version
-          command: cd bit && cat ./package.json | jq .version -r 
-      - run:
-          name: set bit version in env variable
-          command: 'cd bit && export BIT_VERSION=$(cat ./package.json | jq .version -r)'
-      - run:
-          name: echo bit version
-          command: echo $BIT_VERSION
       - run:
           name: Install jFrog CLI
           command: curl -fL https://getcli.jfrog.io | sh
