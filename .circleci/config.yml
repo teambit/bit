@@ -216,7 +216,9 @@ jobs:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/bit/.npmrc
       -
-        run: 'cd bit && npm publish --tag dev --dry-run'
+        run: 
+          name: Publish bit to the npm registry
+          command: 'cd bit && npm publish --tag dev --dry-run'
   github-release: 
     docker:
       -
@@ -243,7 +245,9 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
+        run: 
+          name: Build debian file
+          command: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
       -
         persist_to_workspace:
           root: .
@@ -260,7 +264,9 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
+        run:
+          name: Build rpm file
+          command: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
       -
         persist_to_workspace:
           root: .
@@ -277,7 +283,7 @@ jobs:
         attach_workspace:
           at: ./
       - run:
-          name: echo bit version original
+          name: print bit version
           command: cd bit && cat ./package.json | jq .version -r 
       - run:
           name: Setup bit version environment variables
@@ -290,13 +296,12 @@ jobs:
           command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
       -
         run:
-          name: upload debian file
+          name: Upload debian file
           command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
-
       -
         run:
-          name: upload rpm file
-          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_V}/bit-${BIT_V}-1.x86_64.rpm --flat=false
+          name: Upload rpm file
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-1.x86_64.rpm --flat=false
   build_bit_javascript:
     docker:
       -
