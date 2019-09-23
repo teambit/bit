@@ -143,7 +143,7 @@ jobs:
       -
         run:
           name: 'validate tag match version in package.json'
-          command: 'cd bit && ./scripts/compare-versions $CIRCLE_BRANCH $BIT_VERSION'
+          command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_BRANCH $BIT_VERSION'
   build:
     docker:
       -
@@ -694,14 +694,6 @@ workflows:
     jobs:
       - checkout_code
       -
-        install_npm_deps:
-          filters:
-            branches:
-              only:
-                - feature/ci-release-publishing
-          requires:
-            - checkout_code
-      -
         validate-git-tag-version:
           filters:
             branches:
@@ -710,13 +702,21 @@ workflows:
           requires:
             - checkout_code
       -
-        build:
+        install_npm_deps:
           filters:
             branches:
               only:
                 - feature/ci-release-publishing
           requires:
             - validate-git-tag-version
+            - checkout_code
+      -
+        build:
+          filters:
+            branches:
+              only:
+                - feature/ci-release-publishing
+          requires:
             - install_npm_deps
       -
         npm-publish:
