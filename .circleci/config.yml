@@ -660,12 +660,19 @@ workflows:
             - build_bit_javascript
   deploy:
     jobs:
-      - checkout_code
+      - checkout_code:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
       -
         validate-git-tag-version:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - checkout_code
       -
@@ -673,6 +680,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - validate-git-tag-version
             - checkout_code
@@ -681,6 +690,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - install_npm_deps
       -
@@ -688,6 +699,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - build
       -
@@ -695,6 +708,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - build
       -
@@ -702,6 +717,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - pack
       -
@@ -709,6 +726,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - pack
       -
@@ -716,12 +735,16 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - pack
         publish_to_jfrog:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
           requires:
             - build-debian
             - build-rpm
