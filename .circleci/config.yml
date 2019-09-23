@@ -142,6 +142,14 @@ jobs:
           command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
       -
         run:
+          name: 'installing semver tool'
+          command: 'npm i -g semver'
+      -
+        run:
+          name: 'validate version in package.json does not contains pre release tags'
+          command: 'cd bit && ./scripts/validate-no-pre-release.sh $BIT_VERSION $(semver $BIT_VERSION -r x.x.x)'
+      -
+        run:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_BRANCH $BIT_VERSION'
   build:
