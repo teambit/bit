@@ -79,12 +79,27 @@ jobs:
       # SKIP_LOCAL_BUILD_BINARY: true
     steps:
       -
+        attach_workspace:
+          at: ./
+      - run:
+          name: echo bit version original
+          command: cd bit && cat ./package.json | jq .version -r 
+      - run:
+          name: Setup Environment Variables
+          command: cd bit && echo "export BIT_VERSION1=$(cat ./package.json | jq .version -r) >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: echo bit version 1
+          command: echo $BIT_VERSION1
+      - run:
+          name: set bit version in env variable
+          command: 'cd bit && BIT_VERSION=$(cat ./package.json | jq .version -r)'
+      - run:
+          name: echo bit version
+          command: echo $BIT_VERSION
+      -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
-          at: ./
       # -
       #   restore_cache:
       #     keys:
@@ -134,22 +149,13 @@ jobs:
     resource_class: small
     working_directory: ~/bit
     steps:
-      - run:
-          name: echo bit version
-          command: cd bit && cat ./package.json | jq .version -r 
-      - run:
-          name: set bit version in env variable
-          command: 'cd bit && BIT_VERSION=$(cat ./package.json | jq .version -r)'
-      - run:
-          name: echo bit version
-          command: echo $BIT_VERSION
+      -
+        attach_workspace:
+          at: ./
       -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
-          at: ./
       -
         run:
           name: 'Build bit source code'
