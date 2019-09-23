@@ -227,9 +227,9 @@ jobs:
       -
         attach_workspace:
           at: ./
-      - run:
-          name: set GitHub token
-          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      # - run:
+      #     name: set GitHub token
+      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
   build-debian: 
@@ -277,8 +277,11 @@ jobs:
         attach_workspace:
           at: ./
       - run:
+          name: echo bit version
+          command: cd bit && cat ./package.json | jq .version -r 
+      - run:
           name: set bit version in env variable
-          command: 'cd bit && cat ./package.json | jq .version -r && export BIT_VERSION=$(cat ./package.json | jq .version -r)'
+          command: 'cd bit && export BIT_VERSION=$(cat ./package.json | jq .version -r)'
       - run:
           name: echo bit version
           command: echo $BIT_VERSION
