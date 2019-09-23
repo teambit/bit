@@ -146,20 +146,12 @@ jobs:
           command: 'sudo npm i -g semver'
       -
         run:
-          name: 'test'
-          command: 'semver'
+          name: 'test validation'
+          command: 'semver 1.1.1 -r x.x.x'
       -
         run:
-          name: 'test'
+          name: 'validate version in package.json does not contains pre release tags'
           command: 'semver $BIT_VERSION -r x.x.x'
-      -
-        run:
-          name: 'validate version in package.json does not contains pre release tags'
-          command: 'cd bit && ./scripts/validate-no-pre-release.sh $BIT_VERSION $(semver $BIT_VERSION -r x.x.x)'
-      -
-        run:
-          name: 'validate version in package.json does not contains pre release tags'
-          command: 'cd bit && ./scripts/validate-no-pre-release.sh 1.1.1 $(semver 1.1.1 -r x.x.x)'
       -
         run:
           name: 'validate tag match version in package.json'
