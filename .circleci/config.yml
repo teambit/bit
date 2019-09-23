@@ -244,7 +244,7 @@ jobs:
       -
         run: 
           name: Publish bit to the npm registry
-          command: 'cd bit && npm publish --tag dev --dry-run'
+          command: 'cd bit && npm publish'
   github-release: 
     docker:
       -
@@ -323,11 +323,11 @@ jobs:
       -
         run:
           name: Upload debian file
-          command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/development/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/development/amd64" --flat=false
+          command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/stable/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/stable/amd64" --flat=false
       -
         run:
           name: Upload rpm file
-          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   build_bit_javascript:
     docker:
       -
