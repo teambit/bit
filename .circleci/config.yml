@@ -301,7 +301,7 @@ jobs:
       -
         run:
           name: Upload rpm file
-          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-1.x86_64.rpm --flat=false
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/development/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   build_bit_javascript:
     docker:
       -
