@@ -675,16 +675,14 @@ workflows:
         validate-git-tag-version:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - checkout_code
       -
         install_npm_deps:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - validate-git-tag-version
             - checkout_code
@@ -692,55 +690,48 @@ workflows:
         build:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - install_npm_deps
       -
         npm-publish:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - build
       -
         pack:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - build
       -
         github-release:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - pack
       -
         build-rpm:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - pack
       -
         build-debian:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - pack
         publish_to_jfrog:
           filters:
             tags:
-              only:
-                - /^v.*/
+              only: /^v.*/
           requires:
             - build-debian
             - build-rpm
