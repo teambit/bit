@@ -17,7 +17,7 @@ also, if they're staged, bit will not change their status to exported unless '--
 there are additional flags for the 'export' command to specifically handle forking components:
 1. '--include-dependencies' exports all dependencies to the destination alongside the component.
 2. '--set-current-scope' sets your workspace to use the destination scope as the main remote for the component.
-3. '--codemod' changes all dependencies to point to the new destination.
+3. '--rewire-scope' changes all dependencies to point to the new destination.
 
 would you like to proceed with forking the components? (yes/no)`,
         message: 'please type yes or no.',
