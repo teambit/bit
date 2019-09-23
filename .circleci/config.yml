@@ -146,11 +146,8 @@ jobs:
           command: 'sudo npm i -g semver'
       -
         run:
-          name: 'test validation'
-          command: 'semver 1.1.1 -r x.x.x'
-      -
-        run:
           name: 'validate version in package.json does not contains pre release tags'
+          # This will return code 1 when the version contains pre release tags
           command: 'semver $BIT_VERSION -r x.x.x'
       -
         run:
@@ -605,74 +602,44 @@ workflows:
   build_and_test:
     jobs:
       - checkout_code:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
       - set_ssh_key:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
       - set_bitsrc_registry:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
       -
         install_npm_deps:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - checkout_code
       -
         install_bit_javascript_npm_deps:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - checkout_code
       -
         build:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - install_npm_deps
       -
         build_bit_javascript:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - install_bit_javascript_npm_deps
       -
         unit_test:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - build
       -
         unit_test_bit_javascript:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - build_bit_javascript
       -
         lint:
-          filters:
-            branches:
-              ignore:
-                - feature/ci-release-publishing
+          
           requires:
             - install_npm_deps
       # -
@@ -686,7 +653,6 @@ workflows:
             branches:
               ignore:
                 - performance-tests
-                - feature/ci-release-publishing
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -708,73 +674,73 @@ workflows:
       -
         validate-git-tag-version:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - checkout_code
       -
         install_npm_deps:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - validate-git-tag-version
             - checkout_code
       -
         build:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - install_npm_deps
       -
         npm-publish:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - build
       -
         pack:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - build
       -
         github-release:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - pack
       -
         build-rpm:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - pack
       -
         build-debian:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - pack
         publish_to_jfrog:
           filters:
-            branches:
+            tags:
               only:
-                - feature/ci-release-publishing
+                - /^v.*/
           requires:
             - build-debian
             - build-rpm
