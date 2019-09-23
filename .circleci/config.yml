@@ -86,7 +86,7 @@ jobs:
           command: cd bit && cat ./package.json | jq .version -r 
       - run:
           name: Setup Environment Variables
-          command: cd bit && echo "export BIT_VERSION1=$(cat ./package.json | jq .version -r) >> $BASH_ENV && source $BASH_ENV
+          command: cd bit && echo "export BIT_VERSION1=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
       - run:
           name: echo bit version 1
           command: echo $BIT_VERSION1
