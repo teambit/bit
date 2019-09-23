@@ -127,6 +127,23 @@ jobs:
           root: .
           paths:
             - bit-javascript/node_modules
+  validate-git-tag: 
+    docker:
+      -
+        image: 'circleci/node:8.12.0'
+    resource_class: small
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      -
+        run:
+          name: 'validate tag match version in package.json'
+          command: 'cd bit && ./scripts/compare-versions $CIRCLE_BRANCH $BIT_VERSION'
   build:
     docker:
       -
