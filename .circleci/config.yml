@@ -695,13 +695,13 @@ workflows:
             - checkout_code
       -
         build:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - install_npm_deps
       -
