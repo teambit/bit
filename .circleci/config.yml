@@ -244,7 +244,7 @@ jobs:
       -
         run: 
           name: Publish bit to the npm registry
-          command: 'cd bit && npm publish'
+          command: 'cd bit && npm publish --tag dev'
   github-release: 
     docker:
       -
@@ -661,35 +661,35 @@ workflows:
   deploy:
     jobs:
       - checkout_code:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-      -
-        validate-git-tag-version:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - checkout_code
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
+      # -
+        # validate-git-tag-version:
+        #   filters:
+        #     # ignore any commit on any branch by default
+        #     branches:
+        #       ignore: /.*/
+        #     # only act on version tags
+        #     tags:
+        #       only: /^v[0-9]+(\.[0-9]+)*$/
+        #   requires:
+        #     - checkout_code
       -
         install_npm_deps:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
-            - validate-git-tag-version
+            # - validate-git-tag-version
             - checkout_code
       -
         build:
@@ -704,70 +704,70 @@ workflows:
             - install_npm_deps
       -
         npm-publish:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - build
-      -
-        pack:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - build
-      -
-        github-release:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - pack
-      -
-        build-rpm:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - pack
-      -
-        build-debian:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - pack
-        publish_to_jfrog:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
-          requires:
-            - build-debian
-            - build-rpm
+      # -
+      #   pack:
+      #     filters:
+      #       # ignore any commit on any branch by default
+      #       branches:
+      #         ignore: /.*/
+      #       # only act on version tags
+      #       tags:
+      #         only: /^v[0-9]+(\.[0-9]+)*$/
+      #     requires:
+      #       - build
+      # -
+      #   github-release:
+      #     filters:
+      #       # ignore any commit on any branch by default
+      #       branches:
+      #         ignore: /.*/
+      #       # only act on version tags
+      #       tags:
+      #         only: /^v[0-9]+(\.[0-9]+)*$/
+      #     requires:
+      #       - pack
+      # -
+      #   build-rpm:
+      #     filters:
+      #       # ignore any commit on any branch by default
+      #       branches:
+      #         ignore: /.*/
+      #       # only act on version tags
+      #       tags:
+      #         only: /^v[0-9]+(\.[0-9]+)*$/
+      #     requires:
+      #       - pack
+      # -
+      #   build-debian:
+      #     filters:
+      #       # ignore any commit on any branch by default
+      #       branches:
+      #         ignore: /.*/
+      #       # only act on version tags
+      #       tags:
+      #         only: /^v[0-9]+(\.[0-9]+)*$/
+      #     requires:
+      #       - pack
+      #   publish_to_jfrog:
+      #     filters:
+      #       # ignore any commit on any branch by default
+      #       branches:
+      #         ignore: /.*/
+      #       # only act on version tags
+      #       tags:
+      #         only: /^v[0-9]+(\.[0-9]+)*$/
+      #     requires:
+      #       - build-debian
+      #       - build-rpm
   performance_tests:
     triggers:
       - schedule:
