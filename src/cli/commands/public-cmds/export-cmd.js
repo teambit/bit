@@ -49,7 +49,7 @@ export default class Export extends Command {
       setCurrentScope = false,
       all = false,
       force = false,
-      rewire = false
+      rewireScope = false
     }: any
   ): Promise<*> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
@@ -61,7 +61,7 @@ export default class Export extends Command {
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
       );
     }
-    if (rewire && !includeDependencies) {
+    if (rewireScope && !includeDependencies) {
       throw new GeneralError(
         'to use --rewire-scope, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
       );
@@ -73,7 +73,7 @@ export default class Export extends Command {
       includeDependencies,
       setCurrentScope,
       includeNonStaged: all,
-      codemod: rewire,
+      codemod: rewireScope,
       force
     }).then(results => ({
       ...results,
