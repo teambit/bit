@@ -192,8 +192,7 @@ export default class EjectComponents {
     const action = 'installing the components using the NPM client';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      // $FlowFixMe componentMap must be set for authored and imported
-      const dirs: string[] = this.notEjectedDependents
+      const dirs: string[] = this.notEjectedDependents // $FlowFixMe componentMap must be set for authored and imported
         .map(({ dependent }) => dependent.componentMap.rootDir)
         .filter(x => x);
       await installPackages(this.consumer, dirs, true, true);

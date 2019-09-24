@@ -149,6 +149,7 @@ export default class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
+    // $FlowFixMe
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = R.clone(this.packageJsonObject);
     return clone;
