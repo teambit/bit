@@ -662,7 +662,7 @@ workflows:
             - build_bit_javascript
   deploy:
     jobs:
-      - checkout_code:
+      - checkout_code
           # filters:
           #   # ignore any commit on any branch by default
           #   branches:
