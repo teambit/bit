@@ -203,9 +203,7 @@ export default class Consumer {
     } catch (err) {
       msg = msg
         ? format(msg, err)
-        : `Warning: Bit is not able to run the link command. Please install bit-${
-          err.lang
-        } driver and run the link command.`;
+        : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
@@ -325,12 +323,23 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
-    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+  async loadComponentWithDependenciesFromModel(
+    id: BitId,
+    throwIfNotExist: boolean = true
+  ): Promise<ComponentWithDependencies> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const getModelComponent = async (): Promise<ModelComponent> => {
+      if (throwIfNotExist) return this.scope.getModelComponent(id);
+      const modelComponent = await this.scope.getModelComponentIfExist(id);
+      if (modelComponent) return modelComponent;
+      await scopeComponentsImporter.importMany(new BitIds(id));
+      return this.scope.getModelComponent(id);
+    };
+    const modelComponent = await getModelComponent();
     if (!id.version) {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
-    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+
     const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,

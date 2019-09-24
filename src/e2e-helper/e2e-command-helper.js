@@ -163,6 +163,10 @@ export default class CommandHelper {
     return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
   }
 
+  isolateComponentWithCapsule(id: string, capsuleDir: string) {
+    return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
+  }
+
   importExtension(id: string) {
     return this.runCmd(`bit import ${id} --extension`);
   }
