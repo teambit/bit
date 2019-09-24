@@ -149,10 +149,10 @@ jobs:
           name: 'validate version in package.json does not contains pre release tags'
           # This will return code 1 when the version contains pre release tags
           command: 'semver $BIT_VERSION -r x.x.x'
-      -
-        run:
-          name: 'validate tag match version in package.json'
-          command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG $BIT_VERSION'
+      # -
+      #   run:
+      #     name: 'validate tag match version in package.json'
+      #     command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG $BIT_VERSION'
   build:
     docker:
       -
@@ -660,111 +660,111 @@ workflows:
             - build_bit_javascript
   deploy:
     jobs:
-      - checkout_code:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+      - checkout_code
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
       -
         validate-git-tag-version:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - checkout_code
       -
         install_npm_deps:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - validate-git-tag-version
             - checkout_code
       -
         build:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - install_npm_deps
       -
         npm-publish:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - build
       -
         pack:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - build
       -
         github-release:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - pack
       -
         build-rpm:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - pack
       -
         build-debian:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - pack
         publish_to_jfrog:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          # filters:
+          #   # ignore any commit on any branch by default
+          #   branches:
+          #     ignore: /.*/
+          #   # only act on version tags
+          #   tags:
+          #     only: /^v[0-9]+(\.[0-9]+)*$/
           requires:
             - build-debian
             - build-rpm
