@@ -1,11 +1,31 @@
+default_image: &default_image
+  docker:
+    - image: circleci/node:8.12.0
+
+default_resource_class: &default_resource_class
+  resource_class: small
+
+default_working_dir: &default_working_dir
+  working_directory: ~/bit
+
+defaults: &defaults
+  <<: *default_image
+  <<: *default_resource_class
+  <<: *default_working_dir
+
+semver_tags_only_filters: &semver_tags_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /^v[0-9]+(\.[0-9]+)*$/
+
 version: 2
 jobs:
   checkout_code:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       - checkout
       -
@@ -23,10 +43,7 @@ jobs:
             - bit
             - bit-javascript
   set_ssh_key:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
+    <<: *defaults
     working_directory: ~/.ssh
     steps:
       -
@@ -44,11 +61,7 @@ jobs:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
   set_bitsrc_registry:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       # prod registry
       # -
@@ -67,11 +80,7 @@ jobs:
           paths:
             - ~/.npmrc
   install_npm_deps:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
     # testing the install script will be done in different workflow dedicated for this
     environment:
@@ -109,11 +118,7 @@ jobs:
             - bit/node_modules
             - bit/releases
   install_bit_javascript_npm_deps:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -128,11 +133,7 @@ jobs:
           paths:
             - bit-javascript/node_modules
   validate-git-tag-version: 
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -154,11 +155,7 @@ jobs:
           name: 'validate tag match version in package.json'
           command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG $BIT_VERSION'
   build:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -177,11 +174,7 @@ jobs:
           paths:
             - bit/dist
   pack:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -229,11 +222,7 @@ jobs:
           paths:
             - bit/releases
   npm-publish: 
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -246,11 +235,7 @@ jobs:
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish'
   github-release: 
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -261,11 +246,10 @@ jobs:
       -
         run: 'cd bit && npm run release:circle'
   build-debian: 
+    <<: *defaults
     docker:
       -
         image: 'bitcli/debian-artifact-builder:latest'
-    resource_class: small
-    working_directory: ~/bit
     steps:
       -
         attach_workspace:
@@ -280,11 +264,10 @@ jobs:
           paths:
             - bit/releases/deb
   build-rpm: 
+    <<: *defaults
     docker:
       -
         image: 'bitcli/rpm-artifact-builder:latest'
-    resource_class: small
-    working_directory: ~/bit
     steps:
       -
         attach_workspace:
@@ -299,11 +282,7 @@ jobs:
           paths:
             - bit/releases/rpm
   publish_to_jfrog: 
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -329,11 +308,7 @@ jobs:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
   build_bit_javascript:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         run:
@@ -352,11 +327,7 @@ jobs:
           paths:
             - bit-javascript/dist
   unit_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         run:
@@ -381,11 +352,7 @@ jobs:
         store_artifacts:
           path: bit/junit
   unit_test_bit_javascript:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         run:
@@ -410,11 +377,8 @@ jobs:
         store_artifacts:
           path: bit-javascript/junit
   lint:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
+    <<: *defaults
     resource_class: medium
-    working_directory: ~/bit
     steps:
       -
         run:
@@ -438,11 +402,7 @@ jobs:
         store_artifacts:
           path: bit/junit
   e2e_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -547,10 +507,8 @@ jobs:
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
   performance_e2e_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    working_directory: ~/bit
+    <<: *defaults
+    resource_class: medium
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -661,110 +619,50 @@ workflows:
   deploy:
     jobs:
       - checkout_code:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
       -
         validate-git-tag-version:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - checkout_code
       -
         install_npm_deps:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - validate-git-tag-version
             - checkout_code
       -
         build:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - install_npm_deps
       -
         npm-publish:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - build
       -
         pack:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - build
       -
         github-release:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - pack
       -
         build-rpm:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - pack
       -
         build-debian:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - pack
         publish_to_jfrog:
-          filters:
-            # ignore any commit on any branch by default
-            branches:
-              ignore: /.*/
-            # only act on version tags
-            tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+          <<: *semver_tags_only_filters
           requires:
             - build-debian
             - build-rpm
