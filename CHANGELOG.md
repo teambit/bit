@@ -7,17 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.3.1-dev.1] - 2019-09-22
+## [[14.4.0] - 2019-09-24](https://github.com/teambit/bit/releases/tag/v14.4.0)
 
-- [#2013](https://github.com/teambit/bit/issues/2013) fix bit import when one module resolution alias is a directory of another alias
+### New
+- [#1981](https://github.com/teambit/bit/issues/1981) allow compilers to add all dependencies types and not only devDependencies
+
+### Changes
 - [#2004](https://github.com/teambit/bit/issues/2004) ask for approval before exporting a component to another scope (fork)
-- [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--rewire` for `bit export` to replace the import/require statements in the source to the newly exported scope
+
+### Bug fixes
+- [#2013](https://github.com/teambit/bit/issues/2013) fix bit import when one module resolution alias is a directory of another alias
+- block tagging components with prerelease versions
 - fix "Converting circular structure to JSON" error when logging a circular metadata object
 - fix exporting to a different scope than workspace configuration of `defaultScope`
 - fix exporting components with and without scope at the same time
 - [#1999](https://github.com/teambit/bit/issues/1999) show a descriptive error when a component is missing from the scope
-- block tagging components with prerelease versions
-- [#1981](https://github.com/teambit/bit/issues/1981) allow compilers to add all dependencies types and not only devDependencies
+
+### Experimental
+- [#1956](https://github.com/teambit/bit/issues/1956) introduce a new flag `--rewire` for `bit export` to replace the import/require statements in the source to the newly exported scope
 
 ## [[14.3.0] - 2019-09-11](https://github.com/teambit/bit/releases/tag/v14.3.0)
 
