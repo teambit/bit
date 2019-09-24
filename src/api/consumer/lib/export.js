@@ -249,7 +249,7 @@ async function _throwForModified(consumer: Consumer, ids: BitIds) {
     const status = consumer.getComponentStatusById(id);
     if (status.modified) {
       throw new GeneralError(
-        `unable to perform rewire-scope on "${id.toString()}" because it is modified, please tag or discard your changes before re-trying`
+        `unable to perform rewire on "${id.toString()}" because it is modified, please tag or discard your changes before re-trying`
       );
     }
   });
