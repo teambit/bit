@@ -240,7 +240,7 @@ jobs:
           at: ./
       - run:
           name: Authenticate with registry
-          command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/bit/.npmrc
+          command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
       -
         run: 
           name: Publish bit to the npm registry
