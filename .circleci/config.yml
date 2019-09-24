@@ -242,6 +242,8 @@ jobs:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
       -
+        run: npm whoami
+      -
         run: 
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish --tag dev'
