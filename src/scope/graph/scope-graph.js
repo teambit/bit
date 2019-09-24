@@ -140,6 +140,21 @@ export default class DependencyGraph {
     return graph;
   }
 
+  /**
+   * ignore nested dependencies. build the graph from only imported and authored components
+   * according to currently used versions (.bitmap versions)
+   */
+  static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
+    const componentsList = new ComponentsList(consumer);
+    const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();
+    const graph = new Graph();
+    workspaceComponents.forEach((component: Component) => {
+      const id = component.id;
+      this._addDependenciesToGraph(id, graph, component);
+    });
+    return graph;
+  }
+
   static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
@@ -232,13 +247,14 @@ export default class DependencyGraph {
     return this.graph.node(id.toStringWithoutVersion());
   }
 
-  getDependentsPerId(id: BitId): string[] {
+  getImmediateDependentsPerId(id: BitId, returnNodeValue: boolean = false): Array<string | Component | BitId> {
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
-    return nodeEdges.map(node => node.v);
+    const idsStr = nodeEdges.map(node => node.v);
+    return returnNodeValue ? idsStr.map(idStr => this.graph.node(idStr)) : idsStr;
   }
 
-  getDependenciesPerId(id: BitId): string[] {
+  getImmediateDependenciesPerId(id: BitId): string[] {
     const nodeEdges = this.graph.outEdges(id.toString());
     if (!nodeEdges) return [];
     return nodeEdges.map(node => node.v);

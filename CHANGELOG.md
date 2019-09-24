@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2011](https://github.com/teambit/bit/issues/2011) update dependents package.json files when ejecting dependencies
+
 ## [[14.4.0] - 2019-09-24](https://github.com/teambit/bit/releases/tag/v14.4.0)
 
 ### New

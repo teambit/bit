@@ -64,7 +64,7 @@ export default class ComponentsList {
     return this._fromObjectsIds;
   }
 
-  async _getAuthoredAndImportedFromFS(): Promise<Component[]> {
+  async getAuthoredAndImportedFromFS(): Promise<Component[]> {
     let [authored, imported] = await Promise.all([
       this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
       this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
@@ -83,7 +83,7 @@ export default class ComponentsList {
    */
   async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
-      const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+      const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
       this._modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
         return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
       });
@@ -93,7 +93,7 @@ export default class ComponentsList {
   }
 
   async listOutdatedComponents(): Promise<Component[]> {
-    const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+    const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
     return fileSystemComponents.filter((component) => {
       const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
@@ -122,7 +122,7 @@ export default class ComponentsList {
   }
 
   async authoredAndImportedComponents(): Promise<Component[]> {
-    return this._getAuthoredAndImportedFromFS();
+    return this.getAuthoredAndImportedFromFS();
   }
 
   async idsFromObjects(): Promise<BitIds> {
@@ -195,7 +195,7 @@ export default class ComponentsList {
   }
 
   async listNonNewComponentsIds(): Promise<BitIds> {
-    const authoredAndImported = await this._getAuthoredAndImportedFromFS();
+    const authoredAndImported = await this.getAuthoredAndImportedFromFS();
     // $FlowFixMe
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
