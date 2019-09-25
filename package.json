@@ -43,7 +43,9 @@
     "release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos",
     "release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y",
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
-    "release:inc-pack": "npm run pkg:all && npm run release"
+    "release:inc-pack": "npm run pkg:all && npm run release",
+    "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
+    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'"
   },
   "pkg": {
     "assets": [
