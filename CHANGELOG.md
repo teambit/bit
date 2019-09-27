@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2033](https://github.com/teambit/bit/issues/2033) improve bit link to build unrecognized missing links
 - [#2027](https://github.com/teambit/bit/issues/2027) fix ComponentNotFound error when building a typescript component and its Bit dependency is installed as a package
 - [#2011](https://github.com/teambit/bit/issues/2011) update dependents package.json files when ejecting dependencies
 - fix bit graph edge colouring for regular dependencies

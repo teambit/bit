@@ -5,7 +5,7 @@ import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
 import NodeModuleLinker from './node-modules-linker';
-import type Consumer from '../consumer/consumer';
+import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJsonUtils from '../consumer/component/package-json-utils';
 import type { LinksResult } from './node-modules-linker';
