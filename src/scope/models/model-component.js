@@ -29,6 +29,7 @@ import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
+import ValidationError from '../../error/validation-error';
 
 type State = {
   versions?: {
@@ -111,9 +112,7 @@ export default class Component extends BitObject {
   addScopeListItem(scopeListItem: ScopeListItem): void {
     if (!scopeListItem.name || !scopeListItem.url || !scopeListItem.date) {
       throw new TypeError(
-        `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${
-          scopeListItem.url
-        }, date: ${scopeListItem.date}`
+        `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${scopeListItem.url}, date: ${scopeListItem.date}`
       );
     }
     if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
@@ -200,6 +199,9 @@ export default class Component extends BitObject {
     );
   }
 
+  /**
+   * if exactVersion is defined, add exact version instead of using the semver mechanism
+   */
   getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
@@ -207,11 +209,7 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
-  /**
-   * if exactVersion is defined, add exact version instead of using the semver mechanism
-   */
-  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
-    const versionToAdd = this.getVersionToAdd(releaseType, exactVersion);
+  addVersion(version: Version, versionToAdd: string): string {
     this.versions[versionToAdd] = version.hash();
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
@@ -473,7 +471,14 @@ export default class Component extends BitObject {
   }
 
   validate(): void {
-    const message = 'unable to save Component object';
+    const message = `unable to save Component object "${this.id()}"`;
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (this.state && this.state.versions) {
+      Object.keys(this.state.versions).forEach((version) => {
+        if (!this.versions[version]) {
+          throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
+        }
+      });
+    }
   }
 }

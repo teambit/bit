@@ -3,10 +3,10 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import graphlib from 'graphlib';
 import pMapSeries from 'p-map-series';
-import type { Scope } from '..';
-import type Consumer from '../../consumer/consumer';
+import { Scope } from '..';
+import Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import type Component from '../../consumer/component/consumer-component';
+import Component from '../../consumer/component/consumer-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -99,7 +99,9 @@ function getEdgesWithProdGraph(prodGraph: ?Object, dependencies: BitIdStr[]): Bi
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency) => {
     const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
-    if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
+    if (foundDependency) {
+      dependency.id = dependency.id.changeVersion(foundDependency.version);
+    }
   };
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
@@ -338,8 +340,6 @@ export default (async function tagModelComponent({
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       message,
-      exactVersion,
-      releaseType,
       specsResults: testResult ? testResult.specs : undefined
     });
     return consumerComponent;
