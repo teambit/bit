@@ -261,7 +261,7 @@ export default class Isolator {
     try {
       npmList = await this._getNpmListOutput(packageManager);
     } catch (err) {
-      logger.error(err);
+      logger.error(`failed running "${packageManager} list -j"`, err);
       throw new Error(
         `failed running "${packageManager} list -j" to find the peer dependencies due to an error: ${err}`
       );

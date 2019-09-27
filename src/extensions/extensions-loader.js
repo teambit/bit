@@ -46,8 +46,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     const extensions = R.values(R.mapObjIndexed(_loadExtension(consumerPath, scopePath), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
-    logger.error('loading extensions failed');
-    logger.error(err);
+    logger.error('loading extensions failed', err);
     return [];
   }
 });

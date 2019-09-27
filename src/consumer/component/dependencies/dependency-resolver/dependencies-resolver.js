@@ -363,9 +363,7 @@ export default class DependencyResolver {
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new ShowDoctorError( // $FlowFixMe
-        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-          this.componentFromModel.id
-        }`
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
     const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
@@ -741,7 +739,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       'dependency-resolver.processErrors',
       'got an error from the driver while resolving dependencies'
     );
-    logger.error(error);
+    logger.error('dependency-resolver.processErrors', error);
     // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;

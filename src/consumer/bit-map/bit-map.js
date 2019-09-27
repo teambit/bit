@@ -120,7 +120,7 @@ export default class BitMap {
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
     } catch (e) {
-      logger.error(e);
+      logger.error(`invalid bitmap at ${currentLocation}`, e);
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const version = componentsJson.version;

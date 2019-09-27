@@ -7,7 +7,7 @@ export default (async function resolveGroupId(groupName: string): Promise<?numbe
   return new Promise((resolve, reject) => {
     uidNumber(null, groupName, (err, uid, gid) => {
       if (err) {
-        logger.error(err);
+        logger.error('resolveGroupId', err);
         if (err.message.includes('EPERM')) {
           return reject(
             new GeneralError(
