@@ -25,7 +25,7 @@ export default class Remove extends Command {
     [
       'f',
       'force [boolean]',
-      'WARNING - using force may remove components that other components depend upon. This may corrupt the dependent components (see the link above for more info)'
+      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
     ['s', 'silent [boolean]', 'skip confirmation']
   ];
