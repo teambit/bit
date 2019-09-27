@@ -365,8 +365,9 @@ describe('bit eject command', function () {
             scopeBeforeEjecting = helper.scopeHelper.cloneLocalScope();
           });
           describe('ejecting the dependency successfully', () => {
+            let ejectOutput;
             before(() => {
-              helper.command.ejectComponents('utils/is-string');
+              ejectOutput = helper.command.ejectComponents('utils/is-string');
             });
             it('should bring the modified version (v2) as a package', () => {
               const packageJson = helper.packageJson.read();
@@ -397,6 +398,14 @@ describe('bit eject command', function () {
               expect(listScope).to.have.string('is-string');
               expect(listScope).to.have.string('is-type');
               expect(listScope).to.have.string('bar/foo');
+            });
+            it('should change the dependents package.json to have the dependency with version', () => {
+              const packageJson = helper.packageJson.readComponentPackageJson('bar/foo');
+              expect(packageJson.dependencies).to.have.property(`@bit/${remoteScopeName}.utils.is-string`);
+              expect(packageJson.dependencies[`@bit/${remoteScopeName}.utils.is-string`]).to.equal('0.0.2');
+            });
+            it('should run npm install from the dependent dir', () => {
+              expect(ejectOutput).to.have.string('successfully ran npm install at components/bar/foo');
             });
           });
           describe('failure while ejecting the dependency', () => {

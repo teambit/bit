@@ -19,6 +19,9 @@ import { getScopeRemotes } from '../../scope/scope-remotes';
 import PackageJsonFile from '../component/package-json-file';
 import ComponentVersion from '../../scope/component-version';
 import deleteComponentsFiles from './delete-component-files';
+import DependencyGraph from '../../scope/graph/scope-graph';
+import Component from '../component/consumer-component';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
@@ -37,8 +40,9 @@ export default class EjectComponents {
   componentsIds: BitId[];
   force: boolean;
   componentsToEject: BitIds;
+  notEjectedDependents: Array<{ dependent: Component, ejectedDependencies: Component[] }>;
   failedComponents: FailedComponents;
-  originalPackageJson: PackageJsonFile; // for rollback in case of errors
+  packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
   constructor(consumer: Consumer, componentsIds: BitId[], force?: boolean) {
     this.consumer = consumer;
     this.componentsIds = componentsIds;
@@ -57,9 +61,10 @@ export default class EjectComponents {
     logger.debugAndAddBreadCrumb('eject-components.eject', `${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
       this._validateIdsHaveScopesAndVersions();
-      this.originalPackageJson = await PackageJsonFile.load(this.consumer.getPath());
+      await this.findNonEjectedDependents();
+      await this.loadPackageJsonFilesForPotentialRollBack();
       await this.removeComponentsFromPackageJsonAndNodeModules();
-      await this.addComponentsAsPackagesToPackageJson();
+      await this.addComponentsAsPackagesToPackageJsonFiles();
       await this.installPackagesUsingNPMClient();
       await this.removeComponents();
     }
@@ -68,6 +73,44 @@ export default class EjectComponents {
       ejectedComponents: this.componentsToEject,
       failedComponents: this.failedComponents
     };
+  }
+
+  /**
+   * needed for update their package.json later with the dependencies version (instead of the
+   * relative paths)
+   */
+  async findNonEjectedDependents() {
+    // this also loads all non-nested components into the memory, so retrieving them later is at no cost
+    const graph = await DependencyGraph.buildGraphFromCurrentlyUsedComponents(this.consumer);
+    const scopeGraph = new DependencyGraph(graph);
+    const notEjectedData: Array<{ id: BitId, dependencies: BitId[] }> = [];
+    this.componentsToEject.forEach((componentId) => {
+      const dependents: BitId[] = scopeGraph.getImmediateDependentsPerId(componentId, true);
+      const notEjectedDependents: BitId[] = dependents.filter(
+        d => !this.componentsToEject.hasWithoutScopeAndVersion(d)
+      );
+      notEjectedDependents.forEach((dependentId: BitId) => {
+        const foundInNotEjectedData = notEjectedData.find(d => d.id.isEqual(dependentId));
+        if (foundInNotEjectedData) foundInNotEjectedData.dependencies.push(componentId);
+        else notEjectedData.push({ id: dependentId, dependencies: [componentId] });
+      });
+    });
+    const notEjectedComponentsDataP = notEjectedData.map(async (notEjectedItem) => {
+      const dependent = await this.consumer.loadComponent(notEjectedItem.id);
+      const { components: ejectedDependencies } = await this.consumer.loadComponents(notEjectedItem.dependencies);
+      return { dependent, ejectedDependencies };
+    });
+    const notEjectedComponentsData = await Promise.all(notEjectedComponentsDataP);
+    this.notEjectedDependents = notEjectedComponentsData.filter(d => d.dependent.packageJsonFile);
+  }
+
+  async loadPackageJsonFilesForPotentialRollBack() {
+    const rootPackageJson = await PackageJsonFile.load(this.consumer.getPath());
+    this.packageJsonFilesBeforeChanges = [rootPackageJson];
+    this.notEjectedDependents.forEach(({ dependent }) => {
+      // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+      this.packageJsonFilesBeforeChanges.push(dependent.packageJsonFile.clone());
+    });
   }
 
   async decideWhichComponentsToEject(): Promise<void> {
@@ -114,7 +157,7 @@ export default class EjectComponents {
     }
   }
 
-  async addComponentsAsPackagesToPackageJson() {
+  async addComponentsAsPackagesToPackageJsonFiles() {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
@@ -126,6 +169,17 @@ export default class EjectComponents {
         })
       );
       await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, componentsVersions);
+      this.notEjectedDependents.forEach(({ dependent, ejectedDependencies }) => {
+        const dependenciesToReplace = ejectedDependencies.reduce((acc, dependency) => {
+          const packageName = componentIdToPackageName(dependency.id, dependency.bindingPrefix);
+          acc[packageName] = dependency.version;
+          return acc;
+        }, {});
+        // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+        dependent.packageJsonFile.replaceDependencies(dependenciesToReplace);
+      });
+      // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+      await Promise.all(this.notEjectedDependents.map(({ dependent }) => dependent.packageJsonFile.write()));
     } catch (err) {
       logger.error(err);
       logger.warn(`eject: failed ${action}, restoring package.json`);
@@ -138,7 +192,10 @@ export default class EjectComponents {
     const action = 'installing the components using the NPM client';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await installPackages(this.consumer, [], true, true);
+      const dirs: string[] = this.notEjectedDependents // $FlowFixMe componentMap must be set for authored and imported
+        .map(({ dependent }) => dependent.componentMap.rootDir)
+        .filter(x => x);
+      await installPackages(this.consumer, dirs, true, true);
     } catch (err) {
       await this.rollBack(action);
       this.throwEjectError(this._buildExceptionMessageWithRollbackData(action), err);
@@ -146,12 +203,16 @@ export default class EjectComponents {
   }
 
   async rollBack(action: string): Promise<void> {
-    if (this.originalPackageJson.fileExist) {
-      logger.warn(`eject: failed ${action}, restoring package.json`);
-      await this.originalPackageJson.write();
-    } else {
-      logger.warn(`eject: failed ${action}, no package.json to restore`);
-    }
+    await Promise.all(
+      this.packageJsonFilesBeforeChanges.map(async (packageJsonFile) => {
+        if (packageJsonFile.fileExist) {
+          logger.warn(`eject: failed ${action}, restoring package.json at ${packageJsonFile.filePath}`);
+          await packageJsonFile.write();
+        } else {
+          logger.warn(`eject: failed ${action}, no package.json to restore at ${packageJsonFile.filePath}`);
+        }
+      })
+    );
   }
 
   _buildExceptionMessageWithRollbackData(action: string): string {

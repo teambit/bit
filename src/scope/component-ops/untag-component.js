@@ -34,7 +34,7 @@ export async function removeLocalVersion(
 
     versionsToRemove.forEach((versionToRemove) => {
       const idWithVersion = component.toBitId().changeVersion(versionToRemove);
-      const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
+      const dependents = dependencyGraph.getImmediateDependentsPerId(idWithVersion);
       if (dependents.length) {
         throw new GeneralError(
           `unable to untag ${idStr}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
@@ -91,7 +91,7 @@ async function removeLocalVersionsForMultipleComponents(
     });
     const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
     candidateComponentsIds.forEach((bitId: BitId) => {
-      const dependents = dependencyGraph.getDependentsPerId(bitId);
+      const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
       const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
         throw new GeneralError( // $FlowFixMe

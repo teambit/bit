@@ -1,5 +1,5 @@
 /** @flow */
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import BitId from '../bit-id/bit-id';
 
 export default class ComponentWithDependencies {

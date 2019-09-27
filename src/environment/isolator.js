@@ -10,9 +10,9 @@ import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
-import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
+import loadFlattenedDependenciesForCapsule from '../consumer/component-ops/load-flattened-dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
@@ -151,8 +151,7 @@ export default class Isolator {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponentForCapsule(id);
-    const forCapsule = true;
-    return loadFlattenedDependencies(consumer, component, forCapsule);
+    return loadFlattenedDependenciesForCapsule(consumer, component);
   }
 
   async _persistComponentsDataToCapsule() {

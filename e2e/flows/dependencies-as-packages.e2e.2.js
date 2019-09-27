@@ -64,12 +64,26 @@ chai.use(require('chai-fs'));
           helper.scopeHelper.reInitLocalScope();
           helper.command.runCmd('npm init -y');
           helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`);
-        });
-        it('should be able to require its direct dependency and print results from all dependencies', () => {
+
           const appJsFixture = `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`;
           fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        describe('isolating a component that requires Bit component as a package (no objects for the component)', () => {
+          before(() => {
+            helper.command.addComponent('app.js');
+            helper.bitJson.modifyField('bindingPrefix', '@ci');
+            helper.scopeHelper.addRemoteScope();
+          });
+          it('should be able to isolate without throwing an error ComponentNotFound', () => {
+            const capsuleDir = helper.general.generateRandomTmpDirName();
+            helper.command.isolateComponentWithCapsule('app', capsuleDir);
+            // makes sure the bar/foo was saved as a component and not as a package
+            expect(path.join(capsuleDir, '.dependencies/bar/foo')).to.be.a.path();
+          });
         });
       });
       describe('importing a component using Bit', () => {

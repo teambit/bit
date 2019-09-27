@@ -53,7 +53,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 
   if (remoteMinor > localMinor) {
     loader.stop();
-    logger.console.error(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console.error(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
     loader.start();
     return;
   }

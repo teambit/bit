@@ -887,7 +887,7 @@ describe('bit export command', function () {
           });
         });
       });
-      describe('with --codemod flag', () => {
+      describe('with --rewire flag', () => {
         describe('without --set-current-scope', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localScope);
@@ -896,7 +896,7 @@ describe('bit export command', function () {
             helper.fixtures.createComponentBarFoo(fixtures.barFooModulePath(helper.scopes.remote));
             helper.env.importDummyCompiler();
             helper.command.tagScope('1.0.0');
-            helper.command.export(`${forkScope} --include-dependencies --codemod`);
+            helper.command.export(`${forkScope} --include-dependencies --rewire`);
           });
           it('should not change the files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
@@ -932,7 +932,7 @@ describe('bit export command', function () {
             helper.env.importDummyCompiler();
             helper.command.tagScope('1.0.0');
             localBeforeFork = helper.scopeHelper.cloneLocalScope();
-            helper.command.export(`${forkScope} --include-dependencies --set-current-scope --codemod`);
+            helper.command.export(`${forkScope} --include-dependencies --set-current-scope --rewire`);
           });
           it('should change the files locally on the workspace', () => {
             const barFoo = helper.fs.readFile('bar/foo.js');
@@ -976,7 +976,7 @@ describe('bit export command', function () {
 
               helper.scopeHelper.reInitRemoteScope(forkScopePath);
               helper.scopeHelper.addRemoteScope(forkScopePath);
-              output = helper.command.export(`${forkScope} --include-dependencies --set-current-scope --codemod --all`);
+              output = helper.command.export(`${forkScope} --include-dependencies --set-current-scope --rewire --all`);
             });
             it('should change the files locally on the workspace', () => {
               const barFoo = helper.fs.readFile('components/bar/foo/foo.js');

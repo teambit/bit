@@ -74,7 +74,7 @@ export default class VisualDependencyGraph {
     edges.forEach((edge) => {
       const edgeType = graphlib.edge(edge);
       const vizEdge = graph.addEdge(edge.v, edge.w);
-      if (edgeType !== 'prod') {
+      if (edgeType !== 'dependencies') {
         // $FlowFixMe
         setEdgeColor(vizEdge, config.devDependencyColor);
       }
