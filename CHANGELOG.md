@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2034](https://github.com/teambit/bit/issues/2034) make sure versions are not deleted upon tag when components have cycle dependencies and a version is specified
 - [#2027](https://github.com/teambit/bit/issues/2027) fix ComponentNotFound error when building a typescript component and its Bit dependency is installed as a package
 - [#2011](https://github.com/teambit/bit/issues/2011) update dependents package.json files when ejecting dependencies
 - fix bit graph edge colouring for regular dependencies
