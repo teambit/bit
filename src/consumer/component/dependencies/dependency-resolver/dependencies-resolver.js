@@ -22,6 +22,7 @@ import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
+import PackageJsonFile from '../../package-json-file';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -363,9 +364,7 @@ export default class DependencyResolver {
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new ShowDoctorError( // $FlowFixMe
-        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-          this.componentFromModel.id
-        }`
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
     const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
@@ -955,13 +954,9 @@ either, use the ignore file syntax or change the require statement to have a mod
    * the package.json in the component's directory.
    */
   populatePeerPackageDependencies(): void {
-    const componentMap = this.component.componentMap;
     const getPeerDependencies = (): Object => {
       const packageJson = this._getPackageJson();
       if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
-      if (this.component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-        return this.component.componentFromModel.peerPackageDependencies;
-      }
       return {};
     };
     const projectPeerDependencies = getPeerDependencies();
@@ -996,6 +991,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     if (this.component.packageJsonFile) {
       return this.component.packageJsonFile.packageJsonObject;
+    }
+    if (this.componentFromModel) {
+      // a component is imported but the package.json file is missing or never written
+      // read the values from the model
+      // $FlowFixMe
+      const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
+      return packageJson.packageJsonObject;
     }
     return null;
   }
