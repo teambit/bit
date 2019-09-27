@@ -2,6 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -138,6 +139,41 @@ describe('component config', function () {
         const bitJson = helper.bitJson.read('components/bar/foo');
         expect(bitJson).to.not.have.property('dependencies');
         expect(bitJson).to.not.have.property('packageDependencies');
+      });
+    });
+  });
+  describe('a component with overrides settings', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.npm.addNpmPackage('chai', '2.4');
+      helper.packageJson.create({ dependencies: { chai: '2.4' } });
+      const overrides = {
+        'bar/foo': {
+          dependencies: {
+            chai: '-'
+          },
+          peerDependencies: {
+            chai: '+'
+          }
+        }
+      };
+      helper.bitJson.addOverrides(overrides);
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar/foo');
+    });
+    describe('deleting the package.json of the component', () => {
+      // tests https://github.com/teambit/bit/issues/2035
+      before(() => {
+        helper.fs.deletePath('components/bar/foo/package.json');
+      });
+      it('bit status should not throw an error', () => {
+        const status = helper.command.status();
+        expect(status).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
   });
