@@ -14,7 +14,11 @@ export default class Untag extends Command {
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
-    ['f', 'force', 'revert tag although the tag is used as a dependency']
+    [
+      'f',
+      'force',
+      'revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt'
+    ]
   ];
   loader = true;
   migration = true;
