@@ -104,7 +104,8 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
+    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
