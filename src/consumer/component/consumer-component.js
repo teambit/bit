@@ -899,25 +899,13 @@ export default class Component {
     this.docs = flattenedDocs;
   }
 
-  copyDependenciesFromModel(ids: string[]) {
+  copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
-    ids.forEach((id: string) => {
-      const addDependency = (modelDependencies: Dependencies, dependencies: Dependencies) => {
-        const dependency = modelDependencies.getByIdStr(id);
-        if (dependency) dependencies.add(dependency);
-        return Boolean(dependency);
-      };
-      const addedDep = addDependency(componentFromModel.dependencies, this.dependencies);
-      if (addedDep) return;
-      const addedDevDep = addDependency(componentFromModel.devDependencies, this.devDependencies);
-      if (addedDevDep) return;
-      const addedCompilerDep = addDependency(componentFromModel.compilerDependencies, this.compilerDependencies);
-      if (addedCompilerDep) return;
-      const addedTesterDep = addDependency(componentFromModel.testerDependencies, this.testerDependencies);
-      if (addedTesterDep) return;
-      throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
-    });
+    this.setDependencies(componentFromModel.dependencies.get());
+    this.setDevDependencies(componentFromModel.devDependencies.get());
+    this.setCompilerDependencies(componentFromModel.compilerDependencies.get());
+    this.setTesterDependencies(componentFromModel.testerDependencies.get());
   }
 
   static async fromObject(object: Object): Component {
