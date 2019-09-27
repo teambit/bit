@@ -203,7 +203,7 @@ export default class SSH implements Network {
       if (err.message === AUTH_FAILED_MESSAGE) {
         throw new AuthenticationStrategyFailed(authFailedMsg);
       }
-      logger.error(err);
+      logger.error('ssh', err);
       if (err.code === 'ENOTFOUND') {
         throw new GeneralError(
           `unable to find the SSH server. host: ${err.host}, port: ${err.port}. Original error message: ${err.message}`
@@ -248,7 +248,7 @@ export default class SSH implements Network {
       );
       if (!this.connection) {
         err = 'ssh connection is not defined';
-        logger.error(err);
+        logger.error('ssh', err);
         return reject(err);
       }
       this.connection.exec(cmd, (error, stream) => {

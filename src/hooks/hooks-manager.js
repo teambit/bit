@@ -19,9 +19,9 @@ type HookFailures = {
 };
 
 /*
-  * Setting up block level variable to store class state
-  * set's to null by default.
-*/
+ * Setting up block level variable to store class state
+ * set's to null by default.
+ */
 let instance = null;
 
 /**
@@ -142,8 +142,7 @@ export default class HooksManager {
           return action.run(args, headers, context);
         })
         .catch((e) => {
-          logger.error(`running action ${action.name} on hook ${hookName} failed, err:`);
-          logger.error(e);
+          logger.error(`running action ${action.name} on hook ${hookName} failed, err:`, e);
           resultErrors.push({ [action.name]: e });
         });
     });

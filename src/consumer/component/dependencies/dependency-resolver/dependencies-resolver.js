@@ -740,7 +740,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       'dependency-resolver.processErrors',
       'got an error from the driver while resolving dependencies'
     );
-    logger.error(error);
+    logger.error('dependency-resolver.processErrors', error);
     // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;

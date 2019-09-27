@@ -160,8 +160,7 @@ export default class BaseExtension {
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
-      logger.error(`initialized extension ${this.name} failed`);
-      logger.error(err);
+      logger.error(`initialized extension ${this.name} failed`, err);
       if (throws) {
         throw new ExtensionLoadError(err, this.name);
       }
@@ -398,8 +397,7 @@ export default class BaseExtension {
         logger.warn(msg);
         // console.error(msg); // eslint-disable-line no-console
       }
-      logger.error(`loading extension ${extensionProps.name} failed`);
-      logger.error(err);
+      logger.error(`loading extension ${extensionProps.name} failed`, err);
       extensionProps.loaded = false;
       if (throws) {
         let printStack = true;

@@ -198,9 +198,9 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
     const ejectComponents = new EjectComponents(consumer, componentsIds);
     ejectResults = await ejectComponents.eject();
   } catch (err) {
-    logger.error(err);
     const ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
     However, the eject operation has failed due to an error: ${err.msg || err}`;
+    logger.error(ejectErr, err);
     throw new Error(ejectErr);
   }
   // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap

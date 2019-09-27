@@ -181,8 +181,7 @@ export default class EjectComponents {
       // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
       await Promise.all(this.notEjectedDependents.map(({ dependent }) => dependent.packageJsonFile.write()));
     } catch (err) {
-      logger.error(err);
-      logger.warn(`eject: failed ${action}, restoring package.json`);
+      logger.error(`eject: failed ${action}, restoring package.json`, err);
       await this.rollBack(action);
       this.throwEjectError(this._buildExceptionMessageWithRollbackData(action), err);
     }
