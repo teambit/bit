@@ -82,10 +82,13 @@ describe('merge functionality', function () {
     });
   });
   describe('importing a component with --merge flag', () => {
+    let beforeImport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.fixtures.addComponentUtilsIsType();
@@ -94,6 +97,7 @@ describe('merge functionality', function () {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      beforeImport = helper.scopeHelper.cloneLocalScope();
       helper.command.importComponent('utils/is-type@0.0.1');
     });
     describe('using invalid value for merge flag', () => {
@@ -218,6 +222,21 @@ describe('merge functionality', function () {
         });
       });
     });
-    // describe('bit import with no ids', () => {});
+    describe('modifying the dependency then import --merge of the dependent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeImport);
+        helper.command.importComponent('utils/is-type');
+        helper.command.importComponent('utils/is-string');
+        helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV3);
+        // an intermediate step, make sure bit status shows as modified
+        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/utils/is-type@0.0.2`)).to.be.true;
+        helper.command.importComponent('utils/is-string --merge');
+      });
+      it('should not remove the dependency changes', () => {
+        const isTypeContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+        expect(isTypeContent).to.equal(fixtures.isTypeV3);
+        expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/utils/is-type@0.0.2`)).to.be.true;
+      });
+    });
   });
 });
