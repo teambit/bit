@@ -165,7 +165,7 @@ export default class NodeModuleLinker {
         manipulateDirData.wrapDir
       );
       const possiblyDist = component.dists.calculateDistFileForAuthored(fileWithoutManipulation, this.consumer);
-      const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
+      const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true), file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
