@@ -232,7 +232,7 @@ export default class ManyComponentsWriter {
           dep.writtenPath = '.';
           logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
+            'writeToComponentsDir, ignore authored dependency {dependencyId} as it already exists in bit map',
             { dependencyId }
           );
           return Promise.resolve(dep);
@@ -246,11 +246,25 @@ export default class ManyComponentsWriter {
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
           return Promise.resolve(dep);
         }
+        if (
+          depFromBitMap &&
+          depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED &&
+          (fs.existsSync(depFromBitMap.rootDir) ||
+            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
+        ) {
+          dep.writtenPath = depFromBitMap.rootDir;
+          logger.debugAndAddBreadCrumb(
+            'writeToComponentsDir',
+            'writeToComponentsDir, ignore non-authored dependency {dependencyId} as it already exists in bit map and file system',
+            { dependencyId }
+          );
+          return Promise.resolve(dep);
+        }
         const depRootPath = this._getDependencyRootDir(dep.id);
         dep.writtenPath = depRootPath;
         this.dependenciesIdsCache[dependencyId] = depRootPath;
-        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
-        // and namespace can co-exist with different versions.
+        // When a component is NESTED we do interested in the exact version, because multiple
+        // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
