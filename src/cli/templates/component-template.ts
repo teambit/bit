@@ -9,7 +9,7 @@ import {
   getDiffBetweenObjects,
   prettifyFieldName
 } from '../../consumer/component-ops/components-object-diff';
-import type { DependenciesInfo } from '../../scope/graph/scope-graph';
+import { DependenciesInfo } from '../../scope/graph/scope-graph';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {

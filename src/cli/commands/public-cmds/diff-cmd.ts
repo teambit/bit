@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { diff } from '../../../api/consumer';
-import type { DiffResults } from '../../../consumer/component-ops/components-diff';
+import { DiffResults } from '../../../consumer/component-ops/components-diff';
 import { WILDCARD_HELP } from '../../../constants';
 
 export default class Diff extends Command {

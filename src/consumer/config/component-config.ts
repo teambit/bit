@@ -1,11 +1,11 @@
 /** @flow */
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
-import type { Compilers, Testers } from './abstract-config';
-import type WorkspaceConfig from './workspace-config';
-import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import type Component from '../component/consumer-component';
-import type { ComponentOverridesData } from './component-overrides';
+import { Compilers, Testers } from './abstract-config';
+import WorkspaceConfig from './workspace-config';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import Component from '../component/consumer-component';
+import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';

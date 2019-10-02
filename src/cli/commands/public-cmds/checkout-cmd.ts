@@ -4,9 +4,9 @@ import Command from '../../command';
 import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
-import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default class Checkout extends Command {
   name = 'checkout [values...]';

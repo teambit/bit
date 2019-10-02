@@ -1,5 +1,5 @@
 // @flow
-import type { NewerVersion } from '../../consumer/exceptions/newer-version-found';
+import { NewerVersion } from '../../consumer/exceptions/newer-version-found';
 
 const helpPhrase =
   'use checkout to merge latest versions with current changes. you can also tag current changes as a newer version with the --ignore-newest-version flag';

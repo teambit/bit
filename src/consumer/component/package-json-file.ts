@@ -5,7 +5,7 @@ import R from 'ramda';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import stringifyPackage from 'stringify-package';
-import type { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
+import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import { PACKAGE_JSON, DEPENDENCIES_FIELDS } from '../../constants';
 import logger from '../../logger/logger';
 import Component from './consumer-component';

@@ -1,11 +1,11 @@
 /** @flow */
 
 import { getScopeComponent, addMany } from './api/consumer/index';
-import type { AddProps } from './consumer/component-ops/add-components/add-components';
+import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
 import Extension from './extensions/extension';
 import HooksManager from './hooks';
-import type { BaseLoadArgsProps } from './extensions/base-extension';
+import { BaseLoadArgsProps } from './extensions/base-extension';
 import Helper from './e2e-helper/e2e-helper';
 
 HooksManager.init();

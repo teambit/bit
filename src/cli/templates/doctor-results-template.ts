@@ -2,8 +2,8 @@
 
 import { table } from 'table';
 import chalk from 'chalk';
-import type { ExamineResult } from '../../doctor/diagnosis';
-import type { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
+import { ExamineResult } from '../../doctor/diagnosis';
+import { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
 
 // const NAME_COLUMN_WIDTH = 100;
 // const DESCRIPTION_COLUMN_WIDTH = 30;

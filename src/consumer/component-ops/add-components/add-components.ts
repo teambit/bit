@@ -22,7 +22,7 @@ import {
 import Consumer from '../../../consumer/consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
-import type { BitIdStr } from '../../../bit-id/bit-id';
+import { BitIdStr } from '../../../bit-id/bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER, PACKAGE_JSON } from '../../../constants';
 import logger from '../../../logger/logger';
 import {
@@ -36,9 +36,9 @@ import {
   ExcludedMainFile,
   MainFileIsDir
 } from './exceptions';
-import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
+import { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import ComponentMap from '../../bit-map/component-map';
-import type { PathLinux, PathOsBased } from '../../../utils/path';
+import { PathLinux, PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';

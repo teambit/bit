@@ -1,6 +1,6 @@
 // @flow
 import { loadConsumer, Consumer } from '../../../consumer';
-import type { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { mergeVersion } from '../../../consumer/versions-ops/merge-version';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';

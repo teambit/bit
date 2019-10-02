@@ -7,12 +7,12 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
-import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
+import { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
+import { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
-import type { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
+import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
 export default class Import extends Command {
   name = 'import [ids...]';

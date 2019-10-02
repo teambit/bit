@@ -1,6 +1,6 @@
 // @flow
 import chalk from 'chalk';
-import type { LinksResult } from '../../links/node-modules-linker';
+import { LinksResult } from '../../links/node-modules-linker';
 
 export default (results: LinksResult[]): string => {
   const reportComponents = results

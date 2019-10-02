@@ -1,8 +1,8 @@
 /** @flow */
 import path from 'path';
-import type { PathOsBased } from '../../../utils/path';
+import { PathOsBased } from '../../../utils/path';
 import AddComponents from '../../../consumer/component-ops/add-components';
-import type {
+import {
   AddProps,
   AddContext,
   AddActionResults,

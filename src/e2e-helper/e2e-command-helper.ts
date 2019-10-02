@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
-import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
+import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
 

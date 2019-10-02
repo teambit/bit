@@ -5,7 +5,7 @@ import { installPackages } from '../../npm-client/install-packages';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
-import type { LinksResult } from '../../links/node-modules-linker';
+import { LinksResult } from '../../links/node-modules-linker';
 import { Analytics } from '../../analytics/analytics';
 
 /**

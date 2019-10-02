@@ -2,7 +2,7 @@
 import R from 'ramda';
 import Vinyl from 'vinyl';
 import getWithoutExt from './fs-no-ext';
-import type { PathOsBased } from '../path';
+import { PathOsBased } from '../path';
 import logger from '../../logger/logger';
 
 const LOWER_PRIORITY_EXTENSIONS = ['d.ts'];

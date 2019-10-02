@@ -1,7 +1,7 @@
 /** @flow */
 import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
-import type Version from '../../../scope/models/version';
+import Version from '../../../scope/models/version';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 

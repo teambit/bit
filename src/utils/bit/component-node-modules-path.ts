@@ -1,7 +1,7 @@
 // @flow
 import path from 'path';
 import GeneralError from '../../error/general-error';
-import type { PathOsBasedRelative } from '../path';
+import { PathOsBasedRelative } from '../path';
 import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 

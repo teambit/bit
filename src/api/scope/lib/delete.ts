@@ -3,7 +3,7 @@ import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 import { PRE_REMOVE_REMOTE, POST_REMOVE_REMOTE } from '../../../constants';
 import HooksManager from '../../../hooks';
-import type { RemovedObjectSerialized } from '../../../scope/removed-components';
+import { RemovedObjectSerialized } from '../../../scope/removed-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

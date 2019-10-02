@@ -5,14 +5,14 @@ import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_LIST, BEFORE_LOCAL_LIST } from '../../../cli/loader/loader-messages';
 import Remote from '../../../remotes/remote';
 import ComponentsList from '../../../consumer/component/components-list';
-import type { ListScopeResult } from '../../../consumer/component/components-list';
+import { ListScopeResult } from '../../../consumer/component/components-list';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import { Remotes } from '../../../remotes';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import GeneralError from '../../../error/general-error';
 import { BitId } from '../../../bit-id';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
-import type { SSHConnectionStrategyName } from '../../../scope/network/ssh/ssh';
+import { SSHConnectionStrategyName } from '../../../scope/network/ssh/ssh';
 
 export async function listScope({
   scopeName,

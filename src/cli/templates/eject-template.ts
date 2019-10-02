@@ -1,6 +1,6 @@
 // @flow
 import chalk from 'chalk';
-import type { EjectResults } from '../../consumer/component-ops/eject-components';
+import { EjectResults } from '../../consumer/component-ops/eject-components';
 import { BASE_WEB_DOMAIN } from '../../constants';
 
 export const successEjectMessage = 'successfully ejected the following components';

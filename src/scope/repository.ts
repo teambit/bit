@@ -1,5 +1,5 @@
 /** @flow */
-import type Scope from './scope';
+import Scope from './scope';
 import { mkdirp } from '../utils';
 
 export default class Repository {

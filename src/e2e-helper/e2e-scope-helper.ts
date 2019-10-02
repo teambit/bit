@@ -4,7 +4,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { generateRandomStr } from './e2e-helper';
-import type { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
+import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';

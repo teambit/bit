@@ -2,7 +2,7 @@
 import groupArray from 'group-array';
 import logger from '../../logger/logger';
 import { BitIds, BitId } from '../../bit-id';
-import type { BitIdStr } from '../../bit-id/bit-id';
+import { BitIdStr } from '../../bit-id/bit-id';
 import { Scope } from '..';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import Remotes from '../../remotes/remotes';

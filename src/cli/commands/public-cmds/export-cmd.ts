@@ -5,7 +5,7 @@ import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
-import type { EjectResults } from '../../../consumer/component-ops/eject-components';
+import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
 

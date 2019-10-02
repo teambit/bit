@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
-import type { Extensions, Compilers, Testers } from './abstract-config';
+import { Extensions, Compilers, Testers } from './abstract-config';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
@@ -11,8 +11,8 @@ import {
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import type { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
-import type { PathOsBasedAbsolute } from '../../utils/path';
+import { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
+import { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';

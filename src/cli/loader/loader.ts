@@ -9,7 +9,7 @@ type Loader = {
   off: () => ?Loader,
   start: (text: ?string) => ?Loader,
   stop: () => ?Loader,
-  setText: string => ?Loader,
+  setText: (text: ?string) => ?Loader,
   get: () => ?Loader
 };
 

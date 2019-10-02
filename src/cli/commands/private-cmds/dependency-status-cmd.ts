@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { dependencyStatus } from '../../../api/consumer';
-import type { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
+import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 
 export default class DependencyStatus extends Command {
   name = 'dependency-status [mainFile...]';

@@ -5,9 +5,9 @@ import path from 'path';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
-import type { ComponentWithDependencies } from '../scope';
-import type Consumer from '../consumer/consumer';
-import type { PathOsBasedRelative, PathAbsolute } from '../utils/path';
+import { ComponentWithDependencies } from '../scope';
+import Consumer from '../consumer/consumer';
+import { PathOsBasedRelative, PathAbsolute } from '../utils/path';
 import filterAsync from '../utils/array/filter-async';
 import { PACKAGE_JSON } from '../constants';
 

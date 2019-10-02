@@ -9,7 +9,7 @@ import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import { BitId } from '../../../bit-id';
-import type { ImportOptions } from '../../../consumer/component-ops/import-components';
+import { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 import ImportComponents from '../../../consumer/component-ops/import-components';

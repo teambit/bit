@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import R from 'ramda';
 import Diagnosis from '../diagnosis';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
 import { Scope } from '../../scope';
 

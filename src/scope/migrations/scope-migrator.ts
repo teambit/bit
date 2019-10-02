@@ -3,7 +3,7 @@ import R from 'ramda';
 import { BitObject, BitRawObject, Ref } from '../objects';
 import { BIT_VERSION } from '../../constants';
 import getMigrationVersions from '../../migration/migration-helper';
-import type { MigrationDeclaration } from '../../migration/migration-helper';
+import { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';
 
 export type ScopeMigrationResult = {

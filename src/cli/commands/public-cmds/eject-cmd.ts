@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { ejectAction } from '../../../api/consumer';
-import type { EjectResults } from '../../../consumer/component-ops/eject-components';
+import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 
 export default class Eject extends Command {

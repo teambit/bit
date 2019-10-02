@@ -2,8 +2,8 @@
 
 import domain from 'domain';
 import vuedoc from '@vuedoc/parser';
-import type { PathOsBased } from '../utils/path';
-import type { Doclet } from './parser';
+import { PathOsBased } from '../utils/path';
+import { Doclet } from './parser';
 import { pathNormalizeToLinux } from '../utils';
 import logger from '../logger/logger';
 

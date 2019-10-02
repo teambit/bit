@@ -6,7 +6,7 @@ import validateType from '../utils/validate-type';
 import { BitId, BitIds } from '../bit-id';
 import VersionInvalid from './exceptions/version-invalid';
 import { isValidPath } from '../utils';
-import type Version from './models/version';
+import Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';

@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import type BitMap from '../bit-map';
+import BitMap from '../bit-map';
 import { BIT_VERSION } from '../../constants';
 import getMigrationVersions, { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';

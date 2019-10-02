@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
-import type { TagResults } from '../../../api/consumer/lib/tag';
+import { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';

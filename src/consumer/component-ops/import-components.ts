@@ -12,10 +12,10 @@ import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
 import { filterAsync, pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
-import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
+import { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
-import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
+import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
 import hasWildcard from '../../utils/string/has-wildcard';
@@ -304,7 +304,7 @@ export default class ImportComponents {
 
   /**
    * Model Component id() calculation uses id.toString() for the hash.
-   * If an imported component has scope+name equals to a local name, both will have the exact same
+   * If an imported component has scopereadonly name equals to a local name, both will have the exact same
    * hash and they'll override each other.
    */
   _throwForDifferentComponentWithSameName(ids: BitIds): void {

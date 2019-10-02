@@ -2,13 +2,13 @@
 import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
-import type { Scope, ComponentWithDependencies } from '../scope';
+import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId, BitIds } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 export type IsolateOptions = {

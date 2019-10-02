@@ -7,7 +7,7 @@ import { PrimaryOverloaded } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
 import GlobalRemotes from '../global-config/global-remotes';
-import type Scope from '../scope/scope';
+import Scope from '../scope/scope';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';
 

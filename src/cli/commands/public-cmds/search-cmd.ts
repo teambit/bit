@@ -4,7 +4,7 @@ import requestify from 'requestify';
 import Command from '../../command';
 import { searchAdapter } from '../../../search';
 import { formatter } from '../../../search/searcher';
-import type { Doc } from '../../../search/indexer';
+import { Doc } from '../../../search/indexer';
 import loader from '../../../cli/loader';
 import { SEARCH_DOMAIN } from '../../../constants';
 import { BEFORE_REMOTE_SEARCH } from '../../../cli/loader/loader-messages';

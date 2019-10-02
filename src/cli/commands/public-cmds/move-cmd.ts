@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { move } from '../../../api/consumer';
-import type { PathChangeResult } from '../../../consumer/bit-map/bit-map';
+import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Move extends Command {

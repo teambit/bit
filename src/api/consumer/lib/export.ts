@@ -14,7 +14,7 @@ import IdExportedAlready from './exceptions/id-exported-already';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 import EjectComponents from '../../../consumer/component-ops/eject-components';
-import type { EjectResults } from '../../../consumer/component-ops/eject-components';
+import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { exportMany } from '../../../scope/component-ops/export-scope-components';
 import { NodeModuleLinker } from '../../../links';

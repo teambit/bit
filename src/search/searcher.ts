@@ -1,6 +1,6 @@
 /** @flow */
 import serverlessIndex from './serverless-index';
-import type { Doc } from './indexer';
+import { Doc } from './indexer';
 import buildQuery from './query-builder';
 
 const numOfResultsPerPage = 15;

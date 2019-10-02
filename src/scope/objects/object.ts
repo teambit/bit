@@ -1,6 +1,6 @@
 /** @flow */
 import { inflateSync } from 'zlib';
-import type Repository from './repository';
+import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';

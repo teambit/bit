@@ -1,7 +1,7 @@
 /** @flow */
 import { Readable } from 'stream';
 import { stemmer } from 'porter-stemmer';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import serverlessIndex from './serverless-index';
 import logger from '../logger/logger';
 

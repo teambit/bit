@@ -5,7 +5,7 @@ import { BitId } from '../bit-id';
 import { LATEST_BIT_VERSION, BITS_DIRNAME } from '../constants';
 import { ComponentNotFound } from '../scope/exceptions';
 import logger from '../logger/logger';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {
   // $FlowFixMe

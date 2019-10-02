@@ -3,7 +3,7 @@
 import R from 'ramda';
 import fs from 'fs-extra';
 import Diagnosis from '../diagnosis';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
 import WorkspaceConfig from '../../consumer/config/workspace-config';
 import AbstractConfig from '../../consumer/config/abstract-config';

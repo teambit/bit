@@ -1,7 +1,7 @@
 /** @flow */
 
 import Diagnosis from '../diagnosis';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 import npmClient from '../../npm-client';
 
 export default class ValidateNpmExec extends Diagnosis {

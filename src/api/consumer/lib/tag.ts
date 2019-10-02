@@ -9,7 +9,7 @@ import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from
 import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
 import Component from '../../../consumer/component';
-import type { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import GeneralError from '../../../error/general-error';
 
 const HooksManagerInstance = HooksManager.getInstance();

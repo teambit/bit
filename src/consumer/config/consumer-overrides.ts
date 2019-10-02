@@ -4,7 +4,7 @@ import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import { validateUserInputType } from '../../utils/validate-type';
-import type Component from '../component/consumer-component';
+import Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import AbstractConfig from './abstract-config';
 import { DEPENDENCIES_FIELDS } from '../../constants';

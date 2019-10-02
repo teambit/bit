@@ -9,7 +9,7 @@ import {
 } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { deprecateMany, undeprecateMany } from '../../../scope/component-ops/components-deprecation';
-import type { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
+import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

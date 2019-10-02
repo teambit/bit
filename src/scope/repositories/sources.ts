@@ -2,19 +2,19 @@
 import R from 'ramda';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
-import type Scope from '../scope';
+import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
-import type { ComponentProps } from '../models/model-component';
-import type ConsumerComponent from '../../consumer/component';
+import { ComponentProps } from '../models/model-component';
+import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
-import type Consumer from '../../consumer/consumer';
-import type { PathOsBased, PathLinux } from '../../utils/path';
+import Consumer from '../../consumer/consumer';
+import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 
 export type ComponentTree = {

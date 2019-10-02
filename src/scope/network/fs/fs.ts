@@ -5,11 +5,11 @@ import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
-import type Scope, { ScopeDescriptor } from '../../scope';
+import Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
-import type { Network } from '../network';
+import { Network } from '../network';
 import ComponentsList from '../../../consumer/component/components-list';
-import type { ListScopeResult } from '../../../consumer/component/components-list';
+import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 

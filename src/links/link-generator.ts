@@ -9,20 +9,20 @@ import {
   ANGULAR_BIT_ENTRY_POINT_FILE
 } from '../constants';
 import { getExt } from '../utils';
-import type { OutputFileParams } from '../utils/fs-output-file';
+import { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
-import type { ComponentWithDependencies } from '../scope';
+import { ComponentWithDependencies } from '../scope';
 import Component from '../consumer/component/consumer-component';
-import type { Dependency, Dependencies } from '../consumer/component/dependencies';
-import type { RelativePath } from '../consumer/component/dependencies/dependency';
+import { Dependency, Dependencies } from '../consumer/component/dependencies';
+import { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
-import type Consumer from '../consumer/consumer';
+import Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
-import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS, EXTENSIONS_NOT_SUPPORT_DIRS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import type { LinkFileType } from './dependency-file-link-generator';
+import { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';

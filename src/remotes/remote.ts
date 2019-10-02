@@ -1,13 +1,13 @@
 /** @flow */
 import { isBitUrl, cleanBang } from '../utils';
-import type ComponentObjects from '../scope/component-objects';
+import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
-import type { Network } from '../scope/network/network';
-import type Component from '../consumer/component/consumer-component';
-import type { ListScopeResult } from '../consumer/component/components-list';
-import type { SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
+import { Network } from '../scope/network/network';
+import Component from '../consumer/component/consumer-component';
+import { ListScopeResult } from '../consumer/component/components-list';
+import { SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
 
 /**

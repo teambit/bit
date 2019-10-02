@@ -4,8 +4,8 @@ import R from 'ramda';
 import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getWithoutExt, getExt } from '../utils';
 import logger from '../logger/logger';
-import type { PathOsBased } from '../utils/path';
-import type { ImportSpecifier } from '../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
+import { PathOsBased } from '../utils/path';
+import { ImportSpecifier } from '../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",

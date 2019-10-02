@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 import * as path from 'path';
 import Repository from '../repository';
 import { BIT_TMP_DIRNAME } from '../../constants';
-import type { PathOsBased } from '../../utils/path';
+import { PathOsBased } from '../../utils/path';
 import logger from '../../logger/logger';
 
 export default class Tmp extends Repository {

@@ -4,9 +4,9 @@ import logger from '../logger/logger';
 import TesterExtension from './tester-extension';
 import CompilerExtension from './compiler-extension';
 import EnvExtension from './env-extension';
-import type { EnvType, EnvLoadArgsProps, EnvExtensionProps } from './env-extension-types';
+import { EnvType, EnvLoadArgsProps, EnvExtensionProps } from './env-extension-types';
 import BaseExtension from './base-extension';
-import type { BaseExtensionModel } from './base-extension';
+import { BaseExtensionModel } from './base-extension';
 import Repository from '../scope/objects/repository';
 
 export default (async function makeEnv(envType: EnvType, props: EnvLoadArgsProps): Promise<EnvExtension> {

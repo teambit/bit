@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
 import { eol } from '../../../utils';
-import type { PathOsBased } from '../../../utils/path';
+import { PathOsBased } from '../../../utils/path';
 import Source from '../../../scope/models/source';
 
 type AbstractVinylProps = {

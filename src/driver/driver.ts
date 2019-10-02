@@ -4,7 +4,7 @@ import bitJavascript from 'bit-javascript';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
-import type {
+import {
   Tree,
   ResolveModulesConfig
 } from '../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';

@@ -1,6 +1,6 @@
 // @flow
 import { VERSION_DELIMITER } from '../../constants';
-import type { ListScopeResult } from '../../consumer/component/components-list';
+import { ListScopeResult } from '../../consumer/component/components-list';
 
 export default (rawScopeResults: ListScopeResult[]) => {
   function paintRawComponent(listScopeResult: ListScopeResult) {

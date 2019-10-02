@@ -4,10 +4,10 @@ import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
 import path from 'path';
-import type Component from '../component/consumer-component';
+import Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
-import type { ComponentOrigin } from '../bit-map/component-map';
-import type Consumer from '../consumer';
+import { ComponentOrigin } from '../bit-map/component-map';
+import Consumer from '../consumer';
 import logger from '../../logger/logger';
 import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
 import {
@@ -18,7 +18,7 @@ import {
   COMPONENT_DIST_PATH_TEMPLATE
 } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import type { PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';

@@ -2,7 +2,7 @@
 import { loadConsumer, Consumer } from '../../../consumer';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 import DependencyGraph from '../../../scope/graph/scope-graph';
-import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default (async function getConsumerBit({
   id,

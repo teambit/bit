@@ -1,11 +1,11 @@
 /** @flow */
 import { BitIds, BitId } from '../../bit-id';
 import ComponentObjects from '../../scope/component-objects';
-import type { ScopeDescriptor } from '../scope';
+import { ScopeDescriptor } from '../scope';
 import Component from '../../consumer/component';
-import type { ListScopeResult } from '../../consumer/component/components-list';
+import { ListScopeResult } from '../../consumer/component/components-list';
 import DependencyGraph from '../graph/scope-graph';
-import type { SSHConnectionStrategyName } from './ssh/ssh';
+import { SSHConnectionStrategyName } from './ssh/ssh';
 
 export interface Network {
   connect(host: string): Network;

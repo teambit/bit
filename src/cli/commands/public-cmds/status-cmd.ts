@@ -3,7 +3,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
 import { status } from '../../../api/consumer';
-import type { StatusResult } from '../../../api/consumer/lib/status';
+import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';

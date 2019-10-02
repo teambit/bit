@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import symlinkOrCopy from 'symlink-or-copy';
 import logger from '../../logger/logger';
-import type { PathOsBased } from '../path';
+import { PathOsBased } from '../path';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 /**

@@ -1,21 +1,21 @@
 /** @flow */
 import semver from 'semver';
 import R from 'ramda';
-import type ModelComponent from './models/model-component';
-import type Version from './models/version';
+import ModelComponent from './models/model-component';
+import Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
 import Repository from './objects/repository';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
-import type ConsumerComponent from '../consumer/component';
+import ConsumerComponent from '../consumer/component';
 import { HashMismatch } from './exceptions';
-import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
+import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import CustomError from '../error/custom-error';
 import ShowDoctorError from '../error/show-doctor-error';
 
 export default class ComponentVersion {
-  +component: ModelComponent;
-  +version: string;
+  readonly component: ModelComponent;
+  readonly version: string;
 
   constructor(component: ModelComponent, version: string) {
     if (!version) {

@@ -73,7 +73,7 @@ describe('getLatestVersionNumber', () => {
     expect(result).to.not.deep.equal(idWithVersion1);
     expect(result).to.deep.equal(idWithNoVersionWithScope);
   });
-  it('should return the same id when bitIds has a similar id where its name is equal to scope+name of the id', () => {
+  it('should return the same id when bitIds has a similar id where its name is equal to scopereadonly name of the id', () => {
     const idWithScope = new BitId({ scope: 'is', name: 'string' });
     const idWithoutScope = new BitId({ name: 'is/string', version: '0.0.1' });
     const bitIds = new BitIds(idWithoutScope);

@@ -6,7 +6,7 @@ import ScopeMeta from './scopeMeta';
 import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, filterObject, getStringifyArgs } from '../../utils';
-import type Version from './version';
+import Version from './version';
 import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
@@ -17,14 +17,14 @@ import {
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
-import type Repository from '../objects/repository';
+import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
+import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
@@ -320,7 +320,7 @@ export default class Component extends BitObject {
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = ClassName => async (file) => {
       const loadP = file.file.load(repository);
-      const content: Source = ((await loadP: any): Source);
+      const content: Source = await loadP;
       if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };

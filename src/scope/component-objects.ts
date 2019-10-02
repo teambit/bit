@@ -1,6 +1,6 @@
 /** @flow */
 import BitObject from './objects/object';
-import type Repository from './objects/repository';
+import Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
 import { typesObj } from './object-registrar';
 import ModelComponent from './models/model-component';

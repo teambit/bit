@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { AbstractVinyl } from '../consumer/component/sources';
 import { AUTO_GENERATED_STAMP, AUTO_GENERATED_MSG } from '../constants';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 import { BitId } from '../bit-id';
 import logger from '../logger/logger';
 import ValidationError from '../error/validation-error';

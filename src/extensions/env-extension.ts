@@ -4,30 +4,30 @@ import R from 'ramda';
 import path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
-import type Scope from '../scope/scope';
-import type {
+import Scope from '../scope/scope';
+import {
   EnvType,
   EnvLoadArgsProps,
   EnvExtensionProps,
   EnvExtensionModel,
   EnvExtensionSerializedModel
 } from './env-extension-types';
-import type { BaseExtensionProps, BaseExtensionModel } from './base-extension';
+import { BaseExtensionProps, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import { Repository } from '../scope/objects';
 import { pathJoinLinux, sortObject, sha1 } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
-import type { PathOsBased } from '../utils/path';
-import type { EnvExtensionObject } from '../consumer/config/abstract-config';
+import { PathOsBased } from '../utils/path';
+import { EnvExtensionObject } from '../consumer/config/abstract-config';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
-import type { ComponentOrigin } from '../consumer/bit-map/component-map';
-import type ConsumerComponent from '../consumer/component';
-import type WorkspaceConfig from '../consumer/config/workspace-config';
-import type ComponentConfig from '../consumer/config';
+import { ComponentOrigin } from '../consumer/bit-map/component-map';
+import ConsumerComponent from '../consumer/component';
+import WorkspaceConfig from '../consumer/config/workspace-config';
+import ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
@@ -35,8 +35,8 @@ import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-c
 import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
-import type Consumer from '../consumer/consumer';
-import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
+import Consumer from '../consumer/consumer';
+import { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
 import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 import GeneralError from '../error/general-error';

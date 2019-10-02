@@ -1,7 +1,7 @@
 // @flow
 import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
-import type { PathLinux, PathOsBased } from '../utils/path';
+import { PathLinux, PathOsBased } from '../utils/path';
 import { pathNormalizeToLinux, getExt } from '../utils';
 import vueParse from './vue-parser';
 import logger from '../logger/logger';

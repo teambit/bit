@@ -5,9 +5,9 @@ import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
-import type { ExtensionOptions } from '../../extensions/extension';
-import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension-types';
-import type { PathOsBased, PathLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { ExtensionOptions } from '../../extensions/extension';
+import { EnvExtensionOptions, EnvType } from '../../extensions/env-extension-types';
+import { PathOsBased, PathLinux, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import {
   BIT_JSON,
   NO_PLUGIN_TYPE,

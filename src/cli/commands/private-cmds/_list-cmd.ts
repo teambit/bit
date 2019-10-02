@@ -4,7 +4,7 @@ import { fromBase64, packCommand, unpackCommand, buildCommandMessage } from '../
 import { scopeList } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
-import type { ListScopeResult } from '../../../consumer/component/components-list';
+import { ListScopeResult } from '../../../consumer/component/components-list';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 
 export default class List extends Command {

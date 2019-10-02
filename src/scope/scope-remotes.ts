@@ -1,6 +1,6 @@
 // @flow
 import R from 'ramda';
-import type { Scope } from '.';
+import { Scope } from '.';
 import GlobalRemotes from '../global-config/global-remotes';
 import { Remotes } from '../remotes';
 import { BitId } from '../bit-id';

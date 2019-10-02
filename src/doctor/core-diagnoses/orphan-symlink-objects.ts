@@ -1,6 +1,6 @@
 /** @flow */
 import Diagnosis from '../diagnosis';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
 import { Symlink, ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';

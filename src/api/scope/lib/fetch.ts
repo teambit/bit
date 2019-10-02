@@ -5,7 +5,7 @@ import { PRE_SEND_OBJECTS, POST_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import type ComponentObjects from '../../../scope/component-objects';
+import ComponentObjects from '../../../scope/component-objects';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

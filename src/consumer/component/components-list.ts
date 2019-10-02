@@ -2,11 +2,11 @@
 import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
-import type Version from '../../scope/models/version';
+import Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
-import type { InvalidComponent } from '../component/consumer-component';
+import { InvalidComponent } from '../component/consumer-component';
 import { BitId, BitIds } from '../../bit-id';
 import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';

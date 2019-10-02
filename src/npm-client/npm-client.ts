@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
 

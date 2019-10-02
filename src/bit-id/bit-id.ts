@@ -7,7 +7,7 @@ import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './e
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
 import isValidIdChunk from '../utils/is-valid-id-chunk';
 import isValidScopeName from '../utils/is-valid-scope-name';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
 import versionParser from '../version/version-parser';
 
@@ -21,10 +21,10 @@ export type BitIdProps = {
 export type BitIdStr = string;
 
 export default class BitId {
-  +scope: ?string;
-  +box: ?string;
-  +name: string;
-  +version: ?string;
+  readonly scope: ?string;
+  readonly box: ?string;
+  readonly name: string;
+  readonly version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
     // don't validate the id parts using isValidIdChunk here. we instance this class tons of times

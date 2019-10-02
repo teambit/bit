@@ -2,7 +2,7 @@
 import Command from '../../command';
 import { installAction } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
-import type { LinksResult } from '../../../links/node-modules-linker';
+import { LinksResult } from '../../../links/node-modules-linker';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Install extends Command {

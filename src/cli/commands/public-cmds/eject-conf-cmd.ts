@@ -3,8 +3,8 @@ import chalk from 'chalk';
 import * as nodePath from 'path';
 import Command from '../../command';
 import { ejectConf } from '../../../api/consumer';
-import type { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
-import type { PathOsBased } from '../../../utils/path';
+import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
+import { PathOsBased } from '../../../utils/path';
 
 type EjectConfCliResult = EjectConfResult & {
   ejectPathRelativeToCwd: PathOsBased

@@ -1,7 +1,7 @@
 /** @flow */
 
 import EnvExtension from './env-extension';
-import type { EnvExtensionProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension-types';
+import { EnvExtensionProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension-types';
 import { TESTER_ENV_TYPE } from '../constants';
 
 export type TesterExtensionOptions = EnvExtensionOptions;

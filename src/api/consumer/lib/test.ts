@@ -6,7 +6,7 @@ import { BEFORE_LOADING_COMPONENTS, BEFORE_RUNNING_SPECS } from '../../../cli/lo
 import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
 import GeneralError from '../../../error/general-error';
-import type { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
+import { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 

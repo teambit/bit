@@ -6,7 +6,7 @@ import diff from 'object-diff';
 import normalize from 'normalize-path';
 import arrayDifference from 'array-difference';
 import Component from '../component/consumer-component';
-import type { FieldsDiff } from './components-diff';
+import { FieldsDiff } from './components-diff';
 import { Consumer } from '..';
 import EnvExtension from '../../extensions/env-extension';
 

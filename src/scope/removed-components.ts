@@ -1,6 +1,6 @@
 /** @flow */
 import { BitId, BitIds } from '../bit-id';
-import type { BitIdStr } from '../bit-id/bit-id';
+import { BitIdStr } from '../bit-id/bit-id';
 
 export type RemovedObjectSerialized = {
   removedComponentIds: BitIdStr[],

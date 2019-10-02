@@ -5,7 +5,7 @@ import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default class Show extends Command {
   name = 'show <id>';

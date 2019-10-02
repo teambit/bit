@@ -1,9 +1,9 @@
 /** @flow */
 
-import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
-import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
+import { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
+import { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
 import ExtensionFile from './extension-file';
-import type { PathOsBased } from '../utils/path';
+import { PathOsBased } from '../utils/path';
 
 /**
  * Those types were extracted to dedicated file in order to prevent circular dependency between ./env-factory and ./env-extension

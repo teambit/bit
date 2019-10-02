@@ -2,7 +2,7 @@
 
 import Command from '../../command';
 import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
-import type { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
+import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/diagnosis';
@@ -44,12 +44,12 @@ export default class Doctor extends Command {
 
   report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Object): string {
     if (flags.list) {
-      return _listReport(((res: any): Diagnosis[]), flags.json);
+      return _listReport(res, flags.json);
     }
     if (args && args[0]) {
-      return _runOneReport(((res: any): DoctorRunOneResult), flags.json);
+      return _runOneReport(res, flags.json);
     }
-    return _runAllReport(((res: any): DoctorRunAllResults), flags.json);
+    return _runAllReport(res, flags.json);
   }
 }
 

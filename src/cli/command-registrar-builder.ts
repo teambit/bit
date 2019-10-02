@@ -1,7 +1,7 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
-import type { Commands } from '../extensions/extension';
+import { Commands } from '../extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';

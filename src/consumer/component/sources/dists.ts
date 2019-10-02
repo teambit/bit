@@ -1,19 +1,19 @@
 // @flow
 import path from 'path';
 import Dist from './dist';
-import type Consumer from '../../consumer';
+import Consumer from '../../consumer';
 import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
-import type { PathLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
-import type ComponentMap from '../../bit-map/component-map';
+import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
+import ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
 import { getLinksInDistToWrite } from '../../../links';
 import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
-import type Component from '../consumer-component';
+import Component from '../consumer-component';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import Source from '../../../scope/models/source';
-import type CompilerExtension from '../../../extensions/compiler-extension';
-import type { DistFileModel } from '../../../scope/models/version';
+import CompilerExtension from '../../../extensions/compiler-extension';
+import { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
 import WorkspaceConfig from '../../config/workspace-config';
 import { ComponentWithDependencies } from '../../../scope';

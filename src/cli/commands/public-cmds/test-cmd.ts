@@ -5,7 +5,7 @@ import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import type { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
+import { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
 
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
 

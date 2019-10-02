@@ -2,7 +2,7 @@
 import { isAbsolute } from 'path';
 import fs from 'fs-extra';
 import GeneralError from '../../error/general-error';
-import type { PathOsBasedAbsolute } from '../path';
+import { PathOsBasedAbsolute } from '../path';
 
 export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Object) {
   if (!isAbsolute(src) || !isAbsolute(dest)) {

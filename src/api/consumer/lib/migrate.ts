@@ -2,7 +2,7 @@
 import { loadScope } from '../../../scope';
 import { loadConsumerIfExist } from '../../../consumer';
 import logger from '../../../logger/logger';
-import type { MigrationResult } from '../../../migration/migration-helper';
+import { MigrationResult } from '../../../migration/migration-helper';
 
 /**
  * Running migration process for consumer and / or scope - to update the stores (bitObjects, bit.map.json) to the current version

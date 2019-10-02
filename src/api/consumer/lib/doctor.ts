@@ -7,7 +7,7 @@ import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar
 import DoctorRegistrar from '../../../doctor/doctor-registrar';
 import Diagnosis from '../../../doctor/diagnosis';
 import { getWithoutExt, getExt } from '../../../utils';
-import type { ExamineResult } from '../../../doctor/diagnosis';
+import { ExamineResult } from '../../../doctor/diagnosis';
 import logger from '../../../logger/logger';
 import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
 import * as globalConfig from './global-config';
@@ -15,7 +15,7 @@ import { getConsumerInfo } from '../../../consumer/consumer-locator';
 import BitMap from '../../../consumer/bit-map';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
-import type { ConsumerInfo } from '../../../consumer/consumer-locator';
+import { ConsumerInfo } from '../../../consumer/consumer-locator';
 import npmClient from '../../../npm-client';
 
 // run specific check

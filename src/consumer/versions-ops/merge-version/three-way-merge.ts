@@ -6,8 +6,8 @@ import { sha1, pathNormalizeToLinux } from '../../../utils';
 import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
-import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import type { PathOsBased, PathLinux } from '../../../utils/path';
+import { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
+import { PathOsBased, PathLinux } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 
 export type MergeResultsThreeWay = {

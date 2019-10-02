@@ -3,7 +3,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import { deprecate } from '../../../api/consumer';
 import Command from '../../command';
-import type { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
+import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
 export default class Deprecate extends Command {
   name = 'deprecate <ids...>';

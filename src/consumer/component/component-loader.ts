@@ -1,11 +1,11 @@
 // @flow
 import path from 'path';
 import pMapSeries from 'p-map-series';
-import type Consumer from '../consumer';
+import Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import Component from './consumer-component';
-import type { InvalidComponent } from '../component/consumer-component';
+import { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';

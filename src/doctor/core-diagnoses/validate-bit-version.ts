@@ -2,7 +2,7 @@
 
 import semver from 'semver';
 import Diagnosis from '../diagnosis';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 import npmClient from '../../npm-client';
 import { BIT_VERSION } from '../../constants';
 import packageFile from '../../../package.json';
@@ -17,8 +17,8 @@ export default class ValidateBitVersion extends Diagnosis {
     if (!bareResult.data.latestVersion) {
       return 'could not fetch bit latest version';
     }
-    return `bit is not up to date. 
-    your version: ${BIT_VERSION} 
+    return `bit is not up to date.
+    your version: ${BIT_VERSION}
     latest version: ${bareResult.data.latestVersion}`;
   }
 

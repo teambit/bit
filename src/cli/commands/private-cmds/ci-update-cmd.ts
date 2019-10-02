@@ -5,7 +5,7 @@ import { ciUpdateAction } from '../../../api/scope';
 import { paintCiResults } from '../../chalk-box';
 import SpecsResults from '../../../consumer/specs-results';
 import Dists from '../../../consumer/component/sources/dists';
-import type { PathOsBased } from '../../../utils/path';
+import { PathOsBased } from '../../../utils/path';
 
 export default class CiUpdate extends Command {
   name = 'ci-update <id> [scopePath]';

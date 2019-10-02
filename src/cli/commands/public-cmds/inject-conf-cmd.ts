@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { injectConf } from '../../../api/consumer';
-import type { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
+import { InjectConfResult } from '../../../consumer/component-ops/inject-conf';
 
 export default class InjectConf extends Command {
   name = 'inject-conf [id]';

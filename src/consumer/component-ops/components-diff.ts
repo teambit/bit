@@ -7,7 +7,7 @@ import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import { PathLinux, PathOsBased } from '../../utils/path';
 import { Version } from '../../scope/models';
 import { diffBetweenComponentsObjects } from './components-object-diff';
 import ShowDoctorError from '../../error/show-doctor-error';

@@ -1,5 +1,5 @@
 /** @flow */
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import { PathLinux, PathOsBased } from '../../utils/path';
 import { pathNormalizeToLinux } from '../../utils';
 import { BitId } from '../../bit-id';
 

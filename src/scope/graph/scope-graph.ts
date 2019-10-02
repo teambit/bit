@@ -1,7 +1,7 @@
 /** @flow */
 import GraphLib from 'graphlib';
 import { BitId, BitIds } from '../../bit-id';
-import type { ModelComponent, Version } from '../models';
+import { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
 import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';

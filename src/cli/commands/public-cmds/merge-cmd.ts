@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { merge } from '../../../api/consumer';
-import type { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
+import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
 import { WILDCARD_HELP } from '../../../constants';
 

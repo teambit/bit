@@ -4,7 +4,7 @@ import path from 'path';
 import format from 'string-format';
 import { pathNormalizeToLinux } from '../../utils';
 import { COMPONENT_DIR } from '../../constants';
-import type { PathRelative } from '../../utils/path';
+import { PathRelative } from '../../utils/path';
 
 export default class ConfigDir {
   dirPath: PathRelative;

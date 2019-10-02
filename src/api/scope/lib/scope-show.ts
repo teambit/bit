@@ -1,7 +1,7 @@
 /** @flow */
 import { Scope, loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
-import type ConsumerComponent from '../../../consumer/component';
+import ConsumerComponent from '../../../consumer/component';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 
 export default (async function list(path: string, id: string): Promise<any> {

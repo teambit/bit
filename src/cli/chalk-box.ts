@@ -2,10 +2,10 @@
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
-import type Component from '../consumer/component/consumer-component';
-import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
+import Component from '../consumer/component/consumer-component';
+import { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
-import type { SpecsResultsWithComponentId, SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
+import { SpecsResultsWithComponentId, SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 

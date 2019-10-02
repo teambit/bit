@@ -1,6 +1,6 @@
 // @flow
 import BitObject from '../objects/object';
-import type Ref from '../objects/ref';
+import Ref from '../objects/ref';
 import { getStringifyArgs } from '../../utils';
 
 type ScopeMetaProps = {

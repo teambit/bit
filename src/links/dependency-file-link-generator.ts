@@ -2,13 +2,13 @@
 import path from 'path';
 import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
 import { DEFAULT_INDEX_NAME, DEFAULT_DIST_DIRNAME } from '../constants';
-import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
+import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { BitId } from '../bit-id';
-import type Consumer from '../consumer/consumer';
+import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
-import type Component from '../consumer/component/consumer-component';
-import type { RelativePath } from '../consumer/component/dependencies/dependency';
-import type ComponentMap from '../consumer/bit-map/component-map';
+import Component from '../consumer/component/consumer-component';
+import { RelativePath } from '../consumer/component/dependencies/dependency';
+import ComponentMap from '../consumer/bit-map/component-map';
 import {
   getLinkToPackageContent,
   EXTENSIONS_TO_STRIP_FROM_PACKAGES,

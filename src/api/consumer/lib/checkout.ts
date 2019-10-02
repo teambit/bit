@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
-import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
-import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { loadConsumer, Consumer } from '../../../consumer';
 import checkoutVersion from '../../../consumer/versions-ops/checkout-version';
 import loader from '../../../cli/loader';

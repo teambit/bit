@@ -2,7 +2,7 @@
 
 import { loadConsumer, Consumer } from '../../../consumer';
 import GeneralError from '../../../error/general-error';
-import type { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
+import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
 
 export default (async function ejectConf(id: string, { ejectPath }: { ejectPath: string }): Promise<EjectConfResult> {
   if (!id) {

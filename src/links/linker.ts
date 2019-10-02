@@ -8,7 +8,7 @@ import NodeModuleLinker from './node-modules-linker';
 import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJsonUtils from '../consumer/component/package-json-utils';
-import type { LinksResult } from './node-modules-linker';
+import { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';

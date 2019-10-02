@@ -3,29 +3,29 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import type { customResolvedPath } from '../../consumer/component';
+import { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
-import type { Doclet } from '../../jsdoc/parser';
+import { Doclet } from '../../jsdoc/parser';
 import {
   DEFAULT_BUNDLE_FILENAME,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   DEPENDENCIES_FIELDS
 } from '../../constants';
-import type { Results } from '../../specs-runner/specs-runner';
+import { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
-import type { PathLinux, PathLinuxRelative } from '../../utils/path';
-import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
-import type { TesterExtensionModel } from '../../extensions/tester-extension';
+import { PathLinux, PathLinuxRelative } from '../../utils/path';
+import { CompilerExtensionModel } from '../../extensions/compiler-extension';
+import { TesterExtensionModel } from '../../extensions/tester-extension';
 import ExtensionFile from '../../extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
-import type { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import type { EnvPackages } from '../../extensions/env-extension';
+import { ComponentOverridesData } from '../../consumer/config/component-overrides';
+import { EnvPackages } from '../../extensions/env-extension';
 
 type CiProps = {
   error: Object,

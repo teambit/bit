@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import type { Scope } from '..';
+import { Scope } from '..';
 import { Remotes } from '../../remotes';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { BitId, BitIds } from '../../bit-id';
@@ -10,14 +10,14 @@ import logger from '../../logger/logger';
 import { RemoteScopeNotFound, PermissionDenied } from '../network/exceptions';
 import { ComponentNotFound, DependencyNotFound } from '../exceptions';
 import { Analytics } from '../../analytics/analytics';
-import SourcesRepository, { type ComponentDef } from '../repositories/sources';
-import type ComponentVersion from '../component-version';
-import type ComponentObjects from '../component-objects';
+import SourcesRepository, { ComponentDef } from '../repositories/sources';
+import ComponentVersion from '../component-version';
+import ComponentObjects from '../component-objects';
 import GeneralError from '../../error/general-error';
 import { getScopeRemotes } from '../scope-remotes';
-import type ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import { splitBy } from '../../utils';
-import type { ModelComponent, Version } from '../models';
+import { ModelComponent, Version } from '../models';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 const removeNils = R.reject(R.isNil);

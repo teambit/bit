@@ -2,7 +2,7 @@
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
-import type { InvalidComponents } from '../../../consumer/component';
+import { InvalidComponents } from '../../../consumer/component';
 import { ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';

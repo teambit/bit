@@ -3,7 +3,7 @@ import cliSpinners from 'cli-spinners';
 import os from 'os';
 import path from 'path';
 import format from 'string-format';
-import type { PathOsBased } from './utils/path';
+import { PathOsBased } from './utils/path';
 
 const userHome = require('user-home');
 const packageFile = require('../package.json');

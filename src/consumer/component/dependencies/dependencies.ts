@@ -1,15 +1,15 @@
 /** @flow */
 import R from 'ramda';
 import Dependency from './dependency';
-import type { RelativePath } from './dependency';
+import { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
-import type Scope from '../../../scope/scope';
+import Scope from '../../../scope/scope';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
-import type { BitIdStr } from '../../../bit-id/bit-id';
-import type { ManipulateDirItem } from '../../component-ops/manipulate-dir';
-import type { PathLinux } from '../../../utils/path';
+import { BitIdStr } from '../../../bit-id/bit-id';
+import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
+import { PathLinux } from '../../../utils/path';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];

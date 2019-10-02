@@ -5,11 +5,11 @@ import { RemovedObjects } from '../removed-components';
 import logger from '../../logger/logger';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
-import type { ModelComponent } from '../models';
+import { ModelComponent } from '../models';
 import { Symlink } from '../models';
-import type ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
-import type Consumer from '../../consumer/consumer';
+import Consumer from '../../consumer/consumer';
 
 export default class RemoveModelComponents {
   scope: Scope;

@@ -1,17 +1,17 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import type ConsumerComponent from '../component/consumer-component';
+import ConsumerComponent from '../component/consumer-component';
 import ComponentConfig from '../config';
 import { sharedStartOfArray } from '../../utils';
-import type BitMap from '../bit-map';
+import BitMap from '../bit-map';
 import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
 import { getLinksByDependencies } from '../../links/link-generator';
-import type Consumer from '../consumer';
+import Consumer from '../consumer';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
-import type { PathOsBased } from '../../utils/path';
+import { PathOsBased } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import RemovePath from '../component/sources/remove-path';

@@ -8,7 +8,7 @@ import {
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS
 } from '../../constants';
-import type { ConsumerOverridesOfComponent } from './consumer-overrides';
+import { ConsumerOverridesOfComponent } from './consumer-overrides';
 import { overridesBitInternalFields, nonPackageJsonFields, overridesForbiddenFields } from './consumer-overrides';
 
 // consumer internal fields should not be used in component overrides, otherwise, they might conflict upon import

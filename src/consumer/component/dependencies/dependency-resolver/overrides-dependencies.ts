@@ -9,11 +9,11 @@ import {
 } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
-import type Component from '../../../component/consumer-component';
-import type Consumer from '../../../../consumer/consumer';
+import Component from '../../../component/consumer-component';
+import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
-import type { FileType, AllDependencies } from './dependencies-resolver';
+import { FileType, AllDependencies } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[],

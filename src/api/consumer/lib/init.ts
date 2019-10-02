@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { Consumer } from '../../../consumer';
 import { Repository } from '../../../scope/objects';
 import { isDirEmpty } from '../../../utils';
-import type { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
+import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default (async function init(

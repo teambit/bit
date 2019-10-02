@@ -1,13 +1,13 @@
 // @flow
 import R from 'ramda';
-import type Component from '../../component/consumer-component';
-import type Consumer from '../../consumer';
+import Component from '../../component/consumer-component';
+import Consumer from '../../consumer';
 import { sha1, pathNormalizeToLinux } from '../../../utils';
-import type { SourceFile } from '../../component/sources';
+import { SourceFile } from '../../component/sources';
 import Tmp from '../../../scope/repositories/tmp';
 import mergeFiles from '../../../utils/merge-files';
-import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import type { PathOsBased, PathLinux } from '../../../utils/path';
+import { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
+import { PathOsBased, PathLinux } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 
 export type MergeResultsTwoWay = {

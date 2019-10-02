@@ -6,7 +6,7 @@ import { listScope } from '../../../api/consumer';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-import type { ListScopeResult } from '../../../consumer/component/components-list';
+import { ListScopeResult } from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default class List extends Command {

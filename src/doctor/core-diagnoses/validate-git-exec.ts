@@ -4,7 +4,7 @@ import execa from 'execa';
 import R from 'ramda';
 import Diagnosis from '../diagnosis';
 import getGitExecutablePath from '../../utils/git/git-executable';
-import type { ExamineBareResult } from '../diagnosis';
+import { ExamineBareResult } from '../diagnosis';
 
 export const DIAGNOSIS_NAME = 'validate git exec';
 export default class ValidateGitExec extends Diagnosis {

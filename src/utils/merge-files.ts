@@ -1,6 +1,6 @@
 // @flow
 import execa from 'execa';
-import type { PathLinux, PathOsBased } from '../utils/path';
+import { PathLinux, PathOsBased } from '../utils/path';
 import GitNotFound from './git/exceptions/git-not-found';
 import getGitExecutablePath from './git/git-executable';
 import logger from '../logger/logger';

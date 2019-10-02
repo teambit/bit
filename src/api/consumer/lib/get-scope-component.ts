@@ -9,7 +9,7 @@ import Component from '../../../consumer/component';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import type { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default (async function getScopeComponent({
   id,
