@@ -2,7 +2,7 @@ import init from './lib/init';
 import isolate from './lib/isolate';
 import remove from './lib/remove';
 import { deprecate, undeprecate } from './lib/deprecation';
-import listScope from './lib/list-scope';
+import { listScope } from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';
@@ -31,6 +31,8 @@ import migrate from './lib/migrate';
 import ejectAction from './lib/eject';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
+import show from './lib/show';
+import paintGraph from './lib/paint-graph';
 
 export {
   init,
@@ -71,5 +73,7 @@ export {
   injectConf,
   migrate,
   ejectAction,
-  login
+  login,
+  show,
+  paintGraph
 };

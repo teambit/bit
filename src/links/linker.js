@@ -1,11 +1,11 @@
 /** @flow */
 import R from 'ramda';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
 import NodeModuleLinker from './node-modules-linker';
-import type Consumer from '../consumer/consumer';
+import Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJsonUtils from '../consumer/component/package-json-utils';
 import type { LinksResult } from './node-modules-linker';
@@ -15,6 +15,7 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
+import { COMPONENT_ORIGINS } from '../constants';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -34,6 +35,15 @@ export async function getLinksInDistToWrite(
   if (!componentWithDependencies && !consumer) {
     throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined');
   }
+  const nodeModuleLinker = new NodeModuleLinker([component], consumer, bitMap);
+  const nodeModuleLinks = await nodeModuleLinker.getLinks();
+  const dataToPersist = new DataToPersist();
+  dataToPersist.merge(nodeModuleLinks);
+  const isAuthored = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+  if (isAuthored) {
+    // authored only need the node-modules links
+    return dataToPersist;
+  }
   const componentWithDeps: ComponentWithDependencies = // $FlowFixMe
     componentWithDependencies || (await component.toComponentWithDependencies(consumer));
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
@@ -43,14 +53,6 @@ export async function getLinksInDistToWrite(
     bitMap
   );
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
-  const rootDir = componentMap.rootDir;
-  if (!rootDir) {
-    throw new GeneralError('getLinksInDistToWrite should get called on imported components only');
-  }
-  const nodeModuleLinker = new NodeModuleLinker([component], consumer, bitMap);
-  const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const dataToPersist = new DataToPersist();
-  dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
   const packageJsonFile = component.packageJsonFile;
   if (packageJsonFile) {
@@ -175,6 +177,22 @@ export async function getAllComponentsLinks({
   const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   dataToPersist.merge(nodeModuleLinks);
+
+  componentsWithDependencies.map(async (componentWithDependencies) => {
+    const component = componentWithDependencies.component;
+    [component.compilerDependencies, component.testerDependencies].map(async (deps) => {
+      const links = await linkGenerator.getLinksByDependencies(
+        // $FlowFixMe writtenPath is set here
+        component.writtenPath,
+        component,
+        deps,
+        consumer,
+        bitMap,
+        componentWithDependencies
+      );
+      dataToPersist.addManyFiles(links);
+    });
+  });
 
   if (consumer) {
     const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));

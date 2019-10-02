@@ -39,17 +39,25 @@ export function componentToPrintableForDiff(component: Component): Object {
     mainFile,
     deprecated
   } = component;
-  const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
-  const parsedCompilerPackageDependencies = parsePackages(compilerPackageDependencies) || [];
-  const parsedTesterPackageDependencies = parsePackages(testerPackageDependencies) || [];
-  const printableDevPackageDependencies = [
-    ...parsedDevPackageDependencies,
-    ...parsedCompilerPackageDependencies,
-    ...parsedTesterPackageDependencies
-  ];
+  const allDevPackages = {
+    ...devPackageDependencies,
+    ...compilerPackageDependencies.devDependencies,
+    ...testerPackageDependencies.devDependencies
+  };
+  const allPackages = {
+    ...packageDependencies,
+    ...compilerPackageDependencies.dependencies,
+    ...testerPackageDependencies.dependencies
+  };
+  const allPeerPackages = {
+    ...component.peerPackageDependencies,
+    ...compilerPackageDependencies.peerDependencies,
+    ...testerPackageDependencies.peerDependencies
+  };
+  const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
   const printableCompilerDependencies = compilerDependencies.toStringOfIds();
   const printableTesterDependencies = testerDependencies.toStringOfIds();
-  const peerPackageDependencies = [].concat(parsePackages(component.peerPackageDependencies)).filter(x => x);
+  const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter(x => x);
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id.toStringWithoutScope();
@@ -62,12 +70,12 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.dependencies = dependencies
     .toStringOfIds()
     .sort()
-    .concat(parsePackages(packageDependencies))
+    .concat(parsePackages(allPackages))
     .filter(x => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .sort()
-    .concat(printableDevPackageDependencies)
+    .concat(parsedDevPackageDependencies)
     .concat(printableCompilerDependencies)
     .concat(printableTesterDependencies)
     .filter(x => x);
@@ -85,6 +93,7 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.overridesDependencies = parsePackages(overrides.dependencies);
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
+  obj.overridesPackageJsonProps = JSON.stringify(component.overrides.componentOverridesPackageJsonData);
   return obj;
 }
 

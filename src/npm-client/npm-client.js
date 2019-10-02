@@ -9,8 +9,8 @@ import path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
-import GeneralError from '../error/general-error';
 import { Analytics } from '../analytics/analytics';
+import ShowDoctorError from '../error/show-doctor-error';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -146,7 +146,7 @@ const _installInOneDirectory = ({
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
       return Promise.reject(
-        new GeneralError(
+        new ShowDoctorError(
           `${stderr}\n\n${chalk.yellow(
             `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
           )}`
@@ -170,7 +170,7 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
       // it's probably a valid json with errors, that's fine, parse it.
       npmList = err;
     } else {
-      logger.error(err);
+      logger.error('npm-client got an error', err);
       throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
@@ -200,7 +200,7 @@ async function parseNpmListJsonGracefully(str: string, packageManager: string): 
     const json = JSON.parse(str);
     return json;
   } catch (err) {
-    logger.error(err);
+    logger.error('npm-client got an error', err);
     if (packageManager === 'npm') {
       const version = await getNpmVersion();
       Analytics.setExtraData('npmVersion', version);
@@ -319,8 +319,8 @@ const installAction = async ({
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
-  console.log(chalk.yellow(stdout)); // eslint-disable-line
-  console.log(chalk.yellow(stderr)); // eslint-disable-line
+  logger.console.info(chalk.yellow(stdout)); // eslint-disable-line
+  logger.console.info(chalk.yellow(stderr)); // eslint-disable-line
 };
 
 async function getNpmVersion(): Promise<?string> {

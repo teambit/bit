@@ -4,17 +4,21 @@ import Command from '../../command';
 import { unTagAction } from '../../../api/consumer';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 
 export default class Untag extends Command {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
   https://${BASE_DOCS_DOMAIN}/docs/cli-untag.html
-  the id can be used with wildcards (e.g. bit untag "utils/*")`;
+  ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
-    ['f', 'force', 'revert tag although the tag is used as a dependency']
+    [
+      'f',
+      'force',
+      'revert the tag even if used as a dependency. WARNING: components that depend on this tag will corrupt'
+    ]
   ];
   loader = true;
   migration = true;

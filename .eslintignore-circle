@@ -27,7 +27,6 @@ src/consumer/migrations/bit-map/index.js
 src/environment/environment.js
 src/git-hooks/exceptions/index.js
 src/git-hooks/git-hook.js
-src/jsdoc/formater.js
 src/prompts/exceptions/index.js
 src/remotes/remote-resolver/remote-resolver.js
 src/scope/component-objects.js
@@ -40,7 +39,6 @@ src/utils/promise-to-result-object.js
 src/utils/string/get-stringify-args.js
 src/api/scope/lib/resolver.js
 src/cli/cli-utils.js
-src/cli/command.js
 src/cli/commands/private-cmds/_fetch-cmd.js
 src/cli/commands/private-cmds/scope-config-cmd.js
 src/cli/commands/public-cmds/config-cmd.js
@@ -56,7 +54,6 @@ src/remotes/remotes.js
 src/scope/migrations/component-version/remove-latest-from-compiler.js
 src/search/serverless-index.js
 src/utils/array/filter-async.js
-src/utils/buffer/from.js
 src/utils/path.js
 src/api/scope/lib/put.js
 src/cli/commands/private-cmds/ci-update-cmd.js
@@ -89,7 +86,6 @@ src/jsdoc/parser.js
 src/scope/objects/repository.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
-src/scope/graph/scope-graph.js
 src/consumer/config/component-config.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js
@@ -104,7 +100,7 @@ src/scope/component-remove.js
 src/extensions/extension.js
 src/scope/models/model-component.js
 src/consumer/consumer.js
-e2e/e2e-helper.js
+src/e2e-helper/e2e-helper.js
 src/consumer/component/consumer-component.js
 src/scope/scope.js
 src/api/consumer/lib/global-config.js

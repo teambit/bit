@@ -20,7 +20,7 @@ import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
-import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS } from './link-content';
+import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS, EXTENSIONS_NOT_SUPPORT_DIRS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
@@ -28,6 +28,7 @@ import BitMap from '../consumer/bit-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import Symlink from './symlink';
+import getWithoutExt from '../utils/fs/fs-no-ext';
 
 type SymlinkType = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -295,12 +296,34 @@ function getInternalCustomResolvedLinks(
   if (!componentDir) {
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
   }
-  const getDestination = (importSource: string) => `node_modules/${importSource}`;
+  const getDestination = ({ destinationPath, importSource }) => {
+    const destinationFilename = path.basename(destinationPath);
+    const destinationExt = getExt(destinationFilename);
+    const destinationNoExt = getWithoutExt(destinationFilename);
+    const importSourceSuffix = path.basename(importSource);
+    const importSourceSuffixHasExt = importSourceSuffix.includes('.');
+    let suffixToAdd = '';
+    if (!importSourceSuffixHasExt) {
+      // otherwise, it already points to a file
+      if (importSourceSuffix === destinationNoExt) {
+        // only extension is missing
+        suffixToAdd = `.${destinationExt}`;
+      }
+      if (destinationNoExt === 'index') {
+        // the index file is missing
+        suffixToAdd = `/index.${destinationExt}`;
+      }
+    }
+    return `node_modules/${importSource}${suffixToAdd}`;
+  };
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
   const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
+  const customResolvedPathsToProcess = R.uniqBy(JSON.stringify, component.customResolvedPaths).filter(customPath =>
+    isResolvePathsInvalid(customPath)
+  );
+  return customResolvedPathsToProcess.map((customPath) => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
-    const dest = getDestination(customPath.importSource);
+    const dest = getDestination(customPath);
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
@@ -371,9 +394,12 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const mainFileExt = getExt(mainFile);
   if (JAVASCRIPT_FLAVORS_EXTENSIONS.includes(mainFileExt) && component.packageJsonFile) {
-    // throw new Error('hi')
     // if the main file is a javascript kind of file and the component has package.json file, no
     // need for an entry-point file because the "main" attribute of package.json takes care of that
+    return [];
+  }
+  if (EXTENSIONS_NOT_SUPPORT_DIRS.includes(mainFileExt)) {
+    // some extensions (such as .scss according to node-sass) don't know to resolve by an entry-point
     return [];
   }
   const files = [];
@@ -425,13 +451,22 @@ async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
-  consumer: Consumer,
-  bitMap: BitMap
+  consumer: ?Consumer,
+  bitMap: BitMap,
+  componentWithDependencies?: ComponentWithDependencies
 ): Promise<LinkFile[]> {
-  // @todo: isolate consumer from this function for the Capsule.
-  if (!consumer) throw new Error('getLinksByDependencies expects to get Consumer');
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
+    const getDependencyComponent = async (): Promise<?Component> => {
+      if (componentWithDependencies) {
+        return componentWithDependencies.allDependencies.find(d => d.id.isEqual(dependency.id));
+      }
+      if (!consumer) {
+        throw new Error('getLinksByDependencies expects to get Consumer or componentWithDependencies');
+      }
+      return consumer.loadComponentFromModel(dependency.id);
+    };
+    const dependencyComponent = await getDependencyComponent();
+    if (!dependencyComponent) throw new Error(`getLinksByDependencies failed finding ${dependency.id}`);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,

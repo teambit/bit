@@ -7,10 +7,9 @@ import BitIds from '../../bit-id/bit-ids';
 import BitId from '../../bit-id/bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 
-export default (async function loadFlattenedDependencies(
+export default (async function loadFlattenedDependenciesForCapsule(
   consumer: Consumer,
-  component: Component,
-  forCapsule: boolean = false
+  component: Component
 ): Promise<ComponentWithDependencies> {
   const dependencies = await loadManyDependencies(component.dependencies.getAllIds());
   const devDependencies = await loadManyDependencies(component.devDependencies.getAllIds());
@@ -38,10 +37,17 @@ export default (async function loadFlattenedDependencies(
     const componentMap = consumer.bitMap.getComponentIfExist(dependencyId);
     const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     if (couldBeModified) {
-      return forCapsule ? consumer.loadComponentForCapsule(dependencyId) : consumer.loadComponent(dependencyId);
+      return consumer.loadComponentForCapsule(dependencyId);
     }
-    const componentFromModel = await consumer.loadComponentFromModel(dependencyId);
-    return forCapsule ? componentFromModel.clone() : componentFromModel;
+    // for capsule, a dependency might have been installed as a package in the workspace, and as
+    // such doesn't have a componentMap, which result in not stripping the sharedDir.
+    // using the loadComponentWithDependenciesFromModel, all dependencies are loaded and their
+    // shared dir is stripped. (see e2e-test of 'isolating with capsule' in dependencies-as-packages.e2e file)
+    const componentWithDependenciesFromModel = await consumer.loadComponentWithDependenciesFromModel(
+      dependencyId,
+      false
+    );
+    return componentWithDependenciesFromModel.component.clone();
   }
 
   async function loadFlattened(deps: Component[]) {

@@ -24,6 +24,11 @@ export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): Bi
   if (R.isEmpty(allVersionsForId)) return bitId;
 
   const maxVersion = semver.maxSatisfying(allVersionsForId, '*');
+  if (!maxVersion) {
+    throw new Error(
+      `semver was not able to find the highest version among the following: ${allVersionsForId.join(', ')}`
+    );
+  }
   const bitIdWithMaxVersion = bitId.changeVersion(maxVersion);
   const result = ignoreScope ? bitIds.searchWithoutScope(bitIdWithMaxVersion) : bitIds.search(bitIdWithMaxVersion);
   if (!result) {

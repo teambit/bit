@@ -8,18 +8,22 @@ import Repository from './objects/repository';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
 import type ConsumerComponent from '../consumer/component';
-import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import CustomError from '../error/custom-error';
+import ShowDoctorError from '../error/show-doctor-error';
 
 export default class ComponentVersion {
-  component: ModelComponent;
-  version: string;
+  +component: ModelComponent;
+  +version: string;
 
   constructor(component: ModelComponent, version: string) {
+    if (!version) {
+      throw new TypeError(`ComponentVersion expects "version" to be defined (failed for ${component.id()})`);
+    }
     this.component = component;
     this.version = version;
+    Object.freeze(this);
   }
 
   getVersion(repository: Repository): Promise<Version> {
@@ -61,7 +65,7 @@ export default class ComponentVersion {
 
   async toObjects(repo: Repository, clientVersion: ?string): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
-    if (!version) throw new GeneralError(`failed loading version ${this.version} of ${this.component.id()}`);
+    if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
     // and the client has < 15, the client will get anyway an error to upgrade the version
     if (clientVersion && version.overrides && !R.isEmpty(version.overrides) && semver.lt(clientVersion, '14.1.0')) {
@@ -77,7 +81,7 @@ Please upgrade your bit client to version >= v14.1.0`);
       ]);
       return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
     } catch (err) {
-      logger.error(err);
+      logger.error('component-version.toObjects got an error', err);
       const originalVersionHash = this.component.versions[this.version].toString();
       const currentVersionHash = version.hash().toString();
       if (originalVersionHash !== currentVersionHash) {

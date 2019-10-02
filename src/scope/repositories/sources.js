@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import type Scope from '../scope';
@@ -146,7 +145,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
-        const dist = source.dist ? Source.from(bufferFrom(source.dist.toString())) : null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
         return objectRepo.persist();
@@ -275,8 +274,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedCompilerDependencies,
     flattenedTesterDependencies,
     message,
-    exactVersion,
-    releaseType,
     specsResults
   }: {
     source: ConsumerComponent,
@@ -286,8 +283,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedCompilerDependencies: BitIds,
     flattenedTesterDependencies: BitIds,
     message: string,
-    exactVersion: ?string,
-    releaseType: string,
     specsResults?: any
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
@@ -314,7 +309,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedTesterDependencies,
       specsResults
     });
-    component.addVersion(version, releaseType, exactVersion);
+    component.addVersion(version, source.version);
     objectRepo.add(version).add(component);
 
     files.forEach(file => objectRepo.add(file.file));
@@ -329,7 +324,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     version: Version,
     message: string,
-    releaseType: string = DEFAULT_BIT_RELEASE_TYPE
+    versionToAdd: string
   ): Promise<ModelComponent> {
     const [username, email] = await Promise.all([
       globalConfig.get(CFG_USER_NAME_KEY),
@@ -341,7 +336,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       email,
       date: Date.now().toString()
     };
-    component.addVersion(version, releaseType);
+    component.addVersion(version, versionToAdd);
     return this.put({ component, objects: [version] });
   }
 

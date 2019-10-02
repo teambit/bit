@@ -8,13 +8,14 @@ import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
 import { BitId } from '../../../bit-id';
+import ComponentsPendingImport from '../../../consumer/component-ops/exceptions/components-pending-import';
 
 export type StatusResult = {
   newComponents: Component[],
   modifiedComponent: Component[],
   stagedComponents: ModelComponent[],
   componentsWithMissingDeps: Component[],
-  importPendingComponents: Component[],
+  importPendingComponents: BitId[],
   autoTagPendingComponents: string[],
   invalidComponents: InvalidComponents[],
   outdatedComponents: Component[]
@@ -24,13 +25,18 @@ export default (async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
-  const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
-  const { newComponents, importPendingComponents } = newAndImportPendingComponents;
+  // $FlowFixMe
+  const newComponents: Component[] = await componentsList.listNewComponents(true);
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
-  const invalidComponents = await componentsList.listInvalidComponents();
+  // $FlowFixMe
+  const allInvalidComponents = await componentsList.listInvalidComponents();
+  const importPendingComponents = allInvalidComponents
+    .filter(c => c.error instanceof ComponentsPendingImport)
+    .map(i => i.id);
+  const invalidComponents = allInvalidComponents.filter(c => !(c.error instanceof ComponentsPendingImport));
   const outdatedComponents = await componentsList.listOutdatedComponents();
 
   // Run over the components to check if there is missing dependencies

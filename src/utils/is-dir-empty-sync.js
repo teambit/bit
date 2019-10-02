@@ -1,6 +1,6 @@
 /** @flow */
-import fs from 'fs-extra';
+import { readDirSyncIgnoreDsStore } from './fs/read-dir-ignore-ds-store';
 
 export default function isDirEmptySync(dirPath: string): boolean {
-  return !fs.readdirSync(dirPath).length;
+  return !readDirSyncIgnoreDsStore(dirPath).length;
 }

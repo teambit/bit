@@ -6,9 +6,10 @@ import type Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
+import type { InvalidComponent } from '../component/consumer-component';
 import { BitId, BitIds } from '../../bit-id';
 import BitMap from '../bit-map/bit-map';
-import type Consumer from '../consumer';
+import Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
@@ -31,7 +32,7 @@ export default class ComponentsList {
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
   _fromObjectsIds: BitId[];
   _modelComponents: ModelComponent[];
-  _invalidComponents: string[];
+  _invalidComponents: InvalidComponent[];
   _modifiedComponents: Component[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
@@ -63,7 +64,7 @@ export default class ComponentsList {
     return this._fromObjectsIds;
   }
 
-  async _getAuthoredAndImportedFromFS(): Promise<Component[]> {
+  async getAuthoredAndImportedFromFS(): Promise<Component[]> {
     let [authored, imported] = await Promise.all([
       this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
       this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
@@ -82,7 +83,7 @@ export default class ComponentsList {
    */
   async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
-      const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+      const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
       this._modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
         return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
       });
@@ -92,7 +93,7 @@ export default class ComponentsList {
   }
 
   async listOutdatedComponents(): Promise<Component[]> {
-    const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+    const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
     return fileSystemComponents.filter((component) => {
       const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
@@ -121,7 +122,7 @@ export default class ComponentsList {
   }
 
   async authoredAndImportedComponents(): Promise<Component[]> {
-    return this._getAuthoredAndImportedFromFS();
+    return this.getAuthoredAndImportedFromFS();
   }
 
   async idsFromObjects(): Promise<BitIds> {
@@ -150,24 +151,6 @@ export default class ComponentsList {
 
     const { components } = await this.consumer.loadComponents(newComponentsIds, false);
     return components;
-  }
-
-  /**
-   * Authored exported components (easily identified by having a scope) which are not saved in the model are
-   * import-pending. Exclude them from the 'newComponents' and add them to 'importPendingComponents'.
-   */
-  async listNewComponentsAndImportPending() {
-    const allNewComponents: Component[] = await this.listNewComponents(true);
-    const newComponents = [];
-    const importPendingComponents = [];
-    allNewComponents.forEach((component) => {
-      if (component.id.scope) {
-        importPendingComponents.push(component);
-      } else {
-        newComponents.push(component);
-      }
-    });
-    return { newComponents, importPendingComponents };
   }
 
   async listCommitPendingOfAllScope(
@@ -209,6 +192,14 @@ export default class ComponentsList {
     const pendingExportComponents = modelComponents.filter(component => component.isLocallyChanged());
     const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
+  }
+
+  async listNonNewComponentsIds(): Promise<BitIds> {
+    const authoredAndImported = await this.getAuthoredAndImportedFromFS();
+    // $FlowFixMe
+    const newComponents: BitIds = await this.listNewComponents();
+    const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
+    return BitIds.fromArray(nonNewComponents.map(c => c.id));
   }
 
   async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
@@ -299,9 +290,16 @@ export default class ComponentsList {
   /**
    * get called when the Consumer is available, shows also components from remote scopes
    */
-  async listScope(showRemoteVersion: boolean, includeNested: boolean): Promise<ListScopeResult[]> {
+  async listScope(
+    showRemoteVersion: boolean,
+    includeNested: boolean,
+    namespacesUsingWildcards?: string
+  ): Promise<ListScopeResult[]> {
     const components: ModelComponent[] = await this.getModelComponents();
-    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const componentsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
+      : components;
+    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated

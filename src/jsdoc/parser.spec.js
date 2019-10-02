@@ -9,10 +9,10 @@ describe('JSDoc Parser', () => {
   describe('parse()', () => {
     describe('Function Declaration', function () {
       let doclet;
-      before(() => {
+      before(async () => {
         const functionDeclarationFile = path.join(fixtures, 'functionDeclaration.js');
         const functionDeclaration = fs.readFileSync(functionDeclarationFile).toString();
-        const doclets = parser(functionDeclaration);
+        const doclets = await parser(functionDeclaration);
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(1);
         doclet = doclets[0];
@@ -54,8 +54,8 @@ describe('JSDoc Parser', () => {
     });
 
     describe('Invalid code', () => {
-      it('should returns an empty array', () => {
-        const doclets = parser('this is an invalid code');
+      it('should returns an empty array', async () => {
+        const doclets = await parser('this is an invalid code');
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(0);
       });
@@ -63,10 +63,10 @@ describe('JSDoc Parser', () => {
 
     describe('Method Declaration and Class Declaration', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const methodDeclarationFile = path.join(fixtures, 'methodDeclaration.js');
         const methodDeclaration = fs.readFileSync(methodDeclarationFile).toString();
-        doclets = parser(methodDeclaration);
+        doclets = await parser(methodDeclaration);
       });
       it('should be a populated array', () => {
         expect(doclets).to.be.an('array');
@@ -158,10 +158,10 @@ describe('JSDoc Parser', () => {
 
     describe('Variable Declaration', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const variableDeclarationFile = path.join(fixtures, 'variableDeclaration.js');
         const variableDeclaration = fs.readFileSync(variableDeclarationFile).toString();
-        doclets = parser(variableDeclaration);
+        doclets = await parser(variableDeclaration);
       });
       it('should be an array of one Doclet', () => {
         expect(doclets)
@@ -195,9 +195,9 @@ describe('JSDoc Parser', () => {
 
     describe('Various Param Types', () => {
       let args;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'variousParamTypes.js');
-        const doclets = parser(fs.readFileSync(file).toString());
+        const doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
           .and.to.have.lengthOf(1);
@@ -251,9 +251,9 @@ describe('JSDoc Parser', () => {
     });
 
     describe('Flow Type File', () => {
-      it('should parse the file with no errors', () => {
+      it('should parse the file with no errors', async () => {
         const file = path.join(fixtures, 'flowTypeFile.js');
-        const doclets = parser(fs.readFileSync(file).toString());
+        const doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
           .and.to.have.lengthOf(1);
@@ -283,9 +283,9 @@ describe('JSDoc Parser', () => {
 
     describe('Description Tag', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'descriptionTag.js');
-        doclets = parser(fs.readFileSync(file).toString());
+        doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
           .and.to.have.lengthOf(3);
@@ -311,9 +311,9 @@ describe('JSDoc Parser', () => {
 
     describe('Access property', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'misc.js');
-        doclets = parser(fs.readFileSync(file).toString());
+        doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
       it('should find only public functions', () => {
@@ -324,9 +324,9 @@ describe('JSDoc Parser', () => {
 
     describe('Properties property', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'properties.js');
-        doclets = parser(fs.readFileSync(file).toString());
+        doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
       it('should parse the property tag correctly', () => {
@@ -343,9 +343,9 @@ describe('JSDoc Parser', () => {
 
     describe('Doc ending with more than one star', () => {
       let doclets;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'endWithTwoStars.js');
-        doclets = parser(fs.readFileSync(file).toString());
+        doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
       it('should parse the doc and not hang due to catastrophic backtracking', () => {
@@ -358,9 +358,9 @@ describe('JSDoc Parser', () => {
 
     describe('React Docs', () => {
       let doclet;
-      before(() => {
+      before(async () => {
         const file = path.join(fixtures, 'react-docs.js');
-        doclet = parser(fs.readFileSync(file).toString());
+        doclet = await parser(fs.readFileSync(file).toString());
         expect(doclet).to.be.an('object');
       });
       it('should have properties parsed', () => {

@@ -1,7 +1,7 @@
 // @flow
 import BitObject from '../objects/object';
 import type Ref from '../objects/ref';
-import { bufferFrom, getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '../../utils';
 
 type ScopeMetaProps = {
   name: string,
@@ -35,7 +35,7 @@ export default class ScopeMeta extends BitObject {
   }
 
   toBuffer(pretty): Buffer {
-    return bufferFrom(this.toString(pretty));
+    return Buffer.from(this.toString(pretty));
   }
 
   static fromScopeName(name: string): Ref {

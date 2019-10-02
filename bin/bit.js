@@ -3,10 +3,11 @@
 // require('v8-compile-cache');
 
 const constants = require('../dist/constants');
+const { printWarning } = require('../dist/logger/logger');
 
 const MINIMUM_NODE_VERSION = '8.12.0';
 
-// set max listeners to a more appripriate numbers
+// set max listeners to a more appropriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
 
@@ -21,18 +22,28 @@ const chalk = require('chalk');
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
 
+warnIfRunningAsRoot();
+
 function ensureDirectories() {
   mkdirp.sync(constants.GLOBAL_CONFIG);
   mkdirp.sync(constants.GLOBAL_LOGS);
 }
 
+function warnIfRunningAsRoot() {
+  const isRoot = process.getuid && process.getuid() === 0;
+  if (isRoot) {
+    printWarning('running bit as root might cause permission issues later');
+  }
+}
+
 function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
     console.log(
+      // eslint-disable-line
       require('chalk').red(
         `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
       )
-    ); // eslint-disable-line
+    );
     return process.exit();
   }
 

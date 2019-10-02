@@ -12,13 +12,14 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import logger from '../../logger/logger';
-import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
+import BitMap from '../bit-map/bit-map';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 /**
  * Add components as dependencies to root package.json
@@ -28,7 +29,7 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
     const componentMap = consumer.bitMap.getComponent(component.id);
     if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return acc;
     if (!componentMap.rootDir) {
-      throw new GeneralError(`rootDir is missing from an imported component ${component.id.toString()}`);
+      throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
     }
     const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
     const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
@@ -98,27 +99,8 @@ export async function changeDependenciesToRelativeSyntax(
   }
 }
 
-export async function write(
-  consumer: Consumer,
-  component: Component,
-  bitDir: string,
-  writeBitDependencies?: boolean = false,
-  excludeRegistryPrefix?: boolean
-): Promise<PackageJsonFile> {
-  const { packageJson, distPackageJson } = preparePackageJsonToWrite(
-    consumer,
-    component,
-    bitDir,
-    writeBitDependencies,
-    excludeRegistryPrefix
-  );
-  await packageJson.write();
-  if (distPackageJson) await distPackageJson.write();
-  return packageJson;
-}
-
 export function preparePackageJsonToWrite(
-  consumer: ?Consumer,
+  bitMap: BitMap,
   component: Component,
   bitDir: string,
   override?: boolean = true,
@@ -129,7 +111,7 @@ export function preparePackageJsonToWrite(
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = consumer ? getPackageDependency(consumer, dep.id, component.id) : null;
+      const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
       acc[packageName] = packageDependency;
       return acc;
@@ -150,7 +132,7 @@ export function preparePackageJsonToWrite(
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
-    if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
+    if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
     distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
     const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
     distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
@@ -253,15 +235,15 @@ function getPackageDependencyValue(
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
   if (!dependencyRootDir) {
-    throw new GeneralError(`rootDir is missing from an imported component ${dependencyId.toString()}`);
+    throw new Error(`rootDir is missing from an imported component ${dependencyId.toString()}`);
   }
-  if (!parentComponentMap.rootDir) throw new GeneralError('rootDir is missing from an imported component');
+  if (!parentComponentMap.rootDir) throw new Error('rootDir is missing from an imported component');
   const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): ?string {
-  const parentComponentMap = consumer.bitMap.getComponent(parentId);
-  const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
+function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): ?string {
+  const parentComponentMap = bitMap.getComponent(parentId);
+  const dependencyComponentMap = bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }

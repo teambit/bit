@@ -6,7 +6,7 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import { propogateUntil, currentDirName, pathHasAll, first } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   OBJECTS_DIR,
@@ -15,7 +15,8 @@ import {
   DEFAULT_BIT_VERSION,
   SCOPE_JSON,
   COMPONENT_ORIGINS,
-  NODE_PATH_SEPARATOR
+  NODE_PATH_SEPARATOR,
+  CURRENT_UPSTREAM
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -96,7 +97,7 @@ export default class Scope {
 
   async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
-      this._dependencyGraph = await DependencyGraph.load(this);
+      this._dependencyGraph = await DependencyGraph.loadAllVersions(this);
     }
     return this._dependencyGraph;
   }
@@ -149,7 +150,7 @@ export default class Scope {
     }
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
-    const versions = fs.readdirSync(componentFullPath);
+    const versions = readDirSyncIgnoreDsStore(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*');
     return pathLib.join(relativePath, latestVersion);
   }
@@ -486,8 +487,7 @@ export default class Scope {
   }
 
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return this.getModelComponentIfExist(id).then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id.toString());
+    return this.getModelComponent(id).then((componentModel) => {
       return componentModel.collectLogs(this.objects);
     });
   }
@@ -688,6 +688,9 @@ export default class Scope {
   static ensure(path: PathOsBasedAbsolute, name: ?string, groupName: ?string): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
+    if (name === CURRENT_UPSTREAM) {
+      throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
+    }
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     const repository = Repository.create({ scopePath: path, scopeJson });
     return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));

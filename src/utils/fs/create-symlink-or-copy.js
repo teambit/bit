@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import symlinkOrCopy from 'symlink-or-copy';
 import logger from '../../logger/logger';
 import type { PathOsBased } from '../path';
-import GeneralError from '../../error/general-error';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 /**
  * @param srcPath the path where the symlink is pointing to
@@ -20,7 +20,7 @@ export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: Path
     symlinkOrCopy.sync(srcPath, destPath);
   } catch (err) {
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
-    throw new GeneralError(`${errorHeader}.
+    throw new ShowDoctorError(`${errorHeader}.
          Symlink (or maybe copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
   }

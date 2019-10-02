@@ -34,6 +34,14 @@ export default class BitIds extends Array<BitId> {
     return Boolean(this.searchWithoutVersion(bitId));
   }
 
+  hasWithoutScope(bitId: BitId): boolean {
+    return Boolean(this.searchWithoutScope(bitId));
+  }
+
+  hasWithoutScopeAndVersion(bitId: BitId): boolean {
+    return Boolean(this.searchWithoutScopeAndVersion(bitId));
+  }
+
   search(bitId: BitId): ?BitId {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
@@ -84,6 +92,20 @@ export default class BitIds extends Array<BitId> {
 
   toString(): string {
     return this.map(id => id.toString()).join(', ');
+  }
+
+  toGroupByScopeName(defaultScope?: ?string): { [scopeName: string]: BitIds } {
+    return this.reduce((acc, current) => {
+      const scopeName = current.scope || defaultScope;
+      if (!scopeName) {
+        throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
+      }
+      // $FlowFixMe
+      if (acc[scopeName]) acc[scopeName].push(current);
+      // $FlowFixMe
+      else acc[scopeName] = new BitIds(current);
+      return acc;
+    }, {});
   }
 
   static fromObject(dependencies: { [string]: string }) {

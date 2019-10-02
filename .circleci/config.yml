@@ -1,11 +1,31 @@
+default_image: &default_image
+  docker:
+    - image: circleci/node:8.12.0
+
+default_resource_class: &default_resource_class
+  resource_class: small
+
+default_working_dir: &default_working_dir
+  working_directory: ~/bit
+
+defaults: &defaults
+  <<: *default_image
+  <<: *default_resource_class
+  <<: *default_working_dir
+
+semver_tags_only_filters: &semver_tags_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /^v[0-9]+(\.[0-9]+)*$/
+
 version: 2
 jobs:
   checkout_code:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       - checkout
       -
@@ -23,10 +43,7 @@ jobs:
             - bit
             - bit-javascript
   set_ssh_key:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
+    <<: *defaults
     working_directory: ~/.ssh
     steps:
       -
@@ -44,11 +61,7 @@ jobs:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
   set_bitsrc_registry:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small        
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       # prod registry
       # -
@@ -67,11 +80,7 @@ jobs:
           paths:
             - ~/.npmrc
   install_npm_deps:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     # skipping the pre-built binaries to make sure we build them by the pack step
     # testing the install script will be done in different workflow dedicated for this
     environment:
@@ -79,20 +88,20 @@ jobs:
       # SKIP_LOCAL_BUILD_BINARY: true
     steps:
       -
+        attach_workspace:
+          at: ./
+      -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
-          at: ./
       # -
       #   restore_cache:
       #     keys:
       #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      -
-        run:
-          name: 'install pkg to support local build'
-          command: 'sudo npm install -g pkg'
+      # -
+      #   run:
+      #     name: 'install pkg to support local build'
+      #     command: 'sudo npm install -g pkg@4.4.0'
       -
         run:
           name: 'Install npm dependencies'
@@ -109,11 +118,7 @@ jobs:
             - bit/node_modules
             - bit/releases
   install_bit_javascript_npm_deps:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
@@ -127,20 +132,38 @@ jobs:
           root: .
           paths:
             - bit-javascript/node_modules
-  build:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+  validate-git-tag-and-version: 
+    <<: *defaults
     steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      -
+        run:
+          name: 'installing semver tool'
+          command: 'sudo npm i -g semver'
+      -
+        run:
+          name: 'validate version in package.json does not contains pre release tags'
+          # This will return code 1 when the version contains pre release tags
+          command: 'semver $BIT_VERSION -r x.x.x'
+      -
+        run:
+          name: 'validate tag match version in package.json'
+          command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_VERSION'
+  build:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
       -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        attach_workspace:
-          at: ./
       -
         run:
           name: 'Build bit source code'
@@ -151,63 +174,141 @@ jobs:
           paths:
             - bit/dist
   pack:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg'
-      -
-        run:
-          name: 'save pkg targets names'
-          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
+        run: 'sudo npm i -g pkg@4.4.0'
+      # -
+      #   run:
+      #     name: 'save pkg targets names'
+      #     command: 'cat ./bit/package.json | jq .scripts.pkg:all | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
       -
         restore_cache:
           keys:
-            - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            # - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v2
       -
         run:
           name: 'set pkg path'
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
-      -
-        run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && sudo npm link ../bit-javascript'
+      # -
+      #   run:
+      #     name: 'npm link bit-javascript to bit'
+      #     command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'Pack bit'
-          command: 'cd bit && npm run pkg'
-      -
-        save_cache:
-          key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
-          paths:
-            - ~/pkg-cache
+          command: 'cd bit && npm run pkg:all'
+      # -
+      #   save_cache:
+      #     key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+      #     paths:
+      #       - ~/pkg-cache
       -
         save_cache:
           key: pkg-cache-v2
           paths:
             - /home/circleci/pkg-cache
-      -
-        run:
-          name: 'copy unsuported files'
-          command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+      # -
+      #   run:
+      #     name: 'copy unsuported files'
+      #     command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
       -
         persist_to_workspace:
           root: .
           paths:
             - bit/releases
-  build_bit_javascript:
+  npm-publish: 
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
+      -
+        run: 
+          name: Publish bit to the npm registry
+          command: 'cd bit && npm publish'
+  github-release: 
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      # - run:
+      #     name: set GitHub token
+      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      -
+        run: 'cd bit && npm run release:circle'
+  build-debian: 
+    <<: *defaults
     docker:
       -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+        image: 'bitcli/debian-artifact-builder:latest'
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 
+          name: Build debian file
+          command: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases/deb
+  build-rpm: 
+    <<: *defaults
+    docker:
+      -
+        image: 'bitcli/rpm-artifact-builder:latest'
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: Build rpm file
+          command: 'cd bit && ./scripts/linux/centos/build-linux-rpm.sh'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases/rpm
+  publish_to_jfrog: 
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: print bit version
+          command: cd bit && cat ./package.json | jq .version -r 
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: Install jFrog CLI
+          command: curl -fL https://getcli.jfrog.io | sh
+      - run:
+          name: Configure jfrog auth
+          command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
+      -
+        run:
+          name: Upload debian file
+          command: ./jfrog rt u "bit/releases/deb/*.deb" bit-deb/stable/${BIT_VERSION}/bit_${BIT_VERSION}_amd64.deb --build-name bit_${BIT_VERSION}_amd64.deb --build-number $CIRCLE_BUILD_NUM --deb "all/stable/amd64" --flat=false
+      -
+        run:
+          name: Upload rpm file
+          command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+  build_bit_javascript:
+    <<: *defaults
     steps:
       -
         run:
@@ -226,11 +327,7 @@ jobs:
           paths:
             - bit-javascript/dist
   unit_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         run:
@@ -255,11 +352,7 @@ jobs:
         store_artifacts:
           path: bit/junit
   unit_test_bit_javascript:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     steps:
       -
         run:
@@ -284,11 +377,8 @@ jobs:
         store_artifacts:
           path: bit-javascript/junit
   lint:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
+    resource_class: medium
     steps:
       -
         run:
@@ -312,11 +402,7 @@ jobs:
         store_artifacts:
           path: bit/junit
   e2e_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    resource_class: small    
-    working_directory: ~/bit
+    <<: *defaults
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -371,12 +457,12 @@ jobs:
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
         run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && sudo npm link ../bit-javascript'
-      -
-        run:
           name: 'npm link bit to global'
           command: cd bit && npm link
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run: which bit
       -
@@ -421,10 +507,8 @@ jobs:
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
   performance_e2e_test:
-    docker:
-      -
-        image: 'circleci/node:8.12.0'
-    working_directory: ~/bit
+    <<: *defaults
+    resource_class: medium
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
@@ -532,7 +616,56 @@ workflows:
           requires:
             - build
             - build_bit_javascript
-
+  deploy:
+    jobs:
+      - checkout_code:
+          <<: *semver_tags_only_filters
+      -
+        validate-git-tag-and-version:
+          <<: *semver_tags_only_filters
+          requires:
+            - checkout_code
+      -
+        install_npm_deps:
+          <<: *semver_tags_only_filters
+          requires:
+            - validate-git-tag-and-version
+            - checkout_code
+      -
+        build:
+          <<: *semver_tags_only_filters
+          requires:
+            - install_npm_deps
+      -
+        npm-publish:
+          <<: *semver_tags_only_filters
+          requires:
+            - build
+      -
+        pack:
+          <<: *semver_tags_only_filters
+          requires:
+            - build
+      -
+        github-release:
+          <<: *semver_tags_only_filters
+          requires:
+            - pack
+      -
+        build-rpm:
+          <<: *semver_tags_only_filters
+          requires:
+            - pack
+      -
+        build-debian:
+          <<: *semver_tags_only_filters
+          requires:
+            - pack
+        publish_to_jfrog:
+          <<: *semver_tags_only_filters
+          requires:
+            - build-debian
+            - build-rpm
   performance_tests:
     triggers:
       - schedule:

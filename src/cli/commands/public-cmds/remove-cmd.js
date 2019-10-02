@@ -5,23 +5,27 @@ import { remove } from '../../../api/consumer';
 import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-components';
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
   description = `remove a component (local/remote)
   https://${BASE_DOCS_DOMAIN}/docs/removing-components.html
-  the id can be used with wildcards (e.g. bit remove "utils/*")`;
+  ${WILDCARD_HELP('remove')}`;
   alias = 'rm';
   opts = [
-    ['f', 'force [boolean]', 'force remove (default = false)'],
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
     [
       'd',
       'delete-files [boolean]',
       'delete local component files (authored components only. for imported components the files are always deleted)'
+    ],
+    [
+      'f',
+      'force [boolean]',
+      'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
     ['s', 'silent [boolean]', 'skip confirmation']
   ];

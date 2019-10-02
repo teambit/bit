@@ -8,17 +8,14 @@ import logger from '../../logger/logger';
 import {
   BIT_MAP,
   OLD_BIT_MAP,
-  DEFAULT_INDEX_NAME,
   COMPONENT_ORIGINS,
-  DEFAULT_SEPARATOR,
-  DEFAULT_INDEX_EXTS,
   BIT_VERSION,
   VERSION_DELIMITER,
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   COMPONENT_DIR
 } from '../../constants';
-import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
+import { InvalidBitMap, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import {
   outputFile,
@@ -33,11 +30,11 @@ import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
-import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
 import WorkspaceConfig from '../config/workspace-config';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -76,13 +73,15 @@ export default class BitMap {
   setComponent(bitId: BitId, componentMap: ComponentMap) {
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
+      throw new ShowDoctorError(
+        `invalid bitmap id ${id}, a component must have a version when a scope-name is included`
+      );
     }
     if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
       // make sure there are no duplications (same name)
       const similarIds = this.findSimilarIds(bitId, true);
       if (similarIds.length) {
-        throw new GeneralError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+        throw new ShowDoctorError(`your id ${id} is duplicated with ${similarIds.toString()}`);
       }
     }
 
@@ -121,7 +120,7 @@ export default class BitMap {
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
     } catch (e) {
-      logger.error(e);
+      logger.error(`invalid bitmap at ${currentLocation}`, e);
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const version = componentsJson.version;
@@ -488,50 +487,6 @@ export default class BitMap {
     return path.relative(this.projectRoot, absolutePath);
   }
 
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], rootDir: ?PathLinux): ?PathLinux {
-    // search for an exact relative-path
-    let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
-    if (mainFileFromFiles) return baseMainFile;
-    if (rootDir) {
-      const mainFileUsingRootDir = files.find(file => pathJoinLinux(rootDir, file.relativePath) === baseMainFile);
-      if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
-    }
-    // search for a file-name
-    const potentialMainFiles = files.filter(file => file.name === baseMainFile);
-    if (!potentialMainFiles.length) return null;
-    // when there are several files that met the criteria, choose the closer to the root
-    const sortByNumOfDirs = (a, b) =>
-      a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
-    potentialMainFiles.sort(sortByNumOfDirs);
-    mainFileFromFiles = R.head(potentialMainFiles);
-    return mainFileFromFiles.relativePath;
-  }
-
-  _getMainFile(mainFile?: PathLinux, componentIdStr: string): PathLinux {
-    const componentMap: ComponentMap = this.components[componentIdStr];
-    const files = componentMap.files.filter(file => !file.test);
-    // scenario 1) user entered mainFile => search the mainFile in the files array
-    if (mainFile) {
-      const foundMainFile = this._searchMainFile(mainFile, files, componentMap.rootDir);
-      if (foundMainFile) return foundMainFile;
-      throw new MissingMainFile(componentIdStr, mainFile, files.map(file => path.normalize(file.relativePath)));
-    }
-    // scenario 2) user didn't enter mainFile and the component has only one file => use that file as the main file.
-    if (files.length === 1) return files[0].relativePath;
-    // scenario 3) user didn't enter mainFile and the component has multiple files => search for default main files (such as index.js)
-    let searchResult;
-    DEFAULT_INDEX_EXTS.forEach((ext) => {
-      // TODO: can be improved - stop loop if finding main file
-      if (!searchResult) {
-        const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
-        searchResult = this._searchMainFile(mainFileNameToSearch, files, componentMap.rootDir);
-      }
-    });
-    if (searchResult) return searchResult;
-    const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-    throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
-  }
-
   /**
    * find ids that have the same name but different version
    * if compareWithoutScope is false, the scope should be identical in addition to the name
@@ -624,11 +579,11 @@ export default class BitMap {
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
-    mainFile?: PathOsBased,
+    mainFile: PathLinux,
     origin: ComponentOrigin,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
-    trackDir?: PathOsBased,
+    trackDir?: ?PathOsBased,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
@@ -637,9 +592,6 @@ export default class BitMap {
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       this.components[componentIdStr].files = files;
-      if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
-      }
     } else {
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
         // if there are older versions, the user is updating an existing component, delete old ones from bit.map
@@ -649,8 +601,8 @@ export default class BitMap {
       const componentMap = new ComponentMap({ files, origin });
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, componentMap);
-      this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
     }
+    this.components[componentIdStr].mainFile = mainFile;
     if (rootDir) {
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootDir);
     }
@@ -674,7 +626,7 @@ export default class BitMap {
   addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
     if (!this.components[componentIdStr]) {
-      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
+      throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
     this.components[componentIdStr].files = files;
@@ -709,8 +661,8 @@ export default class BitMap {
     return ids.map(id => this.removeComponent(id));
   }
 
-  isExistWithSameVersion(id: BitId) {
-    return id.hasVersion() && this.components[id.toString()];
+  isExistWithSameVersion(id: BitId): boolean {
+    return Boolean(id.hasVersion() && this.components[id.toString()]);
   }
 
   /**
@@ -727,7 +679,7 @@ export default class BitMap {
       return id;
     }
     if (similarIds.length > 1) {
-      throw new GeneralError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
+      throw new ShowDoctorError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
     const oldId: BitId = similarIds[0];
@@ -817,7 +769,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new GeneralError(errorMsg);
+      throw new ShowDoctorError(errorMsg);
     }
 
     this.markAsChanged();

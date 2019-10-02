@@ -1,6 +1,6 @@
 /** @flow */
 import semver from 'semver';
-import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
+import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
@@ -28,6 +28,8 @@ import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
+import ShowDoctorError from '../../error/show-doctor-error';
+import ValidationError from '../../error/validation-error';
 
 type State = {
   versions?: {
@@ -38,6 +40,7 @@ type State = {
 };
 
 type Versions = { [string]: Ref };
+export type ScopeListItem = { url: string, name: string, date: string };
 
 export type ComponentProps = {
   scope: ?string,
@@ -50,7 +53,8 @@ export type ComponentProps = {
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */
   local?: boolean, // get deleted after export
-  state?: State // get deleted after export
+  state?: State, // get deleted after export
+  scopesList?: ScopeListItem[]
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -68,6 +72,7 @@ export default class Component extends BitObject {
   bindingPrefix: string;
   local: ?boolean;
   state: State;
+  scopesList: ScopeListItem[];
 
   constructor(props: ComponentProps) {
     super();
@@ -80,6 +85,7 @@ export default class Component extends BitObject {
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.local = props.local;
     this.state = props.state || {};
+    this.scopesList = props.scopesList || [];
   }
 
   get versionArray(): Ref[] {
@@ -98,6 +104,20 @@ export default class Component extends BitObject {
 
   hasVersion(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  /**
+   * add a new remote if it is not there already
+   */
+  addScopeListItem(scopeListItem: ScopeListItem): void {
+    if (!scopeListItem.name || !scopeListItem.url || !scopeListItem.date) {
+      throw new TypeError(
+        `model-component.addRemote get an invalid remote. name: ${scopeListItem.name}, url: ${scopeListItem.url}, date: ${scopeListItem.date}`
+      );
+    }
+    if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
+      this.scopesList.push(scopeListItem);
+    }
   }
 
   /**
@@ -160,11 +180,12 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return repo.findMany(this.versionArray).then((versions) => {
-      const indexedLogs = fromPairs(zip(keys(this.versions), map(prop('log'), versions)));
-      return indexedLogs;
-    });
+  async collectLogs(repo: Repository): Promise<{ [number]: ?{ message: string, date: string, hash: string } }> {
+    // $FlowFixMe
+    const versions: Version[] = await repo.findMany(this.versionArray);
+    const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
+    const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
+    return indexedLogs;
   }
 
   /**
@@ -178,6 +199,9 @@ export default class Component extends BitObject {
     );
   }
 
+  /**
+   * if exactVersion is defined, add exact version instead of using the semver mechanism
+   */
   getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
@@ -185,11 +209,7 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
-  /**
-   * if exactVersion is defined, add exact version instead of using the semver mechanism
-   */
-  addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
-    const versionToAdd = this.getVersionToAdd(releaseType, exactVersion);
+  addVersion(version: Version, versionToAdd: string): string {
     this.versions[versionToAdd] = version.hash();
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
@@ -233,7 +253,8 @@ export default class Component extends BitObject {
       versions: versions(this.versions),
       lang: this.lang,
       deprecated: this.deprecated,
-      bindingPrefix: this.bindingPrefix
+      bindingPrefix: this.bindingPrefix,
+      remotes: this.scopesList
     };
     if (this.local) componentObject.local = this.local;
     if (!isEmpty(this.state)) componentObject.state = this.state;
@@ -273,7 +294,7 @@ export default class Component extends BitObject {
     const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
     }
@@ -300,7 +321,7 @@ export default class Component extends BitObject {
     const loadFileInstance = ClassName => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = ((await loadP: any): Source);
-      if (!content) throw new GeneralError(`failed loading file ${file.relativePath} from the model`);
+      if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
@@ -355,7 +376,8 @@ export default class Component extends BitObject {
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
-      deprecated: this.deprecated
+      deprecated: this.deprecated,
+      scopesList: clone(this.scopesList)
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
@@ -431,7 +453,8 @@ export default class Component extends BitObject {
       deprecated: rawComponent.deprecated,
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
-      state: rawComponent.state
+      state: rawComponent.state,
+      scopesList: rawComponent.remotes
     });
   }
 
@@ -448,7 +471,14 @@ export default class Component extends BitObject {
   }
 
   validate(): void {
-    const message = 'unable to save Component object';
+    const message = `unable to save Component object "${this.id()}"`;
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (this.state && this.state.versions) {
+      Object.keys(this.state.versions).forEach((version) => {
+        if (!this.versions[version]) {
+          throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
+        }
+      });
+    }
   }
 }

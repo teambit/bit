@@ -1,0 +1,49 @@
+{
+  "name": "utils/is-type",
+  "version": "0.0.1",
+  "mainFile": "utils/is-type.scss",
+  "scope": "remote-scope",
+  "lang": "javascript",
+  "bindingPrefix": "@bit",
+  "compiler": null,
+  "tester": null,
+  "dependencies": [],
+  "devDependencies": [],
+  "compilerDependencies": [],
+  "testerDependencies": [],
+  "packageDependencies": {},
+  "devPackageDependencies": {},
+  "peerPackageDependencies": {},
+  "compilerPackageDependencies": {},
+  "testerPackageDependencies": {},
+  "files": [{
+      "stat": null,
+      "_contents": {
+          "type": "Buffer",
+          "data": [109, 111, 100, 117, 108, 101, 46, 101, 120, 112, 111, 114, 116, 115, 32, 61, 32, 102, 117, 110, 99, 116, 105, 111, 110, 32, 105, 115, 84, 121, 112, 101, 40, 41, 32, 123, 32, 114, 101, 116, 117, 114, 110, 32, 39, 103, 111, 116, 32, 105, 115, 45, 116, 121, 112, 101, 39, 59, 32, 125, 59]
+      },
+      "history": ["utils/is-type.scss"],
+      "_cwd": "/Users/davidfirst",
+      "_base": ".",
+      "_isVinyl": true,
+      "_symlink": null,
+      "test": false
+  }],
+  "docs": [],
+  "dists": {
+      "writeDistsFiles": true,
+      "areDistsInsideComponentDir": true,
+      "distEntryShouldBeStripped": false,
+      "_distsPathsAreUpdated": false,
+      "dists": []
+  },
+  "specsResults": null,
+  "license": null,
+  "log": {
+      "message": "tag-message",
+      "date": "1541588058327",
+      "username": "David First",
+      "email": "david@bit.dev"
+  },
+  "deprecated": false
+}

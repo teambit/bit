@@ -17,12 +17,13 @@ import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
+import InvalidPackageManager from './exceptions/invalid-package-manager';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
-type workspaceConfigProps = {
+export type WorkspaceConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   saveDependenciesAsComponents?: boolean,
@@ -40,6 +41,7 @@ type workspaceConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
+  defaultScope?: string,
   overrides?: ConsumerOverrides
 };
 
@@ -60,6 +62,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   resolveModules: ?ResolveModulesConfig;
   overrides: ConsumerOverrides;
   packageJsonObject: ?Object; // workspace package.json if exists (parsed)
+  defaultScope: ?string; // default remote scope to export to
 
   constructor({
     compiler,
@@ -79,12 +82,21 @@ export default class WorkspaceConfig extends AbstractConfig {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
+    defaultScope,
     overrides = ConsumerOverrides.load()
-  }: workspaceConfigProps) {
+  }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
+    if (packageManager !== 'npm' && packageManager !== 'yarn') {
+      throw new InvalidPackageManager(packageManager);
+    }
     this.distTarget = distTarget;
     this.distEntry = distEntry;
+
     this.componentsDefaultDirectory = componentsDefaultDirectory;
+    // Make sure we have the component name in the path. otherwise components will be imported to the same dir.
+    if (!componentsDefaultDirectory.includes('{name}')) {
+      this.componentsDefaultDirectory = `${this.componentsDefaultDirectory}/{name}`;
+    }
     this.dependenciesDirectory = dependenciesDirectory;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;
@@ -94,6 +106,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
     this.resolveModules = resolveModules;
+    this.defaultScope = defaultScope;
     this.overrides = overrides;
   }
 
@@ -110,6 +123,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces: this.useWorkspaces,
       manageWorkspaces: this.manageWorkspaces,
       resolveModules: this.resolveModules,
+      defaultScope: this.defaultScope,
       overrides: this.overrides.overrides
     });
     if (this.distEntry || this.distTarget) {
@@ -126,6 +140,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
       if (key === 'resolveModules') return !R.isEmpty(val);
+      if (key === 'defaultScope') return Boolean(val);
       if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
@@ -133,17 +148,21 @@ export default class WorkspaceConfig extends AbstractConfig {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  static create(): WorkspaceConfig {
-    return new WorkspaceConfig({});
+  static create(workspaceConfigProps: WorkspaceConfigProps): WorkspaceConfig {
+    return new WorkspaceConfig(workspaceConfigProps);
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<WorkspaceConfig> {
+  static async ensure(
+    dirPath: PathOsBasedAbsolute,
+    standAlone: boolean,
+    workspaceConfigProps: WorkspaceConfigProps = {}
+  ): Promise<WorkspaceConfig> {
     try {
       const workspaceConfig = await this.load(dirPath);
       return workspaceConfig;
     } catch (err) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
-        const consumerBitJson = this.create();
+        const consumerBitJson = this.create(workspaceConfigProps);
         const packageJsonExists = await AbstractConfig.pathHasPackageJson(dirPath);
         if (packageJsonExists && !standAlone) {
           consumerBitJson.writeToPackageJson = true;
@@ -183,6 +202,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       useWorkspaces,
       manageWorkspaces,
       resolveModules,
+      defaultScope,
       overrides
     } = object;
 
@@ -204,6 +224,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       resolveModules,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist),
+      defaultScope,
       overrides: ConsumerOverrides.load(overrides)
     });
   }

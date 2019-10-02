@@ -9,6 +9,7 @@ import type BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
 import { AbstractVinyl } from '../component/sources';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type InjectConfResult = { id: string };
 
@@ -25,7 +26,7 @@ export default (async function injectConf(
 ): Promise<InjectConfResult> {
   const componentMap = component.componentMap;
   if (!componentMap) {
-    throw new GeneralError('could not find component in the .bitmap file');
+    throw new ShowDoctorError('could not find component in the .bitmap file');
   }
   const componentDir = componentMap.getComponentDir();
 

@@ -2,12 +2,17 @@
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
+import { filterObject, first, getStringifyArgs } from '../../utils';
 import type { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import type { Doclet } from '../../jsdoc/parser';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
+import {
+  DEFAULT_BUNDLE_FILENAME,
+  DEFAULT_BINDINGS_PREFIX,
+  COMPONENT_ORIGINS,
+  DEPENDENCIES_FIELDS
+} from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import type { PathLinux, PathLinuxRelative } from '../../utils/path';
@@ -20,7 +25,7 @@ import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import type { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import EnvExtension from '../../extensions/env-extension';
+import type { EnvPackages } from '../../extensions/env-extension';
 
 type CiProps = {
   error: Object,
@@ -66,8 +71,8 @@ export type VersionProps = {
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
-  compilerPackageDependencies?: { [string]: string },
-  testerPackageDependencies?: { [string]: string },
+  compilerPackageDependencies?: EnvPackages,
+  testerPackageDependencies?: EnvPackages,
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[],
   overrides: ComponentOverridesData,
@@ -99,8 +104,8 @@ export default class Version extends BitObject {
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
-  compilerPackageDependencies: { [string]: string };
-  testerPackageDependencies: { [string]: string };
+  compilerPackageDependencies: EnvPackages;
+  testerPackageDependencies: EnvPackages;
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
   overrides: ComponentOverridesData;
@@ -174,8 +179,6 @@ export default class Version extends BitObject {
         key === 'testerDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
-        key === 'compilerPackageDependencies' ||
-        key === 'testerPackageDependencies' ||
         key === 'overrides'
       ) {
         return !R.isEmpty(val);
@@ -198,8 +201,6 @@ export default class Version extends BitObject {
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
-          compilerPackageDependencies: obj.compilerPackageDependencies,
-          testerPackageDependencies: obj.testerPackageDependencies,
           bindingPrefix: obj.bindingPrefix,
           overrides: obj.overrides
         },
@@ -291,6 +292,15 @@ export default class Version extends BitObject {
       return result;
     };
 
+    const _removeEmptyPackagesEnvs = (pkgEnv) => {
+      DEPENDENCIES_FIELDS.forEach((dependencyType) => {
+        if (pkgEnv[dependencyType] && R.isEmpty(pkgEnv[dependencyType])) {
+          delete pkgEnv[dependencyType];
+        }
+      });
+      return pkgEnv;
+    };
+
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
@@ -320,8 +330,8 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        compilerPackageDependencies: this.compilerPackageDependencies,
-        testerPackageDependencies: this.testerPackageDependencies,
+        compilerPackageDependencies: _removeEmptyPackagesEnvs(this.compilerPackageDependencies),
+        testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps
@@ -331,7 +341,7 @@ export default class Version extends BitObject {
   }
 
   validateBeforePersisting(versionStr: string): void {
-    logger.debug('validating version object: ', this.hash().hash);
+    logger.debug(`validating version object, hash: ${this.hash().hash}`);
     const version = Version.parse(versionStr);
     version.validate();
   }
@@ -341,7 +351,7 @@ export default class Version extends BitObject {
     const args = getStringifyArgs(pretty);
     const str = JSON.stringify(obj, ...args);
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
-    return bufferFrom(str);
+    return Buffer.from(str);
   }
 
   /**
@@ -537,14 +547,14 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
-      compilerPackageDependencies: {
-        ...component.compilerPackageDependencies,
-        ...compilerDynamicPakageDependencies
-      },
-      testerPackageDependencies: {
-        ...component.testerPackageDependencies,
-        ...testerDynamicPakageDependencies
-      },
+      compilerPackageDependencies: R.mergeDeepRight(
+        component.compilerPackageDependencies || {},
+        compilerDynamicPakageDependencies || {}
+      ),
+      testerPackageDependencies: R.mergeDeepRight(
+        component.testerPackageDependencies || {},
+        testerDynamicPakageDependencies || {}
+      ),
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,

@@ -6,7 +6,7 @@ import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import stringifyPackage from 'stringify-package';
 import type { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
-import { PACKAGE_JSON } from '../../constants';
+import { PACKAGE_JSON, DEPENDENCIES_FIELDS } from '../../constants';
 import logger from '../../logger/logger';
 import Component from './consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
@@ -24,14 +24,21 @@ export default class PackageJsonFile {
   workspaceDir: ?PathOsBasedAbsolute;
   indent: ?string; // default when writing (in stringifyPackage) is "  ". (two spaces).
   newline: ?string; // whether "\n" or "\r\n", default when writing (in stringifyPackage) is "\n"
-  constructor(
+  constructor({
+    filePath,
+    packageJsonObject = {},
+    fileExist,
+    workspaceDir,
+    indent,
+    newline
+  }: {
     filePath: PathOsBasedRelative,
-    packageJsonObject: Object,
+    packageJsonObject?: Object,
     fileExist: boolean,
     workspaceDir?: PathOsBasedAbsolute,
     indent?: string,
     newline?: string
-  ) {
+  }) {
     this.filePath = filePath;
     this.packageJsonObject = packageJsonObject;
     this.fileExist = fileExist;
@@ -58,12 +65,12 @@ export default class PackageJsonFile {
     const filePathAbsolute = path.join(workspaceDir, filePath);
     const packageJsonStr = await PackageJsonFile.getPackageJsonStrIfExist(filePathAbsolute);
     if (!packageJsonStr) {
-      return new PackageJsonFile(filePath, {}, false, workspaceDir);
+      return new PackageJsonFile({ filePath, fileExist: false, workspaceDir });
     }
     const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, componentDir);
     const indent = detectIndent(packageJsonStr).indent;
     const newline = detectNewline(packageJsonStr);
-    return new PackageJsonFile(filePath, packageJsonObject, true, workspaceDir, indent, newline);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
   }
 
   static createFromComponent(
@@ -80,16 +87,24 @@ export default class PackageJsonFile {
       version: component.version,
       homepage: component._getHomepage(),
       main: component.mainFile,
-      dependencies: component.packageDependencies,
+      dependencies: {
+        ...component.packageDependencies,
+        ...component.compilerPackageDependencies.dependencies,
+        ...component.testerPackageDependencies.dependencies
+      },
       devDependencies: {
         ...component.devPackageDependencies,
-        ...component.compilerPackageDependencies,
-        ...component.testerPackageDependencies
+        ...component.compilerPackageDependencies.devDependencies,
+        ...component.testerPackageDependencies.devDependencies
       },
-      peerDependencies: component.peerPackageDependencies,
+      peerDependencies: {
+        ...component.peerPackageDependencies,
+        ...component.compilerPackageDependencies.peerDependencies,
+        ...component.testerPackageDependencies.peerDependencies
+      },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     };
-    return new PackageJsonFile(filePath, packageJsonObject, false);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
   }
 
   toVinylFile(): PackageJsonVinyl {
@@ -110,6 +125,16 @@ export default class PackageJsonFile {
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 
+  replaceDependencies(dependencies: Object) {
+    Object.keys(dependencies).forEach((dependency) => {
+      DEPENDENCIES_FIELDS.forEach((dependencyField) => {
+        if (this.packageJsonObject[dependencyField] && this.packageJsonObject[dependencyField][dependency]) {
+          this.packageJsonObject[dependencyField][dependency] = dependencies[dependency];
+        }
+      });
+    });
+  }
+
   addOrUpdateProperty(propertyName: string, propertyValue: any): void {
     this.packageJsonObject[propertyName] = propertyValue;
   }
@@ -121,6 +146,13 @@ export default class PackageJsonFile {
   mergePackageJsonObject(packageJsonObject: ?Object): void {
     if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
     this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
+  }
+
+  clone(): PackageJsonFile {
+    // $FlowFixMe
+    const clone = new PackageJsonFile(this);
+    clone.packageJsonObject = R.clone(this.packageJsonObject);
+    return clone;
   }
 
   static propsNonUserChangeable() {

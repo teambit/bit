@@ -38,8 +38,10 @@ describe('ConsumerComponent', function () {
       const sourceFile = new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(src), test: false });
       componentProps.files = [sourceFile];
       const component = new Component(componentProps);
-      expect(component.docs).to.have.lengthOf(1);
-      expect(component.docs[0].description).to.equal('is a given variable a string');
+      await component.recalculateDocs();
+      const docs = component.docs;
+      expect(docs).to.have.lengthOf(1);
+      expect(docs[0].description).to.equal('is a given variable a string');
     });
     it('should return the docs only for non-test files with jsdocs', async () => {
       const src = `/**
@@ -55,6 +57,7 @@ describe('ConsumerComponent', function () {
       });
       componentProps.files = [sourceFile, sourceFileSpec];
       const component = new Component(componentProps);
+      await component.recalculateDocs();
       expect(component.docs).to.have.lengthOf(1);
     });
   });

@@ -14,11 +14,11 @@ import componentIdToPackageName from '../../../../utils/bit/component-id-to-pack
 /**
  * The dependency version is determined by the following strategies by this order.
  * 1) if the component bit.json or package.json has "overrides" property, check whether the dependency version is overridden
- * 2) if package.json is different than the model, use package.json. to find the package.json follow this steps:
- * 2 a) search in the component directory for package.json and look for dependencies or devDependencies with the name of the dependency
- * 2 b) if not found there, propagate until you reach the consumer root directory.
- * 2 c) if not found, go directly to the dependency directory and find the version in its package.json
- * 3) if workspace-config overrides this component, find whether it overrides the dependency version and use it.
+ * 2) if workspace-config overrides this component, use it. (technically this is done via #1 because we merge the two before)
+ * 3) if package.json is different than the model, use package.json. to find the package.json follow this steps:
+ * 3 a) search in the component directory for package.json and look for dependencies or devDependencies with the name of the dependency
+ * 3 b) if not found there, propagate until you reach the consumer root directory.
+ * 3 c) if not found, go directly to the dependency directory and find the version in its package.json
  * 4) if bitmap has a version, use it.
  * 5) use the model if it has a version.
  * 6) use the package.json regardless the model.
@@ -45,7 +45,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
       const idFromPackageJson = getIdFromPackageJson(id);
       const idFromBitMap = getIdFromBitMap(id);
-      const idFromWorkspaceConfig = getIdFromWorkspaceConfig(id);
       const idFromComponentConfig = getIdFromComponentConfig(id);
       const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
 
@@ -56,7 +55,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
         if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
         return null;
       };
-      const getFromWorkspaceConfig = () => idFromWorkspaceConfig || null;
       const getFromComponentConfig = () => idFromComponentConfig || null;
       const getFromBitMap = () => idFromBitMap || null;
       const getFromModel = () => idFromModel || null;
@@ -66,7 +64,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
         getFromComponentConfig,
         getFromDependentPackageJson,
         getFromPackageJsonIfChanged,
-        getFromWorkspaceConfig,
         getFromBitMap,
         getFromModel,
         getFromPackageJson
@@ -129,16 +126,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
 
   function getIdFromBitMap(componentId: BitId): ?BitId {
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
-  }
-
-  function getIdFromWorkspaceConfig(componentId: BitId): ?BitId {
-    const dependencies = component.overrides.getComponentDependenciesWithVersionFromConsumer();
-    if (R.isEmpty(dependencies)) return null;
-    const dependency = Object.keys(dependencies).find(
-      idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
-    );
-    if (!dependency) return null;
-    return componentId.changeVersion(dependencies[dependency]);
   }
 
   function getIdFromComponentConfig(componentId: BitId): ?BitId {

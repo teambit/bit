@@ -2,7 +2,6 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { getResolver, setResolver, resetResolver } from '../../../api/scope';
-import GeneralError from '../../../error/general-error';
 
 class ResolverSet extends Command {
   name = 'set <resolverPath>';
@@ -14,7 +13,7 @@ class ResolverSet extends Command {
   action([resolverPath]: [string]): Promise<any> {
     if (!resolverPath) {
       // @TODO mandatory arguments do not work for sub commands - please fix !
-      throw new GeneralError('resolverPath is mandatory');
+      throw new Error('resolverPath is mandatory');
     }
 
     return setResolver(process.cwd(), resolverPath).then(() => resolverPath);

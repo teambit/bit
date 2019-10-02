@@ -2,7 +2,6 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import c from 'chalk';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentConfig from '../config';
@@ -23,6 +22,7 @@ import MissingFilesFromComponent from './exceptions/missing-files-from-component
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
+import type { ScopeListItem } from '../../scope/models/model-component';
 import type BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
@@ -71,6 +71,8 @@ import PackageJsonFile from './package-json-file';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
+import ShowDoctorError from '../../error/show-doctor-error';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -111,7 +113,9 @@ export type ComponentProps = {
   license?: ?License,
   deprecated: ?boolean,
   origin: ComponentOrigin,
-  log?: ?Log
+  log?: ?Log,
+  scopesList?: ScopeListItem[],
+  componentFromModel?: ?Component
 };
 
 export default class Component {
@@ -140,7 +144,7 @@ export default class Component {
   manuallyRemovedDependencies: OverriddenDependencies = {};
   manuallyAddedDependencies: OverriddenDependencies = {};
   overrides: ComponentOverrides;
-  _docs: ?(Doclet[]);
+  docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
   specsResults: ?(SpecsResults[]);
@@ -166,6 +170,7 @@ export default class Component {
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
+  scopesList: ?(ScopeListItem[]);
 
   get id(): BitId {
     return new BitId({
@@ -173,15 +178,6 @@ export default class Component {
       name: this.name,
       version: this.version
     });
-  }
-
-  get docs(): ?(Doclet[]) {
-    if (!this._docs) {
-      this._docs = R.flatten(
-        this.files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)))
-      );
-    }
-    return this._docs;
   }
 
   get driver(): Driver {
@@ -215,6 +211,7 @@ export default class Component {
     peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
+    componentFromModel,
     overrides,
     packageJsonFile,
     packageJsonChangedProps,
@@ -226,7 +223,8 @@ export default class Component {
     log,
     deprecated,
     origin,
-    customResolvedPaths
+    customResolvedPaths,
+    scopesList
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -254,7 +252,7 @@ export default class Component {
     this.overrides = overrides;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
-    this._docs = docs;
+    this.docs = docs || [];
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
@@ -262,6 +260,8 @@ export default class Component {
     this.deprecated = deprecated || false;
     this.origin = origin;
     this.customResolvedPaths = customResolvedPaths || [];
+    this.scopesList = scopesList;
+    this.componentFromModel = componentFromModel;
     this.validateComponent();
   }
 
@@ -851,6 +851,7 @@ export default class Component {
       MissingFilesFromComponent,
       ComponentNotFoundInPath,
       ComponentOutOfSync,
+      ComponentsPendingImport,
       ExtensionFileNotFound
     ];
     return invalidComponentErrors.some(errorType => err instanceof errorType);
@@ -861,7 +862,7 @@ export default class Component {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
-    const getDependenciesComponents = (ids: BitIds): Component[] => {
+    const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
       return Promise.all(
         ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
@@ -887,25 +888,24 @@ export default class Component {
     });
   }
 
-  copyDependenciesFromModel(ids: string[]) {
+  /**
+   * Recalculate docs property based on the source files
+   * used usually when setting the source files manually
+   */
+  async recalculateDocs() {
+    const docsP = _getDocsForFiles(this.files);
+    const docs = await Promise.all(docsP);
+    const flattenedDocs = docs ? R.flatten(docs) : [];
+    this.docs = flattenedDocs;
+  }
+
+  copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
-    ids.forEach((id: string) => {
-      const addDependency = (modelDependencies: Dependencies, dependencies: Dependencies) => {
-        const dependency = modelDependencies.getByIdStr(id);
-        if (dependency) dependencies.add(dependency);
-        return Boolean(dependency);
-      };
-      const addedDep = addDependency(componentFromModel.dependencies, this.dependencies);
-      if (addedDep) return;
-      const addedDevDep = addDependency(componentFromModel.devDependencies, this.devDependencies);
-      if (addedDevDep) return;
-      const addedCompilerDep = addDependency(componentFromModel.compilerDependencies, this.compilerDependencies);
-      if (addedCompilerDep) return;
-      const addedTesterDep = addDependency(componentFromModel.testerDependencies, this.testerDependencies);
-      if (addedTesterDep) return;
-      throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
-    });
+    this.setDependencies(componentFromModel.dependencies.get());
+    this.setDevDependencies(componentFromModel.devDependencies.get());
+    this.setCompilerDependencies(componentFromModel.compilerDependencies.get());
+    this.setTesterDependencies(componentFromModel.testerDependencies.get());
   }
 
   static async fromObject(object: Object): Component {
@@ -988,18 +988,22 @@ export default class Component {
     bitDir,
     componentMap,
     id,
-    consumer,
-    componentFromModel
+    consumer
   }: {
     bitDir: PathOsBasedAbsolute,
     componentMap: ComponentMap,
     id: BitId,
-    consumer: Consumer,
-    componentFromModel: ?Component
+    consumer: Consumer
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const workspaceConfig: WorkspaceConfig = consumer.config;
     const bitMap: BitMap = consumer.bitMap;
+    const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
+    if (!componentFromModel && id.scope) {
+      const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(null));
+      // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
+      if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
+    }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
@@ -1074,9 +1078,9 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
-    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isAuthor ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
+    const overridesFromConsumer = isNotNested ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
@@ -1095,35 +1099,36 @@ export default class Component {
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
-    // Load the compilerPackageDependencies/testerPackageDependencies from the actual compiler / tester or from the model
-    // if they are not loaded (aka not installed)
-    // We load it from model to prevent case when component is modified becasue changes in envsPackageDependencies
-    // That occur as a result that we import component but didn't import its envs so we can't
-    // calculate the envsPackageDependencies (without install the env, which we don't want)
+    // load the compilerPackageDependencies/testerPackageDependencies from the actual compiler/tester
+    // if they're not installed, load them from the model
     const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
-    const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
     const modelCompilerPackageDependencies = componentFromModel
       ? componentFromModel.compilerPackageDependencies || {}
       : {};
+    const compilerPackageDependencies = R.isEmpty(compilerDynamicPackageDependencies)
+      ? modelCompilerPackageDependencies
+      : compilerDynamicPackageDependencies;
+    const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
     const modelTesterPackageDependencies = componentFromModel ? componentFromModel.testerPackageDependencies || {} : {};
-    const compilerPackageDependencies = {
-      ...modelCompilerPackageDependencies,
-      ...compilerDynamicPackageDependencies
-    };
-    const testerPackageDependencies = {
-      ...modelTesterPackageDependencies,
-      ...testerDynamicPackageDependencies
-    };
+    const testerPackageDependencies = R.isEmpty(testerDynamicPackageDependencies)
+      ? modelTesterPackageDependencies
+      : testerDynamicPackageDependencies;
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     const overrides = ComponentOverrides.loadFromConsumer(
       overridesFromConsumer,
       overridesFromModel,
       componentConfig,
       isAuthor
     );
+
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
+    const files = await getLoadedFiles();
+    const docsP = _getDocsForFiles(files);
+    const docs = await Promise.all(docsP);
+    const flattenedDocs = docs ? R.flatten(docs) : [];
 
     return new Component({
       name: id.name,
@@ -1135,10 +1140,12 @@ export default class Component {
       tester,
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
-      files: await getLoadedFiles(),
+      files,
       loadedFromFileSystem: true,
+      componentFromModel,
       componentMap,
       dists,
+      docs: flattenedDocs,
       mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
@@ -1149,4 +1156,8 @@ export default class Component {
       packageJsonChangedProps
     });
   }
+}
+
+function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
+  return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }

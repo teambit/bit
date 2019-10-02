@@ -1,8 +1,9 @@
 /** @flow */
 import R from 'ramda';
+import semver from 'semver';
 import chalk from 'chalk';
 import { NothingToImport } from '../exceptions';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
 import { Consumer } from '../../consumer';
 import { ComponentWithDependencies, Scope } from '../../scope';
@@ -18,7 +19,11 @@ import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-w
 import ManyComponentsWriter from './many-components-writer';
 import { COMPONENT_ORIGINS } from '../../constants';
 import hasWildcard from '../../utils/string/has-wildcard';
-import { listScope } from '../../api/consumer';
+import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import Remotes from '../../remotes/remotes';
+import DependencyGraph from '../../scope/graph/scope-graph';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -34,7 +39,9 @@ export type ImportOptions = {
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
   objectsOnly: boolean, // default: false
-  saveDependenciesAsComponents?: boolean // default: false
+  saveDependenciesAsComponents?: boolean, // default: false,
+  importDependenciesDirectly?: boolean, // default: false, normally it imports them as packages or nested, not as imported
+  importDependents?: boolean // default: false,
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies,
@@ -76,7 +83,7 @@ export default class ImportComponents {
 
   async importSpecificComponents(): ImportResult {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
-    const bitIds = await this._getBitIds();
+    const bitIds: BitIds = await this._getBitIds();
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = await this.consumer.importComponents(
@@ -84,37 +91,85 @@ export default class ImportComponents {
       true,
       this.options.saveDependenciesAsComponents
     );
-    await this._writeToFileSystem(componentsWithDependencies);
+    await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
+    const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
+    await this._writeToFileSystem(componentsWithDependenciesFiltered);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
-    return { dependencies: componentsWithDependencies, importDetails };
+    return { dependencies: componentsWithDependenciesFiltered, importDetails };
   }
 
-  async _getBitIds(): Promise<BitId[]> {
+  /**
+   * it can happen for example when importing a component with `--dependent` flag and the component has
+   * the same dependent with different versions. we only want the one with the higher version
+   */
+  _filterComponentsWithLowerVersions(
+    componentsWithDependencies: ComponentWithDependencies[]
+  ): ComponentWithDependencies[] {
+    return componentsWithDependencies.filter((comp) => {
+      const sameIdHigherVersion = componentsWithDependencies.find(
+        c =>
+          !c.component.id.isEqual(comp.component.id) &&
+          c.component.id.isEqualWithoutVersion(comp.component.id) &&
+          semver.gt(c.component.id.version, comp.component.id.version)
+      );
+      return !sameIdHigherVersion;
+    });
+  }
+
+  async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          if (!idStr.includes('/')) {
-            throw new GeneralError(
-              `import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`
-            );
-          }
-          const idSplit = idStr.split('/');
-          const scopeName = idSplit[0];
-          const namespacesUsingWildcards = R.tail(idSplit).join('/');
-          const listResult = await listScope({ scopeName, namespacesUsingWildcards });
-          if (!listResult.length) {
-            throw new GeneralError(`no components found on the remote scope matching the "${idStr}" pattern`);
-          }
+          const ids = await getRemoteBitIdsByWildcards(idStr);
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
-          const ids = listResult.map(result => result.id);
           bitIds.push(...ids);
         } else {
           bitIds.push(BitId.parse(idStr, true)); // we don't support importing without a scope name
         }
       })
     );
-    return bitIds;
+    if (this.options.importDependenciesDirectly || this.options.importDependents) {
+      const graphs = await this._getComponentsGraphs(bitIds);
+      if (this.options.importDependenciesDirectly) {
+        const dependenciesIds = this._getDependenciesFromGraph(bitIds, graphs);
+        bitIds.push(...dependenciesIds);
+      }
+      if (this.options.importDependents) {
+        const dependentsIds = this._getDependentsFromGraph(bitIds, graphs);
+        bitIds.push(...dependentsIds);
+      }
+    }
+    return BitIds.uniqFromArray(bitIds);
+  }
+
+  _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
+    const dependencies = bitIds.map((bitId) => {
+      const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
+      if (!componentGraph) {
+        throw new Error(`unable to find a graph for ${bitId.toString()}`);
+      }
+      const dependenciesInfo = componentGraph.getDependenciesInfo(bitId);
+      return dependenciesInfo.map(d => d.id);
+    });
+    return R.flatten(dependencies);
+  }
+
+  _getDependentsFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
+    const dependents = bitIds.map((bitId) => {
+      const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
+      if (!componentGraph) {
+        throw new Error(`unable to find a graph for ${bitId.toString()}`);
+      }
+      const dependentsInfo = componentGraph.getDependentsInfo(bitId);
+      return dependentsInfo.map(d => d.id);
+    });
+    return R.flatten(dependents);
+  }
+
+  async _getComponentsGraphs(bitIds: BitId[]): Promise<DependencyGraph[]> {
+    const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
+    return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
   async importAccordingToBitMap(): ImportResult {
@@ -143,6 +198,7 @@ export default class ImportComponents {
     let componentsAndDependencies = [];
     if (componentsIdsToImport.length) {
       componentsAndDependencies = await this.consumer.importComponents(componentsIdsToImport, true);
+      await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
@@ -168,7 +224,7 @@ export default class ImportComponents {
     return { dependencies: componentsAndDependencies, importDetails };
   }
 
-  async _getCurrentVersions(ids: BitId[]): ImportedVersions {
+  async _getCurrentVersions(ids: BitIds): ImportedVersions {
     const versionsP = ids.map(async (id) => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       const idStr = id.toStringWithoutVersion();
@@ -198,7 +254,7 @@ export default class ImportComponents {
         );
       }
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
-      if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
+      if (!modelComponent) throw new ShowDoctorError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
       const versionDifference = R.difference(afterImportVersions, beforeImportVersions);
       const getStatus = (): ImportStatus => {
@@ -212,30 +268,38 @@ export default class ImportComponents {
     return Promise.all(detailsP);
   }
 
-  async _throwForPotentialIssues(ids: BitId[]): Promise<void> {
+  async _throwForPotentialIssues(ids: BitIds): Promise<void> {
     await this._throwForModifiedOrNewComponents(ids);
     this._throwForDifferentComponentWithSameName(ids);
   }
 
-  async _throwForModifiedOrNewComponents(ids: BitId[]) {
+  async _throwForModifiedOrNewComponents(ids: BitIds): Promise<void> {
     // the typical objectsOnly option is when a user cloned a project with components tagged to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.override || this.options.objectsOnly || this.options.merge) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly || this.options.merge) return;
+    // $FlowFixMe BitIds is an array
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
-
     if (modifiedComponents.length) {
       throw new GeneralError(
         chalk.yellow(
-          `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
+          `unable to import the following components due to local changes, use --merge flag to merge your local changes or --override to override them\n${modifiedComponents.join(
             '\n'
           )} `
         )
       );
     }
-    return Promise.resolve();
+  }
+
+  async _throwForModifiedOrNewDependencies(componentsAndDependencies: ComponentWithDependencies[]) {
+    const allDependenciesIds = R.flatten(
+      componentsAndDependencies.map(componentAndDependencies =>
+        componentAndDependencies.component.dependencies.getAllIds()
+      )
+    );
+    await this._throwForModifiedOrNewComponents(allDependenciesIds);
   }
 
   /**
@@ -243,7 +307,7 @@ export default class ImportComponents {
    * If an imported component has scope+name equals to a local name, both will have the exact same
    * hash and they'll override each other.
    */
-  _throwForDifferentComponentWithSameName(ids: BitId[]): void {
+  _throwForDifferentComponentWithSameName(ids: BitIds): void {
     ids.forEach((id: BitId) => {
       const existingId = this.consumer.getParsedIdIfExist(id.toStringWithoutVersion());
       if (existingId && !existingId.hasScope()) {
@@ -261,7 +325,7 @@ export default class ImportComponents {
     if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.sources.get(component.id);
     if (!componentModel) {
-      throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
+      throw new ShowDoctorError(`component ${component.id.toString()} wasn't found in the model`);
     }
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
@@ -363,6 +427,7 @@ export default class ImportComponents {
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
+      addToRootPackageJson: this.options.writePackageJson, // no point to add to root if it doesn't have package.json
       writeConfig: this.options.writeConfig,
       configDir: this.options.configDir,
       writeDists: this.options.writeDists,

@@ -3,10 +3,10 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import graphlib from 'graphlib';
 import pMapSeries from 'p-map-series';
-import type { Scope } from '..';
-import type Consumer from '../../consumer/consumer';
+import { Scope } from '..';
+import Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import type Component from '../../consumer/component/consumer-component';
+import Component from '../../consumer/component/consumer-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -25,6 +25,7 @@ import type { AutoTagResult } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
 import { buildComponentsGraph } from '../graph/components-graph';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 async function getFlattenedDependencies(
   scope: Scope,
@@ -98,7 +99,9 @@ function getEdgesWithProdGraph(prodGraph: ?Object, dependencies: BitIdStr[]): Bi
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency) => {
     const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
-    if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
+    if (foundDependency) {
+      dependency.id = dependency.id.changeVersion(foundDependency.version);
+    }
   };
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
@@ -113,6 +116,7 @@ async function setFutureVersions(
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
+      // $FlowFixMe
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance
@@ -235,7 +239,7 @@ export default (async function tagModelComponent({
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
-        if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
+        if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
         const latest = modelComponent.latest();
         if (latest !== component.version) {
           return {
@@ -336,8 +340,6 @@ export default (async function tagModelComponent({
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       message,
-      exactVersion,
-      releaseType,
       specsResults: testResult ? testResult.specs : undefined
     });
     return consumerComponent;

@@ -16,9 +16,11 @@ export default class List extends Command {
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
-    ['b', 'bare', 'show bare output (more details, less pretty)'],
+    ['b', 'bare', 'DEPRECATED. use --raw instead'],
+    ['r', 'raw', 'show raw output (only components ids, no styling)'],
     ['o', 'outdated', 'show latest versions from remotes'],
-    ['j', 'json', 'show the output in JSON format']
+    ['j', 'json', 'show the output in JSON format'],
+    ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
   ];
   loader = true;
   migration = true;
@@ -29,21 +31,35 @@ export default class List extends Command {
       ids,
       scope = false,
       bare = false,
+      raw = false,
       json = false,
-      outdated = false
-    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
+      outdated = false,
+      namespace
+    }: {
+      ids?: boolean,
+      scope?: boolean,
+      bare?: boolean,
+      raw?: boolean,
+      json?: boolean,
+      outdated?: boolean,
+      namespace?: string
+    }
   ): Promise<any> {
     const params = { scopeName, showAll: scope, showRemoteVersion: outdated };
-    if (hasWildcard(scopeName) && scopeName.includes('/')) {
-      const scopeNameSplit = scopeName.split('/');
-      params.scopeName = R.head(scopeNameSplit);
-      params.namespacesUsingWildcards = R.tail(scopeNameSplit).join('/');
+    if (bare) {
+      console.warn(chalk.yellow('--bare flag is deprecated. please use --raw instead')); // eslint-disable-line no-console
+      raw = true;
+    }
+    if (namespace) {
+      const namespaceWithWildcard = hasWildcard(namespace) ? namespace : `${namespace}/*`;
+      // $FlowFixMe
+      params.namespacesUsingWildcards = namespaceWithWildcard;
     }
     return listScope(params).then(listScopeResults => ({
       listScopeResults,
       scope: scopeName,
       ids,
-      bare,
+      raw,
       json,
       outdated
     }));
@@ -53,14 +69,14 @@ export default class List extends Command {
     listScopeResults,
     scope,
     ids,
-    bare,
+    raw,
     json,
     outdated
   }: {
     listScopeResults: ListScopeResult[],
     scope: ?string,
     ids?: boolean,
-    bare?: boolean,
+    raw?: boolean,
     json?: boolean,
     outdated?: boolean
   }): string {
@@ -78,7 +94,7 @@ export default class List extends Command {
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
     return (
       decideHeaderSentence() +
-      (bare ? bareListTemplate(listScopeResults) : listTemplate(listScopeResults, json, outdated))
+      (raw ? bareListTemplate(listScopeResults) : listTemplate(listScopeResults, json, outdated))
     );
   }
 }

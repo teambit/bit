@@ -95,6 +95,11 @@ export default class Dists {
     return this.distsRootDir;
   }
 
+  hasFileParallelToSrcFile(srcFile: PathLinux): boolean {
+    const distFile = searchFilesIgnoreExt(this.dists, path.normalize(srcFile));
+    return Boolean(distFile);
+  }
+
   static getDistDirWhenDistIsOutsideCompDir(
     workspaceConfig: WorkspaceConfig,
     componentRootDir: PathLinux
@@ -175,7 +180,7 @@ export default class Dists {
       ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
       : component.componentMap;
     if (!componentMap) throw new Error('writeDistsLinks expect componentMap to be defined');
-    if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return;
+    if (componentMap.origin === COMPONENT_ORIGINS.NESTED) return;
     const dataToPersist = await getLinksInDistToWrite(component, componentMap, consumer, consumer.bitMap);
     dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();

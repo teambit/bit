@@ -2,6 +2,7 @@
 import cliSpinners from 'cli-spinners';
 import os from 'os';
 import path from 'path';
+import format from 'string-format';
 import type { PathOsBased } from './utils/path';
 
 const userHome = require('user-home');
@@ -165,6 +166,11 @@ export const IGNORE_LIST = [
 ];
 
 /**
+ * bit commands
+ */
+export const INIT_COMMAND = 'init';
+
+/**
  * bit global config keys
  */
 export const CFG_USER_EMAIL_KEY = 'user.email';
@@ -208,6 +214,15 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
 export const CFG_LOG_JSON_FORMAT = 'log_json_format';
+
+export const CFG_NO_WARNINGS = 'no_warnings';
+
+export const CFG_INTERACTIVE = 'interactive';
+
+// Template for interactive config for specific command like interactive.init
+export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
+
+export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 
 /**
  * git hooks
@@ -375,3 +390,10 @@ export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
 
 export const COMPONENT_DIST_PATH_TEMPLATE = '{COMPONENT_DIST_PATH}';
+
+export const WILDCARD_HELP = (command: string) =>
+  `you can use a pattern for multiple ids, such as bit ${command} "utils/*". (wrap the pattern with quotes to avoid collision with shell commands)`;
+
+export const CURRENT_UPSTREAM = 'current';
+
+export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];

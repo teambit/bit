@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { BIT_VERSION, BASE_DOCS_DOMAIN } from '../../constants';
 import loader from '../../cli/loader/loader';
 import { OldClientVersion } from './exceptions';
+import logger from '../../logger/logger';
 
 const createMajorMessage = (remoteVersion, currentVersion) =>
   chalk.red(
@@ -45,21 +46,21 @@ export default function checkVersionCompatibility(remoteVersion: string) {
   if (remoteMajor > localMajor) {
     if (localMajor < throwErrorFromServerSinceVersion) return;
     loader.stop();
-    console.log(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console.error(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
     loader.start();
     return;
   }
 
   if (remoteMinor > localMinor) {
     loader.stop();
-    console.log(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console.error(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
     loader.start();
     return;
   }
 
   if (remotePatch > localPatch) {
     loader.stop();
-    console.log(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console.warn(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
     loader.start();
   }
 }

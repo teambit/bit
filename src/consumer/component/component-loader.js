@@ -18,13 +18,10 @@ export default class ComponentLoader {
   _componentsCacheForCapsule: Object = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Object;
-  cacheProjectAst: ?{ angular: Object }; // specific platforms (like Angular) need to parse the entire project
+  cacheProjectAst: ?Object; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
-    if (this._isAngularProject()) {
-      this.cacheProjectAst = { angular: {} };
-    }
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
@@ -93,15 +90,13 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
     let component;
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
         componentMap,
         id,
-        consumer: this.consumer,
-        componentFromModel
+        consumer: this.consumer
       });
     } catch (err) {
       if (throwOnFailure) throw err;
@@ -120,7 +115,6 @@ export default class ComponentLoader {
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
-    component.componentFromModel = componentFromModel;
     await this._handleOutOfSyncScenarios(component);
 
     if (!driverExists) {

@@ -62,7 +62,7 @@ const compiler = {
       presetsNames.map(addParsedNameToResult(dynamicPackageDependencies, packageJson, getPresetPackageName));
     }
 
-    return dynamicPackageDependencies;
+    return { devDependencies: dynamicPackageDependencies };
   },
   action: ({
     files,

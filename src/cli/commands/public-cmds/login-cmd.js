@@ -2,6 +2,7 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { login } from '../../../api/consumer';
+import { BASE_WEB_DOMAIN } from '../../../constants';
 
 export default class Login extends Command {
   name = 'login';
@@ -10,8 +11,8 @@ export default class Login extends Command {
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
-    ['', 'npmrc-path <path>', 'path to npmrc file to configure bitsrc registry'],
-    ['', 'skip-registry-config [boolean]', "don't configure bitsrc registry"],
+    ['', 'npmrc-path <path>', `path to npmrc file to configure ${BASE_WEB_DOMAIN} registry`],
+    ['', 'skip-registry-config [boolean]', `don't configure ${BASE_WEB_DOMAIN} registry`],
     [
       '',
       'machine-name <string>',

@@ -4,7 +4,6 @@ import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
 import ComponentConfig from '../config';
 import { sharedStartOfArray } from '../../utils';
-import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
 import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
@@ -17,6 +16,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import RemovePath from '../component/sources/remove-path';
 import AbstractConfig from '../config/abstract-config';
+import ShowDoctorError from '../../error/show-doctor-error';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
 export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath?: string, dataToPersist: DataToPersist };
@@ -51,7 +51,7 @@ export async function getEjectConfDataToPersist(
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
   if (!componentMap) {
-    throw new GeneralError('could not find component in the .bitmap file');
+    throw new ShowDoctorError('could not find component in the .bitmap file');
   }
   const componentDir = componentMap.getComponentDir();
   if (!componentDir && configDir.isUnderComponentDir) {
@@ -208,7 +208,6 @@ export async function populateEnvFilesToWrite({
   const envType = env instanceof CompilerExtension ? COMPILER_ENV_TYPE : TESTER_ENV_TYPE;
   const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
-  // $FlowFixMe will be fixed with the Capsule feature
   const links = await getLinksByDependencies(configDir, component, deps, consumer, bitMap);
   env.dataToPersist.addManyFiles(links);
   return ejectedDirectory;

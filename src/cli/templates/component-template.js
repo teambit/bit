@@ -9,6 +9,7 @@ import {
   getDiffBetweenObjects,
   prettifyFieldName
 } from '../../consumer/component-ops/components-object-diff';
+import type { DependenciesInfo } from '../../scope/graph/scope-graph';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
@@ -30,12 +31,15 @@ export default function paintComponent(
   component: ConsumerComponent,
   componentModel?: ConsumerComponent,
   showRemoteVersion: boolean,
-  detailed: boolean
+  detailed: boolean,
+  dependenciesInfo: DependenciesInfo[],
+  dependentsInfo: DependenciesInfo[]
 ) {
   return componentModel ? paintWithCompare() : paintWithoutCompare();
 
   function paintWithoutCompare() {
     const printableComponent = componentToPrintableForDiff(component);
+    printableComponent.scopesList = (component.scopesList || []).map(s => s.name).join('\n');
     const rows = getFields()
       .map((field) => {
         const arr = [];
@@ -62,7 +66,15 @@ export default function paintComponent(
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
-    return componentTable + dependenciesTableStr + paintDocumentation(component.docs);
+    const dependentsInfoTableStr = generateDependentsInfoTable();
+    const dependenciesInfoTableStr = generateDependenciesInfoTable();
+    return (
+      componentTable +
+      dependenciesTableStr +
+      dependentsInfoTableStr +
+      dependenciesInfoTableStr +
+      paintDocumentation(component.docs)
+    );
   }
 
   function paintWithCompare() {
@@ -127,7 +139,12 @@ export default function paintComponent(
       'deprecated'
     ];
     if (detailed) {
-      const extraFields = ['overridesDependencies', 'overridesDevDependencies', 'overridesPeerDependencies'];
+      const extraFields = [
+        'overridesDependencies',
+        'overridesDevDependencies',
+        'overridesPeerDependencies',
+        'scopesList'
+      ];
       fields.push(...extraFields);
     }
     return fields;
@@ -184,6 +201,52 @@ export default function paintComponent(
 
     const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
     return dependenciesTable;
+  }
+
+  function generateDependentsInfoTable() {
+    if (!dependentsInfo.length) {
+      return '';
+    }
+    const dependentsHeader = [];
+    dependentsHeader.push([
+      c.cyan('Dependent ID'),
+      c.cyan('Depth'),
+      c.cyan('Immediate Dependency'),
+      c.cyan('Dependent type')
+    ]);
+    const allDependenciesRows = getAllDependenciesRows(dependentsInfo);
+
+    const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
+    return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
+  }
+
+  function generateDependenciesInfoTable() {
+    if (!dependenciesInfo.length) {
+      return '';
+    }
+
+    const dependenciesHeader = [];
+    dependenciesHeader.push([
+      c.cyan('Dependency ID'),
+      c.cyan('Depth'),
+      c.cyan('Immediate Dependent'),
+      c.cyan('Dependency type')
+    ]);
+    const allDependenciesRows = getAllDependenciesRows(dependenciesInfo);
+
+    const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
+    return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
+  }
+
+  function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[]): Array<string[]> {
+    return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
+      const row = [];
+      row.push(dependency.id.toString());
+      row.push(dependency.depth.toString());
+      row.push(dependency.parent === component.id.toString() ? '<self>' : dependency.parent);
+      row.push(dependency.dependencyType);
+      return row;
+    });
   }
 
   function calculatePadRightLength(str: string, columnWidth: number): string {

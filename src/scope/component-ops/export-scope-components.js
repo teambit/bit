@@ -12,7 +12,7 @@ import { ModelComponent, Symlink, Version } from '../models';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
-import type Scope from '../scope';
+import Scope from '../scope';
 import { LATEST } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
@@ -48,42 +48,111 @@ export async function exportManyBareScope(
   return mergedIds;
 }
 
-export async function exportMany(scope: Scope, ids: BitIds, remoteName: string, context: Object = {}): Promise<BitIds> {
+export async function exportMany({
+  scope,
+  ids,
+  remoteName,
+  context = {},
+  includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
+  changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
+  codemod = false,
+  defaultScope
+}: {
+  scope: Scope,
+  ids: BitIds,
+  remoteName: ?string,
+  context?: Object,
+  includeDependencies: boolean,
+  changeLocallyAlthoughRemoteIsDifferent: boolean,
+  codemod: boolean,
+  defaultScope: ?string
+}): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  const remotes: Remotes = await getScopeRemotes(scope);
-  const remote: Remote = await remotes.resolve(remoteName, scope);
-  const componentObjects = await pMapSeries(ids, id => scope.sources.getObjects(id));
-  const componentsAndObjects = [];
   enrichContextFromGlobal(context);
-  const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
-    const componentAndObject = componentObject.toObjects(scope.objects);
-    componentAndObject.component.clearStateData();
-    convertNonScopeToCorrectScope(scope, componentAndObject, remoteName);
-    await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
-    componentsAndObjects.push(componentAndObject);
-    const componentBuffer = await componentAndObject.component.compress();
-    const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
-    return new ComponentObjects(componentBuffer, objectsBuffer);
-  });
-  const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
-  let exportedIds;
-  try {
-    exportedIds = await remote.pushMany(manyObjects, context);
-    logger.debugAndAddBreadCrumb(
-      'exportMany',
-      'successfully pushed all ids to the bare-scope, going to save them back to local scope'
-    );
-  } catch (err) {
-    logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
-    return Promise.reject(err);
+  if (includeDependencies) {
+    const dependenciesIds = await getDependenciesImportIfNeeded();
+    ids.push(...dependenciesIds);
+    // $FlowFixMe
+    ids = BitIds.uniqFromArray(ids);
   }
-  await Promise.all(ids.map(id => scope.sources.removeComponentById(id)));
-  ids.map(id => scope.createSymlink(id, remoteName));
-  componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
-  await scope.objects.persist();
-  // remove version. exported component might have multiple versions exported
-  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
-  return BitIds.uniqFromArray(idsWithRemoteScope);
+  const remotes: Remotes = await getScopeRemotes(scope);
+  if (remoteName) {
+    return exportIntoRemote(remoteName, ids);
+  }
+  const groupedByScope = ids.toGroupByScopeName(defaultScope);
+  const results = await pMapSeries(Object.keys(groupedByScope), scopeName =>
+    exportIntoRemote(scopeName, groupedByScope[scopeName])
+  );
+  return {
+    exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
+    updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
+  };
+
+  async function exportIntoRemote(
+    remoteNameStr: string,
+    bitIds: BitIds
+  ): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
+    const remote: Remote = await remotes.resolve(remoteNameStr, scope);
+    const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
+    const idsToChangeLocally = BitIds.fromArray(
+      bitIds.filter(id => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
+    );
+    const componentsAndObjects = [];
+    const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
+      const componentAndObject = componentObject.toObjects(scope.objects);
+      componentAndObject.component.clearStateData();
+      await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
+      await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
+      const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
+      componentAndObject.component.addScopeListItem(remoteObj);
+
+      if (idsToChangeLocally.hasWithoutScopeAndVersion(componentAndObject.component.toBitId())) {
+        componentsAndObjects.push(componentAndObject);
+      } else {
+        // the component should not be changed locally. only add the new scope to the scope-list
+        const componentAndObjectCloned = componentObject.toObjects(scope.objects);
+        componentAndObjectCloned.component.addScopeListItem(remoteObj);
+        componentsAndObjects.push(componentAndObjectCloned);
+      }
+      const componentBuffer = await componentAndObject.component.compress();
+      const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+      return new ComponentObjects(componentBuffer, objectsBuffer);
+    });
+    const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
+    let exportedIds: string[];
+    try {
+      exportedIds = await remote.pushMany(manyObjects, context);
+      logger.debugAndAddBreadCrumb(
+        'exportMany',
+        'successfully pushed all ids to the bare-scope, going to save them back to local scope'
+      );
+    } catch (err) {
+      logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
+      return Promise.reject(err);
+    }
+    await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
+    idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
+    componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
+    await scope.objects.persist();
+    // remove version. exported component might have multiple versions exported
+    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
+    return {
+      exported: idsWithRemoteScopeUniq,
+      updatedLocally: BitIds.fromArray(
+        idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))
+      )
+    };
+  }
+
+  async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
+    const scopeComponentImporter = new ScopeComponentsImporter(scope);
+    const versionsDependencies = await scopeComponentImporter.importManyWithAllVersions(ids, true, true);
+    const allDependencies = R.flatten(
+      versionsDependencies.map(versionDependencies => versionDependencies.allDependencies)
+    );
+    return allDependencies.map(componentVersion => componentVersion.component.toBitId());
+  }
 }
 
 /**
@@ -126,41 +195,25 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
  * to the bare-scope name.
  * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
  */
-function convertNonScopeToCorrectScope(
+async function convertToCorrectScope(
   scope: Scope,
   componentsObjects: { component: ModelComponent, objects: BitObject[] },
-  remoteScope: string
-): void {
-  const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
-    if (dependencyId.scope) return dependencyId;
-    const depId = ModelComponent.fromBitId(dependencyId);
-    // todo: use 'load' for async and switch the foreach with map.
-    const dependencyObject = scope.objects.loadSync(depId.hash());
-    if (dependencyObject instanceof Symlink) {
-      return dependencyId.changeScope(dependencyObject.realScope);
-    }
-    return dependencyId.changeScope(remoteScope);
-  };
-
-  const getBitIdsWithUpdatedScope = (bitIds: BitIds): BitIds => {
-    const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
-    return BitIds.fromArray(updatedIds);
-  };
-
-  componentsObjects.objects.forEach((object: BitObject) => {
-    if (object instanceof Version) {
-      const hashBefore = object.hash().toString();
-      object.getAllDependencies().forEach((dependency) => {
-        dependency.id = getIdWithUpdatedScope(dependency.id);
-      });
-      object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
-      object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
-      object.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(object.flattenedCompilerDependencies);
-      object.flattenedTesterDependencies = getBitIdsWithUpdatedScope(object.flattenedTesterDependencies);
-      const hashAfter = object.hash().toString();
+  remoteScope: string,
+  fork: boolean,
+  exportingIds: BitIds,
+  codemod: boolean
+): Promise<void> {
+  // $FlowFixMe
+  const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
+  await Promise.all(
+    versionsObjects.map(async (objectVersion: Version) => {
+      const hashBefore = objectVersion.hash().toString();
+      if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
+      changeDependencyScope(objectVersion);
+      const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
         logger.debugAndAddBreadCrumb(
-          'scope._convertNonScopeToCorrectScope',
+          'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
           { id: componentsObjects.component.id().toString() }
         );
@@ -171,10 +224,87 @@ function convertNonScopeToCorrectScope(
           }
         });
       }
-    }
-  });
-
+    })
+  );
   componentsObjects.component.scope = remoteScope;
+
+  function changeDependencyScope(version: Version): void {
+    version.getAllDependencies().forEach((dependency) => {
+      dependency.id = getIdWithUpdatedScope(dependency.id);
+    });
+    version.flattenedDependencies = getBitIdsWithUpdatedScope(version.flattenedDependencies);
+    version.flattenedDevDependencies = getBitIdsWithUpdatedScope(version.flattenedDevDependencies);
+    version.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(version.flattenedCompilerDependencies);
+    version.flattenedTesterDependencies = getBitIdsWithUpdatedScope(version.flattenedTesterDependencies);
+  }
+
+  function getIdWithUpdatedScope(dependencyId: BitId): BitId {
+    if (dependencyId.scope === remoteScope) {
+      return dependencyId; // nothing has changed
+    }
+    if (!dependencyId.scope || fork || exportingIds.hasWithoutVersion(dependencyId)) {
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
+      }
+      return dependencyId.changeScope(remoteScope);
+    }
+    return dependencyId;
+  }
+  function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
+    const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
+    return BitIds.fromArray(updatedIds);
+  }
+  async function _replaceSrcOfVersionIfNeeded(version: Version) {
+    const files = [...version.files, ...(version.dists || [])];
+    await Promise.all(
+      files.map(async (file) => {
+        const newFileObject = await _createNewFileIfNeeded(version, file);
+        if (newFileObject) {
+          file.file = newFileObject.hash();
+          componentsObjects.objects.push(newFileObject);
+        }
+        return null;
+      })
+    );
+  }
+  async function _createNewFileIfNeeded(version: Version, file: Object): Promise<?Source> {
+    const currentHash = file.file;
+    // $FlowFixMe
+    const fileObject: Source = await scope.objects.load(currentHash);
+    const fileString = fileObject.contents.toString();
+    const dependenciesIds = version.getAllDependencies().map(d => d.id);
+    const allIds = [...dependenciesIds, componentsObjects.component.toBitId()];
+    let newFileString = fileString;
+    allIds.forEach((id) => {
+      if (id.scope === remoteScope) {
+        return; // nothing to do, the remote has not changed
+      }
+      const idWithNewScope = id.changeScope(remoteScope);
+      const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
+      const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
+      const singleQuote = "'";
+      const doubleQuotes = '"';
+      [singleQuote, doubleQuotes].forEach((quoteType) => {
+        // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
+        newFileString = newFileString.replace(
+          new RegExp(quoteType + pkgNameWithOldScope + quoteType, 'g'),
+          quoteType + pkgNameWithNewScope + quoteType
+        );
+        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+        newFileString = newFileString.replace(
+          new RegExp(`${quoteType}${pkgNameWithOldScope}/`, 'g'),
+          `${quoteType}${pkgNameWithNewScope}/`
+        );
+      });
+    });
+    if (newFileString !== fileString) {
+      return Source.from(Buffer.from(newFileString));
+    }
+    return null;
+  }
 }
 
 /**
@@ -209,8 +339,13 @@ async function changePartialNamesToFullNamesInDists(
 
   async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<?Source> {
     const currentHash = dist.file;
+    // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
+    // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.
+    // currently, we require calculating the hash for each one of the source every time.
     // $FlowFixMe
-    const distObject: Source = await scope.objects.load(currentHash);
+    const distObject: Source =
+      (await currentHash.load(scope.objects)) ||
+      objects.filter(obj => obj instanceof Source).find(obj => obj.hash().toString() === currentHash.toString());
     const distString = distObject.contents.toString();
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
     const allIds = [...dependenciesIds, component.toBitId()];
@@ -219,7 +354,20 @@ async function changePartialNamesToFullNamesInDists(
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-      newDistString = newDistString.replace(new RegExp(pkgNameWithoutScope, 'g'), pkgNameWithScope);
+      const singleQuote = "'";
+      const doubleQuotes = '"';
+      [singleQuote, doubleQuotes].forEach((quoteType) => {
+        // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
+        newDistString = newDistString.replace(
+          new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),
+          quoteType + pkgNameWithScope + quoteType
+        );
+        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+        newDistString = newDistString.replace(
+          new RegExp(`${quoteType}${pkgNameWithoutScope}/`, 'g'),
+          `${quoteType}${pkgNameWithScope}/`
+        );
+      });
     });
     if (newDistString !== distString) {
       return Source.from(Buffer.from(newDistString));

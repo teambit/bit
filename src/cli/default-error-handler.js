@@ -47,6 +47,7 @@ import {
   HashNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
+import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
 import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
@@ -142,9 +143,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ExtensionNameNotValid,
     err =>
-      `error: the extension name "${
-        err.name
-      }" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
+      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
   ],
   [
     ProtocolNotSupported,
@@ -198,9 +197,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     PermissionDenied,
     err =>
-      `error: permission to scope ${
-        err.scope
-      } was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
+      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
@@ -255,9 +252,7 @@ to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIs
   ],
   [
     ExportAnotherOwnerPrivate,
-    err => `error: unable to export components to ${
-      err.destinationScope
-    } because they have dependencies on components in ${err.sourceScope}.
+    err => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
 see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bitdev-permissions.html`
@@ -326,6 +321,11 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
 consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
   [
+    InvalidPackageManager,
+    err => `error: the package manager provided ${chalk.bold(err.packageManager)} is not a valid package manager.
+please specify 'npm' or 'yarn'`
+  ],
+  [
     InvalidPackageJson,
     err => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
 please fix the file in order to run bit commands`
@@ -391,9 +391,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     MissingFilesFromComponent,
     (err) => {
-      return `component ${
-        err.id
-      } is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
+      return `component ${err.id} is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
     }
   ],
   [
@@ -495,16 +493,12 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExtensionGetDynamicPackagesError,
     err =>
-      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${
-        err.originalError.message
-      }.\n${err.originalError.stack}`
+      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
   ],
   [
     ExtensionGetDynamicConfigError,
     err =>
-      `error: bit failed to get the config from ${err.compName} with the following exception:\n${
-        err.originalError.message
-      }.\n${err.originalError.stack}`
+      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
   ],
   [
     InvalidCompilerInterface,
@@ -525,9 +519,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     err =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${
-        err.debugInfo
-      }`
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${err.debugInfo}`
   ],
   [
     ObjectsWithoutConsumer,
@@ -608,19 +600,30 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
  * in which case, it loses its class and has only the fields.
  */
-function sendToAnalyticsAndSentry(err) {
+function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
-  // only level FATAL are reported to Sentry.
   // $FlowFixMe
-  const level = err.isUserError ? LEVEL.INFO : LEVEL.FATAL;
+  const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
+  // only level FATAL are reported to Sentry.
+  const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;
   Analytics.setError(level, possiblyHashedError);
+}
+
+function handleNonBitCustomErrors(err: Error): string {
+  if (err.code === 'EACCES') {
+    // see #1774
+    return chalk.red(
+      `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
+    );
+  }
+  return chalk.red(err.message || err);
 }
 
 export default (err: Error): ?string => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {
-    return chalk.red(err.message || err);
+    return handleNonBitCustomErrors(err);
   }
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';

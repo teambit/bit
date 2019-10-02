@@ -1,5 +1,4 @@
 /** @flow */
-import chalk from 'chalk';
 import Command from '../../command';
 import { link } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';

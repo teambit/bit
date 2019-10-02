@@ -3,12 +3,12 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import { COMPONENT_ORIGINS } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import { Driver } from '../../../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import type Consumer from '../../../../consumer/consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
@@ -21,7 +21,8 @@ import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
-import { dependenciesFields } from '../../../config/consumer-overrides';
+import ShowDoctorError from '../../../../error/show-doctor-error';
+import PackageJsonFile from '../../package-json-file';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -148,14 +149,19 @@ export default class DependencyResolver {
     this.component.setTesterDependencies(this.allDependencies.testerDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
-    this.component.compilerPackageDependencies = R.merge(
-      this.allPackagesDependencies.compilerPackageDependencies,
-      this.component.compilerPackageDependencies
-    );
-    this.component.testerPackageDependencies = R.merge(
-      this.allPackagesDependencies.testerPackageDependencies,
-      this.component.testerPackageDependencies
-    );
+    if (shouldProcessEnvDependencies(this.component.compiler)) {
+      this.component.compilerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.compilerPackageDependencies,
+        this.component.compilerPackageDependencies.devDependencies
+      );
+    }
+    if (shouldProcessEnvDependencies(this.component.tester)) {
+      this.component.testerPackageDependencies.devDependencies = R.merge(
+        this.allPackagesDependencies.testerPackageDependencies,
+        this.component.testerPackageDependencies.devDependencies
+      );
+    }
+
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
@@ -223,7 +229,7 @@ export default class DependencyResolver {
     const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
-    dependenciesFields.forEach((depField) => {
+    DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
         // $FlowFixMe
         components[depField].forEach(id => this.allDependencies[depField].push({ id, relativePaths: [] }));
@@ -297,10 +303,6 @@ export default class DependencyResolver {
         // since the dep-file is a generated file, it is safe to assume that the componentFromModel has in its
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
-        if (!this.componentFromModel) {
-          throw new GeneralError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
-Try to run "bit import ${this.component.id.toString()} --objects" to get the component saved in the model`);
-        }
         ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
           componentId,
           depFile,
@@ -361,10 +363,8 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       .getAllDependencies()
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
-      throw new GeneralError( // $FlowFixMe
-        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-          this.componentFromModel.id
-        }`
+      throw new ShowDoctorError( // $FlowFixMe
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
     const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
@@ -379,7 +379,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     );
     const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
     if (!relativePath) {
-      throw new GeneralError(
+      throw new ShowDoctorError(
         `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }
@@ -650,7 +650,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const getPackages = () => {
+    const getPackages = (): ?Object => {
       const packages = this.tree[originFile].packages;
       if (RA.isNilOrEmpty(packages)) return null;
       const shouldBeIncluded = (pkgVersion, pkgName) =>
@@ -668,6 +668,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       } else {
         Object.assign(this.allPackagesDependencies.packageDependencies, packages);
       }
+      this._addTypesPackagesForTypeScript(packages, originFile);
     }
   }
 
@@ -739,7 +740,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       'dependency-resolver.processErrors',
       'got an error from the driver while resolving dependencies'
     );
-    logger.error(error);
+    logger.error('dependency-resolver.processErrors', error);
     // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;
@@ -884,11 +885,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!this.componentFromModel) return;
     if (!shouldProcessEnvDependencies(this.component.compiler)) {
       this.allDependencies.compilerDependencies = this.componentFromModel.compilerDependencies.get();
-      this.allPackagesDependencies.compilerPackageDependencies = this.componentFromModel.compilerPackageDependencies;
     }
     if (!shouldProcessEnvDependencies(this.component.tester)) {
       this.allDependencies.testerDependencies = this.componentFromModel.testerDependencies.get();
-      this.allPackagesDependencies.testerPackageDependencies = this.componentFromModel.testerPackageDependencies;
     }
   }
 
@@ -955,13 +954,9 @@ either, use the ignore file syntax or change the require statement to have a mod
    * the package.json in the component's directory.
    */
   populatePeerPackageDependencies(): void {
-    const componentMap = this.component.componentMap;
     const getPeerDependencies = (): Object => {
       const packageJson = this._getPackageJson();
       if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
-      if (this.component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-        return this.component.componentFromModel.peerPackageDependencies;
-      }
       return {};
     };
     const projectPeerDependencies = getPeerDependencies();
@@ -983,22 +978,56 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.allPackagesDependencies.peerPackageDependencies = peerPackages;
   }
 
+  /**
+   * returns `package.json` of the component when it's imported, or `package.json` of the workspace
+   * when it's authored.
+   */
   _getPackageJson(): ?Object {
     const componentMap = this.component.componentMap;
     // $FlowFixMe
-    const componentRoot = componentMap.getRootDir();
-    const packageJsonLocation = path.join(this.consumer.toAbsolutePath(componentRoot), 'package.json');
-    if (!fs.existsSync(packageJsonLocation)) return null;
-    try {
-      const packageJson = fs.readJsonSync(packageJsonLocation);
-      return packageJson;
-    } catch (err) {
-      logger.errorAndAddBreadCrumb(
-        'dependency-resolver._getPackageJson',
-        'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
-        { packageJsonLocation, message: err.message }
-      );
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    if (isAuthor) {
+      return this.consumer.config.packageJsonObject;
     }
+    if (this.component.packageJsonFile) {
+      return this.component.packageJsonFile.packageJsonObject;
+    }
+    if (this.componentFromModel) {
+      // a component is imported but the package.json file is missing or never written
+      // read the values from the model
+      // $FlowFixMe
+      const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
+      return packageJson.packageJsonObject;
+    }
+    return null;
+  }
+
+  /**
+   * when requiring packages in typescript, sometimes there are the types packages with the same
+   * name, which the user probably wants as well. for example, requiring `foo` package, will also
+   * add `@types/foo` to the devDependencies if it has been found in the user `package.json` file.
+   *
+   * ideally this should be in bit-javascript. however, the decision where to put these `@types`
+   * packages (dependencies/devDependencies) is done here according to the user `package.json`
+   * and can't be done there because the `Tree` we get from bit-javascript doesn't have this
+   * distinction.
+   */
+  _addTypesPackagesForTypeScript(packages: Object, originFile: PathLinuxRelative): void {
+    const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
+    if (!isTypeScript) return;
+    const packageJson = this._getPackageJson();
+    if (!packageJson) return;
+    const addIfNeeded = (depField: string, packageName: string) => {
+      if (!packageJson[depField]) return;
+      const typesPackage = `@types/${packageName}`;
+      if (!packageJson[depField][typesPackage]) return;
+      Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], {
+        [typesPackage]: packageJson[depField][typesPackage]
+      });
+    };
+    Object.keys(packages).forEach((packageName) => {
+      DEPENDENCIES_FIELDS.forEach(depField => addIfNeeded(depField, packageName));
+    });
   }
 
   _pkgFieldMapping(field: string) {

@@ -68,7 +68,7 @@ export default class ManyComponentsWriter {
   installNpmPackages: boolean;
   installPeerDependencies: boolean;
   addToRootPackageJson: boolean;
-  verbose: boolean;
+  verbose: boolean; // prints npm results
   excludeRegistryPrefix: boolean;
   dependenciesIdsCache: Object;
   writtenComponents: Component[];
@@ -170,6 +170,7 @@ export default class ManyComponentsWriter {
       : this._getComponentRootDir(componentWithDeps.component.id);
     const getParams = () => {
       if (!this.consumer) {
+        componentWithDeps.component.dists.writeDistsFiles = this.writeDists;
         return {
           origin: COMPONENT_ORIGINS.IMPORTED
         };
@@ -185,7 +186,7 @@ export default class ManyComponentsWriter {
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
-      // also, don't write dists file for imported component, unless the user used '--dist' flag
+      // also, don't write dists file for imported component when a user used `--ignore-dist` flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
         configDir: this.configDir || configDirFromComponentMap,
@@ -231,7 +232,7 @@ export default class ManyComponentsWriter {
           dep.writtenPath = '.';
           logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
+            'writeToComponentsDir, ignore authored dependency {dependencyId} as it already exists in bit map',
             { dependencyId }
           );
           return Promise.resolve(dep);
@@ -245,11 +246,25 @@ export default class ManyComponentsWriter {
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
           return Promise.resolve(dep);
         }
+        if (
+          depFromBitMap &&
+          depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED &&
+          (fs.existsSync(depFromBitMap.rootDir) ||
+            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
+        ) {
+          dep.writtenPath = depFromBitMap.rootDir;
+          logger.debugAndAddBreadCrumb(
+            'writeToComponentsDir',
+            'writeToComponentsDir, ignore non-authored dependency {dependencyId} as it already exists in bit map and file system',
+            { dependencyId }
+          );
+          return Promise.resolve(dep);
+        }
         const depRootPath = this._getDependencyRootDir(dep.id);
         dep.writtenPath = depRootPath;
         this.dependenciesIdsCache[dependencyId] = depRootPath;
-        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
-        // and namespace can co-exist with different versions.
+        // When a component is NESTED we do interested in the exact version, because multiple
+        // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
@@ -270,7 +285,16 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        const relativeWrittenPath = componentWithDeps.component.writtenPath;
+        // $FlowFixMe componentWithDeps.component.componentMap is set
+        const componentMap: ComponentMap = componentWithDeps.component.componentMap;
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {
+          throw new GeneralError(`unable to use "--path" flag.
+to move individual files, use bit move.
+to move all component files to a different directory, run bit remove and then bit import --path`);
+        }
+        const relativeWrittenPath = componentMap.trackDir
+          ? componentMap.trackDir
+          : componentWithDeps.component.writtenPath;
         // $FlowFixMe relativeWrittenPath is set
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // $FlowFixMe this.writeToPath is set

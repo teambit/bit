@@ -8,6 +8,8 @@ import barFooEs6 from '../../fixtures/consumer-components/es6/bar-foo.json';
 import utilsIsStringEs6 from '../../fixtures/consumer-components/es6/utils-is-string.json';
 import barFooCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/bar-foo.json';
 import utilsIsStringCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/utils-is-string.json';
+import barFooSass from '../../fixtures/consumer-components/sass/bar-foo.json';
+import utilsIsStringSass from '../../fixtures/consumer-components/sass/utils-is-string.json';
 import * as globalConfig from '../api/consumer/lib/global-config';
 
 const mockBitMap = () => {
@@ -309,6 +311,37 @@ describe('DependencyFileLinkGenerator', () => {
             expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
         });
+      });
+    });
+    describe('using sass files', () => {
+      let dependencyFileLinkGenerator;
+      let linkResult;
+      before(async () => {
+        const component = await Component.fromString(JSON.stringify(barFooSass));
+        component.componentMap = {
+          rootDir: 'components/bar/foo',
+          getRootDir() {
+            return this.rootDir;
+          }
+        };
+        const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringSass));
+        dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
+          consumer: mockConsumer(),
+          bitMap: mockBitMap(),
+          component,
+          relativePath: component.dependencies.get()[0].relativePaths[0],
+          dependencyComponent,
+          createNpmLinkFiles: false,
+          targetDir: ''
+        });
+        const linkResults = dependencyFileLinkGenerator.generate();
+        linkResult = linkResults[0];
+      });
+      it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
+        expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.scss'));
+      });
+      it('should generate linkContent that points to the main file inside the package', () => {
+        expect(linkResult.linkContent).to.equal("@import '~@bit/remote-scope.utils.is-string/utils/is-string.scss';");
       });
     });
   });

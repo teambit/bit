@@ -3,7 +3,7 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import childProcess, { ChildProcess } from 'child_process';
-import Helper from './e2e-helper';
+import Helper from '../src/e2e-helper/e2e-helper';
 import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/consumer/component-ops/watch-components';
 
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
@@ -15,10 +15,10 @@ export default class WatchRunner {
     this.helper = helper;
   }
   watch(): Promise<void> {
-    const cmd = `${this.helper.bitBin} watch --verbose`;
+    const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     return new Promise((resolve, reject) => {
-      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.localScopePath, detached: true });
+      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath, detached: true });
       this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(STARTED_WATCHING_MSG)) {

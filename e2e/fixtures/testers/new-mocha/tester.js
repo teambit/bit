@@ -17,8 +17,8 @@ const tester = {
     const dynamicPackageDependencies = {
       "lodash.get": '4.4.2'
     };
-    
-    return dynamicPackageDependencies;
+
+    return { devDependencies: dynamicPackageDependencies };
   },
   action: ({
     testFiles,
@@ -29,7 +29,7 @@ const tester = {
     context
   }) => {
     let config = {};
-    const configFile = getFileByName('config', configFiles);  
+    const configFile = getFileByName('config', configFiles);
     if (configFile) {
       const rawConfigFile = configFile.contents.toString();
       config = JSON.parse(rawConfigFile);
@@ -37,7 +37,7 @@ const tester = {
     // This is not a good idea to get it from external file
     // it's here only to tests that the files passed correctly
     const reporter = config.reporter || JSONReporter;
-  
+
     try {
       return new Promise((resolve) => {
         const mocha = new Mocha({ reporter: JSONReporter });

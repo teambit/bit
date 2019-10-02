@@ -10,13 +10,15 @@ import { ComponentWithDependencies } from '../../../scope';
 import type { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import type { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = `import components into your current workspace.\n  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html`;
+  description = `import components into your current workspace.
+  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html
+  ${WILDCARD_HELP('import')}`;
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
@@ -32,7 +34,8 @@ export default class Import extends Command {
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
-    ['', 'ignore-dist', 'write dist files (when exist) to the configured directory'],
+    ['j', 'json', 'return the output as JSON'],
+    ['', 'ignore-dist', "skip writing the component's build files during import"],
     [
       '',
       'conf [path]',
@@ -52,7 +55,9 @@ export default class Import extends Command {
       'm',
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
-    ]
+    ],
+    ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
   ];
   loader = true;
   migration = true;
@@ -69,11 +74,14 @@ export default class Import extends Command {
       environment = false,
       override = false,
       verbose = false,
+      json = false,
       ignoreDist = false,
       conf,
       skipNpmInstall = false,
       ignorePackageJson = false,
-      merge
+      merge,
+      dependencies = false,
+      dependents = false
     }: {
       tester?: boolean,
       compiler?: boolean,
@@ -84,11 +92,14 @@ export default class Import extends Command {
       environment?: boolean,
       override?: boolean,
       verbose?: boolean,
+      json?: boolean,
       ignoreDist?: boolean,
       conf?: string,
       skipNpmInstall?: boolean,
       ignorePackageJson?: boolean,
-      merge?: MergeStrategy
+      merge?: MergeStrategy,
+      dependencies?: boolean,
+      dependents?: boolean
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -127,15 +138,19 @@ export default class Import extends Command {
       writeDists: !ignoreDist,
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
-      writePackageJson: !ignorePackageJson
+      writePackageJson: !ignorePackageJson,
+      importDependenciesDirectly: dependencies,
+      importDependents: dependents
     };
     // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
     if (typeof conf === 'string') {
       importOptions.configDir = conf;
     }
-    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults =>
-      R.assoc('displayDependencies', displayDependencies, importResults)
-    );
+    return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults => ({
+      displayDependencies,
+      json,
+      ...importResults
+    }));
   }
 
   report({
@@ -143,7 +158,8 @@ export default class Import extends Command {
     envComponents,
     importDetails,
     warnings,
-    displayDependencies
+    displayDependencies,
+    json
   }: {
     dependencies?: ComponentWithDependencies[],
     envComponents?: Component[],
@@ -153,8 +169,12 @@ export default class Import extends Command {
       notInNodeModules: [],
       notInBoth: []
     },
-    displayDependencies?: boolean
+    displayDependencies: boolean,
+    json: boolean
   }): string {
+    if (json) {
+      return JSON.stringify({ importDetails, warnings }, null, 4);
+    }
     let dependenciesOutput;
     let envComponentsOutput;
 

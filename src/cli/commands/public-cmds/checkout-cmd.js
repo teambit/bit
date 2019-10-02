@@ -5,7 +5,7 @@ import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
 import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
-import { LATEST } from '../../../constants';
+import { LATEST, WILDCARD_HELP } from '../../../constants';
 import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default class Checkout extends Command {
@@ -14,7 +14,7 @@ export default class Checkout extends Command {
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
-  the id can be used with wildcards (e.g. bit checkout 0.0.1 "utils/*")`;
+  ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
   opts = [
     [

@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 import { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
 
 const maxComponents = 3000;
 const maxFlattenedDependencies = 100;
@@ -40,11 +40,11 @@ describe('many components', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
-    helper.destroyEnv();
+    helper.scopeHelper.destroy();
   });
   describe('basic commands', () => {
     before(() => {
-      helper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
@@ -53,14 +53,14 @@ describe('many components', function () {
         return `require('./comp${index - 1}');`;
       };
       for (let i = 0; i < maxComponents; i += 1) {
-        helper.createFile('bar', `comp${i}.js`, getImp(i));
+        helper.fs.createFile('bar', `comp${i}.js`, getImp(i));
       }
     });
     describe('add command', () => {
       let addTimeInSeconds;
       before(() => {
         const start = process.hrtime();
-        helper.addComponent('bar/*');
+        helper.command.addComponent('bar/*');
         [addTimeInSeconds] = process.hrtime(start);
         console.log('addTimeInSeconds', addTimeInSeconds);
       });
@@ -71,7 +71,7 @@ describe('many components', function () {
         let tagTimeInSeconds;
         before(() => {
           const start = process.hrtime();
-          helper.tagAllComponents();
+          helper.command.tagAllComponents();
           [tagTimeInSeconds] = process.hrtime(start);
           console.log('tagTimeInSeconds', tagTimeInSeconds);
         });
@@ -82,7 +82,7 @@ describe('many components', function () {
           let statusTimeInSeconds;
           before(() => {
             const start = process.hrtime();
-            helper.status();
+            helper.command.status();
             [statusTimeInSeconds] = process.hrtime(start);
             console.log('statusTimeInSeconds', statusTimeInSeconds);
           });
@@ -94,7 +94,7 @@ describe('many components', function () {
           let exportTimeInSeconds;
           before(() => {
             const start = process.hrtime();
-            helper.exportAllComponents();
+            helper.command.exportAllComponents();
             [exportTimeInSeconds] = process.hrtime(start);
             console.log('exportTimeInSeconds', exportTimeInSeconds);
           });
@@ -105,7 +105,7 @@ describe('many components', function () {
             let importTimeInSeconds;
             before(() => {
               const start = process.hrtime();
-              helper.runCmd('bit import');
+              helper.command.runCmd('bit import');
               [importTimeInSeconds] = process.hrtime(start);
               console.log('importTimeInSeconds', importTimeInSeconds);
             });

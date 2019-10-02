@@ -7,6 +7,7 @@ import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
+import ScopeGraph from './commands/private-cmds/_graph-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Commit from './commands/public-cmds/tag-cmd';
@@ -54,6 +55,7 @@ import Logout from './commands/public-cmds/logout-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
+import Graph from './commands/public-cmds/graph-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
@@ -82,6 +84,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new ScopeList(),
       new ScopeSearch(),
       new ScopeShow(),
+      new ScopeGraph(),
       new Fetch(),
       new Build(),
       new EjectConf(),
@@ -112,7 +115,8 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Eject(),
       new Migrate(),
       new Watch(),
-      new Doctor()
+      new Doctor(),
+      new Graph()
     ],
     extensionsCommands
   );
