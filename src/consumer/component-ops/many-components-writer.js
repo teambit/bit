@@ -248,6 +248,7 @@ export default class ManyComponentsWriter {
         }
         if (
           depFromBitMap &&
+          depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED &&
           (fs.existsSync(depFromBitMap.rootDir) ||
             this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
         ) {
