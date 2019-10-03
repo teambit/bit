@@ -14,9 +14,6 @@ type AbstractVinylProps = {
   contents: Buffer
 };
 export default class AbstractVinyl extends Vinyl {
-  base: PathOsBased;
-  path: PathOsBased;
-  relative: PathOsBased;
   override: boolean = true;
   verbose: boolean = false;
 
