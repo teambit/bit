@@ -14,7 +14,10 @@
     "lint:html": "eslint \"{src,e2e}/**/*.js\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e}/**/*.js\" --ignore-path .eslintignore-circle --format junit -o junit/eslint-results.xml",
     "lint-circle-debug": "eslint \"{src,e2e}/**/*.js\" --ignore-path .eslintignore-circle",
-    "format": "prettier-eslint \"{src,e2e}/**/*.js\" --write",
+    "format": "prettier-eslint \"{src,e2e}/**/*.{ts,tsx}\" --write",
+    "prettier:base": "prettier",
+    "prettier:check": "npm run prettier:base -- --list-different \"{src,e2e}/**/*.{ts,tsx}\"",
+    "prettier:write": "npm run prettier:base -- --write \"{src,e2e}/**/*.{ts,tsx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
@@ -197,7 +200,8 @@
     "mocha-appveyor-reporter": "^0.4.2",
     "mocha-circleci-reporter": "0.0.3",
     "mocha-junit-reporter": "^1.13.0",
-    "prettier-eslint": "^8.8.1",
+    "prettier": "^1.18.2",
+    "prettier-eslint": "^9.0.0",
     "prettier-eslint-cli": "^4.7.1",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
@@ -210,7 +214,7 @@
     "/dist"
   ],
   "lint-staged": {
-    "*.{js,css}": [
+    "*.{ts,js,css}": [
       "prettier-eslint --write",
       "git add"
     ]
