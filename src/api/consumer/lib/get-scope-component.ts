@@ -19,8 +19,8 @@ export default (async function getScopeComponent({
   showDependencies
 }: {
   id: string,
-  allVersions: ?boolean,
-  scopePath: ?string, // used by the api (see /src/api.js)
+  allVersions: boolean | null | undefined,
+  scopePath: string | null | undefined, // used by the api (see /src/api.js)
   showDependents: boolean,
   showDependencies: boolean
 }): Promise<{ component: Component[] | Component }> {
@@ -33,7 +33,7 @@ export default (async function getScopeComponent({
     return { component };
   }
 
-  const consumer: ?Consumer = await loadConsumerIfExist();
+  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
   // $FlowFixMe
   const remote = await getRemote();
   loader.start(BEFORE_REMOTE_SHOW);

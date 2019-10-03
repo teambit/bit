@@ -22,7 +22,7 @@ export default class CiUpdate extends Command {
   private = false;
 
   action(
-    [id, scopePath]: [string, ?string],
+    [id, scopePath]: [string, string | null | undefined],
     {
       // verbose = true,
       directory,
@@ -30,9 +30,9 @@ export default class CiUpdate extends Command {
       keep = false,
       noCache = false
     }: {
-      // verbose: ?boolean,
-      directory: ?string,
-      output: ?string,
+      // verbose: boolean | null | undefined,
+      directory: string | null | undefined,
+      output: string | null | undefined,
       keep: boolean,
       noCache: boolean
     }
@@ -49,7 +49,7 @@ export default class CiUpdate extends Command {
     output,
     directory
   }: {
-    specsResults: ?SpecsResults,
+    specsResults: SpecsResults | null | undefined,
     dists: Dists,
     output: PathOsBased,
     directory: PathOsBased

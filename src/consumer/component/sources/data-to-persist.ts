@@ -55,7 +55,7 @@ export default class DataToPersist {
   addManySymlinks(symlinks: Symlink[] = []) {
     symlinks.forEach(symlink => this.addSymlink(symlink));
   }
-  merge(dataToPersist: ?DataToPersist) {
+  merge(dataToPersist: DataToPersist | null | undefined) {
     if (!dataToPersist) return;
     this.addManyFiles(dataToPersist.files);
     this.removeManyPaths(dataToPersist.remove);

@@ -28,8 +28,8 @@ export type DoctorMetaData = {
   yarnVersion: string,
   userDetails: string
 };
-export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string, metaData: DoctorMetaData };
-export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: ?string, metaData: DoctorMetaData };
+export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: string | null | undefined, metaData: DoctorMetaData };
+export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: string | null | undefined, metaData: DoctorMetaData };
 
 let runningTimeStamp;
 
@@ -76,8 +76,8 @@ export async function listDiagnoses(): Promise<Diagnosis[]> {
 async function _saveExamineResultsToFile(
   examineResults: ExamineResult[],
   envMeta: DoctorMetaData,
-  filePath: ?string
-): Promise<?string> {
+  filePath: string | null | undefined
+): Promise<string | null | undefined> {
   if (!filePath) {
     return Promise.resolve(undefined);
   }
@@ -172,7 +172,7 @@ function _getUserDetails(): string {
   return `${name}<${email}>`;
 }
 
-async function _getDebugLogAsStream(): Promise<?Buffer> {
+async function _getDebugLogAsStream(): Promise<Buffer | null | undefined> {
   const exists = fs.exists(DEBUG_LOG);
   if (exists) {
     return fs.readFile(DEBUG_LOG);
@@ -180,11 +180,11 @@ async function _getDebugLogAsStream(): Promise<?Buffer> {
   return Promise.resolve(undefined);
 }
 
-async function _getConsumerInfo(): Promise<?ConsumerInfo> {
+async function _getConsumerInfo(): Promise<ConsumerInfo | null | undefined> {
   const consumerInfo = await getConsumerInfo(process.cwd());
   return consumerInfo;
 }
 
-function _getBitMap(workspaceDir): ?Buffer {
+function _getBitMap(workspaceDir): Buffer | null | undefined {
   return BitMap.loadRawSync(workspaceDir);
 }

@@ -59,7 +59,7 @@ export async function changeDependenciesToRelativeSyntax(
   dependencies: Component[]
 ): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
-  const updateComponentPackageJson = async (component): Promise<?JSONFile> => {
+  const updateComponentPackageJson = async (component): Promise<JSONFile | null | undefined> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
     const componentRootDir = componentMap.rootDir;
     if (!componentRootDir) return null;
@@ -106,7 +106,7 @@ export function preparePackageJsonToWrite(
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): { packageJson: PackageJsonFile, distPackageJson: ?PackageJsonFile } {
+): { packageJson: PackageJsonFile, distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
@@ -157,7 +157,7 @@ export async function updateAttribute(
 /**
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
  */
-export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
+export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: string | null | undefined) {
   if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const rootDir = consumer.getPath();
     const dependenciesDirectory = consumer.config.dependenciesDirectory;
@@ -225,8 +225,8 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ?ComponentMap
-): ?string {
+  dependencyComponentMap?: ComponentMap | null | undefined
+): string | null | undefined {
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }
@@ -242,7 +242,7 @@ function getPackageDependencyValue(
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): ?string {
+function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): string | null | undefined {
   const parentComponentMap = bitMap.getComponent(parentId);
   const dependencyComponentMap = bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);

@@ -13,11 +13,11 @@ export default class BitRawObject {
 
   constructor(
     buffer: Buffer,
-    ref: ?string,
-    types: ?{ [string]: Function },
-    type: ?string,
-    content: ?Buffer,
-    parsedContent: ?Any
+    ref: string | null | undefined,
+    types: { [string]: Function } | null | undefined,
+    type: string | null | undefined,
+    content: Buffer | null | undefined,
+    parsedContent: Any | null | undefined
   ) {
     let headers;
     let contentFromBuffer;
@@ -107,8 +107,8 @@ export default class BitRawObject {
 
   static async fromDeflatedBuffer(
     fileContents: Buffer,
-    ref: ?string,
-    types: ?{ [string]: Function }
+    ref: string | null | undefined,
+    types: { [string]: Function } | null | undefined
   ): Promise<BitObject> {
     return inflate(fileContents).then(buffer => new BitRawObject(buffer, ref, types));
   }

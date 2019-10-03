@@ -14,13 +14,13 @@ import ShowDoctorError from '../../error/show-doctor-error';
 
 type FileDiff = { filePath: string, diffOutput: string };
 export type FieldsDiff = { fieldName: string, diffOutput: string };
-export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[], fieldsDiff?: ?(FieldsDiff[]) };
+export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[], fieldsDiff?: FieldsDiff[] | null | undefined };
 
 export default (async function componentsDiff(
   consumer: Consumer,
   ids: BitId[],
-  version: ?string,
-  toVersion: ?string,
+  version: string | null | undefined,
+  toVersion: string | null | undefined,
   verbose: boolean // whether show internal components diff, such as sourceRelativePath
 ): Promise<DiffResults[]> {
   const { components } = await consumer.loadComponents(ids);

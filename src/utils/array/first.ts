@@ -11,7 +11,7 @@
  *  first([]) // => null
  * ```
  */
-export default function first(array: any[]): ?any {
+export default function first(array: any[]): any | null | undefined {
   if (array && array[0]) return array[0];
   return null;
 }

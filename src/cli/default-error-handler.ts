@@ -569,7 +569,7 @@ function getErrorFunc(errorDefinition) {
   return func;
 }
 
-function getErrorMessage(error: ?Error, func: ?Function): string {
+function getErrorMessage(error: Error | null | undefined, func: Function | null | undefined): string {
   if (!error || !func) return '';
   let errorMessage = func(error);
   if (error.showDoctorMessage) {
@@ -580,7 +580,7 @@ run 'bit doctor' to get detailed workspace diagnosis and issue resolution.`;
   return errorMessage;
 }
 
-function getExternalErrorMessage(externalError: ?Error): string {
+function getExternalErrorMessage(externalError: Error | null | undefined): string {
   if (!externalError) return '';
 
   // In case an error is not a real error
@@ -633,7 +633,7 @@ function handleNonBitCustomErrors(err: Error): string {
   return chalk.red(err.message || err);
 }
 
-export default (err: Error): ?string => {
+export default (err: Error): string | null | undefined => {
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {

@@ -23,7 +23,7 @@ export default class Graph extends Command {
 
   action(
     [id]: [string],
-    options: { image: ?string, remote: ?string, allVersions: ?boolean, layout: ?string }
+    options: { image: string | null | undefined, remote: string | null | undefined, allVersions: boolean | null | undefined, layout: string | null | undefined }
   ): Promise<any> {
     if (!options.image) {
       options.image = path.join(os.tmpdir(), `${generateRandomStr()}.png`);

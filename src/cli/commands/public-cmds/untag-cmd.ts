@@ -23,7 +23,7 @@ export default class Untag extends Command {
   loader = true;
   migration = true;
 
-  action([id, version]: string[], { all, force }: { all: ?boolean, force: ?boolean }): Promise<untagResult[]> {
+  action([id, version]: string[], { all, force }: { all: boolean | null | undefined, force: boolean | null | undefined }): Promise<untagResult[]> {
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
     }

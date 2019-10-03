@@ -51,17 +51,17 @@ export default class Tag extends Command {
       scope
     }: {
       message: string,
-      all: ?boolean,
-      patch: ?boolean,
-      minor: ?boolean,
-      major: ?boolean,
-      force: ?boolean,
-      verbose: ?boolean,
+      all: boolean | null | undefined,
+      patch: boolean | null | undefined,
+      minor: boolean | null | undefined,
+      major: boolean | null | undefined,
+      force: boolean | null | undefined,
+      verbose: boolean | null | undefined,
       ignoreMissingDependencies?: boolean,
       ignoreUnresolvedDependencies?: boolean,
       ignoreNewestVersion?: boolean,
       skipTests?: boolean,
-      scope: ?string
+      scope: string | null | undefined
     }
   ): Promise<any> {
     function getVersion() {

@@ -25,7 +25,7 @@ export default class OverridesDependencies {
   component: Component;
   consumer: Consumer;
   componentMap: ComponentMap;
-  componentFromModel: ?Component;
+  componentFromModel: Component | null | undefined;
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
   constructor(component: Component, consumer: Consumer) {
@@ -99,9 +99,9 @@ export default class OverridesDependencies {
   }
 
   getDependenciesToAddManually(
-    packageJson: ?Object,
+    packageJson: Object | null | undefined,
     existingDependencies: AllDependencies
-  ): ?{ components: Object, packages: Object } {
+  ): { components: Object, packages: Object } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
@@ -146,7 +146,7 @@ export default class OverridesDependencies {
     dependencyValue: string,
     idsFromBitmap: BitIds,
     idsFromModel: BitIds
-  ): ?BitId {
+  ): BitId | null | undefined {
     if (field === 'peerDependencies') return null;
     if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return null;
     dependency = dependency.replace(OVERRIDE_COMPONENT_PREFIX, '');
@@ -160,8 +160,8 @@ export default class OverridesDependencies {
     return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
   }
 
-  _manuallyAddPackage(field: string, dependency: string, dependencyValue: string, packageJson: ?Object): ?Object {
-    const packageVersionToAdd = (): ?string => {
+  _manuallyAddPackage(field: string, dependency: string, dependencyValue: string, packageJson: Object | null | undefined): Object | null | undefined {
+    const packageVersionToAdd = (): string | null | undefined => {
       if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
         return dependencyValue;
       }

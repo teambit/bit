@@ -4,10 +4,10 @@ import { InvalidVersionChange, InvalidVersion } from './exceptions';
 import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 
 export default class Version {
-  versionNum: ?string;
+  versionNum: string | null | undefined;
   latest: boolean;
 
-  constructor(versionNum: ?string, latest: boolean) {
+  constructor(versionNum: string | null | undefined, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
   }

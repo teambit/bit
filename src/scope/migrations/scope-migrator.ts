@@ -17,10 +17,10 @@ type ScopeMigrationResultCache = {
 };
 
 type VersionMigrationsDeclarations = {
-  component: ?(MigrationDeclaration[]),
-  symlink: ?(MigrationDeclaration[]),
-  scopeMeta: ?(MigrationDeclaration[]),
-  version: ?(MigrationDeclaration[])
+  component: MigrationDeclaration[] | null | undefined,
+  symlink: MigrationDeclaration[] | null | undefined,
+  scopeMeta: MigrationDeclaration[] | null | undefined,
+  version: MigrationDeclaration[] | null | undefined
 };
 
 type VersionMigrations = {

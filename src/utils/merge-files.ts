@@ -5,7 +5,7 @@ import GitNotFound from './git/exceptions/git-not-found';
 import getGitExecutablePath from './git/git-executable';
 import logger from '../logger/logger';
 
-export type MergeFileResult = { filePath: PathLinux, output: ?string, conflict: ?string };
+export type MergeFileResult = { filePath: PathLinux, output: string | null | undefined, conflict: string | null | undefined };
 export type MergeFileParams = {
   filePath: PathLinux,
   currentFile: {

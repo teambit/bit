@@ -6,8 +6,8 @@ export default class Cmd {
   alias: string;
   opts: [string, string, string][];
   commands: Cmd[] = [];
-  private: ?boolean;
-  loader: ?boolean;
+  private: boolean | null | undefined;
+  loader: boolean | null | undefined;
 
   // eslint-disable-next-line no-unused-vars
   action(params: any, opts: { [string]: any }, packageManagerArgs: string[]): Promise<any> {
@@ -20,7 +20,7 @@ export default class Cmd {
     return '"report" method not implemented on this command';
   }
 
-  handleError(): ?string {
+  handleError(): string | null | undefined {
     return null;
   }
 

@@ -14,7 +14,7 @@ export default (async function getConsumerBit({
 }: {
   id: string,
   compare: boolean,
-  allVersions: ?boolean,
+  allVersions: boolean | null | undefined,
   showRemoteVersions: boolean,
   showDependents: boolean,
   showDependencies: boolean

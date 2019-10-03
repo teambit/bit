@@ -55,11 +55,11 @@ import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
 export default class Dists {
   dists: Dist[];
   writeDistsFiles: boolean = true; // changed only when importing a component
-  areDistsInsideComponentDir: ?boolean = true;
-  distEntryShouldBeStripped: ?boolean = false;
-  _mainDistFile: ?PathOsBasedRelative;
-  distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
-  constructor(dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
+  areDistsInsideComponentDir: boolean | null | undefined = true;
+  distEntryShouldBeStripped: boolean | null | undefined = false;
+  _mainDistFile: PathOsBasedRelative | null | undefined;
+  distsRootDir: PathOsBasedRelative | null | undefined; // populated only after getDistDirForConsumer() is called
+  constructor(dists?: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
     this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
@@ -109,13 +109,13 @@ export default class Dists {
     return path.join(distTarget, componentRootDir);
   }
 
-  getDistDir(consumer: ?Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
+  getDistDir(consumer: Consumer | null | undefined, componentRootDir: PathLinux): PathOsBasedRelative {
     if (consumer) return this.getDistDirForConsumer(consumer, componentRootDir);
     this.distsRootDir = path.join(componentRootDir, DEFAULT_DIST_DIRNAME);
     return this.distsRootDir;
   }
 
-  updateDistsPerWorkspaceConfig(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
+  updateDistsPerWorkspaceConfig(id: BitId, consumer: Consumer | null | undefined, componentMap: ComponentMap): void {
     if (this.isEmpty()) return;
     const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
     this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase }));
@@ -150,7 +150,7 @@ export default class Dists {
     }
   }
 
-  stripOriginallySharedDir(originallySharedDir: ?string) {
+  stripOriginallySharedDir(originallySharedDir: string | null | undefined) {
     this.dists.forEach((distFile) => {
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newRelative });
@@ -163,7 +163,7 @@ export default class Dists {
   /**
    * write dists files to the filesystem
    */
-  async writeDists(component: Component, consumer: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+  async writeDists(component: Component, consumer: Consumer, writeLinks?: boolean = true): Promise<string[] | null | undefined> {
     const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
@@ -193,10 +193,10 @@ export default class Dists {
   async getDistsToWrite(
     component: Component,
     bitMap: BitMap,
-    consumer: ?Consumer,
+    consumer: Consumer | null | undefined,
     writeLinks?: boolean = true,
     componentWithDependencies?: ComponentWithDependencies
-  ): Promise<?DataToPersist> {
+  ): Promise<DataToPersist | null | undefined> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
     const dataToPersist = new DataToPersist();
     const componentMap = consumer
@@ -257,9 +257,9 @@ export default class Dists {
 
   toDistFilesModel(
     consumer: Consumer,
-    originallySharedDir: ?PathLinux,
-    compiler: ?CompilerExtension
-  ): { dists?: DistFileModel[], mainDistFile?: ?PathOsBasedRelative } {
+    originallySharedDir: PathLinux | null | undefined,
+    compiler: CompilerExtension | null | undefined
+  ): { dists?: DistFileModel[], mainDistFile?: PathOsBasedRelative | null | undefined } {
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
@@ -295,7 +295,7 @@ export default class Dists {
    * node_path will be 'dist' + 'src' - 'src' = 'dist'.
    * another example, distTarget = 'dist', customDir = 'src/custom', distEntry = 'src'. result: "dist/custom"
    */
-  static getNodePathDir(consumer: Consumer): ?string {
+  static getNodePathDir(consumer: Consumer): string | null | undefined {
     const resolveModules = consumer.config.resolveModules;
     if (!resolveModules || !resolveModules.modulesDirectories || !resolveModules.modulesDirectories.length) return null;
     const distTarget = consumer.config.distTarget || DEFAULT_DIST_DIRNAME;

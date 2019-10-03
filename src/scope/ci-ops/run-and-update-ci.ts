@@ -13,7 +13,7 @@ async function runAndUpdateCI({
   id: string,
   scopePath: string,
   verbose: boolean,
-  directory: ?string,
+  directory: string | null | undefined,
   keep?: boolean,
   noCache?: boolean
 }): Promise<any> {

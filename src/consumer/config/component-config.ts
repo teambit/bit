@@ -20,9 +20,9 @@ type ConfigProps = {
 };
 
 export default class ComponentConfig extends AbstractConfig {
-  overrides: ?ComponentOverridesData;
+  overrides: ComponentOverridesData | null | undefined;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
-  packageJsonFile: ?PackageJsonFile;
+  packageJsonFile: PackageJsonFile | null | undefined;
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
@@ -92,7 +92,7 @@ export default class ComponentConfig extends AbstractConfig {
   /**
    * Use the workspaceConfig as a base. Override values if exist in componentConfig
    */
-  static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: ?WorkspaceConfig): ComponentConfig {
+  static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: WorkspaceConfig | null | undefined): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
     const consumerConfigWithoutConsumerSpecifics = filterObject(plainConsumerConfig, (val, key) => key !== 'overrides');
     const mergedObject = R.merge(consumerConfigWithoutConsumerSpecifics, componentConfig);
@@ -115,7 +115,7 @@ export default class ComponentConfig extends AbstractConfig {
     configDir,
     workspaceConfig
   }: {
-    componentDir: ?PathOsBasedRelative,
+    componentDir: PathOsBasedRelative | null | undefined,
     workspaceDir: PathOsBasedRelative,
     configDir: PathOsBasedAbsolute,
     workspaceConfig: WorkspaceConfig
@@ -132,7 +132,7 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
-    const loadPackageJson = async (): Promise<?PackageJsonFile> => {
+    const loadPackageJson = async (): Promise<PackageJsonFile | null | undefined> => {
       if (!componentDir) return null;
       try {
         const file = await PackageJsonFile.load(workspaceDir, componentDir);

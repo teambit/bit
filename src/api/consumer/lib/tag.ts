@@ -24,9 +24,9 @@ export type TagResults = {
 export async function tagAction(args: {
   id: string,
   message: string,
-  exactVersion: ?string,
+  exactVersion: string | null | undefined,
   releaseType: string,
-  force: ?boolean,
+  force: boolean | null | undefined,
   verbose?: boolean,
   ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
@@ -87,9 +87,9 @@ async function getCommitPendingComponents(
 
 export async function tagAllAction(args: {
   message: string,
-  exactVersion: ?string,
+  exactVersion: string | null | undefined,
   releaseType: string,
-  force: ?boolean,
+  force: boolean | null | undefined,
   verbose?: boolean,
   ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,

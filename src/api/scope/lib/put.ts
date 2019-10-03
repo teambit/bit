@@ -16,7 +16,7 @@ export type ComponentObjectsInput = {
 
 export default (async function put(
   { path, componentObjects }: ComponentObjectsInput,
-  headers: ?Object
+  headers: Object | null | undefined
 ): Promise<string[]> {
   if (typeof componentObjects === 'string') {
     componentObjects = ComponentObjects.manyFromString(componentObjects);

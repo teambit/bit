@@ -8,7 +8,7 @@ import BitId from '../../bit-id/bit-id';
  */
 export default function componentIdToPackageName(
   id: BitId,
-  bindingPrefix: ?string,
+  bindingPrefix: string | null | undefined,
   withPrefix?: boolean = true
 ): string {
   const nameWithoutPrefix = `${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;

@@ -94,7 +94,7 @@ export default class ExtensionFile extends AbstractVinyl {
     return Promise.all(loadP);
   }
 
-  static loadFromParsedString(parsedString: Object): ?ExtensionFile {
+  static loadFromParsedString(parsedString: Object): ExtensionFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
     const extensionFile = new ExtensionFile(opts);
@@ -102,7 +102,7 @@ export default class ExtensionFile extends AbstractVinyl {
     return extensionFile;
   }
 
-  static loadFromParsedStringArray(arr: Object[]): ?Array<?ExtensionFile> {
+  static loadFromParsedStringArray(arr: Object[]): Array< | null | undefined | ExtensionFile> {
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }

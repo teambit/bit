@@ -32,7 +32,7 @@ export default (async function removeComponents({
   track,
   deleteFiles
 }: {
-  consumer: ?Consumer, // when remote is false, it's always set
+  consumer: Consumer | null | undefined, // when remote is false, it's always set
   ids: BitIds,
   force: boolean,
   remote: boolean,
@@ -66,7 +66,7 @@ export default (async function removeComponents({
  * @param {BitIds} bitIds - list of remote component ids to delete
  * @param {boolean} force - delete component that are used by other components.
  */
-async function removeRemote(consumer: ?Consumer, bitIds: BitIds, force: boolean) {
+async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitIds, force: boolean) {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};

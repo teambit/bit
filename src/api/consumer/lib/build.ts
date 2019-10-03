@@ -6,7 +6,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
-export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
+export async function build(id: string, noCache: boolean, verbose: boolean): Promise<string[] | undefined> {
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);
   const component: Component = await consumer.loadComponent(bitId);

@@ -27,7 +27,7 @@ export default class BitObject {
   }
 
   // eslint-disable-next-line no-unused-vars
-  static parse(data: *) {
+  static parse(data: any) {
     throw new Error('parse() was not implemented...');
   }
 

@@ -1,7 +1,7 @@
 /** @flow */
 export type ResultObject<T> = {
   success: boolean,
-  val: ?T,
+  val: T | null | undefined,
   error: Error
 };
 

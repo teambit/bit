@@ -5,7 +5,7 @@ export default function CiUpdateAction(
   id: string,
   path: string,
   verbose: boolean,
-  directory: ?string,
+  directory: string | null | undefined,
   keep?: boolean,
   noCache?: boolean
 ) {

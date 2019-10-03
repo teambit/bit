@@ -62,13 +62,13 @@ export type ScopeProps = {
 };
 
 export type IsolateOptions = {
-  directory: ?string,
-  write_bit_dependencies: ?boolean,
-  links: ?boolean,
-  install_packages: ?boolean,
-  installPeerDependencies: ?boolean,
-  no_package_json: ?boolean,
-  override: ?boolean
+  directory: string | null | undefined,
+  write_bit_dependencies: boolean | null | undefined,
+  links: boolean | null | undefined,
+  install_packages: boolean | null | undefined,
+  installPeerDependencies: boolean | null | undefined,
+  no_package_json: boolean | null | undefined,
+  override: boolean | null | undefined
 };
 
 export type ComponentsAndVersions = {
@@ -102,7 +102,7 @@ export default class Scope {
     return this._dependencyGraph;
   }
 
-  get groupName(): ?string {
+  get groupName(): string | null | undefined {
     if (!this.scopeJson.groupName) return null;
     return this.scopeJson.groupName;
   }
@@ -391,7 +391,7 @@ export default class Scope {
     return this.objects.loadRawObject(new Ref(hash));
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
+  async getModelComponentIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
     return this.sources.get(id);
   }
 
@@ -609,13 +609,13 @@ export default class Scope {
     keep
   }: {
     bitId: BitId,
-    consumer?: ?Consumer,
-    save?: ?boolean,
-    verbose?: ?boolean,
+    consumer?: Consumer | null | undefined,
+    save?: boolean | null | undefined,
+    verbose?: boolean | null | undefined,
     isolated?: boolean,
     directory?: string,
     keep?: boolean
-  }): Promise<?SpecsResults> {
+  }): Promise<SpecsResults | null | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run specs on remote component');
     }
@@ -642,13 +642,13 @@ export default class Scope {
     noCache
   }: {
     bitId: BitId,
-    save?: ?boolean,
+    save?: boolean | null | undefined,
     consumer?: Consumer,
-    verbose?: ?boolean,
-    directory?: ?string,
-    keep?: ?boolean,
-    noCache?: ?boolean
-  }): Promise<?Dists> {
+    verbose?: boolean | null | undefined,
+    directory?: string | null | undefined,
+    keep?: boolean | null | undefined,
+    noCache?: boolean | null | undefined
+  }): Promise<Dists | null | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
     }
@@ -685,7 +685,7 @@ export default class Scope {
     return BitId.parse(id, idHasScope);
   }
 
-  static ensure(path: PathOsBasedAbsolute, name: ?string, groupName: ?string): Promise<Scope> {
+  static ensure(path: PathOsBasedAbsolute, name: string | null | undefined, groupName: string | null | undefined): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
     if (name === CURRENT_UPSTREAM) {

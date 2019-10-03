@@ -32,11 +32,11 @@ export type AllDependencies = {
 };
 
 export type AllPackagesDependencies = {
-  packageDependencies: ?Object,
-  devPackageDependencies: ?Object,
-  compilerPackageDependencies: ?Object,
-  testerPackageDependencies: ?Object,
-  peerPackageDependencies: ?Object
+  packageDependencies: Object | null | undefined,
+  devPackageDependencies: Object | null | undefined,
+  compilerPackageDependencies: Object | null | undefined,
+  testerPackageDependencies: Object | null | undefined,
+  peerPackageDependencies: Object | null | undefined
 };
 
 export type FileType = {
@@ -119,7 +119,7 @@ export default class DependencyResolver {
   async loadDependenciesForComponent(
     bitDir: string,
     cacheResolvedDependencies: Object,
-    cacheProjectAst: ?Object
+    cacheProjectAst: Object | null | undefined
   ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
@@ -240,7 +240,7 @@ export default class DependencyResolver {
     });
   }
 
-  traverseTreeForComponentId(depFile: PathLinux): ?BitId {
+  traverseTreeForComponentId(depFile: PathLinux): BitId | null | undefined {
     if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
@@ -275,10 +275,10 @@ export default class DependencyResolver {
 
   getComponentIdByDepFile(
     depFile: PathLinux
-  ): { componentId: ?BitId, depFileRelative: PathLinux, destination: ?string } {
+  ): { componentId: BitId | null | undefined, depFileRelative: PathLinux, destination: string | null | undefined } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    let componentId: ?BitId;
-    let destination: ?string;
+    let componentId: BitId | null | undefined;
+    let destination: string | null | undefined;
     const rootDir = this.componentMap.rootDir;
     if (rootDir) {
       // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
@@ -343,7 +343,7 @@ export default class DependencyResolver {
    * dist directory, the resolved path contains the "dist", which doesn't exist in the ComponentMap,
    * the solution we take is to identify such cases, strip the dist, then try to find them again.
    */
-  _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): ?BitId {
+  _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
     if (!depFile.includes('dist')) return null;
     const resolveModules = this.consumer.config.resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
@@ -607,7 +607,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     bits.forEach((bitDep) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-      const getExistingId = (): ?BitId => {
+      const getExistingId = (): BitId | null | undefined => {
         let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
 
@@ -650,7 +650,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const getPackages = (): ?Object => {
+    const getPackages = (): Object | null | undefined => {
       const packages = this.tree[originFile].packages;
       if (RA.isNilOrEmpty(packages)) return null;
       const shouldBeIncluded = (pkgVersion, pkgName) =>
@@ -858,7 +858,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   /**
    * given missing packages name, find whether they were dependencies with custom-resolve before.
    */
-  findOriginallyCustomModuleResolvedDependencies(packages: string[]): ?Object {
+  findOriginallyCustomModuleResolvedDependencies(packages: string[]): Object | null | undefined {
     if (!packages) return undefined;
     if (!this.componentFromModel) return undefined; // not relevant, the component is not imported
     const dependencies: Dependencies = new Dependencies(this.componentFromModel.getAllDependencies());
@@ -908,7 +908,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.issues = R.filter(notEmpty, this.issues);
   }
 
-  getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
+  getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
     return dependencies.find(d => d.id.isEqual(id));
   }
 
@@ -982,7 +982,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
    */
-  _getPackageJson(): ?Object {
+  _getPackageJson(): Object | null | undefined {
     const componentMap = this.component.componentMap;
     // $FlowFixMe
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;

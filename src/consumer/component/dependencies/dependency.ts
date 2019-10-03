@@ -60,7 +60,7 @@ export default class Dependency {
   }
 
   static addWrapDir(dependency: Dependency, manipulateDirData: ManipulateDirItem[], componentWrapDir: PathLinux): void {
-    const pathWithWrapDir = (pathStr: PathLinux, wrapDir: ?PathLinux): PathLinux => {
+    const pathWithWrapDir = (pathStr: PathLinux, wrapDir: PathLinux | null | undefined): PathLinux => {
       if (!wrapDir) return pathStr;
       return pathJoinLinux(wrapDir, pathStr);
     };

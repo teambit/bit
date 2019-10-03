@@ -260,7 +260,7 @@ export default class DependencyGraph {
     return nodeEdges.map(node => node.v);
   }
 
-  serialize(graph: ?Object = this.graph) {
+  serialize(graph: Object | null | undefined = this.graph) {
     return GraphLib.json.write(graph);
   }
 }

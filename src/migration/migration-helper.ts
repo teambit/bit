@@ -4,7 +4,7 @@ import logger from '../logger/logger';
 
 export type MigrationResult = {
   run: boolean,
-  success?: ?boolean
+  success?: boolean | null | undefined
 };
 
 export type MigrationDeclaration = {

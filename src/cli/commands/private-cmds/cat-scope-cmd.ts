@@ -17,7 +17,7 @@ export default class CatScope extends Command {
 
   action(
     [scopePath]: [string],
-    { full, json, jsonExtra }: { full: ?boolean, json: ?boolean, jsonExtra: ?boolean }
+    { full, json, jsonExtra }: { full: boolean | null | undefined, json: boolean | null | undefined, jsonExtra: boolean | null | undefined }
   ): Promise<any> {
     return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json, jsonExtra }));
   }
@@ -29,9 +29,9 @@ export default class CatScope extends Command {
     jsonExtra
   }: {
     payload: ModelComponent[],
-    full: ?boolean,
-    json: ?boolean,
-    jsonExtra: ?boolean
+    full: boolean | null | undefined,
+    json: boolean | null | undefined,
+    jsonExtra: boolean | null | undefined
   }): string {
     if (jsonExtra) {
       payload.forEach((obj) => {

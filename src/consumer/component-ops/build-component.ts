@@ -47,7 +47,7 @@ export default (async function buildComponent({
   verbose?: boolean,
   dontPrintEnvMsg?: boolean,
   keep?: boolean
-}): Promise<?Dists> {
+}): Promise<Dists | null | undefined> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
   // @TODO - write SourceMap Type
   if (!component.compiler) {
@@ -131,7 +131,7 @@ async function _updateComponentPackageJson(component: ConsumerComponent, package
 
 function _extractAndVerifyCompilerResults(
   compilerResults: CompilerResults
-): { builtFiles: Vinyl[], mainDist: ?string, packageJson: ?Object } {
+): { builtFiles: Vinyl[], mainDist: string | null | undefined, packageJson: Object | null | undefined } {
   if (Array.isArray(compilerResults)) {
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
@@ -178,11 +178,11 @@ async function _buildIfNeeded({
 }: {
   component: ConsumerComponent,
   consumer?: Consumer,
-  componentMap?: ?ComponentMap,
+  componentMap?: ComponentMap | null | undefined,
   scope: Scope,
   verbose: boolean,
-  directory?: ?string,
-  keep: ?boolean
+  directory?: string | null | undefined,
+  keep: boolean | null | undefined
 }): Promise<CompilerResults> {
   const compiler = component.compiler;
 
@@ -226,7 +226,7 @@ async function _buildIfNeeded({
 // Ideally it's better to use the dists from the model.
 // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-const _isNeededToReBuild = async (consumer: ?Consumer, componentId: BitId, noCache: ?boolean): Promise<boolean> => {
+const _isNeededToReBuild = async (consumer: Consumer | null | undefined, componentId: BitId, noCache: boolean | null | undefined): Promise<boolean> => {
   // Forcly rebuild
   if (noCache) return true;
   if (!consumer) return false;
@@ -244,9 +244,9 @@ const _runBuild = async ({
 }: {
   component: ConsumerComponent,
   componentRoot: PathLinux,
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   scope: Scope,
-  componentMap: ?ComponentMap,
+  componentMap: ComponentMap | null | undefined,
   verbose: boolean
 }): Promise<CompilerResults> => {
   const compiler = component.compiler;

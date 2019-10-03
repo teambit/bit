@@ -40,7 +40,7 @@ export function delSync(key: string): Config {
   return config;
 }
 
-export async function get(key: string): Promise<?string> {
+export async function get(key: string): Promise<string | null | undefined> {
   const getConfigObject = async () => {
     const configFromCache = cache().get();
     if (configFromCache) return configFromCache;
@@ -60,7 +60,7 @@ export async function get(key: string): Promise<?string> {
   }
 }
 
-export function getSync(key: string): ?string {
+export function getSync(key: string): string | null | undefined {
   const getConfigObject = () => {
     const configFromCache = cache().get();
     if (configFromCache) return configFromCache;

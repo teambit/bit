@@ -4,7 +4,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 import { BitId, BitIds } from '../../../bit-id';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-export default (async function untrack(componentIds: string[], all: ?boolean): Promise<Object> {
+export default (async function untrack(componentIds: string[], all: boolean | null | undefined): Promise<Object> {
   const untrackedComponents: BitId[] = [];
   const missing: string[] = [];
   const unRemovableComponents: BitId[] = [];

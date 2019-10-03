@@ -51,14 +51,14 @@ export default class Add extends Command {
       exclude,
       override = false
     }: {
-      id: ?string,
-      main: ?string,
-      tests: ?string,
-      namespace: ?string,
-      exclude: ?string,
+      id: string | null | undefined,
+      main: string | null | undefined,
+      tests: string | null | undefined,
+      namespace: string | null | undefined,
+      exclude: string | null | undefined,
       override: boolean
     }
-  ): Promise<*> {
+  ): Promise<any> {
     if (namespace && id) {
       throw new GeneralError('please use either [id] or [namespace] to add a particular component');
     }

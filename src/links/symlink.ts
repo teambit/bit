@@ -7,7 +7,7 @@ import ShowDoctorError from '../error/show-doctor-error';
 export default class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
-  componentId: ?BitId;
+  componentId: BitId | null | undefined;
   forDistOutsideComponentsDir: boolean;
   constructor(src: string, dest: string, componentId?: BitId) {
     this.src = src;

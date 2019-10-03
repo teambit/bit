@@ -4,7 +4,7 @@ import { LICENSE_FILENAME } from '../../../constants';
 import { AbstractVinyl } from '.';
 
 export default class License extends AbstractVinyl {
-  override: ?boolean = true;
+  override: boolean | null | undefined = true;
   src: string;
 
   write(): Promise<any> {

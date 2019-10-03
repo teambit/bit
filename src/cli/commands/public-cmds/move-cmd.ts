@@ -12,7 +12,7 @@ export default class Move extends Command {
   opts = [];
   loader = true;
 
-  action([from, to]: [string, string]): Promise<*> {
+  action([from, to]: [string, string]): Promise<any> {
     return move({ from, to });
   }
 

@@ -42,27 +42,27 @@ export default class BitIds extends Array<BitId> {
     return Boolean(this.searchWithoutScopeAndVersion(bitId));
   }
 
-  search(bitId: BitId): ?BitId {
+  search(bitId: BitId): BitId | null | undefined {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
 
-  searchWithoutVersion(bitId: BitId): ?BitId {
+  searchWithoutVersion(bitId: BitId): BitId | null | undefined {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
-  searchWithoutScopeAndVersion(bitId: BitId): ?BitId {
+  searchWithoutScopeAndVersion(bitId: BitId): BitId | null | undefined {
     return this.find(id => id.hasSameName(bitId));
   }
 
-  searchWithoutScope(bitId: BitId): ?BitId {
+  searchWithoutScope(bitId: BitId): BitId | null | undefined {
     return this.find(id => id.hasSameName(bitId) && id.hasSameVersion(bitId));
   }
 
-  searchStrWithoutVersion(idStr: string): ?BitId {
+  searchStrWithoutVersion(idStr: string): BitId | null | undefined {
     return this.find(id => id.toStringWithoutVersion() === idStr);
   }
 
-  searchStrWithoutScopeAndVersion(idStr: string): ?BitId {
+  searchStrWithoutScopeAndVersion(idStr: string): BitId | null | undefined {
     return this.find(id => id.toStringWithoutScopeAndVersion() === idStr);
   }
 
@@ -94,7 +94,7 @@ export default class BitIds extends Array<BitId> {
     return this.map(id => id.toString()).join(', ');
   }
 
-  toGroupByScopeName(defaultScope?: ?string): { [scopeName: string]: BitIds } {
+  toGroupByScopeName(defaultScope?: string | null | undefined): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
       const scopeName = current.scope || defaultScope;
       if (!scopeName) {

@@ -86,7 +86,7 @@ export default class AbstractConfig {
     this.extensions = props.extensions || DEFAULT_EXTENSIONS;
   }
 
-  get compiler(): ?Compilers {
+  get compiler(): Compilers | null | undefined {
     const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
@@ -96,7 +96,7 @@ export default class AbstractConfig {
     this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
-  get tester(): ?Testers {
+  get tester(): Testers | null | undefined {
     const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
@@ -125,7 +125,7 @@ export default class AbstractConfig {
     return !!this.tester && this._tester !== NO_PLUGIN_TYPE && !R.isEmpty(this.tester);
   }
 
-  getEnvsByType(type: EnvType): ?Compilers | ?Testers {
+  getEnvsByType(type: EnvType): Compilers | null | undefined | Testers {
     if (type === COMPILER_ENV_TYPE) {
       return this.compiler;
     }
@@ -136,7 +136,7 @@ export default class AbstractConfig {
    * if there is only one env (compiler/tester) and it doesn't have any special configuration, only
    * the name, convert it to a string.
    */
-  static convertEnvToStringIfPossible(envObj: ?Envs): ?string | ?Envs {
+  static convertEnvToStringIfPossible(envObj: Envs | null | undefined): string | null | undefined | Envs {
     if (!envObj) return undefined;
     if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id
     const envId = Object.keys(envObj)[0];
@@ -228,7 +228,7 @@ export default class AbstractConfig {
     return fs.exists(this.composePackageJsonPath(bitPath));
   }
 
-  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
+  static async loadJsonFileIfExist(jsonFilePath: string): Promise<Object | null | undefined> {
     try {
       const file = await fs.readJson(jsonFilePath);
       return file;

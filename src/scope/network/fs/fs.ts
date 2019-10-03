@@ -15,7 +15,7 @@ import DependencyGraph from '../../graph/scope-graph';
 
 export default class Fs implements Network {
   scopePath: string;
-  scope: ?Scope;
+  scope: Scope | null | undefined;
 
   constructor(scopePath: string) {
     this.scopePath = scopePath;

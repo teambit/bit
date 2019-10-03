@@ -50,8 +50,8 @@ export default class BitMap {
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
-  _cacheIds: { [origin: string]: ?BitIds };
-  allTrackDirs: ?{ [trackDir: PathLinux]: BitId };
+  _cacheIds: { [origin: string]: BitIds | null | undefined };
+  allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
 
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
@@ -132,7 +132,7 @@ export default class BitMap {
     return bitMap;
   }
 
-  static loadRawSync(dirPath: PathOsBasedAbsolute): ?Buffer {
+  static loadRawSync(dirPath: PathOsBasedAbsolute): Buffer | null | undefined {
     const { currentLocation } = BitMap.getBitMapLocation(dirPath);
     if (!currentLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
@@ -145,7 +145,7 @@ export default class BitMap {
   static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
     const defaultLocation = path.join(dirPath, BIT_MAP);
     const oldLocation = path.join(dirPath, OLD_BIT_MAP);
-    const getCurrentLocation = (): ?PathOsBased => {
+    const getCurrentLocation = (): PathOsBased | null | undefined => {
       if (fs.existsSync(defaultLocation)) return defaultLocation;
       if (fs.existsSync(oldLocation)) return oldLocation;
       return null;
@@ -380,7 +380,7 @@ export default class BitMap {
       ignoreVersion?: boolean,
       ignoreScopeAndVersion?: boolean
     } = {}
-  ): ?BitId {
+  ): BitId | null | undefined {
     try {
       const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return existingBitId;
@@ -423,7 +423,7 @@ export default class BitMap {
       ignoreVersion?: boolean,
       ignoreScopeAndVersion?: boolean
     } = {}
-  ): ?ComponentMap {
+  ): ComponentMap | null | undefined {
     try {
       const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
       return componentMap;
@@ -433,14 +433,14 @@ export default class BitMap {
     }
   }
 
-  getNonNestedComponentIfExist(bitId: BitId): ?ComponentMap {
+  getNonNestedComponentIfExist(bitId: BitId): ComponentMap | null | undefined {
     const nonNestedIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-    const id: ?BitId = nonNestedIds.searchWithoutScopeAndVersion(bitId);
+    const id: BitId | null | undefined = nonNestedIds.searchWithoutScopeAndVersion(bitId);
     if (!id) return null;
     return this.getComponent(id);
   }
 
-  getComponentPreferNonNested(bitId: BitId): ?ComponentMap {
+  getComponentPreferNonNested(bitId: BitId): ComponentMap | null | undefined {
     return this.getNonNestedComponentIfExist(bitId) || this.getComponentIfExist(bitId, { ignoreVersion: true });
   }
 
@@ -521,7 +521,7 @@ export default class BitMap {
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
-  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): ?BitId {
+  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): BitId | null | undefined {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
@@ -582,10 +582,10 @@ export default class BitMap {
     mainFile: PathLinux,
     origin: ComponentOrigin,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
-    configDir?: ?ConfigDir,
-    trackDir?: ?PathOsBased,
-    originallySharedDir?: ?PathLinux,
-    wrapDir?: ?PathLinux
+    configDir?: ConfigDir | null | undefined,
+    trackDir?: PathOsBased | null | undefined,
+    originallySharedDir?: PathLinux | null | undefined,
+    wrapDir?: PathLinux | null | undefined
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);

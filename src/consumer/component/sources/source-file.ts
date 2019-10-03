@@ -10,7 +10,7 @@ import { Repository } from '../../../scope/objects';
 
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
-  distFilePath: ?string;
+  distFilePath: string | null | undefined;
 
   static load(
     filePath: PathOsBased,
@@ -38,13 +38,13 @@ export default class SourceFile extends AbstractVinyl {
     }
   }
 
-  static loadFromParsedString(parsedString: Object): ?SourceFile {
+  static loadFromParsedString(parsedString: Object): SourceFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
     return new SourceFile(opts);
   }
 
-  static loadFromParsedStringArray(arr: Object[]): ?(SourceFile[]) {
+  static loadFromParsedStringArray(arr: Object[]): SourceFile[] | null | undefined {
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }

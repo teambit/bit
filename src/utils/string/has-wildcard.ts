@@ -1,5 +1,5 @@
 // @flow
-export default function hasWildcard(ids: ?string | ?(string[])): boolean {
+export default function hasWildcard(ids: string | null | undefined | string[]): boolean {
   if (!ids) return false;
   if (Array.isArray(ids)) {
     return ids.some(id => idHasWildcard(id));

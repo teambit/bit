@@ -80,7 +80,7 @@ export default class WatchComponents {
     console.log(chalk.yellow(WATCHER_COMPLETED_MSG));
   }
 
-  async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<?BitId> {
+  async _getBitIdByPathAndReloadConsumer(filePath: string, isNew: boolean): Promise<BitId | null | undefined> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
     let componentId = this.consumer.bitMap.getComponentIdByPath(relativeFile);
     if (!isNew && !componentId) {

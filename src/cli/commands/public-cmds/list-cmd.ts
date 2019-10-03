@@ -74,7 +74,7 @@ export default class List extends Command {
     outdated
   }: {
     listScopeResults: ListScopeResult[],
-    scope: ?string,
+    scope: string | null | undefined,
     ids?: boolean,
     raw?: boolean,
     json?: boolean,

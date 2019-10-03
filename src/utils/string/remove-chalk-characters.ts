@@ -10,7 +10,7 @@
  *  removeChalkCharacters('\u001b[37mbit.envs/bundlers/vue\u001b[39m') // => bit.envs/bundlers/vue
  * ```
  */
-export default function removeChalkCharacters(str?: ?string): ?string {
+export default function removeChalkCharacters(str?: string | null | undefined): string | null | undefined {
   if (!str) return str;
   // eslint-disable-next-line no-control-regex
   return str.replace(/\u001b\[.*?m/g, '');

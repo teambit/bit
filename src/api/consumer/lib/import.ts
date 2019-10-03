@@ -94,7 +94,7 @@ export default (async function importAction(
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript
-const getSemverType = (str): ?string => {
+const getSemverType = (str): string | null | undefined => {
   if (semver.valid(str)) return 'V'; // VALID_VERSION
   if (semver.validRange(str)) return 'R'; // RANGE_VERSIONS
   return null;

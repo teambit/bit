@@ -45,14 +45,14 @@ export type EnvPackages = { dependencies?: Object, devDependencies?: Object, pee
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
-  dynamicPackageDependencies: ?Object;
+  dynamicPackageDependencies: Object | null | undefined;
   files: ExtensionFile[];
   dataToPersist: DataToPersist;
 
   /**
    * Return the action
    */
-  get action(): ?Function {
+  get action(): Function | null | undefined {
     if (this.script && this.script.action && typeof this.script.action === 'function') {
       return this.script.action;
     }
@@ -62,7 +62,7 @@ export default class EnvExtension extends BaseExtension {
   /**
    * return old actions (to support old compilers / testers which uses run / compile functions)
    */
-  get oldAction(): ?Function {
+  get oldAction(): Function | null | undefined {
     if (this.script && this.script.run && typeof this.script.run === 'function') {
       return this.script.run;
     }
@@ -83,7 +83,7 @@ export default class EnvExtension extends BaseExtension {
     scope: Scope,
     opts: { verbose: boolean, dontPrintEnvMsg?: boolean },
     context?: Object
-  ): Promise<?(ComponentWithDependencies[])> {
+  ): Promise<ComponentWithDependencies[] | null | undefined> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
     logger.debug('env-extension - install env extension');
 
@@ -151,7 +151,7 @@ export default class EnvExtension extends BaseExtension {
     configDir: string,
     envType: EnvType,
     deleteOldFiles: boolean,
-    consumer: ?Consumer,
+    consumer: Consumer | null | undefined,
     verbose: boolean
   }): Promise<string> {
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
@@ -234,7 +234,7 @@ export default class EnvExtension extends BaseExtension {
     return envExtensionProps;
   }
 
-  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?EnvPackages {
+  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): EnvPackages | null | undefined {
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (!getDynamicPackageDependencies || typeof getDynamicPackageDependencies !== 'function') {
       return undefined;
@@ -267,7 +267,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   // $FlowFixMe
-  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): ?Object {
+  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): Object | null | undefined {
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
@@ -342,12 +342,12 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    componentConfig: ?ComponentConfig,
-    overridesFromConsumer: ?ConsumerOverridesOfComponent,
+    componentConfig: ComponentConfig | null | undefined,
+    overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined,
     workspaceConfig: WorkspaceConfig,
     envType: EnvType,
     context?: Object
-  }): Promise<?EnvExtension> {
+  }): Promise<EnvExtension | null | undefined> {
     logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
     const componentHasWrittenConfig = componentConfig && componentConfig.componentHasWrittenConfig;
@@ -392,7 +392,7 @@ export default class EnvExtension extends BaseExtension {
   /**
    * are two envs (in the model/scope format) different
    */
-  static areEnvsDifferent(envModelA: ?EnvExtensionModel, envModelB: ?EnvExtensionModel) {
+  static areEnvsDifferent(envModelA: EnvExtensionModel | null | undefined, envModelB: EnvExtensionModel | null | undefined) {
     const sortEnv = (env) => {
       env.files = R.sortBy(R.prop('name'), env.files);
       env.config = sortObject(env.config);
@@ -421,7 +421,7 @@ async function loadFromConfig({
   scopePath,
   configPath,
   context
-}): Promise<?EnvExtension> {
+}): Promise<EnvExtension | null | undefined> {
   const env = envConfig[envType];
   if (!env) return null;
   const envName = Object.keys(env)[0];

@@ -15,9 +15,9 @@ export default class Watch extends Command {
     {
       verbose
     }: {
-      verbose: ?boolean
+      verbose: boolean | null | undefined
     }
-  ): Promise<*> {
+  ): Promise<any> {
     return watchAll(verbose);
   }
 

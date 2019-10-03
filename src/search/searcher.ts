@@ -51,7 +51,7 @@ function sortSearchResults(results: Array<any>): Array<any> {
   });
 }
 
-function formatter(doc: Doc | *): string {
+function formatter(doc: Doc | any): string {
   // $FlowFixMe
   if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') {
     // from web search

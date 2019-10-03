@@ -59,7 +59,7 @@ export default (async function injectConf(
 /**
  * returns whether the envs configuration files were modified on the filesystem
  */
-function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel: ?ConsumerComponent) {
+function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel: ConsumerComponent | null | undefined) {
   if (!componentFromModel) return false;
   const envTypes = [COMPILER_ENV_TYPE, TESTER_ENV_TYPE];
   return envTypes.some((envType) => {

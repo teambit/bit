@@ -28,8 +28,8 @@ export type WorkspaceConfigProps = {
   tester?: string | Testers,
   saveDependenciesAsComponents?: boolean,
   lang?: string,
-  distTarget?: ?string,
-  distEntry?: ?string,
+  distTarget?: string | null | undefined,
+  distEntry?: string | null | undefined,
   componentsDefaultDirectory?: string,
   dependenciesDirectory?: string,
   ejectedEnvsDirectory?: string,
@@ -46,23 +46,23 @@ export type WorkspaceConfigProps = {
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
-  distTarget: ?string; // path where to store build artifacts
+  distTarget: string | null | undefined; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
-  distEntry: ?string;
+  distEntry: string | null | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'npm' | 'yarn'; // package manager client to use
-  packageManagerArgs: ?(string[]); // package manager client to use
-  packageManagerProcessOptions: ?Object; // package manager process options
+  packageManagerArgs: string[] | null | undefined; // package manager client to use
+  packageManagerProcessOptions: Object | null | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
-  resolveModules: ?ResolveModulesConfig;
+  resolveModules: ResolveModulesConfig | null | undefined;
   overrides: ConsumerOverrides;
-  packageJsonObject: ?Object; // workspace package.json if exists (parsed)
-  defaultScope: ?string; // default remote scope to export to
+  packageJsonObject: Object | null | undefined; // workspace package.json if exists (parsed)
+  defaultScope: string | null | undefined; // default remote scope to export to
 
   constructor({
     compiler,
@@ -250,7 +250,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     workspaceConfig.packageJsonObject = packageJsonFile;
     return workspaceConfig;
   }
-  static async loadBitJson(bitJsonPath: string): Promise<?Object> {
+  static async loadBitJson(bitJsonPath: string): Promise<Object | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
@@ -258,7 +258,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       throw new InvalidBitJson(bitJsonPath);
     }
   }
-  static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
+  static async loadPackageJson(packageJsonPath: string): Promise<Object | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;

@@ -12,7 +12,7 @@ export default class VersionDependencies {
   compilerDependencies: ComponentVersion[];
   testerDependencies: ComponentVersion[];
   allDependencies: ComponentVersion[];
-  sourceScope: ?string;
+  sourceScope: string | null | undefined;
 
   constructor(
     component: ComponentVersion,
@@ -36,7 +36,7 @@ export default class VersionDependencies {
     this.sourceScope = sourceScope;
   }
 
-  async toConsumer(repo: Repository, manipulateDirData: ?(ManipulateDirItem[])): Promise<ComponentWithDependencies> {
+  async toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ComponentWithDependencies> {
     const depToConsumer = dep => dep.toConsumer(repo, manipulateDirData);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));
     const devDependenciesP = Promise.all(this.devDependencies.map(depToConsumer));
@@ -59,7 +59,7 @@ export default class VersionDependencies {
     });
   }
 
-  toObjects(repo: Repository, clientVersion: ?string): Promise<ComponentObjects> {
+  toObjects(repo: Repository, clientVersion: string | null | undefined): Promise<ComponentObjects> {
     const depsP = Promise.all(this.allDependencies.map(dep => dep.toObjects(repo, clientVersion)));
     const compP = this.component.toObjects(repo, clientVersion);
 

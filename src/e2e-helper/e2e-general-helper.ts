@@ -51,7 +51,7 @@ export default class GeneralHelper {
     return output;
   }
 
-  static alignOutput(str?: ?string): ?string {
+  static alignOutput(str?: string | null | undefined): string | null | undefined {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
     // $FlowFixMe

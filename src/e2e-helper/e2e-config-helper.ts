@@ -25,7 +25,7 @@ export default class ConfigHelper {
     this.command.delConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
-  restoreGitPath(oldGitPath: ?string): any {
+  restoreGitPath(oldGitPath: string | null | undefined): any {
     if (!oldGitPath) {
       return this.deleteGitPath();
     }

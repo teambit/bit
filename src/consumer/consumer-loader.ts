@@ -21,7 +21,7 @@ export async function loadConsumer(
 export async function loadConsumerIfExist(
   currentPath?: string = process.cwd(),
   newInstance?: boolean = false
-): Promise<?Consumer> {
+): Promise<Consumer | null | undefined> {
   try {
     return await loadConsumer(currentPath, newInstance);
   } catch (err) {

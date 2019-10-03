@@ -24,7 +24,7 @@ Use `BitId.parse(id: BitIdStr, hasScope: boolean = true): BitId`
 #### You have a Consumer instance
 
 Use `Consumer.getParsedId(id: BitIdStr): BitId` when you know the ID should be there and to throw an exception when it's not.
-Or, use `Consumer.getParsedIdIfExist(id: BitIdStr): ?BitId` when you're not sure whether the component is there.
+Or, use `Consumer.getParsedIdIfExist(id: BitIdStr): BitId | null | undefined` when you're not sure whether the component is there.
 
 #### You have a Scope instance
 

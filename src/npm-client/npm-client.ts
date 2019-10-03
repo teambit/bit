@@ -71,7 +71,7 @@ type installArgs = {
   packageManagerProcessOptions: Object,
   useWorkspaces: boolean,
   dirs: string[],
-  rootDir: ?string, // Used for yarn workspace
+  rootDir: string | null | undefined, // Used for yarn workspace
   installRootPackageJson: boolean,
   installPeerDependencies: boolean,
   verbose: boolean
@@ -323,7 +323,7 @@ const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) =>
   logger.console.info(chalk.yellow(stderr)); // eslint-disable-line
 };
 
-async function getNpmVersion(): Promise<?string> {
+async function getNpmVersion(): Promise<string | null | undefined> {
   try {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
@@ -333,7 +333,7 @@ async function getNpmVersion(): Promise<?string> {
   return null;
 }
 
-async function getYarnVersion(): Promise<?string> {
+async function getYarnVersion(): Promise<string | null | undefined> {
   try {
     const { stdout } = await execa('yarn', ['-v']);
     return stdout;
@@ -360,7 +360,7 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
   return false;
 }
 
-async function getPackageLatestVersion(packageName: string): Promise<?string> {
+async function getPackageLatestVersion(packageName: string): Promise<string | null | undefined> {
   try {
     const { stdout } = await execa('npm', ['show', packageName, 'version']);
     return stdout;

@@ -31,7 +31,7 @@ export default class ExtensionCommand extends Command {
   }
 
   // A wrapper to make sure the action return a promise
-  action(relevantArgs, opts): Promise<*> {
+  action(relevantArgs, opts): Promise<any> {
     return Promise.resolve(this._action(relevantArgs, opts));
   }
 

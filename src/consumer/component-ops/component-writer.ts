@@ -38,7 +38,7 @@ export type ComponentWriterProps = {
   override?: boolean,
   isolated?: boolean,
   origin: ComponentOrigin,
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   bitMap: BitMap,
   writeBitDependencies?: boolean,
   deleteBitDirContent?: boolean,
@@ -50,16 +50,16 @@ export default class ComponentWriter {
   component: Component;
   writeToPath: PathOsBasedRelative;
   writeConfig: boolean;
-  configDir: ?string;
+  configDir: string | null | undefined;
   writePackageJson: boolean;
   override: boolean;
-  isolated: ?boolean;
+  isolated: boolean | null | undefined;
   origin: ComponentOrigin;
-  consumer: ?Consumer; // when using capsule, the consumer is not defined
+  consumer: Consumer | null | undefined; // when using capsule, the consumer is not defined
   bitMap: BitMap;
   writeBitDependencies: boolean;
-  deleteBitDirContent: ?boolean;
-  existingComponentMap: ?ComponentMap;
+  deleteBitDirContent: boolean | null | undefined;
+  existingComponentMap: ComponentMap | null | undefined;
   excludeRegistryPrefix: boolean;
   constructor({
     component,
@@ -191,7 +191,7 @@ export default class ComponentWriter {
     }
   }
 
-  addComponentToBitMap(rootDir: ?string): ComponentMap {
+  addComponentToBitMap(rootDir: string | null | undefined): ComponentMap {
     const filesForBitMap = this.component.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });

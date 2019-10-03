@@ -79,7 +79,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       }
     });
   }
-  function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {
+  function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): BitId | null | undefined {
     if (!componentFromModel) return null;
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
     if (!dependency) return null;
@@ -92,10 +92,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
    * it first searches in the dependent package.json and propagate up to the consumer root, if not
    * found it goes to the dependency package.json.
    */
-  function getIdFromPackageJson(componentId: BitId): ?BitId {
+  function getIdFromPackageJson(componentId: BitId): BitId | null | undefined {
     if (!componentId.scope) return null;
     // $FlowFixMe component.componentMap is set
-    const rootDir: ?PathLinux = component.componentMap.rootDir;
+    const rootDir: PathLinux | null | undefined = component.componentMap.rootDir;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
     const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
@@ -111,7 +111,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return componentId.changeVersion(validVersion);
   }
 
-  function getIdFromDependentPackageJson(componentId: BitId): ?BitId {
+  function getIdFromDependentPackageJson(componentId: BitId): BitId | null | undefined {
     // for author, there is not package.json of a component
     if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
@@ -124,11 +124,11 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return componentId.changeVersion(validVersion);
   }
 
-  function getIdFromBitMap(componentId: BitId): ?BitId {
+  function getIdFromBitMap(componentId: BitId): BitId | null | undefined {
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromComponentConfig(componentId: BitId): ?BitId {
+  function getIdFromComponentConfig(componentId: BitId): BitId | null | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(

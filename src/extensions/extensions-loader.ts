@@ -15,7 +15,7 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 export default (async function loadExtensions(): Promise<Extension[]> {
   try {
     logger.debug('start loading extensions');
-    const getConsumer = async (): Promise<?Consumer> => {
+    const getConsumer = async (): Promise<Consumer | null | undefined> => {
       try {
         const consumer = await loadConsumer();
         return consumer;
@@ -23,7 +23,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
         return null;
       }
     };
-    const consumer: ?Consumer = await getConsumer();
+    const consumer: Consumer | null | undefined = await getConsumer();
     let consumerPath = null;
     let scopePath = null;
 
@@ -56,7 +56,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
  * @param {string} consumerPath
  * @param {string} scopePath
  */
-const _loadExtension = (consumerPath: ?string, scopePath: ?string) => (
+const _loadExtension = (consumerPath: string | null | undefined, scopePath: string | null | undefined) => (
   rawConfig: Object = {},
   name: string
 ): Promise<Extension> => {

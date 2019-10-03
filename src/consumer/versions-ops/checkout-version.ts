@@ -22,7 +22,7 @@ export type CheckoutProps = {
   ids?: BitId[],
   latestVersion?: boolean,
   promptMergeOptions: boolean,
-  mergeStrategy: ?MergeStrategy,
+  mergeStrategy: MergeStrategy | null | undefined,
   verbose: boolean,
   skipNpmInstall: boolean,
   reset: boolean, // remove local changes. if set, the version is undefined.
@@ -34,7 +34,7 @@ type ComponentStatus = {
   componentFromModel?: Version,
   id: BitId,
   failureMessage?: string,
-  mergeResults?: ?MergeResultsThreeWay
+  mergeResults?: MergeResultsThreeWay | null | undefined
 };
 
 export default (async function checkoutVersion(
@@ -124,7 +124,7 @@ async function getComponentStatus(
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
-  let mergeResults: ?MergeResultsThreeWay;
+  let mergeResults: MergeResultsThreeWay | null | undefined;
   if (isModified && version) {
     const newBitId = component.id.changeVersion(newVersion);
     const currentComponent: ConsumerComponent = await consumer.loadComponentFromModel(newBitId);
@@ -164,7 +164,7 @@ async function applyVersion(
   consumer: Consumer,
   id: BitId,
   componentFromFS: ConsumerComponent,
-  mergeResults: ?MergeResultsThreeWay,
+  mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResult> {
   const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
@@ -237,7 +237,7 @@ async function applyVersion(
 export function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsThreeWay,
-  mergeStrategy: ?MergeStrategy
+  mergeStrategy: MergeStrategy | null | undefined
 ): Object {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;

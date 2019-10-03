@@ -11,7 +11,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
  * @param destPath the path where to write the symlink
  * @param componentId
  */
-export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: PathOsBased, componentId?: ?string = '') {
+export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: PathOsBased, componentId?: string | null | undefined = '') {
   logger.info(`create-symlink-or-copy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));

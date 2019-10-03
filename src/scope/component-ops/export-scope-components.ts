@@ -60,12 +60,12 @@ export async function exportMany({
 }: {
   scope: Scope,
   ids: BitIds,
-  remoteName: ?string,
+  remoteName: string | null | undefined,
   context?: Object,
   includeDependencies: boolean,
   changeLocallyAlthoughRemoteIsDifferent: boolean,
   codemod: boolean,
-  defaultScope: ?string
+  defaultScope: string | null | undefined
 }): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
@@ -270,7 +270,7 @@ async function convertToCorrectScope(
       })
     );
   }
-  async function _createNewFileIfNeeded(version: Version, file: Object): Promise<?Source> {
+  async function _createNewFileIfNeeded(version: Version, file: Object): Promise<Source | null | undefined> {
     const currentHash = file.file;
     // $FlowFixMe
     const fileObject: Source = await scope.objects.load(currentHash);
@@ -337,7 +337,7 @@ async function changePartialNamesToFullNamesInDists(
     );
   }
 
-  async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<?Source> {
+  async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<Source | null | undefined> {
     const currentHash = dist.file;
     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
     // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.

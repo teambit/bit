@@ -168,7 +168,7 @@ function applyModifiedVersion(
   consumer: Consumer,
   componentFiles: SourceFile[],
   mergeResults: MergeResultsTwoWay,
-  mergeStrategy: ?MergeStrategy
+  mergeStrategy: MergeStrategy | null | undefined
 ): Object {
   const filesStatus = {};
   mergeResults.modifiedFiles.forEach((file) => {
@@ -209,7 +209,7 @@ export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   }
 }
 
-export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean): ?MergeStrategy {
+export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean): MergeStrategy | null | undefined {
   if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
     throw new GeneralError('please choose only one of the following: ours, theirs or manual');
   }

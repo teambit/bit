@@ -75,7 +75,7 @@ this dependency was not included in the tag command.`);
   }
 }
 
-function getEdges(graph: Object, id: BitIdStr): ?(BitIdStr[]) {
+function getEdges(graph: Object, id: BitIdStr): BitIdStr[] | null | undefined {
   if (!graph.hasNode(id)) return null;
   const edges = graphlib.alg.preorder(graph, id);
   return R.tail(edges); // the first item is the component itself
@@ -89,7 +89,7 @@ function getEdges(graph: Object, id: BitIdStr): ?(BitIdStr[]) {
  * baz.js because the relationship between bar and baz are set on prodGraph only.
  * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
  */
-function getEdgesWithProdGraph(prodGraph: ?Object, dependencies: BitIdStr[]): BitIdStr[] {
+function getEdgesWithProdGraph(prodGraph: Object | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
   if (!prodGraph) return dependencies;
   // $FlowFixMe
   const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
@@ -112,7 +112,7 @@ async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
   releaseType: string,
-  exactVersion: ?string
+  exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -205,9 +205,9 @@ export default (async function tagModelComponent({
   consumerComponents: Component[],
   scope: Scope,
   message: string,
-  exactVersion: ?string,
+  exactVersion: string | null | undefined,
   releaseType: string,
-  force: ?boolean,
+  force: boolean | null | undefined,
   consumer: Consumer,
   ignoreNewestVersion: boolean,
   skipTests: boolean,

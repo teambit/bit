@@ -57,7 +57,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     };
   }
 
-  async _getLinkIfExist(symlinkPath: string): Promise<?string> {
+  async _getLinkIfExist(symlinkPath: string): Promise<string | null | undefined> {
     try {
       const link = await fs.readlink(symlinkPath);
       return link;

@@ -10,7 +10,7 @@ import InvalidIndexJson from '../exceptions/invalid-index-json';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-type IndexItem = { id: { scope: ?string, name: string }, isSymlink: boolean, hash: string };
+type IndexItem = { id: { scope: string | null | undefined, name: string }, isSymlink: boolean, hash: string };
 
 export default class ComponentsIndex {
   indexPath: string;
@@ -49,7 +49,7 @@ export default class ComponentsIndex {
   getIdsIncludesSymlinks(): BitId[] {
     return this.index.map(indexItem => this.indexItemToBitId(indexItem));
   }
-  getIdByHash(hash: string): ?BitId {
+  getIdByHash(hash: string): BitId | null | undefined {
     const foundIndexItem = this.index.find(indexItem => indexItem.hash === hash);
     if (!foundIndexItem) return null;
     return this.indexItemToBitId(foundIndexItem);
@@ -101,7 +101,7 @@ export default class ComponentsIndex {
   isFileOnBitHub() {
     return this.indexPath.includes('/bithub/');
   }
-  _find(hash: string): ?IndexItem {
+  _find(hash: string): IndexItem | null | undefined {
     return this.index.find(indexItem => indexItem.hash === hash);
   }
   _exist(hash: string): boolean {

@@ -27,11 +27,11 @@ export default (async function run({
   includeUnmodified = false,
   verbose
 }: {
-  ids: ?(string[]),
+  ids: string[] | null | undefined,
   forkLevel: ForkLevel,
   includeUnmodified: boolean,
-  verbose: ?boolean
-}): Promise<?SpecsResultsWithMetaData> {
+  verbose: boolean | null | undefined
+}): Promise<SpecsResultsWithMetaData | null | undefined> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
     logger.debug('specs-runner.run, running tests on one child process without ids');
@@ -81,10 +81,10 @@ async function runOnChildProcess({
   includeUnmodified,
   verbose
 }: {
-  ids?: ?(string[]),
-  includeUnmodified: ?boolean,
-  verbose: ?boolean
-}): Promise<?SpecsResultsWithMetaData> {
+  ids?: string[] | null | undefined,
+  includeUnmodified: boolean | null | undefined,
+  verbose: boolean | null | undefined
+}): Promise<SpecsResultsWithMetaData | null | undefined> {
   // Check if we run from npm or from binary (pkg)
   let args = [];
   if (ids) {
@@ -138,7 +138,7 @@ async function runOnChildProcess({
   }
 }
 
-function deserializeResults(results): ?SpecsResultsWithMetaData {
+function deserializeResults(results): SpecsResultsWithMetaData | null | undefined {
   if (!results) return undefined;
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);

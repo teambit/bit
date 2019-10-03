@@ -21,7 +21,7 @@ export default class Driver {
     return this.lang.startsWith('bit-') ? this.lang : `bit-${this.lang}`;
   }
 
-  getDriver(silent: boolean = true): ?Object {
+  getDriver(silent: boolean = true): Object | null | undefined {
     if (this.driver) return this.driver;
     const langDriver = this.driverName();
     if (langDriver === 'bit-javascript') {
@@ -40,7 +40,7 @@ export default class Driver {
     return this.driver;
   }
 
-  runHook(hookName: string, param: *, returnValue?: *): Promise<*> {
+  runHook(hookName: string, param: any, returnValue?: any): Promise<any> {
     const driver = this.getDriver();
     // $FlowFixMe
     if (!driver || !driver.lifecycleHooks || !driver.lifecycleHooks[hookName]) {
@@ -60,7 +60,7 @@ export default class Driver {
     bindingPrefix: string,
     resolveModulesConfig: ResolveModulesConfig,
     cacheResolvedDependencies: Object,
-    cacheProjectAst: ?Object
+    cacheProjectAst: Object | null | undefined
   ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir

@@ -48,7 +48,7 @@ class Analytics {
   static success: boolean = true;
   static nodeVersion: string;
   static os: string;
-  static extra: ?Object = {};
+  static extra: Object | null | undefined = {};
   static level: LEVEL;
   static error: Error | string | Object;
   static breadcrumbs: Array<Breadcrumb> = [];

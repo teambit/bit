@@ -32,7 +32,7 @@ export default class ConsumerOverrides {
   static load(overrides: Object = {}) {
     return new ConsumerOverrides(overrides);
   }
-  getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
+  getOverrideComponentData(bitId: BitId): ConsumerOverridesOfComponent | null | undefined {
     const matches = this._getAllRulesMatchedById(bitId);
     if (!matches.length) {
       return null;
@@ -150,7 +150,7 @@ export default class ConsumerOverrides {
   }
 
   areOverridesObjectsEqual(
-    overridesA: ?ConsumerOverridesOfComponent,
+    overridesA: ConsumerOverridesOfComponent | null | undefined,
     overridesB: ConsumerOverridesOfComponent
   ): boolean {
     // seems like R.equals does a great job here. it compares objects by values (not by reference).
@@ -158,7 +158,7 @@ export default class ConsumerOverrides {
     return R.equals(overridesA, overridesB);
   }
 
-  findExactMatch(bitId: BitId): ?string {
+  findExactMatch(bitId: BitId): string | null | undefined {
     return Object.keys(this.overrides).find(
       idStr => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
     );

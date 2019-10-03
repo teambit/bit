@@ -10,7 +10,7 @@ import { AddedComponent } from './add-components';
 
 export default function determineMainFile(
   addedComponent: AddedComponent,
-  existingComponentMap: ?ComponentMap
+  existingComponentMap: ComponentMap | null | undefined
 ): PathLinux {
   const mainFile = addedComponent.mainFile;
   const componentIdStr = addedComponent.componentId.toString();
@@ -36,7 +36,7 @@ export default function determineMainFile(
   /**
    * user didn't enter mainFile but the component already exists with mainFile
    */
-  function getExistingIfNotChanged(): ?PathLinux {
+  function getExistingIfNotChanged(): PathLinux | null | undefined {
     if (!mainFile && existingComponentMap) {
       return existingComponentMap.mainFile;
     }
@@ -45,7 +45,7 @@ export default function determineMainFile(
   /**
    * user entered mainFile => search the mainFile in the files array, throw error if not found
    */
-  function getUserSpecifiedMainFile(): ?PathLinux {
+  function getUserSpecifiedMainFile(): PathLinux | null | undefined {
     if (mainFile) {
       const foundMainFile = _searchMainFile(pathNormalizeToLinux(mainFile));
       if (foundMainFile) return foundMainFile;
@@ -56,7 +56,7 @@ export default function determineMainFile(
   /**
    * user didn't enter mainFile and the component has only one file, use that file as the main file
    */
-  function onlyOneFileEnteredUseIt(): ?PathLinux {
+  function onlyOneFileEnteredUseIt(): PathLinux | null | undefined {
     if (files.length === 1) {
       return files[0].relativePath;
     }
@@ -66,7 +66,7 @@ export default function determineMainFile(
    * user didn't enter mainFile and the component has multiple files, search for file name "index",
    * e.g. `index.js`, `index.css`, etc.
    */
-  function searchForFileNameIndex(): ?PathLinux {
+  function searchForFileNameIndex(): PathLinux | null | undefined {
     for (const ext of DEFAULT_INDEX_EXTS) {
       const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
       const searchResult = _searchMainFile(mainFileNameToSearch);
@@ -80,7 +80,7 @@ export default function determineMainFile(
    * user didn't enter mainFile and the component has multiple files, search for file with the same
    * name as the directory (see #1714)
    */
-  function searchForSameFileNameAsImmediateDir(): ?PathLinux {
+  function searchForSameFileNameAsImmediateDir(): PathLinux | null | undefined {
     if (addedComponent.immediateDir) {
       for (const ext of DEFAULT_INDEX_EXTS) {
         const mainFileNameToSearch = `${addedComponent.immediateDir}.${ext}`;
@@ -93,7 +93,7 @@ export default function determineMainFile(
     return null;
   }
 
-  function _searchMainFile(baseMainFile: PathLinux): ?PathLinux {
+  function _searchMainFile(baseMainFile: PathLinux): PathLinux | null | undefined {
     // search for an exact relative-path
     let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
     if (mainFileFromFiles) return baseMainFile;

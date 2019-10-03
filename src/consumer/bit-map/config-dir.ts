@@ -56,7 +56,7 @@ export default class ConfigDir {
     return this.getCleaned({ cleanComponentDir: true, cleanEnvType: false });
   }
 
-  getResolved({ componentDir, envType }: { componentDir?: ?string, envType?: ?string }): ConfigDir {
+  getResolved({ componentDir, envType }: { componentDir?: string | null | undefined, envType?: string | null | undefined }): ConfigDir {
     const resolvedComponentDir = componentDir || `{${COMPONENT_DIR}}`;
     const resolvedEnvType = envType || '{ENV_TYPE}';
     const resolved = format(this.dirPath, { [COMPONENT_DIR]: resolvedComponentDir, ENV_TYPE: resolvedEnvType });

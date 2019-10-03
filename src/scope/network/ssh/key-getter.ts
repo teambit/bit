@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { identityFile } from '../../../utils';
 import logger from '../../../logger/logger';
 
-async function readKey(keyPath: ?string) {
+async function readKey(keyPath: string | null | undefined) {
   if (!keyPath) return '';
 
   try {
@@ -14,7 +14,7 @@ async function readKey(keyPath: ?string) {
   }
 }
 
-export default (async function keyGetter(keyPath: ?string) {
+export default (async function keyGetter(keyPath: string | null | undefined) {
   if (keyPath) return readKey(keyPath);
   const sshFile = await identityFile();
   logger.debug(`ssh, reading ssh key at ${sshFile}`);

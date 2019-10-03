@@ -6,7 +6,7 @@ import logger from '../logger/logger';
 import * as errors from './exceptions';
 
 export type HookAction = {
-  name: ?string,
+  name: string | null | undefined,
   run: Function[]
 };
 
@@ -112,7 +112,7 @@ export default class HooksManager {
     args: Object = {},
     headers: Object = {},
     context: Object = {}
-  ): ?(HookFailures[]) {
+  ): HookFailures[] | null | undefined {
     const resultErrors = [];
     if (!this.hooks.has(hookName)) {
       logger.warn(`trying to trigger a non existing hook ${hookName}`);

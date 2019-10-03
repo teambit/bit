@@ -80,54 +80,54 @@ export type InvalidComponent = { id: BitId, error: Error };
 
 export type ComponentProps = {
   name: string,
-  version?: ?string,
-  scope?: ?string,
+  version?: string | null | undefined,
+  scope?: string | null | undefined,
   lang?: string,
   bindingPrefix?: string,
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson: ?ComponentConfig,
+  bitJson: ComponentConfig | null | undefined,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
   testerDependencies?: Dependency[],
-  flattenedDependencies?: ?BitIds,
-  flattenedDevDependencies?: ?BitIds,
-  flattenedCompilerDependencies?: ?BitIds,
-  flattenedTesterDependencies?: ?BitIds,
-  packageDependencies?: ?Object,
-  devPackageDependencies?: ?Object,
-  peerPackageDependencies?: ?Object,
-  compilerPackageDependencies?: ?Object,
-  testerPackageDependencies?: ?Object,
-  customResolvedPaths?: ?(customResolvedPath[]),
+  flattenedDependencies?: BitIds | null | undefined,
+  flattenedDevDependencies?: BitIds | null | undefined,
+  flattenedCompilerDependencies?: BitIds | null | undefined,
+  flattenedTesterDependencies?: BitIds | null | undefined,
+  packageDependencies?: Object | null | undefined,
+  devPackageDependencies?: Object | null | undefined,
+  peerPackageDependencies?: Object | null | undefined,
+  compilerPackageDependencies?: Object | null | undefined,
+  testerPackageDependencies?: Object | null | undefined,
+  customResolvedPaths?: customResolvedPath[] | null | undefined,
   overrides: ComponentOverrides,
-  packageJsonFile?: ?PackageJsonFile,
-  packageJsonChangedProps?: ?{ [string]: any },
+  packageJsonFile?: PackageJsonFile | null | undefined,
+  packageJsonChangedProps?: { [string]: any } | null | undefined,
   files: SourceFile[],
-  docs?: ?(Doclet[]),
+  docs?: Doclet[] | null | undefined,
   dists?: Dist[],
-  mainDistFile?: ?PathLinux,
-  specsResults?: ?SpecsResults,
-  license?: ?License,
-  deprecated: ?boolean,
+  mainDistFile?: PathLinux | null | undefined,
+  specsResults?: SpecsResults | null | undefined,
+  license?: License | null | undefined,
+  deprecated: boolean | null | undefined,
   origin: ComponentOrigin,
-  log?: ?Log,
+  log?: Log | null | undefined,
   scopesList?: ScopeListItem[],
-  componentFromModel?: ?Component
+  componentFromModel?: Component | null | undefined
 };
 
 export default class Component {
   name: string;
-  version: ?string;
-  scope: ?string;
+  version: string | null | undefined;
+  scope: string | null | undefined;
   lang: string;
   bindingPrefix: string;
   mainFile: PathOsBased;
-  compiler: ?CompilerExtension;
-  tester: ?TesterExtension;
-  bitJson: ?ComponentConfig;
+  compiler: CompilerExtension | null | undefined;
+  tester: TesterExtension | null | undefined;
+  bitJson: ComponentConfig | null | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -144,20 +144,20 @@ export default class Component {
   manuallyRemovedDependencies: OverriddenDependencies = {};
   manuallyAddedDependencies: OverriddenDependencies = {};
   overrides: ComponentOverrides;
-  docs: ?(Doclet[]);
+  docs: Doclet[] | null | undefined;
   files: SourceFile[];
   dists: Dists;
-  specsResults: ?(SpecsResults[]);
-  license: ?License;
-  log: ?Log;
-  writtenPath: ?PathOsBasedRelative; // needed for generate links
-  dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages.
-  originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
-  _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
+  specsResults: SpecsResults[] | null | undefined;
+  license: License | null | undefined;
+  log: Log | null | undefined;
+  writtenPath: PathOsBasedRelative | null | undefined; // needed for generate links
+  dependenciesSavedAsComponents: boolean | null | undefined = true; // otherwise they're saved as npm packages.
+  originallySharedDir: PathLinux | null | undefined; // needed to reduce a potentially long path that was used by the author
+  _wasOriginallySharedDirStripped: boolean | null | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
+  wrapDir: PathLinux | null | undefined; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
-  componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
-  componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
+  componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
+  componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
@@ -165,12 +165,12 @@ export default class Component {
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
-  packageJsonFile: ?PackageJsonFile; // populated when loadedFromFileSystem or when writing the components. for author it never exists
-  packageJsonChangedProps: ?Object; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
+  packageJsonFile: PackageJsonFile | null | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
+  packageJsonChangedProps: Object | null | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
-  scopesList: ?(ScopeListItem[]);
+  scopesList: ScopeListItem[] | null | undefined;
 
   get id(): BitId {
     return new BitId({
@@ -324,7 +324,7 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
+  setDists(dists: Dist[] | null | undefined, mainDistFile?: PathOsBased | null | undefined) {
     this.dists = new Dists(dists, mainDistFile);
   }
 
@@ -336,15 +336,15 @@ export default class Component {
     }
   }
 
-  async getDetachedCompiler(consumer: ?Consumer): Promise<boolean> {
+  async getDetachedCompiler(consumer: Consumer | null | undefined): Promise<boolean> {
     return this._isEnvDetach(consumer, COMPILER_ENV_TYPE);
   }
 
-  async getDetachedTester(consumer: ?Consumer): Promise<boolean> {
+  async getDetachedTester(consumer: Consumer | null | undefined): Promise<boolean> {
     return this._isEnvDetach(consumer, TESTER_ENV_TYPE);
   }
 
-  async _isEnvDetach(consumer: ?Consumer, envType: EnvType): Promise<boolean> {
+  async _isEnvDetach(consumer: Consumer | null | undefined, envType: EnvType): Promise<boolean> {
     if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
 
     const context = { workspaceDir: consumer.getPath() };
@@ -367,7 +367,7 @@ export default class Component {
   }
 
   async getConfigToWrite(
-    consumer: ?Consumer,
+    consumer: Consumer | null | undefined,
     bitMap: BitMap,
     configDir: PathOsBased | ConfigDir
   ): Promise<EjectConfData> {
@@ -543,13 +543,13 @@ export default class Component {
   }: {
     scope: Scope,
     save?: boolean,
-    consumer?: ?Consumer,
+    consumer?: Consumer | null | undefined,
     noCache?: boolean,
     directory?: string,
     verbose?: boolean,
     dontPrintEnvMsg?: boolean,
     keep?: boolean
-  }): Promise<?Dists> {
+  }): Promise<Dists | null | undefined> {
     return buildComponent({
       component: this,
       scope,
@@ -583,7 +583,7 @@ export default class Component {
     isolated?: boolean,
     directory?: string,
     keep?: boolean
-  }): Promise<?SpecsResults> {
+  }): Promise<SpecsResults | null | undefined> {
     const testFiles = this.files.filter(file => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
     if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
@@ -1051,7 +1051,7 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentConfig: ?ComponentConfig;
+    let componentConfig: ComponentConfig | null | undefined;
     if (configDir !== consumerPath) {
       // $FlowFixMe unclear error
       componentConfig = await ComponentConfig.load({

@@ -31,9 +31,9 @@ export default class Test extends Command {
       verbose,
       forkLevel
     }: {
-      all: ?boolean,
-      verbose: ?boolean,
-      forkLevel: ?string
+      all: boolean | null | undefined,
+      verbose: boolean | null | undefined,
+      forkLevel: string | null | undefined
     }
   ): Promise<{ __code: number, data: SpecsResultsWithMetaData }> {
     if (id && all) {

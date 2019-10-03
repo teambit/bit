@@ -228,7 +228,7 @@ export default class Repository {
     fs.copySync(objectsDir, backupDir);
   }
 
-  add(object: ?BitObject): Repository {
+  add(object: BitObject | null | undefined): Repository {
     if (!object) return this;
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);

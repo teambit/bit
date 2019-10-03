@@ -58,12 +58,12 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  toConsumer(repo: Repository, manipulateDirData: ?(ManipulateDirItem[])): Promise<ConsumerComponent> {
+  toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ConsumerComponent> {
     // $FlowFixMe
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 
-  async toObjects(repo: Repository, clientVersion: ?string): Promise<ComponentObjects> {
+  async toObjects(repo: Repository, clientVersion: string | null | undefined): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15

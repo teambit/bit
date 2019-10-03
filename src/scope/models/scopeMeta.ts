@@ -9,7 +9,7 @@ type ScopeMetaProps = {
 };
 
 export default class ScopeMeta extends BitObject {
-  license: ?string;
+  license: string | null | undefined;
   name: string;
 
   constructor(props: ScopeMetaProps) {

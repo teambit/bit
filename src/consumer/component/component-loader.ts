@@ -18,7 +18,7 @@ export default class ComponentLoader {
   _componentsCacheForCapsule: Object = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Object;
-  cacheProjectAst: ?Object; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  cacheProjectAst: Object | null | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
@@ -138,7 +138,7 @@ export default class ComponentLoader {
     const { componentFromModel, componentMap } = component;
     // $FlowFixMe componentMap is set here
     const currentId: BitId = componentMap.id;
-    let newId: ?BitId;
+    let newId: BitId | null | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
       // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
       newId = currentId.changeVersion(componentFromModel.version);
@@ -173,7 +173,7 @@ export default class ComponentLoader {
 
   async _throwPendingImportIfNeeded(currentId: BitId) {
     if (currentId.hasScope()) {
-      const remoteComponent: ?ModelComponent = await this._getRemoteComponent(currentId);
+      const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // $FlowFixMe version is set here
       if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
         throw new ComponentsPendingImport();
@@ -181,7 +181,7 @@ export default class ComponentLoader {
     }
   }
 
-  async _getRemoteComponent(id: BitId): Promise<?ModelComponent> {
+  async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const remotes = await getScopeRemotes(this.consumer.scope);
     let componentsObjects;
     try {

@@ -44,7 +44,7 @@ export default (async function ejectConf(
 
 export async function getEjectConfDataToPersist(
   component: ConsumerComponent,
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   bitMap: BitMap,
   configDir: ConfigDir
 ): Promise<EjectConfData> {
@@ -156,8 +156,8 @@ export async function writeEnvFiles({
   verbose = false
 }: {
   configDir: PathOsBased,
-  env?: ?CompilerExtension | ?TesterExtension,
-  consumer?: ?Consumer,
+  env?: CompilerExtension | null | undefined | TesterExtension,
+  consumer?: Consumer | null | undefined,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean
@@ -195,8 +195,8 @@ export async function populateEnvFilesToWrite({
   verbose = false
 }: {
   configDir: PathOsBased,
-  env?: ?CompilerExtension | ?TesterExtension,
-  consumer?: ?Consumer,
+  env?: CompilerExtension | null | undefined | TesterExtension,
+  consumer?: Consumer | null | undefined,
   bitMap?: BitMap,
   component: ConsumerComponent,
   deleteOldFiles: boolean,

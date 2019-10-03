@@ -3,7 +3,7 @@ import AbstractError from '../../error/abstract-error';
 
 export default class ComponentNotFound extends AbstractError {
   id: string;
-  dependentId: ?string;
+  dependentId: string | null | undefined;
   code: number;
 
   constructor(id: string, dependentId?: string) {

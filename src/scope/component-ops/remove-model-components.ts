@@ -16,7 +16,7 @@ export default class RemoveModelComponents {
   bitIds: BitIds;
   force: boolean;
   removeSameOrigin: boolean = false;
-  consumer: ?Consumer;
+  consumer: Consumer | null | undefined;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;

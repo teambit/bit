@@ -12,11 +12,11 @@ export default class Create extends Command {
   private = false;
   loader = true;
 
-  action(): Promise<*> {
+  action(): Promise<any> {
     return link();
   }
 
-  report(results: Array<{ id: string, bound: ?Object }>): string {
+  report(results: Array<{ id: string, bound: Object | null | undefined }>): string {
     return linkTemplate(results);
   }
 }

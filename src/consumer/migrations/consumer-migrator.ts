@@ -10,7 +10,7 @@ export type ConsumerMigrationResult = {
 };
 
 type VersionMigrationsDeclarations = {
-  bitmap: ?(MigrationDeclaration[])
+  bitmap: MigrationDeclaration[] | null | undefined
 };
 
 type VersionMigrations = {

@@ -35,10 +35,10 @@ export type LinksResult = {
  */
 export default class NodeModuleLinker {
   components: Component[];
-  consumer: ?Consumer;
+  consumer: Consumer | null | undefined;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: ?Consumer, bitMap: BitMap) {
+  constructor(components: Component[], consumer: Consumer | null | undefined, bitMap: BitMap) {
     this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer;
     this.bitMap = bitMap;
@@ -78,7 +78,7 @@ export default class NodeModuleLinker {
   getLinksResults(): LinksResult[] {
     const linksResults: LinksResult[] = [];
     const getExistingLinkResult = id => linksResults.find(linkResult => linkResult.id.isEqual(id));
-    const addLinkResult = (id: ?BitId, from: string, to: string) => {
+    const addLinkResult = (id: BitId | null | undefined, from: string, to: string) => {
       if (!id) return;
       const existingLinkResult = getExistingLinkResult(id);
       if (existingLinkResult) {

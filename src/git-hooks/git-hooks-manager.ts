@@ -8,7 +8,7 @@ import bitImportGitHook from './fixtures/bit-import-git-hook';
 
 const HOOKS_DIR_NAME = 'hooks';
 
-/* 
+/*
   * Setting up block level variable to store class state
   * set's to null by default.
 */
@@ -70,7 +70,7 @@ export default class GitHooksManager {
    * @return {GitHooksManager} instance of the GitHooksManager
    *
    */
-  static getInstance(): ?GitHooksManager {
+  static getInstance(): GitHooksManager | null | undefined {
     return instance;
   }
 }

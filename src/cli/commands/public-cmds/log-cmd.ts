@@ -12,7 +12,7 @@ export default class Log extends Command {
   opts = [];
   migration = true;
 
-  action([id]: [string]): Promise<*> {
+  action([id]: [string]): Promise<any> {
     return getComponentLogs(id).then((logs) => {
       Object.keys(logs).forEach(key => (logs[key].tag = key));
       return R.reverse(R.values(logs)).map(
@@ -28,8 +28,8 @@ export default class Log extends Command {
       message: string,
       tag: string,
       date: string,
-      username: ?string,
-      email: ?string
+      username: string | null | undefined,
+      email: string | null | undefined
     }>
   ): string {
     return logs.map(paintLog).join('\n');

@@ -24,7 +24,7 @@ export type ComponentTree = {
 
 export type ComponentDef = {
   id: BitId,
-  component: ?ModelComponent
+  component: ModelComponent | null | undefined
 };
 
 export default class SourceRepository {
@@ -52,9 +52,9 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<?ModelComponent> {
+  async get(bitId: BitId): Promise<ModelComponent | null | undefined> {
     const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ?ModelComponent = await this._findComponent(component);
+    const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
@@ -74,7 +74,7 @@ export default class SourceRepository {
     return foundComponent;
   }
 
-  async _findComponent(component: ModelComponent): Promise<?ModelComponent> {
+  async _findComponent(component: ModelComponent): Promise<ModelComponent | null | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
@@ -88,7 +88,7 @@ export default class SourceRepository {
     return null;
   }
 
-  async _findComponentBySymlink(symlink: Symlink): Promise<?ModelComponent> {
+  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | null | undefined> {
     const realComponentId: BitId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
     const foundComponent = await this.objects().load(realModelComponent.hash());
@@ -469,7 +469,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     local: boolean = true
   ): Promise<{ mergedComponent: ModelComponent, mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
-    const existingComponent: ?ModelComponent = await this._findComponent(component);
+    const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (!existingComponent) {
       this.put({ component, objects });
       return { mergedComponent: component, mergedVersions: component.listVersions() };

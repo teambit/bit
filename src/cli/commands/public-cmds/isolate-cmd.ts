@@ -33,22 +33,22 @@ export default class Isolate extends Command {
   loader = true;
 
   action(
-    [id, scopePath]: [string, ?string],
+    [id, scopePath]: [string, string | null | undefined],
     opts: {
-      directory: ?string,
-      writeBitDependencies: ?boolean,
-      npmLinks: ?boolean,
-      installPackages: ?boolean,
-      installPeerDependencies: ?boolean,
-      dist: ?boolean,
-      conf: ?boolean,
-      noPackageJson: ?boolean,
-      override: ?boolean,
-      saveDependenciesAsComponents: ?boolean,
-      excludeRegistryPrefix: ?boolean,
-      verbose: ?boolean,
-      silentClientResult: ?boolean,
-      useCapsule: ?boolean
+      directory: string | null | undefined,
+      writeBitDependencies: boolean | null | undefined,
+      npmLinks: boolean | null | undefined,
+      installPackages: boolean | null | undefined,
+      installPeerDependencies: boolean | null | undefined,
+      dist: boolean | null | undefined,
+      conf: boolean | null | undefined,
+      noPackageJson: boolean | null | undefined,
+      override: boolean | null | undefined,
+      saveDependenciesAsComponents: boolean | null | undefined,
+      excludeRegistryPrefix: boolean | null | undefined,
+      verbose: boolean | null | undefined,
+      silentClientResult: boolean | null | undefined,
+      useCapsule: boolean | null | undefined
     }
   ): Promise<any> {
     opts.writeToPath = opts.directory;

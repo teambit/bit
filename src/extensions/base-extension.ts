@@ -23,7 +23,7 @@ const ajv = new Ajv();
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
 export type BaseExtensionOptions = {
-  file?: ?string
+  file?: string | null | undefined
 };
 
 type BaseArgs = {
@@ -34,9 +34,9 @@ type BaseArgs = {
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
-  consumerPath?: ?PathOsBased,
-  scopePath?: ?PathOsBased,
-  context?: ?Object,
+  consumerPath?: PathOsBased | null | undefined,
+  scopePath?: PathOsBased | null | undefined,
+  context?: Object | null | undefined,
   throws?: boolean
 };
 
@@ -49,12 +49,12 @@ type BaseLoadFromFileArgsProps = BaseArgs & {
 type StaticProps = BaseArgs & {
   dynamicConfig: Object,
   filePath: string,
-  rootDir?: ?string,
-  schema?: ?Object,
+  rootDir?: string | null | undefined,
+  schema?: Object | null | undefined,
   script?: Function,
   disabled: boolean,
   loaded: boolean,
-  context?: ?Object
+  context?: Object | null | undefined
 };
 
 type InstanceSpecificProps = {
@@ -74,7 +74,7 @@ type ExtensionPath = {
 };
 
 export type InitOptions = {
-  writeConfigFilesOnAction: ?boolean
+  writeConfigFilesOnAction: boolean | null | undefined
 };
 
 // export type BaseExtensionProps = {
@@ -92,12 +92,12 @@ export default class BaseExtension {
   filePath: string;
   rootDir: string;
   rawConfig: Object;
-  schema: ?Object;
+  schema: Object | null | undefined;
   options: Object;
   dynamicConfig: Object;
-  context: ?Object;
-  script: ?Function; // Store the required plugin
-  _initOptions: ?InitOptions; // Store the required plugin
+  context: Object | null | undefined;
+  script: Function | null | undefined; // Store the required plugin
+  _initOptions: InitOptions | null | undefined; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {
@@ -126,7 +126,7 @@ export default class BaseExtension {
     return this._initOptions;
   }
 
-  set initOptions(opts: ?Object) {
+  set initOptions(opts: Object | null | undefined) {
     const defaultInitOpts = {
       writeConfigFilesOnAction: false
     };
@@ -412,7 +412,7 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static loadDynamicConfig(extensionProps: StaticProps): ?Object {
+  static loadDynamicConfig(extensionProps: StaticProps): Object | null | undefined {
     logger.debug('base-extension - loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
@@ -476,7 +476,7 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
   }
 };
 
-const _getExtensionVersionFromComponentPath = (componentPath: string): ?string => {
+const _getExtensionVersionFromComponentPath = (componentPath: string): string | null | undefined => {
   const parsed = path.parse(componentPath);
   const version = parsed.base;
   if (!semver.valid(version)) {

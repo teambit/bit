@@ -22,7 +22,7 @@ export default class Remote {
   host: string;
   name: string;
 
-  constructor(host: string, name: ?string, primary: boolean = false) {
+  constructor(host: string, name: string | null | undefined, primary: boolean = false) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;
@@ -53,15 +53,15 @@ export default class Remote {
     return this.connect().then(network => network.search(query, reindex));
   }
 
-  show(bitId: BitId): Promise<?Component> {
+  show(bitId: BitId): Promise<Component | null | undefined> {
     return this.connect().then(network => network.show(bitId));
   }
 
-  graph(bitId?: ?BitId): Promise<DependencyGraph> {
+  graph(bitId?: BitId | null | undefined): Promise<DependencyGraph> {
     return this.connect().then(network => network.graph(bitId));
   }
 
-  fetch(bitIds: BitIds, withoutDeps: boolean, context: ?Object): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds, withoutDeps: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
     return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
   }
 
@@ -77,16 +77,16 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[], context: ?Object): Promise<string[]> {
+  pushMany(components: ComponentObjects[], context: Object | null | undefined): Promise<string[]> {
     return connect(this.host).then(network => network.pushMany(components, context));
   }
-  deleteMany(ids: string[], force: boolean, context: ?Object): Promise<Object[]> {
+  deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<Object[]> {
     return connect(this.host).then(network => network.deleteMany(ids, force, context));
   }
-  deprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
+  deprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
   }
-  undeprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
+  undeprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]> {
     return connect(this.host).then(network => network.undeprecateMany(ids, context));
   }
 

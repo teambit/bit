@@ -24,7 +24,7 @@ export default (async function remove({
   deleteFiles: boolean
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
-  const consumer: ?Consumer = remote ? await loadConsumerIfExist() : await loadConsumer();
+  const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
   const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
   const removeResults = await removeComponents({
     consumer,

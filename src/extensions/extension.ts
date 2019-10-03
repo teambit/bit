@@ -84,7 +84,7 @@ export default class Extension extends BaseExtension {
      * API to trigger a hook registered by this extension.
      * trigger hook are available only for hooks registered by you.
      */
-    triggerHook: (hookName: string, args: ?Object) => {
+    triggerHook: (hookName: string, args: Object | null | undefined) => {
       if (!R.contains(hookName, this.newHooks)) {
         logger.debug(`trying to trigger the hook ${hookName} which not registered by this extension`);
         return;
@@ -153,14 +153,14 @@ export default class Extension extends BaseExtension {
   }
 }
 
-const _createIsolatedEnv = async (scopePath: string, dirPath: ?string) => {
+const _createIsolatedEnv = async (scopePath: string, dirPath: string | null | undefined) => {
   const scope = await _loadScope(scopePath);
   const isolatedEnvironment = new IsolatedEnvironment(scope, dirPath);
   await isolatedEnvironment.create();
   return isolatedEnvironment;
 };
 
-const _loadScope = async (scopePath: ?string) => {
+const _loadScope = async (scopePath: string | null | undefined) => {
   // If a scope path provided we will take the component from that scope
   if (scopePath) {
     return loadScope(scopePath);

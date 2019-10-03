@@ -41,7 +41,7 @@ export async function undeprecate({ ids, remote }: { ids: string[], remote: bool
   return undeprecateMany(consumer.scope, bitIds);
 }
 
-function getRemotes(consumer: ?Consumer): Promise<Remotes> {
+function getRemotes(consumer: Consumer | null | undefined): Promise<Remotes> {
   return consumer ? getScopeRemotes(consumer.scope) : Remotes.getGlobalRemotes();
 }
 

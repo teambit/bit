@@ -11,12 +11,12 @@ type ErrorObj = {
 type Test = {
   title: string,
   pass: boolean,
-  err: ?ErrorObj,
+  err: ErrorObj | null | undefined,
   duration: number
 };
 type Failure = {
   title: string,
-  err: ?ErrorObj,
+  err: ErrorObj | null | undefined,
   duration: number
 };
 
@@ -37,21 +37,21 @@ export type Results = {
 type TestProps = {
   title: string,
   pass: boolean,
-  err: ?ErrorObj,
+  err: ErrorObj | null | undefined,
   duration: number | string
 };
 
 type StatsProps = {
   start: string,
   end: string,
-  duration: ?number | string
+  duration: number | null | undefined | string
 };
 
 export type RawTestsResults = {
   tests: TestProps[],
   stats: StatsProps,
-  pass: ?boolean,
-  failures: ?(Failure[]),
+  pass: boolean | null | undefined,
+  failures: Failure[] | null | undefined,
   specPath: PathOsBased
 };
 

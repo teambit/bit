@@ -11,7 +11,7 @@
  *   first(['a', 'b', 'c']) // => 'a'
  * ```
  */
-module.exports = function first(array: any[]): ?any {
+module.exports = function first(array: any[]): any | null | undefined {
   if (array && array[0]) return array[0];
   return null;
 };

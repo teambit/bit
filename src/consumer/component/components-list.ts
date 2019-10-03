@@ -20,7 +20,7 @@ export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
 export type ListScopeResult = {
   id: BitId,
-  currentlyUsedVersion?: ?string,
+  currentlyUsedVersion?: string | null | undefined,
   remoteVersion?: string,
   deprecated?: boolean
 };

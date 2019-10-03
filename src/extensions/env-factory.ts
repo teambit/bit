@@ -26,7 +26,7 @@ export async function makeEnvFromModel(
   envType: EnvType,
   modelObject: string | BaseExtensionModel,
   repository: Repository
-): Promise<?EnvExtension> {
+): Promise<EnvExtension | null | undefined> {
   logger.debug(`env-factory, create ${envType} from model`);
   if (!modelObject) return undefined;
   const actualObject =

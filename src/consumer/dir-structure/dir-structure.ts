@@ -13,7 +13,7 @@ export default class BitStructure {
   _componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
-  constructor(componentsDefaultDirectory: ?string, dependenciesDirectory: ?string, ejectedEnvsDirectory: ?string) {
+  constructor(componentsDefaultDirectory: string | null | undefined, dependenciesDirectory: string | null | undefined, ejectedEnvsDirectory: string | null | undefined) {
     this._componentsDefaultDirectoryUnProcessed = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;

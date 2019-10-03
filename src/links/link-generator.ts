@@ -50,7 +50,7 @@ function getComponentLinks({
   createNpmLinkFiles,
   bitMap
 }: {
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   component: Component,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean,
@@ -205,7 +205,7 @@ function groupLinks(
  */
 function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   createNpmLinkFiles: boolean,
   bitMap: BitMap
 ): DataToPersist {
@@ -388,7 +388,7 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
 /**
  * Relevant for IMPORTED and NESTED only
  */
-function getEntryPointsForComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile[] {
+function getEntryPointsForComponent(component: Component, consumer: Consumer | null | undefined, bitMap: BitMap): LinkFile[] {
   const componentMap = bitMap.getComponent(component.id);
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
@@ -424,7 +424,7 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   return files;
 }
 
-function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): ?LinkFile {
+function getEntryPointForAngularComponent(component: Component, consumer: Consumer | null | undefined, bitMap: BitMap): LinkFile | null | undefined {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
   // $FlowFixMe
@@ -451,12 +451,12 @@ async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   bitMap: BitMap,
   componentWithDependencies?: ComponentWithDependencies
 ): Promise<LinkFile[]> {
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const getDependencyComponent = async (): Promise<?Component> => {
+    const getDependencyComponent = async (): Promise<Component | null | undefined> => {
       if (componentWithDependencies) {
         return componentWithDependencies.allDependencies.find(d => d.id.isEqual(dependency.id));
       }

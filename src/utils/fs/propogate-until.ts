@@ -54,7 +54,7 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
  *  // => '/usr/local/var'
  * ```
  */
-export function propogateUntil(fromPath: string): ?string {
+export function propogateUntil(fromPath: string): string | null | undefined {
   if (!fromPath) return null;
   if (!fs.existsSync(fromPath)) return null;
   const filePath = findUp.sync(

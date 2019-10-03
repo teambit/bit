@@ -6,7 +6,7 @@ import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../co
 import BitId from '../../bit-id/bit-id';
 
 export default function getNodeModulesPathOfComponent(
-  bindingPrefix: ?string,
+  bindingPrefix: string | null | undefined,
   id: BitId,
   allowNonScope: boolean = false
 ): PathOsBasedRelative {

@@ -13,7 +13,7 @@ export default (async function fetch(
   path: string,
   ids: string[],
   noDependencies: boolean = false,
-  headers: ?Object
+  headers: Object | null | undefined
 ): Promise<ComponentObjects[]> {
   const bitIds: BitIds = BitIds.deserialize(ids);
 

@@ -164,7 +164,7 @@ export default class CommandRegistrar {
   usage: string;
   description: string;
   commands: Command[];
-  extensionsCommands: ?(Command[]);
+  extensionsCommands: Command[] | null | undefined;
 
   registerBaseCommand() {
     commander

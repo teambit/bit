@@ -17,7 +17,7 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
       : null;
   };
-  const parseEnvFiles = (envExtension: ?EnvExtension): ?(string[]) => {
+  const parseEnvFiles = (envExtension: EnvExtension | null | undefined): string[] | null | undefined => {
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
@@ -123,7 +123,7 @@ export function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component,
   verbose: boolean
-): ?(FieldsDiff[]) {
+): FieldsDiff[] | null | undefined {
   const printableLeft = componentToPrintableForDiff(componentLeft);
   const printableRight = componentToPrintableForDiff(componentRight);
   const fieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);

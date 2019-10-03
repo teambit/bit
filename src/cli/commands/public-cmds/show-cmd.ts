@@ -37,7 +37,7 @@ export default class Show extends Command {
       dependencies = false
     }: {
       json?: boolean,
-      versions: ?boolean,
+      versions: boolean | null | undefined,
       remote: boolean,
       outdated?: boolean,
       compare?: boolean,
@@ -45,7 +45,7 @@ export default class Show extends Command {
       dependents?: boolean,
       dependencies?: boolean
     }
-  ): Promise<*> {
+  ): Promise<any> {
     if (versions && (compare || outdated)) {
       throw new GeneralError('the [--compare] or [--outdated] flag cannot be used along with --versions');
     }
@@ -84,9 +84,9 @@ export default class Show extends Command {
     componentModel?: ConsumerComponent,
     dependenciesInfo: DependenciesInfo[],
     dependentsInfo: DependenciesInfo[],
-    json: ?boolean,
-    versions: ?boolean,
-    components: ?(ConsumerComponent[]),
+    json: boolean | null | undefined,
+    versions: boolean | null | undefined,
+    components: ConsumerComponent[] | null | undefined,
     outdated: boolean,
     detailed: boolean
   }): string {

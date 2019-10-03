@@ -250,7 +250,7 @@ export default class CommandHelper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
-  ejectConf(id: string = 'bar/foo', options: ?Object) {
+  ejectConf(id: string = 'bar/foo', options: Object | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
         .map(key => `-${key} ${options[key]}`)
@@ -258,7 +258,7 @@ export default class CommandHelper {
       : '';
     return this.runCmd(`bit eject-conf ${id} ${value}`);
   }
-  injectConf(id: string = 'bar/foo', options: ?Object) {
+  injectConf(id: string = 'bar/foo', options: Object | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
         .map(key => `-${key} ${options[key]}`)

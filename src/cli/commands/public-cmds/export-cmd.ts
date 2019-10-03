@@ -51,7 +51,7 @@ export default class Export extends Command {
       force = false,
       rewire = false
     }: any
-  ): Promise<*> {
+  ): Promise<any> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
@@ -93,7 +93,7 @@ export default class Export extends Command {
     componentsIds: BitId[],
     nonExistOnBitMap: BitId[],
     missingScope: BitId[],
-    ejectResults: ?EjectResults,
+    ejectResults: EjectResults | null | undefined,
     remote: string,
     includeDependencies: boolean
   }): string {

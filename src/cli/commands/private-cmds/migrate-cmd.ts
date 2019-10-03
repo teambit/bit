@@ -12,7 +12,7 @@ export default class Migrate extends Command {
   alias = '';
   opts = [['v', 'verbose', 'showing logs for the migration process']];
 
-  action([scopePath]: [string], { verbose }: { verbose: ?boolean }): Promise<any> {
+  action([scopePath]: [string], { verbose }: { verbose: boolean | null | undefined }): Promise<any> {
     return migrate(scopePath, verbose).then(result => ({ result, verbose }));
   }
 

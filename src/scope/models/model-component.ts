@@ -43,7 +43,7 @@ type Versions = { [string]: Ref };
 export type ScopeListItem = { url: string, name: string, date: string };
 
 export type ComponentProps = {
-  scope: ?string,
+  scope: string | null | undefined,
   name: string,
   versions?: Versions,
   lang: string,
@@ -64,13 +64,13 @@ const VERSION_ZERO = '0.0.0';
  * with 'Component' in their headers. see object-registrar.types()
  */
 export default class Component extends BitObject {
-  scope: ?string;
+  scope: string | null | undefined;
   name: string;
   versions: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
-  local: ?boolean;
+  local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
 
@@ -180,7 +180,7 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(repo: Repository): Promise<{ [number]: ?{ message: string, date: string, hash: string } }> {
+  async collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } | null | undefined }> {
     // $FlowFixMe
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
@@ -202,7 +202,7 @@ export default class Component extends BitObject {
   /**
    * if exactVersion is defined, add exact version instead of using the semver mechanism
    */
-  getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
+  getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: string | null | undefined): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
@@ -313,7 +313,7 @@ export default class Component extends BitObject {
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    manipulateDirData: ?(ManipulateDirItem[])
+    manipulateDirData: ManipulateDirItem[] | null | undefined
   ): Promise<ConsumerComponent> {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);

@@ -5,7 +5,7 @@ export type SSHUrl = {
   username: string,
   port: number,
   host: string,
-  path: ?string
+  path: string | null | undefined
 };
 
 /**

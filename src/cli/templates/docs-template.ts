@@ -72,7 +72,7 @@ export const paintDoc = (doc: Doclet) => {
   return table.render() + paintExamples(doc.examples);
 };
 
-export default (docs: ?(Doclet[])) => {
+export default (docs: Doclet[] | null | undefined) => {
   if (R.isEmpty(docs) || R.isNil(docs)) {
     return '\nNo documentation found';
   }

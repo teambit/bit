@@ -25,7 +25,7 @@ import GeneralError from '../error/general-error';
 
 export default class Isolator {
   capsule: Capsule;
-  consumer: ?Consumer;
+  consumer: Consumer | null | undefined;
   scope: Scope;
   capsuleBitMap: BitMap;
   capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
@@ -33,13 +33,13 @@ export default class Isolator {
   manyComponentsWriter: ManyComponentsWriter;
   _npmVersionHasValidated: boolean = false;
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer | null | undefined) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
   }
 
-  static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
+  static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: Consumer | null | undefined, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
@@ -217,7 +217,7 @@ export default class Isolator {
     this._npmVersionHasValidated = true;
   }
 
-  async capsuleExec(cmd: string, options?: ?Object): Promise<string> {
+  async capsuleExec(cmd: string, options?: Object | null | undefined): Promise<string> {
     const execResults = await this.capsule.exec(cmd, options);
     let output = '';
     return new Promise((resolve, reject) => {

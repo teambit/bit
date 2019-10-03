@@ -113,15 +113,15 @@ export default class Dependencies {
     );
   }
 
-  getById(id: BitId): ?Dependency {
+  getById(id: BitId): Dependency | null | undefined {
     return this.dependencies.find(dep => dep.id.isEqual(id));
   }
 
-  getByIdStr(id: BitIdStr): ?Dependency {
+  getByIdStr(id: BitIdStr): Dependency | null | undefined {
     return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
-  getBySourcePath(sourcePath: string): ?Dependency {
+  getBySourcePath(sourcePath: string): Dependency | null | undefined {
     return this.dependencies.find(dependency =>
       dependency.relativePaths.some((relativePath) => {
         return relativePath.sourceRelativePath === sourcePath;

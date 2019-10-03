@@ -12,19 +12,19 @@ import { PathOsBased } from '../utils/path';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 export type IsolateOptions = {
-  writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
-  writeBitDependencies: ?boolean, // Write bit dependencies as package dependencies in package.json
-  npmLinks: ?boolean, // Fix the links to dependencies to be links to the package
-  saveDependenciesAsComponents: ?boolean, // import the dependencies as bit components instead of as npm packages
-  installPackages: ?boolean, // Install the package dependencies
-  installPeerDependencies: ?boolean, // Install the peer package dependencies
-  noPackageJson: ?boolean, // Don't write the package.json
-  override: ?boolean, // Override existing files in the folder
-  excludeRegistryPrefix: ?boolean, // exclude the registry prefix from the component's name in the package.json
-  dist: ?boolean, // Write dist files
-  conf: ?boolean, // Write bit.json file
+  writeToPath: string | null | undefined, // Path to write the component to (default to the isolatedEnv path)
+  writeBitDependencies: boolean | null | undefined, // Write bit dependencies as package dependencies in package.json
+  npmLinks: boolean | null | undefined, // Fix the links to dependencies to be links to the package
+  saveDependenciesAsComponents: boolean | null | undefined, // import the dependencies as bit components instead of as npm packages
+  installPackages: boolean | null | undefined, // Install the package dependencies
+  installPeerDependencies: boolean | null | undefined, // Install the peer package dependencies
+  noPackageJson: boolean | null | undefined, // Don't write the package.json
+  override: boolean | null | undefined, // Override existing files in the folder
+  excludeRegistryPrefix: boolean | null | undefined, // exclude the registry prefix from the component's name in the package.json
+  dist: boolean | null | undefined, // Write dist files
+  conf: boolean | null | undefined, // Write bit.json file
   verbose: boolean, // Print more logs
-  silentClientResult: ?boolean // Print environment install result
+  silentClientResult: boolean | null | undefined // Print environment install result
 };
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
@@ -34,7 +34,7 @@ export default class Environment {
   scope: Scope;
   consumer: Consumer;
 
-  constructor(scope: Scope, dir: ?string) {
+  constructor(scope: Scope, dir: string | null | undefined) {
     this.scope = scope;
     this.path = dir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
     logger.debug(`creating a new isolated environment at ${this.path}`);
@@ -108,13 +108,13 @@ export default class Environment {
     return this.path;
   }
 
-  destroy(): Promise<*> {
+  destroy(): Promise<any> {
     logger.debug(`destroying the isolated environment at ${this.path}`);
     logger.info(`environment, deleting ${this.path}`);
     return fs.remove(this.path);
   }
 
-  async destroyIfExist(): Promise<*> {
+  async destroyIfExist(): Promise<any> {
     const isExist = await fs.exists(this.path);
     if (isExist) {
       logger.debug(`destroying existing environment in path ${this.path}`);

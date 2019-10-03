@@ -41,8 +41,8 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     base: string,
     path: string,
     content: Object,
-    indent?: ?string,
-    newline?: ?string,
+    indent?: string | null | undefined,
+    newline?: string | null | undefined,
     override?: boolean
   }): PackageJsonVinyl {
     const jsonStr = stringifyPackage(content, indent, newline);

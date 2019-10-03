@@ -21,9 +21,9 @@ export default class PackageJsonFile {
   packageJsonObject: Object;
   fileExist: boolean;
   filePath: PathOsBasedRelative;
-  workspaceDir: ?PathOsBasedAbsolute;
-  indent: ?string; // default when writing (in stringifyPackage) is "  ". (two spaces).
-  newline: ?string; // whether "\n" or "\r\n", default when writing (in stringifyPackage) is "\n"
+  workspaceDir: PathOsBasedAbsolute | null | undefined;
+  indent: string | null | undefined; // default when writing (in stringifyPackage) is "  ". (two spaces).
+  newline: string | null | undefined; // whether "\n" or "\r\n", default when writing (in stringifyPackage) is "\n"
   constructor({
     filePath,
     packageJsonObject = {},
@@ -143,7 +143,7 @@ export default class PackageJsonFile {
     return this.packageJsonObject[propertyName];
   }
 
-  mergePackageJsonObject(packageJsonObject: ?Object): void {
+  mergePackageJsonObject(packageJsonObject: Object | null | undefined): void {
     if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
     this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
   }

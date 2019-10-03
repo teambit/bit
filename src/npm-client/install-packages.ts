@@ -67,12 +67,12 @@ export async function installNpmPackagesForComponents({
   installPeerDependencies = false
 }: {
   consumer: Consumer,
-  basePath: ?string,
+  basePath: string | null | undefined,
   componentsWithDependencies: ComponentWithDependencies[],
   verbose: boolean,
   silentPackageManagerResult?: boolean,
   installPeerDependencies: boolean
-}): Promise<*> {
+}): Promise<any> {
   const componentDirsRelative = getAllRootDirectoriesFor(componentsWithDependencies);
   const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
   return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);

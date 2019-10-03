@@ -29,7 +29,7 @@ export default function loginToBitSrc(
   suppressBrowserLaunch: boolean,
   npmrcPath: string,
   skipRegistryConfig: boolean,
-  machineName: ?string
+  machineName: string | null | undefined
 ): Promise<{
   isAlreadyLoggedIn?: boolean,
   username?: string,

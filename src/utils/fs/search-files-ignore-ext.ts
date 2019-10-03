@@ -22,7 +22,7 @@ export default function searchFilesIgnoreExt(
   }
   return null;
 
-  function getFile(): ?Vinyl {
+  function getFile(): Vinyl | null | undefined {
     const foundFileWithExt = R.find(_byFileWithExt, files);
     if (foundFileWithExt) return foundFileWithExt;
     const foundFilesWithExt = R.filter(_byFileNoExt, files);

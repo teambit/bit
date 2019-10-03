@@ -48,7 +48,7 @@ export const paintHeader = (value: string): string => {
   return `${c.underline(value)}\n`;
 };
 
-const paintAuthor = (email: ?string, username: ?string): string => {
+const paintAuthor = (email: string | null | undefined, username: string | null | undefined): string => {
   if (email && username) {
     return c.white(`author: ${username} <${email}>\n`);
   } else if (email && !username) {
@@ -70,8 +70,8 @@ export const paintLog = ({
   message: string,
   tag: string,
   date: string,
-  username: ?string,
-  email: ?string
+  username: string | null | undefined,
+  email: string | null | undefined
 }): string => {
   return (
     c.yellow(`tag ${tag}\n`) +

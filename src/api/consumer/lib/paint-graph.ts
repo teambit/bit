@@ -10,9 +10,9 @@ import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 
 export default (async function paintGraph(id: string, options: Object): Promise<string> {
   const { image, remote, layout, allVersions } = options;
-  const consumer: ?Consumer = await loadConsumerIfExist();
+  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
   if (!consumer && !remote) throw new ConsumerNotFound();
-  const getBitId = (): ?BitId => {
+  const getBitId = (): BitId | null | undefined => {
     if (!id) return null;
     if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
     // $FlowFixMe

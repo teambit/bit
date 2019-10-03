@@ -28,7 +28,7 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
 export async function getLinksInDistToWrite(
   component: Component,
   componentMap: ComponentMap,
-  consumer: ?Consumer,
+  consumer: Consumer | null | undefined,
   bitMap: BitMap,
   componentWithDependencies?: ComponentWithDependencies
 ): Promise<DataToPersist> {
@@ -143,8 +143,8 @@ export async function getAllComponentsLinks({
 }: {
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
-  writtenDependencies: ?(Component[]),
-  consumer: ?Consumer,
+  writtenDependencies: Component[] | null | undefined,
+  consumer: Consumer | null | undefined,
   bitMap: BitMap,
   createNpmLinkFiles: boolean
 }): Promise<DataToPersist> {

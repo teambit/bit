@@ -27,7 +27,7 @@ export async function listScope({
   namespacesUsingWildcards?: string,
   strategiesNames?: SSHConnectionStrategyName[]
 }): Promise<ListScopeResult[]> {
-  const consumer: ?Consumer = await loadConsumerIfExist();
+  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
   if (scopeName) {
     return remoteList();
   }

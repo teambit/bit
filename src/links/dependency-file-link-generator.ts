@@ -25,8 +25,8 @@ export type LinkFileType = {
   isEs6?: boolean,
   postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
   postInstallSymlink?: boolean, // postInstallSymlink is needed when custom module resolution was used with unsupported file extension
-  symlinkTo?: ?PathOsBased, // symlink (instead of link) is needed for unsupported files, such as binary files
-  customResolveMapping?: ?{ [string]: string } // needed when custom module resolution was used
+  symlinkTo?: PathOsBased | null | undefined, // symlink (instead of link) is needed for unsupported files, such as binary files
+  customResolveMapping?: { [string]: string } | null | undefined // needed when custom module resolution was used
 };
 
 /**
@@ -35,7 +35,7 @@ export type LinkFileType = {
  * @see RelativePath docs for more info
  */
 export default class DependencyFileLinkGenerator {
-  consumer: ?Consumer;
+  consumer: Consumer | null | undefined;
   bitMap: BitMap;
   component: Component;
   componentMap: ComponentMap;
@@ -43,8 +43,8 @@ export default class DependencyFileLinkGenerator {
   dependencyId: BitId;
   dependencyComponent: Component;
   createNpmLinkFiles: boolean;
-  targetDir: ?string;
-  dependencyComponentMap: ?ComponentMap;
+  targetDir: string | null | undefined;
+  dependencyComponentMap: ComponentMap | null | undefined;
   linkFiles: LinkFileType[];
   relativePathInDependency: PathOsBased;
   hasDist: boolean;
@@ -58,7 +58,7 @@ export default class DependencyFileLinkGenerator {
     createNpmLinkFiles,
     targetDir
   }: {
-    consumer: ?Consumer,
+    consumer: Consumer | null | undefined,
     bitMap: BitMap,
     component: Component,
     relativePath: RelativePath,
@@ -179,7 +179,7 @@ export default class DependencyFileLinkGenerator {
   }: {
     linkPath: PathOsBased,
     relativePathInDependency: PathOsBased,
-    depRootDir: ?PathOsBasedAbsolute
+    depRootDir: PathOsBasedAbsolute | null | undefined
   }): LinkFileType {
     const actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
@@ -338,12 +338,12 @@ export default class DependencyFileLinkGenerator {
     return path.join('node_modules', importSourceFile);
   }
 
-  _getDepRootDir(): ?PathOsBasedRelative {
+  _getDepRootDir(): PathOsBasedRelative | null | undefined {
     if (!this.dependencyComponentMap) return undefined;
     return this.dependencyComponentMap.getRootDir();
   }
 
-  _getDepRootDirDist(): ?PathOsBasedRelative {
+  _getDepRootDirDist(): PathOsBasedRelative | null | undefined {
     const rootDir = this._getDepRootDir();
     return rootDir ? this.dependencyComponent.dists.getDistDir(this.consumer, rootDir) : undefined;
   }

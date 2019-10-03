@@ -15,15 +15,15 @@ export default function buildInScope({
   noCache = false
 }: {
   id: string,
-  save: ?boolean,
-  verbose: ?boolean,
+  save: boolean | null | undefined,
+  verbose: boolean | null | undefined,
   scopePath: string,
-  directory: ?string,
+  directory: string | null | undefined,
   keep: boolean,
   noCache: boolean
 }) {
   logger.debugAndAddBreadCrumb('buildInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
-  async function loadFromScope(initialError: ?Error) {
+  async function loadFromScope(initialError: Error | null | undefined) {
     const getScope = async () => {
       try {
         const scope = await loadScope(scopePath || process.cwd());

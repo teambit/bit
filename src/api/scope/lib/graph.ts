@@ -3,7 +3,7 @@ import { Scope, loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 
-export default (async function graph(path: string, id: ?string): Promise<string> {
+export default (async function graph(path: string, id: string | null | undefined): Promise<string> {
   const scope: Scope = await loadScope(path);
   const dependencyGraph = await DependencyGraph.loadLatest(scope);
   if (!id) {

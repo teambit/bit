@@ -200,7 +200,7 @@ export default function validateVersionInstance(version: Version): void {
     validateType(message, version.bindingPrefix, 'bindingPrefix', 'string');
   }
   const npmSpecs = PJV.getSpecMap('npm');
-  const validatePackageJsonField = (fieldName: string, fieldValue: any): ?string => {
+  const validatePackageJsonField = (fieldName: string, fieldValue: any): string | null | undefined => {
     if (!npmSpecs[fieldName]) {
       // it's not a standard package.json field, can't validate
       return null;

@@ -23,7 +23,7 @@ export type ComponentOverridesData = {
 
 export default class ComponentOverrides {
   overrides: ConsumerOverridesOfComponent;
-  constructor(overrides: ?ConsumerOverridesOfComponent) {
+  constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }
   /**
@@ -49,12 +49,12 @@ export default class ComponentOverrides {
    * use the component-config.
    */
   static loadFromConsumer(
-    overridesFromConsumer: ?ConsumerOverridesOfComponent,
-    overridesFromModel: ?ComponentOverridesData,
-    componentConfig: ?ComponentConfig,
+    overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined,
+    overridesFromModel: ComponentOverridesData | null | undefined,
+    componentConfig: ComponentConfig | null | undefined,
     isAuthor: boolean
   ): ComponentOverrides {
-    const getFromComponent = (): ?ComponentOverridesData => {
+    const getFromComponent = (): ComponentOverridesData | null | undefined => {
       if (componentConfig && componentConfig.componentHasWrittenConfig) {
         return componentConfig.overrides;
       }
@@ -84,7 +84,7 @@ export default class ComponentOverrides {
     return new ComponentOverrides(overridesFromComponent);
   }
 
-  static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
+  static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
     // $FlowFixMe
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
@@ -162,7 +162,7 @@ export default class ComponentOverrides {
       rule => !rule.startsWith(OVERRIDE_FILE_PREFIX) && !rule.startsWith(OVERRIDE_COMPONENT_PREFIX)
     );
   }
-  stripOriginallySharedDir(sharedDir: ?string) {
+  stripOriginallySharedDir(sharedDir: string | null | undefined) {
     if (!sharedDir) return;
     DEPENDENCIES_FIELDS.forEach((field) => {
       if (!this.overrides[field]) return;
@@ -180,7 +180,7 @@ export default class ComponentOverrides {
       });
     });
   }
-  addOriginallySharedDir(sharedDir: ?string) {
+  addOriginallySharedDir(sharedDir: string | null | undefined) {
     if (!sharedDir) return;
     DEPENDENCIES_FIELDS.forEach((field) => {
       if (!this.overrides[field]) return;

@@ -20,7 +20,7 @@ import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 import Component from '../component/consumer-component';
 import { ComponentWithDependencies } from '../../scope';
 
-export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
+export type ManipulateDirItem = { id: BitId, originallySharedDir: PathLinux | null | undefined, wrapDir: PathLinux | null | undefined };
 
 /**
  * use this method when loading an existing component. don't use it during the import process
@@ -31,7 +31,7 @@ export async function getManipulateDirForExistingComponents(
 ): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
-  const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
+  const componentMap: ComponentMap | null | undefined = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
@@ -41,7 +41,7 @@ export async function getManipulateDirForExistingComponents(
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach((dependency) => {
-    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
+    const depComponentMap: ComponentMap | null | undefined = getDependencyComponentMap(consumer.bitMap, dependency.id);
     const manipulateDirDep: ManipulateDirItem = {
       id: dependency.id,
       originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
@@ -106,14 +106,14 @@ export function getManipulateDirForComponentWithDependencies(
 
 export function revertDirManipulationForPath(
   pathStr: PathOsBased,
-  originallySharedDir: ?PathLinux,
-  wrapDir: ?PathLinux
+  originallySharedDir: PathLinux | null | undefined,
+  wrapDir: PathLinux | null | undefined
 ): PathLinux {
   const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
   return removeWrapperDirFromPath(withSharedDir, wrapDir);
 }
 
-export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: ?PathLinux): PathOsBased {
+export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: PathLinux | null | undefined): PathOsBased {
   if (!sharedDir) return pathStr;
   const partToRemove = path.normalize(sharedDir) + path.sep;
   return pathStr.replace(partToRemove, '');
@@ -122,14 +122,14 @@ export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: ?PathLin
 /**
  * find a shared directory among the files of the main component and its dependencies
  */
-function calculateOriginallySharedDirForVersion(version: Version): ?PathLinux {
+function calculateOriginallySharedDirForVersion(version: Version): PathLinux | null | undefined {
   const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
   const allDependencies = new Dependencies(version.getAllDependencies());
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
   return _calculateSharedDir(filePaths, allDependencies, overridesDependenciesFiles);
 }
 
-function calculateOriginallySharedDirForConsumerComponent(component: Component): ?PathLinux {
+function calculateOriginallySharedDirForConsumerComponent(component: Component): PathLinux | null | undefined {
   const filePaths = component.files.map(file => pathNormalizeToLinux(file.relative));
   const allDependencies = new Dependencies(component.getAllDependencies());
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(component.overrides);
@@ -140,7 +140,7 @@ function _calculateSharedDir(
   filePaths: PathLinux[],
   allDependencies: Dependencies,
   overridesDependenciesFiles: string[]
-): ?PathLinux {
+): PathLinux | null | undefined {
   const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
   const dependenciesPaths = allDependencies.getSourcesPaths();
   const allPaths = [...filePaths, ...dependenciesPaths, ...overridesDependenciesFiles];
@@ -156,7 +156,7 @@ function _calculateSharedDir(
   return sharedStartDirectories.join(pathSep);
 }
 
-function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): PathLinux | null | undefined {
   if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return calculateOriginallySharedDirForVersion(version);
 }
@@ -185,7 +185,7 @@ function isWrapperDirNeededForConsumerComponent(component: Component) {
   );
 }
 
-function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): PathLinux | null | undefined {
   if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
 }
@@ -198,7 +198,7 @@ function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLin
  * components with different versions, in this case, we look for the exact version.
  * so we do prefer an exact version, but if it doesn't find one try without a version.
  */
-function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
+function getDependencyComponentMap(bitMap, dependencyId): ComponentMap | null | undefined {
   return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
 }
 
@@ -207,7 +207,7 @@ function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
  * however, nested component that is now imported directly, is actually imported.
  * if there is no entry for this component in bitmap, it is imported.
  */
-function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
+function getComponentOrigin(bitmapOrigin: ComponentOrigin | null | undefined, isDependency: boolean): ComponentOrigin {
   if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
   if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
     return COMPONENT_ORIGINS.IMPORTED;
@@ -227,7 +227,7 @@ async function getManipulateDirItemFromComponentVersion(
   // however, the opposite is not true, if it is now nested and was imported before, we can have them both.
   // (see 'when imported component has lower dependencies versions than local' in import.e2e for such a case).
   // we might change this behavior as it is confusing.
-  const componentMap: ?ComponentMap = isDependency
+  const componentMap: ComponentMap | null | undefined = isDependency
     ? bitMap.getComponentIfExist(id)
     : bitMap.getComponentPreferNonNested(id);
   const bitmapOrigin = componentMap ? componentMap.origin : null;
@@ -238,11 +238,11 @@ async function getManipulateDirItemFromComponentVersion(
   return { id, originallySharedDir, wrapDir };
 }
 
-function addSharedDirForPath(pathStr: string, originallySharedDir: ?PathLinux): PathLinux {
+function addSharedDirForPath(pathStr: string, originallySharedDir: PathLinux | null | undefined): PathLinux {
   const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
   return pathNormalizeToLinux(withSharedDir);
 }
 
-function removeWrapperDirFromPath(pathStr: PathLinux, wrapDir: ?PathLinux): PathLinux {
+function removeWrapperDirFromPath(pathStr: PathLinux, wrapDir: PathLinux | null | undefined): PathLinux {
   return wrapDir ? pathStr.replace(`${wrapDir}/`, '') : pathStr;
 }

@@ -8,7 +8,7 @@ export const setResolver = (currentPath: string, resolverPath: string): Promise<
   });
 };
 
-export const getResolver = (currentPath: string): Promise<?string> => {
+export const getResolver = (currentPath: string): Promise<string | null | undefined> => {
   return loadScope(currentPath).then(scope => scope.scopeJson.resolverPath);
 };
 

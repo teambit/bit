@@ -145,7 +145,7 @@ function addToLoggerAndToBreadCrumb(
   category: string,
   message: string,
   data: Object,
-  extraData?: ?Object
+  extraData?: Object | null | undefined
 ) {
   if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
   if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');

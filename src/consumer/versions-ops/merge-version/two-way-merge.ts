@@ -19,8 +19,8 @@ export type MergeResultsTwoWay = {
     filePath: PathLinux,
     otherFile: SourceFile,
     currentFile: SourceFile,
-    output: ?string,
-    conflict: ?string
+    output: string | null | undefined,
+    conflict: string | null | undefined
   }>,
   unModifiedFiles: Array<{
     filePath: PathLinux,

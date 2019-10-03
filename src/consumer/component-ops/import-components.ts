@@ -45,11 +45,11 @@ export type ImportOptions = {
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies,
-  mergeResults: ?MergeResultsThreeWay
+  mergeResults: MergeResultsThreeWay | null | undefined
 };
 type ImportedVersions = { [id: string]: string[] };
 export type ImportStatus = 'added' | 'updated' | 'up to date';
-export type ImportDetails = { id: string, versions: string[], status: ImportStatus, filesStatus: ?FilesStatus };
+export type ImportDetails = { id: string, versions: string[], status: ImportStatus, filesStatus: FilesStatus | null | undefined };
 export type ImportResult = Promise<{
   dependencies: ComponentWithDependencies[],
   envComponents?: Component[],
@@ -354,7 +354,7 @@ export default class ImportComponents {
    * 3) when there is no conflict or there are conflicts and the strategy is manual, write the files
    * according to the merge result. (done by applyModifiedVersion())
    */
-  _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): ?FilesStatus {
+  _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): FilesStatus | null | undefined {
     const mergeResults = componentMergeStatus.mergeResults;
     if (!mergeResults) return null;
     const component = componentMergeStatus.componentWithDependencies.component;
@@ -401,7 +401,7 @@ export default class ImportComponents {
     this.mergeStatus = {};
 
     const componentsToWrite = componentsStatus.map((componentStatus) => {
-      const filesStatus: ?FilesStatus = this._updateComponentFilesPerMergeStrategy(componentStatus);
+      const filesStatus: FilesStatus | null | undefined = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
       if (!filesStatus) return componentWithDependencies;
       this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;

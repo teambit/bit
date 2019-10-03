@@ -29,7 +29,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export default (async function exportAction(params: {
   ids: string[],
-  remote: ?string,
+  remote: string | null | undefined,
   eject: boolean,
   includeDependencies: boolean,
   setCurrentScope: boolean,
@@ -56,7 +56,7 @@ async function exportComponents({
   force
 }: {
   ids: string[],
-  remote: ?string,
+  remote: string | null | undefined,
   includeDependencies: boolean,
   setCurrentScope: boolean,
   includeNonStaged: boolean,
@@ -111,11 +111,11 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
 }
 
 async function getComponentsToExport(
-  ids: ?(string[]),
+  ids: string[] | null | undefined,
   consumer: Consumer,
-  remote: ?string,
+  remote: string | null | undefined,
   includeNonStaged: boolean,
-  defaultScope: ?string,
+  defaultScope: string | null | undefined,
   force: boolean
 ): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);

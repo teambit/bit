@@ -24,7 +24,7 @@ import { composeComponentPath, composeDependencyPathForIsolated } from '../../ut
 import { BitId } from '../../bit-id';
 
 type ManyComponentsWriterParams = {
-  consumer?: ?Consumer,
+  consumer?: Consumer | null | undefined,
   silentPackageManagerResult?: boolean,
   componentsWithDependencies: ComponentWithDependencies[],
   writeToPath?: string,
@@ -54,14 +54,14 @@ type ManyComponentsWriterParams = {
  * write them only once.
  */
 export default class ManyComponentsWriter {
-  consumer: ?Consumer;
-  silentPackageManagerResult: ?boolean;
+  consumer: Consumer | null | undefined;
+  silentPackageManagerResult: boolean | null | undefined;
   componentsWithDependencies: ComponentWithDependencies[];
-  writeToPath: ?string;
+  writeToPath: string | null | undefined;
   override: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
-  configDir: ?string;
+  configDir: string | null | undefined;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
@@ -75,7 +75,7 @@ export default class ManyComponentsWriter {
   writtenDependencies: Component[];
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
-  basePath: ?string;
+  basePath: string | null | undefined;
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -98,7 +98,7 @@ export default class ManyComponentsWriter {
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
-  _setBooleanDefault(field: ?boolean, defaultValue: boolean): boolean {
+  _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
   }
   async writeAll() {
@@ -345,7 +345,7 @@ to move all component files to a different directory, run bit remove and then bi
     // $FlowFixMe consumer is set here
     return this.consumer.composeRelativeDependencyPath(bitId);
   }
-  _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ?ComponentMap) {
+  _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ComponentMap | null | undefined) {
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
     // component is not new, and it's ok to override the existing directory.
     if (!this.writeToPath && componentMap) return;

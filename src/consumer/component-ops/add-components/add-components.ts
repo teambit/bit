@@ -61,12 +61,12 @@ type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
-  mainFile?: ?PathOsBased,
+  mainFile?: PathOsBased | null | undefined,
   trackDir?: PathOsBased, // set only when one directory is added by author
-  idFromPath: ?{
+  idFromPath: {
     name: string,
     namespace: string
-  },
+  } | null | undefined,
   immediateDir?: string
 };
 const REGEX_DSL_PATTERN = /{([^}]+)}/g;
@@ -96,18 +96,18 @@ export default class AddComponents {
   consumer: Consumer;
   bitMap: BitMap;
   componentPaths: PathOsBased[];
-  id: ?string; // id entered by the user
-  main: ?PathOsBased;
-  namespace: ?string;
+  id: string | null | undefined; // id entered by the user
+  main: PathOsBased | null | undefined;
+  namespace: string | null | undefined;
   tests: PathOrDSL[];
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
-  trackDirFeature: ?boolean;
+  trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  alternateCwd: ?string;
+  alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
@@ -226,7 +226,7 @@ export default class AddComponents {
    * 2. a user is updating an existing component. there is a record for this component in bit.map
    * 3. some or all the files of this component were previously added as another component-id.
    */
-  async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<?AddResult> {
+  async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<AddResult | null | undefined> {
     const consumerPath = this.consumer.getPath();
     const parsedBitId = component.componentId;
     const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
@@ -364,7 +364,7 @@ export default class AddComponents {
     });
   }
 
-  async _getComponentFromScopeIfExist(id: BitId): Promise<?ModelComponent> {
+  async _getComponentFromScopeIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
     try {
       return await this.consumer.scope.getModelComponentIgnoreScope(id);
     } catch (err) {
@@ -416,7 +416,7 @@ export default class AddComponents {
     return existingComponentId || BitId.parse(currentId, false);
   }
 
-  _getIdAccordingToTrackDir(dir: PathOsBased): ?BitId {
+  _getIdAccordingToTrackDir(dir: PathOsBased): BitId | null | undefined {
     const dirNormalizedToLinux = pathNormalizeToLinux(dir);
     const trackDirs = this.bitMap.getAllTrackDirs();
     if (!trackDirs) return null;
@@ -426,7 +426,7 @@ export default class AddComponents {
   /**
    * used for updating main file if exists or doesn't exists
    */
-  _addMainFileToFiles(files: ComponentMapFile[]): ?PathOsBased {
+  _addMainFileToFiles(files: ComponentMapFile[]): PathOsBased | null | undefined {
     let mainFile = this.main;
     if (mainFile && mainFile.match(REGEX_DSL_PATTERN)) {
       // it's a DSL

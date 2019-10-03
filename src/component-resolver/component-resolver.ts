@@ -22,7 +22,7 @@ function getLatestVersion(bitId: BitId, componentsDir: string): number {
 
 function componentResolver(
   componentId: string,
-  mainFilePath: ?string,
+  mainFilePath: string | null | undefined,
   projectRoot: PathOsBased = process.cwd()
 ): PathOsBased {
   const bitId = BitId.parse(componentId, true); // used for envs. components, all have a scope

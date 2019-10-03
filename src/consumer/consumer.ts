@@ -80,8 +80,8 @@ type ConsumerProps = {
   created?: boolean,
   isolated?: boolean,
   bitMap: BitMap,
-  addedGitHooks?: ?(string[]),
-  existingGitHooks: ?(string[])
+  addedGitHooks?: string[] | null | undefined,
+  existingGitHooks: string[] | null | undefined
 };
 
 type ComponentStatus = {
@@ -104,8 +104,8 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
-  addedGitHooks: ?(string[]); // list of git hooks added during init process
-  existingGitHooks: ?(string[]); // list of git hooks already exists during init process
+  addedGitHooks: string[] | null | undefined; // list of git hooks added during init process
+  existingGitHooks: string[] | null | undefined; // list of git hooks already exists during init process
   _driver: Driver;
   _dirStructure: DirStructure;
   _componentsStatusCache: Object = {}; // cache loaded components
@@ -133,12 +133,12 @@ export default class Consumer {
     this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
   }
-  get compiler(): Promise<?CompilerExtension> {
+  get compiler(): Promise<CompilerExtension | null | undefined> {
     // $FlowFixMe
     return this.getEnv(COMPILER_ENV_TYPE);
   }
 
-  get tester(): Promise<?TesterExtension> {
+  get tester(): Promise<TesterExtension | null | undefined> {
     // $FlowFixMe
     return this.getEnv(TESTER_ENV_TYPE);
   }
@@ -165,7 +165,7 @@ export default class Consumer {
     return this.bitMap.getAllBitIds();
   }
 
-  async getEnv(envType: EnvType, context: ?Object): Promise<?EnvExtension> {
+  async getEnv(envType: EnvType, context: Object | null | undefined): Promise<EnvExtension | null | undefined> {
     const props = this._getEnvProps(envType, context);
     if (!props) return null;
     return makeEnv(envType, props);
@@ -282,8 +282,8 @@ export default class Consumer {
     return bitId.changeVersion(version || LATEST);
   }
 
-  getParsedIdIfExist(id: BitIdStr): ?BitId {
-    const bitId: ?BitId = this.bitMap.getExistingBitId(id, false);
+  getParsedIdIfExist(id: BitIdStr): BitId | null | undefined {
+    const bitId: BitId | null | undefined = this.bitMap.getExistingBitId(id, false);
     if (!bitId) return null;
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
@@ -305,7 +305,7 @@ export default class Consumer {
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
-  async loadComponentFromModelIfExist(id: BitId): Promise<?Component> {
+  async loadComponentFromModelIfExist(id: BitId): Promise<Component | null | undefined> {
     if (!id.version) return null;
     return this.loadComponentFromModel(id).catch((err) => {
       if (err instanceof ComponentNotFound) return null;
@@ -550,7 +550,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
+      const componentFromModel: ModelComponent | null | undefined = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
         // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
@@ -611,11 +611,11 @@ export default class Consumer {
   async tag(
     ids: BitIds,
     message: string,
-    exactVersion: ?string,
+    exactVersion: string | null | undefined,
     releaseType: string,
-    force: ?boolean,
-    verbose: ?boolean,
-    ignoreUnresolvedDependencies: ?boolean,
+    force: boolean | null | undefined,
+    verbose: boolean | null | undefined,
+    ignoreUnresolvedDependencies: boolean | null | undefined,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
@@ -656,7 +656,7 @@ export default class Consumer {
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
-    const getPackageJsonDir = (componentMap: ComponentMap, bitId: BitId, bindingPrefix: string): ?PathRelative => {
+    const getPackageJsonDir = (componentMap: ComponentMap, bitId: BitId, bindingPrefix: string): PathRelative | null | undefined => {
       if (componentMap.rootDir) return componentMap.rootDir;
       // it's author
       if (!bitId.hasScope()) return null;
@@ -881,7 +881,7 @@ export default class Consumer {
     return Promise.all(dependentComponentsP);
   }
 
-  async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {
+  async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: string | null | undefined }) {
     const component = await this.loadComponent(componentId);
     return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }
@@ -891,7 +891,7 @@ export default class Consumer {
     return component.injectConfig(this.getPath(), this.bitMap, force);
   }
 
-  _getEnvProps(envType: EnvType, context: ?Object) {
+  _getEnvProps(envType: EnvType, context: Object | null | undefined) {
     const envs = this.config.getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];

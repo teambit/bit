@@ -6,14 +6,14 @@ let _loader;
 
 type Loader = {
   on: () => Loader,
-  off: () => ?Loader,
-  start: (text: ?string) => ?Loader,
-  stop: () => ?Loader,
-  setText: (text: ?string) => ?Loader,
-  get: () => ?Loader
+  off: () => Loader | null | undefined,
+  start: (text: string | null | undefined) => Loader | null | undefined,
+  stop: () => Loader | null | undefined,
+  setText: (text: string | null | undefined) => Loader | null | undefined,
+  get: () => Loader | null | undefined
 };
 
-const start = (text: ?string): Loader => {
+const start = (text: string | null | undefined): Loader => {
   if (_loader) {
     if (text) _loader.text = text;
     _loader.start();
@@ -26,7 +26,7 @@ const setText = (text: string): Loader => {
   return loader;
 };
 
-const get = (): ?Loader => _loader;
+const get = (): Loader | null | undefined => _loader;
 
 const stop = (): Loader => {
   if (_loader) _loader.stop();

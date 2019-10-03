@@ -3,8 +3,8 @@ import { userInfo } from 'os';
 import fs from 'fs-extra';
 
 export type Options = {
-  uid?: ?number,
-  gid?: ?number
+  uid?: number | null | undefined,
+  gid?: number | null | undefined
 };
 
 export default (async function writeFile(

@@ -38,7 +38,7 @@ export default class AbstractVinyl extends Vinyl {
     writePath?: string,
     override?: boolean = this.override,
     verbose?: boolean = this.verbose
-  ): Promise<?string> {
+  ): Promise<string | null | undefined> {
     const filePath = writePath || this.path;
     const msg = _verboseMsg(filePath, override);
     if (verbose) {
@@ -69,7 +69,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedStringArray(arr: Object[]): ?(AbstractVinylProps[]) {
+  static loadFromParsedStringArray(arr: Object[]): AbstractVinylProps[] | null | undefined {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }
@@ -83,7 +83,7 @@ export default class AbstractVinyl extends Vinyl {
     return Source.from(eol.lf(this.contents));
   }
 
-  async _getStatIfFileExists(): Promise<?fs.Stats> {
+  async _getStatIfFileExists(): Promise<fs.Stats | null | undefined> {
     try {
       return await fs.lstat(this.path);
     } catch (err) {

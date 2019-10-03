@@ -61,12 +61,12 @@ export type SSHConnectionStrategyName = 'token' | 'ssh-agent' | 'ssh-key' | 'use
 
 const ALL_STRATEGIES = ['token', 'ssh-agent', 'ssh-key', 'user-password'];
 export default class SSH implements Network {
-  connection: ?SSH2;
+  connection: SSH2 | null | undefined;
   path: string;
   username: string;
   port: number;
   host: string;
-  _sshUsername: ?string; // Username entered by the user on the prompt user/pass process
+  _sshUsername: string | null | undefined; // Username entered by the user on the prompt user/pass process
 
   constructor({ path, username, port, host }: SSHProps) {
     this.path = path;
@@ -153,7 +153,7 @@ export default class SSH implements Network {
     return this;
   }
 
-  _composeBaseObject(passphrase: ?string) {
+  _composeBaseObject(passphrase: string | null | undefined) {
     return {
       username: this.username,
       host: this.host,
@@ -162,7 +162,7 @@ export default class SSH implements Network {
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
   }
-  _composeTokenAuthObject(): ?Object {
+  _composeTokenAuthObject(): Object | null | undefined {
     const token = getSync(CFG_USER_TOKEN_KEY);
     if (token) {
       this._sshUsername = 'token';
@@ -227,7 +227,7 @@ export default class SSH implements Network {
     return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload, context))}`;
   }
 
-  exec(commandName: string, payload: any, context: ?Object): Promise<any> {
+  exec(commandName: string, payload: any, context: Object | null | undefined): Promise<any> {
     logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
     // Add the entered username to context
     if (this._sshUsername) {
@@ -336,7 +336,7 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[], context: ?Object): Promise<string[]> {
+  pushMany(manyComponentObjects: ComponentObjects[], context: Object | null | undefined): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
@@ -346,7 +346,7 @@ export default class SSH implements Network {
     });
   }
 
-  deleteMany(ids: string[], force: boolean, context: ?Object): Promise<ComponentObjects[]> {
+  deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
     return this.exec(
       '_delete',
       {
@@ -359,7 +359,7 @@ export default class SSH implements Network {
       return Promise.resolve(RemovedObjects.fromObjects(payload));
     });
   }
-  deprecateMany(ids: string[], context: ?Object): Promise<ComponentObjects[]> {
+  deprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
     return this.exec(
       '_deprecate',
       {
@@ -371,7 +371,7 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
-  undeprecateMany(ids: string[], context: ?Object): Promise<ComponentObjects[]> {
+  undeprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
     return this.exec(
       '_undeprecate',
       {
@@ -427,7 +427,7 @@ export default class SSH implements Network {
     });
   }
 
-  show(id: BitId): Promise<?ConsumerComponent> {
+  show(id: BitId): Promise<ConsumerComponent | null | undefined> {
     return this.exec('_show', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -444,7 +444,7 @@ export default class SSH implements Network {
     });
   }
 
-  fetch(ids: BitIds, noDeps: boolean = false, context: ?Object): Promise<ComponentObjects[]> {
+  fetch(ids: BitIds, noDeps: boolean = false, context: Object | null | undefined): Promise<ComponentObjects[]> {
     let options = '';
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';

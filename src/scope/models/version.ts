@@ -45,20 +45,20 @@ export type DistFileModel = SourceFileModel;
 export type Log = {
   message: string,
   date: string,
-  username: ?string,
-  email: ?string
+  username: string | null | undefined,
+  email: string | null | undefined
 };
 
 export type VersionProps = {
   mainFile: PathLinux,
   files: Array<SourceFileModel>,
-  dists?: ?Array<DistFileModel>,
-  mainDistFile: ?PathLinux,
-  compiler?: ?CompilerExtensionModel,
-  tester?: ?TesterExtensionModel,
+  dists?: Array<DistFileModel> | null | undefined,
+  mainDistFile: PathLinux | null | undefined,
+  compiler?: CompilerExtensionModel | null | undefined,
+  tester?: TesterExtensionModel | null | undefined,
   log: Log,
   ci?: CiProps,
-  specsResults?: ?Results,
+  specsResults?: Results | null | undefined,
   docs?: Doclet[],
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
@@ -85,14 +85,14 @@ export type VersionProps = {
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists: ?Array<DistFileModel>;
-  mainDistFile: ?PathLinuxRelative;
-  compiler: ?CompilerExtensionModel;
-  tester: ?TesterExtensionModel;
+  dists: Array<DistFileModel> | null | undefined;
+  mainDistFile: PathLinuxRelative | null | undefined;
+  compiler: CompilerExtensionModel | null | undefined;
+  tester: TesterExtensionModel | null | undefined;
   log: Log;
   ci: CiProps | {};
-  specsResults: ?Results;
-  docs: ?(Doclet[]);
+  specsResults: Results | null | undefined;
+  docs: Doclet[] | null | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -106,8 +106,8 @@ export default class Version extends BitObject {
   peerPackageDependencies: { [string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
-  bindingPrefix: ?string;
-  customResolvedPaths: ?(customResolvedPath[]);
+  bindingPrefix: string | null | undefined;
+  customResolvedPaths: customResolvedPath[] | null | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Object;
 
@@ -500,11 +500,11 @@ export default class Version extends BitObject {
     flattenedCompilerDependencies: BitIds,
     flattenedTesterDependencies: BitIds,
     message: string,
-    dists: ?Array<DistFileModel>,
+    dists: Array<DistFileModel> | null | undefined,
     mainDistFile: PathLinuxRelative,
-    specsResults: ?Results,
-    username: ?string,
-    email: ?string
+    specsResults: Results | null | undefined,
+    username: string | null | undefined,
+    email: string | null | undefined
   }) {
     const parseFile = (file) => {
       return {
@@ -565,11 +565,11 @@ export default class Version extends BitObject {
     });
   }
 
-  setSpecsResults(specsResults: ?Results) {
+  setSpecsResults(specsResults: Results | null | undefined) {
     this.specsResults = specsResults;
   }
 
-  setDist(dist: ?Source) {
+  setDist(dist: Source | null | undefined) {
     this.dist = dist
       ? {
         file: dist.hash(),

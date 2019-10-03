@@ -17,15 +17,15 @@ export type ScopeJsonProps = {
   version: string,
   resolverPath?: string,
   license?: string,
-  groupName: ?string,
+  groupName: string | null | undefined,
   remotes?: { name: string, url: string }
 };
 
 export class ScopeJson {
   _name: string;
-  version: ?string;
-  resolverPath: ?string;
-  license: ?string;
+  version: string | null | undefined;
+  resolverPath: string | null | undefined;
+  license: string | null | undefined;
   remotes: { [string]: string };
   groupName: string;
 
@@ -108,7 +108,7 @@ export class ScopeJson {
     return ScopeJson.loadFromJson(rawScopeJson.toString());
   }
 
-  getPopulatedLicense(): Promise<?string> {
+  getPopulatedLicense(): Promise<string | null | undefined> {
     if (!this.get('license') || !fs.existsSync(this.get('license'))) return Promise.resolve();
     return fs.readFile(this.get('license')).then(license => license.toString());
   }

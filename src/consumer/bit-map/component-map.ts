@@ -28,13 +28,13 @@ export type ComponentMapData = {
   id: BitId,
   files: ComponentMapFile[],
   mainFile: PathLinux,
-  rootDir?: ?PathLinux,
-  trackDir?: ?PathLinux,
-  configDir?: ?PathLinux | ?ConfigDir | string,
+  rootDir?: PathLinux | null | undefined,
+  trackDir?: PathLinux | null | undefined,
+  configDir?: PathLinux | null | undefined | ConfigDir | string,
   origin: ComponentOrigin,
-  originallySharedDir?: ?PathLinux,
-  wrapDir?: ?PathLinux,
-  exported?: ?boolean
+  originallySharedDir?: PathLinux | null | undefined,
+  wrapDir?: PathLinux | null | undefined,
+  exported?: boolean | null | undefined
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
@@ -43,19 +43,19 @@ export default class ComponentMap {
   id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
+  rootDir: PathLinux | null | undefined; // always set for IMPORTED and NESTED.
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
   // relative to rootDir for consistency, then, when saving into the model changing them back to
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
-  trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
-  configDir: ?ConfigDir;
+  trackDir: PathLinux | null | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
+  configDir: ConfigDir | null | undefined;
   origin: ComponentOrigin;
-  originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
-  wrapDir: ?PathLinux; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
+  originallySharedDir: PathLinux | null | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  wrapDir: PathLinux | null | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   markBitMapChangedCb: Function;
-  exported: ?boolean; // relevant for authored components only, it helps finding out whether a component has a scope
+  exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   constructor({
     id,
     files,
@@ -134,7 +134,7 @@ export default class ComponentMap {
     this.markBitMapChangedCb = markAsChangedBinded;
   }
 
-  _findFile(fileName: PathLinux): ?ComponentMapFile {
+  _findFile(fileName: PathLinux): ComponentMapFile | null | undefined {
     return this.files.find((file) => {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
@@ -241,7 +241,7 @@ export default class ComponentMap {
   /**
    * directory to track for changes (such as files added/renamed)
    */
-  getTrackDir(): ?PathLinux {
+  getTrackDir(): PathLinux | null | undefined {
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
@@ -261,12 +261,12 @@ export default class ComponentMap {
   /**
    * directory of the component (root / track)
    */
-  getComponentDir(): ?PathLinux {
+  getComponentDir(): PathLinux | null | undefined {
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
   }
 
-  setConfigDir(val: ?PathLinux) {
+  setConfigDir(val: PathLinux | null | undefined) {
     if (val === null || val === undefined) {
       delete this.configDir;
       this.markBitMapChangedCb();
@@ -289,7 +289,7 @@ export default class ComponentMap {
   /**
    * Get resolved base config dir (the dir where the bit.json is) after resolving the DSL
    */
-  getBaseConfigDir(): ?PathLinux {
+  getBaseConfigDir(): PathLinux | null | undefined {
     if (!this.configDir) return null;
     const componentDir = this.getComponentDir();
     const configDir = this.configDir && this.configDir.getResolved({ componentDir }).getEnvTypeCleaned().linuxDirPath;

@@ -21,7 +21,7 @@ export default (async function test(
   id?: string,
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
   includeUnmodified: boolean = false,
-  verbose: ?boolean
+  verbose: boolean | null | undefined
 ): Promise<SpecsResultsWithMetaData> {
   loader.start(BEFORE_RUNNING_SPECS);
 
@@ -47,8 +47,8 @@ export default (async function test(
 export const testInProcess = async (
   id?: string,
   includeUnmodified: boolean = false,
-  verbose: ?boolean,
-  dontPrintEnvMsg: ?boolean
+  verbose: boolean | null | undefined,
+  dontPrintEnvMsg: boolean | null | undefined
 ): Promise<SpecsResultsWithMetaData> => {
   const consumer: Consumer = await loadConsumer();
   const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose, dontPrintEnvMsg);
@@ -65,8 +65,8 @@ const _getComponentsAfterBuild = async (
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
-  verbose: ?boolean,
-  dontPrintEnvMsg: ?boolean
+  verbose: boolean | null | undefined,
+  dontPrintEnvMsg: boolean | null | undefined
 ) => {
   let components;
   if (id) {

@@ -12,19 +12,19 @@ import GeneralError from '../error/general-error';
 import versionParser from '../version/version-parser';
 
 export type BitIdProps = {
-  scope?: ?string,
-  box?: ?string,
+  scope?: string | null | undefined,
+  box?: string | null | undefined,
   name: string,
-  version?: ?string
+  version?: string | null | undefined
 };
 
 export type BitIdStr = string;
 
 export default class BitId {
-  readonly scope: ?string;
-  readonly box: ?string;
+  readonly scope: string | null | undefined;
+  readonly box: string | null | undefined;
   readonly name: string;
-  readonly version: ?string;
+  readonly version: string | null | undefined;
 
   constructor({ scope, box, name, version }: BitIdProps) {
     // don't validate the id parts using isValidIdChunk here. we instance this class tons of times
@@ -42,11 +42,11 @@ export default class BitId {
     return new BitId(this);
   }
 
-  changeScope(newScope?: ?string): BitId {
+  changeScope(newScope?: string | null | undefined): BitId {
     return new BitId({ scope: newScope, name: this.name, version: this.version });
   }
 
-  changeVersion(newVersion: ?string): BitId {
+  changeVersion(newVersion: string | null | undefined): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: newVersion });
   }
 

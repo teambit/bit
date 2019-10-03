@@ -16,7 +16,7 @@ export default (async function show({
 }: {
   id: string,
   json: boolean,
-  versions: ?boolean,
+  versions: boolean | null | undefined,
   remote: boolean,
   outdated: boolean,
   compare: boolean,
@@ -40,7 +40,7 @@ export default (async function show({
     detailed
   }));
 
-  function getComponent(allVersions: ?boolean) {
+  function getComponent(allVersions: boolean | null | undefined) {
     const params = {
       id,
       allVersions,
