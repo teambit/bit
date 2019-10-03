@@ -132,7 +132,7 @@ jobs:
           root: .
           paths:
             - bit-javascript/node_modules
-  validate-git-tag-and-version: 
+  validate-git-tag-and-version:
     <<: *defaults
     steps:
       -
@@ -221,7 +221,7 @@ jobs:
           root: .
           paths:
             - bit/releases
-  npm-publish: 
+  npm-publish:
     <<: *defaults
     steps:
       -
@@ -231,10 +231,10 @@ jobs:
           name: Authenticate with registry
           command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
       -
-        run: 
+        run:
           name: Publish bit to the npm registry
           command: 'cd bit && npm publish'
-  github-release: 
+  github-release:
     <<: *defaults
     steps:
       -
@@ -245,7 +245,7 @@ jobs:
       #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       -
         run: 'cd bit && npm run release:circle'
-  build-debian: 
+  build-debian:
     <<: *defaults
     docker:
       -
@@ -255,7 +255,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 
+        run:
           name: Build debian file
           command: 'cd bit && ./scripts/linux/debian/build-linux-deb.sh'
       -
@@ -263,7 +263,7 @@ jobs:
           root: .
           paths:
             - bit/releases/deb
-  build-rpm: 
+  build-rpm:
     <<: *defaults
     docker:
       -
@@ -281,7 +281,7 @@ jobs:
           root: .
           paths:
             - bit/releases/rpm
-  publish_to_jfrog: 
+  publish_to_jfrog:
     <<: *defaults
     steps:
       -
@@ -289,7 +289,7 @@ jobs:
           at: ./
       - run:
           name: print bit version
-          command: cd bit && cat ./package.json | jq .version -r 
+          command: cd bit && cat ./package.json | jq .version -r
       - run:
           name: Setup bit version environment variables
           command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
@@ -491,7 +491,7 @@ jobs:
       -
         run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
