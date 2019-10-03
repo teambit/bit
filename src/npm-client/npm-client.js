@@ -170,7 +170,7 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
       // it's probably a valid json with errors, that's fine, parse it.
       npmList = err;
     } else {
-      logger.error(err);
+      logger.error('npm-client got an error', err);
       throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
@@ -200,7 +200,7 @@ async function parseNpmListJsonGracefully(str: string, packageManager: string): 
     const json = JSON.parse(str);
     return json;
   } catch (err) {
-    logger.error(err);
+    logger.error('npm-client got an error', err);
     if (packageManager === 'npm') {
       const version = await getNpmVersion();
       Analytics.setExtraData('npmVersion', version);

@@ -4,9 +4,10 @@ import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
 import type ModelComponent from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
-import type Scope, { ComponentsAndVersions } from '../scope';
+import Scope from '../scope';
+import type { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
-import type Component from '../../consumer/component/consumer-component';
+import Component from '../../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
 
@@ -71,30 +72,46 @@ async function updateComponents(
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return null;
-    const isCommittedComponent = taggedComponents.hasWithoutVersion(bitId);
-    if (isCommittedComponent && !isRound2) {
+    const taggedId = taggedComponents.searchWithoutVersion(bitId);
+    const isTaggedComponent = Boolean(taggedId);
+    if (isTaggedComponent && !isRound2) {
       // if isCommittedComponent is true, the only case it's needed to be updated is when it has
       // cycle dependencies. in that case, it should be updated on the round2 only.
       return null;
     }
-    const edges = graphlib.alg.preorder(graph, idStr);
+    const allDependencies = graphlib.alg.preorder(graph, idStr); // same as flattenDependencies
     const triggeredBy = new BitIds();
-    edges.forEach((edge: string) => {
-      const edgeId: BitId = graph.node(edge);
-      const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
-      if (changedComponentId && semver.gt(changedComponentId.version, edgeId.version)) {
-        updateDependencies(version, edgeId, changedComponentId);
+    allDependencies.forEach((dependency: string) => {
+      const dependencyId: BitId = graph.node(dependency);
+      const changedComponentId = changedComponents.searchWithoutVersion(dependencyId);
+      if (changedComponentId && semver.gt(changedComponentId.version, dependencyId.version)) {
+        updateDependencies(version, dependencyId, changedComponentId);
         pendingUpdate = true;
-        triggeredBy.push(edgeId);
+        triggeredBy.push(dependencyId);
       }
     });
     if (pendingUpdate) {
-      const message = isCommittedComponent ? version.log.message : 'bump dependencies versions';
-      if (isRound2) {
-        delete component.versions[component.latest()];
-      }
+      const message = isTaggedComponent ? version.log.message : 'bump dependencies versions';
+      const getVersionToAdd = (): string => {
+        if (isRound2) {
+          // in case round2 updates the same component it updated in round1 or updated during the
+          // tag, we should use the same updated version, and not creating a new version.
+          if (isTaggedComponent) {
+            // $FlowFixMe
+            return taggedId.version;
+          }
+          const componentChangedInRound1 = changedComponents.searchWithoutVersion(bitId);
+          if (componentChangedInRound1) {
+            // $FlowFixMe
+            return componentChangedInRound1.version;
+          }
+        }
+        // it's round 1 or it's round2 but wasn't updated before. create a new version
+        return component.getVersionToAdd();
+      };
+      const versionToAdd = getVersionToAdd();
       autoTagResults.push({ component, triggeredBy });
-      return scope.sources.putAdditionalVersion(component, version, message);
+      return scope.sources.putAdditionalVersion(component, version, message, versionToAdd);
     }
     return null;
   });

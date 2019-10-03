@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
+import HooksManager from '../../../hooks';
 import { BEFORE_EXPORT, BEFORE_EXPORTS, BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { BitId, BitIds } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
@@ -19,10 +20,12 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS } from '../../../constants';
+import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
+
+const HooksManagerInstance = HooksManager.getInstance();
 
 export default (async function exportAction(params: {
   ids: string[],
@@ -34,10 +37,13 @@ export default (async function exportAction(params: {
   codemod: boolean,
   force: boolean
 }) {
+  HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
-  return { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
+  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
+  HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+  return exportResults;
 });
 
 async function exportComponents({
@@ -192,9 +198,9 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
     const ejectComponents = new EjectComponents(consumer, componentsIds);
     ejectResults = await ejectComponents.eject();
   } catch (err) {
-    logger.error(err);
     const ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
     However, the eject operation has failed due to an error: ${err.msg || err}`;
+    logger.error(ejectErr, err);
     throw new Error(ejectErr);
   }
   // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap

@@ -207,6 +207,11 @@ export default class CommandHelper {
     return status.stagedComponents.includes(id);
   }
 
+  statusComponentIsModified(id: string): boolean {
+    const status = this.statusJson();
+    return status.modifiedComponent.includes(id);
+  }
+
   showComponent(id: string = 'bar/foo') {
     return this.runCmd(`bit show ${id}`);
   }

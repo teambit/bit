@@ -28,6 +28,7 @@ import BitMap from '../consumer/bit-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import Symlink from './symlink';
+import getWithoutExt from '../utils/fs/fs-no-ext';
 
 type SymlinkType = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -296,37 +297,54 @@ function getInternalCustomResolvedLinks(
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
   }
   const getDestination = ({ destinationPath, importSource }) => {
-    const shouldAddIndexJsFile = destinationPath.endsWith(`${path.basename(importSource)}/index.js`);
-    return `node_modules/${importSource}${shouldAddIndexJsFile ? '/index.js' : ''}`;
+    const destinationFilename = path.basename(destinationPath);
+    const destinationExt = getExt(destinationFilename);
+    const destinationNoExt = getWithoutExt(destinationFilename);
+    const importSourceSuffix = path.basename(importSource);
+    const importSourceSuffixHasExt = importSourceSuffix.includes('.');
+    let suffixToAdd = '';
+    if (!importSourceSuffixHasExt) {
+      // otherwise, it already points to a file
+      if (importSourceSuffix === destinationNoExt) {
+        // only extension is missing
+        suffixToAdd = `.${destinationExt}`;
+      }
+      if (destinationNoExt === 'index') {
+        // the index file is missing
+        suffixToAdd = `/index.${destinationExt}`;
+      }
+    }
+    return `node_modules/${importSource}${suffixToAdd}`;
   };
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
   const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  return component.customResolvedPaths
-    .filter(customPath => isResolvePathsInvalid(customPath))
-    .map((customPath) => {
-      const sourceAbs = path.join(componentDir, customPath.destinationPath);
-      const dest = getDestination(customPath);
-      const destAbs = path.join(componentDir, dest);
-      const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
-      const linkContent = getLinkToFileContent(destRelative);
+  const customResolvedPathsToProcess = R.uniqBy(JSON.stringify, component.customResolvedPaths).filter(customPath =>
+    isResolvePathsInvalid(customPath)
+  );
+  return customResolvedPathsToProcess.map((customPath) => {
+    const sourceAbs = path.join(componentDir, customPath.destinationPath);
+    const dest = getDestination(customPath);
+    const destAbs = path.join(componentDir, dest);
+    const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
+    const linkContent = getLinkToFileContent(destRelative);
 
-      const postInstallSymlink = createNpmLinkFiles && !linkContent;
-      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
-      const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
-      const getSymlink = () => {
-        if (linkContent) return undefined;
-        if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
-        return sourceAbs;
-      };
-      return {
-        linkPath: createNpmLinkFiles ? dest : destAbs,
-        linkContent,
-        postInstallLink: createNpmLinkFiles,
-        customResolveMapping,
-        symlinkTo: getSymlink(),
-        postInstallSymlink
-      };
-    });
+    const postInstallSymlink = createNpmLinkFiles && !linkContent;
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+    const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+    const getSymlink = () => {
+      if (linkContent) return undefined;
+      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+      return sourceAbs;
+    };
+    return {
+      linkPath: createNpmLinkFiles ? dest : destAbs,
+      linkContent,
+      postInstallLink: createNpmLinkFiles,
+      customResolveMapping,
+      symlinkTo: getSymlink(),
+      postInstallSymlink
+    };
+  });
 }
 
 /**

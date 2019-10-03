@@ -261,8 +261,8 @@ describe('custom module resolutions', function () {
           });
           it('npm install should create the custom-resolved dir inside node_modules', () => {
             helper.command.runCmd('npm i', packDir);
-            expect(path.join(packDir, 'node_modules/utils/is-string')).to.be.a.file();
-            expect(path.join(packDir, 'node_modules/utils/is-type')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/utils/is-string.js')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/utils/is-type.js')).to.be.a.file();
             expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
@@ -354,7 +354,7 @@ describe('custom module resolutions', function () {
           it('npm install should create the custom-resolved dir inside node_modules', () => {
             helper.command.runCmd('npm i', packDir);
             expect(path.join(packDir, 'node_modules/@/utils/index.js')).to.be.a.file();
-            expect(path.join(packDir, 'node_modules/@/utils/is-type')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/@/utils/is-type.js')).to.be.a.file();
             expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {

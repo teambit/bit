@@ -382,6 +382,7 @@ describe('auto tagging functionality', function () {
     });
   });
   describe('with cyclic dependencies', () => {
+    let scopeBeforeTag;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
@@ -390,13 +391,14 @@ describe('auto tagging functionality', function () {
       helper.command.addComponent('bar/*.js', { n: 'bar' });
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
+      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should recognize the auto tag pending components', () => {
       const output = helper.command.statusJson();
       expect(output.autoTagPendingComponents).to.deep.include('bar/a');
       expect(output.autoTagPendingComponents).to.deep.include('bar/b');
     });
-    describe('after tagging the components', () => {
+    describe('tagging the components with auto-version-bump', () => {
       let tagOutput;
       before(() => {
         tagOutput = helper.command.tagAllComponents();
@@ -429,8 +431,55 @@ describe('auto tagging functionality', function () {
         expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
         expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
 
-        // @todo: we have a bug there. it shows itself as a flattened dependency.
         expect(barC.flattenedDependencies).to.have.lengthOf(2);
+      });
+    });
+    describe('tagging the components with a specific version', () => {
+      // see https://github.com/teambit/bit/issues/2034 for the issue this test for
+      let tagOutput;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        tagOutput = helper.command.tagAllComponents(undefined, '2.0.0');
+      });
+      it('should auto tag all dependents', () => {
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
+        expect(tagOutput).to.have.string('bar/a@0.0.2');
+        expect(tagOutput).to.have.string('bar/b@0.0.2');
+        expect(tagOutput).to.have.string('bar/c@2.0.0');
+      });
+      it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
+        const barA = helper.command.catComponent('bar/a@latest');
+        expect(barA.dependencies[0].id.name).to.equal('bar/b');
+        expect(barA.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '2.0.0' });
+
+        const barB = helper.command.catComponent('bar/b@latest');
+        expect(barB.dependencies[0].id.name).to.equal('bar/c');
+        expect(barB.dependencies[0].id.version).to.equal('2.0.0');
+
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '2.0.0' });
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+      });
+      it('should update the dependencies and the flattenedDependencies of the modified component according to the specified version', () => {
+        const barC = helper.command.catComponent('bar/c@latest');
+        expect(barC.dependencies[0].id.name).to.equal('bar/a');
+        expect(barC.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+
+        expect(barC.flattenedDependencies).to.have.lengthOf(2);
+      });
+      describe('exporting the component', () => {
+        before(() => {
+          helper.command.exportAllComponents();
+        });
+        it('should be successful', () => {
+          const listScope = helper.command.listRemoteScopeParsed();
+          expect(listScope).to.have.lengthOf(3);
+        });
       });
     });
   });
