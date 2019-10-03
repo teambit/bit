@@ -155,7 +155,6 @@
     "table": "^5.2.3",
     "tar-stream": "^2.0.1",
     "tty-table": "^2.6.9",
-    "typescript": "3.2.4",
     "uid-number": "0.0.6",
     "unionfs": "^3.0.2",
     "uniqid": "^5.0.3",
@@ -208,6 +207,7 @@
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
+    "typescript": "^3.6.3",
     "verdaccio": "^4.1.0"
   },
   "files": [
