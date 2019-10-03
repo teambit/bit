@@ -1,6 +1,6 @@
 // @flow
 // TODO - move to language specific driver.
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
 import loader from '../cli/loader';
 import ExternalErrors from '../error/external-errors';

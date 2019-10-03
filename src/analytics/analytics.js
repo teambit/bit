@@ -1,5 +1,5 @@
 /** @flow */
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import path from 'path';
 import hashObj from 'object-hash';
 import uniqid from 'uniqid';
