@@ -1,4 +1,3 @@
-// @flow
 // TODO - move to language specific driver.
 import serializeError from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
@@ -8,9 +7,9 @@ import ExternalError from '../error/external-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 export type SerializedSpecsResultsWithComponentId = {
-  type: 'error' | 'results',
-  error?: Object,
-  results?: SpecsResultsWithComponentId[]
+  type: 'error' | 'results';
+  error?: Object;
+  results?: SpecsResultsWithComponentId[];
 };
 
 const testOneComponent = verbose => async (id: string) => {
@@ -26,14 +25,14 @@ export default function run(): Promise<void> {
     process.env.__includeUnmodified__ === true || process.env.__includeUnmodified__ === 'true';
   if (!ids || !ids.length) {
     return testInProcess(undefined, includeUnmodified, verbose)
-      .then((results) => {
+      .then(results => {
         const serializedResults = serializeResults(results.results);
         // $FlowFixMe
         process.send(serializedResults);
         // Make sure the child process will not hang
         process.exit();
       })
-      .catch((e) => {
+      .catch(e => {
         loader.off();
         const serializedResults = serializeResults(e);
         // $FlowFixMe
@@ -44,14 +43,14 @@ export default function run(): Promise<void> {
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
-    .then((results) => {
+    .then(results => {
       const serializedResults = serializeResults(results);
       // $FlowFixMe
       process.send(serializedResults);
       // Make sure the child process will not hang
       process.exit();
     })
-    .catch((e) => {
+    .catch(e => {
       loader.off();
       const serializedResults = serializeResults(e);
       // $FlowFixMe
@@ -86,7 +85,7 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
     };
     return finalResults;
   }
-  const serializeFailure = (failure) => {
+  const serializeFailure = failure => {
     if (!failure) return undefined;
     const serializedFailure = failure;
     if (failure.err && failure.err instanceof Error) {
@@ -95,13 +94,13 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
     return serializedFailure;
   };
 
-  const serializeSpec = (spec) => {
+  const serializeSpec = spec => {
     if (!spec.failures) return spec;
     spec.failures = spec.failures.map(serializeFailure);
     return spec;
   };
 
-  const serializeResult = (result) => {
+  const serializeResult = result => {
     const specs = result.specs;
     if (!specs || !Array.isArray(specs)) return result;
     result.specs = specs.map(serializeSpec);

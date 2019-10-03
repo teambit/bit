@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import GeneralError from '../../error/general-error';
 import { PathOsBasedRelative } from '../path';

@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import stringifyPackage from 'stringify-package';
 import AbstractVinyl from './sources/abstract-vinyl';
@@ -38,12 +37,12 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     newline,
     override = true
   }: {
-    base: string,
-    path: string,
-    content: Object,
-    indent?: string | null | undefined,
-    newline?: string | null | undefined,
-    override?: boolean
+    base: string;
+    path: string;
+    content: Object;
+    indent?: string | null | undefined;
+    newline?: string | null | undefined;
+    override?: boolean;
   }): PackageJsonVinyl {
     const jsonStr = stringifyPackage(content, indent, newline);
     const jsonFile = new PackageJsonVinyl({ base, path, contents: Buffer.from(jsonStr) });

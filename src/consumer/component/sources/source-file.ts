@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import vinylFile from 'vinyl-file';
 import AbstractVinyl from './abstract-vinyl';

@@ -1,4 +1,3 @@
-// @flow
 import doctrine from 'doctrine';
 import exampleTagParser from './example-tag-parser';
 import { PathLinux, PathOsBased } from '../utils/path';
@@ -9,38 +8,38 @@ import logger from '../logger/logger';
 const docgen = require('react-docgen');
 
 export type Method = {
-  name: string,
-  description: string,
-  args: [],
-  access: 'public' | 'private' | '',
-  returns: {},
-  modifiers: []
+  name: string;
+  description: string;
+  args: [];
+  access: 'public' | 'private' | '';
+  returns: {};
+  modifiers: [];
 };
 
 export type PropDefaultValue = {
-  value: string,
-  computed: boolean
+  value: string;
+  computed: boolean;
 };
 
 export type DocProp = {
-  name: string,
-  description: string,
-  required: boolean,
-  type: string,
-  defaultValue: PropDefaultValue
+  name: string;
+  description: string;
+  required: boolean;
+  type: string;
+  defaultValue: PropDefaultValue;
 };
 
 export type Doclet = {
-  filePath: PathLinux,
-  name: string,
-  description: string,
-  args?: Array,
-  returns?: Object,
-  access?: string,
-  examples?: Array,
-  methods?: Method[],
-  properties?: DocProp[],
-  static?: Boolean
+  filePath: PathLinux;
+  name: string;
+  description: string;
+  args?: Array;
+  returns?: Object;
+  access?: string;
+  examples?: Array;
+  methods?: Method[];
+  properties?: DocProp[];
+  static?: Boolean;
 };
 
 function formatTag(tag: Object): Object {
@@ -76,7 +75,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
   let name = '';
   let render = '';
 
-  commentsAst.tags.forEach((tag) => {
+  commentsAst.tags.forEach(tag => {
     switch (tag.title) {
       case 'desc':
       case 'description':
@@ -134,7 +133,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
 }
 
 function formatProperties(props) {
-  const parseDescription = (description) => {
+  const parseDescription = description => {
     // an extra step is needed to parse the properties description correctly. without this step
     // it'd show the entire tag, e.g. `@property {propTypes.string} text - Button text.`
     // instead of just `text - Button text.`.
@@ -146,7 +145,7 @@ function formatProperties(props) {
     }
     return description;
   };
-  return Object.keys(props).map((name) => {
+  return Object.keys(props).map(name => {
     const { type, description, required, defaultValue, flowType } = props[name];
 
     return {
@@ -160,7 +159,7 @@ function formatProperties(props) {
 }
 
 function formatMethods(methods) {
-  return Object.keys(methods).map((key) => {
+  return Object.keys(methods).map(key => {
     const { returns, modifiers, params, docblock, name } = methods[key];
     return {
       name,
@@ -183,7 +182,7 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
   };
 }
 
-function stringifyType(prop: { name: string, value?: any }): string {
+function stringifyType(prop: { name: string; value?: any }): string {
   const { name } = prop;
   let transformed;
 

@@ -1,4 +1,3 @@
-// @flow
 import { BitId } from '../../bit-id';
 import ModelComponent from '../models/model-component';
 import logger from '../../logger/logger';
@@ -6,7 +5,7 @@ import { Scope } from '..';
 import GeneralError from '../../error/general-error';
 import ComponentsList from '../../consumer/component/components-list';
 
-export type untagResult = { id: BitId, versions: string[], component: ModelComponent };
+export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
 
 /**
  * If not specified version, remove all local versions.
@@ -32,7 +31,7 @@ export async function removeLocalVersion(
   if (!force) {
     const dependencyGraph = await scope.getDependencyGraph();
 
-    versionsToRemove.forEach((versionToRemove) => {
+    versionsToRemove.forEach(versionToRemove => {
       const idWithVersion = component.toBitId().changeVersion(versionToRemove);
       const dependents = dependencyGraph.getImmediateDependentsPerId(idWithVersion);
       if (dependents.length) {
@@ -85,7 +84,7 @@ async function removeLocalVersionsForMultipleComponents(
   // if no version is given, there is risk of deleting dependencies version without their dependents.
   if (!force && version) {
     const dependencyGraph = await scope.getDependencyGraph();
-    const candidateComponentsIds = componentsToUntag.map((component) => {
+    const candidateComponentsIds = componentsToUntag.map(component => {
       const bitId = component.toBitId();
       return bitId.changeVersion(version);
     });

@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
@@ -10,7 +9,7 @@ import InvalidIndexJson from '../exceptions/invalid-index-json';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-type IndexItem = { id: { scope: string | null | undefined, name: string }, isSymlink: boolean, hash: string };
+type IndexItem = { id: { scope: string | null | undefined; name: string }; isSymlink: boolean; hash: string };
 
 export default class ComponentsIndex {
   indexPath: string;

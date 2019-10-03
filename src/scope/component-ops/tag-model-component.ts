@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import graphlib from 'graphlib';
@@ -40,7 +39,7 @@ async function getFlattenedDependencies(
   if (!edges) return new BitIds();
   const dependencies = getEdgesWithProdGraph(prodGraph, edges);
   if (!dependencies.length) return new BitIds();
-  const flattenDependency = async (dependency) => {
+  const flattenDependency = async dependency => {
     if (cache[dependency]) return cache[dependency];
     // $FlowFixMe if graph doesn't have the node, prodGraph must have it
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
@@ -103,7 +102,7 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
       dependency.id = dependency.id.changeVersion(foundDependency.version);
     }
   };
-  componentsToTag.forEach((oneComponentToTag) => {
+  componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
   });
 }
@@ -115,7 +114,7 @@ async function setFutureVersions(
   exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
-    componentsToTag.map(async (componentToTag) => {
+    componentsToTag.map(async componentToTag => {
       // $FlowFixMe
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
@@ -178,7 +177,7 @@ function validateDirManipulation(components: Component[]): void {
     // $FlowFixMe componentMap is set here
     const componentMapFiles = component.componentMap.getAllFilesPaths();
     const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
-    componentMapFiles.forEach((file) => {
+    componentMapFiles.forEach(file => {
       const expectedFile = pathAfterDirManipulation(file);
       if (!componentFiles.includes(expectedFile)) {
         throw new ValidationError(
@@ -202,22 +201,22 @@ export default (async function tagModelComponent({
   skipTests = false,
   verbose = false
 }: {
-  consumerComponents: Component[],
-  scope: Scope,
-  message: string,
-  exactVersion: string | null | undefined,
-  releaseType: string,
-  force: boolean | null | undefined,
-  consumer: Consumer,
-  ignoreNewestVersion: boolean,
-  skipTests: boolean,
-  verbose?: boolean
-}): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
+  consumerComponents: Component[];
+  scope: Scope;
+  message: string;
+  exactVersion: string | null | undefined;
+  releaseType: string;
+  force: boolean | null | undefined;
+  consumer: Consumer;
+  ignoreNewestVersion: boolean;
+  skipTests: boolean;
+  verbose?: boolean;
+}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
-  consumerComponents.forEach((consumerComponent) => {
+  consumerComponents.forEach(consumerComponent => {
     const componentIdString = consumerComponent.id.toString();
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
@@ -235,7 +234,7 @@ export default (async function tagModelComponent({
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion) {
-    const newestVersionsP = componentsToBuildAndTest.map(async (component) => {
+    const newestVersionsP = componentsToBuildAndTest.map(async component => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
@@ -297,7 +296,7 @@ export default (async function tagModelComponent({
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
-      testResult = testsResults.find((result) => {
+      testResult = testsResults.find(result => {
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }

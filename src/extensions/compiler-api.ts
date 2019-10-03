@@ -1,4 +1,4 @@
-// // @flow
+//
 // import Vinyl from 'vinyl';
 // import { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 // import { SourceFile } from '../consumer/component/sources';

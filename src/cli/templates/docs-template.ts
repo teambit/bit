@@ -1,15 +1,14 @@
-// @flow
 import R from 'ramda';
 import c from 'chalk';
 import Table from 'tty-table';
 import { paintHeader } from '../chalk-box';
 import { Doclet } from '../../jsdoc/parser';
 
-const paintExample = (example) => {
+const paintExample = example => {
   return example.raw;
 };
 
-const paintExamples = (examples) => {
+const paintExamples = examples => {
   if (R.isEmpty(examples) || R.isNil(examples)) {
     return '';
   }
@@ -30,7 +29,7 @@ export const paintDoc = (doc: Doclet) => {
 
   const table = new Table(header, [], opts);
 
-  const paintArg = (arg) => {
+  const paintArg = arg => {
     if (!arg && !arg.type && !arg.name) {
       return '';
     }
@@ -45,7 +44,7 @@ export const paintDoc = (doc: Doclet) => {
     return `(${args.map(paintArg).join(', ')})`;
   };
 
-  const paintDescription = (arg) => {
+  const paintDescription = arg => {
     if (!arg) return '';
     if (!arg.type) {
       return '';

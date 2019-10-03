@@ -1,4 +1,3 @@
-// @flow
 import chalk from 'chalk';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 

@@ -1,4 +1,3 @@
-// @flow
 import chalk from 'chalk';
 import { EjectResults } from '../../consumer/component-ops/eject-components';
 import { BASE_WEB_DOMAIN } from '../../constants';

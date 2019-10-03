@@ -1,4 +1,3 @@
-// @flow
 import normalize from 'normalize-path';
 import R from 'ramda';
 import fileTypesPlugins from '../plugins/file-types-plugins';
@@ -67,7 +66,7 @@ export function getLinkToPackageContent(
 
 function getSupportedExtensions(): string[] {
   const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
-  fileTypesPlugins.forEach((plugin) => {
+  fileTypesPlugins.forEach(plugin => {
     extensions.push(plugin.getExtension());
   });
   return extensions;
@@ -115,7 +114,7 @@ function _getTemplate(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
 }
 
 function _addPluginsTemplatesToLinkContentTemplates(importSpecifiers?: ImportSpecifier[]) {
-  fileTypesPlugins.forEach((plugin) => {
+  fileTypesPlugins.forEach(plugin => {
     LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
   });
 }
@@ -127,7 +126,7 @@ function _logWhenNoTemplateWasFound(filePath: string, fileExt: string) {
 
 function tsTemplateWithImportSpecifiers(importSpecifiers) {
   return importSpecifiers
-    .map((importSpecifier) => {
+    .map(importSpecifier => {
       let importPart = 'import ';
       if (
         (importSpecifier.linkFile && importSpecifier.linkFile.isDefault) ||
@@ -151,7 +150,7 @@ function tsTemplateWithImportSpecifiers(importSpecifiers) {
 
 function es6TemplateWithImportSpecifiers(importSpecifiers) {
   return R.uniq(
-    importSpecifiers.map((importSpecifier) => {
+    importSpecifiers.map(importSpecifier => {
       if (!importSpecifier.linkFile) {
         // when no link-file is involved, use the standard non-es6 syntax (a privilege that doesn't exist for TS)
         return LINKS_CONTENT_TEMPLATES.js;

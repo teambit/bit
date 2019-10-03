@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';

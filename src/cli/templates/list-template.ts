@@ -1,4 +1,3 @@
-// @flow
 import c from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
@@ -6,7 +5,7 @@ import Table from 'tty-table';
 import { removeChalkCharacters } from '../../utils';
 import { ListScopeResult } from '../../consumer/component/components-list';
 
-type Row = { id: string, localVersion: string, currentVersion: string, remoteVersion?: string };
+type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 
 export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVersion: boolean) => {
   const header = [

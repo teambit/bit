@@ -1,4 +1,3 @@
-// @flow
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
@@ -143,9 +142,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ExtensionNameNotValid,
     err =>
-      `error: the extension name "${
-        err.name
-      }" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
+      `error: the extension name "${err.name}" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
   ],
   [
     ProtocolNotSupported,
@@ -170,11 +167,11 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     ComponentNotFound,
-    (err) => {
+    err => {
       const msg = err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
-          err.dependentId
-        )}" was not found`
+            err.dependentId
+          )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
       return msg;
     }
@@ -199,9 +196,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     PermissionDenied,
     err =>
-      `error: permission to scope ${
-        err.scope
-      } was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
+      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
@@ -256,9 +251,7 @@ to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIs
   ],
   [
     ExportAnotherOwnerPrivate,
-    err => `error: unable to export components to ${
-      err.destinationScope
-    } because they have dependencies on components in ${err.sourceScope}.
+    err => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
 see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bitdev-permissions.html`
@@ -294,7 +287,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
   ],
   [
     MissingDependencies,
-    (err) => {
+    err => {
       const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
@@ -396,10 +389,8 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     MissingFilesFromComponent,
-    (err) => {
-      return `component ${
-        err.id
-      } is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
+    err => {
+      return `component ${err.id} is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
     }
   ],
   [
@@ -442,7 +433,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     DuplicateIds,
     err =>
       Object.keys(err.componentObject)
-        .map((key) => {
+        .map(key => {
           return `unable to add ${
             Object.keys(err.componentObject[key]).length
           } components with the same ID: ${chalk.bold(key)} : ${err.componentObject[key]}\n`;
@@ -501,16 +492,12 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExtensionGetDynamicPackagesError,
     err =>
-      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${
-        err.originalError.message
-      }.\n${err.originalError.stack}`
+      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
   ],
   [
     ExtensionGetDynamicConfigError,
     err =>
-      `error: bit failed to get the config from ${err.compName} with the following exception:\n${
-        err.originalError.message
-      }.\n${err.originalError.stack}`
+      `error: bit failed to get the config from ${err.compName} with the following exception:\n${err.originalError.message}.\n${err.originalError.stack}`
   ],
   [
     InvalidCompilerInterface,
@@ -531,9 +518,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     err =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${
-        err.debugInfo
-      }`
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${err.debugInfo}`
   ],
   [
     ObjectsWithoutConsumer,
@@ -599,7 +584,7 @@ function getExternalErrorMessage(externalError: Error | null | undefined): strin
 
 function getExternalErrorsMessageAndStack(errors: Error[]): string {
   const result = errors
-    .map((e) => {
+    .map(e => {
       const msg = getExternalErrorMessage(e);
       const stack = e.stack || '';
       return `${msg}\n${stack}\n`;

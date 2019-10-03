@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import Dist from './dist';
 import Consumer from '../../consumer';
@@ -151,7 +150,7 @@ export default class Dists {
   }
 
   stripOriginallySharedDir(originallySharedDir: string | null | undefined) {
-    this.dists.forEach((distFile) => {
+    this.dists.forEach(distFile => {
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newRelative });
     });
@@ -163,7 +162,11 @@ export default class Dists {
   /**
    * write dists files to the filesystem
    */
-  async writeDists(component: Component, consumer: Consumer, writeLinks?: boolean = true): Promise<string[] | null | undefined> {
+  async writeDists(
+    component: Component,
+    consumer: Consumer,
+    writeLinks?: boolean = true
+  ): Promise<string[] | null | undefined> {
     const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
@@ -259,14 +262,14 @@ export default class Dists {
     consumer: Consumer,
     originallySharedDir: PathLinux | null | undefined,
     compiler: CompilerExtension | null | undefined
-  ): { dists?: DistFileModel[], mainDistFile?: PathOsBasedRelative | null | undefined } {
+  ): { dists?: DistFileModel[]; mainDistFile?: PathOsBasedRelative | null | undefined } {
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
     // consumerComponent.dists.distEntryShouldBeStripped is set to true.
     // because the model always has the paths of the original author, in case part of the path was stripped, add it
     // back before saving to the model. this way, when the author updates the components, the paths will be correct.
-    const addSharedDirAndDistEntry = (pathStr) => {
+    const addSharedDirAndDistEntry = pathStr => {
       const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
       const withDistEntry = this.distEntryShouldBeStripped // $FlowFixMe
         ? path.join(consumer.config.distEntry, withSharedDir)
@@ -276,7 +279,7 @@ export default class Dists {
 
     if (this.isEmpty() || !compiler) return {};
 
-    const dists = this.get().map((dist) => {
+    const dists = this.get().map(dist => {
       return {
         name: dist.basename,
         relativePath: addSharedDirAndDistEntry(dist.relative),
@@ -300,7 +303,7 @@ export default class Dists {
     if (!resolveModules || !resolveModules.modulesDirectories || !resolveModules.modulesDirectories.length) return null;
     const distTarget = consumer.config.distTarget || DEFAULT_DIST_DIRNAME;
     const distEntry = consumer.config.distEntry;
-    const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map((moduleDir) => {
+    const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map(moduleDir => {
       const isRelative = str => str.startsWith('./') || str.startsWith('../');
       if (!distEntry) return path.join(distTarget, moduleDir);
       const distEntryRelativeToModuleDir = pathRelativeLinux(distEntry, moduleDir);

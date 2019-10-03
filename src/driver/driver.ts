@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import bitJavascript from 'bit-javascript';
 import DriverNotFound from './exceptions/driver-not-found';

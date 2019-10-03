@@ -1,4 +1,3 @@
-// @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import { linkAllToNodeModules } from '../../../links';
 import { LinksResult } from '../../../links/node-modules-linker';

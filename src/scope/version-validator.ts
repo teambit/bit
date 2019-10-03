@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import { PJV } from 'package-json-validator';
 import packageNameValidate from 'validate-npm-package-name';
@@ -32,7 +31,7 @@ export default function validateVersionInstance(version: Version): void {
     }
     if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
   };
-  const _validateEnv = (env) => {
+  const _validateEnv = env => {
     if (!env) return;
     if (typeof env === 'string') {
       // Do not validate version - for backward compatibility
@@ -46,7 +45,7 @@ export default function validateVersionInstance(version: Version): void {
     validateBitIdStr(env.name, 'env.name');
     if (env.files) {
       const compilerName = env.name || '';
-      env.files.forEach((file) => {
+      env.files.forEach(file => {
         if (!file.name) {
           throw new VersionInvalid(
             `${message}, the environment ${compilerName} has a file which missing the name attribute`
@@ -71,13 +70,13 @@ export default function validateVersionInstance(version: Version): void {
     // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
     validateType(message, packageVersion, `version of "${packageName}"`, 'string');
   };
-  const _validatePackageDependencies = (packageDependencies) => {
+  const _validatePackageDependencies = packageDependencies => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
     R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
   };
   const _validateEnvPackages = (envPackages, fieldName) => {
     validateType(message, envPackages, fieldName, 'object');
-    Object.keys(envPackages).forEach((dependencyType) => {
+    Object.keys(envPackages).forEach(dependencyType => {
       if (!DEPENDENCIES_FIELDS.includes(dependencyType)) {
         throw new VersionInvalid(
           `${message}, the property ${dependencyType} inside ${fieldName} is invalid, allowed values are ${DEPENDENCIES_FIELDS.join(
@@ -87,7 +86,7 @@ export default function validateVersionInstance(version: Version): void {
       }
       validateType(message, envPackages[dependencyType], `${fieldName}.${dependencyType}`, 'object');
       // $FlowFixMe
-      Object.keys(envPackages[dependencyType]).forEach((pkg) => {
+      Object.keys(envPackages[dependencyType]).forEach(pkg => {
         // $FlowFixMe
         validateType(message, envPackages[dependencyType][pkg], `${fieldName}.${dependencyType}.${pkg}`, 'string');
       });
@@ -116,7 +115,7 @@ export default function validateVersionInstance(version: Version): void {
   let foundMainFile = false;
   validateType(message, version.files, 'files', 'array');
   const filesPaths = [];
-  version.files.forEach((file) => {
+  version.files.forEach(file => {
     validateFile(file);
     filesPaths.push(file.relativePath);
     if (file.relativePath === version.mainFile) foundMainFile = true;
@@ -144,7 +143,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
     // $FlowFixMe
-    version.dists.forEach((file) => {
+    version.dists.forEach(file => {
       validateFile(file, true);
     });
   } else if (version.mainDistFile) {
@@ -153,7 +152,7 @@ export default function validateVersionInstance(version: Version): void {
   if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
     throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
-  DEPENDENCIES_TYPES.forEach((dependenciesType) => {
+  DEPENDENCIES_TYPES.forEach(dependenciesType => {
     // $FlowFixMe
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(
@@ -179,7 +178,7 @@ export default function validateVersionInstance(version: Version): void {
   }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
-    dependencies.forEach((dependency) => {
+    dependencies.forEach(dependency => {
       if (!(dependency instanceof BitId)) {
         throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
       }
@@ -213,7 +212,7 @@ export default function validateVersionInstance(version: Version): void {
     const field = `overrides.${fieldName}`;
     if (DEPENDENCIES_FIELDS.includes(fieldName)) {
       validateType(message, fieldValue, field, 'object');
-      Object.keys(fieldValue).forEach((key) => {
+      Object.keys(fieldValue).forEach(key => {
         validateType(message, key, `property name of ${field}`, 'string');
         validateType(message, fieldValue[key], `version of "${field}.${key}"`, 'string');
       });
@@ -226,7 +225,7 @@ export default function validateVersionInstance(version: Version): void {
       }
     }
   };
-  Object.keys(version.overrides).forEach((field) => {
+  Object.keys(version.overrides).forEach(field => {
     if (componentOverridesForbiddenFields.includes(field)) {
       throw new VersionInvalid(`${message}, the "overrides" has a forbidden key "${field}"`);
     }
@@ -235,7 +234,7 @@ export default function validateVersionInstance(version: Version): void {
   });
   validateType(message, version.packageJsonChangedProps, 'packageJsonChangedProps', 'object');
   const forbiddenPackageJsonProps = PackageJsonFile.propsNonUserChangeable();
-  Object.keys(version.packageJsonChangedProps).forEach((prop) => {
+  Object.keys(version.packageJsonChangedProps).forEach(prop => {
     validateType(message, prop, 'property name of packageJson', 'string');
     if (forbiddenPackageJsonProps.includes(prop)) {
       throw new VersionInvalid(`${message}, the packageJsonChangedProps should not override the prop ${prop}`);

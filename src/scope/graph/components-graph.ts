@@ -1,4 +1,3 @@
-// @flow
 import graphLib from 'graphlib';
 import R from 'ramda';
 import Component from '../../consumer/component/consumer-component';
@@ -11,7 +10,7 @@ const Graph = graphLib.Graph;
 export function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
     const id = component.id.toString();
-    dependencies.get().forEach((dependency) => {
+    dependencies.get().forEach(dependency => {
       const depId = dependency.id.toString();
       // save the full BitId of a string id to be able to retrieve it later with no confusion
       if (!graph.hasNode(id)) graph.setNode(id, component.id);
@@ -24,7 +23,7 @@ export function buildComponentsGraph(components: Component[]) {
   const graphDevDeps = new Graph();
   const graphCompilerDeps = new Graph();
   const graphTesterDeps = new Graph();
-  components.forEach((component) => {
+  components.forEach(component => {
     setGraphEdges(component, component.dependencies, graphDeps);
     setGraphEdges(component, component.devDependencies, graphDevDeps);
     setGraphEdges(component, component.compilerDependencies, graphCompilerDeps);
@@ -54,7 +53,7 @@ export function topologicalSortComponentDependencies(componentWithDependencies: 
     sortedComponents = graphLib.alg.topsort(graphDeps);
     const sortedComponentsIds = sortedComponents.map(s => graphDeps.node(s));
     const sortedDependenciesIds = R.tail(sortedComponentsIds); // the first one is the component itself
-    const dependencies = sortedDependenciesIds.map((depId) => {
+    const dependencies = sortedDependenciesIds.map(depId => {
       const matchDependency = componentWithDependencies.dependencies.find(dependency => dependency.id.isEqual(depId));
       if (!matchDependency) throw new Error(`topologicalSortComponentDependencies, ${depId.toString()} is missing`);
       return matchDependency;

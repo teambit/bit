@@ -1,4 +1,3 @@
-// @flow
 import ExternalErrors from '../../../error/external-errors';
 
 export default class ExternalBuildErrors extends ExternalErrors {

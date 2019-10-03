@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import Component from '../component/consumer-component';
 import ComponentWithDependencies from '../../scope/component-dependencies';

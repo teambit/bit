@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
@@ -24,23 +23,23 @@ import { composeComponentPath, composeDependencyPathForIsolated } from '../../ut
 import { BitId } from '../../bit-id';
 
 type ManyComponentsWriterParams = {
-  consumer?: Consumer | null | undefined,
-  silentPackageManagerResult?: boolean,
-  componentsWithDependencies: ComponentWithDependencies[],
-  writeToPath?: string,
-  override?: boolean,
-  isolated?: boolean,
-  writePackageJson?: boolean,
-  writeConfig?: boolean,
-  configDir?: string,
-  writeBitDependencies?: boolean,
-  createNpmLinkFiles?: boolean,
-  writeDists?: boolean,
-  installNpmPackages?: boolean,
-  installPeerDependencies?: boolean,
-  addToRootPackageJson?: boolean,
-  verbose?: boolean,
-  excludeRegistryPrefix?: boolean
+  consumer?: Consumer | null | undefined;
+  silentPackageManagerResult?: boolean;
+  componentsWithDependencies: ComponentWithDependencies[];
+  writeToPath?: string;
+  override?: boolean;
+  isolated?: boolean;
+  writePackageJson?: boolean;
+  writeConfig?: boolean;
+  configDir?: string;
+  writeBitDependencies?: boolean;
+  createNpmLinkFiles?: boolean;
+  writeDists?: boolean;
+  installNpmPackages?: boolean;
+  installPeerDependencies?: boolean;
+  addToRootPackageJson?: boolean;
+  verbose?: boolean;
+  excludeRegistryPrefix?: boolean;
 };
 
 /**
@@ -134,7 +133,7 @@ export default class ManyComponentsWriter {
   }
   async _persistComponentsData() {
     const dataToPersist = new DataToPersist();
-    this.componentsWithDependencies.forEach((componentWithDeps) => {
+    this.componentsWithDependencies.forEach(componentWithDeps => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
@@ -150,7 +149,7 @@ export default class ManyComponentsWriter {
     const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach((componentWriter) => {
+    componentWriterInstances.forEach(componentWriter => {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
@@ -284,7 +283,7 @@ export default class ManyComponentsWriter {
   }
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
-      this.componentsWithDependencies.forEach((componentWithDeps) => {
+      this.componentsWithDependencies.forEach(componentWithDeps => {
         // $FlowFixMe componentWithDeps.component.componentMap is set
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
         if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {

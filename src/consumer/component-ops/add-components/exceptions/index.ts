@@ -1,4 +1,3 @@
-// @flow
 import DuplicateIds from './duplicate-ids';
 import EmptyDirectory from './empty-directory';
 import IncorrectIdForImportedComponent from './incorrect-id-imported-component';

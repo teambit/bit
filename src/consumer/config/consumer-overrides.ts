@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
@@ -10,12 +9,12 @@ import AbstractConfig from './abstract-config';
 import { DEPENDENCIES_FIELDS } from '../../constants';
 
 export type ConsumerOverridesOfComponent = {
-  dependencies?: Object,
-  devDependencies?: Object,
-  peerDependencies?: Object,
-  env?: Object,
-  propagate?: boolean, // whether propagate to a more general rule,
-  [string]: any // can be any package.json field
+  dependencies?: Object;
+  devDependencies?: Object;
+  peerDependencies?: Object;
+  env?: Object;
+  propagate?: boolean; // whether propagate to a more general rule,
+  [string]: any; // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
@@ -50,11 +49,11 @@ export default class ConsumerOverrides {
   }
   _updateSpecificOverridesWithGeneralOverrides(generalOverrides: Object, specificOverrides: Object) {
     const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
-    Object.keys(generalOverrides).forEach((field) => {
+    Object.keys(generalOverrides).forEach(field => {
       switch (field) {
         case 'env':
           if (!specificOverrides[field]) specificOverrides[field] = {};
-          ['compiler', 'tester'].forEach((envField) => {
+          ['compiler', 'tester'].forEach(envField => {
             if (specificOverrides.env[envField] || !generalOverrides.env[envField]) return;
             specificOverrides.env[envField] = generalOverrides.env[envField];
           });
@@ -179,7 +178,7 @@ export default class ConsumerOverrides {
 
     function validateComponentOverride(id, override) {
       validateUserInputType(message, override, `overrides.${id}`, 'object');
-      Object.keys(override).forEach((field) => {
+      Object.keys(override).forEach(field => {
         if (overridesForbiddenFields.includes(field)) {
           throw new GeneralError(`${message} found a forbidden field "${field}" inside "overrides.${id}" property.
 the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
@@ -196,7 +195,7 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
 
     function validateDependencyField(field: string, override: Object, id: string) {
       validateUserInputType(message, override[field], `overrides.${id}.${field}`, 'object');
-      Object.keys(override[field]).forEach((rule) => {
+      Object.keys(override[field]).forEach(rule => {
         validateUserInputType(message, override[field][rule], `overrides.${id}.${field}.${rule}`, 'string');
       });
     }

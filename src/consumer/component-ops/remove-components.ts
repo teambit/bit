@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import groupArray from 'group-array';
 import partition from 'lodash.partition';
@@ -32,17 +31,17 @@ export default (async function removeComponents({
   track,
   deleteFiles
 }: {
-  consumer: Consumer | null | undefined, // when remote is false, it's always set
-  ids: BitIds,
-  force: boolean,
-  remote: boolean,
-  track: boolean,
-  deleteFiles: boolean
-}): Promise<{ localResult: RemovedLocalObjects, remoteResult: Object[] }> {
+  consumer: Consumer | null | undefined; // when remote is false, it's always set
+  ids: BitIds;
+  force: boolean;
+  remote: boolean;
+  track: boolean;
+  deleteFiles: boolean;
+}): Promise<{ localResult: RemovedLocalObjects; remoteResult: Object[] }> {
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
   const bitIdsLatest = BitIds.fromArray(
-    ids.map((id) => {
+    ids.map(id => {
       return id.changeVersion(LATEST_BIT_VERSION);
     })
   );
@@ -72,7 +71,7 @@ async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitId
   const context = {};
   enrichContextFromGlobal(context);
   const scope = consumer ? consumer.scope : null;
-  const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
+  const removeP = Object.keys(groupedBitsByScope).map(async key => {
     const resolvedRemote = await remotes.resolve(key, scope);
     const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
@@ -100,7 +99,7 @@ async function removeLocal(
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
     await Promise.all(
-      bitIds.map(async (id) => {
+      bitIds.map(async id => {
         try {
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);

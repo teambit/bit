@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import { RemovedObjects } from '../removed-components';
@@ -47,7 +46,7 @@ export default class RemoveModelComponents {
    * @param {BitId} bitId - list of remote component ids to delete
    * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
-  async _removeSingle(bitId: BitId): Promise<{ bitId: BitId, removedDependencies: BitIds }> {
+  async _removeSingle(bitId: BitId): Promise<{ bitId: BitId; removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();

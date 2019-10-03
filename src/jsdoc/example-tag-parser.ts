@@ -1,11 +1,10 @@
 import GeneralError from '../error/general-error';
-// @flow
 
 type Example = {
-  raw: string,
-  description?: string,
-  code?: Array,
-  returns?: Object
+  raw: string;
+  description?: string;
+  code?: Array;
+  returns?: Object;
 };
 
 const token = {

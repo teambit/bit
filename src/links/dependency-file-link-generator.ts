@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
 import { DEFAULT_INDEX_NAME, DEFAULT_DIST_DIRNAME } from '../constants';
@@ -20,13 +19,13 @@ import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
 
 export type LinkFileType = {
-  linkPath: string,
-  linkContent: string,
-  isEs6?: boolean,
-  postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
-  postInstallSymlink?: boolean, // postInstallSymlink is needed when custom module resolution was used with unsupported file extension
-  symlinkTo?: PathOsBased | null | undefined, // symlink (instead of link) is needed for unsupported files, such as binary files
-  customResolveMapping?: { [string]: string } | null | undefined // needed when custom module resolution was used
+  linkPath: string;
+  linkContent: string;
+  isEs6?: boolean;
+  postInstallLink?: boolean; // postInstallLink is needed when custom module resolution was used
+  postInstallSymlink?: boolean; // postInstallSymlink is needed when custom module resolution was used with unsupported file extension
+  symlinkTo?: PathOsBased | null | undefined; // symlink (instead of link) is needed for unsupported files, such as binary files
+  customResolveMapping?: { [string]: string } | null | undefined; // needed when custom module resolution was used
 };
 
 /**
@@ -58,13 +57,13 @@ export default class DependencyFileLinkGenerator {
     createNpmLinkFiles,
     targetDir
   }: {
-    consumer: Consumer | null | undefined,
-    bitMap: BitMap,
-    component: Component,
-    relativePath: RelativePath,
-    dependencyComponent: Component,
-    createNpmLinkFiles: boolean,
-    targetDir?: string
+    consumer: Consumer | null | undefined;
+    bitMap: BitMap;
+    component: Component;
+    relativePath: RelativePath;
+    dependencyComponent: Component;
+    createNpmLinkFiles: boolean;
+    targetDir?: string;
   }) {
     this.consumer = consumer;
     this.bitMap = bitMap;
@@ -177,9 +176,9 @@ export default class DependencyFileLinkGenerator {
     relativePathInDependency,
     depRootDir
   }: {
-    linkPath: PathOsBased,
-    relativePathInDependency: PathOsBased,
-    depRootDir: PathOsBasedAbsolute | null | undefined
+    linkPath: PathOsBased;
+    relativePathInDependency: PathOsBased;
+    depRootDir: PathOsBasedAbsolute | null | undefined;
   }): LinkFileType {
     const actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);

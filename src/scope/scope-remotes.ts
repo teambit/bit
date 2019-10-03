@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import { Scope } from '.';
 import GlobalRemotes from '../global-config/global-remotes';

@@ -1,5 +1,3 @@
-// @flow
-
 import hash from 'object-hash';
 import yn from 'yn';
 import { getSync } from '../api/consumer/lib/global-config';
@@ -13,7 +11,7 @@ export default function hashErrorIfNeeded(error: Error) {
   const fields = Object.getOwnPropertyNames(clonedError);
   const fieldToHash = fields.filter(field => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
-  fieldToHash.forEach((field) => {
+  fieldToHash.forEach(field => {
     // $FlowFixMe
     clonedError[field] = hashValue(clonedError[field]);
   });

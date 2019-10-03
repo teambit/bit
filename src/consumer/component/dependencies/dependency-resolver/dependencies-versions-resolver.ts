@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -39,7 +38,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   updateDependencies(component.testerDependencies);
 
   function updateDependencies(dependencies: Dependencies) {
-    dependencies.get().forEach((dependency) => {
+    dependencies.get().forEach(dependency => {
       const id = dependency.id;
       // $FlowFixMe component.componentFromModel is set
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);

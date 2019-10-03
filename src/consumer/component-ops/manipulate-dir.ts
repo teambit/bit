@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import BitMap from '../bit-map/bit-map';
@@ -20,7 +19,11 @@ import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 import Component from '../component/consumer-component';
 import { ComponentWithDependencies } from '../../scope';
 
-export type ManipulateDirItem = { id: BitId, originallySharedDir: PathLinux | null | undefined, wrapDir: PathLinux | null | undefined };
+export type ManipulateDirItem = {
+  id: BitId;
+  originallySharedDir: PathLinux | null | undefined;
+  wrapDir: PathLinux | null | undefined;
+};
 
 /**
  * use this method when loading an existing component. don't use it during the import process
@@ -31,7 +34,9 @@ export async function getManipulateDirForExistingComponents(
 ): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
-  const componentMap: ComponentMap | null | undefined = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
+  const componentMap: ComponentMap | null | undefined = consumer.bitMap.getComponentIfExist(id, {
+    ignoreVersion: true
+  });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
@@ -40,7 +45,7 @@ export async function getManipulateDirForExistingComponents(
   const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
-  dependencies.forEach((dependency) => {
+  dependencies.forEach(dependency => {
     const depComponentMap: ComponentMap | null | undefined = getDependencyComponentMap(consumer.bitMap, dependency.id);
     const manipulateDirDep: ManipulateDirItem = {
       id: dependency.id,

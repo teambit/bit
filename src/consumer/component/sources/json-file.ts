@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import AbstractVinyl from './abstract-vinyl';
 import ValidationError from '../../../error/validation-error';
@@ -29,10 +28,10 @@ export default class JSONFile extends AbstractVinyl {
     content,
     override = false
   }: {
-    base: string,
-    path: string,
-    content: Object,
-    override?: boolean
+    base: string;
+    path: string;
+    content: Object;
+    override?: boolean;
   }): JSONFile {
     const jsonStr = JSON.stringify(content, null, 4);
     const jsonFile = new JSONFile({ base, path, contents: Buffer.from(jsonStr) });

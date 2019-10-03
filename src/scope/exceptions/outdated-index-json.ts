@@ -1,5 +1,3 @@
-// @flow
-
 export default class OutdatedIndexJson extends Error {
   componentId: string;
   indexJsonPath: string;

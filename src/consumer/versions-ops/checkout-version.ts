@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
@@ -18,23 +17,23 @@ import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { Tmp } from '../../scope/repositories';
 
 export type CheckoutProps = {
-  version?: string, // if reset is true, the version is undefined
-  ids?: BitId[],
-  latestVersion?: boolean,
-  promptMergeOptions: boolean,
-  mergeStrategy: MergeStrategy | null | undefined,
-  verbose: boolean,
-  skipNpmInstall: boolean,
-  reset: boolean, // remove local changes. if set, the version is undefined.
-  all: boolean, // checkout all ids
-  ignoreDist: boolean
+  version?: string; // if reset is true, the version is undefined
+  ids?: BitId[];
+  latestVersion?: boolean;
+  promptMergeOptions: boolean;
+  mergeStrategy: MergeStrategy | null | undefined;
+  verbose: boolean;
+  skipNpmInstall: boolean;
+  reset: boolean; // remove local changes. if set, the version is undefined.
+  all: boolean; // checkout all ids
+  ignoreDist: boolean;
 };
 type ComponentStatus = {
-  componentFromFS?: ConsumerComponent,
-  componentFromModel?: Version,
-  id: BitId,
-  failureMessage?: string,
-  mergeResults?: MergeResultsThreeWay | null | undefined
+  componentFromFS?: ConsumerComponent;
+  componentFromModel?: Version;
+  id: BitId;
+  failureMessage?: string;
+  mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
 export default (async function checkoutVersion(
@@ -170,7 +169,7 @@ async function applyVersion(
   const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
-    componentFromFS.files.forEach((file) => {
+    componentFromFS.files.forEach(file => {
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
@@ -198,7 +197,7 @@ async function applyVersion(
   const writePackageJson = await shouldWritePackageJson();
 
   const files = componentWithDependencies.component.files;
-  files.forEach((file) => {
+  files.forEach(file => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
@@ -241,7 +240,7 @@ export function applyModifiedVersion(
 ): Object {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
-  mergeResults.modifiedFiles.forEach((file) => {
+  mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
@@ -255,11 +254,11 @@ export function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  mergeResults.addFiles.forEach((file) => {
+  mergeResults.addFiles.forEach(file => {
     componentFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
-  mergeResults.overrideFiles.forEach((file) => {
+  mergeResults.overrideFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);

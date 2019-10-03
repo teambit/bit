@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import Component from '../../component/consumer-component';
 import Consumer from '../../consumer';
@@ -12,21 +11,21 @@ import GeneralError from '../../../error/general-error';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{
-    filePath: PathLinux,
-    otherFile: SourceFile
-  }>,
+    filePath: PathLinux;
+    otherFile: SourceFile;
+  }>;
   modifiedFiles: Array<{
-    filePath: PathLinux,
-    otherFile: SourceFile,
-    currentFile: SourceFile,
-    output: string | null | undefined,
-    conflict: string | null | undefined
-  }>,
+    filePath: PathLinux;
+    otherFile: SourceFile;
+    currentFile: SourceFile;
+    output: string | null | undefined;
+    conflict: string | null | undefined;
+  }>;
   unModifiedFiles: Array<{
-    filePath: PathLinux,
-    currentFile: SourceFile
-  }>,
-  hasConflicts: boolean
+    filePath: PathLinux;
+    currentFile: SourceFile;
+  }>;
+  hasConflicts: boolean;
 };
 
 export default (async function twoWayMergeVersions({
@@ -36,11 +35,11 @@ export default (async function twoWayMergeVersions({
   currentComponent,
   currentVersion
 }: {
-  consumer: Consumer,
-  otherComponent: Component,
-  otherVersion: string,
-  currentComponent: Component,
-  currentVersion: string
+  consumer: Consumer;
+  otherComponent: Component;
+  otherVersion: string;
+  currentComponent: Component;
+  currentVersion: string;
 }): Promise<MergeResultsTwoWay> {
   const otherFiles: SourceFile[] = otherComponent.files;
   const currentFiles: SourceFile[] = currentComponent.files;
@@ -94,7 +93,7 @@ async function getMergeResults(
   modifiedFiles: $PropertyType<MergeResultsTwoWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
-  const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
+  const conflictResultsP = modifiedFiles.map(async modifiedFile => {
     const currentFilePathP = tmp.save(modifiedFile.currentFile.contents);
     const writeFile = async (file: SourceFile): Promise<PathOsBased> => {
       return tmp.save(file.contents);

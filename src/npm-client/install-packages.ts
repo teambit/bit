@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import fs from 'fs-extra';
 import path from 'path';
@@ -52,7 +51,7 @@ export async function installPackages(
     results = [results];
   }
   if (!silentPackageManagerResult || verbose) {
-    results.forEach((result) => {
+    results.forEach(result => {
       if (result) npmClient.printResults(result);
     });
   }
@@ -66,12 +65,12 @@ export async function installNpmPackagesForComponents({
   silentPackageManagerResult = false,
   installPeerDependencies = false
 }: {
-  consumer: Consumer,
-  basePath: string | null | undefined,
-  componentsWithDependencies: ComponentWithDependencies[],
-  verbose: boolean,
-  silentPackageManagerResult?: boolean,
-  installPeerDependencies: boolean
+  consumer: Consumer;
+  basePath: string | null | undefined;
+  componentsWithDependencies: ComponentWithDependencies[];
+  verbose: boolean;
+  silentPackageManagerResult?: boolean;
+  installPeerDependencies: boolean;
 }): Promise<any> {
   const componentDirsRelative = getAllRootDirectoriesFor(componentsWithDependencies);
   const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
@@ -84,7 +83,7 @@ export function getAllRootDirectoriesFor(
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
-    componentsWithDependencies.map((oneComponentWithDependencies) => {
+    componentsWithDependencies.map(oneComponentWithDependencies => {
       return oneComponentWithDependencies.component.dependenciesSavedAsComponents
         ? [oneComponentWithDependencies.component, ...oneComponentWithDependencies.dependencies]
         : [oneComponentWithDependencies.component];

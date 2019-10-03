@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import { PathLinux } from '../../../utils/path';

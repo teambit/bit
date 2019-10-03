@@ -1,4 +1,3 @@
-// @flow
 export default function hasWildcard(ids: string | null | undefined | string[]): boolean {
   if (!ids) return false;
   if (Array.isArray(ids)) {

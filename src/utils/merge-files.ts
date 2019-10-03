@@ -1,24 +1,27 @@
-// @flow
 import execa from 'execa';
 import { PathLinux, PathOsBased } from '../utils/path';
 import GitNotFound from './git/exceptions/git-not-found';
 import getGitExecutablePath from './git/git-executable';
 import logger from '../logger/logger';
 
-export type MergeFileResult = { filePath: PathLinux, output: string | null | undefined, conflict: string | null | undefined };
+export type MergeFileResult = {
+  filePath: PathLinux;
+  output: string | null | undefined;
+  conflict: string | null | undefined;
+};
 export type MergeFileParams = {
-  filePath: PathLinux,
+  filePath: PathLinux;
   currentFile: {
-    label: string,
-    path: PathOsBased
-  },
+    label: string;
+    path: PathOsBased;
+  };
   baseFile: {
-    path: PathOsBased
-  },
+    path: PathOsBased;
+  };
   otherFile: {
-    label: string,
-    path: PathOsBased
-  }
+    label: string;
+    path: PathOsBased;
+  };
 };
 
 /**

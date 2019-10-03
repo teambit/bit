@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import Capsule from '../../../../components/core/capsule';
@@ -107,17 +106,17 @@ export default class DataToPersist {
     }
   }
   addBasePath(basePath: string) {
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       this._assertRelative(file.base);
       file.updatePaths({ newBase: path.join(basePath, file.base) });
     });
-    this.symlinks.forEach((symlink) => {
+    this.symlinks.forEach(symlink => {
       this._assertRelative(symlink.src);
       this._assertRelative(symlink.dest);
       symlink.src = path.join(basePath, symlink.src);
       symlink.dest = path.join(basePath, symlink.dest);
     });
-    this.remove.forEach((removePath) => {
+    this.remove.forEach(removePath => {
       this._assertRelative(removePath.path);
       removePath.path = path.join(basePath, removePath.path);
     });
@@ -154,36 +153,36 @@ export default class DataToPersist {
   _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the
     // filesystem. relative paths won't work when running bit commands from an inner dir
-    const validateAbsolutePath = (pathToValidate) => {
+    const validateAbsolutePath = pathToValidate => {
       if (!path.isAbsolute(pathToValidate)) {
         throw new Error(`DataToPersist expects ${pathToValidate} to be absolute, got relative`);
       }
     };
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       validateAbsolutePath(file.path);
     });
-    this.remove.forEach((removePath) => {
+    this.remove.forEach(removePath => {
       validateAbsolutePath(removePath.path);
     });
-    this.symlinks.forEach((symlink) => {
+    this.symlinks.forEach(symlink => {
       validateAbsolutePath(symlink.src);
       validateAbsolutePath(symlink.dest);
     });
   }
   _validateRelative() {
     // it's important to make sure that all paths are relative before writing them to the capsule
-    const validateRelativePath = (pathToValidate) => {
+    const validateRelativePath = pathToValidate => {
       if (path.isAbsolute(pathToValidate)) {
         throw new Error(`DataToPersist expects ${pathToValidate} to be relative, got absolute`);
       }
     };
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       validateRelativePath(file.path);
     });
-    this.remove.forEach((removePath) => {
+    this.remove.forEach(removePath => {
       validateRelativePath(removePath.path);
     });
-    this.symlinks.forEach((symlink) => {
+    this.symlinks.forEach(symlink => {
       validateRelativePath(symlink.src);
       validateRelativePath(symlink.dest);
     });
@@ -224,9 +223,7 @@ export default class DataToPersist {
       f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
     );
     if (directoryCollision) {
-      throw new Error(`unable to add the file "${file.path}", because another file "${
-        directoryCollision.path
-      }" is going to be written.
+      throw new Error(`unable to add the file "${file.path}", because another file "${directoryCollision.path}" is going to be written.
 one of them is a directory of the other one, and is not possible to have them both`);
     }
   }

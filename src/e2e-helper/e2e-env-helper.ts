@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';

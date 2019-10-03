@@ -1,4 +1,3 @@
-// @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { mergeVersion } from '../../../consumer/versions-ops/merge-version';

@@ -1,4 +1,3 @@
-// @flow
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import path from 'path';
@@ -253,16 +252,16 @@ export default class CommandHelper {
   ejectConf(id: string = 'bar/foo', options: Object | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
-        .map(key => `-${key} ${options[key]}`)
-        .join(' ')
+          .map(key => `-${key} ${options[key]}`)
+          .join(' ')
       : '';
     return this.runCmd(`bit eject-conf ${id} ${value}`);
   }
   injectConf(id: string = 'bar/foo', options: Object | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
-        .map(key => `-${key} ${options[key]}`)
-        .join(' ')
+          .map(key => `-${key} ${options[key]}`)
+          .join(' ')
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
@@ -288,7 +287,7 @@ export default class CommandHelper {
 
   parseOptions(options: Object): string {
     const value = Object.keys(options)
-      .map((key) => {
+      .map(key => {
         const keyStr = key.length === 1 ? `-${key}` : `--${key}`;
         return `${keyStr} ${options[key]}`;
       })
@@ -309,14 +308,14 @@ export default class CommandHelper {
       verbose: false
     }
   }: {
-    args: string[],
-    inputs: InteractiveInputs,
-    processOpts: Object,
+    args: string[];
+    inputs: InteractiveInputs;
+    processOpts: Object;
     opts: {
       // Default interval between inputs in case there is no specific interval
-      defaultIntervalBetweenInputs: number,
-      verbose: boolean
-    }
+      defaultIntervalBetweenInputs: number;
+      verbose: boolean;
+    };
   }) {
     const processName = this.bitBin || 'bit';
     opts.verbose = !!this.debugMode;

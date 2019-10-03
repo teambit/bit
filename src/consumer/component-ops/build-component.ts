@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
@@ -38,15 +37,15 @@ export default (async function buildComponent({
   dontPrintEnvMsg,
   keep
 }: {
-  component: ConsumerComponent,
-  scope: Scope,
-  save?: boolean,
-  consumer?: Consumer,
-  noCache?: boolean,
-  directory?: string,
-  verbose?: boolean,
-  dontPrintEnvMsg?: boolean,
-  keep?: boolean
+  component: ConsumerComponent;
+  scope: Scope;
+  save?: boolean;
+  consumer?: Consumer;
+  noCache?: boolean;
+  directory?: string;
+  verbose?: boolean;
+  dontPrintEnvMsg?: boolean;
+  keep?: boolean;
 }): Promise<Dists | null | undefined> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
   // @TODO - write SourceMap Type
@@ -98,7 +97,7 @@ export default (async function buildComponent({
       verbose: !!verbose
     })) || [];
   const { builtFiles, mainDist, packageJson } = _extractAndVerifyCompilerResults(compilerResults);
-  builtFiles.forEach((file) => {
+  builtFiles.forEach(file => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
@@ -131,7 +130,7 @@ async function _updateComponentPackageJson(component: ConsumerComponent, package
 
 function _extractAndVerifyCompilerResults(
   compilerResults: CompilerResults
-): { builtFiles: Vinyl[], mainDist: string | null | undefined, packageJson: Object | null | undefined } {
+): { builtFiles: Vinyl[]; mainDist: string | null | undefined; packageJson: Object | null | undefined } {
   if (Array.isArray(compilerResults)) {
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
@@ -160,7 +159,7 @@ function _verifyPackageJsonReturnedByCompiler(packageJson: Object) {
   if (typeof packageJson !== 'object') {
     throw new GeneralError(`fatal: compiler must return packageJson as an object, got ${typeof packageJson}`);
   }
-  PackageJsonFile.propsNonUserChangeable().forEach((prop) => {
+  PackageJsonFile.propsNonUserChangeable().forEach(prop => {
     if (packageJson[prop]) {
       throw new GeneralError(`fatal: compiler must not return packageJson with "${prop}" property`);
     }
@@ -176,13 +175,13 @@ async function _buildIfNeeded({
   directory,
   keep
 }: {
-  component: ConsumerComponent,
-  consumer?: Consumer,
-  componentMap?: ComponentMap | null | undefined,
-  scope: Scope,
-  verbose: boolean,
-  directory?: string | null | undefined,
-  keep: boolean | null | undefined
+  component: ConsumerComponent;
+  consumer?: Consumer;
+  componentMap?: ComponentMap | null | undefined;
+  scope: Scope;
+  verbose: boolean;
+  directory?: string | null | undefined;
+  keep: boolean | null | undefined;
 }): Promise<CompilerResults> {
   const compiler = component.compiler;
 
@@ -226,7 +225,11 @@ async function _buildIfNeeded({
 // Ideally it's better to use the dists from the model.
 // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-const _isNeededToReBuild = async (consumer: Consumer | null | undefined, componentId: BitId, noCache: boolean | null | undefined): Promise<boolean> => {
+const _isNeededToReBuild = async (
+  consumer: Consumer | null | undefined,
+  componentId: BitId,
+  noCache: boolean | null | undefined
+): Promise<boolean> => {
   // Forcly rebuild
   if (noCache) return true;
   if (!consumer) return false;
@@ -242,12 +245,12 @@ const _runBuild = async ({
   componentMap,
   verbose
 }: {
-  component: ConsumerComponent,
-  componentRoot: PathLinux,
-  consumer: Consumer | null | undefined,
-  scope: Scope,
-  componentMap: ComponentMap | null | undefined,
-  verbose: boolean
+  component: ConsumerComponent;
+  componentRoot: PathLinux;
+  consumer: Consumer | null | undefined;
+  scope: Scope;
+  componentMap: ComponentMap | null | undefined;
+  verbose: boolean;
 }): Promise<CompilerResults> => {
   const compiler = component.compiler;
   if (!compiler) {
@@ -277,9 +280,9 @@ const _runBuild = async ({
         targetDir,
         shouldBuildDependencies
       }: {
-        targetDir?: string,
-        shouldBuildDependencies?: boolean
-      }): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+        targetDir?: string;
+        shouldBuildDependencies?: boolean;
+      }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
         const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
         const componentWithDependencies = await isolator.isolate(component.id, {
           shouldBuildDependencies,
@@ -311,7 +314,7 @@ const _runBuild = async ({
           const sharedDir = componentWithDependencies.component.originallySharedDir;
           let updatedFiles = filesToAdd;
           if (sharedDir) {
-            updatedFiles = filesToAdd.map((file) => {
+            updatedFiles = filesToAdd.map(file => {
               const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
               fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
               return fileAsAbstractVinyl;
@@ -391,7 +394,7 @@ const _runBuild = async ({
       }
       return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
     })
-    .catch((e) => {
+    .catch(e => {
       if (tmpFolderFullPath) {
         logger.info(`build-components, deleting ${tmpFolderFullPath}`);
         fs.removeSync(tmpFolderFullPath);

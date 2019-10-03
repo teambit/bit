@@ -1,4 +1,3 @@
-// @flow
 import { loadScope } from '../../../scope';
 import ComponentObjects from '../../../scope/component-objects';
 import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
@@ -10,8 +9,8 @@ import { isClientHasVersionBefore } from '../../../scope/network/check-version-c
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type ComponentObjectsInput = {
-  path: string,
-  componentObjects: string | ComponentObjects[]
+  path: string;
+  componentObjects: string | ComponentObjects[];
 };
 
 export default (async function put(

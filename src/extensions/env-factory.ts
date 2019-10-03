@@ -1,4 +1,3 @@
-// @flow
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import logger from '../logger/logger';
 import TesterExtension from './tester-extension';

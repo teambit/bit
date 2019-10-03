@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import chalk from 'chalk';
@@ -12,7 +11,7 @@ import EnvExtension from '../../extensions/env-extension';
 
 export function componentToPrintableForDiff(component: Component): Object {
   const obj = {};
-  const parsePackages = (packages) => {
+  const parsePackages = packages => {
     return !R.isEmpty(packages) && !R.isNil(packages)
       ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
       : null;

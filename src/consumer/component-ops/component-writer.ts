@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
@@ -30,20 +29,20 @@ import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ComponentWriterProps = {
-  component: Component,
-  writeToPath: PathOsBasedRelative,
-  writeConfig?: boolean,
-  configDir?: string,
-  writePackageJson?: boolean,
-  override?: boolean,
-  isolated?: boolean,
-  origin: ComponentOrigin,
-  consumer: Consumer | null | undefined,
-  bitMap: BitMap,
-  writeBitDependencies?: boolean,
-  deleteBitDirContent?: boolean,
-  existingComponentMap?: ComponentMap,
-  excludeRegistryPrefix?: boolean
+  component: Component;
+  writeToPath: PathOsBasedRelative;
+  writeConfig?: boolean;
+  configDir?: string;
+  writePackageJson?: boolean;
+  override?: boolean;
+  isolated?: boolean;
+  origin: ComponentOrigin;
+  consumer: Consumer | null | undefined;
+  bitMap: BitMap;
+  writeBitDependencies?: boolean;
+  deleteBitDirContent?: boolean;
+  existingComponentMap?: ComponentMap;
+  excludeRegistryPrefix?: boolean;
 };
 
 export default class ComponentWriter {
@@ -192,7 +191,7 @@ export default class ComponentWriter {
   }
 
   addComponentToBitMap(rootDir: string | null | undefined): ComponentMap {
-    const filesForBitMap = this.component.files.map((file) => {
+    const filesForBitMap = this.component.files.map(file => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
     const getConfigDir = () => {
@@ -215,7 +214,7 @@ export default class ComponentWriter {
   }
 
   async _populateEnvFilesIfNeeded() {
-    [this.component.compiler, this.component.tester].forEach((env) => {
+    [this.component.compiler, this.component.tester].forEach(env => {
       if (!env) return;
       env.populateDataToPersist({
         configDir: this.writeToPath,
@@ -416,7 +415,7 @@ export default class ComponentWriter {
     }
     const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
     await Promise.all(
-      directDependentIds.map((dependentId) => {
+      directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
           ? getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id)

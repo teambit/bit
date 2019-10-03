@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import ComponentConfig from './component-config';
 import {
@@ -15,10 +14,10 @@ import { overridesBitInternalFields, nonPackageJsonFields, overridesForbiddenFie
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type ComponentOverridesData = {
-  dependencies?: Object,
-  devDependencies?: Object,
-  peerDependencies?: Object,
-  [string]: any // any package.json field should be valid here. can't be overridesSystemFields
+  dependencies?: Object;
+  devDependencies?: Object;
+  peerDependencies?: Object;
+  [string]: any; // any package.json field should be valid here. can't be overridesSystemFields
 };
 
 export default class ComponentOverrides {
@@ -66,7 +65,7 @@ export default class ComponentOverrides {
     }
     const overridesFromComponent = R.clone(fromComponent);
     const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
-    Object.keys(overridesFromConsumer || {}).forEach((field) => {
+    Object.keys(overridesFromConsumer || {}).forEach(field => {
       if (overridesBitInternalFields.includes(field)) {
         return; // do nothing
       }
@@ -164,9 +163,9 @@ export default class ComponentOverrides {
   }
   stripOriginallySharedDir(sharedDir: string | null | undefined) {
     if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
+    DEPENDENCIES_FIELDS.forEach(field => {
       if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
+      Object.keys(this.overrides[field]).forEach(rule => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
         const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
         // $FlowFixMe we made sure that sharedDir is not empty
@@ -182,9 +181,9 @@ export default class ComponentOverrides {
   }
   addOriginallySharedDir(sharedDir: string | null | undefined) {
     if (!sharedDir) return;
-    DEPENDENCIES_FIELDS.forEach((field) => {
+    DEPENDENCIES_FIELDS.forEach(field => {
       if (!this.overrides[field]) return;
-      Object.keys(this.overrides[field]).forEach((rule) => {
+      Object.keys(this.overrides[field]).forEach(rule => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
         const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
         // $FlowFixMe

@@ -1,4 +1,3 @@
-// @flow
 import logger from '../../logger/logger';
 import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -19,7 +18,7 @@ export default (async function deleteComponentsFiles(
 
   function getFilesToDelete(): DataToPersist {
     const dataToPersist = new DataToPersist();
-    bitIds.forEach((id) => {
+    bitIds.forEach(id => {
       const ignoreVersion = id.isLocal() || !id.hasVersion();
       const componentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion });
       if (!componentMap) {

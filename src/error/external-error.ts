@@ -1,4 +1,3 @@
-// @flow
 import AbstractError from './abstract-error';
 
 export default class ExternalError extends AbstractError {

@@ -1,4 +1,3 @@
-// @flow
 import { loadScope } from '../../../scope';
 import { BitIds } from '../../../bit-id';
 import {
@@ -14,7 +13,7 @@ import { DeprecationResult } from '../../../scope/component-ops/components-depre
 const HooksManagerInstance = HooksManager.getInstance();
 
 export async function deprecate(
-  { path, ids }: { path: string, ids: string[] },
+  { path, ids }: { path: string; ids: string[] },
   headers: Object | null | undefined
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);
@@ -34,7 +33,7 @@ export async function deprecate(
 }
 
 export async function undeprecate(
-  { path, ids }: { path: string, ids: string[] },
+  { path, ids }: { path: string; ids: string[] },
   headers: Object | null | undefined
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);

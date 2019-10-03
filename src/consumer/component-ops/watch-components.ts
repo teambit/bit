@@ -1,4 +1,3 @@
-// @flow
 /* eslint no-console: 0 */
 import chokidar from 'chokidar';
 import R from 'ramda';
@@ -41,19 +40,19 @@ export default class WatchComponents {
       watcher.on('ready', () => {
         log(chalk.yellow(STARTED_WATCHING_MSG));
       });
-      watcher.on('change', (p) => {
+      watcher.on('change', p => {
         log(`file ${p} has been changed`);
         this._handleChange(p).catch(err => reject(err));
       });
-      watcher.on('add', (p) => {
+      watcher.on('add', p => {
         log(`file ${p} has been added`);
         this._handleChange(p, true).catch(err => reject(err));
       });
-      watcher.on('unlink', (p) => {
+      watcher.on('unlink', p => {
         log(`file ${p} has been removed`);
         this._handleChange(p).catch(err => reject(err));
       });
-      watcher.on('error', (err) => {
+      watcher.on('error', err => {
         log(`Watcher error ${err}`);
         reject(err);
       });
@@ -113,7 +112,7 @@ export default class WatchComponents {
       // https://github.com/paulmillr/chokidar/issues/773
       // https://github.com/paulmillr/chokidar/issues/492
       // https://github.com/paulmillr/chokidar/issues/724
-      ignored: (path) => {
+      ignored: path => {
         // Ignore package.json temporarily since it cerates endless loop since it's re-written after each build
         if (path.includes('dist') || path.includes('node_modules') || path.includes('package.json')) {
           return true;
@@ -127,7 +126,7 @@ export default class WatchComponents {
 
   _getPathsToWatch(): string[] {
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    const paths = Object.keys(componentsFromBitMap).map((componentId) => {
+    const paths = Object.keys(componentsFromBitMap).map(componentId => {
       const componentMap = componentsFromBitMap[componentId];
       const trackDir = componentMap.getTrackDir();
       if (trackDir) {

@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import isGlob from 'is-glob';
 import fs from 'fs-extra';
@@ -9,7 +8,7 @@ const DSL = ['{PARENT}', '{FILE_NAME}'];
 
 export default function getMissingTestFiles(tests: PathOsBased[]): PathOsBased[] {
   let missingTestFiles = [];
-  const realTestFiles = tests.filter((testFile) => {
+  const realTestFiles = tests.filter(testFile => {
     const files = DSL.filter(pattern => testFile.indexOf(pattern) > -1);
     const glob = isGlob(pathNormalizeToLinux(testFile));
     return !glob && R.isEmpty(files) ? testFile : undefined;

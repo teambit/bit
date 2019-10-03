@@ -1,4 +1,3 @@
-// @flow
 export default function stripTrailingChar(str: string, char: string): string {
   if (!str || !char) {
     return str;

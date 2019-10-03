@@ -1,4 +1,3 @@
-// @flow
 import minimatch from 'minimatch';
 import {
   COMPONENT_ORIGINS,
@@ -16,9 +15,9 @@ import hasWildcard from '../../../../utils/string/has-wildcard';
 import { FileType, AllDependencies } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
-  dependencies?: string[],
-  devDependencies?: string[],
-  peerDependencies?: string[]
+  dependencies?: string[];
+  devDependencies?: string[];
+  peerDependencies?: string[];
 };
 
 export default class OverridesDependencies {
@@ -79,7 +78,7 @@ export default class OverridesDependencies {
   shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
     const shouldIgnore = (ids: string[]) => {
-      return ids.some((idStr) => {
+      return ids.some(idStr => {
         if (hasWildcard(idStr)) {
           // we don't support wildcards for components for now. it gets things complicated
           // and may cause unpredicted behavior especially for imported that the originally ignored
@@ -101,16 +100,16 @@ export default class OverridesDependencies {
   getDependenciesToAddManually(
     packageJson: Object | null | undefined,
     existingDependencies: AllDependencies
-  ): { components: Object, packages: Object } | null | undefined {
+  ): { components: Object; packages: Object } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     const components = {};
     const packages = {};
-    DEPENDENCIES_FIELDS.forEach((depField) => {
+    DEPENDENCIES_FIELDS.forEach(depField => {
       if (!overrides[depField]) return;
       const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
-      Object.keys(overrides[depField]).forEach((dependency) => {
+      Object.keys(overrides[depField]).forEach(dependency => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
         const componentId = this._getComponentIdToAdd(
@@ -160,7 +159,12 @@ export default class OverridesDependencies {
     return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
   }
 
-  _manuallyAddPackage(field: string, dependency: string, dependencyValue: string, packageJson: Object | null | undefined): Object | null | undefined {
+  _manuallyAddPackage(
+    field: string,
+    dependency: string,
+    dependencyValue: string,
+    packageJson: Object | null | undefined
+  ): Object | null | undefined {
     const packageVersionToAdd = (): string | null | undefined => {
       if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
         return dependencyValue;

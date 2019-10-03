@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * code template for writing link files.
  * when custom module resolution was originally used by the author, we create link-files on

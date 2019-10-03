@@ -1,4 +1,3 @@
-// @flow
 import { VERSION_DELIMITER } from '../../constants';
 import { ListScopeResult } from '../../consumer/component/components-list';
 

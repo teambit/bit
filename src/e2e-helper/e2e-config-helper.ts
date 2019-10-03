@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import { BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../constants';
 import CommandHelper from './e2e-command-helper';
@@ -34,7 +33,7 @@ export default class ConfigHelper {
 
   backupConfigs(names: string[]): Object {
     const backupObject: Object = {};
-    names.forEach((name) => {
+    names.forEach(name => {
       backupObject[name] = this.command.getConfig(name);
     });
     return backupObject;

@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import pMapSeries from 'p-map-series';
 import Consumer from '../consumer';
@@ -39,7 +38,7 @@ export default class ComponentLoader {
   async loadMany(
     ids: BitIds,
     throwOnFailure: boolean = true
-  ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
+  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString()
     });

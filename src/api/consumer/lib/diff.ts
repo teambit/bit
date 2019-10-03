@@ -1,4 +1,3 @@
-// @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -20,7 +19,7 @@ export default (async function diff(values: string[], verbose: boolean): Promise
 async function parseValues(
   consumer: Consumer,
   values: string[]
-): Promise<{ bitIds: BitId[], version?: string, toVersion?: string }> {
+): Promise<{ bitIds: BitId[]; version?: string; toVersion?: string }> {
   // option #1: bit diff
   // no arguments
   if (!values.length) {
@@ -52,9 +51,7 @@ async function parseValues(
   // last argument and one before the last are versions, first argument is id
   if (values.length !== 3) {
     throw new GeneralError(
-      `bit diff [id] [version] [to_version] syntax was used, however, ${
-        values.length
-      } arguments were given instead of 3`
+      `bit diff [id] [version] [to_version] syntax was used, however, ${values.length} arguments were given instead of 3`
     );
   }
   return { bitIds: getBitIdsForDiff(consumer, [firstValue]), version: oneBeforeLastValue, toVersion: lastValue };

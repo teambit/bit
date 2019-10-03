@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
@@ -31,8 +30,8 @@ import Symlink from './symlink';
 import getWithoutExt from '../utils/fs/fs-no-ext';
 
 type SymlinkType = {
-  source: PathOsBasedAbsolute, // symlink is pointing to this path
-  dest: PathOsBasedAbsolute // path where the symlink is written to
+  source: PathOsBasedAbsolute; // symlink is pointing to this path
+  dest: PathOsBasedAbsolute; // path where the symlink is written to
 };
 
 // todo: move to bit-javascript
@@ -50,11 +49,11 @@ function getComponentLinks({
   createNpmLinkFiles,
   bitMap
 }: {
-  consumer: Consumer | null | undefined,
-  component: Component,
-  dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-  createNpmLinkFiles: boolean,
-  bitMap: BitMap
+  consumer: Consumer | null | undefined;
+  component: Component;
+  dependencies: Component[]; // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
+  createNpmLinkFiles: boolean;
+  bitMap: BitMap;
 }): DataToPersist {
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
@@ -151,17 +150,17 @@ function _getFlattenedDependencies(
 function groupLinks(
   flattenLinks: LinkFileType[]
 ): {
-  postInstallLinks: OutputFileParams[],
-  linksToWrite: OutputFileParams[],
-  symlinks: SymlinkType[],
-  postInstallSymlinks: SymlinkType[]
+  postInstallLinks: OutputFileParams[];
+  linksToWrite: OutputFileParams[];
+  symlinks: SymlinkType[];
+  postInstallSymlinks: SymlinkType[];
 } {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
   const postInstallLinks = [];
   const postInstallSymlinks = [];
   const symlinks = [];
-  Object.keys(groupedLinks).forEach((group) => {
+  Object.keys(groupedLinks).forEach(group => {
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
@@ -321,7 +320,7 @@ function getInternalCustomResolvedLinks(
   const customResolvedPathsToProcess = R.uniqBy(JSON.stringify, component.customResolvedPaths).filter(customPath =>
     isResolvePathsInvalid(customPath)
   );
-  return customResolvedPathsToProcess.map((customPath) => {
+  return customResolvedPathsToProcess.map(customPath => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
     const dest = getDestination(customPath);
     const destAbs = path.join(componentDir, dest);
@@ -388,7 +387,11 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
 /**
  * Relevant for IMPORTED and NESTED only
  */
-function getEntryPointsForComponent(component: Component, consumer: Consumer | null | undefined, bitMap: BitMap): LinkFile[] {
+function getEntryPointsForComponent(
+  component: Component,
+  consumer: Consumer | null | undefined,
+  bitMap: BitMap
+): LinkFile[] {
   const componentMap = bitMap.getComponent(component.id);
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
@@ -424,7 +427,11 @@ function getEntryPointsForComponent(component: Component, consumer: Consumer | n
   return files;
 }
 
-function getEntryPointForAngularComponent(component: Component, consumer: Consumer | null | undefined, bitMap: BitMap): LinkFile | null | undefined {
+function getEntryPointForAngularComponent(
+  component: Component,
+  consumer: Consumer | null | undefined,
+  bitMap: BitMap
+): LinkFile | null | undefined {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
   // $FlowFixMe

@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
 

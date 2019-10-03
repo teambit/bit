@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import format from 'string-format';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';

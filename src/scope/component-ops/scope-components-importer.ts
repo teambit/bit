@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import { Scope } from '..';
@@ -49,7 +48,7 @@ export default class ScopeComponentsImporter {
     const [locals, externals] = R.partition(id => id.isLocal(this.scope.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
-    const versionDeps = await pMapSeries(localDefs, (def) => {
+    const versionDeps = await pMapSeries(localDefs, def => {
       if (!def.component) throw new ComponentNotFound(def.id.toString());
       return this.componentToVersionDependencies(def.component, def.id);
     });
@@ -74,7 +73,7 @@ export default class ScopeComponentsImporter {
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
     const componentVersionArr = await Promise.all(
-      localDefs.map((def) => {
+      localDefs.map(def => {
         if (!def.component) throw new ComponentNotFound(def.id.toString());
         // $FlowFixMe it must have a version
         return def.component.toComponentVersion(def.id.version);
@@ -102,9 +101,9 @@ export default class ScopeComponentsImporter {
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
 
     const allIdsWithAllVersions = new BitIds();
-    versionDependenciesArr.forEach((versionDependencies) => {
+    versionDependenciesArr.forEach(versionDependencies => {
       const versions = versionDependencies.component.component.listVersions();
-      const idsWithAllVersions = versions.map((version) => {
+      const idsWithAllVersions = versions.map(version => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
         return versionId.changeVersion(version);
@@ -122,7 +121,7 @@ export default class ScopeComponentsImporter {
     return new Promise((resolve, reject) => {
       return this.importMany(dependencies)
         .then(resolve)
-        .catch((e) => {
+        .catch(e => {
           logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
           if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
           return reject(new DependencyNotFound(e.id));
@@ -148,7 +147,7 @@ export default class ScopeComponentsImporter {
           `Version ${versionComp.version} of ${component.id().toString()} was not found in scope ${this.scope.name}`
         );
       }
-      return getScopeRemotes(this.scope).then((remotes) => {
+      return getScopeRemotes(this.scope).then(remotes => {
         return this._getExternal({ id, remotes, localFetch: false });
       });
     }
@@ -184,7 +183,7 @@ export default class ScopeComponentsImporter {
    * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
    */
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
-    return this._getComponentVersion(id).then((component) => {
+    return this._getComponentVersion(id).then(component => {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.toConsumer(this.scope.objects);
     });
@@ -217,8 +216,8 @@ export default class ScopeComponentsImporter {
       { ids: ids.join(', ') }
     );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
-    return this.sources.getMany(ids).then((defs) => {
-      const left = defs.filter((def) => {
+    return this.sources.getMany(ids).then(defs => {
+      const left = defs.filter(def => {
         if (!localFetch) return true;
         if (!def.component) return true;
         return false;
@@ -236,7 +235,7 @@ export default class ScopeComponentsImporter {
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
         .fetch(left.map(def => def.id), this.scope, undefined, context)
-        .then((componentObjects) => {
+        .then(componentObjects => {
           logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
           return this.scope.writeManyComponentsToModel(componentObjects, persist);
         })
@@ -254,13 +253,13 @@ export default class ScopeComponentsImporter {
     localFetch = true,
     context = {}
   }: {
-    id: BitId,
-    remotes: Remotes,
-    localFetch: boolean,
-    context?: Object
+    id: BitId;
+    remotes: Remotes;
+    localFetch: boolean;
+    context?: Object;
   }): Promise<VersionDependencies> {
     enrichContextFromGlobal(context);
-    return this.sources.get(id).then((component) => {
+    return this.sources.get(id).then(component => {
       if (component && localFetch) {
         return this.componentToVersionDependencies(component, id);
       }
@@ -280,12 +279,12 @@ export default class ScopeComponentsImporter {
     localFetch = true,
     context = {}
   }: {
-    id: BitId,
-    remotes: Remotes,
-    localFetch: boolean,
-    context?: Object
+    id: BitId;
+    remotes: Remotes;
+    localFetch: boolean;
+    context?: Object;
   }): Promise<ComponentVersion> {
-    return this.sources.get(id).then((component) => {
+    return this.sources.get(id).then(component => {
       if (component && localFetch) {
         // $FlowFixMe scope component must have a version
         return component.toComponentVersion(id.version);
@@ -312,7 +311,7 @@ export default class ScopeComponentsImporter {
     );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
     return this.sources.getMany(ids).then((defs: ComponentDef[]) => {
-      const left = defs.filter((def) => {
+      const left = defs.filter(def => {
         if (!localFetch) return true;
         if (!def.component) return true;
         return false;
@@ -333,7 +332,7 @@ export default class ScopeComponentsImporter {
       );
       return remotes
         .fetch(left.map(def => def.id), this.scope, true, context)
-        .then((componentObjects) => {
+        .then(componentObjects => {
           return this.scope.writeManyComponentsToModel(componentObjects);
         })
         .then(() => this._getExternalManyWithoutDependencies(ids, remotes, true));
@@ -346,7 +345,7 @@ export default class ScopeComponentsImporter {
       return this._getExternalWithoutDependencies({ id, remotes, localFetch: true });
     }
 
-    return this.sources.get(id).then((component) => {
+    return this.sources.get(id).then(component => {
       if (!component) throw new ComponentNotFound(id.toString());
       // $FlowFixMe version is set
       return component.toComponentVersion(id.version);

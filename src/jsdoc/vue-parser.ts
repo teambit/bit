@@ -1,5 +1,3 @@
-// @flow
-
 import domain from 'domain';
 import vuedoc from '@vuedoc/parser';
 import { PathOsBased } from '../utils/path';
@@ -73,7 +71,7 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
     filecontent: data
   };
 
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     try {
       // Wrapping this call with a domain since the vue docs parser call process.nextTick directly
       // see (https://gitlab.com/vuedoc/parser/blob/master/lib/parser/Parser.js#L72) which
@@ -82,7 +80,7 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
       // https://gitlab.com/vuedoc/parser/issues/56#note_219267637
       const parsingDomain = domain.create();
       parsingDomain
-        .on('error', (err) => {
+        .on('error', err => {
           logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`);
           logger.debug(err);
           // never mind, ignore the doc of this source

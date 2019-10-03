@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import format from 'string-format';
 import fs from 'fs-extra';
@@ -38,8 +37,8 @@ import ShowDoctorError from '../../error/show-doctor-error';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
-export type PathChangeResult = { id: BitId, changes: PathChange[] };
-export type IgnoreFilesDirs = { files: PathLinux[], dirs: PathLinux[] };
+export type PathChangeResult = { id: BitId; changes: PathChange[] };
+export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 
 export default class BitMap {
   projectRoot: string;
@@ -200,7 +199,7 @@ export default class BitMap {
     if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
       const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
       const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
-      allEnvFilesPaths.forEach((file) => {
+      allEnvFilesPaths.forEach(file => {
         const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
         ignoreList.files.push(ignoreFile);
       });
@@ -243,7 +242,7 @@ export default class BitMap {
   }
 
   loadComponents(componentsJson: Object) {
-    Object.keys(componentsJson).forEach((componentId) => {
+    Object.keys(componentsJson).forEach(componentId => {
       const componentFromJson = componentsJson[componentId];
       const idHasScope = (): boolean => {
         if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
@@ -345,8 +344,8 @@ export default class BitMap {
       ignoreVersion = false,
       ignoreScopeAndVersion = false
     }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
+      ignoreVersion?: boolean;
+      ignoreScopeAndVersion?: boolean;
     } = {}
   ): BitId {
     if (!(bitId instanceof BitId)) {
@@ -377,8 +376,8 @@ export default class BitMap {
       ignoreVersion = false,
       ignoreScopeAndVersion = false
     }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
+      ignoreVersion?: boolean;
+      ignoreScopeAndVersion?: boolean;
     } = {}
   ): BitId | null | undefined {
     try {
@@ -401,8 +400,8 @@ export default class BitMap {
       ignoreVersion = false,
       ignoreScopeAndVersion = false
     }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
+      ignoreVersion?: boolean;
+      ignoreScopeAndVersion?: boolean;
     } = {}
   ): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
@@ -420,8 +419,8 @@ export default class BitMap {
       ignoreVersion = false,
       ignoreScopeAndVersion = false
     }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
+      ignoreVersion?: boolean;
+      ignoreScopeAndVersion?: boolean;
     } = {}
   ): ComponentMap | null | undefined {
     try {
@@ -458,7 +457,7 @@ export default class BitMap {
     if (configDir.startsWith('./')) {
       configDir = configDir.replace('./', '');
     }
-    const comps = R.pickBy((component) => {
+    const comps = R.pickBy(component => {
       const compDir = component.getComponentDir();
       if (compDir && pathIsInside(configDir, compDir)) {
         return true;
@@ -504,7 +503,7 @@ export default class BitMap {
 
   deleteOlderVersionsOfComponent(componentId: BitId): void {
     const similarIds = this.findSimilarIds(componentId);
-    similarIds.forEach((id) => {
+    similarIds.forEach(id => {
       const idStr = id.toString();
       logger.debugAndAddBreadCrumb(
         'BitMap.deleteOlderVersionsOfComponent',
@@ -577,15 +576,15 @@ export default class BitMap {
     originallySharedDir,
     wrapDir
   }: {
-    componentId: BitId,
-    files: ComponentMapFile[],
-    mainFile: PathLinux,
-    origin: ComponentOrigin,
-    rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
-    configDir?: ConfigDir | null | undefined,
-    trackDir?: PathOsBased | null | undefined,
-    originallySharedDir?: PathLinux | null | undefined,
-    wrapDir?: PathLinux | null | undefined
+    componentId: BitId;
+    files: ComponentMapFile[];
+    mainFile: PathLinux;
+    origin: ComponentOrigin;
+    rootDir?: PathOsBasedAbsolute | PathOsBasedRelative;
+    configDir?: ConfigDir | null | undefined;
+    trackDir?: PathOsBased | null | undefined;
+    originallySharedDir?: PathLinux | null | undefined;
+    wrapDir?: PathLinux | null | undefined;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -623,7 +622,7 @@ export default class BitMap {
     return this.components[componentIdStr];
   }
 
-  addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
+  addFilesToComponent({ componentId, files }: { componentId: BitId; files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
     if (!this.components[componentIdStr]) {
       throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
@@ -727,9 +726,9 @@ export default class BitMap {
 
   _populateAllPaths() {
     if (R.isEmpty(this.paths)) {
-      Object.keys(this.components).forEach((componentId) => {
+      Object.keys(this.components).forEach(componentId => {
         const component = this.components[componentId];
-        component.files.forEach((file) => {
+        component.files.forEach(file => {
           const relativeToConsumer = component.rootDir
             ? pathJoinLinux(component.rootDir, file.relativePath)
             : file.relativePath;
@@ -743,7 +742,7 @@ export default class BitMap {
   getAllTrackDirs() {
     if (!this.allTrackDirs) {
       this.allTrackDirs = {};
-      Object.keys(this.components).forEach((componentId) => {
+      Object.keys(this.components).forEach(componentId => {
         const component = this.components[componentId];
         if (!component.trackDir) return;
         // $FlowFixMe
@@ -760,7 +759,7 @@ export default class BitMap {
   ): PathChangeResult[] {
     const isPathDir = isDir(existingPath);
     const allChanges = [];
-    Object.keys(this.components).forEach((componentId) => {
+    Object.keys(this.components).forEach(componentId => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
       if (changes && changes.length) allChanges.push({ id: componentMap.id.clone(), changes });
@@ -781,7 +780,7 @@ export default class BitMap {
    */
   toObjects(): Object {
     const components = {};
-    Object.keys(this.components).forEach((id) => {
+    Object.keys(this.components).forEach(id => {
       const componentMap = this.components[id].clone();
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         componentMap.exported = componentMap.id.hasScope();

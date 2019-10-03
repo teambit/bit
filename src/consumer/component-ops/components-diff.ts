@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
@@ -12,9 +11,14 @@ import { Version } from '../../scope/models';
 import { diffBetweenComponentsObjects } from './components-object-diff';
 import ShowDoctorError from '../../error/show-doctor-error';
 
-type FileDiff = { filePath: string, diffOutput: string };
-export type FieldsDiff = { fieldName: string, diffOutput: string };
-export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[], fieldsDiff?: FieldsDiff[] | null | undefined };
+type FileDiff = { filePath: string; diffOutput: string };
+export type FieldsDiff = { fieldName: string; diffOutput: string };
+export type DiffResults = {
+  id: BitId;
+  hasDiff: boolean;
+  filesDiff?: FileDiff[];
+  fieldsDiff?: FieldsDiff[] | null | undefined;
+};
 
 export default (async function componentsDiff(
   consumer: Consumer,
@@ -28,7 +32,7 @@ export default (async function componentsDiff(
   const tmp = new Tmp(consumer.scope);
 
   // try to resolve ids scope of by components array
-  const idsWithScope = ids.map((id) => {
+  const idsWithScope = ids.map(id => {
     if (!id.scope && components) {
       const foundComponent = components.find(o => o.name === id.name);
       if (foundComponent) return id.changeScope(foundComponent.scope);
@@ -153,7 +157,7 @@ async function getEnvFilesDiff(
   componentB: Component
 ): Promise<FileDiff[]> {
   const envs = ['compiler', 'tester'];
-  const envsDiffP = envs.map((env) => {
+  const envsDiffP = envs.map(env => {
     // $FlowFixMe
     const filesA = componentA[env] && componentA[env].files ? componentA[env].files : [];
     // $FlowFixMe
@@ -182,7 +186,7 @@ async function getFilesDiff(
   const allPaths = R.uniq(filesAPaths.concat(filesBPaths));
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
-  const filesDiffP = allPaths.map(async (relativePath) => {
+  const filesDiffP = allPaths.map(async relativePath => {
     const getFilePath = async (files): Promise<PathOsBased> => {
       const file = files.find(f => f[fileNameAttribute] === relativePath);
       const fileContent = file ? file.contents : '';

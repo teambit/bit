@@ -1,4 +1,3 @@
-// @flow
 import loader from '../../../cli/loader/loader';
 import { getScopeComponent, getConsumerComponent } from '..';
 import { BEFORE_SHOW_REMOTE } from '../../../cli/loader/loader-messages';
@@ -14,15 +13,15 @@ export default (async function show({
   dependents,
   dependencies
 }: {
-  id: string,
-  json: boolean,
-  versions: boolean | null | undefined,
-  remote: boolean,
-  outdated: boolean,
-  compare: boolean,
-  detailed: boolean,
-  dependents: boolean,
-  dependencies: boolean
+  id: string;
+  json: boolean;
+  versions: boolean | null | undefined;
+  remote: boolean;
+  outdated: boolean;
+  compare: boolean;
+  detailed: boolean;
+  dependents: boolean;
+  dependencies: boolean;
 }) {
   if (versions) {
     return getComponent(versions).then(components => ({

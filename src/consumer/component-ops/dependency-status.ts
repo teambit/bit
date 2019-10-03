@@ -1,4 +1,3 @@
-// @flow
 import { Consumer } from '..';
 import { DEFAULT_BINDINGS_PREFIX } from '../../constants';
 
@@ -25,10 +24,10 @@ function getComponentFiles(consumer: Consumer) {
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
   const values = Object.keys(componentsMaps).map(key => componentsMaps[key]);
-  values.forEach(function (value) {
+  values.forEach(function(value) {
     if (value && value.files && Array.isArray(value.files)) {
       const currentFiles = [];
-      value.files.forEach(function (file) {
+      value.files.forEach(function(file) {
         if (file && file.relativePath) currentFiles.push(file.relativePath);
       });
       componentFile = componentFile.concat(currentFiles);
@@ -44,7 +43,7 @@ export default (async function getDependencyStatus(
   const topLevelDependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];
-  topLevelDependencies.forEach(function (dependency) {
+  topLevelDependencies.forEach(function(dependency) {
     if (!componentFiles.includes(dependency)) {
       missingDependencyFiles.push(dependency);
     }

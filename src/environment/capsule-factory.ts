@@ -1,4 +1,3 @@
-// @flow
 import Capsule from '../../components/core/capsule';
 import FsContainer from '../../components/container/fs-container';
 

@@ -1,10 +1,9 @@
-// @flow
 import chalk from 'chalk';
 import { LinksResult } from '../../links/node-modules-linker';
 
 export default (results: LinksResult[]): string => {
   const reportComponents = results
-    .map((result) => {
+    .map(result => {
       const bounds = result.bound
         .filter(bound => bound.from && bound.to)
         .map(bound => `\t\toriginal path: ${chalk.bold(bound.from)}, link path: ${chalk.bold(bound.to)}`)

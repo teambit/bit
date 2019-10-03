@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * replace string with another string inside Buffer without converting it to string.
  * other npm packages, such as replace-buffer and buffer-replace are recursive, and as such,

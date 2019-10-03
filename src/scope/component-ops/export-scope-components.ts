@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
@@ -58,15 +57,15 @@ export async function exportMany({
   codemod = false,
   defaultScope
 }: {
-  scope: Scope,
-  ids: BitIds,
-  remoteName: string | null | undefined,
-  context?: Object,
-  includeDependencies: boolean,
-  changeLocallyAlthoughRemoteIsDifferent: boolean,
-  codemod: boolean,
-  defaultScope: string | null | undefined
-}): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
+  scope: Scope;
+  ids: BitIds;
+  remoteName: string | null | undefined;
+  context?: Object;
+  includeDependencies: boolean;
+  changeLocallyAlthoughRemoteIsDifferent: boolean;
+  codemod: boolean;
+  defaultScope: string | null | undefined;
+}): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
   if (includeDependencies) {
@@ -91,7 +90,7 @@ export async function exportMany({
   async function exportIntoRemote(
     remoteNameStr: string,
     bitIds: BitIds
-  ): Promise<{ exported: BitIds, updatedLocally: BitIds }> {
+  ): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await pMapSeries(bitIds, id => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
@@ -164,7 +163,7 @@ export async function exportMany({
  */
 async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise<BitIds> {
   const mergeResults = await Promise.all(
-    manyObjects.map(async (objects) => {
+    manyObjects.map(async objects => {
       try {
         const result = await scope.sources.merge(objects, true, false);
         return result;
@@ -197,7 +196,7 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
  */
 async function convertToCorrectScope(
   scope: Scope,
-  componentsObjects: { component: ModelComponent, objects: BitObject[] },
+  componentsObjects: { component: ModelComponent; objects: BitObject[] },
   remoteScope: string,
   fork: boolean,
   exportingIds: BitIds,
@@ -218,7 +217,7 @@ async function convertToCorrectScope(
           { id: componentsObjects.component.id().toString() }
         );
         const versions = componentsObjects.component.versions;
-        Object.keys(versions).forEach((version) => {
+        Object.keys(versions).forEach(version => {
           if (versions[version].toString() === hashBefore) {
             versions[version] = Ref.from(hashAfter);
           }
@@ -229,7 +228,7 @@ async function convertToCorrectScope(
   componentsObjects.component.scope = remoteScope;
 
   function changeDependencyScope(version: Version): void {
-    version.getAllDependencies().forEach((dependency) => {
+    version.getAllDependencies().forEach(dependency => {
       dependency.id = getIdWithUpdatedScope(dependency.id);
     });
     version.flattenedDependencies = getBitIdsWithUpdatedScope(version.flattenedDependencies);
@@ -260,7 +259,7 @@ async function convertToCorrectScope(
   async function _replaceSrcOfVersionIfNeeded(version: Version) {
     const files = [...version.files, ...(version.dists || [])];
     await Promise.all(
-      files.map(async (file) => {
+      files.map(async file => {
         const newFileObject = await _createNewFileIfNeeded(version, file);
         if (newFileObject) {
           file.file = newFileObject.hash();
@@ -278,7 +277,7 @@ async function convertToCorrectScope(
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
     const allIds = [...dependenciesIds, componentsObjects.component.toBitId()];
     let newFileString = fileString;
-    allIds.forEach((id) => {
+    allIds.forEach(id => {
       if (id.scope === remoteScope) {
         return; // nothing to do, the remote has not changed
       }
@@ -287,7 +286,7 @@ async function convertToCorrectScope(
       const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
       const singleQuote = "'";
       const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach((quoteType) => {
+      [singleQuote, doubleQuotes].forEach(quoteType => {
         // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
         newFileString = newFileString.replace(
           new RegExp(quoteType + pkgNameWithOldScope + quoteType, 'g'),
@@ -326,7 +325,7 @@ async function changePartialNamesToFullNamesInDists(
     const dists = version.dists;
     if (!dists) return;
     await Promise.all(
-      dists.map(async (dist) => {
+      dists.map(async dist => {
         const newDistObject = await _createNewDistIfNeeded(version, dist);
         if (newDistObject) {
           dist.file = newDistObject.hash();
@@ -350,13 +349,13 @@ async function changePartialNamesToFullNamesInDists(
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
     const allIds = [...dependenciesIds, component.toBitId()];
     let newDistString = distString;
-    allIds.forEach((id) => {
+    allIds.forEach(id => {
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
       const singleQuote = "'";
       const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach((quoteType) => {
+      [singleQuote, doubleQuotes].forEach(quoteType => {
         // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
         newDistString = newDistString.replace(
           new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),

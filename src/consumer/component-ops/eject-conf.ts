@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import R from 'ramda';
 import ConsumerComponent from '../component/consumer-component';
@@ -18,8 +17,8 @@ import RemovePath from '../component/sources/remove-path';
 import AbstractConfig from '../config/abstract-config';
 import ShowDoctorError from '../../error/show-doctor-error';
 
-export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
-export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath?: string, dataToPersist: DataToPersist };
+export type EjectConfResult = { id: string; ejectedPath: string; ejectedFullPath: string };
+export type EjectConfData = { id: string; ejectedPath: string; ejectedFullPath?: string; dataToPersist: DataToPersist };
 
 export default (async function ejectConf(
   component: ConsumerComponent,
@@ -155,12 +154,12 @@ export async function writeEnvFiles({
   deleteOldFiles,
   verbose = false
 }: {
-  configDir: PathOsBased,
-  env?: CompilerExtension | null | undefined | TesterExtension,
-  consumer?: Consumer | null | undefined,
-  component: ConsumerComponent,
-  deleteOldFiles: boolean,
-  verbose: boolean
+  configDir: PathOsBased;
+  env?: CompilerExtension | null | undefined | TesterExtension;
+  consumer?: Consumer | null | undefined;
+  component: ConsumerComponent;
+  deleteOldFiles: boolean;
+  verbose: boolean;
 }): Promise<PathOsBased> {
   if (!env) {
     return '';
@@ -194,13 +193,13 @@ export async function populateEnvFilesToWrite({
   deleteOldFiles,
   verbose = false
 }: {
-  configDir: PathOsBased,
-  env?: CompilerExtension | null | undefined | TesterExtension,
-  consumer?: Consumer | null | undefined,
-  bitMap?: BitMap,
-  component: ConsumerComponent,
-  deleteOldFiles: boolean,
-  verbose: boolean
+  configDir: PathOsBased;
+  env?: CompilerExtension | null | undefined | TesterExtension;
+  consumer?: Consumer | null | undefined;
+  bitMap?: BitMap;
+  component: ConsumerComponent;
+  deleteOldFiles: boolean;
+  verbose: boolean;
 }): Promise<PathOsBased> {
   if (!env) {
     return '';

@@ -1,5 +1,3 @@
-// @flow
-
 import path from 'path';
 import R from 'ramda';
 import vinylFile from 'vinyl-file';
@@ -13,23 +11,23 @@ import { EnvType } from './env-extension-types';
 import { pathNormalizeToLinux } from '../utils/path';
 
 export type ExtensionFileModel = {
-  name: string,
-  relativePath: PathLinux,
-  file: Ref
+  name: string;
+  relativePath: PathLinux;
+  file: Ref;
 };
 
 export type ExtensionFileSerializedModel = {
-  name: string,
-  relativePath: PathLinux,
+  name: string;
+  relativePath: PathLinux;
   file: {
-    contents: Buffer
-  }
+    contents: Buffer;
+  };
 };
 
 export type ExtensionFileObject = {
-  name: string,
-  relativePath: PathLinux,
-  file: string
+  name: string;
+  relativePath: PathLinux;
+  file: string;
 };
 
 export default class ExtensionFile extends AbstractVinyl {
@@ -102,7 +100,7 @@ export default class ExtensionFile extends AbstractVinyl {
     return extensionFile;
   }
 
-  static loadFromParsedStringArray(arr: Object[]): Array< | null | undefined | ExtensionFile> {
+  static loadFromParsedStringArray(arr: Object[]): Array<null | undefined | ExtensionFile> {
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }

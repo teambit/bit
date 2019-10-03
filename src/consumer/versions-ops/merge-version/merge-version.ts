@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import chalk from 'chalk';
 import { BitId, BitIds } from '../../../bit-id';
@@ -26,17 +25,17 @@ export const FileStatus = {
   unchanged: chalk.green('unchanged')
 };
 export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
-export type ApplyVersionResult = { id: BitId, filesStatus: FilesStatus };
-export type FailedComponents = { id: BitId, failureMessage: string };
+export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
+export type FailedComponents = { id: BitId; failureMessage: string };
 export type ApplyVersionResults = {
-  components?: ApplyVersionResult[],
-  version?: string,
-  failedComponents?: FailedComponents[]
+  components?: ApplyVersionResult[];
+  version?: string;
+  failedComponents?: FailedComponents[];
 };
 type ComponentStatus = {
-  componentFromFS: Component,
-  id: BitId,
-  mergeResults: MergeResultsTwoWay
+  componentFromFS: Component;
+  id: BitId;
+  mergeResults: MergeResultsTwoWay;
 };
 
 export async function mergeVersion(
@@ -123,7 +122,7 @@ async function applyVersion(
 ): Promise<ApplyVersionResult> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
-    componentFromFS.files.forEach((file) => {
+    componentFromFS.files.forEach(file => {
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     return { id, filesStatus };
@@ -135,7 +134,7 @@ async function applyVersion(
   const files = componentFromFS.files;
   component.files = files;
 
-  files.forEach((file) => {
+  files.forEach(file => {
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
   });
 
@@ -171,7 +170,7 @@ function applyModifiedVersion(
   mergeStrategy: MergeStrategy | null | undefined
 ): Object {
   const filesStatus = {};
-  mergeResults.modifiedFiles.forEach((file) => {
+  mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
@@ -190,7 +189,7 @@ function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  mergeResults.addFiles.forEach((file) => {
+  mergeResults.addFiles.forEach(file => {
     const otherFile: SourceFile = file.otherFile;
     componentFiles.push(otherFile);
     filesStatus[file.filePath] = FileStatus.added;

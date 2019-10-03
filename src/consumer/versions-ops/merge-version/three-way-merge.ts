@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import Component from '../../component';
 import { Consumer } from '../..';
@@ -12,26 +11,26 @@ import GeneralError from '../../../error/general-error';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{
-    filePath: PathLinux,
-    fsFile: SourceFile
-  }>,
+    filePath: PathLinux;
+    fsFile: SourceFile;
+  }>;
   modifiedFiles: Array<{
-    filePath: PathLinux,
-    fsFile: SourceFile,
-    baseFile: SourceFile,
-    currentFile: SourceFile,
-    output: string | null | undefined,
-    conflict: string | null | undefined
-  }>,
+    filePath: PathLinux;
+    fsFile: SourceFile;
+    baseFile: SourceFile;
+    currentFile: SourceFile;
+    output: string | null | undefined;
+    conflict: string | null | undefined;
+  }>;
   unModifiedFiles: Array<{
-    filePath: PathLinux,
-    fsFile: SourceFile
-  }>,
+    filePath: PathLinux;
+    fsFile: SourceFile;
+  }>;
   overrideFiles: Array<{
-    filePath: PathLinux,
-    fsFile: SourceFile
-  }>,
-  hasConflicts: boolean
+    filePath: PathLinux;
+    fsFile: SourceFile;
+  }>;
+  hasConflicts: boolean;
 };
 
 /**
@@ -61,12 +60,12 @@ export default (async function threeWayMergeVersions({
   currentVersion,
   baseComponent
 }: {
-  consumer: Consumer,
-  otherComponent: Component,
-  otherVersion: string,
-  currentComponent: Component,
-  currentVersion: string,
-  baseComponent: Component
+  consumer: Consumer;
+  otherComponent: Component;
+  otherVersion: string;
+  currentComponent: Component;
+  currentVersion: string;
+  baseComponent: Component;
 }): Promise<MergeResultsThreeWay> {
   const baseFiles: SourceFile[] = baseComponent.files;
   const currentFiles: SourceFile[] = currentComponent.files;
@@ -107,7 +106,7 @@ export default (async function threeWayMergeVersions({
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
-  fsFiles.forEach((fsFile) => {
+  fsFiles.forEach(fsFile => {
     const baseFile = baseFiles.find(file => file.relative === fsFile.relative);
     const currentFile = currentFiles.find(file => file.relative === fsFile.relative);
     getFileResult(fsFile, baseFile, currentFile);
@@ -132,7 +131,7 @@ async function getMergeResults(
   modifiedFiles: $PropertyType<MergeResultsThreeWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
-  const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
+  const conflictResultsP = modifiedFiles.map(async modifiedFile => {
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFile): Promise<PathOsBased> => {
       return tmp.save(file.contents);

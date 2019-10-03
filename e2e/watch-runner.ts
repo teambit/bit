@@ -1,4 +1,3 @@
-// @flow
 /* eslint no-console: 0 */
 import rightpad from 'pad-right';
 import chalk from 'chalk';

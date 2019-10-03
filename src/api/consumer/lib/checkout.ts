@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
@@ -33,9 +32,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
   }
   if (checkoutProps.reset && checkoutProps.version) {
     throw new GeneralError(
-      `the first argument "${
-        checkoutProps.version
-      }" seems to be a version. however, --reset flag doesn't support a version`
+      `the first argument "${checkoutProps.version}" seems to be a version. however, --reset flag doesn't support a version`
     );
   }
   if (!checkoutProps.reset && !checkoutProps.version) {
@@ -75,7 +72,7 @@ function getIdsMatchedByWildcard(consumer: Consumer, checkoutProps: CheckoutProp
 
 function getCandidateIds(consumer: Consumer, checkoutProps: CheckoutProps): BitId[] {
   const idsFromBitMap = consumer.bitMap.getAuthoredAndImportedBitIds();
-  return idsFromBitMap.map((bitId) => {
+  return idsFromBitMap.map(bitId => {
     const version = checkoutProps.latestVersion ? LATEST : bitId.version;
     return bitId.changeVersion(version);
   });

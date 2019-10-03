@@ -1,4 +1,3 @@
-// @flow
 import glob from 'glob';
 import path from 'path';
 import fs from 'fs-extra';
@@ -90,7 +89,7 @@ export default class FsHelper {
     fs.removeSync(dirPath);
   }
   cleanExternalDirs() {
-    this.externalDirsArray.forEach((dirPath) => {
+    this.externalDirsArray.forEach(dirPath => {
       this.cleanDir(dirPath);
     });
   }

@@ -1,4 +1,3 @@
-// @flow
 import { NewerVersion } from '../../consumer/exceptions/newer-version-found';
 
 const helpPhrase =

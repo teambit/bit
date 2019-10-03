@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import R from 'ramda';
 import { NodeModuleLinker, reLinkDependents } from '../../links';
@@ -15,7 +14,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 
 export async function movePaths(
   consumer: Consumer,
-  { from, to }: { from: PathOsBasedRelative, to: PathOsBasedRelative }
+  { from, to }: { from: PathOsBasedRelative; to: PathOsBasedRelative }
 ): Promise<PathChangeResult[]> {
   const fromExists = fs.existsSync(from);
   const toExists = fs.existsSync(to);
@@ -62,12 +61,12 @@ export function moveExistingComponent(
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
   consumer.bitMap.markAsChanged();
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-    component.dataToPersist.files.forEach((file) => {
+    component.dataToPersist.files.forEach(file => {
       const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newRelative });
     });
   } else {
-    component.dataToPersist.files.forEach((file) => {
+    component.dataToPersist.files.forEach(file => {
       const newBase = file.base.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newBase });
     });

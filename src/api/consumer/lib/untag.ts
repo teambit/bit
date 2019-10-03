@@ -1,4 +1,3 @@
-// @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import {
   removeLocalVersion,

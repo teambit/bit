@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
@@ -39,7 +38,12 @@ export default class Isolator {
     this.consumer = consumer;
   }
 
-  static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: Consumer | null | undefined, dir?: string) {
+  static async getInstance(
+    containerType: string = 'fs',
+    scope: Scope,
+    consumer?: Consumer | null | undefined,
+    dir?: string
+  ) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
@@ -125,7 +129,7 @@ export default class Isolator {
   _manipulateDir() {
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     const manipulateDirData = getManipulateDirForComponentWithDependencies(this.componentWithDependencies);
-    allComponents.forEach((component) => {
+    allComponents.forEach(component => {
       component.stripOriginallySharedDir(manipulateDirData);
     });
   }

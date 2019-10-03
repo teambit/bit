@@ -1,4 +1,3 @@
-// @flow
 import * as pathLib from 'path';
 import R from 'ramda';
 import chalk from 'chalk';
@@ -22,11 +21,11 @@ export default function installExtensions({
   verbose,
   dontPrintEnvMsg
 }: {
-  ids: [{ componentId: BitId, type?: string }],
-  dependentId?: BitId,
-  scope: Scope,
-  verbose?: boolean,
-  dontPrintEnvMsg?: boolean
+  ids: [{ componentId: BitId; type?: string }];
+  dependentId?: BitId;
+  scope: Scope;
+  verbose?: boolean;
+  dontPrintEnvMsg?: boolean;
 }): Promise<ComponentWithDependencies[]> {
   logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
   Analytics.addBreadCrumb('installEnvironment', `scope.installEnvironment, ids: ${Analytics.hashData(ids)}`);
@@ -44,7 +43,7 @@ export default function installExtensions({
   const idsWithoutNils = removeNils(ids);
   const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
   const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
-  const nonExistingEnvsIds = uniqIds.filter((id) => {
+  const nonExistingEnvsIds = uniqIds.filter(id => {
     return !isEnvironmentInstalled(scope, id.componentId);
   });
   if (!nonExistingEnvsIds.length) {
@@ -56,7 +55,7 @@ export default function installExtensions({
     return Promise.resolve([]);
   }
 
-  const importEnv = async (id) => {
+  const importEnv = async id => {
     let concreteId = id.componentId;
     if (id.componentId.getVersion().latest) {
       const concreteIds = await fetchRemoteVersions(scope, [id.componentId]);

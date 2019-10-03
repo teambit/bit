@@ -1,4 +1,3 @@
-// @flow
 import npmRegistryName from './npm-registry-name';
 import { NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import BitId from '../../bit-id/bit-id';

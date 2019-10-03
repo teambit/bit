@@ -1,4 +1,3 @@
-// @flow
 import R from 'ramda';
 import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
@@ -11,7 +10,7 @@ import Component from '../../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
 
-export type AutoTagResult = { component: ModelComponent, triggeredBy: BitIds };
+export type AutoTagResult = { component: ModelComponent; triggeredBy: BitIds };
 
 /**
  * bumping dependencies version, so-called "auto tagging" is needed when the currently tagged
@@ -163,7 +162,7 @@ export async function getAutoTagPending(
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return null;
     const edges = graphlib.alg.preorder(graph, idStr);
-    const isAutoTagPending = edges.some((edge) => {
+    const isAutoTagPending = edges.some(edge => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
       if (!changedComponentId) return false;

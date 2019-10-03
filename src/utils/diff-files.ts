@@ -1,4 +1,3 @@
-// @flow
 import execa from 'execa';
 import { PathOsBased } from '../utils/path';
 import GitNotFound from './git/exceptions/git-not-found';

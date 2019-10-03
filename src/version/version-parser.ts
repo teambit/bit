@@ -1,4 +1,3 @@
-// @flow
 import semver from 'semver';
 import Version from './version';
 import { LATEST, LATEST_TESTED_MARK } from '../constants';

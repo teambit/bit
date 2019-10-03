@@ -1,4 +1,3 @@
-// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
@@ -74,48 +73,48 @@ import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
-export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
+export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
-export type InvalidComponent = { id: BitId, error: Error };
+export type InvalidComponent = { id: BitId; error: Error };
 
 export type ComponentProps = {
-  name: string,
-  version?: string | null | undefined,
-  scope?: string | null | undefined,
-  lang?: string,
-  bindingPrefix?: string,
-  mainFile: PathOsBased,
-  compiler?: CompilerExtension,
-  tester: TesterExtension,
-  bitJson: ComponentConfig | null | undefined,
-  dependencies?: Dependency[],
-  devDependencies?: Dependency[],
-  compilerDependencies?: Dependency[],
-  testerDependencies?: Dependency[],
-  flattenedDependencies?: BitIds | null | undefined,
-  flattenedDevDependencies?: BitIds | null | undefined,
-  flattenedCompilerDependencies?: BitIds | null | undefined,
-  flattenedTesterDependencies?: BitIds | null | undefined,
-  packageDependencies?: Object | null | undefined,
-  devPackageDependencies?: Object | null | undefined,
-  peerPackageDependencies?: Object | null | undefined,
-  compilerPackageDependencies?: Object | null | undefined,
-  testerPackageDependencies?: Object | null | undefined,
-  customResolvedPaths?: customResolvedPath[] | null | undefined,
-  overrides: ComponentOverrides,
-  packageJsonFile?: PackageJsonFile | null | undefined,
-  packageJsonChangedProps?: { [string]: any } | null | undefined,
-  files: SourceFile[],
-  docs?: Doclet[] | null | undefined,
-  dists?: Dist[],
-  mainDistFile?: PathLinux | null | undefined,
-  specsResults?: SpecsResults | null | undefined,
-  license?: License | null | undefined,
-  deprecated: boolean | null | undefined,
-  origin: ComponentOrigin,
-  log?: Log | null | undefined,
-  scopesList?: ScopeListItem[],
-  componentFromModel?: Component | null | undefined
+  name: string;
+  version?: string | null | undefined;
+  scope?: string | null | undefined;
+  lang?: string;
+  bindingPrefix?: string;
+  mainFile: PathOsBased;
+  compiler?: CompilerExtension;
+  tester: TesterExtension;
+  bitJson: ComponentConfig | null | undefined;
+  dependencies?: Dependency[];
+  devDependencies?: Dependency[];
+  compilerDependencies?: Dependency[];
+  testerDependencies?: Dependency[];
+  flattenedDependencies?: BitIds | null | undefined;
+  flattenedDevDependencies?: BitIds | null | undefined;
+  flattenedCompilerDependencies?: BitIds | null | undefined;
+  flattenedTesterDependencies?: BitIds | null | undefined;
+  packageDependencies?: Object | null | undefined;
+  devPackageDependencies?: Object | null | undefined;
+  peerPackageDependencies?: Object | null | undefined;
+  compilerPackageDependencies?: Object | null | undefined;
+  testerPackageDependencies?: Object | null | undefined;
+  customResolvedPaths?: customResolvedPath[] | null | undefined;
+  overrides: ComponentOverrides;
+  packageJsonFile?: PackageJsonFile | null | undefined;
+  packageJsonChangedProps?: { [string]: any } | null | undefined;
+  files: SourceFile[];
+  docs?: Doclet[] | null | undefined;
+  dists?: Dist[];
+  mainDistFile?: PathLinux | null | undefined;
+  specsResults?: SpecsResults | null | undefined;
+  license?: License | null | undefined;
+  deprecated: boolean | null | undefined;
+  origin: ComponentOrigin;
+  log?: Log | null | undefined;
+  scopesList?: ScopeListItem[];
+  componentFromModel?: Component | null | undefined;
 };
 
 export default class Component {
@@ -267,7 +266,7 @@ export default class Component {
 
   validateComponent() {
     const nonEmptyFields = ['name', 'mainFile'];
-    nonEmptyFields.forEach((field) => {
+    nonEmptyFields.forEach(field => {
       if (!this[field]) {
         throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
@@ -491,7 +490,7 @@ export default class Component {
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
       file.updatePaths({ newBase: file.base, newRelative });
     });
@@ -501,7 +500,7 @@ export default class Component {
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    this.customResolvedPaths.forEach((customPath) => {
+    this.customResolvedPaths.forEach(customPath => {
       customPath.destinationPath = pathNormalizeToLinux(
         stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
       );
@@ -518,7 +517,7 @@ export default class Component {
     const pathWithWrapDir = (pathStr: PathOsBased): PathOsBased => {
       return path.join(this.wrapDir, pathStr);
     };
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       const newRelative = pathWithWrapDir(file.relative);
       file.updatePaths({ newBase: file.base, newRelative });
     });
@@ -526,7 +525,7 @@ export default class Component {
     this.mainFile = pathWithWrapDir(this.mainFile);
     const allDependencies = new Dependencies(this.getAllDependencies());
     allDependencies.addWrapDir(manipulateDirData, this.wrapDir);
-    this.customResolvedPaths.forEach((customPath) => {
+    this.customResolvedPaths.forEach(customPath => {
       customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
     });
   }
@@ -541,14 +540,14 @@ export default class Component {
     directory,
     keep
   }: {
-    scope: Scope,
-    save?: boolean,
-    consumer?: Consumer | null | undefined,
-    noCache?: boolean,
-    directory?: string,
-    verbose?: boolean,
-    dontPrintEnvMsg?: boolean,
-    keep?: boolean
+    scope: Scope;
+    save?: boolean;
+    consumer?: Consumer | null | undefined;
+    noCache?: boolean;
+    directory?: string;
+    verbose?: boolean;
+    dontPrintEnvMsg?: boolean;
+    keep?: boolean;
   }): Promise<Dists | null | undefined> {
     return buildComponent({
       component: this,
@@ -574,15 +573,15 @@ export default class Component {
     directory,
     keep
   }: {
-    scope: Scope,
-    rejectOnFailure?: boolean,
-    consumer?: Consumer,
-    save?: boolean,
-    verbose?: boolean,
-    dontPrintEnvMsg?: boolean,
-    isolated?: boolean,
-    directory?: string,
-    keep?: boolean
+    scope: Scope;
+    rejectOnFailure?: boolean;
+    consumer?: Consumer;
+    save?: boolean;
+    verbose?: boolean;
+    dontPrintEnvMsg?: boolean;
+    isolated?: boolean;
+    directory?: string;
+    keep?: boolean;
   }): Promise<SpecsResults | null | undefined> {
     const testFiles = this.files.filter(file => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
@@ -673,12 +672,12 @@ export default class Component {
         } else {
           logger.debug('running tests using old format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using old format');
-          const oneFileSpecResult = async (testFile) => {
+          const oneFileSpecResult = async testFile => {
             const testFilePath = testFile.path;
             try {
               const isolateFunc = async (
                 destDir?: string
-              ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+              ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
                 const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
                 const componentWithDependencies = await isolator.isolate(component.id, {});
                 const testFileWithoutSharedDir = stripSharedDirFromPath(
@@ -864,7 +863,7 @@ export default class Component {
     };
     const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
       return Promise.all(
-        ids.map((dependencyId) => {
+        ids.map(dependencyId => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
             return consumer.loadComponent(dependencyId);
           }
@@ -990,10 +989,10 @@ export default class Component {
     id,
     consumer
   }: {
-    bitDir: PathOsBasedAbsolute,
-    componentMap: ComponentMap,
-    id: BitId,
-    consumer: Consumer
+    bitDir: PathOsBasedAbsolute;
+    componentMap: ComponentMap;
+    id: BitId;
+    consumer: Consumer;
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const workspaceConfig: WorkspaceConfig = consumer.config;
@@ -1012,7 +1011,7 @@ export default class Component {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
-      componentMap.files.forEach((file) => {
+      componentMap.files.forEach(file => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, workspaceConfig.distTarget, bitDir, consumerPath, {
@@ -1027,7 +1026,7 @@ export default class Component {
       });
       if (filesToDelete.length) {
         if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
-        filesToDelete.forEach((fileToDelete) => {
+        filesToDelete.forEach(fileToDelete => {
           if (fileToDelete.relativePath === componentMap.mainFile) {
             throw new MainFileRemoved(componentMap.mainFile, id.toString());
           }

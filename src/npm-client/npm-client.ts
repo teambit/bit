@@ -1,4 +1,3 @@
-// @flow
 import execa from 'execa';
 import pMapSeries from 'p-map-series';
 import semver from 'semver';
@@ -12,7 +11,7 @@ import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
 
-type PackageManagerResults = { stdout: string, stderr: string };
+type PackageManagerResults = { stdout: string; stderr: string };
 
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
@@ -59,22 +58,22 @@ const stripNonPeerDependenciesWarnings = (errors: string, packageManager: string
  * Pick only allowed to be overridden options
  * @param {Object} userOptions
  */
-const getAllowdPackageManagerProcessOptions = (userOptions) => {
+const getAllowdPackageManagerProcessOptions = userOptions => {
   const allowdOptions = ['shell', 'env', 'extendEnv', 'uid', 'gid', 'preferLocal', 'localDir', 'timeout'];
   return R.pick(allowdOptions, userOptions);
 };
 
 type installArgs = {
-  modules?: string[] | { [string]: number | string },
-  packageManager: 'npm' | 'yarn',
-  packageManagerArgs: string[],
-  packageManagerProcessOptions: Object,
-  useWorkspaces: boolean,
-  dirs: string[],
-  rootDir: string | null | undefined, // Used for yarn workspace
-  installRootPackageJson: boolean,
-  installPeerDependencies: boolean,
-  verbose: boolean
+  modules?: string[] | { [string]: number | string };
+  packageManager: 'npm' | 'yarn';
+  packageManagerArgs: string[];
+  packageManagerProcessOptions: Object;
+  useWorkspaces: boolean;
+  dirs: string[];
+  rootDir: string | null | undefined; // Used for yarn workspace
+  installRootPackageJson: boolean;
+  installPeerDependencies: boolean;
+  verbose: boolean;
 };
 
 /**
@@ -142,7 +141,7 @@ const _installInOneDirectory = ({
       stderr = verbose ? stderr : '';
       return { stdout, stderr };
     })
-    .catch((err) => {
+    .catch(err => {
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
       return Promise.reject(
@@ -181,7 +180,7 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
 async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Object> {
   const parsePeers = (deps: Object): Object => {
     const result = {};
-    R.forEachObjIndexed((dep) => {
+    R.forEachObjIndexed(dep => {
       if (dep.peerMissing) {
         const name = dep.required.name;
         const version = dep.required.version;
@@ -318,7 +317,7 @@ const installAction = async ({
   return results.concat(R.flatten(promisesResults));
 };
 
-const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {
+const printResults = ({ stdout, stderr }: { stdout: string; stderr: string }) => {
   logger.console.info(chalk.yellow(stdout)); // eslint-disable-line
   logger.console.info(chalk.yellow(stderr)); // eslint-disable-line
 };

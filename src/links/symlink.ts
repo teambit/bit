@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import BitId from '../bit-id/bit-id';

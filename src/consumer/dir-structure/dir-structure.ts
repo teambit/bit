@@ -1,4 +1,3 @@
-// @flow
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
@@ -13,7 +12,11 @@ export default class BitStructure {
   _componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
-  constructor(componentsDefaultDirectory: string | null | undefined, dependenciesDirectory: string | null | undefined, ejectedEnvsDirectory: string | null | undefined) {
+  constructor(
+    componentsDefaultDirectory: string | null | undefined,
+    dependenciesDirectory: string | null | undefined,
+    ejectedEnvsDirectory: string | null | undefined
+  ) {
     this._componentsDefaultDirectoryUnProcessed = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
@@ -31,7 +34,7 @@ export default class BitStructure {
     if (!this._componentsDefaultDirectory) {
       const dirStructure = this._componentsDefaultDirectoryUnProcessed;
       const dirStructureParsed = [];
-      dirStructure.split('/').forEach((dir) => {
+      dirStructure.split('/').forEach(dir => {
         if (dir.startsWith('{') && dir.endsWith('}')) {
           // this is a dynamic parameter
           const dirStripped = dir.replace(/[{}]/g, '');

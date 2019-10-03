@@ -1,4 +1,3 @@
-// @flow
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
@@ -32,12 +31,12 @@ export default class PackageJsonFile {
     indent,
     newline
   }: {
-    filePath: PathOsBasedRelative,
-    packageJsonObject?: Object,
-    fileExist: boolean,
-    workspaceDir?: PathOsBasedAbsolute,
-    indent?: string,
-    newline?: string
+    filePath: PathOsBasedRelative;
+    packageJsonObject?: Object;
+    fileExist: boolean;
+    workspaceDir?: PathOsBasedAbsolute;
+    indent?: string;
+    newline?: string;
   }) {
     this.filePath = filePath;
     this.packageJsonObject = packageJsonObject;
@@ -126,8 +125,8 @@ export default class PackageJsonFile {
   }
 
   replaceDependencies(dependencies: Object) {
-    Object.keys(dependencies).forEach((dependency) => {
-      DEPENDENCIES_FIELDS.forEach((dependencyField) => {
+    Object.keys(dependencies).forEach(dependency => {
+      DEPENDENCIES_FIELDS.forEach(dependencyField => {
         if (this.packageJsonObject[dependencyField] && this.packageJsonObject[dependencyField][dependency]) {
           this.packageJsonObject[dependencyField][dependency] = dependencies[dependency];
         }

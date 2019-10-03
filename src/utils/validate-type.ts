@@ -1,4 +1,3 @@
-// @flow
 import ValidationError from '../error/validation-error';
 import GeneralError from '../error/general-error';
 

@@ -1,4 +1,3 @@
-// @flow
 import groupArray from 'group-array';
 import logger from '../../logger/logger';
 import { BitIds, BitId } from '../../bit-id';
@@ -8,8 +7,8 @@ import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-globa
 import Remotes from '../../remotes/remotes';
 
 export type DeprecationResult = {
-  bitIds: BitIdStr[],
-  missingComponents: BitIdStr[]
+  bitIds: BitIdStr[];
+  missingComponents: BitIdStr[];
 };
 
 export async function deprecateMany(scope: Scope, bitIds: BitIds): Promise<DeprecationResult> {
@@ -56,7 +55,7 @@ async function _deprecationRemote(
   const groupedBitsByScope = groupArray(bitIds, 'scope');
   const context = {};
   enrichContextFromGlobal(context);
-  const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
+  const deprecateP = Object.keys(groupedBitsByScope).map(async scopeName => {
     const resolvedRemote = await remotes.resolve(scopeName, scope);
     const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
     const deprecateResult = deprecate
