@@ -1,5 +1,5 @@
 /** @flow */
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
 
 async function runAndUpdateCI({
@@ -10,14 +10,14 @@ async function runAndUpdateCI({
   keep,
   noCache
 }: {
-  id: string,
-  scopePath: string,
-  verbose: boolean,
-  directory: string | null | undefined,
-  keep?: boolean,
-  noCache?: boolean
+  id: string;
+  scopePath: string;
+  verbose: boolean;
+  directory: string | null | undefined;
+  keep?: boolean;
+  noCache?: boolean;
 }): Promise<any> {
-  function addCIAttrsInTheModel({ error, startTime }: { error?: any, startTime: string }) {
+  function addCIAttrsInTheModel({ error, startTime }: { error?: any; startTime: string }) {
     const endTime = Date.now().toString();
     const ciProps = { startTime, endTime, error: undefined };
 

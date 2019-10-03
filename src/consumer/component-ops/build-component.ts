@@ -399,7 +399,10 @@ const _runBuild = async ({
         logger.info(`build-components, deleting ${tmpFolderFullPath}`);
         fs.removeSync(tmpFolderFullPath);
       }
-      const errors = e.errors || [e];
+      // Some time an external tool might return a complex object or an array of errors
+      // See for example this issue: https://github.com/teambit/bit/issues/2023#issuecomment-534952085
+      // (The Vue compiler will return an object with different fields such as details, missing, origin, dependencies, module, name, error)
+      const errors = e.errors || (e.error ? [e.error] : [e]);
       const err = new ExternalBuildErrors(component.id.toString(), errors);
       throw err;
     });

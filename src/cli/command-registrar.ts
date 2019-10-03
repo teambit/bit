@@ -1,5 +1,5 @@
 /** @flow */
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import R from 'ramda';
 import commander from 'commander';
 import chalk from 'chalk';
@@ -79,7 +79,7 @@ function execAction(command, concrete, args) {
 
   migrateWrapper(command.migration)
     .then(() => {
-      return command.action(relevantArgs, flags, packageManagerArgs).then((res) => {
+      return command.action(relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
         let data = res;
         let code = 0;
@@ -90,7 +90,7 @@ function execAction(command, concrete, args) {
         return logAndExit(command.report(data, relevantArgs, flags), command.name, code);
       });
     })
-    .catch((err) => {
+    .catch(err => {
       logger.error(
         `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
           err,
@@ -117,7 +117,7 @@ function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     if (!empty(command.commands)) {
       const subcommandName = parseSubcommandFromArgs(args);
-      const subcommand = command.commands.find((cmd) => {
+      const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 
@@ -151,7 +151,7 @@ function register(command: Command, commanderCmd) {
   concrete.option('--skip-update', 'Skips auto updates');
 
   if (command.commands) {
-    command.commands.forEach((nestedCmd) => {
+    command.commands.forEach(nestedCmd => {
       register(nestedCmd, concrete);
     });
   }

@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import yn from 'yn';
-import serializeError from 'serialize-error';
+import { serializeError } from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
 import * as path from 'path';
