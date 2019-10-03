@@ -178,6 +178,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-typescript": "^7.6.0",
     "@babel/register": "^7.4.4",
+    "@types/mocha": "^5.2.7",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
     "babel-eslint": "^9.0.0",
