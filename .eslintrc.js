@@ -1,6 +1,11 @@
 module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json'
+  },
   extends: [
     'airbnb-typescript/base',
+    // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
     // 'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     // 'plugin:promise/recommended',
@@ -26,10 +31,10 @@ module.exports = {
     // Use function hoisting to improve code readability
     // 'no-use-before-define': ['error', { functions: false, classes: true, variables: true }],
     // Makes no sense to allow type inferrence for expression parameters, but require typing the response
-    '@typescript-eslint/explicit-function-return-type': [
-      'error',
-      { allowExpressions: true, allowTypedFunctionExpressions: true }
-    ],
+    // '@typescript-eslint/explicit-function-return-type': [
+    //   'error',
+    //   { allowExpressions: true, allowTypedFunctionExpressions: true }
+    // ],
     '@typescript-eslint/no-use-before-define': [
       'error',
       { functions: false, classes: true, variables: true, typedefs: true }
