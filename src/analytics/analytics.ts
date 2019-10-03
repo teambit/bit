@@ -212,4 +212,4 @@ class Analytics {
   }
 }
 
-module.exports = { LEVEL, Analytics };
+export { LEVEL, Analytics };
