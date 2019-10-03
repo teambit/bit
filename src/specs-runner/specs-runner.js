@@ -3,7 +3,7 @@ import R from 'ramda';
 import path from 'path';
 import execa from 'execa';
 import pEvent from 'p-event';
-import deserializeError from 'deserialize-error';
+import { deserializeError } from 'serialize-error';
 import { Results } from '../consumer/specs-results';
 import type { ForkLevel } from '../api/consumer/lib/test';
 import { TESTS_FORK_LEVEL } from '../constants';
