@@ -40,7 +40,7 @@ describe('bit dependency status', function() {
     // we use our bit-bin code as an example of large code base
     it('should not hang indefinitely', () => {
       const bitBinRoot = path.resolve(path.join(__dirname, '../..'));
-      const output = helper.command.runCmd('bit dependency-status src/app.js', bitBinRoot);
+      const output = helper.command.runCmd('bit dependency-status src/app.ts', bitBinRoot);
       expect(output).to.have.string('The following file exist in dependency tree but are not a component');
     });
   });
