@@ -1,24 +1,30 @@
 module.exports = {
   extends: [
     'airbnb-typescript/base',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:eslint-comments/recommended',
-    'plugin:promise/recommended',
-    'plugin:unicorn/recommended',
-    'plugin:mocha/recommended',
+    // 'plugin:@typescript-eslint/recommended',
+    // 'plugin:eslint-comments/recommended',
+    // 'plugin:promise/recommended',
+    // 'plugin:unicorn/recommended',
+    // 'plugin:mocha/recommended',
     'prettier',
     'prettier/@typescript-eslint'
   ],
-  plugins: ['@typescript-eslint', 'eslint-comments', 'promise', 'mocha', 'unicorn'],
+  plugins: [
+    '@typescript-eslint'
+    // 'eslint-comments',
+    // 'promise',
+    // 'mocha',
+    // 'unicorn'
+  ],
   rules: {
     // Taken from here: https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
     // Too restrictive, writing ugly code to defend against a very unlikely scenario: https://eslint.org/docs/rules/no-prototype-builtins
-    'no-prototype-builtins': 'off',
+    // 'no-prototype-builtins': 'off',
     // https://basarat.gitbooks.io/typescript/docs/tips/defaultIsBad.html
-    'import/prefer-default-export': 'off',
-    'import/no-default-export': 'error',
+    // 'import/prefer-default-export': 'off',
+    // 'import/no-default-export': 'error',
     // Use function hoisting to improve code readability
-    'no-use-before-define': ['error', { functions: false, classes: true, variables: true }],
+    // 'no-use-before-define': ['error', { functions: false, classes: true, variables: true }],
     // Makes no sense to allow type inferrence for expression parameters, but require typing the response
     '@typescript-eslint/explicit-function-return-type': [
       'error',
@@ -29,13 +35,15 @@ module.exports = {
       { functions: false, classes: true, variables: true, typedefs: true }
     ],
     // Common abbreviations are known and readable
-    'unicorn/prevent-abbreviations': 'off',
+    // 'unicorn/prevent-abbreviations': 'off',
     // END taken from https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
 
     // TEMP RULES
     // '@typescript-eslint/no-explicit-any': 'off',
     // END OF TEMP RULES
-
+    'import/no-cycle': 'off',
+    'import/no-useless-path-segments': 'off',
+    'lines-between-class-members': 'off',
     'mocha/no-mocha-arrows': 'off',
     'no-bitwise': 'off',
     'arrow-body-style': [0, 'as-needed'],
