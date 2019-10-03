@@ -1,20 +1,23 @@
 {
   "compilerOptions": {
-      "strict": false,
-      "moduleResolution": "node",
-      "allowJs": true,
-      "module": "commonjs",
-      "noImplicitAny": true,
-      "removeComments": true,
-      "preserveConstEnums": true,
-      "outFile": "dist/local/tsc.js",
-      "sourceMap": true
+    "strict": false,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "outFile": "dist/local/tsc.js",
+    "sourceMap": true
   },
   "include": [
-      "src/**/*"
+    "src/**/*",
+    "e2e/**/*"
   ],
   "exclude": [
-      "node_modules",
-      "**/*.spec.ts"
+    "node_modules",
+    "e2e/fixtures/**/*",
+    "**/*.spec.ts"
   ]
 }
