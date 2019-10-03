@@ -8,7 +8,6 @@
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "outFile": "dist/local/tsc.js",
     "sourceMap": true
   },
   "include": [
