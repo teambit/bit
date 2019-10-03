@@ -8,6 +8,7 @@
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "precommit": "lint-staged",
     "ts-coverage": "type-coverage",
+    "check-types": "tsc",
     "lint": "eslint \"{src,e2e}/**/*.ts\"",
     "lint:table": "eslint \"{src,e2e}/**/*.ts\" --format table",
     "lint:html": "eslint \"{src,e2e}/**/*.ts\" --format html -o eslint-report.html",
