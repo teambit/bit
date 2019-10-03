@@ -8,7 +8,7 @@
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "precommit": "lint-staged",
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
-    "flow-coverage": "flow-coverage-report -i \"./src/**/*.js\"",
+    "ts-coverage": "type-coverage",
     "lint": "eslint \"{src,e2e}/**/*.js\" && flow check",
     "lint:table": "eslint \"{src,e2e}/**/*.js\" --format table",
     "lint:html": "eslint \"{src,e2e}/**/*.js\" --format html -o eslint-report.html",
@@ -201,6 +201,7 @@
     "prettier-eslint-cli": "^4.7.1",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
+    "type-coverage": "^2.3.0",
     "verdaccio": "^4.1.0"
   },
   "files": [
