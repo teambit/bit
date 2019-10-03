@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { expect } from 'chai';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import Component from '../consumer/component/consumer-component';

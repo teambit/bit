@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
@@ -8,10 +8,10 @@ import { PathOsBased } from '../../../utils/path';
 import Source from '../../../scope/models/source';
 
 type AbstractVinylProps = {
-  cwd: PathOsBased,
-  path: PathOsBased,
-  base: PathOsBased,
-  contents: Buffer
+  cwd: PathOsBased;
+  path: PathOsBased;
+  base: PathOsBased;
+  contents: Buffer;
 };
 export default class AbstractVinyl extends Vinyl {
   override: boolean = true;
@@ -23,7 +23,7 @@ export default class AbstractVinyl extends Vinyl {
   }
 
   // Update the base path and keep the relative value to be the same
-  updatePaths({ newBase, newRelative, newCwd }: { newBase?: string, newRelative?: string, newCwd?: string }) {
+  updatePaths({ newBase, newRelative, newCwd }: { newBase?: string; newRelative?: string; newCwd?: string }) {
     const relative = newRelative || this.relative;
     const base = newBase || this.base;
     if (newCwd) this.cwd = newCwd;

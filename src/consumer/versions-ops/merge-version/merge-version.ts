@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import chalk from 'chalk';
 import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../component/consumer-component';

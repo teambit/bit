@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import * as path from 'path';
 import { expect } from 'chai';
 import { parser } from '../jsdoc';
 
@@ -7,7 +7,7 @@ const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc');
 
 describe('JSDoc Parser', () => {
   describe('parse()', () => {
-    describe('Function Declaration', function () {
+    describe('Function Declaration', function() {
       let doclet;
       before(async () => {
         const functionDeclarationFile = path.join(fixtures, 'functionDeclaration.js');
@@ -144,7 +144,7 @@ describe('JSDoc Parser', () => {
           .to.have.property('description')
           .that.equals('Get the y value.');
       });
-      it('should recognize the fromString method as the last doclet', function () {
+      it('should recognize the fromString method as the last doclet', function() {
         this.timeout(0);
         const doclet = doclets[doclets.length - 1];
         expect(doclet)

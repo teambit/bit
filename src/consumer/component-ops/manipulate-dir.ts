@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import BitMap from '../bit-map/bit-map';
 import { ComponentOrigin } from '../bit-map/component-map';

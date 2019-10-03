@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import { BIT_VERSION } from '../constants';

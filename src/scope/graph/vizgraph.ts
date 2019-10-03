@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import execa from 'execa';
 import graphviz from 'graphviz';
@@ -13,16 +13,16 @@ const Graph = GraphLib.Graph;
 const Digraph = graphviz.digraph;
 
 type ConfigProps = {
-  layout?: string, // dot Layout to use in the graph
-  fontName?: string, // Arial font name to use in the graph
-  fontSize?: string, // 14px Font size to use in the graph
-  backgroundColor?: string, // #000000 Background color for the graph
-  nodeColor?: string, // #c6c5fe Default node color to use in the graph
-  noDependencyColor?: string, // #cfffac Color to use for nodes with no dependencies
-  edgeColor?: string, // #757575 Edge color to use in the graph
-  graphVizOptions?: Object, // null Custom GraphViz options
-  graphVizPath?: string, // null Custom GraphViz path
-  highlightColor?: string
+  layout?: string; // dot Layout to use in the graph
+  fontName?: string; // Arial font name to use in the graph
+  fontSize?: string; // 14px Font size to use in the graph
+  backgroundColor?: string; // #000000 Background color for the graph
+  nodeColor?: string; // #c6c5fe Default node color to use in the graph
+  noDependencyColor?: string; // #cfffac Color to use for nodes with no dependencies
+  edgeColor?: string; // #757575 Edge color to use in the graph
+  graphVizOptions?: Object; // null Custom GraphViz options
+  graphVizPath?: string; // null Custom GraphViz path
+  highlightColor?: string;
 };
 
 const defaultConfig: ConfigProps = {
@@ -68,10 +68,10 @@ export default class VisualDependencyGraph {
     const nodes = graphlib.nodes();
     const edges = graphlib.edges();
 
-    nodes.forEach((node) => {
+    nodes.forEach(node => {
       graph.addNode(node);
     });
-    edges.forEach((edge) => {
+    edges.forEach(edge => {
       const edgeType = graphlib.edge(edge);
       const vizEdge = graph.addEdge(edge.v, edge.w);
       if (edgeType !== 'dependencies') {
@@ -164,7 +164,7 @@ function checkGraphvizInstalled(graphVizPath?: string) {
   }
 
   const childProcess = execa('gvpr', ['-V'], options);
-  return childProcess.catch((e) => {
+  return childProcess.catch(e => {
     logger.debug(`Graphviz could not be found in path: ${graphVizPath || 'default path'}`);
     throw new Error(`Graphviz could not be found. Ensure that "gvpr" is in your $PATH.\n${e}`);
   });

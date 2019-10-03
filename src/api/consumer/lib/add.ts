@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import { PathOsBased } from '../../../utils/path';
 import AddComponents from '../../../consumer/component-ops/add-components';
 import {
@@ -34,8 +34,8 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
   const consumer: Consumer = await loadConsumer(consumerPath);
   const addContext: AddContext = { consumer, alternateCwd: consumerPath };
   const addComponentsArr = [];
-  components.forEach((component) => {
-    const normalizedPaths: PathOsBased[] = component.componentPaths.map((p) => {
+  components.forEach(component => {
+    const normalizedPaths: PathOsBased[] = component.componentPaths.map(p => {
       return path.normalize(p);
     });
     component.componentPaths = normalizedPaths;
@@ -51,7 +51,7 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
   });
   const addResults = [];
   await Promise.all(
-    addComponentsArr.map(async function (addComponents) {
+    addComponentsArr.map(async function(addComponents) {
       const addResultsSingle = await addComponents.add();
       addResults.push(addResultsSingle);
     })

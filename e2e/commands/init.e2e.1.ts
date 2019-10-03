@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import path from 'path';
+import * as path from 'path';
 import detectIndent from 'detect-indent';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON, CURRENT_UPSTREAM } from '../../src/constants';

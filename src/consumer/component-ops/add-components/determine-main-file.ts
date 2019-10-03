@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import { PathLinux } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';

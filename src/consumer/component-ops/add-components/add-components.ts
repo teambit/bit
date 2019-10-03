@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import format from 'string-format';
@@ -49,38 +49,41 @@ import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
 
-export type AddResult = { id: string, files: ComponentMapFile[] };
+export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
-  alreadyUsed: Object,
-  emptyDirectory: string[],
-  existInScope: BitId[]
+  alreadyUsed: Object;
+  emptyDirectory: string[];
+  existInScope: BitId[];
 };
-export type AddActionResults = { addedComponents: AddResult[], warnings: Warnings };
+export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
-  componentId: BitId,
-  files: ComponentMapFile[],
-  mainFile?: PathOsBased | null | undefined,
-  trackDir?: PathOsBased, // set only when one directory is added by author
-  idFromPath: {
-    name: string,
-    namespace: string
-  } | null | undefined,
-  immediateDir?: string
+  componentId: BitId;
+  files: ComponentMapFile[];
+  mainFile?: PathOsBased | null | undefined;
+  trackDir?: PathOsBased; // set only when one directory is added by author
+  idFromPath:
+    | {
+        name: string;
+        namespace: string;
+      }
+    | null
+    | undefined;
+  immediateDir?: string;
 };
 const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 
 export type AddProps = {
-  componentPaths: PathOsBased[],
-  id?: string,
-  main?: PathOsBased,
-  namespace?: string,
-  tests?: PathOrDSL[],
-  exclude?: PathOrDSL[],
-  override: boolean,
-  trackDirFeature?: boolean,
-  origin?: ComponentOrigin
+  componentPaths: PathOsBased[];
+  id?: string;
+  main?: PathOsBased;
+  namespace?: string;
+  tests?: PathOrDSL[];
+  exclude?: PathOrDSL[];
+  override: boolean;
+  trackDirFeature?: boolean;
+  origin?: ComponentOrigin;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
 // In that case , give the value false to overridenConsumer .
@@ -88,8 +91,8 @@ export type AddProps = {
 // Different from process.cwd(), transfer true.
 // Required for determining if the paths are relative to consumer or to process.cwd().
 export type AddContext = {
-  consumer: Consumer,
-  alternateCwd?: string
+  consumer: Consumer;
+  alternateCwd?: string;
 };
 
 export default class AddComponents {
@@ -148,8 +151,8 @@ export default class AddComponents {
    * @returns array of file-paths from 'files' parameter that match the patterns from 'filesWithPotentialDsl' parameter
    */
   async getFilesAccordingToDsl(files: PathLinux[], filesWithPotentialDsl: PathOrDSL[]): Promise<PathLinux[]> {
-    const filesListAllMatches = filesWithPotentialDsl.map(async (dsl) => {
-      const filesListMatch = files.map(async (file) => {
+    const filesListAllMatches = filesWithPotentialDsl.map(async dsl => {
+      const filesListMatch = files.map(async file => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
         const matches = await glob(generatedFile);
@@ -161,7 +164,7 @@ export default class AddComponents {
 
     const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
     const filesListUnique = R.uniq(filesListFlatten);
-    return filesListUnique.map((file) => {
+    return filesListUnique.map(file => {
       // when files array has the test file with different letter case, use the one from the file array
       const fileNormalized = pathNormalizeToLinux(file);
       const fileWithCorrectCase = files.find(f => f.toLowerCase() === fileNormalized.toLowerCase()) || fileNormalized;
@@ -351,7 +354,7 @@ export default class AddComponents {
    */
   _updateFilesWithCurrentLetterCases(currentComponentMap: ComponentMap, newFiles: ComponentMapFile[]) {
     const currentFiles = currentComponentMap.files;
-    currentFiles.forEach((currentFile) => {
+    currentFiles.forEach(currentFile => {
       const sameFile = newFiles.find(
         newFile => newFile.relativePath.toLowerCase() === currentFile.relativePath.toLowerCase()
       );
@@ -430,7 +433,7 @@ export default class AddComponents {
     let mainFile = this.main;
     if (mainFile && mainFile.match(REGEX_DSL_PATTERN)) {
       // it's a DSL
-      files.forEach((file) => {
+      files.forEach(file => {
         const fileInfo = calculateFileInfo(file.relativePath);
         const generatedFile = format(mainFile, fileInfo);
         const foundFile = this._findMainFileInFiles(generatedFile, files);
@@ -488,7 +491,7 @@ export default class AddComponents {
       ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
       : [];
 
-    const resolvedTestFiles = testFiles.map((testFile) => {
+    const resolvedTestFiles = testFiles.map(testFile => {
       if (isDir(path.join(this.consumer.getPath(), testFile))) throw new TestIsDirectory(testFile);
       return {
         relativePath: testFile,
@@ -722,7 +725,7 @@ export default class AddComponents {
    */
   _removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats: PathsStats) {
     const allPaths = Object.keys(componentPathsStats);
-    allPaths.forEach((componentPath) => {
+    allPaths.forEach(componentPath => {
       const foundDir = allPaths.find(p => p === path.dirname(componentPath));
       if (foundDir && componentPathsStats[foundDir]) {
         logger.debug(`add-components._removeDirectoriesWhenTheirFilesAreAdded, ignoring ${foundDir}`);
@@ -734,7 +737,7 @@ export default class AddComponents {
   async _addMultipleToBitMap(added: AddedComponent[]): Promise<void> {
     const missingMainFiles = [];
     await Promise.all(
-      added.map(async (component) => {
+      added.map(async component => {
         if (!R.isEmpty(component.files)) {
           try {
             const addedComponent = await this.addOrUpdateComponentInBitMap(component);
@@ -753,7 +756,7 @@ export default class AddComponents {
 
   _removeNamespaceIfNotNeeded(addedComponents: AddedComponent[]): void {
     const allIds = this.bitMap.getAllBitIds();
-    addedComponents.forEach((addedComponent) => {
+    addedComponents.forEach(addedComponent => {
       if (!addedComponent.idFromPath) return; // when the id was not generated from the path do nothing.
       const componentsWithSameName = addedComponents // $FlowFixMe
         .filter(a => a.idFromPath && a.idFromPath.name === addedComponent.idFromPath.name);
@@ -767,7 +770,7 @@ export default class AddComponents {
   }
 
   async _tryAddingMultiple(componentPathsStats: PathsStats): Promise<AddedComponent[]> {
-    const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
+    const addedP = Object.keys(componentPathsStats).map(async onePath => {
       const oneComponentPathStat = { [onePath]: componentPathsStats[onePath] };
       try {
         const addedComponent = await this.addOneComponent(oneComponentPathStat);
@@ -797,7 +800,7 @@ export default class AddComponents {
  */
 function validatePaths(fileArray: string[]): PathsStats {
   const componentPathsStats = {};
-  fileArray.forEach((componentPath) => {
+  fileArray.forEach(componentPath => {
     if (!fs.existsSync(componentPath)) {
       throw new PathsNotExist([componentPath]);
     }
@@ -814,7 +817,7 @@ function validatePaths(fileArray: string[]): PathsStats {
 function validateNoDuplicateIds(addComponents: Object[]) {
   const duplicateIds = {};
   const newGroupedComponents = groupby(addComponents, 'componentId');
-  Object.keys(newGroupedComponents).forEach((key) => {
+  Object.keys(newGroupedComponents).forEach(key => {
     if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
   });
   if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);

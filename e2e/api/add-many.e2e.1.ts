@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import path from 'path';
+import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as api from '../../src/api';

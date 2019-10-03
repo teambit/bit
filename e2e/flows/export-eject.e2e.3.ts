@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import path from 'path';
+import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { BASE_WEB_DOMAIN } from '../../src/constants';

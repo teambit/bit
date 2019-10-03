@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import * as path from 'path';
 import { expect } from 'chai';
 import parser from './vue-parser';
 

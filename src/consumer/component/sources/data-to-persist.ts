@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import Capsule from '../../../../components/core/capsule';
 import AbstractVinyl from './abstract-vinyl';

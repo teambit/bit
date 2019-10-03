@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import ConsumerComponent from '../component/consumer-component';
 import ComponentConfig from '../config';

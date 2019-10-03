@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import { AbstractVinyl } from '../consumer/component/sources';
 import { AUTO_GENERATED_STAMP, AUTO_GENERATED_MSG } from '../constants';
 import { PathOsBased } from '../utils/path';

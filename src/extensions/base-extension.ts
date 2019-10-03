@@ -1,6 +1,6 @@
 /** @flow */
 
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import Ajv from 'ajv';
@@ -23,58 +23,58 @@ const ajv = new Ajv();
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
 export type BaseExtensionOptions = {
-  file?: string | null | undefined
+  file?: string | null | undefined;
 };
 
 type BaseArgs = {
-  name: string,
-  rawConfig: Object,
+  name: string;
+  rawConfig: Object;
   // options: BaseExtensionOptions
-  options: ExtensionOptions | EnvExtensionOptions
+  options: ExtensionOptions | EnvExtensionOptions;
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
-  consumerPath?: PathOsBased | null | undefined,
-  scopePath?: PathOsBased | null | undefined,
-  context?: Object | null | undefined,
-  throws?: boolean
+  consumerPath?: PathOsBased | null | undefined;
+  scopePath?: PathOsBased | null | undefined;
+  context?: Object | null | undefined;
+  throws?: boolean;
 };
 
 type BaseLoadFromFileArgsProps = BaseArgs & {
-  filePath: string,
-  rootDir?: string,
-  throws?: boolean
+  filePath: string;
+  rootDir?: string;
+  throws?: boolean;
 };
 
 type StaticProps = BaseArgs & {
-  dynamicConfig: Object,
-  filePath: string,
-  rootDir?: string | null | undefined,
-  schema?: Object | null | undefined,
-  script?: Function,
-  disabled: boolean,
-  loaded: boolean,
-  context?: Object | null | undefined
+  dynamicConfig: Object;
+  filePath: string;
+  rootDir?: string | null | undefined;
+  schema?: Object | null | undefined;
+  script?: Function;
+  disabled: boolean;
+  loaded: boolean;
+  context?: Object | null | undefined;
 };
 
 type InstanceSpecificProps = {
-  api: Object
+  api: Object;
 };
 
 export type BaseExtensionProps = InstanceSpecificProps & StaticProps;
 
 export type BaseExtensionModel = {
-  name: string,
-  config: Object
+  name: string;
+  config: Object;
 };
 
 type ExtensionPath = {
-  resolvedPath: string,
-  componentPath: string
+  resolvedPath: string;
+  componentPath: string;
 };
 
 export type InitOptions = {
-  writeConfigFilesOnAction: boolean | null | undefined
+  writeConfigFilesOnAction: boolean | null | undefined;
 };
 
 // export type BaseExtensionProps = {

@@ -1,6 +1,6 @@
 // import { expect } from 'chai';
 // import sinon from 'sinon';
-// import path from 'path';
+// import * as path from 'path';
 // import searchIndex from 'search-index';
 // import serverlessIndex from '../search/serverless-index';
 //

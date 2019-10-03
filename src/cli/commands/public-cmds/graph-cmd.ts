@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import os from 'os';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -23,7 +23,12 @@ export default class Graph extends Command {
 
   action(
     [id]: [string],
-    options: { image: string | null | undefined, remote: string | null | undefined, allVersions: boolean | null | undefined, layout: string | null | undefined }
+    options: {
+      image: string | null | undefined;
+      remote: string | null | undefined;
+      allVersions: boolean | null | undefined;
+      layout: string | null | undefined;
+    }
   ): Promise<any> {
     if (!options.image) {
       options.image = path.join(os.tmpdir(), `${generateRandomStr()}.png`);

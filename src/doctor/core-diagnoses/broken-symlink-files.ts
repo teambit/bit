@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
 import R from 'ramda';
@@ -8,7 +8,7 @@ import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
 import { Scope } from '../../scope';
 
-type BrokenSymlink = { symlinkPath: string, brokenPath: string, pathToDelete: string };
+type BrokenSymlink = { symlinkPath: string; brokenPath: string; pathToDelete: string };
 export const DIAGNOSIS_NAME = 'check environment symlinks';
 
 export default class BrokenSymlinkFiles extends Diagnosis {
@@ -36,7 +36,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     const potentialSymlinks = glob.sync('**/node_modules/@bit/**', { cwd: envComponentsDir });
     const potentialSymlinksAbs = potentialSymlinks.map(p => path.join(envComponentsDir, p));
     const brokenSymlinks: BrokenSymlink[] = [];
-    const results = potentialSymlinksAbs.map(async (potentialSymlink) => {
+    const results = potentialSymlinksAbs.map(async potentialSymlink => {
       const link = await this._getLinkIfExist(potentialSymlink);
       if (!link) return;
       const exists = await fs.exists(link);

@@ -1,6 +1,6 @@
 /** @flow */
 import { spawn } from 'child_process';
-import path from 'path';
+import * as path from 'path';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { CFG_CI_FUNCTION_PATH_KEY, CFG_CI_ENABLE_KEY } from '../../constants';

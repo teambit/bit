@@ -1,7 +1,7 @@
 /** @flow */
 
 import R from 'ramda';
-import path from 'path';
+import * as path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
@@ -41,7 +41,7 @@ import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 import GeneralError from '../error/general-error';
 
-export type EnvPackages = { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
+export type EnvPackages = { dependencies?: Object; devDependencies?: Object; peerDependencies?: Object };
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
@@ -81,7 +81,7 @@ export default class EnvExtension extends BaseExtension {
 
   async install(
     scope: Scope,
-    opts: { verbose: boolean, dontPrintEnvMsg?: boolean },
+    opts: { verbose: boolean; dontPrintEnvMsg?: boolean },
     context?: Object
   ): Promise<ComponentWithDependencies[] | null | undefined> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
@@ -127,7 +127,7 @@ export default class EnvExtension extends BaseExtension {
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
     logger.debug('env-extension, toBitJsonObject');
     const files = {};
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
       files[file.name] = `./${relativePath}`;
     });
@@ -148,16 +148,16 @@ export default class EnvExtension extends BaseExtension {
     consumer,
     verbose = false
   }: {
-    configDir: string,
-    envType: EnvType,
-    deleteOldFiles: boolean,
-    consumer: Consumer | null | undefined,
-    verbose: boolean
+    configDir: string;
+    envType: EnvType;
+    deleteOldFiles: boolean;
+    consumer: Consumer | null | undefined;
+    verbose: boolean;
   }): Promise<string> {
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
     const filePathsToRemove = [];
 
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       if (deleteOldFiles) {
         const pathToDelete = consumer ? consumer.getPathRelativeToConsumer(file.path) : file.path;
         filePathsToRemove.push(pathToDelete);
@@ -166,7 +166,7 @@ export default class EnvExtension extends BaseExtension {
       file.verbose = verbose;
     });
     this.dataToPersist = new DataToPersist();
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       const cloned = file.clone();
       cloned.verbose = verbose;
       this.dataToPersist.addFile(cloned);
@@ -338,15 +338,15 @@ export default class EnvExtension extends BaseExtension {
     envType,
     context
   }: {
-    consumerPath: string,
-    scopePath: string,
-    componentOrigin: ComponentOrigin,
-    componentFromModel: ConsumerComponent,
-    componentConfig: ComponentConfig | null | undefined,
-    overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined,
-    workspaceConfig: WorkspaceConfig,
-    envType: EnvType,
-    context?: Object
+    consumerPath: string;
+    scopePath: string;
+    componentOrigin: ComponentOrigin;
+    componentFromModel: ConsumerComponent;
+    componentConfig: ComponentConfig | null | undefined;
+    overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
+    workspaceConfig: WorkspaceConfig;
+    envType: EnvType;
+    context?: Object;
   }): Promise<EnvExtension | null | undefined> {
     logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
@@ -392,14 +392,17 @@ export default class EnvExtension extends BaseExtension {
   /**
    * are two envs (in the model/scope format) different
    */
-  static areEnvsDifferent(envModelA: EnvExtensionModel | null | undefined, envModelB: EnvExtensionModel | null | undefined) {
-    const sortEnv = (env) => {
+  static areEnvsDifferent(
+    envModelA: EnvExtensionModel | null | undefined,
+    envModelB: EnvExtensionModel | null | undefined
+  ) {
+    const sortEnv = env => {
       env.files = R.sortBy(R.prop('name'), env.files);
       env.config = sortObject(env.config);
       const result = sortObject(env);
       return result;
     };
-    const stringifyEnv = (env) => {
+    const stringifyEnv = env => {
       if (!env) {
         return '';
       }

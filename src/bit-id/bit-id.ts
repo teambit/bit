@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
@@ -12,10 +12,10 @@ import GeneralError from '../error/general-error';
 import versionParser from '../version/version-parser';
 
 export type BitIdProps = {
-  scope?: string | null | undefined,
-  box?: string | null | undefined,
-  name: string,
-  version?: string | null | undefined
+  scope?: string | null | undefined;
+  box?: string | null | undefined;
+  name: string;
+  version?: string | null | undefined;
 };
 
 export type BitIdStr = string;
@@ -254,7 +254,7 @@ export default class BitId {
     const suggestedName = scope.toLowerCase();
     let cleanName = suggestedName
       .split('')
-      .map((char) => {
+      .map(char => {
         if (/^[$\-_!.a-z0-9]+$/.test(char)) return char;
         return '';
       })

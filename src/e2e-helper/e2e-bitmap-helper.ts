@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import json from 'comment-json';
 import { BIT_MAP } from '../constants';

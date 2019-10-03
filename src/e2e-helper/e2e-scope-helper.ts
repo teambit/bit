@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import { generateRandomStr } from './e2e-helper';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';

@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import pMapSeries from 'p-map-series';
 import Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';

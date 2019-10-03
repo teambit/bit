@@ -1,7 +1,7 @@
 /** @flow */
 import cliSpinners from 'cli-spinners';
 import os from 'os';
-import path from 'path';
+import * as path from 'path';
 import format from 'string-format';
 import { PathOsBased } from './utils/path';
 

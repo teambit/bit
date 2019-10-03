@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { linkAllToNodeModules, NodeModuleLinker } from '../../links';
 import { installPackages } from '../../npm-client/install-packages';
 import { COMPONENT_ORIGINS } from '../../constants';

@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { expect } from 'chai';
 import BitMap from './bit-map';
 import { BitId } from '../../bit-id';
@@ -23,7 +23,7 @@ const addComponentParamsImportedFixture = {
   rootDir: 'utils'
 };
 
-describe('BitMap', function () {
+describe('BitMap', function() {
   logger.debug = () => {};
   logger.info = () => {};
   this.timeout(0);

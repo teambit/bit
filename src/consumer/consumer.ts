@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import semver from 'semver';
 import fs from 'fs-extra';
 import R from 'ramda';
@@ -74,24 +74,24 @@ import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 
 type ConsumerProps = {
-  projectPath: string,
-  config: WorkspaceConfig,
-  scope: Scope,
-  created?: boolean,
-  isolated?: boolean,
-  bitMap: BitMap,
-  addedGitHooks?: string[] | null | undefined,
-  existingGitHooks: string[] | null | undefined
+  projectPath: string;
+  config: WorkspaceConfig;
+  scope: Scope;
+  created?: boolean;
+  isolated?: boolean;
+  bitMap: BitMap;
+  addedGitHooks?: string[] | null | undefined;
+  existingGitHooks: string[] | null | undefined;
 };
 
 type ComponentStatus = {
-  modified: boolean,
-  newlyCreated: boolean,
-  deleted: boolean,
-  staged: boolean,
-  notExist: boolean,
-  missingFromScope: boolean,
-  nested: boolean // when a component is nested, it doesn't matter whether it was modified
+  modified: boolean;
+  newlyCreated: boolean;
+  deleted: boolean;
+  staged: boolean;
+  notExist: boolean;
+  missingFromScope: boolean;
+  nested: boolean; // when a component is nested, it doesn't matter whether it was modified
 };
 
 /**
@@ -307,7 +307,7 @@ export default class Consumer {
    */
   async loadComponentFromModelIfExist(id: BitId): Promise<Component | null | undefined> {
     if (!id.version) return null;
-    return this.loadComponentFromModel(id).catch((err) => {
+    return this.loadComponentFromModel(id).catch(err => {
       if (err instanceof ComponentNotFound) return null;
       throw err;
     });
@@ -315,7 +315,7 @@ export default class Consumer {
 
   async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
+    const componentsP = modelComponent.listVersions().map(async versionNum => {
       const componentVersion = modelComponent.toComponentVersion(versionNum);
       const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
       return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects, manipulateDirData);
@@ -361,7 +361,7 @@ export default class Consumer {
   async loadComponents(
     ids: BitIds,
     throwOnFailure: boolean = true
-  ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
+  ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
@@ -390,7 +390,7 @@ export default class Consumer {
     const componentWithDependencies = await pMapSeries(versionDependenciesArr, versionDependencies =>
       versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
     );
-    componentWithDependencies.forEach((componentWithDeps) => {
+    componentWithDependencies.forEach(componentWithDeps => {
       const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
         c.id.isEqual(componentWithDeps.component.id)
       );
@@ -473,7 +473,7 @@ export default class Consumer {
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
-        dependenciesFS.get().forEach((dependency) => {
+        dependenciesFS.get().forEach(dependency => {
           const dependencyFromModel = dependenciesModel
             .get()
             .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
@@ -529,7 +529,7 @@ export default class Consumer {
     }
     function sortOverrides(overrides) {
       if (!overrides) return;
-      DEPENDENCIES_FIELDS.forEach((field) => {
+      DEPENDENCIES_FIELDS.forEach(field => {
         if (overrides[field]) overrides[field] = sortObject(overrides[field]);
       });
     }
@@ -618,14 +618,14 @@ export default class Consumer {
     ignoreUnresolvedDependencies: boolean | null | undefined,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
-  ): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
+  ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     if (!ignoreUnresolvedDependencies) {
-      const componentsWithMissingDeps = components.filter((component) => {
+      const componentsWithMissingDeps = components.filter(component => {
         return Boolean(component.issues);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
@@ -656,14 +656,18 @@ export default class Consumer {
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
-    const getPackageJsonDir = (componentMap: ComponentMap, bitId: BitId, bindingPrefix: string): PathRelative | null | undefined => {
+    const getPackageJsonDir = (
+      componentMap: ComponentMap,
+      bitId: BitId,
+      bindingPrefix: string
+    ): PathRelative | null | undefined => {
       if (componentMap.rootDir) return componentMap.rootDir;
       // it's author
       if (!bitId.hasScope()) return null;
       return getNodeModulesPathOfComponent(bindingPrefix, bitId);
     };
 
-    const updateVersionsP = components.map((component) => {
+    const updateVersionsP = components.map(component => {
       const id: BitId =
         component instanceof ModelComponent ? component.toBitIdWithLatestVersionAllowNull() : component.id;
       this.bitMap.updateComponentId(id);

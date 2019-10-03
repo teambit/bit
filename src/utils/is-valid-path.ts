@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 
 const MAX_LENGTH = 4096;

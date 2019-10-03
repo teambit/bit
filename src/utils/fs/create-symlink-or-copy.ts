@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import symlinkOrCopy from 'symlink-or-copy';
 import logger from '../../logger/logger';
@@ -11,7 +11,11 @@ import ShowDoctorError from '../../error/show-doctor-error';
  * @param destPath the path where to write the symlink
  * @param componentId
  */
-export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: PathOsBased, componentId?: string | null | undefined = '') {
+export default function createSymlinkOrCopy(
+  srcPath: PathOsBased,
+  destPath: PathOsBased,
+  componentId?: string | null | undefined = ''
+) {
   logger.info(`create-symlink-or-copy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));

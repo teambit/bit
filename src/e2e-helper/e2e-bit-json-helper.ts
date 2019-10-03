@@ -1,5 +1,5 @@
 import R from 'ramda';
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import set from 'lodash.set';
 import ScopesData from './e2e-scopes';

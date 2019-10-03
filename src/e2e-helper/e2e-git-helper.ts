@@ -1,5 +1,5 @@
 import glob from 'glob';
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
 import ScopeHelper from './e2e-scope-helper';

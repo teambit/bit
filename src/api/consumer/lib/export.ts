@@ -2,7 +2,7 @@
 import R from 'ramda';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -28,14 +28,14 @@ import { forkComponentsPrompt } from '../../../prompts';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export default (async function exportAction(params: {
-  ids: string[],
-  remote: string | null | undefined,
-  eject: boolean,
-  includeDependencies: boolean,
-  setCurrentScope: boolean,
-  includeNonStaged: boolean,
-  codemod: boolean,
-  force: boolean
+  ids: string[];
+  remote: string | null | undefined;
+  eject: boolean;
+  includeDependencies: boolean;
+  setCurrentScope: boolean;
+  includeNonStaged: boolean;
+  codemod: boolean;
+  force: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -55,14 +55,14 @@ async function exportComponents({
   codemod,
   force
 }: {
-  ids: string[],
-  remote: string | null | undefined,
-  includeDependencies: boolean,
-  setCurrentScope: boolean,
-  includeNonStaged: boolean,
-  codemod: boolean,
-  force: boolean
-}): Promise<{ updatedIds: BitId[], nonExistOnBitMap: BitId[], missingScope: BitId[], exported: BitId[] }> {
+  ids: string[];
+  remote: string | null | undefined;
+  includeDependencies: boolean;
+  setCurrentScope: boolean;
+  includeNonStaged: boolean;
+  codemod: boolean;
+  force: boolean;
+}): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   const defaultScope = consumer.config.defaultScope;
   const { idsToExport, missingScope } = await getComponentsToExport(
@@ -99,10 +99,10 @@ async function exportComponents({
   return { updatedIds, nonExistOnBitMap, missingScope, exported };
 }
 
-function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[], nonExistOnBitMap: BitIds } {
+function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
   const updatedIds = [];
   const nonExistOnBitMap = new BitIds();
-  componentsIds.forEach((componentsId) => {
+  componentsIds.forEach(componentsId => {
     const resultId = bitMap.updateComponentId(componentsId, true);
     if (resultId.hasVersion()) updatedIds.push(resultId);
     else nonExistOnBitMap.push(resultId);
@@ -117,10 +117,10 @@ async function getComponentsToExport(
   includeNonStaged: boolean,
   defaultScope: string | null | undefined,
   force: boolean
-): Promise<{ idsToExport: BitIds, missingScope: BitId[] }> {
+): Promise<{ idsToExport: BitIds; missingScope: BitId[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
-  const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds, missingScope: BitId[] } => {
+  const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds; missingScope: BitId[] } => {
     if (remote) return { idsToExport: bitIds, missingScope: [] };
     const [idsToExport, missingScope] = R.partition(id => id.hasScope() || defaultScope, bitIds);
     return { idsToExport: BitIds.fromArray(idsToExport), missingScope };
@@ -147,7 +147,7 @@ async function getComponentsToExport(
     loader.start(loaderMsg);
     return filterNonScopeIfNeeded(componentsToExport);
   }
-  const idsToExportP = ids.map(async (id) => {
+  const idsToExportP = ids.map(async id => {
     const parsedId = await getParsedId(consumer, id);
     const status = await consumer.getComponentStatusById(parsedId);
     if (status.nested) {
@@ -251,7 +251,7 @@ async function cleanOldComponents(consumer: Consumer, updatedIds: BitIds, idsToE
 }
 
 async function _throwForModified(consumer: Consumer, ids: BitIds) {
-  await pMapSeries(ids, async (id) => {
+  await pMapSeries(ids, async id => {
     const status = consumer.getComponentStatusById(id);
     if (status.modified) {
       throw new GeneralError(

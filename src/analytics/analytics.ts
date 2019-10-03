@@ -1,6 +1,6 @@
 /** @flow */
 import serializeError from 'serialize-error';
-import path from 'path';
+import * as path from 'path';
 import hashObj from 'object-hash';
 import uniqid from 'uniqid';
 import yn from 'yn';
@@ -114,7 +114,7 @@ class Analytics {
     const hashedFlags = {};
     const definedFlags = R.filter(flag => typeof flag !== 'undefined', flags);
     if (this.anonymous && !R.isEmpty(definedFlags)) {
-      Object.keys(definedFlags).forEach((key) => {
+      Object.keys(definedFlags).forEach(key => {
         hashedFlags[key] = this._hashLightly(flags[key]);
       });
       return hashedFlags;
@@ -154,7 +154,7 @@ class Analytics {
           // without it, when the message is large, it exits before the child got the complete message
           resolve();
         });
-        forked.on('error', (err) => {
+        forked.on('error', err => {
           reject(err);
         });
       } else {

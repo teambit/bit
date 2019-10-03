@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import uniqBy from 'lodash.uniqby';
 import BitObject from './object';
 import BitRawObject from './raw-object';
@@ -33,14 +33,14 @@ export default class Repository {
     this.types = types;
   }
 
-  static async load({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Promise<Repository> {
+  static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson, typesObj);
     const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
     repository.componentsIndex = componentsIndex;
     return repository;
   }
 
-  static create({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Repository {
+  static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
     const repository = new Repository(scopePath, scopeJson, typesObj);
     const componentsIndex = ComponentsIndex.create(scopePath);
     repository.componentsIndex = componentsIndex;
@@ -85,14 +85,14 @@ export default class Repository {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return fs
       .readFile(this.objectPath(ref))
-      .then((fileContents) => {
+      .then(fileContents => {
         return BitObject.parseObject(fileContents, this.types);
       })
       .then((parsedObject: BitObject) => {
         this.setCache(parsedObject);
         return parsedObject;
       })
-      .catch((err) => {
+      .catch(err => {
         if (err.code === 'ENOENT') {
           logger.debug(`Failed finding a ref file ${this.objectPath(ref)}.`);
         } else {
@@ -110,7 +110,7 @@ export default class Repository {
 
   async listRefs(): Promise<Refs[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
-    const refs = matches.map((str) => {
+    const refs = matches.map(str => {
       const hash = str.replace(path.sep, '');
       return new Ref(hash);
     });
@@ -120,7 +120,7 @@ export default class Repository {
   async listRawObjects(): Promise<BitRawObject[]> {
     const refs = await this.listRefs();
     return Promise.all(
-      refs.map(async (ref) => {
+      refs.map(async ref => {
         try {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
@@ -145,7 +145,7 @@ export default class Repository {
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
     const bitObjects = await Promise.all(
-      hashes.map(async (hash) => {
+      hashes.map(async hash => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const componentId = this.componentsIndex.getIdByHash(hash);
@@ -281,7 +281,7 @@ export default class Repository {
    * the `validate` argument.
    */
   _validateObjects(validate: boolean) {
-    Object.keys(this.objects).forEach((hash) => {
+    Object.keys(this.objects).forEach(hash => {
       const bitObject = this.objects[hash];
       // $FlowFixMe some BitObject classes have validate() method
       if (validate && bitObject.validate) {

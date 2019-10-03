@@ -2,7 +2,7 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
-import path from 'path';
+import * as path from 'path';
 import Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import { ComponentOrigin } from '../bit-map/component-map';

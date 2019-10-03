@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';

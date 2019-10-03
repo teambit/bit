@@ -1,14 +1,10 @@
 /** @flow */
 import chalk from 'chalk';
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
-import {
-  AddActionResults,
-  AddResult,
-  PathOrDSL
-} from '../../../consumer/component-ops/add-components/add-components';
+import { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 import { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -51,12 +47,12 @@ export default class Add extends Command {
       exclude,
       override = false
     }: {
-      id: string | null | undefined,
-      main: string | null | undefined,
-      tests: string | null | undefined,
-      namespace: string | null | undefined,
-      exclude: string | null | undefined,
-      override: boolean
+      id: string | null | undefined;
+      main: string | null | undefined;
+      tests: string | null | undefined;
+      namespace: string | null | undefined;
+      exclude: string | null | undefined;
+      override: boolean;
     }
   ): Promise<any> {
     if (namespace && id) {

@@ -1,5 +1,5 @@
 import glob from 'glob';
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import * as fixtures from '../../e2e/fixtures/fixtures';
 import { ensureAndWriteJson, generateRandomStr } from './e2e-helper';

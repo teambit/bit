@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import { GIT_HOOKS_NAMES } from '../constants';
 import logger from '../logger/logger';
@@ -9,9 +9,9 @@ import bitImportGitHook from './fixtures/bit-import-git-hook';
 const HOOKS_DIR_NAME = 'hooks';
 
 /*
-  * Setting up block level variable to store class state
-  * set's to null by default.
-*/
+ * Setting up block level variable to store class state
+ * set's to null by default.
+ */
 let instance = null;
 
 /**
@@ -41,7 +41,7 @@ export default class GitHooksManager {
    */
   static init(basePath: string) {
     const self = new GitHooksManager(basePath);
-    GIT_HOOKS_NAMES.forEach((hookName) => {
+    GIT_HOOKS_NAMES.forEach(hookName => {
       const hook = new GitHook(self.hooksDirPath, hookName, bitImportGitHook);
       self.hooks.set(hookName, hook);
     });

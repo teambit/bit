@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import FsHelper from './e2e-fs-helper';

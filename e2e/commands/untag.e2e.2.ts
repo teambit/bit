@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';

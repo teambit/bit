@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
 import { DEFAULT_INDEX_NAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';

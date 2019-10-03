@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { fork } from 'child_process';
-import path from 'path';
+import * as path from 'path';
 
 describe('worker', () => {
   // TODO: fix this test, the worker now do a different process than before
-  it.skip('should throw an error for a mismatch tester interface', (done) => {
+  it.skip('should throw an error for a mismatch tester interface', done => {
     const child = fork(path.join(__dirname, '..', '..', 'dist', 'specs-runner', 'worker.js'), {
       silent: false,
       env: {

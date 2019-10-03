@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import removeEmptyDir from './remove-empty-dir';

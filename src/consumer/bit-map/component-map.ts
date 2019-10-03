@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
@@ -19,25 +19,25 @@ import ShowDoctorError from '../../error/show-doctor-error';
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMapFile = {
-  name: string,
-  relativePath: PathLinux,
-  test: boolean
+  name: string;
+  relativePath: PathLinux;
+  test: boolean;
 };
 
 export type ComponentMapData = {
-  id: BitId,
-  files: ComponentMapFile[],
-  mainFile: PathLinux,
-  rootDir?: PathLinux | null | undefined,
-  trackDir?: PathLinux | null | undefined,
-  configDir?: PathLinux | null | undefined | ConfigDir | string,
-  origin: ComponentOrigin,
-  originallySharedDir?: PathLinux | null | undefined,
-  wrapDir?: PathLinux | null | undefined,
-  exported?: boolean | null | undefined
+  id: BitId;
+  files: ComponentMapFile[];
+  mainFile: PathLinux;
+  rootDir?: PathLinux | null | undefined;
+  trackDir?: PathLinux | null | undefined;
+  configDir?: PathLinux | null | undefined | ConfigDir | string;
+  origin: ComponentOrigin;
+  originallySharedDir?: PathLinux | null | undefined;
+  wrapDir?: PathLinux | null | undefined;
+  exported?: boolean | null | undefined;
 };
 
-export type PathChange = { from: PathLinux, to: PathLinux };
+export type PathChange = { from: PathLinux; to: PathLinux };
 
 export default class ComponentMap {
   id: BitId;
@@ -101,7 +101,7 @@ export default class ComponentMap {
       wrapDir: this.wrapDir,
       exported: this.exported
     };
-    const notNil = (val) => {
+    const notNil = val => {
       return !R.isNil(val);
     };
     res = R.filter(notNil, res);
@@ -122,7 +122,7 @@ export default class ComponentMap {
 
   static changeFilesPathAccordingToItsRootDir(existingRootDir: PathLinux, files: ComponentMapFile[]): PathChange[] {
     const changes = [];
-    files.forEach((file) => {
+    files.forEach(file => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
       changes.push({ from: file.relativePath, to: newPath });
       file.relativePath = newPath;
@@ -135,7 +135,7 @@ export default class ComponentMap {
   }
 
   _findFile(fileName: PathLinux): ComponentMapFile | null | undefined {
-    return this.files.find((file) => {
+    return this.files.find(file => {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
@@ -172,7 +172,7 @@ export default class ComponentMap {
       this.rootDir = newRootDirNormalized;
       return changes;
     }
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       const filePath = this.rootDir ? path.join(this.rootDir, file.relativePath) : file.relativePath;
       if (filePath.startsWith(dirFrom)) {
         const fileTo = filePath.replace(dirFrom, dirTo);
@@ -191,7 +191,7 @@ export default class ComponentMap {
   }
 
   getFilesRelativeToConsumer(): PathLinux[] {
-    return this.files.map((file) => {
+    return this.files.map(file => {
       return this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
     });
   }
@@ -200,7 +200,7 @@ export default class ComponentMap {
     return this.files.map(file => file.relativePath);
   }
 
-  getFilesGroupedByBeingTests(): { allFiles: string[], nonTestsFiles: string[], testsFiles: string[] } {
+  getFilesGroupedByBeingTests(): { allFiles: string[]; nonTestsFiles: string[]; testsFiles: string[] } {
     const allFiles = [];
     const nonTestsFiles = [];
     const testsFiles = [];
@@ -378,7 +378,7 @@ export default class ComponentMap {
     }
 
     if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
-    this.files.forEach((file) => {
+    this.files.forEach(file => {
       if (!isValidPath(file.relativePath)) {
         throw new ValidationError(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
@@ -396,7 +396,7 @@ export default class ComponentMap {
     }
     if (this.trackDir) {
       const trackDir = this.trackDir;
-      this.files.forEach((file) => {
+      this.files.forEach(file => {
         if (!file.relativePath.startsWith(trackDir)) {
           throw new ValidationError(
             `${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`

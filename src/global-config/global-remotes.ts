@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '../constants';
 import { writeFile } from '../utils';
@@ -40,7 +40,7 @@ export default class GlobalRemotes {
     return fs
       .readFile(path.join(GLOBAL_CONFIG, GLOBAL_REMOTES))
       .then(contents => new GlobalRemotes(JSON.parse(contents.toString('utf8'))))
-      .catch((err) => {
+      .catch(err => {
         if (err.code !== 'ENOENT') return err;
         const globalRemotes = new GlobalRemotes({});
         return globalRemotes.write().then(() => globalRemotes);

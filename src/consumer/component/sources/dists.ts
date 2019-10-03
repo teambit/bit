@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import Dist from './dist';
 import Consumer from '../../consumer';
 import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';

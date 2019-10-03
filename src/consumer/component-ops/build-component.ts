@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';

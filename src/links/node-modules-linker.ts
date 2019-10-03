@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
@@ -23,10 +23,10 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import { getPathRelativeRegardlessCWD } from '../utils/path';
 import RemovePath from '../consumer/component/sources/remove-path';
 
-type LinkDetail = { from: string, to: string };
+type LinkDetail = { from: string; to: string };
 export type LinksResult = {
-  id: BitId,
-  bound: LinkDetail[]
+  id: BitId;
+  bound: LinkDetail[];
 };
 
 /**
@@ -55,7 +55,7 @@ export default class NodeModuleLinker {
     this.dataToPersist = new DataToPersist();
     await this._populateShouldDependenciesSavedAsComponentsData();
     await Promise.all(
-      this.components.map((component) => {
+      this.components.map(component => {
         const componentId = component.id.toString();
         logger.debug(`linking component to node_modules: ${componentId}`);
         const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
@@ -93,7 +93,7 @@ export default class NodeModuleLinker {
     this.dataToPersist.files.forEach((file: LinkFile) => {
       addLinkResult(file.componentId, file.srcPath, file.path);
     });
-    this.components.forEach((component) => {
+    this.components.forEach(component => {
       const existingLinkResult = getExistingLinkResult(component.id);
       if (!existingLinkResult) {
         linksResults.push({ id: component.id, bound: [] });
@@ -137,7 +137,7 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
-    filesToBind.forEach((file) => {
+    filesToBind.forEach(file => {
       const isMain = file === component.componentMap.mainFile;
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true), file);
@@ -223,7 +223,7 @@ export default class NodeModuleLinker {
     }
     const dirs = dirsToFilter.length ? unfilteredDirs.filter(dir => !dirsToFilter.includes(dir)) : unfilteredDirs;
     if (!dirs.length) return [];
-    return dirs.map((dir) => {
+    return dirs.map(dir => {
       const fromDir = path.join(fromNodeModules, dir);
       const toDir = path.join(toNodeModules, dir);
       return Symlink.makeInstance(fromDir, toDir);
@@ -292,7 +292,7 @@ export default class NodeModuleLinker {
     if (!this.components.length || !this.consumer) return;
     const bitIds = this.components.map(c => c.id);
     const shouldDependenciesSavedAsComponents = await this.consumer.shouldDependenciesSavedAsComponents(bitIds);
-    this.components.forEach((component) => {
+    this.components.forEach(component => {
       const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c => c.id.isEqual(component.id));
       if (!shouldSavedAsComponents) {
         throw new Error(

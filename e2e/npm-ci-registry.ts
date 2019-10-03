@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import execa from 'execa';
 import tar from 'tar';
 import { ChildProcess } from 'child_process';

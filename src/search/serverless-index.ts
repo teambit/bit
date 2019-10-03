@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 // import searchIndex from 'search-index';
 import logger from '../logger/logger';

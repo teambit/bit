@@ -1,6 +1,6 @@
 const mock = require('mock-fs');
 import chai, { expect } from 'chai';
-import path from 'path';
+import * as path from 'path';
 import FsContainer from './container';
 
 chai.use(require('chai-fs'));
@@ -77,7 +77,7 @@ describe('FsContainer', () => {
         output += data;
       });
       execResults.stdout.on('error', (error: string) => {
-        console.log('on error', error)
+        console.log('on error', error);
       });
       // @ts-ignore
       execResults.on('close', () => {

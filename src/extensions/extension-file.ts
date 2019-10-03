@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import vinylFile from 'vinyl-file';
 import { AbstractVinyl } from '../consumer/component/sources';

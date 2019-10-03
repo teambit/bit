@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
 import { BitId } from '../../../../bit-id';

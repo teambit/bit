@@ -1,6 +1,6 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
-import path from 'path';
+import * as path from 'path';
 import childProcess from 'child_process';
 import { expect } from 'chai';
 import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';

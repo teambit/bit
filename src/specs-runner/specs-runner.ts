@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
+import * as path from 'path';
 import execa from 'execa';
 import pEvent from 'p-event';
 import deserializeError from 'deserialize-error';
@@ -16,9 +16,9 @@ import { SpecsResultsWithMetaData } from '../consumer/specs-results/specs-result
 import { BitId } from '../bit-id';
 
 export type Tester = {
-  run: (filePath: string) => Promise<Results>,
-  globals: Object,
-  modules: Object
+  run: (filePath: string) => Promise<Results>;
+  globals: Object;
+  modules: Object;
 };
 
 export default (async function run({
@@ -27,10 +27,10 @@ export default (async function run({
   includeUnmodified = false,
   verbose
 }: {
-  ids: string[] | null | undefined,
-  forkLevel: ForkLevel,
-  includeUnmodified: boolean,
-  verbose: boolean | null | undefined
+  ids: string[] | null | undefined;
+  forkLevel: ForkLevel;
+  includeUnmodified: boolean;
+  verbose: boolean | null | undefined;
 }): Promise<SpecsResultsWithMetaData | null | undefined> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
@@ -81,9 +81,9 @@ async function runOnChildProcess({
   includeUnmodified,
   verbose
 }: {
-  ids?: string[] | null | undefined,
-  includeUnmodified: boolean | null | undefined,
-  verbose: boolean | null | undefined
+  ids?: string[] | null | undefined;
+  includeUnmodified: boolean | null | undefined;
+  verbose: boolean | null | undefined;
 }): Promise<SpecsResultsWithMetaData | null | undefined> {
   // Check if we run from npm or from binary (pkg)
   let args = [];
@@ -165,7 +165,7 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
     };
     return finalResults;
   }
-  const deserializeFailure = (failure) => {
+  const deserializeFailure = failure => {
     if (!failure) return undefined;
     const deserializedFailure = failure;
     if (failure.err) {
@@ -178,7 +178,7 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
     return deserializedFailure;
   };
 
-  const deserializeResult = (result) => {
+  const deserializeResult = result => {
     result.componentId = new BitId(result.componentId); // when BitId is received from a fork it loses its class and appears as an object
     if (!result.failures) return result;
     result.failures = result.failures.map(deserializeFailure);

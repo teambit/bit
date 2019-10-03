@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import normalize from 'normalize-path';
 
 export type PathLinux = string; // Linux format path (even when running on Windows)

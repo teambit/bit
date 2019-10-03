@@ -1,6 +1,6 @@
 import R from 'ramda';
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';

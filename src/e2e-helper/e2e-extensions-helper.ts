@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
 import BitJsonHelper from './e2e-bit-json-helper';

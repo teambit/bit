@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import path from 'path';
+import * as path from 'path';
 import * as fixtures from '../fixtures/fixtures';
 import Helper from '../../src/e2e-helper/e2e-helper';
 

@@ -1,5 +1,5 @@
 import R from 'ramda';
-import path from 'path';
+import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import Capsule from '../../components/core/capsule';

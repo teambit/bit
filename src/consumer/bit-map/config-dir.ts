@@ -1,6 +1,6 @@
 /** @flow */
 
-import path from 'path';
+import * as path from 'path';
 import format from 'string-format';
 import { pathNormalizeToLinux } from '../../utils';
 import { COMPONENT_DIR } from '../../constants';
@@ -41,7 +41,7 @@ export default class ConfigDir {
     }
   }
 
-  getCleaned({ cleanComponentDir, cleanEnvType }: { cleanComponentDir: boolean, cleanEnvType: boolean }): ConfigDir {
+  getCleaned({ cleanComponentDir, cleanEnvType }: { cleanComponentDir: boolean; cleanEnvType: boolean }): ConfigDir {
     const componentDir = cleanComponentDir ? '' : `{${COMPONENT_DIR}}`;
     const envType = cleanEnvType ? '' : '{ENV_TYPE}';
     const cleaned = format(this.dirPath, { [`{${COMPONENT_DIR}}`]: componentDir, ENV_TYPE: envType });
@@ -56,7 +56,13 @@ export default class ConfigDir {
     return this.getCleaned({ cleanComponentDir: true, cleanEnvType: false });
   }
 
-  getResolved({ componentDir, envType }: { componentDir?: string | null | undefined, envType?: string | null | undefined }): ConfigDir {
+  getResolved({
+    componentDir,
+    envType
+  }: {
+    componentDir?: string | null | undefined;
+    envType?: string | null | undefined;
+  }): ConfigDir {
     const resolvedComponentDir = componentDir || `{${COMPONENT_DIR}}`;
     const resolvedEnvType = envType || '{ENV_TYPE}';
     const resolved = format(this.dirPath, { [COMPONENT_DIR]: resolvedComponentDir, ENV_TYPE: resolvedEnvType });

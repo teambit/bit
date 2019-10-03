@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
@@ -23,18 +23,18 @@ import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 
 export type RegularExtensionObject = {
-  rawConfig: Object,
-  options: ExtensionOptions
+  rawConfig: Object;
+  options: ExtensionOptions;
 };
 
 export type EnvFile = {
-  [string]: PathLinux
+  [string]: PathLinux;
 };
 
 export type EnvExtensionObject = {
-  rawConfig: Object,
-  options: EnvExtensionOptions,
-  files: string[]
+  rawConfig: Object;
+  options: EnvExtensionOptions;
+  files: string[];
 };
 
 export type TesterExtensionObject = EnvExtensionObject;
@@ -47,15 +47,15 @@ export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
 export type AbstractConfigProps = {
-  compiler?: string | Compilers,
-  tester?: string | Testers,
-  dependencies?: Object,
-  devDependencies?: Object,
-  compilerDependencies?: Object,
-  testerDependencies?: Object,
-  lang?: string,
-  bindingPrefix?: string,
-  extensions?: Extensions
+  compiler?: string | Compilers;
+  tester?: string | Testers;
+  dependencies?: Object;
+  devDependencies?: Object;
+  compilerDependencies?: Object;
+  testerDependencies?: Object;
+  lang?: string;
+  bindingPrefix?: string;
+  extensions?: Extensions;
 };
 
 /**
@@ -182,8 +182,8 @@ export default class AbstractConfig {
     workspaceDir,
     componentDir
   }: {
-    workspaceDir: PathOsBasedAbsolute,
-    componentDir?: PathOsBasedRelative
+    workspaceDir: PathOsBasedAbsolute;
+    componentDir?: PathOsBasedRelative;
   }): Promise<string[]> {
     const jsonFiles = await this.prepareToWrite({ workspaceDir, componentDir });
     const dataToPersist = new DataToPersist();
@@ -196,8 +196,8 @@ export default class AbstractConfig {
     workspaceDir,
     componentDir = '.'
   }: {
-    workspaceDir: PathOsBasedAbsolute,
-    componentDir?: PathOsBasedRelative
+    workspaceDir: PathOsBasedAbsolute;
+    componentDir?: PathOsBasedRelative;
   }): Promise<JSONFile[]> {
     const plainObject = this.toPlainObject();
     const JsonFiles = [];

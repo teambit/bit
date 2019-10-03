@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import GeneralError from '../../error/general-error';
 import { PathOsBasedRelative } from '../path';
 import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../constants';

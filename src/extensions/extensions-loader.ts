@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import Extension from './extension';
@@ -83,7 +83,7 @@ const _getGlobalBitJson = async (throws: boolean) => {
     fs
       .readJson(globalBitJsonPath, { throws })
       // Implementing the catch my self since the throws: false not really workging
-      .catch((e) => {
+      .catch(e => {
         if (throws) {
           throw e;
         }

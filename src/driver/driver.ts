@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import bitJavascript from 'bit-javascript';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';

@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
 import { mapToObject, objectToTupleArray } from '../utils';

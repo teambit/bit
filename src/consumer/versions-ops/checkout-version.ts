@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';

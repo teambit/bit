@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import glob from 'glob';
 import R from 'ramda';
-import path from 'path';
+import * as path from 'path';
 import semver from 'semver';
 import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
@@ -14,12 +14,15 @@ import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 import ImportComponents from '../../../consumer/component-ops/import-components';
 
-const key = R.compose(R.head, R.keys);
+const key = R.compose(
+  R.head,
+  R.keys
+);
 
 export type EnvironmentOptions = {
-  tester: boolean,
-  compiler: boolean,
-  extension: boolean
+  tester: boolean;
+  compiler: boolean;
+  extension: boolean;
 };
 
 export default (async function importAction(
@@ -51,7 +54,7 @@ export default (async function importAction(
       if (environmentOptions.extension) {
         const idWithoutVersion = BitId.getStringWithoutVersion(id);
         // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.config.extensions).find((ext) => {
+        const oldVersion = Object.keys(consumer.config.extensions).find(ext => {
           return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
         });
         if (oldVersion) {
@@ -139,7 +142,7 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
   };
   if (installNpmPackages) return Promise.resolve(warnings);
   const projectDir = consumer.getPath();
-  const getPackageJson = (dir) => {
+  const getPackageJson = dir => {
     try {
       return fs.readJSONSync(path.join(dir, 'package.json'));
     } catch (e) {
@@ -151,7 +154,12 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
 
   const getNameAndVersion = pj => ({ [pj.name]: pj.version });
   const nodeModules = R.mergeAll(
-    glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
+    glob.sync(path.join(projectDir, 'node_modules', '*')).map(
+      R.compose(
+        getNameAndVersion,
+        getPackageJson
+      )
+    )
   );
 
   // eslint-disable-next-line

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import R from 'ramda';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';

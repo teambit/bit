@@ -4,7 +4,7 @@ import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import path from 'path';
+import * as path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import { PathOsBased } from '../utils/path';
