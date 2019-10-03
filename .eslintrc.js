@@ -41,6 +41,9 @@ module.exports = {
     // TEMP RULES
     // '@typescript-eslint/no-explicit-any': 'off',
     // END OF TEMP RULES
+    'prefer-object-spread': 'off',
+    'import/no-duplicates': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
     'import/no-useless-path-segments': 'off',
     'lines-between-class-members': 'off',
