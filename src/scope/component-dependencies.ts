@@ -8,14 +8,13 @@ export default class ComponentWithDependencies {
   devDependencies: Component[];
   compilerDependencies: Component[];
   testerDependencies: Component[];
-  allDependencies: Component[];
 
   constructor(props: {
-    component: Component,
-    dependencies: Component[],
-    devDependencies: Component[],
-    compilerDependencies: Component[],
-    testerDependencies: Component[]
+    component: Component;
+    dependencies: Component[];
+    devDependencies: Component[];
+    compilerDependencies: Component[];
+    testerDependencies: Component[];
   }) {
     this.component = props.component;
     this.dependencies = props.dependencies || [];
