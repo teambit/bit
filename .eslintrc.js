@@ -31,6 +31,11 @@ module.exports = {
     // Common abbreviations are known and readable
     'unicorn/prevent-abbreviations': 'off',
     // END taken from https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
+
+    // TEMP RULES
+    // '@typescript-eslint/no-explicit-any': 'off',
+    // END OF TEMP RULES
+
     'mocha/no-mocha-arrows': 'off',
     'no-bitwise': 'off',
     'arrow-body-style': [0, 'as-needed'],
