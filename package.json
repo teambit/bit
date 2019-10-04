@@ -45,7 +45,9 @@
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
-    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'"
+    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "pkg": {
     "assets": [
@@ -162,7 +164,8 @@
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
     "winston": "^3.2.1",
-    "yn": "^2.0.0"
+    "yn": "^2.0.0",
+    "snyk": "^1.230.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
@@ -213,5 +216,6 @@
       "prettier-eslint --write",
       "git add"
     ]
-  }
+  },
+  "snyk": true
 }
