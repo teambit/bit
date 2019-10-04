@@ -124,6 +124,7 @@ export default (async function runInteractive({
       // We remove the eol since sometime interactive frameworks added line breaks if the question is too long
       if (_removeEol(currString).includes(_removeEol(triggerText))) {
         const inputsToWrite = inputs[pointer].inputs;
+        // eslint-disable-next-line promise/catch-or-return
         writeInputsArray(inputsToWrite).then(() => {
           leftInputsArrays -= 1;
           // Finished to write all - end stream

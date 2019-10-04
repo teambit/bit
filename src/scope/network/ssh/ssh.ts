@@ -366,7 +366,7 @@ export default class SSH implements Network {
       context
     ).then((data: string) => {
       const { payload } = this._unpack(data);
-      return Promise.resolve(RemovedObjects.fromObjects(payload));
+      return RemovedObjects.fromObjects(payload);
     });
   }
   deprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
@@ -378,7 +378,7 @@ export default class SSH implements Network {
       context
     ).then((data: string) => {
       const { payload } = this._unpack(data);
-      return Promise.resolve(payload);
+      return payload;
     });
   }
   undeprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
@@ -390,7 +390,7 @@ export default class SSH implements Network {
       context
     ).then((data: string) => {
       const { payload } = this._unpack(data);
-      return Promise.resolve(payload);
+      return payload;
     });
   }
   push(componentObjects: ComponentObjects): Promise<string[]> {

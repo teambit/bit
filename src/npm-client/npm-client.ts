@@ -147,12 +147,10 @@ const _installInOneDirectory = ({
     .catch(err => {
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
-      return Promise.reject(
-        new ShowDoctorError(
-          `${stderr}\n\n${chalk.yellow(
-            `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
-          )}`
-        )
+      throw new ShowDoctorError(
+        `${stderr}\n\n${chalk.yellow(
+          `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
+        )}`
       );
     });
 };

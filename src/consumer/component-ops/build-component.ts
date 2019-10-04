@@ -395,7 +395,7 @@ async function _runBuild({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
+      return compiler.oldAction(files, rootDistDir, context);
     })
     .catch(e => {
       if (tmpFolderFullPath) {

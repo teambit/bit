@@ -12,6 +12,7 @@ loudRejection();
 HooksManager.init();
 
 // Load extensions
+// eslint-disable-next-line promise/catch-or-return
 loadExtensions().then(extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
   extensions.forEach(extension => {

@@ -91,7 +91,7 @@ class Analytics {
             return setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
           });
         }
-        return Promise.resolve();
+        return null;
       });
     }
     return Promise.resolve();

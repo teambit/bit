@@ -8,16 +8,16 @@ module.exports = {
     // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
     // 'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
-    // 'plugin:promise/recommended',
+    'plugin:promise/recommended',
     // 'plugin:unicorn/recommended',
     // 'plugin:mocha/recommended',
     'prettier',
     'prettier/@typescript-eslint'
   ],
   plugins: [
-    '@typescript-eslint'
+    '@typescript-eslint',
     // 'eslint-comments',
-    // 'promise',
+    'promise'
     // 'mocha',
     // 'unicorn'
   ],
@@ -46,6 +46,8 @@ module.exports = {
     // TEMP RULES
     // '@typescript-eslint/no-explicit-any': 'off',
     // END OF TEMP RULES
+    'promise/always-return': 'off',
+    'promise/no-nesting': 'off',
     'prefer-object-spread': 'off',
     'import/no-duplicates': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
