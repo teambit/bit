@@ -401,6 +401,31 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  check_types:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'run TSC'
+          command: 'cd bit && npm run check-types'
+      -
+        store_test_results:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: bit/junit
   e2e_test:
     <<: *defaults
     environment:
@@ -588,6 +613,10 @@ workflows:
             - build_bit_javascript
       -
         lint:
+          requires:
+            - install_npm_deps
+      -
+        check_types:
           requires:
             - install_npm_deps
       # -
