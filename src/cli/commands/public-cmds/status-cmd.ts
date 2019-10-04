@@ -35,6 +35,7 @@ export default class Status extends Command {
   migration = true;
   json = false;
 
+  // eslint-disable-next-line no-empty-pattern
   action([], { json }: { json?: boolean }): Promise<Object> {
     this.json = json;
     return status();
@@ -77,7 +78,7 @@ export default class Status extends Command {
           chalk.yellow(`\n       ${label}: \n`) +
           chalk.white(
             Object.keys(value)
-              .map(key => `          ${key} -> ${componentIssueToString(value[key])}`)
+              .map(k => `          ${k} -> ${componentIssueToString(value[k])}`)
               .join('\n')
           )
         );

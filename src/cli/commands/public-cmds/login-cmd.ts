@@ -20,7 +20,7 @@ export default class Login extends Command {
     ]
   ];
   action(
-    [],
+    [], // eslint-disable-line no-empty-pattern
     {
       port,
       suppressBrowserLaunch = false,
@@ -35,16 +35,10 @@ export default class Login extends Command {
       machineName?: string;
     }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      ({ isAlreadyLoggedIn, username, npmrcPath, writeToNpmrcError }) => ({
-        isAlreadyLoggedIn,
-        username,
-        npmrcPath,
-        writeToNpmrcError,
-        skipRegistryConfig
-      })
-    );
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(results => ({
+      ...results,
+      skipRegistryConfig
+    }));
   }
   report({
     isAlreadyLoggedIn = false,

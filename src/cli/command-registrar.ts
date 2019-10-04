@@ -201,7 +201,7 @@ export default class CommandRegistrar {
 
   printHelp() {
     const helpTemplateGenerator = require('./templates/help');
-    console.log(helpTemplateGenerator(this.extensionsCommands));
+    console.log(helpTemplateGenerator(this.extensionsCommands)); // eslint-disable-line no-console
     return this;
   }
 

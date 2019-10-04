@@ -390,7 +390,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     MissingFilesFromComponent,
     err => {
-      return `component ${err.id} is invalid as part or all of the component files were deleted. please use \'bit remove\' to resolve the issue`;
+      return `component ${err.id} is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue`;
     }
   ],
   [
@@ -450,13 +450,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     NoIdMatchWildcard,
     err => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`
   ],
-  [NothingToCompareTo, err => 'no previous versions to compare'],
+  [NothingToCompareTo, () => 'no previous versions to compare'],
   [
     NewerVersionFound,
     // err => JSON.stringify(err.newerVersions)
     err => newerVersionTemplate(err.newerVersions)
   ],
-  [PromptCanceled, err => chalk.yellow('operation aborted')],
+  [PromptCanceled, () => chalk.yellow('operation aborted')],
   [
     ExternalTestErrors,
     err =>
@@ -512,7 +512,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     GitNotFound,
-    err =>
+    () =>
       "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'"
   ],
   [

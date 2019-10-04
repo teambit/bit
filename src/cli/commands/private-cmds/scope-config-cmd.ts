@@ -1,30 +1,8 @@
 /* eslint max-classes-per-file: 0 */
-import Command from '../../command';
 import chalk from 'chalk';
+import Command from '../../command';
 import { objectToStringifiedTupleArray } from '../../../utils';
 import { scopeConfig } from '../../../api/scope';
-
-export default class ScopeConfig extends Command {
-  name = 'scope-config';
-  description = 'scope config management';
-  alias = '';
-  commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
-  opts = [];
-
-  action(): Promise<any> {
-    return scopeConfig.list();
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
-    return objectToStringifiedTupleArray(conf)
-      .map(tuple => {
-        return tuple.join('     ');
-      })
-      .join('\n');
-  }
-}
 
 class ScopeConfigSet extends Command {
   name = 'set <key> <val>';
@@ -69,9 +47,7 @@ class ScopeConfigList extends Command {
     return scopeConfig.list();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: any }): string {
+  report(conf: { [key: string]: any }): string {
     return objectToStringifiedTupleArray(conf)
       .map(tuple => {
         return tuple.join('     ');
@@ -90,9 +66,27 @@ class ScopeConfigDel extends Command {
     return scopeConfig.del(key);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
+  report(): string {
     return 'deleted successfully';
+  }
+}
+
+export default class ScopeConfig extends Command {
+  name = 'scope-config';
+  description = 'scope config management';
+  alias = '';
+  commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
+  opts = [];
+
+  action(): Promise<any> {
+    return scopeConfig.list();
+  }
+
+  report(conf: { [key: string]: string }): string {
+    return objectToStringifiedTupleArray(conf)
+      .map(tuple => {
+        return tuple.join('     ');
+      })
+      .join('\n');
   }
 }

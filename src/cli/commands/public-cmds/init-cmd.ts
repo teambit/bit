@@ -37,9 +37,7 @@ export default class Init extends Command {
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
   ];
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  action([path]: [string], flags: Object): Promise<{ [string]: any }> {
+  action([path]: [string], flags: Object): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
       return initInteractive();

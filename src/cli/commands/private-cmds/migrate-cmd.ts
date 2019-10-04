@@ -16,7 +16,7 @@ export default class Migrate extends Command {
     return migrate(scopePath, verbose).then(result => ({ result, verbose }));
   }
 
-  report({ result }: { result: boolean }): string {
+  report(): string {
     return chalk.green('migrate finished');
   }
 }

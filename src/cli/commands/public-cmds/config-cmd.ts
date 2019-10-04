@@ -7,30 +7,6 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 
-export default class Config extends Command {
-  name = 'config';
-  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`;
-  alias = '';
-  commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
-  opts = [];
-  migration = false;
-
-  action(): Promise<any> {
-    return config.list();
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
-    return objectToTupleArray(conf)
-      .map(tuple => {
-        tuple[0] = rightpad(tuple[0], 30, ' ');
-        return tuple.join('');
-      })
-      .join('\n');
-  }
-}
-
 class ConfigSet extends Command {
   name = 'set <key> <val>';
   description = 'set a global configuration';
@@ -41,9 +17,7 @@ class ConfigSet extends Command {
     return config.set(key, value);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
+  report(): string {
     return chalk.green('added configuration successfully');
   }
 }
@@ -73,9 +47,7 @@ class ConfigList extends Command {
     return config.list();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
+  report(conf: { [key: string]: string }): string {
     return objectToTupleArray(conf)
       .map(tuple => {
         return tuple.join('     ');
@@ -94,9 +66,29 @@ class ConfigDel extends Command {
     return config.del(key);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  report(conf: { [string]: string }): string {
+  report(): string {
     return chalk.green('deleted successfully');
+  }
+}
+
+export default class Config extends Command {
+  name = 'config';
+  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`;
+  alias = '';
+  commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
+  opts = [];
+  migration = false;
+
+  action(): Promise<any> {
+    return config.list();
+  }
+
+  report(conf: { [key: string]: string }): string {
+    return objectToTupleArray(conf)
+      .map(tuple => {
+        tuple[0] = rightpad(tuple[0], 30, ' ');
+        return tuple.join('');
+      })
+      .join('\n');
   }
 }
