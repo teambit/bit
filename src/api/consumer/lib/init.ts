@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import { Consumer } from '../../../consumer';
 import { Repository } from '../../../scope/objects';

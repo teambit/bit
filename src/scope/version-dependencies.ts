@@ -1,4 +1,3 @@
-/** @flow */
 import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';

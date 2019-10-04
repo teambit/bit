@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
 import { put } from '../../../api/scope';
@@ -19,7 +18,7 @@ export default class Put extends Command {
     checkVersionCompatibilityOnTheServer(headers.version);
     return new Promise((resolve, reject) => {
       process.stdin
-        .on('data', (chunk) => {
+        .on('data', chunk => {
           data += chunk.toString();
         })
         .on('end', () => {

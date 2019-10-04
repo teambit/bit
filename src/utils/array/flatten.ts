@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * flatten arrays to a single dimension.
  * @name flatten

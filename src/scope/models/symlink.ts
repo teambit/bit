@@ -1,12 +1,11 @@
-/** @flow */
 import BitObject from '../objects/object';
 import { getStringifyArgs } from '../../utils';
 import { BitId } from '../../bit-id';
 
 export type SymlinkProp = {
-  scope: string,
-  name: string,
-  realScope: string
+  scope: string;
+  name: string;
+  realScope: string;
 };
 
 export default class Symlink extends BitObject {

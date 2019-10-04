@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import R from 'ramda';
 import { GIT_HOOKS_NAMES } from '../constants';

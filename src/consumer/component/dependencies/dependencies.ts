@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import Dependency from './dependency';
 import { RelativePath } from './dependency';

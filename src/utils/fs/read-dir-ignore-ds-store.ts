@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 
 export default (async function readDirIgnoreDsStore(dirPath: string): Promise<string[]> {

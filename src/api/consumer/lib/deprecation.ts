@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer, loadConsumerIfExist, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOTE_DEPRECATE, BEFORE_REMOTE_UNDEPRECATE } from '../../../cli/loader/loader-messages';
@@ -13,7 +12,7 @@ import { Remotes } from '../../../remotes';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import BitIds from '../../../bit-id/bit-ids';
 
-export async function deprecate({ ids, remote }: { ids: string[], remote: boolean }): Promise<any> {
+export async function deprecate({ ids, remote }: { ids: string[]; remote: boolean }): Promise<any> {
   if (remote) {
     loader.start(BEFORE_REMOTE_DEPRECATE);
     const consumer = await loadConsumerIfExist();
@@ -27,7 +26,7 @@ export async function deprecate({ ids, remote }: { ids: string[], remote: boolea
   return deprecateMany(consumer.scope, bitIds);
 }
 
-export async function undeprecate({ ids, remote }: { ids: string[], remote: boolean }): Promise<any> {
+export async function undeprecate({ ids, remote }: { ids: string[]; remote: boolean }): Promise<any> {
   if (remote) {
     loader.start(BEFORE_REMOTE_UNDEPRECATE);
     const consumer = await loadConsumerIfExist();

@@ -1,5 +1,3 @@
-/** @flow */
-
 export type ExamineBareResult = {
   valid: boolean;
   data?: Object;

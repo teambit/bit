@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import chalk from 'chalk';
 import { objectToStringifiedTupleArray } from '../../../utils';
@@ -17,7 +16,7 @@ export default class ScopeConfig extends Command {
 
   report(conf: { [string]: string }): string {
     return objectToStringifiedTupleArray(conf)
-      .map((tuple) => {
+      .map(tuple => {
         return tuple.join('     ');
       })
       .join('\n');
@@ -35,7 +34,7 @@ class ScopeConfigSet extends Command {
     return scopeConfig.set(key, value);
   }
 
-  report({ key, value }: { key: string, value: number }): string {
+  report({ key, value }: { key: string; value: number }): string {
     return `${chalk.yellow(key)} has been set to - ${chalk.yellow(value)}`;
   }
 }
@@ -68,7 +67,7 @@ class ScopeConfigList extends Command {
 
   report(conf: { [string]: any }): string {
     return objectToStringifiedTupleArray(conf)
-      .map((tuple) => {
+      .map(tuple => {
         return tuple.join('     ');
       })
       .join('\n');

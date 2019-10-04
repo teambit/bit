@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { installAction } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';

@@ -1,5 +1,3 @@
-/** @flow */
-
 import { table } from 'table';
 import chalk from 'chalk';
 import { ExamineResult } from '../../doctor/diagnosis';

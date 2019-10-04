@@ -1,4 +1,3 @@
-/** @flow */
 import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import ConsumerComponent from '../../../consumer/component';

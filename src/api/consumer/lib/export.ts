@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';

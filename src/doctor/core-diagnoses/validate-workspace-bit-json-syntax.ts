@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from 'ramda';
 import fs from 'fs-extra';
 import Diagnosis from '../diagnosis';

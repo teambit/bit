@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { inflate, getStringifyArgs } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';

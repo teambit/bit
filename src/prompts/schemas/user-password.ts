@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * schema for passphrase prompt on SSH.
  */

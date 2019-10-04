@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * It sorts the array, and then looks just at the first and last items
  * taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings

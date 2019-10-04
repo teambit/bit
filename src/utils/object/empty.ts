@@ -1,4 +1,3 @@
-/** @flow */
 import hasOwnProperty from './has-own-property';
 
 /**

@@ -1,4 +1,3 @@
-/** @flow */
 import * as pathLib from 'path';
 import semver from 'semver';
 import fs from 'fs-extra';

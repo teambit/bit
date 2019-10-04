@@ -1,4 +1,3 @@
-/** @flow */
 import inquirer from 'inquirer';
 import format from 'string-format';
 import chalk from 'chalk';
@@ -100,7 +99,7 @@ function _generateChooseCustomEnvQ(
   propToCheck: string,
   valToCheck: string
 ) {
-  const when = (answers) => {
+  const when = answers => {
     return answers[propToCheck] === valToCheck;
   };
   const customEnv = {
@@ -158,7 +157,7 @@ async function _buildQuestions() {
   const componentsDirQ = {
     type: 'fuzzypath',
     name: 'componentsDefaultDirectory',
-    excludePath: (nodePath) => {
+    excludePath: nodePath => {
       return nodePath.startsWith('node_modules') || nodePath.startsWith('.bit') || nodePath.startsWith('.git');
     },
     // excludePath :: (String) -> Bool

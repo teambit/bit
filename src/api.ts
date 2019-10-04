@@ -1,5 +1,3 @@
-/** @flow */
-
 import { getScopeComponent, addMany } from './api/consumer/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';

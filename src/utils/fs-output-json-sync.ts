@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 
 export default function outputJsonFile(file: string, data: Object): void {

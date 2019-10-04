@@ -1,5 +1,3 @@
-/** @flow */
-
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { CFG_INTERACTIVE } from '../../constants';
 

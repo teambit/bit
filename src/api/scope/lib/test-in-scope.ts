@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer } from '../../../consumer';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
@@ -13,12 +12,12 @@ export default function testInScope({
   directory,
   keep
 }: {
-  id: string,
-  save?: boolean | null | undefined,
-  verbose?: boolean | null | undefined,
-  scopePath: string,
-  directory?: string,
-  keep?: boolean
+  id: string;
+  save?: boolean | null | undefined;
+  verbose?: boolean | null | undefined;
+  scopePath: string;
+  directory?: string;
+  keep?: boolean;
 }): Promise<SpecsResults | null | undefined> {
   logger.debugAndAddBreadCrumb('testInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: Error | null | undefined) {
@@ -43,7 +42,7 @@ export default function testInScope({
   }
 
   function loadFromConsumer() {
-    return loadConsumer().then((consumer) => {
+    return loadConsumer().then(consumer => {
       const bitId = consumer.getParsedId(id);
       return consumer.scope.runComponentSpecs({
         consumer,
@@ -57,7 +56,7 @@ export default function testInScope({
 
   if (scopePath) return loadFromScope();
 
-  return loadFromConsumer().catch((err) => {
+  return loadFromConsumer().catch(err => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadFromScope(err);
   });

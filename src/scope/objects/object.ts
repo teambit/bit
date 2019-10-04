@@ -1,4 +1,3 @@
-/** @flow */
 import { inflateSync } from 'zlib';
 import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';

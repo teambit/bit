@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import Scope from './scope';
 import { resolveHomePath } from '../utils';

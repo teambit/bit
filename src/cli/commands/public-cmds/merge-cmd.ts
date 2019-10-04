@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { merge } from '../../../api/consumer';
@@ -16,7 +15,7 @@ export const applyVersionReport = (
     .map((component: ApplyVersionResult) => {
       const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
       const files = Object.keys(component.filesStatus)
-        .map((file) => {
+        .map(file => {
           const note =
             component.filesStatus[file] === FileStatus.manual
               ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
@@ -48,9 +47,9 @@ export default class Merge extends Command {
       theirs = false,
       manual = false
     }: {
-      ours?: boolean,
-      theirs?: boolean,
-      manual?: boolean
+      ours?: boolean;
+      theirs?: boolean;
+      manual?: boolean;
     }
   ): Promise<ApplyVersionResults> {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);

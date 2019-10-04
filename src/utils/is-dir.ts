@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import GeneralError from '../error/general-error';
 

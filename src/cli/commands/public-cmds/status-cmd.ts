@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -84,7 +83,7 @@ export default class Status extends Command {
       }
 
       const missingStr = Object.keys(componentIssuesLabels)
-        .map((key) => {
+        .map(key => {
           if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
           return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
         })
@@ -113,7 +112,7 @@ export default class Status extends Command {
 
     const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${importPendingMsg}.\n`) : '';
 
-    const splitByMissing = R.groupBy((component) => {
+    const splitByMissing = R.groupBy(component => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
@@ -122,7 +121,7 @@ export default class Status extends Command {
     const outdatedDesc =
       '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents
-      .map((component) => {
+      .map(component => {
         return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
           component.latestVersion
         }\n`;

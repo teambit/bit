@@ -1,4 +1,3 @@
-/** @flow */
 import { isBinaryFileSync } from 'isbinaryfile';
 import replaceBuffer from './buffer/replace-buffer-non-recursive';
 
@@ -10,7 +9,7 @@ const newline = /\r\n|\r|\n/g;
 function converts(text: string | Buffer, to: string) {
   if (Buffer.isBuffer(text)) {
     if (isBinaryFileSync(text)) return text; // don't touch binary files
-    newLines.forEach((newLine) => {
+    newLines.forEach(newLine => {
       // $FlowFixMe text is Buffer here
       if (newLine !== to) text = replaceBuffer(text, newLine, to);
     });
@@ -19,18 +18,18 @@ function converts(text: string | Buffer, to: string) {
   return text.toString().replace(newline, to);
 }
 
-exports.lf = function (text: string | Buffer) {
+exports.lf = function(text: string | Buffer) {
   return converts(text, '\n');
 };
 
-exports.auto = function (text: string | Buffer) {
+exports.auto = function(text: string | Buffer) {
   return converts(text, lineBreak);
 };
 
-exports.cr = function (text: string | Buffer) {
+exports.cr = function(text: string | Buffer) {
   return converts(text, '\r');
 };
 
-exports.crlf = function (text: string | Buffer) {
+exports.crlf = function(text: string | Buffer) {
   return converts(text, '\r\n');
 };

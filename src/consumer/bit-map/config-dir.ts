@@ -1,5 +1,3 @@
-/** @flow */
-
 import * as path from 'path';
 import format from 'string-format';
 import { pathNormalizeToLinux } from '../../utils';

@@ -1,4 +1,3 @@
-/** @flow */
 import fileTypesPlugins from '../../plugins/file-types-plugins';
 
 export default function getExt(filename: string): string {

@@ -1,5 +1,3 @@
-/** @flow */
-
 export default class Cmd {
   name: string;
   description: string;

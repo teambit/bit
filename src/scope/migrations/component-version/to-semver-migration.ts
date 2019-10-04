@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import semver from 'semver';
 import BitId from '../../../bit-id/bit-id';
@@ -10,7 +9,7 @@ import { VERSION_DELIMITER } from '../../../constants';
  * @param {*} versionModel - The parsed version model
  */
 function changeVersionToSemVer(versionModel: Object): Object {
-  const getUpdatedDependency = (dependency) => {
+  const getUpdatedDependency = dependency => {
     // Take care of very old models when the dependencies were strings
     // in this case we will keep it string but change it to contain semver
     // Those old model will still not work after this migration

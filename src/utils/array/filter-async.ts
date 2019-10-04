@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * Array.filter is synchronous and therefore does not support Promises.
  * This one works with promises.

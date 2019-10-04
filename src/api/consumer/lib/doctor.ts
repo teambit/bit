@@ -1,4 +1,3 @@
-/** @flow */
 import os from 'os';
 import tar from 'tar-stream';
 import fs from 'fs-extra';

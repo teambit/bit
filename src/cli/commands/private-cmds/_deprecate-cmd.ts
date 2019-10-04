@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { deprecate } from '../../../api/scope';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';

@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import Command from '../../command';
 import { test } from '../../../api/consumer';
@@ -31,11 +30,11 @@ export default class Test extends Command {
       verbose,
       forkLevel
     }: {
-      all: boolean | null | undefined,
-      verbose: boolean | null | undefined,
-      forkLevel: string | null | undefined
+      all: boolean | null | undefined;
+      verbose: boolean | null | undefined;
+      forkLevel: string | null | undefined;
     }
-  ): Promise<{ __code: number, data: SpecsResultsWithMetaData }> {
+  ): Promise<{ __code: number; data: SpecsResultsWithMetaData }> {
     if (id && all) {
       throw new GeneralError(
         'use "--all" to test all components or use a component ID to test a specific component. run tests to all new and modified components by removing all flags and parameters'

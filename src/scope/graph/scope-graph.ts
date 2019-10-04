@@ -1,4 +1,3 @@
-/** @flow */
 import GraphLib from 'graphlib';
 import { BitId, BitIds } from '../../bit-id';
 import { ModelComponent, Version } from '../models';
@@ -13,10 +12,10 @@ import ComponentsList from '../../consumer/component/components-list';
 const Graph = GraphLib.Graph;
 
 export type DependenciesInfo = {
-  id: BitId,
-  depth: number,
-  parent: string,
-  dependencyType: string
+  id: BitId;
+  depth: number;
+  parent: string;
+  dependencyType: string;
 };
 
 export default class DependencyGraph {
@@ -44,7 +43,7 @@ export default class DependencyGraph {
   static loadFromString(str: string): DependencyGraph {
     const graph = GraphLib.json.read(str);
     // when getting a graph from a remote scope, the class BitId is gone and only the object is received
-    graph.nodes().forEach((node) => {
+    graph.nodes().forEach(node => {
       const id = graph.node(node);
       if (!(id instanceof BitId)) {
         graph.setNode(node, new BitId(id));
@@ -64,10 +63,10 @@ export default class DependencyGraph {
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
     await Promise.all(
-      allComponents.map(async (component) => {
+      allComponents.map(async component => {
         graph.setNode(component.id(), component);
         await Promise.all(
-          Object.keys(component.versions).map(async (version) => {
+          Object.keys(component.versions).map(async version => {
             const componentVersion = await component.loadVersion(version, scope.objects);
             if (!componentVersion) return;
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
@@ -91,8 +90,8 @@ export default class DependencyGraph {
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
-    const buildGraphP = allModelComponents.map(async (modelComponent) => {
-      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+    const buildGraphP = allModelComponents.map(async modelComponent => {
+      const buildVersionP = modelComponent.listVersions().map(async versionNum => {
         // $FlowFixMe
         const version = await modelComponent.loadVersion(versionNum, scope.objects);
         if (!version) {
@@ -113,9 +112,9 @@ export default class DependencyGraph {
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
-    const buildGraphP = allModelComponents.map(async (modelComponent) => {
+    const buildGraphP = allModelComponents.map(async modelComponent => {
       const latestVersion = modelComponent.latest();
-      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+      const buildVersionP = modelComponent.listVersions().map(async versionNum => {
         if (onlyLatest && latestVersion !== versionNum) return;
         // $FlowFixMe
         const id = modelComponent.toBitId().changeVersion(versionNum);
@@ -159,9 +158,9 @@ export default class DependencyGraph {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    DEPENDENCIES_TYPES.forEach((depType) => {
+    DEPENDENCIES_TYPES.forEach(depType => {
       // $FlowFixMe
-      component[depType].get().forEach((dependency) => {
+      component[depType].get().forEach(dependency => {
         const depIdStr = dependency.id.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
         graph.setEdge(idStr, depIdStr, depType);
@@ -187,7 +186,7 @@ export default class DependencyGraph {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString());
     const dependencies: DependenciesInfo[] = [];
-    Object.keys(dijkstraResults).forEach((idStr) => {
+    Object.keys(dijkstraResults).forEach(idStr => {
       const distance = dijkstraResults[idStr].distance;
       if (distance === Infinity || distance === 0) {
         // there is no dependency or it's the same component (distance zero)
@@ -211,7 +210,7 @@ export default class DependencyGraph {
     const edgeFunc = v => this.graph.inEdges(v);
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString(), undefined, edgeFunc);
     const dependents: DependenciesInfo[] = [];
-    Object.keys(dijkstraResults).forEach((idStr) => {
+    Object.keys(dijkstraResults).forEach(idStr => {
       const distance = dijkstraResults[idStr].distance;
       if (distance === Infinity || distance === 0) {
         // there is no dependency or it's the same component (distance zero)

@@ -1,5 +1,3 @@
-/** @flow */
-
 import ExternalError from '../../error/external-error';
 
 export default class ExtensionLoadError extends ExternalError {

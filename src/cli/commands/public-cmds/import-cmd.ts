@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -83,23 +82,23 @@ export default class Import extends Command {
       dependencies = false,
       dependents = false
     }: {
-      tester?: boolean,
-      compiler?: boolean,
-      extension?: boolean,
-      path?: string,
-      objects?: boolean,
-      displayDependencies?: boolean,
-      environment?: boolean,
-      override?: boolean,
-      verbose?: boolean,
-      json?: boolean,
-      ignoreDist?: boolean,
-      conf?: string,
-      skipNpmInstall?: boolean,
-      ignorePackageJson?: boolean,
-      merge?: MergeStrategy,
-      dependencies?: boolean,
-      dependents?: boolean
+      tester?: boolean;
+      compiler?: boolean;
+      extension?: boolean;
+      path?: string;
+      objects?: boolean;
+      displayDependencies?: boolean;
+      environment?: boolean;
+      override?: boolean;
+      verbose?: boolean;
+      json?: boolean;
+      ignoreDist?: boolean;
+      conf?: string;
+      skipNpmInstall?: boolean;
+      ignorePackageJson?: boolean;
+      merge?: MergeStrategy;
+      dependencies?: boolean;
+      dependents?: boolean;
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -161,16 +160,16 @@ export default class Import extends Command {
     displayDependencies,
     json
   }: {
-    dependencies?: ComponentWithDependencies[],
-    envComponents?: Component[],
-    importDetails: ImportDetails[],
+    dependencies?: ComponentWithDependencies[];
+    envComponents?: Component[];
+    importDetails: ImportDetails[];
     warnings?: {
-      notInPackageJson: [],
-      notInNodeModules: [],
-      notInBoth: []
-    },
-    displayDependencies: boolean,
-    json: boolean
+      notInPackageJson: [];
+      notInNodeModules: [];
+      notInBoth: [];
+    };
+    displayDependencies: boolean;
+    json: boolean;
   }): string {
     if (json) {
       return JSON.stringify({ importDetails, warnings }, null, 4);
@@ -189,7 +188,7 @@ export default class Import extends Command {
         components.length === 1
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
-      const componentDependencies = components.map((component) => {
+      const componentDependencies = components.map(component => {
         const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
         return formatPlainComponentItemWithVersions(component, details);
@@ -199,9 +198,9 @@ export default class Import extends Command {
       const peerDependenciesOutput =
         peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies
           ? immutableUnshift(
-            R.uniq(peerDependencies.map(formatPlainComponentItem)),
-            chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)
-          ).join('\n')
+              R.uniq(peerDependencies.map(formatPlainComponentItem)),
+              chalk.green(`\n\nsuccessfully imported ${components.length} component dependencies`)
+            ).join('\n')
           : '';
 
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;

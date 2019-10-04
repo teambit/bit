@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
@@ -11,12 +10,12 @@ import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 type ConfigProps = {
-  lang?: string,
-  compiler?: string | Compilers,
-  tester?: string | Testers,
-  bindingPrefix: string,
-  extensions?: Object,
-  overrides?: ComponentOverridesData
+  lang?: string;
+  compiler?: string | Compilers;
+  tester?: string | Testers;
+  bindingPrefix: string;
+  extensions?: Object;
+  overrides?: ComponentOverridesData;
 };
 
 export default class ComponentConfig extends AbstractConfig {
@@ -92,7 +91,10 @@ export default class ComponentConfig extends AbstractConfig {
   /**
    * Use the workspaceConfig as a base. Override values if exist in componentConfig
    */
-  static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: WorkspaceConfig | null | undefined): ComponentConfig {
+  static mergeWithWorkspaceConfig(
+    componentConfig: Object,
+    consumerConfig: WorkspaceConfig | null | undefined
+  ): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
     const consumerConfigWithoutConsumerSpecifics = filterObject(plainConsumerConfig, (val, key) => key !== 'overrides');
     const mergedObject = R.merge(consumerConfigWithoutConsumerSpecifics, componentConfig);
@@ -115,10 +117,10 @@ export default class ComponentConfig extends AbstractConfig {
     configDir,
     workspaceConfig
   }: {
-    componentDir: PathOsBasedRelative | null | undefined,
-    workspaceDir: PathOsBasedRelative,
-    configDir: PathOsBasedAbsolute,
-    workspaceConfig: WorkspaceConfig
+    componentDir: PathOsBasedRelative | null | undefined;
+    workspaceDir: PathOsBasedRelative;
+    configDir: PathOsBasedAbsolute;
+    workspaceConfig: WorkspaceConfig;
   }): Promise<ComponentConfig> {
     if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
     const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);

@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * Determines whether the object has the specified property.
  * @name hasOwnProperty

@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';

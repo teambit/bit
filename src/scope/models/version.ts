@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
@@ -28,55 +27,55 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { EnvPackages } from '../../extensions/env-extension';
 
 type CiProps = {
-  error: Object,
-  startTime: string,
-  endTime: string
+  error: Object;
+  startTime: string;
+  endTime: string;
 };
 
 export type SourceFileModel = {
-  name: string,
-  relativePath: PathLinux,
-  test: boolean,
-  file: Ref
+  name: string;
+  relativePath: PathLinux;
+  test: boolean;
+  file: Ref;
 };
 
 export type DistFileModel = SourceFileModel;
 
 export type Log = {
-  message: string,
-  date: string,
-  username: string | null | undefined,
-  email: string | null | undefined
+  message: string;
+  date: string;
+  username: string | null | undefined;
+  email: string | null | undefined;
 };
 
 export type VersionProps = {
-  mainFile: PathLinux,
-  files: Array<SourceFileModel>,
-  dists?: Array<DistFileModel> | null | undefined,
-  mainDistFile: PathLinux | null | undefined,
-  compiler?: CompilerExtensionModel | null | undefined,
-  tester?: TesterExtensionModel | null | undefined,
-  log: Log,
-  ci?: CiProps,
-  specsResults?: Results | null | undefined,
-  docs?: Doclet[],
-  dependencies?: Dependency[],
-  devDependencies?: Dependency[],
-  compilerDependencies?: Dependency[],
-  testerDependencies?: Dependency[],
-  flattenedDependencies?: BitIds,
-  flattenedDevDependencies?: BitIds,
-  flattenedCompilerDependencies?: BitIds,
-  flattenedTesterDependencies?: BitIds,
-  packageDependencies?: { [string]: string },
-  devPackageDependencies?: { [string]: string },
-  peerPackageDependencies?: { [string]: string },
-  compilerPackageDependencies?: EnvPackages,
-  testerPackageDependencies?: EnvPackages,
-  bindingPrefix?: string,
-  customResolvedPaths?: customResolvedPath[],
-  overrides: ComponentOverridesData,
-  packageJsonChangedProps?: Object
+  mainFile: PathLinux;
+  files: Array<SourceFileModel>;
+  dists?: Array<DistFileModel> | null | undefined;
+  mainDistFile: PathLinux | null | undefined;
+  compiler?: CompilerExtensionModel | null | undefined;
+  tester?: TesterExtensionModel | null | undefined;
+  log: Log;
+  ci?: CiProps;
+  specsResults?: Results | null | undefined;
+  docs?: Doclet[];
+  dependencies?: Dependency[];
+  devDependencies?: Dependency[];
+  compilerDependencies?: Dependency[];
+  testerDependencies?: Dependency[];
+  flattenedDependencies?: BitIds;
+  flattenedDevDependencies?: BitIds;
+  flattenedCompilerDependencies?: BitIds;
+  flattenedTesterDependencies?: BitIds;
+  packageDependencies?: { [string]: string };
+  devPackageDependencies?: { [string]: string };
+  peerPackageDependencies?: { [string]: string };
+  compilerPackageDependencies?: EnvPackages;
+  testerPackageDependencies?: EnvPackages;
+  bindingPrefix?: string;
+  customResolvedPaths?: customResolvedPath[];
+  overrides: ComponentOverridesData;
+  packageJsonChangedProps?: Object;
 };
 
 /**
@@ -145,7 +144,7 @@ export default class Version extends BitObject {
 
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
-    nonEmptyFields.forEach((field) => {
+    nonEmptyFields.forEach(field => {
       // $FlowFixMe
       if (!this[field]) {
         throw new VersionInvalid(`failed creating a version object, the field "${field}" can't be empty`);
@@ -162,7 +161,7 @@ export default class Version extends BitObject {
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
-          relativePaths: dependency.relativePaths.map((relativePath) => {
+          relativePaths: dependency.relativePaths.map(relativePath => {
             return {
               sourceRelativePath: relativePath.sourceRelativePath,
               destinationRelativePath: relativePath.destinationRelativePath
@@ -239,7 +238,7 @@ export default class Version extends BitObject {
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
     const getUpdated = (flattenedDependencies: BitIds): BitIds => {
-      const updatedIds = flattenedDependencies.map((depId) => {
+      const updatedIds = flattenedDependencies.map(depId => {
         if (depId.isEqual(currentId)) return newId;
         return depId;
       });
@@ -252,7 +251,7 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
-    const extractRefsFromFiles = (files) => {
+    const extractRefsFromFiles = files => {
       const refs = files ? files.map(file => file.file) : [];
       return refs;
     };
@@ -264,7 +263,7 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    const _convertFileToObject = (file) => {
+    const _convertFileToObject = file => {
       return {
         file: file.file.toString(),
         relativePath: file.relativePath,
@@ -273,7 +272,7 @@ export default class Version extends BitObject {
       };
     };
 
-    const _convertEnvToObject = (env) => {
+    const _convertEnvToObject = env => {
       if (typeof env === 'string') {
         return env;
       }
@@ -292,8 +291,8 @@ export default class Version extends BitObject {
       return result;
     };
 
-    const _removeEmptyPackagesEnvs = (pkgEnv) => {
-      DEPENDENCIES_FIELDS.forEach((dependencyType) => {
+    const _removeEmptyPackagesEnvs = pkgEnv => {
+      DEPENDENCIES_FIELDS.forEach(dependencyType => {
         if (pkgEnv[dependencyType] && R.isEmpty(pkgEnv[dependencyType])) {
           delete pkgEnv[dependencyType];
         }
@@ -393,7 +392,7 @@ export default class Version extends BitObject {
         return deps.map(dependency => ({ id: BitId.parseObsolete(dependency) }));
       }
 
-      const getRelativePath = (relativePath) => {
+      const getRelativePath = relativePath => {
         if (relativePath.importSpecifiers) {
           // backward compatibility. Before the massive validation was added, an item of
           // relativePath.importSpecifiers array could be missing the mainFile property, which is
@@ -407,7 +406,7 @@ export default class Version extends BitObject {
         return relativePath;
       };
 
-      return deps.map((dependency) => {
+      return deps.map(dependency => {
         return {
           id: BitId.parseBackwardCompatible(dependency.id),
           relativePaths: Array.isArray(dependency.relativePaths)
@@ -421,7 +420,7 @@ export default class Version extends BitObject {
       return BitIds.fromArray(deps.map(dep => BitId.parseBackwardCompatible(dep)));
     };
 
-    const parseFile = (file) => {
+    const parseFile = file => {
       return {
         file: Ref.from(file.file),
         relativePath: file.relativePath,
@@ -492,21 +491,21 @@ export default class Version extends BitObject {
     username,
     email
   }: {
-    component: ConsumerComponent,
-    versionFromModel: Version,
-    files: Array<SourceFileModel>,
-    flattenedDependencies: BitIds,
-    flattenedDevDependencies: BitIds,
-    flattenedCompilerDependencies: BitIds,
-    flattenedTesterDependencies: BitIds,
-    message: string,
-    dists: Array<DistFileModel> | null | undefined,
-    mainDistFile: PathLinuxRelative,
-    specsResults: Results | null | undefined,
-    username: string | null | undefined,
-    email: string | null | undefined
+    component: ConsumerComponent;
+    versionFromModel: Version;
+    files: Array<SourceFileModel>;
+    flattenedDependencies: BitIds;
+    flattenedDevDependencies: BitIds;
+    flattenedCompilerDependencies: BitIds;
+    flattenedTesterDependencies: BitIds;
+    message: string;
+    dists: Array<DistFileModel> | null | undefined;
+    mainDistFile: PathLinuxRelative;
+    specsResults: Results | null | undefined;
+    username: string | null | undefined;
+    email: string | null | undefined;
   }) {
-    const parseFile = (file) => {
+    const parseFile = file => {
       return {
         file: file.file.hash(),
         relativePath: file.relativePath,
@@ -572,9 +571,9 @@ export default class Version extends BitObject {
   setDist(dist: Source | null | undefined) {
     this.dist = dist
       ? {
-        file: dist.hash(),
-        name: DEFAULT_BUNDLE_FILENAME
-      }
+          file: dist.hash(),
+          name: DEFAULT_BUNDLE_FILENAME
+        }
       : null;
   }
 
@@ -594,7 +593,7 @@ export default class Version extends BitObject {
   }
 }
 
-const parseEnv = (env) => {
+const parseEnv = env => {
   if (typeof env === 'string') {
     return env;
   }
@@ -609,14 +608,14 @@ const parseEnv = (env) => {
   };
 };
 
-const envNameOnly = (env) => {
+const envNameOnly = env => {
   if ((!env.config || R.isEmpty(env.config)) && (!env.files || R.isEmpty(env.files))) {
     return true;
   }
   return false;
 };
 
-const getEnvModelOrName = (env) => {
+const getEnvModelOrName = env => {
   if (typeof env === 'string') {
     return env;
   }

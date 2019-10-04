@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import yn from 'yn';
 import { serializeError } from 'serialize-error';

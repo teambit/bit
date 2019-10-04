@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import normalize from 'normalize-path';
 

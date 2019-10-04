@@ -1,4 +1,3 @@
-/** @flow */
 import { loadScope, Scope } from '../../../scope';
 import { loadConsumer } from '../../../consumer';
 import logger from '../../../logger/logger';
@@ -8,16 +7,16 @@ import Isolator from '../../../environment/isolator';
 
 // TODO: merge this with other instances of the same options
 export type IsolateOptions = {
-  writeToPath: string | null | undefined,
-  writeBitDependencies: boolean | null | undefined,
-  npmLinks: boolean | null | undefined,
-  installPackages: boolean | null | undefined,
-  installPeerDependencies: boolean | null | undefined,
-  dist: boolean | null | undefined,
-  conf: boolean | null | undefined,
-  noPackageJson: boolean | null | undefined,
-  override: boolean | null | undefined,
-  useCapsule: boolean | null | undefined
+  writeToPath: string | null | undefined;
+  writeBitDependencies: boolean | null | undefined;
+  npmLinks: boolean | null | undefined;
+  installPackages: boolean | null | undefined;
+  installPeerDependencies: boolean | null | undefined;
+  dist: boolean | null | undefined;
+  conf: boolean | null | undefined;
+  noPackageJson: boolean | null | undefined;
+  override: boolean | null | undefined;
+  useCapsule: boolean | null | undefined;
 };
 
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {

@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * determines whether `val` is a numeric value
  * @name isNumeric

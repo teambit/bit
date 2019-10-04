@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -90,12 +89,12 @@ export default class Export extends Command {
     remote,
     includeDependencies
   }: {
-    componentsIds: BitId[],
-    nonExistOnBitMap: BitId[],
-    missingScope: BitId[],
-    ejectResults: EjectResults | null | undefined,
-    remote: string,
-    includeDependencies: boolean
+    componentsIds: BitId[];
+    nonExistOnBitMap: BitId[];
+    missingScope: BitId[];
+    ejectResults: EjectResults | null | undefined;
+    remote: string;
+    includeDependencies: boolean;
   }): string {
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');

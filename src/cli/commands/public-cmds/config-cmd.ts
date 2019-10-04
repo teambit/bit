@@ -1,5 +1,3 @@
-/** @flow */
-
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -22,7 +20,7 @@ export default class Config extends Command {
 
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
-      .map((tuple) => {
+      .map(tuple => {
         tuple[0] = rightpad(tuple[0], 30, ' ');
         return tuple.join('');
       })
@@ -72,7 +70,7 @@ class ConfigList extends Command {
 
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
-      .map((tuple) => {
+      .map(tuple => {
         return tuple.join('     ');
       })
       .join('\n');

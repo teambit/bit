@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { refreshScope } from '../../../api/scope';
 

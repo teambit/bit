@@ -1,4 +1,3 @@
-/** @flow */
 import { serializeError } from 'serialize-error';
 import * as path from 'path';
 import hashObj from 'object-hash';

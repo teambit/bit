@@ -1,4 +1,3 @@
-/** @flow */
 import c from 'chalk';
 import { table } from 'table';
 import rightpad from 'pad-right';
@@ -41,7 +40,7 @@ export default function paintComponent(
     const printableComponent = componentToPrintableForDiff(component);
     printableComponent.scopesList = (component.scopesList || []).map(s => s.name).join('\n');
     const rows = getFields()
-      .map((field) => {
+      .map(field => {
         const arr = [];
 
         const title = prettifyFieldName(field);
@@ -86,7 +85,7 @@ export default function paintComponent(
     const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
 
     const rows = getFields()
-      .map((field) => {
+      .map(field => {
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
@@ -163,7 +162,7 @@ export default function paintComponent(
     }
     const getDependenciesRows = (dependencies, title?: string) => {
       const dependencyRows = [];
-      dependencies.forEach((dependency) => {
+      dependencies.forEach(dependency => {
         let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
         dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
         const row = [dependencyId];

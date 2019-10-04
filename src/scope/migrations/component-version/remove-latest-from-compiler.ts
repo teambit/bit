@@ -1,4 +1,3 @@
-/** @flow */
 import { VERSION_DELIMITER, LATEST } from '../../../constants';
 
 /**

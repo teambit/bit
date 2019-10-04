@@ -1,12 +1,11 @@
-/** @flow */
 import Command from '../cli/command';
 
 type ExtensionCommandProps = {
-  name: string,
-  action: Function,
-  report: Function,
-  description: string,
-  opts?: [string, string, string][]
+  name: string;
+  action: Function;
+  report: Function;
+  description: string;
+  opts?: [string, string, string][];
 };
 
 export default class ExtensionCommand extends Command {

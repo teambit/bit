@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
@@ -27,7 +26,7 @@ export async function buildAll(noCache: boolean, verbose: boolean): Promise<Obje
   loader.stop();
   const allComponents = await consumer.scope.buildMultiple(components, consumer, noCache, verbose);
   const componentsObj = {};
-  allComponents.forEach((component) => {
+  allComponents.forEach(component => {
     componentsObj[component.component] = component.buildResults;
   });
   await consumer.onDestroy();

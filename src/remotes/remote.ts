@@ -1,4 +1,3 @@
-/** @flow */
 import { isBitUrl, cleanBang } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
@@ -29,7 +28,10 @@ export default class Remote {
   }
 
   connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
-    return connect(this.host, strategiesNames);
+    return connect(
+      this.host,
+      strategiesNames
+    );
   }
 
   toPlainObject() {
@@ -40,7 +42,7 @@ export default class Remote {
   }
 
   scope(): Promise<{ name: string }> {
-    return this.connect().then((network) => {
+    return this.connect().then(network => {
       return network.describeScope();
     });
   }

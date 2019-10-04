@@ -1,4 +1,3 @@
-/** @flow */
 import loadScope from '../../scope-loader';
 import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
@@ -56,7 +55,7 @@ export default class Fs implements Network {
 
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     const idsStr = bitIds.serialize();
-    return fetch(this.scopePath, idsStr, noDependencies).then((bitsMatrix) => {
+    return fetch(this.scopePath, idsStr, noDependencies).then(bitsMatrix => {
       if (noDependencies) return bitsMatrix;
       return flatten(bitsMatrix);
     });
@@ -97,7 +96,7 @@ export default class Fs implements Network {
   }
 
   connect() {
-    return loadScope(this.scopePath).then((scope) => {
+    return loadScope(this.scopePath).then(scope => {
       this.scope = scope;
       return this;
     });

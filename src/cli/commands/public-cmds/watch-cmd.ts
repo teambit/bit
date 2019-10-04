@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { watchAll } from '../../../api/consumer';
 
@@ -15,7 +14,7 @@ export default class Watch extends Command {
     {
       verbose
     }: {
-      verbose: boolean | null | undefined
+      verbose: boolean | null | undefined;
     }
   ): Promise<any> {
     return watchAll(verbose);

@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { isolate } from '../../../api/consumer';
 
@@ -35,20 +34,20 @@ export default class Isolate extends Command {
   action(
     [id, scopePath]: [string, string | null | undefined],
     opts: {
-      directory: string | null | undefined,
-      writeBitDependencies: boolean | null | undefined,
-      npmLinks: boolean | null | undefined,
-      installPackages: boolean | null | undefined,
-      installPeerDependencies: boolean | null | undefined,
-      dist: boolean | null | undefined,
-      conf: boolean | null | undefined,
-      noPackageJson: boolean | null | undefined,
-      override: boolean | null | undefined,
-      saveDependenciesAsComponents: boolean | null | undefined,
-      excludeRegistryPrefix: boolean | null | undefined,
-      verbose: boolean | null | undefined,
-      silentClientResult: boolean | null | undefined,
-      useCapsule: boolean | null | undefined
+      directory: string | null | undefined;
+      writeBitDependencies: boolean | null | undefined;
+      npmLinks: boolean | null | undefined;
+      installPackages: boolean | null | undefined;
+      installPeerDependencies: boolean | null | undefined;
+      dist: boolean | null | undefined;
+      conf: boolean | null | undefined;
+      noPackageJson: boolean | null | undefined;
+      override: boolean | null | undefined;
+      saveDependenciesAsComponents: boolean | null | undefined;
+      excludeRegistryPrefix: boolean | null | undefined;
+      verbose: boolean | null | undefined;
+      silentClientResult: boolean | null | undefined;
+      useCapsule: boolean | null | undefined;
     }
   ): Promise<any> {
     opts.writeToPath = opts.directory;

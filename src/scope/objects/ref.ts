@@ -1,4 +1,3 @@
-/** @flow */
 import Repository from './repository';
 import BitObject from './object';
 

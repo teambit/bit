@@ -1,5 +1,3 @@
-/** @flow */
-
 import semver from 'semver';
 import Diagnosis from '../diagnosis';
 import { ExamineBareResult } from '../diagnosis';

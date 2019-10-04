@@ -1,4 +1,3 @@
-/** @flow */
 import WatchComponents from '../../../consumer/component-ops/watch-components';
 
 /**

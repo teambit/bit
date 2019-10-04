@@ -1,4 +1,3 @@
-/** @flow */
 import { Source, ModelComponent, Version, ScopeMeta, Symlink } from './models';
 
 export default function types() {

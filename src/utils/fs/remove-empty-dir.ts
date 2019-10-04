@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import isDirEmpty from './is-dir-empty';
 import logger from '../../logger/logger';

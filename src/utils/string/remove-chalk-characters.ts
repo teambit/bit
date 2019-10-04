@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * remove chalk characters from a string.
  * @name removeChalkCharacters

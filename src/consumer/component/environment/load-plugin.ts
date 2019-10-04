@@ -1,5 +1,4 @@
-// /** @Flow */
-// import * as path from 'path';
+// // import * as path from 'path';
 // import { PLUGINS_DIR } from '../../constants';
 // import PluginNotFoundException from '../exceptions/plugin-not-found';
 

@@ -1,72 +1,71 @@
-/** @flow */
 import { PathLinux, PathOsBased } from '../../utils/path';
 import { pathNormalizeToLinux } from '../../utils';
 import { BitId } from '../../bit-id';
 
 type ErrorObj = {
-  message: string,
-  stack: string
+  message: string;
+  stack: string;
 };
 
 type Test = {
-  title: string,
-  pass: boolean,
-  err: ErrorObj | null | undefined,
-  duration: number
+  title: string;
+  pass: boolean;
+  err: ErrorObj | null | undefined;
+  duration: number;
 };
 type Failure = {
-  title: string,
-  err: ErrorObj | null | undefined,
-  duration: number
+  title: string;
+  err: ErrorObj | null | undefined;
+  duration: number;
 };
 
 type Stats = {
-  start: string,
-  end: string,
-  duration: number
+  start: string;
+  end: string;
+  duration: number;
 };
 
 export type Results = {
-  tests: Test[],
-  stats: Stats,
-  pass: boolean,
-  failures: Failure[],
-  specFile: PathLinux
+  tests: Test[];
+  stats: Stats;
+  pass: boolean;
+  failures: Failure[];
+  specFile: PathLinux;
 };
 
 type TestProps = {
-  title: string,
-  pass: boolean,
-  err: ErrorObj | null | undefined,
-  duration: number | string
+  title: string;
+  pass: boolean;
+  err: ErrorObj | null | undefined;
+  duration: number | string;
 };
 
 type StatsProps = {
-  start: string,
-  end: string,
-  duration: number | null | undefined | string
+  start: string;
+  end: string;
+  duration: number | null | undefined | string;
 };
 
 export type RawTestsResults = {
-  tests: TestProps[],
-  stats: StatsProps,
-  pass: boolean | null | undefined,
-  failures: Failure[] | null | undefined,
-  specPath: PathOsBased
+  tests: TestProps[];
+  stats: StatsProps;
+  pass: boolean | null | undefined;
+  failures: Failure[] | null | undefined;
+  specPath: PathOsBased;
 };
 
 export type SpecsResultsWithComponentId = Array<{
-  componentId: BitId,
-  specs: SpecsResults,
-  missingTester?: boolean,
-  pass: boolean
+  componentId: BitId;
+  specs: SpecsResults;
+  missingTester?: boolean;
+  pass: boolean;
 }>;
 
 export type SpecsResultsWithMetaData = {
-  type: 'results' | 'error',
-  childOutput?: string,
-  error?: Error,
-  results?: SpecsResultsWithComponentId
+  type: 'results' | 'error';
+  childOutput?: string;
+  error?: Error;
+  results?: SpecsResultsWithComponentId;
 };
 
 export default class SpecsResults {
@@ -118,7 +117,7 @@ export default class SpecsResults {
       duration
     };
 
-    const tests = rawResults.tests.map((result) => {
+    const tests = rawResults.tests.map(result => {
       result.duration = parseInt(result.duration);
       // $FlowFixMe
       return result;
@@ -126,7 +125,7 @@ export default class SpecsResults {
 
     if (hasFailures) {
       // $FlowFixMe
-      failures = rawResults.failures.map((failure) => {
+      failures = rawResults.failures.map(failure => {
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         // $FlowFixMe
         return failure;

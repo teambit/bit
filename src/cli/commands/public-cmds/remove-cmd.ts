@@ -1,4 +1,3 @@
-/** @flow */
 import yn from 'yn';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';

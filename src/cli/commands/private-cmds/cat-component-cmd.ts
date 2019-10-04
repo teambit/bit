@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { catComponent } from '../../../api/scope';
 

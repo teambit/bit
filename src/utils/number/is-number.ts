@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * determiens whether `val` is a number.
  * @name isNumber

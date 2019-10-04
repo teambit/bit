@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { link } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
@@ -16,7 +15,7 @@ export default class Create extends Command {
     return link();
   }
 
-  report(results: Array<{ id: string, bound: Object | null | undefined }>): string {
+  report(results: Array<{ id: string; bound: Object | null | undefined }>): string {
     return linkTemplate(results);
   }
 }

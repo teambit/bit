@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { show } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
@@ -36,14 +35,14 @@ export default class Show extends Command {
       dependents = false,
       dependencies = false
     }: {
-      json?: boolean,
-      versions: boolean | null | undefined,
-      remote: boolean,
-      outdated?: boolean,
-      compare?: boolean,
-      detailed?: boolean,
-      dependents?: boolean,
-      dependencies?: boolean
+      json?: boolean;
+      versions: boolean | null | undefined;
+      remote: boolean;
+      outdated?: boolean;
+      compare?: boolean;
+      detailed?: boolean;
+      dependents?: boolean;
+      dependencies?: boolean;
     }
   ): Promise<any> {
     if (versions && (compare || outdated)) {
@@ -80,15 +79,15 @@ export default class Show extends Command {
     outdated,
     detailed
   }: {
-    component: ConsumerComponent,
-    componentModel?: ConsumerComponent,
-    dependenciesInfo: DependenciesInfo[],
-    dependentsInfo: DependenciesInfo[],
-    json: boolean | null | undefined,
-    versions: boolean | null | undefined,
-    components: ConsumerComponent[] | null | undefined,
-    outdated: boolean,
-    detailed: boolean
+    component: ConsumerComponent;
+    componentModel?: ConsumerComponent;
+    dependenciesInfo: DependenciesInfo[];
+    dependentsInfo: DependenciesInfo[];
+    json: boolean | null | undefined;
+    versions: boolean | null | undefined;
+    components: ConsumerComponent[] | null | undefined;
+    outdated: boolean;
+    detailed: boolean;
   }): string {
     if (versions) {
       // $FlowFixMe
@@ -98,7 +97,7 @@ export default class Show extends Command {
       component.scopesList = component.componentFromModel.scopesList;
     }
     if (json) {
-      const makeEnvFilesReadable = (env) => {
+      const makeEnvFilesReadable = env => {
         if (!env) return undefined;
         if (env.files && env.files.length) {
           const readableFiles = env.files.map(file => file.toReadableString());

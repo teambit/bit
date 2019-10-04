@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from 'ramda';
 import BaseExtension from './base-extension';
 import { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions } from './base-extension';
@@ -15,28 +13,28 @@ import { HOOKS_NAMES } from '../constants';
 const HooksManagerInstance: HooksManager = HooksManager.getInstance();
 
 type NewCommand = {
-  name: string,
-  description: string,
-  action: Function
+  name: string;
+  description: string;
+  action: Function;
 };
 
 type RegisteredHooksActions = {
-  [string]: HookAction
+  [string]: HookAction;
 };
 
 export type Commands = {
-  [string]: NewCommand
+  [string]: NewCommand;
 };
 
 export type ExtensionProps = BaseExtensionProps & {
-  newHooks?: string[],
-  registeredHooksActions?: RegisteredHooksActions,
-  commands?: Array<Commands>
+  newHooks?: string[];
+  registeredHooksActions?: RegisteredHooksActions;
+  commands?: Array<Commands>;
 };
 
 export type ExtensionOptions = BaseExtensionOptions & {
-  core?: boolean,
-  disabled?: boolean
+  core?: boolean;
+  disabled?: boolean;
 };
 
 export type LoadArgsProps = BaseLoadArgsProps;
@@ -172,7 +170,7 @@ const _loadScope = async (scopePath: string | null | undefined) => {
 
 const _getHooksNames = () => {
   const hooks = {};
-  HOOKS_NAMES.forEach((hook) => {
+  HOOKS_NAMES.forEach(hook => {
     hooks[hook] = hook;
   });
   return hooks;

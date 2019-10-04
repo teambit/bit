@@ -1,4 +1,3 @@
-/** @flow */
 import AbstractError from '../../error/abstract-error';
 
 export default class InvalidName extends AbstractError {

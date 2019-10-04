@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { build, buildAll } from '../../../api/consumer';
@@ -22,8 +21,8 @@ export default class Build extends Command {
       noCache = false,
       verbose = false
     }: {
-      noCache: boolean,
-      verbose: boolean
+      noCache: boolean;
+      verbose: boolean;
     }
   ): Promise<any> {
     if (!id) return buildAll(noCache, verbose);
@@ -44,7 +43,7 @@ export default class Build extends Command {
 learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components.html`);
       }
       return Object.keys(res)
-        .map((component) => {
+        .map(component => {
           const title = chalk.bold(component);
           // $FlowFixMe - res is an object
           const content = Array.isArray(res[component])

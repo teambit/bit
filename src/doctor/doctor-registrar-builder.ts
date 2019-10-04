@@ -1,5 +1,3 @@
-/** @flow */
-
 import DoctorRegistrar from './doctor-registrar';
 import Diagnosis from './diagnosis';
 import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-bit-json-syntax';

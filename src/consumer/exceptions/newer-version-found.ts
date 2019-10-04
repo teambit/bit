@@ -1,10 +1,9 @@
-/** @flow */
 import AbstractError from '../../error/abstract-error';
 
 export type NewerVersion = {
-  componentId: string,
-  currentVersion: string,
-  latestVersion: string
+  componentId: string;
+  currentVersion: string;
+  latestVersion: string;
 };
 export default class NewerVersionFound extends AbstractError {
   newerVersions: NewerVersion[];

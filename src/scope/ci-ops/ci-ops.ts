@@ -1,4 +1,3 @@
-/** @flow */
 import { spawn } from 'child_process';
 import * as path from 'path';
 import ConsumerComponent from '../../consumer/component';

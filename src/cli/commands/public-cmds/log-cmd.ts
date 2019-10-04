@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import Command from '../../command';
 import { getComponentLogs } from '../../../api/consumer';
@@ -13,7 +12,7 @@ export default class Log extends Command {
   migration = true;
 
   action([id]: [string]): Promise<any> {
-    return getComponentLogs(id).then((logs) => {
+    return getComponentLogs(id).then(logs => {
       Object.keys(logs).forEach(key => (logs[key].tag = key));
       return R.reverse(R.values(logs)).map(
         R.evolve({
@@ -25,11 +24,11 @@ export default class Log extends Command {
 
   report(
     logs: Array<{
-      message: string,
-      tag: string,
-      date: string,
-      username: string | null | undefined,
-      email: string | null | undefined
+      message: string;
+      tag: string;
+      date: string;
+      username: string | null | undefined;
+      email: string | null | undefined;
     }>
   ): string {
     return logs.map(paintLog).join('\n');

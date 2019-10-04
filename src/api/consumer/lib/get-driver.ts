@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer } from '../../../consumer';
 
 export default function getDriver() {

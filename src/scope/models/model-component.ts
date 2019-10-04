@@ -1,4 +1,3 @@
-/** @flow */
 import semver from 'semver';
 import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
@@ -34,27 +33,27 @@ import ValidationError from '../../error/validation-error';
 type State = {
   versions?: {
     [string]: {
-      local?: boolean // whether a component was changed locally
-    }
-  }
+      local?: boolean; // whether a component was changed locally
+    };
+  };
 };
 
 type Versions = { [string]: Ref };
-export type ScopeListItem = { url: string, name: string, date: string };
+export type ScopeListItem = { url: string; name: string; date: string };
 
 export type ComponentProps = {
-  scope: string | null | undefined,
-  name: string,
-  versions?: Versions,
-  lang: string,
-  deprecated: boolean,
-  bindingPrefix: string,
+  scope: string | null | undefined;
+  name: string;
+  versions?: Versions;
+  lang: string;
+  deprecated: boolean;
+  bindingPrefix: string;
   /**
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */
-  local?: boolean, // get deleted after export
-  state?: State, // get deleted after export
-  scopesList?: ScopeListItem[]
+  local?: boolean; // get deleted after export
+  state?: State; // get deleted after export
+  scopesList?: ScopeListItem[];
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -129,7 +128,7 @@ export default class Component extends BitObject {
   _getComparableVersionsObjects(
     otherComponent: Component, // in case of merging, the otherComponent is the existing component, and "this" is the incoming component
     local: boolean // for 'bit import' the local is true, for 'bit export' the local is false
-  ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
+  ): { thisComponentVersions: Versions; otherComponentVersions: Versions } {
     const otherLocalVersion = otherComponent.getLocalVersions();
     const otherComponentVersions = filterObject(
       otherComponent.versions,
@@ -180,7 +179,9 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } | null | undefined }> {
+  async collectLogs(
+    repo: Repository
+  ): Promise<{ [number]: { message: string; date: string; hash: string } | null | undefined }> {
     // $FlowFixMe
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
@@ -193,7 +194,7 @@ export default class Component extends BitObject {
    */
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
-      this.listVersions().map((versionNum) => {
+      this.listVersions().map(versionNum => {
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -318,7 +319,7 @@ export default class Component extends BitObject {
     logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
-    const loadFileInstance = ClassName => async (file) => {
+    const loadFileInstance = ClassName => async file => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
       if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
@@ -474,7 +475,7 @@ export default class Component extends BitObject {
     const message = `unable to save Component object "${this.id()}"`;
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
-      Object.keys(this.state.versions).forEach((version) => {
+      Object.keys(this.state.versions).forEach(version => {
         if (!this.versions[version]) {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }

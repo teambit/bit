@@ -1,4 +1,3 @@
-/** @flow */
 /**
  * A file to define the list of migration needs to be run for each version
  */

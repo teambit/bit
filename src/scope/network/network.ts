@@ -1,4 +1,3 @@
-/** @flow */
 import { BitIds, BitId } from '../../bit-id';
 import ComponentObjects from '../../scope/component-objects';
 import { ScopeDescriptor } from '../scope';

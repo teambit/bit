@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';

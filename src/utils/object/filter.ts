@@ -1,4 +1,3 @@
-/** @flow */
 import forEach from './foreach';
 
 /**

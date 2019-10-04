@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import Vinyl from 'vinyl';
 import getWithoutExt from './fs-no-ext';

@@ -1,5 +1,3 @@
-/** @flow */
-
 function toFiles(versionModel: Object): Object {
   if (versionModel.impl) {
     versionModel.files = versionModel.files || [];

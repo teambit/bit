@@ -1,4 +1,3 @@
-/** @flow */
 import { DEFAULT_BINDINGS_PREFIX } from '../../../constants';
 
 /**

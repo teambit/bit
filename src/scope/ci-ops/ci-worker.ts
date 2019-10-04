@@ -1,4 +1,3 @@
-/** @flow */
 import runAndUpdateCI from './run-and-update-ci';
 
 const scopePath = process.env.__scope__;

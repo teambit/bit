@@ -1,4 +1,3 @@
-/** @flow */
 import BitConfigNotFound from './bit-config-not-found';
 import InvalidBitJson from './invalid-bit-json';
 import InvalidPackageJson from './invalid-package-json';

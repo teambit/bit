@@ -1,4 +1,3 @@
-/** @flow */
 import identityFile from '../../utils/ssh/identity-file';
 
 /**

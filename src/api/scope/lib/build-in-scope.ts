@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer } from '../../../consumer';
 import Consumer from '../../../consumer/consumer';
 import { loadScope, Scope } from '../../../scope';
@@ -14,13 +13,13 @@ export default function buildInScope({
   keep,
   noCache = false
 }: {
-  id: string,
-  save: boolean | null | undefined,
-  verbose: boolean | null | undefined,
-  scopePath: string,
-  directory: string | null | undefined,
-  keep: boolean,
-  noCache: boolean
+  id: string;
+  save: boolean | null | undefined;
+  verbose: boolean | null | undefined;
+  scopePath: string;
+  directory: string | null | undefined;
+  keep: boolean;
+  noCache: boolean;
 }) {
   logger.debugAndAddBreadCrumb('buildInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: Error | null | undefined) {
@@ -46,7 +45,7 @@ export default function buildInScope({
 
   if (scopePath) return loadFromScope();
 
-  return loadFromConsumer().catch((err) => {
+  return loadFromConsumer().catch(err => {
     if (!(err instanceof ConsumerNotFound)) throw err;
     return loadFromScope(err);
   });

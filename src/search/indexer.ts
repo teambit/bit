@@ -1,4 +1,3 @@
-/** @flow */
 import { Readable } from 'stream';
 import { stemmer } from 'porter-stemmer';
 import Component from '../consumer/component/consumer-component';
@@ -6,15 +5,15 @@ import serverlessIndex from './serverless-index';
 import logger from '../logger/logger';
 
 export type Doc = {
-  id: string,
-  name: string,
-  tokenizedName: string,
-  stemmedName: string,
-  functionNames: string,
-  tokenizedFunctionNames: string,
-  description: string,
-  minDescription: string,
-  stemmedMinDescription: string
+  id: string;
+  name: string;
+  tokenizedName: string;
+  stemmedName: string;
+  functionNames: string;
+  tokenizedFunctionNames: string;
+  description: string;
+  minDescription: string;
+  stemmedMinDescription: string;
 };
 
 const stem = (sentence: string): string =>
@@ -62,7 +61,7 @@ function prepareDoc(docs: Object, component: Component): Doc {
 }
 
 function addAllToLocalIndex(components: Array<Component>): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const docs = components.map(component => prepareDoc(component.docs, component));
     const docStream = new Readable({ objectMode: true });
     // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
@@ -78,7 +77,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
 }
 
 function addToLocalIndex(component: Component): Promise<Component> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const doc = prepareDoc(component.docs, component);
     const docStream = new Readable({ objectMode: true });
     // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true

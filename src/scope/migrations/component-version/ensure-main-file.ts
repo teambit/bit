@@ -1,5 +1,3 @@
-/** @flow */
-
 function ensureMainFile(versionModel: Object): Object {
   if (!versionModel.mainFile) {
     // Find the first file which is not test file

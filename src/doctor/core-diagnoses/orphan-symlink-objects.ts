@@ -1,4 +1,3 @@
-/** @flow */
 import Diagnosis from '../diagnosis';
 import { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
@@ -28,7 +27,7 @@ export default class OrphanSymlinkObjects extends Diagnosis {
     const orphanSymlinks = new BitIds();
     const objectsToDelete = [];
     await Promise.all(
-      symlinks.map(async (symlink) => {
+      symlinks.map(async symlink => {
         const realComponentId: BitId = symlink.getRealComponentId();
         const realModelComponent = ModelComponent.fromBitId(realComponentId);
         const foundComponent = await consumer.scope.objects.load(realModelComponent.hash());

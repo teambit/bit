@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * encode a string or a buffer to base64
  * @name toBase64

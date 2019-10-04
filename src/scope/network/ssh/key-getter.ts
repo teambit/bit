@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import { identityFile } from '../../../utils';
 import logger from '../../../logger/logger';

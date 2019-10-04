@@ -1,4 +1,3 @@
-/** @flow */
 const globlib = require('glob');
 const path = require('path');
 

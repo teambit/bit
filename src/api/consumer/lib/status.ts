@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';

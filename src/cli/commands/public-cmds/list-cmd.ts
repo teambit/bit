@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -36,13 +35,13 @@ export default class List extends Command {
       outdated = false,
       namespace
     }: {
-      ids?: boolean,
-      scope?: boolean,
-      bare?: boolean,
-      raw?: boolean,
-      json?: boolean,
-      outdated?: boolean,
-      namespace?: string
+      ids?: boolean;
+      scope?: boolean;
+      bare?: boolean;
+      raw?: boolean;
+      json?: boolean;
+      outdated?: boolean;
+      namespace?: string;
     }
   ): Promise<any> {
     const params = { scopeName, showAll: scope, showRemoteVersion: outdated };
@@ -73,12 +72,12 @@ export default class List extends Command {
     json,
     outdated
   }: {
-    listScopeResults: ListScopeResult[],
-    scope: string | null | undefined,
-    ids?: boolean,
-    raw?: boolean,
-    json?: boolean,
-    outdated?: boolean
+    listScopeResults: ListScopeResult[];
+    scope: string | null | undefined;
+    ids?: boolean;
+    raw?: boolean;
+    json?: boolean;
+    outdated?: boolean;
   }): string {
     function decideHeaderSentence() {
       if (json) return '';

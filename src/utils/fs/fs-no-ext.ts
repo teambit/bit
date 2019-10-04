@@ -1,4 +1,3 @@
-/** @flow */
 import getExt from './get-ext';
 
 export default function getWithoutExt(filename: string): string {

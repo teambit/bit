@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import { PathOsBased } from '../../../utils/path';
 import AddComponents from '../../../consumer/component-ops/add-components';

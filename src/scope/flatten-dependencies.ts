@@ -1,4 +1,3 @@
-/** @flow */
 import { flatten, values } from '../utils';
 import VersionDependencies from './version-dependencies';
 import Repository from './objects/repository';
@@ -16,12 +15,12 @@ export function flattenDependencies(dependencies: ComponentWithDependencies[]) {
 
 export function flattenDependencyIds(dependencies: VersionDependencies[], repo: Repository): Promise<BitId[]> {
   return Promise.all(
-    dependencies.map((dep) => {
+    dependencies.map(dep => {
       // $FlowFixMe
       const depCompId = dep.component.id.changeScope(dep.sourceScope);
       return dep.component.flattenedDependencies(repo).then(flattenedDeps => flattenedDeps.concat(depCompId));
     })
-  ).then((idMatrix) => {
+  ).then(idMatrix => {
     const ids = flatten(idMatrix);
     return values(
       ids.reduce((components, id) => {

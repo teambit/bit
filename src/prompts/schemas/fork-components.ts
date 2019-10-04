@@ -1,11 +1,10 @@
-/** @flow */
 import chalk from 'chalk';
 import BitId from '../../bit-id/bit-id';
 
 /**
  * schema for forking components
  */
-export default function (bitIds: BitId[], remote: string) {
+export default function(bitIds: BitId[], remote: string) {
   return {
     properties: {
       shouldFork: {

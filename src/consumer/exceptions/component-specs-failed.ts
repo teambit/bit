@@ -1,4 +1,3 @@
-/** @flow */
 import AbstractError from '../../error/abstract-error';
 import SpecsResults from '../specs-results';
 

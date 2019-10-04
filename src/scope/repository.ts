@@ -1,4 +1,3 @@
-/** @flow */
 import Scope from './scope';
 import { mkdirp } from '../utils';
 

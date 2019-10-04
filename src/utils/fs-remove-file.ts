@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import pathLib from 'path';
 import logger from '../logger/logger';

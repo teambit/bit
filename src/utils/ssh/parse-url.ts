@@ -1,11 +1,10 @@
-/** @flow */
 import isNumber from '../number/is-number';
 
 export type SSHUrl = {
-  username: string,
-  port: number,
-  host: string,
-  path: string | null | undefined
+  username: string;
+  port: number;
+  host: string;
+  path: string | null | undefined;
 };
 
 /**

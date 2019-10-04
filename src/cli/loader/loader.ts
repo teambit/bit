@@ -1,4 +1,3 @@
-/** @flow */
 import ora from 'ora';
 import { SPINNER_TYPE } from '../../constants';
 

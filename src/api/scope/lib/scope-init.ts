@@ -1,4 +1,3 @@
-/** @flow */
 import { Scope } from '../../../scope';
 
 export default function init(path: string = process.cwd(), name: string, groupName: string): Promise<Scope> {

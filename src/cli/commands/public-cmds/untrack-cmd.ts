@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import R from 'ramda';
 import Command from '../../command';
@@ -30,9 +29,9 @@ export default class Untrack extends Command {
     unRemovableComponents,
     missingComponents
   }: {
-    untrackedComponents: Array<string>,
-    unRemovableComponents: Array<string>,
-    missingComponents: Array<string>
+    untrackedComponents: Array<string>;
+    unRemovableComponents: Array<string>;
+    missingComponents: Array<string>;
   }): string {
     const msg = [];
     if (R.isEmpty(untrackedComponents) && R.isEmpty(unRemovableComponents) && R.isEmpty(missingComponents)) {

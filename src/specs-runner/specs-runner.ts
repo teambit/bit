@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import * as path from 'path';
 import execa from 'execa';

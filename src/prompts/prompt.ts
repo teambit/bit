@@ -1,4 +1,3 @@
-/** @flow */
 import prompt from 'prompt';
 import loader from '../cli/loader';
 import { PromptCanceled } from './exceptions';
@@ -6,8 +5,8 @@ import { PromptCanceled } from './exceptions';
 const DEFAULT_PROMPT_MSG = '';
 const CANCEL_ERROR_MSG = 'canceled';
 
-export default function (schema: Object): () => Promise<{ string: any }> {
-  return function (): Promise<{ string: any }> {
+export default function(schema: Object): () => Promise<{ string: any }> {
+  return function(): Promise<{ string: any }> {
     return new Promise((resolve, reject) => {
       loader.stop();
       prompt.start();

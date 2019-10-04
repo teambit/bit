@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import pathlib from 'path';
 import { writeFile, cleanObject } from '../utils';
@@ -13,12 +12,12 @@ export function getPath(scopePath: string): string {
 }
 
 export type ScopeJsonProps = {
-  name: string,
-  version: string,
-  resolverPath?: string,
-  license?: string,
-  groupName: string | null | undefined,
-  remotes?: { name: string, url: string }
+  name: string;
+  version: string;
+  resolverPath?: string;
+  license?: string;
+  groupName: string | null | undefined;
+  remotes?: { name: string; url: string };
 };
 
 export class ScopeJson {

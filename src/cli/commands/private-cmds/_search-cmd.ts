@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { fromBase64, unpackCommand, buildCommandMessage, packCommand } from '../../../utils';
 import { searchAdapter } from '../../../search';

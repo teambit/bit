@@ -1,4 +1,3 @@
-/** @flow */
 import semver from 'semver';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
@@ -15,22 +14,22 @@ import GeneralError from '../../../error/general-error';
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type TagResults = {
-  taggedComponents: Component[],
-  autoTaggedResults: AutoTagResult[],
-  warnings: string[],
-  newComponents: BitIds
+  taggedComponents: Component[];
+  autoTaggedResults: AutoTagResult[];
+  warnings: string[];
+  newComponents: BitIds;
 };
 
 export async function tagAction(args: {
-  id: string,
-  message: string,
-  exactVersion: string | null | undefined,
-  releaseType: string,
-  force: boolean | null | undefined,
-  verbose?: boolean,
-  ignoreUnresolvedDependencies?: boolean,
-  ignoreNewestVersion: boolean,
-  skipTests: boolean
+  id: string;
+  message: string;
+  exactVersion: string | null | undefined;
+  releaseType: string;
+  force: boolean | null | undefined;
+  verbose?: boolean;
+  ignoreUnresolvedDependencies?: boolean;
+  ignoreNewestVersion: boolean;
+  skipTests: boolean;
 }): Promise<TagResults> {
   const {
     id,
@@ -75,7 +74,7 @@ async function getCommitPendingComponents(
   isAllScope: boolean,
   exactVersion: string,
   includeImported: boolean
-): Promise<{ tagPendingComponents: BitId[], warnings: string[] }> {
+): Promise<{ tagPendingComponents: BitId[]; warnings: string[] }> {
   const componentsList = new ComponentsList(consumer);
   if (isAllScope) {
     return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);
@@ -86,17 +85,17 @@ async function getCommitPendingComponents(
 }
 
 export async function tagAllAction(args: {
-  message: string,
-  exactVersion: string | null | undefined,
-  releaseType: string,
-  force: boolean | null | undefined,
-  verbose?: boolean,
-  ignoreUnresolvedDependencies?: boolean,
-  ignoreNewestVersion: boolean,
-  skipTests: boolean,
-  scope?: boolean,
-  includeImported?: boolean,
-  idWithWildcard?: string
+  message: string;
+  exactVersion: string | null | undefined;
+  releaseType: string;
+  force: boolean | null | undefined;
+  verbose?: boolean;
+  ignoreUnresolvedDependencies?: boolean;
+  ignoreNewestVersion: boolean;
+  skipTests: boolean;
+  scope?: boolean;
+  includeImported?: boolean;
+  idWithWildcard?: string;
 }): Promise<TagResults> {
   const {
     message,

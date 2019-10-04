@@ -1,5 +1,3 @@
-/** @flow */
-
 export default class ValidationError extends Error {
   showDoctorMessage: boolean;
 

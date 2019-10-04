@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * decode a base64 string
  * @name fromBase64

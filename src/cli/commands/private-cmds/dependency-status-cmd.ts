@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { dependencyStatus } from '../../../api/consumer';
@@ -24,7 +23,7 @@ export default class DependencyStatus extends Command {
       return output;
     }
     let output = chalk.red('The following file exist in dependency tree but are not a component:\n');
-    const files = dependencyStatusResult.missingFiles.map((missingFile) => {
+    const files = dependencyStatusResult.missingFiles.map(missingFile => {
       const file = chalk.bold(missingFile);
       return file;
     });

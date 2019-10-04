@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs';
 import findUp from 'find-up';
 import gitignore from 'parse-gitignore';

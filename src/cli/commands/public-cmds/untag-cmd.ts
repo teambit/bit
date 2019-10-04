@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { unTagAction } from '../../../api/consumer';

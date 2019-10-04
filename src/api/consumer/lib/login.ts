@@ -1,4 +1,3 @@
-/** @flow */
 import loginToBitSrc from '../../../consumer/login/login';
 
 export default (async function loginAction(
@@ -7,6 +6,6 @@ export default (async function loginAction(
   npmrcPath: string,
   skipRegistryConfig: boolean,
   machineName: string | null | undefined
-): Promise<{ isAlreadyLoggedIn?: boolean, username?: string, npmrcPath?: string }> {
+): Promise<{ isAlreadyLoggedIn?: boolean; username?: string; npmrcPath?: string }> {
   return loginToBitSrc(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName);
 });

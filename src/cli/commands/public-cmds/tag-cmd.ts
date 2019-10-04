@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
@@ -50,18 +49,18 @@ export default class Tag extends Command {
       skipTests = false,
       scope
     }: {
-      message: string,
-      all: boolean | null | undefined,
-      patch: boolean | null | undefined,
-      minor: boolean | null | undefined,
-      major: boolean | null | undefined,
-      force: boolean | null | undefined,
-      verbose: boolean | null | undefined,
-      ignoreMissingDependencies?: boolean,
-      ignoreUnresolvedDependencies?: boolean,
-      ignoreNewestVersion?: boolean,
-      skipTests?: boolean,
-      scope: string | null | undefined
+      message: string;
+      all: boolean | null | undefined;
+      patch: boolean | null | undefined;
+      minor: boolean | null | undefined;
+      major: boolean | null | undefined;
+      force: boolean | null | undefined;
+      verbose: boolean | null | undefined;
+      ignoreMissingDependencies?: boolean;
+      ignoreUnresolvedDependencies?: boolean;
+      ignoreNewestVersion?: boolean;
+      skipTests?: boolean;
+      scope: string | null | undefined;
     }
   ): Promise<any> {
     function getVersion() {
@@ -135,9 +134,9 @@ export default class Tag extends Command {
     const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
 (use "bit untag" to unstage versions)\n`;
 
-    const outputComponents = (comps) => {
+    const outputComponents = comps => {
       return comps
-        .map((component) => {
+        .map(component => {
           let componentOutput = `     > ${component.id.toString()}`;
           const autoTag = autoTaggedResults.filter(result =>
             result.triggeredBy.searchWithoutScopeAndVersion(component.id)

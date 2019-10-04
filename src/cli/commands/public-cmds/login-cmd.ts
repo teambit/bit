@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { login } from '../../../api/consumer';
@@ -29,11 +28,11 @@ export default class Login extends Command {
       skipRegistryConfig = false,
       machineName
     }: {
-      port: string,
-      suppressBrowserLaunch?: boolean,
-      npmrcPath: string,
-      skipRegistryConfig: boolean,
-      machineName?: string
+      port: string;
+      suppressBrowserLaunch?: boolean;
+      npmrcPath: string;
+      skipRegistryConfig: boolean;
+      machineName?: string;
     }
   ): Promise<any> {
     return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(
@@ -53,11 +52,11 @@ export default class Login extends Command {
     skipRegistryConfig,
     writeToNpmrcError
   }: {
-    isAlreadyLoggedIn: boolean,
-    username: string,
-    npmrcPath: string,
-    skipRegistryConfig: boolean,
-    writeToNpmrcError: boolean
+    isAlreadyLoggedIn: boolean;
+    username: string;
+    npmrcPath: string;
+    skipRegistryConfig: boolean;
+    writeToNpmrcError: boolean;
   }): string {
     if (isAlreadyLoggedIn) return chalk.yellow('already logged in');
     const successLoginMessage = chalk.green(`success! logged in as ${username}`);

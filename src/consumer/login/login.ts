@@ -1,4 +1,3 @@
-/** @flow */
 import http from 'http';
 import uuid from 'uuid';
 import opn from 'opn';
@@ -31,9 +30,9 @@ export default function loginToBitSrc(
   skipRegistryConfig: boolean,
   machineName: string | null | undefined
 ): Promise<{
-  isAlreadyLoggedIn?: boolean,
-  username?: string,
-  npmrcPath?: string
+  isAlreadyLoggedIn?: boolean;
+  username?: string;
+  npmrcPath?: string;
 }> {
   let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
@@ -102,7 +101,7 @@ export default function loginToBitSrc(
     });
 
     logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
-    server.listen(port || DEFAULT_PORT, (err) => {
+    server.listen(port || DEFAULT_PORT, err => {
       if (err) {
         logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
@@ -121,7 +120,7 @@ export default function loginToBitSrc(
       }
     });
 
-    server.on('error', (e) => {
+    server.on('error', e => {
       if (e.code === 'EADDRINUSE') {
         reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
       }

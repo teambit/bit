@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { outputJsonFile } from '../../../utils';
 import { ciUpdateAction } from '../../../api/scope';
@@ -31,10 +30,10 @@ export default class CiUpdate extends Command {
       noCache = false
     }: {
       // verbose: boolean | null | undefined,
-      directory: string | null | undefined,
-      output: string | null | undefined,
-      keep: boolean,
-      noCache: boolean
+      directory: string | null | undefined;
+      output: string | null | undefined;
+      keep: boolean;
+      noCache: boolean;
     }
   ): Promise<any> {
     const verbose = true; // During ci-update we always want to see verbose outputs
@@ -49,10 +48,10 @@ export default class CiUpdate extends Command {
     output,
     directory
   }: {
-    specsResults: SpecsResults | null | undefined,
-    dists: Dists,
-    output: PathOsBased,
-    directory: PathOsBased
+    specsResults: SpecsResults | null | undefined;
+    dists: Dists;
+    output: PathOsBased;
+    directory: PathOsBased;
   }): string {
     if (!specsResults && !dists) {
       return 'no results found';

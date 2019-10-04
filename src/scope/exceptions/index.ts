@@ -1,4 +1,3 @@
-/** @flow */
 import ScopeNotFound from './scope-not-found';
 import ScopeJsonNotFound from './scope-json-not-found';
 import ScopeAlreadyExists from './scope-already-exists';

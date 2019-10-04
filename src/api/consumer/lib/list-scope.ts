@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
@@ -21,11 +20,11 @@ export async function listScope({
   namespacesUsingWildcards,
   strategiesNames
 }: {
-  scopeName?: string,
-  showAll?: boolean,
-  showRemoteVersion?: boolean,
-  namespacesUsingWildcards?: string,
-  strategiesNames?: SSHConnectionStrategyName[]
+  scopeName?: string;
+  showAll?: boolean;
+  showRemoteVersion?: boolean;
+  namespacesUsingWildcards?: string;
+  strategiesNames?: SSHConnectionStrategyName[];
 }): Promise<ListScopeResult[]> {
   const consumer: Consumer | null | undefined = await loadConsumerIfExist();
   if (scopeName) {

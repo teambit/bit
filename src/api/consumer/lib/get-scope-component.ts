@@ -1,4 +1,3 @@
-/** @flow */
 import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
@@ -18,11 +17,11 @@ export default (async function getScopeComponent({
   showDependents,
   showDependencies
 }: {
-  id: string,
-  allVersions: boolean | null | undefined,
-  scopePath: string | null | undefined, // used by the api (see /src/api.js)
-  showDependents: boolean,
-  showDependencies: boolean
+  id: string;
+  allVersions: boolean | null | undefined;
+  scopePath: string | null | undefined; // used by the api (see /src/api.js)
+  showDependents: boolean;
+  showDependencies: boolean;
 }): Promise<{ component: Component[] | Component }> {
   const bitId: BitId = BitId.parse(id, true); // user used --remote so we know it has a scope
 

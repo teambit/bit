@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId, BitIds } from '../../../bit-id';
@@ -21,7 +20,7 @@ export default (async function untrack(componentIds: string[], all: boolean | nu
     await consumer.onDestroy();
     return { untrackedComponents: componentsToUntrack, unRemovableComponents, missingComponents: missing };
   }
-  componentIds.forEach((componentId) => {
+  componentIds.forEach(componentId => {
     const bitId = consumer.getParsedIdIfExist(componentId);
     if (!bitId) {
       missing.push(componentId);

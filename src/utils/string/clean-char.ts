@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * clean the first occurrence of (`char`) from a string (`str`)
  * @name cleanChar

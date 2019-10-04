@@ -1,4 +1,3 @@
-/** @flow */
 import SSH2 from 'ssh2';
 import R from 'ramda';
 import * as os from 'os';

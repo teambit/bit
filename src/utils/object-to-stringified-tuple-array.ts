@@ -1,4 +1,3 @@
-/** @flow */
 import forEach from './object/foreach';
 
 export default function objectToStringifiedTupleArray(obj: { [string | number]: any }): [string | number][] {

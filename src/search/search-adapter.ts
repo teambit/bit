@@ -1,4 +1,3 @@
-/** @flow */
 // import serverlessIndex from './serverless-index';
 import indexer from './indexer';
 import { search } from './searcher';
@@ -10,26 +9,26 @@ async function searchLocally(queryStr: string, reindex: boolean = false): Promis
   let scopePath;
   if (reindex) {
     return loadConsumer()
-      .then((consumer) => {
+      .then(consumer => {
         scopePath = consumer.scope.path;
         return consumer.scope.listLocal();
       })
-      .then((components) => {
+      .then(components => {
         return indexer.indexAll(scopePath, components);
       })
       .then(() => search(queryStr, scopePath));
     // .catch(Promise.reject);
   }
-  return loadConsumer().then((consumer) => {
+  return loadConsumer().then(consumer => {
     scopePath = consumer.scope.path;
     return search(queryStr, scopePath);
   });
 }
 
 async function searchRemotely(queryStr: string, scope: string, reindex: boolean = false): Promise<any> {
-  return loadConsumer().then((consumer) => {
+  return loadConsumer().then(consumer => {
     return getScopeRemotes(consumer.scope).then(remotes =>
-      remotes.resolve(scope, consumer.scope.name).then((remote) => {
+      remotes.resolve(scope, consumer.scope.name).then(remote => {
         return remote.search(queryStr, reindex);
       })
     );
@@ -40,10 +39,10 @@ async function searchRemotely(queryStr: string, scope: string, reindex: boolean 
 async function scopeSearch(path: string, query: string, reindex: boolean): Promise<any> {
   if (reindex) {
     return loadScope(path)
-      .then((scope) => {
+      .then(scope => {
         return scope.listLocal();
       })
-      .then((components) => {
+      .then(components => {
         return indexer.indexAll(path, components);
       })
       .then(() => search(query, path));

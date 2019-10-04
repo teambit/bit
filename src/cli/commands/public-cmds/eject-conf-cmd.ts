@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import * as nodePath from 'path';
 import Command from '../../command';
@@ -7,7 +6,7 @@ import { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
 import { PathOsBased } from '../../../utils/path';
 
 type EjectConfCliResult = EjectConfResult & {
-  ejectPathRelativeToCwd: PathOsBased
+  ejectPathRelativeToCwd: PathOsBased;
 };
 
 export default class EjectConf extends Command {

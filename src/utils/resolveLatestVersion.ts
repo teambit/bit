@@ -1,4 +1,3 @@
-/** @flow */
 /**
  * Retrieve bitId with the highest version from a list according to provided id
  * it returns the provided id if it has a version already

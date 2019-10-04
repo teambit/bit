@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { BitObject, BitRawObject, Ref } from '../objects';
 import { BIT_VERSION } from '../../constants';
@@ -7,24 +6,24 @@ import { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';
 
 export type ScopeMigrationResult = {
-  newObjects: BitObject[],
-  refsToRemove: Ref[]
+  newObjects: BitObject[];
+  refsToRemove: Ref[];
 };
 
 type ScopeMigrationResultCache = {
-  newObjects: { id: string, object: BitObject[] },
-  refsToRemove: Ref[]
+  newObjects: { id: string; object: BitObject[] };
+  refsToRemove: Ref[];
 };
 
 type VersionMigrationsDeclarations = {
-  component: MigrationDeclaration[] | null | undefined,
-  symlink: MigrationDeclaration[] | null | undefined,
-  scopeMeta: MigrationDeclaration[] | null | undefined,
-  version: MigrationDeclaration[] | null | undefined
+  component: MigrationDeclaration[] | null | undefined;
+  symlink: MigrationDeclaration[] | null | undefined;
+  scopeMeta: MigrationDeclaration[] | null | undefined;
+  version: MigrationDeclaration[] | null | undefined;
 };
 
 type VersionMigrations = {
-  [version: string]: VersionMigrationsDeclarations
+  [version: string]: VersionMigrationsDeclarations;
 };
 
 let globalVerbose: boolean = false;
@@ -112,7 +111,7 @@ const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migrat
  */
 function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: BitRawObject) {
   const refs = rawObject.refs();
-  refs.forEach((ref) => {
+  refs.forEach(ref => {
     index[ref] = rawObject;
   });
 }

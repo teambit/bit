@@ -1,4 +1,3 @@
-/** @flow */
 import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 import getDependencyStatus from '../../../consumer/component-ops/dependency-status';
 import { loadConsumer, Consumer } from '../../../consumer';

@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { checkout } from '../../../api/consumer';
@@ -46,15 +45,15 @@ export default class Checkout extends Command {
       skipNpmInstall = false,
       ignoreDist = false
     }: {
-      interactiveMerge?: boolean,
-      ours?: boolean,
-      theirs?: boolean,
-      manual?: boolean,
-      reset?: boolean,
-      all?: boolean,
-      verbose?: boolean,
-      skipNpmInstall?: boolean,
-      ignoreDist?: boolean
+      interactiveMerge?: boolean;
+      ours?: boolean;
+      theirs?: boolean;
+      manual?: boolean;
+      reset?: boolean;
+      all?: boolean;
+      verbose?: boolean;
+      skipNpmInstall?: boolean;
+      ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
     const checkoutProps: CheckoutProps = {

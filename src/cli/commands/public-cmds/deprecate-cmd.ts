@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
 import { deprecate } from '../../../api/consumer';
@@ -19,13 +18,13 @@ export default class Deprecate extends Command {
 
   report(deprecationResult: DeprecationResult | DeprecationResult[]): string {
     const paintMissingComponents = missingComponents =>
-      (!R.isEmpty(missingComponents)
+      !R.isEmpty(missingComponents)
         ? chalk.underline('missing components:') + chalk(` ${missingComponents.join(', ')}\n`)
-        : '');
+        : '';
     const paintRemoved = bitIds =>
-      (!R.isEmpty(bitIds) && !R.isNil(bitIds)
+      !R.isEmpty(bitIds) && !R.isNil(bitIds)
         ? chalk.underline('deprecated components:') + chalk(` ${bitIds.join(', ')}\n`)
-        : '');
+        : '';
     const paintSingle = obj => paintRemoved(obj.bitIds) + paintMissingComponents(obj.missingComponents);
     const paintMany = (deprecationResults: DeprecationResult[]) =>
       deprecationResults.map(obj => paintSingle(obj)).join('\n');

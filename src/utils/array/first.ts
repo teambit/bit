@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * returns the first element of an array.
  * @name first

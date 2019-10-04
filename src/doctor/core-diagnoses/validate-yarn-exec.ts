@@ -1,5 +1,3 @@
-/** @flow */
-
 import Diagnosis from '../diagnosis';
 import { ExamineBareResult } from '../diagnosis';
 import npmClient from '../../npm-client';

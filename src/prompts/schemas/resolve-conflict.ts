@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * schema for resolve conflict
  */

@@ -1,4 +1,3 @@
-/** @flow */
 import * as Promise from 'bluebird';
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
@@ -13,9 +12,9 @@ loudRejection();
 HooksManager.init();
 
 // Load extensions
-loadExtensions().then((extensions) => {
+loadExtensions().then(extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
-  extensions.forEach((extension) => {
+  extensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
   });
   const extensionsCommands = extensions.reduce((acc, curr) => {

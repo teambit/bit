@@ -1,4 +1,3 @@
-/** @flow */
 import runAndUpdateCi from '../../../scope/ci-ops/run-and-update-ci';
 
 export default function CiUpdateAction(

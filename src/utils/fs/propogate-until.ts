@@ -1,11 +1,10 @@
-/** @flow */
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import findUp from 'find-up';
 import { BIT_GIT_DIR, DOT_GIT_DIR, OBJECTS_DIR, BIT_HIDDEN_DIR } from '../../constants';
 
 function composePath(patternPath: string, patterns: string[]): string[] {
-  return patterns.map((pattern) => {
+  return patterns.map(pattern => {
     return path.join(patternPath, pattern);
   });
 }

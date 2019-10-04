@@ -1,4 +1,3 @@
-/** @flow */
 import SSH from './ssh';
 import Fs from './fs';
 import { Network } from './network';

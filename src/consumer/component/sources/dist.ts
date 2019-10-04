@@ -1,4 +1,3 @@
-/** @flow */
 import AbstractVinyl from './abstract-vinyl';
 
 export default class Dist extends AbstractVinyl {

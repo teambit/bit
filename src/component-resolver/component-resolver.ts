@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import glob from 'glob';
 import { BitId } from '../bit-id';

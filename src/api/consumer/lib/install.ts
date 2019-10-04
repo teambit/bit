@@ -1,4 +1,3 @@
-/** @flow */
 import { Consumer, loadConsumer } from '../../../consumer';
 import { LinksResult } from '../../../links/node-modules-linker';
 import { installIds, install } from '../../../consumer/component-ops/install-components';

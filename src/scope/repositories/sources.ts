@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
@@ -18,13 +17,13 @@ import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 
 export type ComponentTree = {
-  component: ModelComponent,
-  objects: BitObject[]
+  component: ModelComponent;
+  objects: BitObject[];
 };
 
 export type ComponentDef = {
-  id: BitId,
-  component: ModelComponent | null | undefined
+  id: BitId;
+  component: ModelComponent | null | undefined;
 };
 
 export default class SourceRepository {
@@ -41,8 +40,8 @@ export default class SourceRepository {
   getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
-      ids.map((id) => {
-        return this.get(id).then((component) => {
+      ids.map(id => {
+        return this.get(id).then(component => {
           return {
             id,
             component
@@ -103,7 +102,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
-    return this.get(id).then((component) => {
+    return this.get(id).then(component => {
       if (!component) throw new ComponentNotFound(id.toString());
       return component.collectObjects(this.objects());
     });
@@ -111,28 +110,28 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
     const comp = ModelComponent.from(props);
-    return this._findComponent(comp).then((component) => {
+    return this._findComponent(comp).then(component => {
       if (!component) return comp;
       return component;
     });
   }
 
-  modifyCIProps({ source, ciProps }: { source: ConsumerComponent, ciProps: Object }): Promise<any> {
+  modifyCIProps({ source, ciProps }: { source: ConsumerComponent; ciProps: Object }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+    return this.findOrAddComponent(source).then(component => {
+      return component.loadVersion(component.latest(), objectRepo).then(version => {
         version.setCIProps(ciProps);
         return objectRepo._writeOne(version);
       });
     });
   }
 
-  modifySpecsResults({ source, specsResults }: { source: ConsumerComponent, specsResults?: any }): Promise<any> {
+  modifySpecsResults({ source, specsResults }: { source: ConsumerComponent; specsResults?: any }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+    return this.findOrAddComponent(source).then(component => {
+      return component.loadVersion(component.latest(), objectRepo).then(version => {
         version.setSpecsResults(specsResults);
         return objectRepo._writeOne(version);
       });
@@ -143,8 +142,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
     const objectRepo = this.objects();
 
-    return this.findOrAddComponent(source).then((component) => {
-      return component.loadVersion(component.latest(), objectRepo).then((version) => {
+    return this.findOrAddComponent(source).then(component => {
+      return component.loadVersion(component.latest(), objectRepo).then(version => {
         const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
@@ -175,23 +174,23 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies,
     specsResults
   }: {
-    consumerComponent: $ReadOnly<ConsumerComponent>,
-    consumer: Consumer,
-    versionFromModel?: Version,
-    message?: string,
-    flattenedDependencies?: Object,
-    flattenedDevDependencies?: Object,
-    flattenedCompilerDependencies?: Object,
-    flattenedTesterDependencies?: Object,
-    force?: boolean,
-    verbose?: boolean,
-    specsResults?: any
+    consumerComponent: $ReadOnly<ConsumerComponent>;
+    consumer: Consumer;
+    versionFromModel?: Version;
+    message?: string;
+    flattenedDependencies?: Object;
+    flattenedDevDependencies?: Object;
+    flattenedCompilerDependencies?: Object;
+    flattenedTesterDependencies?: Object;
+    force?: boolean;
+    verbose?: boolean;
+    specsResults?: any;
   }): Promise<Object> {
     // $FlowFixMe
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return;
-      const result = files.map((file) => {
+      const result = files.map(file => {
         file.file = file.toSourceAsLinuxEOL();
         return file;
       });
@@ -201,7 +200,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return revertDirManipulationForPath(pathStr, clonedComponent.originallySharedDir, clonedComponent.wrapDir);
     };
 
-    const files = consumerComponent.files.map((file) => {
+    const files = consumerComponent.files.map(file => {
       return {
         name: file.basename,
         relativePath: manipulateDirs(file.relative),
@@ -223,10 +222,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     ]);
 
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
-    clonedComponent.getAllDependencies().forEach((dependency) => {
+    clonedComponent.getAllDependencies().forEach(dependency => {
       // ignoreVersion because when persisting the tag is higher than currently exist in .bitmap
       const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id, { ignoreVersion: true });
-      dependency.relativePaths.forEach((relativePath) => {
+      dependency.relativePaths.forEach(relativePath => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
@@ -276,14 +275,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message,
     specsResults
   }: {
-    source: ConsumerComponent,
-    consumer: Consumer,
-    flattenedDependencies: BitIds,
-    flattenedDevDependencies: BitIds,
-    flattenedCompilerDependencies: BitIds,
-    flattenedTesterDependencies: BitIds,
-    message: string,
-    specsResults?: any
+    source: ConsumerComponent;
+    consumer: Consumer;
+    flattenedDependencies: BitIds;
+    flattenedDevDependencies: BitIds;
+    flattenedCompilerDependencies: BitIds;
+    flattenedTesterDependencies: BitIds;
+    message: string;
+    specsResults?: any;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
 
@@ -345,7 +344,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const repo: Repository = this.objects();
     repo.add(component);
 
-    const isObjectShouldBeAdded = (obj) => {
+    const isObjectShouldBeAdded = obj => {
       // don't add a component if it's already exist locally with more versions
       if (obj instanceof ModelComponent) {
         const loaded = repo.loadSync(obj.hash(), false);
@@ -358,7 +357,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return true;
     };
 
-    objects.forEach((obj) => {
+    objects.forEach(obj => {
       if (isObjectShouldBeAdded(obj)) repo.add(obj);
     });
     return component;
@@ -373,7 +372,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   removeComponentVersions(component: ModelComponent, versions: string[]): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
-    versions.forEach((version) => {
+    versions.forEach(version => {
       const ref = component.removeVersion(version);
       objectRepo.removeObject(ref);
     });
@@ -423,14 +422,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   mergeTwoComponentsObjects(
     existingComponent: ModelComponent,
     incomingComponent: ModelComponent
-  ): { mergedComponent: ModelComponent, mergedVersions: string[] } {
+  ): { mergedComponent: ModelComponent; mergedVersions: string[] } {
     // the base component to save is the existingComponent because it might contain local data that
     // is not available in the remote component, such as the "state" property.
     const mergedComponent = existingComponent;
     const mergedVersions: string[] = [];
     // in case the existing version hash is different than incoming version hash, use the incoming
     // version because we hold the incoming component from a remote as the source of truth
-    Object.keys(existingComponent.versions).forEach((existingVersion) => {
+    Object.keys(existingComponent.versions).forEach(existingVersion => {
       if (
         incomingComponent.versions[existingVersion] &&
         existingComponent.versions[existingVersion].toString() !==
@@ -441,7 +440,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       }
     });
     // in case the incoming component has versions that are not in the existing component, copy them
-    Object.keys(incomingComponent.versions).forEach((incomingVersion) => {
+    Object.keys(incomingComponent.versions).forEach(incomingVersion => {
       if (!existingComponent.versions[incomingVersion]) {
         mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
         mergedVersions.push(incomingVersion);
@@ -467,7 +466,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     { component, objects }: ComponentTree,
     inScope: boolean = false,
     local: boolean = true
-  ): Promise<{ mergedComponent: ModelComponent, mergedVersions: string[] }> {
+  ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (!existingComponent) {

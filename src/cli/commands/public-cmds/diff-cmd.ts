@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { diff } from '../../../api/consumer';
@@ -23,7 +22,7 @@ export default class Diff extends Command {
 
   report(diffResults: DiffResults[]): string {
     return diffResults
-      .map((diffResult) => {
+      .map(diffResult => {
         if (diffResult.hasDiff) {
           const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
           const titleSeparator = new Array(titleStr.length).fill('-').join('');

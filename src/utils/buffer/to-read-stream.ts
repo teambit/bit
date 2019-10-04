@@ -1,4 +1,3 @@
-/** @flow */
 import * as stream from 'stream';
 
 /**

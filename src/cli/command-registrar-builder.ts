@@ -1,4 +1,3 @@
-/** @flow */
 import CommandRegistrar from './command-registrar';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import { Commands } from '../extensions/extension';

@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
 import { move } from '../../../api/consumer';
@@ -17,7 +16,7 @@ export default class Move extends Command {
   }
 
   report(componentsChanged: PathChangeResult[]): string {
-    const output = componentsChanged.map((component) => {
+    const output = componentsChanged.map(component => {
       const title = chalk.green(`moved component ${component.id.toString()}:\n`);
       const files = component.changes.map(file => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`).join('\n');
       return title + files;

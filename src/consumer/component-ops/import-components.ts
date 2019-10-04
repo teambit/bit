@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import semver from 'semver';
 import chalk from 'chalk';

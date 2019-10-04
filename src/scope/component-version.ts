@@ -1,4 +1,3 @@
-/** @flow */
 import semver from 'semver';
 import R from 'ramda';
 import ModelComponent from './models/model-component';

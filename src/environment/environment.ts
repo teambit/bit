@@ -1,4 +1,3 @@
-/** @flow */
 import v4 from 'uuid';
 import fs from 'fs-extra';
 import * as path from 'path';

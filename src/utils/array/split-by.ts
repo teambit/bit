@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * splits an array to two chunks using a conditional predicate function.
  * @name splitBy
@@ -15,7 +13,7 @@ function splitBy(array: [], fn: (elm: any) => boolean): [Array<any>, Array<any>]
   const truthy = [];
   const falsy = [];
 
-  array.forEach((elm) => {
+  array.forEach(elm => {
     if (fn(elm)) truthy.push(elm);
     else falsy.push(elm);
   });

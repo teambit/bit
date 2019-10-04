@@ -1,4 +1,3 @@
-/** @flow */
 import cleanChar from './clean-char';
 
 /**

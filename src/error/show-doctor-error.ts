@@ -1,4 +1,3 @@
-/** @flow */
 import GeneralError from './general-error';
 
 export default class ShowDoctorError extends GeneralError {

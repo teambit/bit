@@ -1,4 +1,3 @@
-/** @flow */
 // @TODO refactor this file to include only exports
 import first from './array/first';
 import flatten from './array/flatten';

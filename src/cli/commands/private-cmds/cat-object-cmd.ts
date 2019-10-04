@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { catObject } from '../../../api/scope';
 
@@ -12,7 +11,7 @@ export default class CatObject extends Command {
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"']
   ];
 
-  action([hash]: [string], { pretty, stringify }: { pretty: boolean, stringify: boolean }): Promise<any> {
+  action([hash]: [string], { pretty, stringify }: { pretty: boolean; stringify: boolean }): Promise<any> {
     // @TODO - import should support multiple bits
     return catObject(hash, pretty, stringify);
   }

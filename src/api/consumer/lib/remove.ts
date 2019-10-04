@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { loadConsumer, loadConsumerIfExist, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
@@ -17,11 +16,11 @@ export default (async function remove({
   track,
   deleteFiles
 }: {
-  ids: string[],
-  force: boolean,
-  remote: boolean,
-  track: boolean,
-  deleteFiles: boolean
+  ids: string[];
+  force: boolean;
+  remote: boolean;
+  track: boolean;
+  deleteFiles: boolean;
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
@@ -57,7 +56,7 @@ async function getRemoteBitIdsToRemove(ids: string[]): Promise<BitId[]> {
 
 async function getIdsFromRemoteByWildcards(ids: string[]): Promise<BitId[]> {
   const remoteIds = await Promise.all(
-    ids.map((id) => {
+    ids.map(id => {
       if (hasWildcard(id)) {
         return getRemoteBitIdsByWildcards(id);
       }

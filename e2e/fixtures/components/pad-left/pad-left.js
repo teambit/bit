@@ -1,4 +1,3 @@
-/** @flow */
 import isString from '../is-string/is-string';
 
 const cache = ['', ' ', '  ', '   ', '    ', '     ', '      ', '       ', '        ', '         '];

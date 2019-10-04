@@ -1,4 +1,3 @@
-/** @flow */
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';

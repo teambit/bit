@@ -1,5 +1,3 @@
-/** @flow */
-
 function updateBindingPrefixToNewDefault(componentModel: Object): Object {
   const oldDefault = 'bit';
   const newDefault = '@bit';

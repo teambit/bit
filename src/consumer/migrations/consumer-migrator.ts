@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import BitMap from '../bit-map';
 import { BIT_VERSION } from '../../constants';
@@ -6,16 +5,16 @@ import getMigrationVersions, { MigrationDeclaration } from '../../migration/migr
 import logger from '../../logger/logger';
 
 export type ConsumerMigrationResult = {
-  bitMap: BitMap
+  bitMap: BitMap;
 };
 
 type VersionMigrationsDeclarations = {
-  bitmap: MigrationDeclaration[] | null | undefined
+  bitmap: MigrationDeclaration[] | null | undefined;
 };
 
 type VersionMigrations = {
-  version: string,
-  migrations: VersionMigrationsDeclarations
+  version: string;
+  migrations: VersionMigrationsDeclarations;
 };
 
 let globalVerbose: boolean = false;

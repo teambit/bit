@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * Invoke a function for every key within given object or array.
  * @name forEach

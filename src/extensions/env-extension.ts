@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from 'ramda';
 import * as path from 'path';
 import format from 'string-format';

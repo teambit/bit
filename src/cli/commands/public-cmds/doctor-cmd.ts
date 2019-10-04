@@ -1,5 +1,3 @@
-/** @flow */
-
 import Command from '../../command';
 import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
 import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
@@ -24,8 +22,8 @@ export default class Doctor extends Command {
       list = false,
       save
     }: {
-      list?: boolean,
-      save?: string
+      list?: boolean;
+      save?: string;
     }
   ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
     if (list) {

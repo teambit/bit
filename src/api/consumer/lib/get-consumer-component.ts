@@ -1,4 +1,3 @@
-/** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 import DependencyGraph from '../../../scope/graph/scope-graph';
@@ -12,12 +11,12 @@ export default (async function getConsumerBit({
   showDependents,
   showDependencies
 }: {
-  id: string,
-  compare: boolean,
-  allVersions: boolean | null | undefined,
-  showRemoteVersions: boolean,
-  showDependents: boolean,
-  showDependencies: boolean
+  id: string;
+  compare: boolean;
+  allVersions: boolean | null | undefined;
+  showRemoteVersions: boolean;
+  showDependents: boolean;
+  showDependencies: boolean;
 }) {
   const consumer: Consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);

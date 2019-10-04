@@ -1,4 +1,3 @@
-/** @flow */
 import uidNumber from 'uid-number';
 import logger from '../logger/logger';
 import GeneralError from '../error/general-error';

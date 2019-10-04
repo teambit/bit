@@ -1,5 +1,3 @@
-/** @flow */
-
 import { loadConsumer, Consumer } from '../../../consumer';
 import GeneralError from '../../../error/general-error';
 import EjectComponents from '../../../consumer/component-ops/eject-components';

@@ -1,8 +1,7 @@
-/** @flow */
 export type ResultObject<T> = {
-  success: boolean,
-  val: T | null | undefined,
-  error: Error
+  success: boolean;
+  val: T | null | undefined;
+  error: Error;
 };
 
 export default function toResultObject<T>() {

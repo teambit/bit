@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
@@ -15,11 +14,11 @@ export default class Eject extends Command {
   loader = true;
   migration = true;
 
-  action([ids]: [string[]], { force, json }: { force: boolean, json: boolean }): Promise<EjectResults> {
+  action([ids]: [string[]], { force, json }: { force: boolean; json: boolean }): Promise<EjectResults> {
     return ejectAction(ids, force).then(ejectResults => ({ ejectResults, json }));
   }
 
-  report({ ejectResults, json }: { ejectResults: EjectResults, json: boolean }): string {
+  report({ ejectResults, json }: { ejectResults: EjectResults; json: boolean }): string {
     if (json) return JSON.stringify(ejectResults, null, 2);
     return ejectTemplate(ejectResults);
   }

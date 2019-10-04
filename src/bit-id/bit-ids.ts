@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import BitId from '../bit-id/bit-id';
 import forEach from '../utils/object/foreach';

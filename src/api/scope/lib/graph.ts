@@ -1,4 +1,3 @@
-/** @flow */
 import { Scope, loadScope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import DependencyGraph from '../../../scope/graph/scope-graph';

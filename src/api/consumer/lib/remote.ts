@@ -1,4 +1,3 @@
-/** @flow */
 import { loadScope } from '../../../scope';
 import { Remote } from '../../../remotes';
 import { GlobalRemotes } from '../../../global-config';
@@ -11,11 +10,11 @@ function buildRemote(url: string): Remote {
 
 export function add(url: string, global: boolean) {
   const remote = buildRemote(url);
-  return remote.scope().then((scopeDesc) => {
+  return remote.scope().then(scopeDesc => {
     remote.name = scopeDesc.name;
 
     if (global) {
-      return GlobalRemotes.load().then((globalRemotes) => {
+      return GlobalRemotes.load().then(globalRemotes => {
         return globalRemotes
           .addRemote(remote)
           .write()
@@ -23,7 +22,7 @@ export function add(url: string, global: boolean) {
       });
     }
 
-    return loadScope().then((scope) => {
+    return loadScope().then(scope => {
       return scope.scopeJson
         .addRemote(remote)
         .write(scope.getPath())
@@ -61,7 +60,7 @@ export function list(global: boolean) {
     return GlobalRemotes.load().then(globalRemotes => globalRemotes.toPlainObject());
   }
 
-  return loadScope().then((scope) => {
+  return loadScope().then(scope => {
     return getScopeRemotes(scope).then(remotes => remotes.toPlainObject());
   });
 }

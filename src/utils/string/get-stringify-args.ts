@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * Get pretty value (boolean) and return args to pass to the json.stringify method
  *

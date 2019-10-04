@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';

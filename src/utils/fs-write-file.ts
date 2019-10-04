@@ -1,10 +1,9 @@
-/** @flow */
 import { userInfo } from 'os';
 import fs from 'fs-extra';
 
 export type Options = {
-  uid?: number | null | undefined,
-  gid?: number | null | undefined
+  uid?: number | null | undefined;
+  gid?: number | null | undefined;
 };
 
 export default (async function writeFile(

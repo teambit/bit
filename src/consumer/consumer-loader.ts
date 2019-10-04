@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import Consumer from './consumer';
 import { ConsumerNotFound } from './exceptions';

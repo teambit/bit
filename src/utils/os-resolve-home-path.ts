@@ -1,4 +1,3 @@
-/** @flow */
 const userHome = require('user-home');
 
 const HOME_SIGN = '~';

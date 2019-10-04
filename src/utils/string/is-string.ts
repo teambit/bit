@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * determines whether `val` is of type string.
  * @name isString

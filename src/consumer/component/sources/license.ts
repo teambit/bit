@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import { LICENSE_FILENAME } from '../../../constants';
 import { AbstractVinyl } from '.';

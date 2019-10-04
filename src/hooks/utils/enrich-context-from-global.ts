@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import gitconfig from '@teambit/gitconfig';
 import yn from 'yn';

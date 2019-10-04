@@ -1,4 +1,3 @@
-/** @flow */
 import cliSpinners from 'cli-spinners';
 import os from 'os';
 import * as path from 'path';

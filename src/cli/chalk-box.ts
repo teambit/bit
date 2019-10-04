@@ -1,4 +1,3 @@
-/** @flow */
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
@@ -67,11 +66,11 @@ export const paintLog = ({
   username,
   email
 }: {
-  message: string,
-  tag: string,
-  date: string,
-  username: string | null | undefined,
-  email: string | null | undefined
+  message: string;
+  tag: string;
+  date: string;
+  username: string | null | undefined;
+  email: string | null | undefined;
 }): string => {
   return (
     c.yellow(`tag ${tag}\n`) +
@@ -81,11 +80,11 @@ export const paintLog = ({
   );
 };
 
-const successTest = (test) => {
+const successTest = test => {
   return `✔   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}`;
 };
 
-const failureTest = (test) => {
+const failureTest = test => {
   return `❌   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}
     ${c.red(test.err.message)}`;
 };
@@ -95,7 +94,7 @@ const paintMissingTester = (componentId: string): string => {
   return c.bold.red(`tester for component: ${componentIdBold} is not defined`);
 };
 
-const paintTest = (test) => {
+const paintTest = test => {
   return test.pass ? successTest(test) : failureTest(test);
 };
 
@@ -111,7 +110,7 @@ const paintGeneralFailure = (failure, verbose) => {
     ${c.red(errStack)}`;
 };
 
-const paintStats = (results) => {
+const paintStats = results => {
   const statsHeader = results.pass ? c.underline.green('\ntests passed') : c.underline.red('\ntests failed');
   const fileName = results.specFile ? c.white(`\nfile: ${results.specFile}`) : '';
   const totalDuration =
@@ -123,7 +122,7 @@ const paintStats = (results) => {
 
 export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = false): string[] => {
   if (!results) return [];
-  return results.map((specResult) => {
+  return results.map(specResult => {
     const stats = paintStats(specResult);
     const tests = specResult.tests ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
     const failures = specResult.failures
@@ -138,7 +137,7 @@ export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose:
   const childOutput = results.childOutput ? `${results.childOutput}\n` : '';
   if (results.results && results.results.length === 0) return `${childOutput}${c.yellow('nothing to test')}`;
   const resultsOutput = results.results
-    .map((result) => {
+    .map(result => {
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
       const componentId = c.bold(idStr);
@@ -154,12 +153,12 @@ export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): 
   const summaryHeader = [];
   summaryHeader.push({ value: 'Component ID', width: 80, headerColor: 'cyan' });
   summaryHeader.push({ value: 'Specs Results', width: 50, headerColor: 'cyan' });
-  const specsSummary = (specResults) => {
+  const specsSummary = specResults => {
     const specsPassed = specResults.map(specResult => specResult.pass);
     const areAllPassed = specsPassed.every(isPassed => isPassed);
     return areAllPassed ? c.green('passed') : c.red('failed');
   };
-  const summaryRows = results.map((result) => {
+  const summaryRows = results.map(result => {
     const componentId = c.bold(result.componentId.toString());
     if (result.missingTester) return [componentId, c.bold.red('tester is not defined')];
     if (result.specs) return [componentId, specsSummary(result.specs)];

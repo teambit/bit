@@ -1,4 +1,3 @@
-/** @flow */
 import { groupBy, prop } from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import Remote from './remote';
@@ -25,7 +24,7 @@ export default class Remotes extends Map<string, Remote> {
   resolve(scopeName: string, thisScope?: Scope | null | undefined): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
-    return remoteResolver(scopeName, thisScope).then((scopeHost) => {
+    return remoteResolver(scopeName, thisScope).then(scopeHost => {
       return new Remote(scopeHost, scopeName);
     });
   }
@@ -78,7 +77,7 @@ export default class Remotes extends Map<string, Remote> {
    */
   async scopeGraphs(ids: BitId[], thisScope: Scope): Promise<DependencyGraph[]> {
     const groupedIds = this._groupByScopeName(ids);
-    const graphsP = Object.keys(groupedIds).map(async (scopeName) => {
+    const graphsP = Object.keys(groupedIds).map(async scopeName => {
       const remote = await this.resolve(scopeName, thisScope);
       const dependencyGraph = await remote.graph();
       dependencyGraph.setScopeName(scopeName);
@@ -95,7 +94,7 @@ export default class Remotes extends Map<string, Remote> {
   toPlainObject() {
     const object = {};
 
-    this.forEach((remote) => {
+    this.forEach(remote => {
       let name = remote.name;
       if (remote.primary) name = prependBang(remote.name);
       object[name] = remote.host;

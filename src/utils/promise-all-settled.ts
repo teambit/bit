@@ -1,4 +1,3 @@
-/** @flow */
 import toResultObject from './promise-to-result-object';
 import { ResultObject } from './promise-to-result-object';
 

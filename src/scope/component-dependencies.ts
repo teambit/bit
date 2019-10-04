@@ -1,4 +1,3 @@
-/** @flow */
 import Component from '../consumer/component/consumer-component';
 import BitId from '../bit-id/bit-id';
 

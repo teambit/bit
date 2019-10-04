@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import { inspect } from 'util';
 import { HOOKS_NAMES } from '../constants';
@@ -6,16 +5,16 @@ import logger from '../logger/logger';
 import * as errors from './exceptions';
 
 export type HookAction = {
-  name: string | null | undefined,
-  run: Function[]
+  name: string | null | undefined;
+  run: Function[];
 };
 
 export type Hooks = {
-  [string]: HookAction[]
+  [string]: HookAction[];
 };
 
 type HookFailures = {
-  [string]: Error
+  [string]: Error;
 };
 
 /*
@@ -133,7 +132,7 @@ export default class HooksManager {
     }
 
     const actions = this.hooks.get(hookName);
-    const actionsP = actions.map((action) => {
+    const actionsP = actions.map(action => {
       // Catch errors in order to aggregate them
       // Wrap in a promise in case the action doesn't return a promise
       return Promise.resolve()
@@ -141,7 +140,7 @@ export default class HooksManager {
           logger.info(`running action ${action.name} on hook ${hookName}`);
           return action.run(args, headers, context);
         })
-        .catch((e) => {
+        .catch(e => {
           logger.error(`running action ${action.name} on hook ${hookName} failed, err:`, e);
           resultErrors.push({ [action.name]: e });
         });

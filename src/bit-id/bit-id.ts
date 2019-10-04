@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import semver from 'semver';
 import decamelize from 'decamelize';

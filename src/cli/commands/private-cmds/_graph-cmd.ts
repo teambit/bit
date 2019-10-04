@@ -1,4 +1,3 @@
-/** @flow */
 import Command from '../../command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { graph } from '../../../api/scope';

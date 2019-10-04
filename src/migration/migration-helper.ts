@@ -1,19 +1,18 @@
-/** @flow */
 import semver from 'semver';
 import logger from '../logger/logger';
 
 export type MigrationResult = {
-  run: boolean,
-  success?: boolean | null | undefined
+  run: boolean;
+  success?: boolean | null | undefined;
 };
 
 export type MigrationDeclaration = {
-  name: string,
-  migrate: Function
+  name: string;
+  migrate: Function;
 };
 
 type AbstractVersionMigrations = {
-  [version: string]: MigrationDeclaration[]
+  [version: string]: MigrationDeclaration[];
 };
 
 /**

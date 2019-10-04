@@ -1,4 +1,3 @@
-/** @flow */
 import zlib from 'zlib';
 
 export default function deflate(buffer: Buffer): Promise<Buffer> {

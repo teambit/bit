@@ -1,4 +1,3 @@
-/** @flow */
 import { Graph } from 'graphviz';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import VisualDependencyGraph from '../../../scope/graph/vizgraph';

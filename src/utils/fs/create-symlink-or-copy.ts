@@ -1,4 +1,3 @@
-/** @flow */
 import * as path from 'path';
 import fs from 'fs-extra';
 import symlinkOrCopy from 'symlink-or-copy';

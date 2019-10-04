@@ -1,4 +1,3 @@
-/** @flow */
 import Table from 'tty-table';
 import Command from '../../command';
 import { catScope } from '../../../api/scope';

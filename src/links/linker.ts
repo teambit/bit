@@ -1,4 +1,3 @@
-/** @flow */
 import R from 'ramda';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
@@ -141,12 +140,12 @@ export async function getAllComponentsLinks({
   bitMap,
   createNpmLinkFiles
 }: {
-  componentsWithDependencies: ComponentWithDependencies[],
-  writtenComponents: Component[],
-  writtenDependencies: Component[] | null | undefined,
-  consumer: Consumer | null | undefined,
-  bitMap: BitMap,
-  createNpmLinkFiles: boolean
+  componentsWithDependencies: ComponentWithDependencies[];
+  writtenComponents: Component[];
+  writtenDependencies: Component[] | null | undefined;
+  consumer: Consumer | null | undefined;
+  bitMap: BitMap;
+  createNpmLinkFiles: boolean;
 }): Promise<DataToPersist> {
   const dataToPersist = new DataToPersist();
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
@@ -178,9 +177,9 @@ export async function getAllComponentsLinks({
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   dataToPersist.merge(nodeModuleLinks);
 
-  componentsWithDependencies.map(async (componentWithDependencies) => {
+  componentsWithDependencies.map(async componentWithDependencies => {
     const component = componentWithDependencies.component;
-    [component.compilerDependencies, component.testerDependencies].map(async (deps) => {
+    [component.compilerDependencies, component.testerDependencies].map(async deps => {
       const links = await linkGenerator.getLinksByDependencies(
         // $FlowFixMe writtenPath is set here
         component.writtenPath,

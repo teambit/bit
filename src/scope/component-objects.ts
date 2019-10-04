@@ -1,4 +1,3 @@
-/** @flow */
 import BitObject from './objects/object';
 import Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
@@ -33,7 +32,7 @@ export default class ComponentObjects {
     return ComponentObjects.fromObject(JSON.parse(str));
   }
 
-  static manyToString(componentsAndObjects: Array<{ component: Buffer, objects: Buffer[] }>) {
+  static manyToString(componentsAndObjects: Array<{ component: Buffer; objects: Buffer[] }>) {
     const result = JSON.stringify(componentsAndObjects.map(componentAndObject => componentAndObject.toString()));
     return result;
   }
@@ -51,7 +50,7 @@ export default class ComponentObjects {
   /**
    * prefer using `this.toObjectsAsync()` if not must to be sync.
    */
-  toObjects(repo: Repository): { component: ModelComponent, objects: BitObject[] } {
+  toObjects(repo: Repository): { component: ModelComponent; objects: BitObject[] } {
     return {
       component: BitObject.parseSync(this.component, repo.types),
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
@@ -60,7 +59,7 @@ export default class ComponentObjects {
   /**
    * see `this.toObject()` for the sync version
    */
-  async toObjectsAsync(repo: Repository): Promise<{ component: ModelComponent, objects: BitObject[] }> {
+  async toObjectsAsync(repo: Repository): Promise<{ component: ModelComponent; objects: BitObject[] }> {
     return {
       component: await BitObject.parseObject(this.component, repo.types),
       objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj, repo.types)))

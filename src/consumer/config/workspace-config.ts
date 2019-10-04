@@ -1,4 +1,3 @@
-/** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
@@ -24,25 +23,25 @@ const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export type WorkspaceConfigProps = {
-  compiler?: string | Compilers,
-  tester?: string | Testers,
-  saveDependenciesAsComponents?: boolean,
-  lang?: string,
-  distTarget?: string | null | undefined,
-  distEntry?: string | null | undefined,
-  componentsDefaultDirectory?: string,
-  dependenciesDirectory?: string,
-  ejectedEnvsDirectory?: string,
-  bindingPrefix?: string,
-  extensions?: Extensions,
-  packageManager?: 'npm' | 'yarn',
-  packageManagerArgs?: string[],
-  packageManagerProcessOptions?: Object,
-  useWorkspaces?: boolean,
-  manageWorkspaces?: boolean,
-  resolveModules?: ResolveModulesConfig,
-  defaultScope?: string,
-  overrides?: ConsumerOverrides
+  compiler?: string | Compilers;
+  tester?: string | Testers;
+  saveDependenciesAsComponents?: boolean;
+  lang?: string;
+  distTarget?: string | null | undefined;
+  distEntry?: string | null | undefined;
+  componentsDefaultDirectory?: string;
+  dependenciesDirectory?: string;
+  ejectedEnvsDirectory?: string;
+  bindingPrefix?: string;
+  extensions?: Extensions;
+  packageManager?: 'npm' | 'yarn';
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Object;
+  useWorkspaces?: boolean;
+  manageWorkspaces?: boolean;
+  resolveModules?: ResolveModulesConfig;
+  defaultScope?: string;
+  overrides?: ConsumerOverrides;
 };
 
 export default class WorkspaceConfig extends AbstractConfig {

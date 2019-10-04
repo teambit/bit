@@ -1,4 +1,3 @@
-/** @flow */
 import { serializeError } from 'serialize-error';
 import R from 'ramda';
 import commander from 'commander';

@@ -1,4 +1,3 @@
-/** @flow */
 import { serializeError } from 'serialize-error';
 import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
 

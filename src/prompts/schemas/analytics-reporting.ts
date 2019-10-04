@@ -1,7 +1,5 @@
 import { BASE_DOCS_DOMAIN } from '../../constants';
 
-/** @flow */
-
 /**
  * schema for analytics.
  */
