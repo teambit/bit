@@ -6,8 +6,7 @@ export default class RemovedLocalObjects extends RemovedObjects {
   constructor(
     removedComponentIds?: BitIds,
     missingComponents?: BitIds,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    modifiedComponents: BitIds,
+    modifiedComponents?: BitIds,
     removedDependencies?: BitIds,
     dependentBits?: Object
   ) {

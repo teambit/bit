@@ -65,20 +65,14 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedString(parsedString: Object): AbstractVinylProps {
+  static loadFromParsedString(parsedString: any): AbstractVinylProps {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const contents = Buffer.isBuffer(parsedString._contents)
-      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        parsedString._contents
-      : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        Buffer.from(parsedString._contents);
+      ? parsedString._contents
+      : Buffer.from(parsedString._contents);
     return {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cwd: parsedString._cwd,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       path: parsedString.history[parsedString.history.length - 1],
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       base: parsedString._base,
       contents
     };

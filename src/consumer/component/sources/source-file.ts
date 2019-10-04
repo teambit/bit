@@ -11,7 +11,7 @@ import { Repository } from '../../../scope/objects';
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: string | null | undefined;
-
+  test: boolean;
   static load(
     filePath: PathOsBased,
     distTarget: PathOsBased,
