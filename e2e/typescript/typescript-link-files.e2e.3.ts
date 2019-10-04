@@ -81,6 +81,7 @@ describe('typescript components with link files', function() {
   describe('when the link file uses default-import and specific-import together', () => {
     if (process.env.APPVEYOR === 'True') {
       // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
+      // @ts-ignore
       this.skip;
     } else {
       before(() => {

@@ -36,6 +36,7 @@ describe('run bit init - interactive', function() {
   describe('with defaults', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      // @ts-ignore
       this.skip;
     } else {
       let output;
@@ -66,6 +67,7 @@ describe('run bit init - interactive', function() {
   describe('change dir, use yarn, set compiler from bit.envs', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      // @ts-ignore
       this.skip;
     } else {
       let bitJson;
@@ -105,6 +107,7 @@ describe('run bit init - interactive', function() {
   describe('use a custom compiler', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      // @ts-ignore
       this.skip;
     } else {
       let bitJson;
@@ -148,6 +151,7 @@ describe('run bit init - interactive', function() {
   describe('interactive global configs', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
+      // @ts-ignore
       this.skip;
     } else {
       let configsBackup;

@@ -54,6 +54,7 @@ describe('bit watch command', function() {
     describe('as imported', function() {
       if (process.env.APPVEYOR === 'True') {
         // these tests are flaky on AppVeyor, they randomly get timeout from the watcher
+        // @ts-ignore
         this.skip;
       } else {
         let watchRunner;

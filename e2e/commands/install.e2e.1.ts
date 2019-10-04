@@ -13,6 +13,7 @@ describe('run bit install', function() {
     // failed running npm install at C:\Users\appveyor\AppData\Local\Temp\1\bit\e2e\cjmoyldi-local
     // npm ERR! Cannot read property 'match' of undefined
     // ```
+    // @ts-ignore
     this.skip;
   } else {
     this.timeout(0);

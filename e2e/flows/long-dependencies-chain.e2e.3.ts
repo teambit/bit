@@ -13,6 +13,7 @@ describe('flow of a long-dependencies-chain', function() {
   });
   describe('a component bar4/foo4 (or any other number set in sizeOfChain) has a dependency bar3/foo3, which has a dependency bar2/foo2 and so on', () => {
     if (process.env.APPVEYOR === 'True') {
+      // @ts-ignore
       this.skip;
     } else {
       before(() => {
