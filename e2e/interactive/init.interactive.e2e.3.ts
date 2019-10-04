@@ -15,6 +15,15 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
+const inputsWithDefaultsNoCompiler = [
+  { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+  { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+  {
+    triggerText: CHOOSE_COMPILER_MSG_Q,
+    inputs: [{ value: INTERACTIVE_KEYS.enter }]
+  }
+];
+
 describe('run bit init - interactive', function() {
   this.timeout(0);
   const helper = new Helper();
@@ -163,12 +172,3 @@ describe('run bit init - interactive', function() {
     }
   });
 });
-
-const inputsWithDefaultsNoCompiler = [
-  { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
-  { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
-  {
-    triggerText: CHOOSE_COMPILER_MSG_Q,
-    inputs: [{ value: INTERACTIVE_KEYS.enter }]
-  }
-];

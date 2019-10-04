@@ -104,3 +104,4 @@ src/api/consumer/lib/global-config.ts
 e2e/flows/dependencies-versions-resolution.e2e.2.ts
 src/search/search-adapter.ts
 src/consumer/component/dependencies/dependency-resolver/dependencies-resolver.ts
+src/search/query-builder.ts

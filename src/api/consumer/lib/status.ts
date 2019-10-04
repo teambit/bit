@@ -2,7 +2,7 @@
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
-import { InvalidComponents } from '../../../consumer/component';
+import { InvalidComponent } from '../../../consumer/component/consumer-component';
 import { ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
@@ -11,14 +11,14 @@ import { BitId } from '../../../bit-id';
 import ComponentsPendingImport from '../../../consumer/component-ops/exceptions/components-pending-import';
 
 export type StatusResult = {
-  newComponents: Component[],
-  modifiedComponent: Component[],
-  stagedComponents: ModelComponent[],
-  componentsWithMissingDeps: Component[],
-  importPendingComponents: BitId[],
-  autoTagPendingComponents: string[],
-  invalidComponents: InvalidComponents[],
-  outdatedComponents: Component[]
+  newComponents: Component[];
+  modifiedComponent: Component[];
+  stagedComponents: ModelComponent[];
+  componentsWithMissingDeps: Component[];
+  importPendingComponents: BitId[];
+  autoTagPendingComponents: string[];
+  invalidComponents: InvalidComponent[];
+  outdatedComponents: Component[];
 };
 
 export default (async function status(): Promise<StatusResult> {

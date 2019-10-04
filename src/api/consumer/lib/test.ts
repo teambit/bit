@@ -61,13 +61,13 @@ export async function testInProcess(
   };
 }
 
-const _getComponentsAfterBuild = async (
+async function _getComponentsAfterBuild(
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined
-) => {
+) {
   let components;
   if (id) {
     const idParsed = consumer.getParsedId(id);
@@ -85,4 +85,4 @@ const _getComponentsAfterBuild = async (
   }
   await consumer.scope.buildMultiple(components, consumer, false, verbose, dontPrintEnvMsg);
   return components;
-};
+}

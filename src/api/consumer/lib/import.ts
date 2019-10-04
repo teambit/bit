@@ -105,7 +105,7 @@ const getSemverType = (str): string | null | undefined => {
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript
-function compatibleWith(a: { [string]: string }, b: { [string]: string }): boolean {
+function compatibleWith(a: { [key: string]: string }, b: { [key: string]: string }): boolean {
   const depName = key(a);
   if (!b[depName]) return false; // dependency does not exist - return false
   const bVersion = b[depName];
@@ -134,7 +134,7 @@ function compatibleWith(a: { [string]: string }, b: { [string]: string }): boole
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript
-const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages }): Promise<Object> => {
+function warnForPackageDependencies({ dependencies, consumer, installNpmPackages }): Promise<Object> {
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],
@@ -197,4 +197,4 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
   warnings.notInBoth = R.uniq(warnings.notInBoth);
 
   return Promise.resolve(warnings);
-};
+}
