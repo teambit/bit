@@ -124,7 +124,7 @@ export default class EnvExtension extends BaseExtension {
    * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
-  toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
+  toBitJsonObject(ejectedEnvDirectory: string): { [key: string]: EnvExtensionObject } {
     logger.debug('env-extension, toBitJsonObject');
     const files = {};
     this.files.forEach(file => {

@@ -8,27 +8,28 @@ import pSeries from 'p-series';
 export type InteractiveInputs = InteractiveInputDefinition[];
 
 export type InteractiveInputDefinition = {
-  triggerText: string,
-  inputs: InteractiveInput[]
+  triggerText: string;
+  inputs: InteractiveInput[];
 };
 
 export type InteractiveInput = {
   // The actual value to enter
-  value: string | InteractiveKey,
+  value: string | InteractiveKey;
   // time (ms) to wait before enter the line
   // Used usually to wait more when running remote actions
-  waitInput?: number
+  waitInput?: number;
 };
 
 export type InteractiveKey = {
   // Used for debug printing
-  label: string,
-  value: string
+  label: string;
+  value: string;
 };
 
 export type InteractiveKeyName = 'up' | 'down' | 'enter' | 'space';
 
-type InteractiveKeys = { [InteractiveKeyName]: InteractiveKey };
+// @ts-ignore
+type InteractiveKeys = { [key: InteractiveKeyName]: InteractiveKey };
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 100;
 
@@ -56,16 +57,16 @@ export default (async function runInteractive({
     verbose: false
   }
 }: {
-  processName: string,
-  args: string[],
-  inputs: InteractiveInputs,
-  processOpts: Object,
+  processName: string;
+  args: string[];
+  inputs: InteractiveInputs;
+  processOpts: Object;
   opts: {
     // Default interval between inputs in case there is no specific interval
-    defaultIntervalBetweenInputs: number,
+    defaultIntervalBetweenInputs: number;
     // print some outputs (like the command running, the args, inputs)
-    verbose: boolean
-  }
+    verbose: boolean;
+  };
 }) {
   const actualDefaultIntervalBetweenInputs =
     opts.defaultIntervalBetweenInputs || DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS;
@@ -81,7 +82,7 @@ export default (async function runInteractive({
   let currentInputTimeout;
 
   const writePromiseTimeout = async (input: InteractiveInput) => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const timeout = input.waitInput || actualDefaultIntervalBetweenInputs;
       const inputValue = typeof input.value === 'string' ? input.value : input.value.value;
       currentInputTimeout = setTimeout(() => {
@@ -116,7 +117,7 @@ export default (async function runInteractive({
   // Kick off the process
   let pointer = 0;
   let leftInputsArrays = inputs.length;
-  child.stdout.on('data', (chunk) => {
+  child.stdout.on('data', chunk => {
     const currString = chunk.toString();
     if (pointer < inputs.length) {
       const triggerText = inputs[pointer].triggerText;
@@ -139,19 +140,19 @@ export default (async function runInteractive({
 });
 
 function _printInputs(inputsToPrint: InteractiveInputs, actualDefaultIntervalBetweenInputs: number) {
-  const getTriggerOutput = (trigger) => {
+  const getTriggerOutput = trigger => {
     return `${chalk.blue('trigger:')} ${trigger} `;
   };
-  const getInputOutput = (input) => {
+  const getInputOutput = input => {
     const timeout = input.waitInput || actualDefaultIntervalBetweenInputs;
     const label = typeof input.value === 'string' ? input.value : input.value.label;
     return `${label}(${timeout})`;
   };
-  const getInputsOutput = (inputs) => {
+  const getInputsOutput = inputs => {
     const inputsOutput = inputs.map(getInputOutput).join(' ');
     return `${chalk.yellow('inputs:')} ${inputsOutput}`;
   };
-  const getEntryOutput = (entry) => {
+  const getEntryOutput = entry => {
     const triggerOutput = getTriggerOutput(entry.triggerText);
     const inputsOutput = getInputsOutput(entry.inputs);
     return `${triggerOutput} ${inputsOutput}`;

@@ -212,18 +212,18 @@ export async function populateEnvFilesToWrite({
   return ejectedDirectory;
 }
 
-const getBitJsonToWrite = (
+function getBitJsonToWrite(
   component: ConsumerComponent,
   ejectedCompilerDirectory: string,
   ejectedTesterDirectory: string
-): ComponentConfig => {
+): ComponentConfig {
   const componentConfig = ComponentConfig.fromComponent(component);
   componentConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
   componentConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
   return componentConfig;
-};
+}
 
-const _getRelativeDir = (bitJsonDir, envDir) => {
+function _getRelativeDir(bitJsonDir, envDir) {
   let res = envDir;
   const sharedStart = sharedStartOfArray([bitJsonDir, envDir]);
   if (sharedStart) {
@@ -231,7 +231,7 @@ const _getRelativeDir = (bitJsonDir, envDir) => {
   }
 
   return res;
-};
+}
 
 /**
  * get the config dir which needed to be searched in other components to validate there is no conflicts
@@ -239,10 +239,10 @@ const _getRelativeDir = (bitJsonDir, envDir) => {
  * and get the dir without the dynamic parts
  * @param {*} configDir
  */
-const _getDirToValidateAgainstOtherComps = (configDir: ConfigDir) => {
+function _getDirToValidateAgainstOtherComps(configDir: ConfigDir) {
   // In case it's inside the component dir it can't conflicts with other comps
   if (configDir.isUnderComponentDir) {
     return null;
   }
   return configDir.getCleaned({ cleanComponentDir: false, cleanEnvType: true }).linuxDirPath;
-};
+}

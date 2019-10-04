@@ -1,15 +1,14 @@
-/** @flow */
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
 
 export type RemovedObjectSerialized = {
-  removedComponentIds: BitIdStr[],
-  missingComponents: BitIdStr[],
-  removedDependencies: BitIdStr[],
-  dependentBits: Object
+  removedComponentIds: BitIdStr[];
+  missingComponents: BitIdStr[];
+  removedDependencies: BitIdStr[];
+  dependentBits: Object;
 };
 
-export class RemovedObjects {
+export default class RemovedObjects {
   removedComponentIds: BitIds;
   missingComponents: BitIds;
   removedDependencies: BitIds;
@@ -20,10 +19,10 @@ export class RemovedObjects {
     removedDependencies,
     dependentBits
   }: {
-    removedComponentIds?: BitIds,
-    missingComponents?: BitIds,
-    removedDependencies?: BitIds,
-    dependentBits?: Object
+    removedComponentIds?: BitIds;
+    missingComponents?: BitIds;
+    removedDependencies?: BitIds;
+    dependentBits?: Object;
   }) {
     this.removedComponentIds = removedComponentIds || new BitIds();
     this.missingComponents = missingComponents || new BitIds();
@@ -41,10 +40,10 @@ export class RemovedObjects {
   }
 
   static fromObjects(payload: {
-    removedComponentIds: string[],
-    missingComponents: string[],
-    removedDependencies: string[],
-    dependentBits: { [string]: Object[] }
+    removedComponentIds: string[];
+    missingComponents: string[];
+    removedDependencies: string[];
+    dependentBits: { [key: string]: Object[] };
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
     const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));
@@ -60,19 +59,5 @@ export class RemovedObjects {
       removedDependencies,
       dependentBits
     });
-  }
-}
-
-export class RemovedLocalObjects extends RemovedObjects {
-  modifiedComponents: BitIds;
-  constructor(
-    removedComponentIds?: BitIds,
-    missingComponents?: BitIds,
-    modifiedComponents: BitIds,
-    removedDependencies?: BitIds,
-    dependentBits?: Object
-  ) {
-    super({ removedComponentIds, missingComponents, removedDependencies, dependentBits });
-    this.modifiedComponents = modifiedComponents;
   }
 }

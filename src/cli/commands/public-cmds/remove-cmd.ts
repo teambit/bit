@@ -2,7 +2,8 @@
 import yn from 'yn';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
-import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-components';
+import RemovedObjects from '../../../scope/removed-components';
+import RemovedLocalObjects from '../../../scope/removed-local-objects';
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
@@ -40,7 +41,7 @@ export default class Remove extends Command {
       track = false,
       deleteFiles = false,
       silent = false
-    }: { force: boolean, remote: boolean, track: boolean, deleteFiles: boolean, silent: boolean }
+    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean }
   ): Promise<any> {
     if (!silent) {
       const removePromptResult = await removePrompt();
@@ -54,8 +55,8 @@ export default class Remove extends Command {
     localResult,
     remoteResult = []
   }: {
-    localResult: RemovedLocalObjects,
-    remoteResult: RemovedObjects[]
+    localResult: RemovedLocalObjects;
+    remoteResult: RemovedObjects[];
   }): string {
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

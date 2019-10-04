@@ -6,7 +6,7 @@ import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
 // import logger from '../../logger/logger';
 
-function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
+function parse(buffer: Buffer, types: { [key: string]: Function }): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
@@ -21,12 +21,12 @@ export default class BitObject {
     throw new Error('id() was not implemented...');
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toBuffer(pretty?: boolean): Buffer {
     throw new Error('toBuffer() was not implemented...');
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static parse(data: any) {
     throw new Error('parse() was not implemented...');
   }
@@ -67,7 +67,7 @@ export default class BitObject {
     const objects: BitObject[] = [];
 
     function addRefs(object: BitObject) {
-      const objs = object.refs().map((ref) => {
+      const objs = object.refs().map(ref => {
         return ref.loadSync(repo);
       });
 
@@ -100,14 +100,14 @@ export default class BitObject {
   /**
    * see `this.parseSync` for the sync version
    */
-  static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {
+  static parseObject(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
     return inflate(fileContents).then(buffer => parse(buffer, types));
   }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.
    */
-  static parseSync(fileContents: Buffer, types: { [string]: Function }): BitObject {
+  static parseSync(fileContents: Buffer, types: { [key: string]: Function }): BitObject {
     const buffer = inflateSync(fileContents);
     return parse(buffer, types);
   }

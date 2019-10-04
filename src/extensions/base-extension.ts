@@ -429,7 +429,7 @@ export default class BaseExtension {
   }
 }
 
-const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): ExtensionPath => {
+function _getExtensionPath(name: string, scopePath: string, isCore: boolean = false): ExtensionPath {
   if (isCore) {
     return _getCoreExtensionPath(name);
   }
@@ -437,17 +437,17 @@ const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = fa
     throw new Error('base-extension._getExtensionPath expects to get scopePath');
   }
   return _getRegularExtensionPath(name, scopePath);
-};
+}
 
-const _getCoreExtensionPath = (name: string): ExtensionPath => {
+function _getCoreExtensionPath(name: string): ExtensionPath {
   const componentPath = path.join(__dirname, CORE_EXTENSIONS_PATH, name);
   return {
     resolvedPath: componentPath,
     componentPath
   };
-};
+}
 
-const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPath => {
+function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPath {
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // todo: make sure it always has a scope
@@ -474,18 +474,18 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
       componentPath
     };
   }
-};
+}
 
-const _getExtensionVersionFromComponentPath = (componentPath: string): string | null | undefined => {
+function _getExtensionVersionFromComponentPath(componentPath: string): string | null | undefined {
   const parsed = path.parse(componentPath);
   const version = parsed.base;
   if (!semver.valid(version)) {
     return undefined;
   }
   return version;
-};
+}
 
-const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string, options: Object): string => {
+function _addVersionToNameFromPathIfMissing(name: string, componentPath: string, options: Object): string {
   if (options && options.core) return name; // if it's a core extension, it's not a bit-id.
   let bitId: BitId;
   try {
@@ -498,7 +498,7 @@ const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string,
     return bitId.changeVersion(version).toString();
   }
   return name;
-};
+}
 
 const baseApi = {
   /**
@@ -510,8 +510,8 @@ const baseApi = {
 /**
  * Function which get actual params and return a concrete base api
  */
-const _getConcreteBaseAPI = ({ name }: { name: string }) => {
+function _getConcreteBaseAPI({ name }: { name: string }) {
   const concreteBaseAPI = R.clone(baseApi);
   concreteBaseAPI.getLogger = baseApi.getLogger(name);
   return concreteBaseAPI;
-};
+}

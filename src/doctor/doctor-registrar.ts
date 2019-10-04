@@ -2,10 +2,14 @@
 import Diagnosis from './diagnosis';
 
 /*
-  * Setting up block level variable to store class state
-  * set's to null by default.
-*/
+ * Setting up block level variable to store class state
+ * set's to null by default.
+ */
 let instance = null;
+
+const _checkName = name => (diagnosis: Diagnosis) => {
+  return diagnosis.name === name;
+};
 
 export default class DoctorRegistrar {
   diagnoses: Diagnosis[];
@@ -52,7 +56,3 @@ export default class DoctorRegistrar {
     return this.diagnoses.find(_checkName(name));
   }
 }
-
-const _checkName = name => (diagnosis: Diagnosis) => {
-  return diagnosis.name === name;
-};

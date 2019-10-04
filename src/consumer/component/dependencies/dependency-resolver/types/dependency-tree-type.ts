@@ -40,7 +40,8 @@ export type DependenciesResults = {
   unidentifiedPackages?: string[];
   bits?: Object;
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
-  missing?: { [MissingType]: string[] };
+  // @ts-ignore
+  missing?: { [key: MissingType]: string[] };
 };
 
 export type Tree = {
@@ -49,7 +50,7 @@ export type Tree = {
 
 export type ResolveModulesConfig = {
   modulesDirectories: string[];
-  aliases: { [string]: string }; // e.g. { '@': 'src' }
+  aliases: { [key: string]: string }; // e.g. { '@': 'src' }
 };
 
 export type DependencyTreeParams = {

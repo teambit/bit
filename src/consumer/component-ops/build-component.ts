@@ -225,19 +225,19 @@ async function _buildIfNeeded({
 // Ideally it's better to use the dists from the model.
 // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-const _isNeededToReBuild = async (
+async function _isNeededToReBuild(
   consumer: Consumer | null | undefined,
   componentId: BitId,
   noCache: boolean | null | undefined
-): Promise<boolean> => {
+): Promise<boolean> {
   // Forcly rebuild
   if (noCache) return true;
   if (!consumer) return false;
   const componentStatus = await consumer.getComponentStatusById(componentId);
   return componentStatus.modified;
-};
+}
 
-const _runBuild = async ({
+async function _runBuild({
   component,
   componentRoot,
   consumer,
@@ -251,7 +251,7 @@ const _runBuild = async ({
   scope: Scope;
   componentMap: ComponentMap | null | undefined;
   verbose: boolean;
-}): Promise<CompilerResults> => {
+}): Promise<CompilerResults> {
   const compiler = component.compiler;
   if (!compiler) {
     throw new GeneralError('compiler was not found, nothing to build');
@@ -406,4 +406,4 @@ const _runBuild = async ({
       const err = new ExternalBuildErrors(component.id.toString(), errors);
       throw err;
     });
-};
+}

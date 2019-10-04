@@ -34,7 +34,7 @@ import { ScopeMigrationResult } from './migrations/scope-migrator';
 import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '../cli/loader/loader-messages';
 import logger from '../logger/logger';
 import Component from '../consumer/component/consumer-component';
-import { RemovedObjects } from './removed-components';
+import RemovedObjects from './removed-components';
 import DependencyGraph from './graph/scope-graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import Dists from '../consumer/component/sources/dists';
@@ -49,32 +49,32 @@ const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 export type ScopeDescriptor = {
-  name: string
+  name: string;
 };
 
 export type ScopeProps = {
-  path: string,
-  scopeJson: ScopeJson,
-  created?: boolean,
-  tmp?: Tmp,
-  sources?: SourcesRepository,
-  objects: Repository
+  path: string;
+  scopeJson: ScopeJson;
+  created?: boolean;
+  tmp?: Tmp;
+  sources?: SourcesRepository;
+  objects: Repository;
 };
 
 export type IsolateOptions = {
-  directory: string | null | undefined,
-  write_bit_dependencies: boolean | null | undefined,
-  links: boolean | null | undefined,
-  install_packages: boolean | null | undefined,
-  installPeerDependencies: boolean | null | undefined,
-  no_package_json: boolean | null | undefined,
-  override: boolean | null | undefined
+  directory: string | null | undefined;
+  write_bit_dependencies: boolean | null | undefined;
+  links: boolean | null | undefined;
+  install_packages: boolean | null | undefined;
+  installPeerDependencies: boolean | null | undefined;
+  no_package_json: boolean | null | undefined;
+  override: boolean | null | undefined;
 };
 
 export type ComponentsAndVersions = {
-  component: ModelComponent,
-  version: Version,
-  versionStr: string
+  component: ModelComponent;
+  version: Version;
+  versionStr: string;
 };
 
 export default class Scope {
@@ -234,7 +234,7 @@ export default class Scope {
   async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
-    const ids = components.map((component) => {
+    const ids = components.map(component => {
       const getVersion = () => {
         if (component.component) {
           return component.component.latest();
@@ -266,7 +266,7 @@ export default class Scope {
     noCache: boolean,
     verbose: boolean,
     dontPrintEnvMsg?: boolean = false
-  ): Promise<{ component: string, buildResults: Object }> {
+  ): Promise<{ component: string; buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
@@ -327,11 +327,11 @@ export default class Scope {
     dontPrintEnvMsg = false,
     rejectOnFailure = false
   }: {
-    components: Component[],
-    consumer: Consumer,
-    verbose: boolean,
-    dontPrintEnvMsg?: boolean,
-    rejectOnFailure?: boolean
+    components: Component[];
+    consumer: Consumer;
+    verbose: boolean;
+    dontPrintEnvMsg?: boolean;
+    rejectOnFailure?: boolean;
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     // Make sure not starting the loader when there is nothing to test
@@ -423,7 +423,7 @@ export default class Scope {
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
         const loadedVersions = await Promise.all(
-          Object.keys(component.versions).map(async (version) => {
+          Object.keys(component.versions).map(async version => {
             const componentVersion = await component.loadVersion(version, this.objects);
             if (!componentVersion) return;
             componentVersion.id = component.toBitId();
@@ -435,10 +435,10 @@ export default class Scope {
     );
     const allScopeComponents = R.flatten(allComponentVersions);
     const dependentBits = {};
-    bitIds.forEach((bitId) => {
+    bitIds.forEach(bitId => {
       const dependencies = [];
-      allScopeComponents.forEach((scopeComponents) => {
-        scopeComponents.flattenedDependencies.forEach((flattenedDependency) => {
+      allScopeComponents.forEach(scopeComponents => {
+        scopeComponents.flattenedDependencies.forEach(flattenedDependency => {
           if (flattenedDependency.isEqualWithoutVersion(bitId)) {
             returnResultsWithVersion
               ? dependencies.push(scopeComponents.id)
@@ -459,10 +459,10 @@ export default class Scope {
    */
   async filterFoundAndMissingComponents(
     bitIds: BitIds
-  ): Promise<{ missingComponents: BitIds, foundComponents: BitIds }> {
+  ): Promise<{ missingComponents: BitIds; foundComponents: BitIds }> {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
-    const resultP = bitIds.map(async (id) => {
+    const resultP = bitIds.map(async id => {
       const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
       else foundComponents.push(id);
@@ -477,7 +477,7 @@ export default class Scope {
    */
   async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
-    const components = componentsObjects.map((componentObject) => {
+    const components = componentsObjects.map(componentObject => {
       const component = componentObject.component;
       if (!component) return null;
       const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
@@ -486,14 +486,14 @@ export default class Scope {
     return removeNils(components);
   }
 
-  loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return this.getModelComponent(id).then((componentModel) => {
+  loadComponentLogs(id: BitId): Promise<{ [number]: { message: string; date: string; hash: string } }> {
+    return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
     });
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {
-    return this.getModelComponentIfExist(id).then((componentModel) => {
+    return this.getModelComponentIfExist(id).then(componentModel => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
@@ -549,7 +549,7 @@ export default class Scope {
 
   async getComponentsAndVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
-    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
+    const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
       if (!componentObjects.component) return null;
       const component: ModelComponent = componentObjects.component;
       const versionStr = componentObjects.id.getVersion().toString();
@@ -608,13 +608,13 @@ export default class Scope {
     directory,
     keep
   }: {
-    bitId: BitId,
-    consumer?: Consumer | null | undefined,
-    save?: boolean | null | undefined,
-    verbose?: boolean | null | undefined,
-    isolated?: boolean,
-    directory?: string,
-    keep?: boolean
+    bitId: BitId;
+    consumer?: Consumer | null | undefined;
+    save?: boolean | null | undefined;
+    verbose?: boolean | null | undefined;
+    isolated?: boolean;
+    directory?: string;
+    keep?: boolean;
   }): Promise<SpecsResults | null | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run specs on remote component');
@@ -641,13 +641,13 @@ export default class Scope {
     keep,
     noCache
   }: {
-    bitId: BitId,
-    save?: boolean | null | undefined,
-    consumer?: Consumer,
-    verbose?: boolean | null | undefined,
-    directory?: string | null | undefined,
-    keep?: boolean | null | undefined,
-    noCache?: boolean | null | undefined
+    bitId: BitId;
+    save?: boolean | null | undefined;
+    consumer?: Consumer;
+    verbose?: boolean | null | undefined;
+    directory?: string | null | undefined;
+    keep?: boolean | null | undefined;
+    noCache?: boolean | null | undefined;
   }): Promise<Dists | null | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
@@ -685,7 +685,11 @@ export default class Scope {
     return BitId.parse(id, idHasScope);
   }
 
-  static ensure(path: PathOsBasedAbsolute, name: string | null | undefined, groupName: string | null | undefined): Promise<Scope> {
+  static ensure(
+    path: PathOsBasedAbsolute,
+    name: string | null | undefined,
+    groupName: string | null | undefined
+  ): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
     if (name === CURRENT_UPSTREAM) {

@@ -23,7 +23,7 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import { Network } from '../network';
 import { DEFAULT_SSH_READY_TIMEOUT, CFG_USER_TOKEN_KEY } from '../../../constants';
-import { RemovedObjects } from '../../removed-components';
+import RemovedObjects from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
@@ -51,10 +51,10 @@ function clean(str: string) {
 }
 
 export type SSHProps = {
-  path: string,
-  username: string,
-  port: number,
-  host: string
+  path: string;
+  username: string;
+  port: number;
+  host: string;
 };
 
 export type SSHConnectionStrategyName = 'token' | 'ssh-agent' | 'ssh-key' | 'user-password';
@@ -185,7 +185,7 @@ export default class SSH implements Network {
       const conn = new SSH2();
       return new Promise((resolve, reject) => {
         conn
-          .on('error', (err) => {
+          .on('error', err => {
             reject(err);
           })
           .on('ready', () => {
@@ -261,10 +261,10 @@ export default class SSH implements Network {
           stream.stdin.end();
         }
         stream
-          .on('data', (response) => {
+          .on('data', response => {
             res += response.toString();
           })
-          .on('exit', (code) => {
+          .on('exit', code => {
             logger.debug(`ssh: exit. Exit code: ${code}`);
             const promiseExit = () => {
               return code && code !== 0 ? reject(this.errorHandler(code, err)) : resolve(clean(res));
@@ -282,7 +282,7 @@ export default class SSH implements Network {
             // connections. Same bugs occur when running "this.connection.end()" on "end" or "exit" events.
             return code && code !== 0 ? reject(this.errorHandler(code, err)) : resolve(clean(res));
           })
-          .stderr.on('data', (response) => {
+          .stderr.on('data', response => {
             err = response.toString();
             logger.error(`ssh: got an error, ${err}`);
           });
@@ -389,12 +389,12 @@ export default class SSH implements Network {
 
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')
-      .then((data) => {
+      .then(data => {
         const { payload, headers } = this._unpack(data);
         checkVersionCompatibility(headers.version);
         return payload;
       })
-      .catch((err) => {
+      .catch(err => {
         throw new RemoteScopeNotFound(this.path);
       });
   }
@@ -403,7 +403,7 @@ export default class SSH implements Network {
     return this.exec('_list', namespacesUsingWildcards).then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      payload.forEach((result) => {
+      payload.forEach(result => {
         result.id = new BitId(result.id);
       });
       return payload;
@@ -420,7 +420,7 @@ export default class SSH implements Network {
   }
 
   search(query: string, reindex: boolean) {
-    return this.exec('_search', { query, reindex: reindex.toString() }).then((data) => {
+    return this.exec('_search', { query, reindex: reindex.toString() }).then(data => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return payload;

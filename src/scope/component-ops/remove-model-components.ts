@@ -1,6 +1,6 @@
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import { RemovedObjects } from '../removed-components';
+import RemovedObjects from '../removed-components';
 import logger from '../../logger/logger';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';

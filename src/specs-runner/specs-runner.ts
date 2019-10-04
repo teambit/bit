@@ -107,34 +107,30 @@ async function runOnChildProcess({
   }
   // Merge process.env from the main process
   const env = Object.assign({}, process.env, baseEnv);
-  try {
-    const workerPath = path.join(__dirname, 'worker.js');
-    // if (process.pkg) {
-    //   const entryPoint = process.argv[1];
-    //   workerPath = path.join(entryPoint, '../../dist/specs-runner/worker.js');
-    // }
-    const child = execa.node(workerPath, args, { env });
-    const result = await pEvent(child, 'message');
-    const childResult = await child;
-    if (!result) {
-      return null;
-    }
-
-    const deserializedResults = deserializeResults(result);
-    if (!deserializedResults) return null;
-    if (childResult.all) {
-      deserializedResults.childOutput = childResult.all;
-    }
-    if (deserializedResults.type === 'error') {
-      if (deserializedResults.error instanceof Error) {
-        throw deserializedResults.error;
-      }
-      throw new Error(deserializedResults.error);
-    }
-    return deserializedResults;
-  } catch (e) {
-    throw e;
+  const workerPath = path.join(__dirname, 'worker.js');
+  // if (process.pkg) {
+  //   const entryPoint = process.argv[1];
+  //   workerPath = path.join(entryPoint, '../../dist/specs-runner/worker.js');
+  // }
+  const child = execa.node(workerPath, args, { env });
+  const result = await pEvent(child, 'message');
+  const childResult = await child;
+  if (!result) {
+    return null;
   }
+
+  const deserializedResults = deserializeResults(result);
+  if (!deserializedResults) return null;
+  if (childResult.all) {
+    deserializedResults.childOutput = childResult.all;
+  }
+  if (deserializedResults.type === 'error') {
+    if (deserializedResults.error instanceof Error) {
+      throw deserializedResults.error;
+    }
+    throw new Error(deserializedResults.error);
+  }
+  return deserializedResults;
 }
 
 function deserializeResults(results): SpecsResultsWithMetaData | null | undefined {

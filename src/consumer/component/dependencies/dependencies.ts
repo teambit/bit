@@ -70,7 +70,7 @@ export default class Dependencies {
   }
 
   cloneAsString(): Object[] {
-    return this.dependencies.map((dependency) => {
+    return this.dependencies.map(dependency => {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.toString();
       return dependencyClone;
@@ -78,7 +78,7 @@ export default class Dependencies {
   }
 
   cloneAsObject(): Object[] {
-    return this.dependencies.map((dependency) => {
+    return this.dependencies.map(dependency => {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.serialize();
       return dependencyClone;
@@ -86,13 +86,13 @@ export default class Dependencies {
   }
 
   stripOriginallySharedDir(manipulateDirData: ManipulateDirItem[], originallySharedDir: string): void {
-    this.dependencies.forEach((dependency) => {
+    this.dependencies.forEach(dependency => {
       Dependency.stripOriginallySharedDir(dependency, manipulateDirData, originallySharedDir);
     });
   }
 
   addWrapDir(manipulateDirData: ManipulateDirItem[], wrapDir: PathLinux): void {
-    this.dependencies.forEach((dependency) => {
+    this.dependencies.forEach(dependency => {
       Dependency.addWrapDir(dependency, manipulateDirData, wrapDir);
     });
   }
@@ -105,7 +105,7 @@ export default class Dependencies {
     return R.flatten(
       this.dependencies.map(dependency =>
         dependency.relativePaths
-          .map((relativePath) => {
+          .map(relativePath => {
             return relativePath.isCustomResolveUsed ? null : relativePath.sourceRelativePath;
           })
           .filter(x => x)
@@ -123,7 +123,7 @@ export default class Dependencies {
 
   getBySourcePath(sourcePath: string): Dependency | null | undefined {
     return this.dependencies.find(dependency =>
-      dependency.relativePaths.some((relativePath) => {
+      dependency.relativePaths.some(relativePath => {
         return relativePath.sourceRelativePath === sourcePath;
       })
     );
@@ -138,7 +138,7 @@ export default class Dependencies {
     const localDependencies = await scope.latestVersions(dependenciesIds);
     const remoteVersionsDependencies = await fetchRemoteVersions(scope, dependenciesIds);
 
-    this.dependencies.forEach((dependency) => {
+    this.dependencies.forEach(dependency => {
       const remoteVersionId = remoteVersionsDependencies.find(remoteId =>
         remoteId.isEqualWithoutVersion(dependency.id)
       );
@@ -155,7 +155,7 @@ export default class Dependencies {
     });
   }
 
-  getCustomResolvedData(): { [import_source: string]: BitId } {
+  getCustomResolvedData(): { [importSource: string]: BitId } {
     const importSourceMap = {};
     this.dependencies.forEach((dependency: Dependency) => {
       dependency.relativePaths.forEach((relativePath: RelativePath) => {
@@ -182,7 +182,7 @@ export default class Dependencies {
     let message = 'failed validating the dependencies.';
     validateType(message, this.dependencies, 'dependencies', 'array');
     const allIds = this.getAllIds();
-    this.dependencies.forEach((dependency) => {
+    this.dependencies.forEach(dependency => {
       validateType(message, dependency, 'dependency', 'object');
       if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
       if (!dependency.relativePaths) {
@@ -194,7 +194,7 @@ export default class Dependencies {
       }
       const permittedProperties = ['id', 'relativePaths'];
       const currentProperties = Object.keys(dependency);
-      currentProperties.forEach((currentProp) => {
+      currentProperties.forEach(currentProp => {
         if (!permittedProperties.includes(currentProp)) {
           throw new ValidationError(
             `a dependency ${dependency.id.toString()} has an undetected property "${currentProp}"`
@@ -202,24 +202,24 @@ export default class Dependencies {
         }
       });
       validateType(message, dependency.relativePaths, 'dependency.relativePaths', 'array');
-      dependency.relativePaths.forEach((relativePath) => {
+      dependency.relativePaths.forEach(relativePath => {
         message = `failed validating dependency ${dependency.id.toString()}.`;
         validateType(message, dependency, 'dependency', 'object');
         const requiredProps = ['sourceRelativePath', 'destinationRelativePath'];
         const pathProps = ['sourceRelativePath', 'destinationRelativePath'];
         const optionalProps = ['importSpecifiers', 'isCustomResolveUsed', 'importSource'];
         const allProps = requiredProps.concat(optionalProps);
-        requiredProps.forEach((prop) => {
+        requiredProps.forEach(prop => {
           if (!relativePath[prop]) {
             throw new ValidationError(`${message} relativePaths.${prop} is missing`);
           }
         });
-        pathProps.forEach((prop) => {
+        pathProps.forEach(prop => {
           if (!isValidPath(relativePath[prop])) {
             throw new ValidationError(`${message} relativePaths.${prop} has an invalid path ${relativePath[prop]}`);
           }
         });
-        Object.keys(relativePath).forEach((prop) => {
+        Object.keys(relativePath).forEach(prop => {
           if (!allProps.includes(prop)) {
             throw new ValidationError(`${message} undetected property of relativePaths "${prop}"`);
           }
@@ -233,7 +233,7 @@ export default class Dependencies {
         if (relativePath.importSpecifiers) {
           validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
           // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set
-          relativePath.importSpecifiers.forEach((importSpecifier) => {
+          relativePath.importSpecifiers.forEach(importSpecifier => {
             validateType(message, importSpecifier, 'importSpecifier', 'object');
             if (!importSpecifier.mainFile) {
               throw new ValidationError(`${message} mainFile property is missing from the importSpecifier`);
@@ -258,7 +258,7 @@ export default class Dependencies {
               }
             }
             const specifierPermittedProps = ['mainFile', 'linkFile'];
-            Object.keys(importSpecifier).forEach((prop) => {
+            Object.keys(importSpecifier).forEach(prop => {
               if (!specifierPermittedProps.includes(prop)) {
                 throw new ValidationError(`${message} undetected property of importSpecifier "${prop}"`);
               }

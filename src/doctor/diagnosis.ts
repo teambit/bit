@@ -1,21 +1,21 @@
 /** @flow */
 
 export type ExamineBareResult = {
-  valid: boolean,
-  data?: Object
+  valid: boolean;
+  data?: Object;
 };
 
 export type DiagnosisMetaData = {
-  name: string,
-  description: string,
-  category: string
+  name: string;
+  description: string;
+  category: string;
 };
 
 export type ExamineResult = {
-  diagnosisMetaData: DiagnosisMetaData,
-  bareResult: ExamineBareResult,
-  formattedSymptoms: string, // A human readable of the found issues
-  formattedManualTreat: string // human readable steps to fix
+  diagnosisMetaData: DiagnosisMetaData;
+  bareResult: ExamineBareResult;
+  formattedSymptoms: string; // A human readable of the found issues
+  formattedManualTreat: string; // human readable steps to fix
 };
 
 export default class Diagnosis {
@@ -35,7 +35,7 @@ export default class Diagnosis {
    * Returns a descriptive symptoms message which might include specific data from the examination
    * @param bareResult ExamineBareResult
    */
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _formatSymptoms(bareResult: ExamineBareResult): string {
     throw new Error('You must implement this method');
   }
@@ -44,7 +44,7 @@ export default class Diagnosis {
    * Returns a descriptive instruction to handle the issue (might include specific data from the examination)
    * @param bareResult ExamineBareResult
    */
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _formatManualTreat(bareResult: ExamineBareResult): string {
     throw new Error('You must implement this method');
   }

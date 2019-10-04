@@ -16,6 +16,7 @@ src/cli/commands/private-cmds/_delete-cmd.ts
 src/cli/commands/private-cmds/migrate-cmd.ts
 src/cli/commands/public-cmds/isolate-cmd.ts
 src/cli/commands/public-cmds/log-cmd.ts
+src/cli/commands/public-cmds/search-cmd.ts
 src/cli/commands/public-cmds/watch-cmd.ts
 src/consumer/component/sources/source.ts
 src/consumer/exceptions/missing-dependencies.ts

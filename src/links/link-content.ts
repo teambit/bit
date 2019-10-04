@@ -86,7 +86,8 @@ function getTemplateForFile(fileExt: string, filePath: PathOsBased, importSpecif
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
       return es6TemplateWithImportSpecifiers(importSpecifiers);
-    } else if (fileExt === 'ts' || fileExt === 'tsx') {
+    }
+    if (fileExt === 'ts' || fileExt === 'tsx') {
       return tsTemplateWithImportSpecifiers(importSpecifiers);
     }
   }
@@ -98,7 +99,8 @@ function getTemplateForPackage(fileExt: string, importSpecifiers?: ImportSpecifi
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
       return es6TemplateWithImportSpecifiers(importSpecifiers);
-    } else if (fileExt === 'ts' || fileExt === 'tsx') {
+    }
+    if (fileExt === 'ts' || fileExt === 'tsx') {
       return tsTemplateWithImportSpecifiers(importSpecifiers);
     }
   }

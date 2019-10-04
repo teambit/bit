@@ -28,7 +28,7 @@ export type RegularExtensionObject = {
 };
 
 export type EnvFile = {
-  [string]: PathLinux;
+  [key: string]: PathLinux;
 };
 
 export type EnvExtensionObject = {
@@ -68,10 +68,10 @@ export default class AbstractConfig {
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
-  dependencies: { [string]: string };
-  devDependencies: { [string]: string };
-  compilerDependencies: { [string]: string };
-  testerDependencies: { [string]: string };
+  dependencies: { [key: string]: string };
+  devDependencies: { [key: string]: string };
+  compilerDependencies: { [key: string]: string };
+  testerDependencies: { [key: string]: string };
   lang: string;
   bindingPrefix: string;
   extensions: Extensions;

@@ -108,7 +108,7 @@ export default class BitIds extends Array<BitId> {
     }, {});
   }
 
-  static fromObject(dependencies: { [string]: string }) {
+  static fromObject(dependencies: { [key: string]: string }) {
     const array = [];
 
     forEach(dependencies, (version, id) => {

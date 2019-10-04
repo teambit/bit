@@ -39,7 +39,7 @@ export default class ConfigHelper {
     return backupObject;
   }
 
-  restoreConfigs(backupObject: { [string]: string }): void {
+  restoreConfigs(backupObject: { [key: string]: string }): void {
     R.forEachObjIndexed((val, key) => {
       if (val === undefined || val.includes('undefined')) {
         this.command.delConfig(key);

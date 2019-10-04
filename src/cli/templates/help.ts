@@ -179,7 +179,7 @@ const allCommands = [
   }
 ];
 
-const baseTemplate = (commands) => {
+const baseTemplate = commands => {
   return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
 
   ${chalk.grey(
@@ -194,28 +194,28 @@ ${commandsTemplate(commands)}
   ${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 };
 
-const commandTemplate = (command) => {
+function commandTemplate(command) {
   const { name, description } = command;
   const nameSpace = SPACE.repeat(COMMAND_LEFT_SPACES_NUMBER);
   const nameWithRightSpace = rightpad(name, NAME_WITH_SPACES_LENTH, SPACE);
   const res = `${nameSpace}${chalk.cyan(nameWithRightSpace)}${description}`;
   return res;
-};
+}
 
-const commandsSectionTemplate = (section) => {
+function commandsSectionTemplate(section) {
   const titleSpace = SPACE.repeat(TITLE_LEFT_SPACES_NUMBER);
   const title = `${titleSpace}${chalk.underline(section.title)}`;
   const commands = section.commands.map(commandTemplate).join('\n');
   const res = `${title}\n${commands}`;
   return res;
-};
+}
 
-const commandsTemplate = (commands) => {
+function commandsTemplate(commands) {
   const res = commands.map(commandsSectionTemplate).join('\n\n');
   return res;
-};
+}
 
-module.exports = function (extensionsCommands) {
+module.exports = function(extensionsCommands) {
   if (extensionsCommands && extensionsCommands.length) {
     allCommands.push({
       title: 'extensions commands',

@@ -44,12 +44,12 @@ export default (async function test(
   throw new GeneralError('unknown fork level, fork level must be one of: NONE, ONE, COMPONENT');
 });
 
-export const testInProcess = async (
+export async function testInProcess(
   id?: string,
   includeUnmodified: boolean = false,
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined
-): Promise<SpecsResultsWithMetaData> => {
+): Promise<SpecsResultsWithMetaData> {
   const consumer: Consumer = await loadConsumer();
   const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose, dontPrintEnvMsg);
   const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose, dontPrintEnvMsg });
@@ -59,7 +59,7 @@ export const testInProcess = async (
     type: 'results',
     results: testsResults
   };
-};
+}
 
 const _getComponentsAfterBuild = async (
   consumer: Consumer,

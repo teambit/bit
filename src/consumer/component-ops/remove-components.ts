@@ -3,7 +3,7 @@ import groupArray from 'group-array';
 import partition from 'lodash.partition';
 import { Consumer } from '..';
 import BitIds from '../../bit-id/bit-ids';
-import { RemovedLocalObjects } from '../../scope/removed-components';
+import RemovedLocalObjects from '../../scope/removed-local-objects';
 import logger from '../../logger/logger';
 import { LATEST_BIT_VERSION } from '../../constants';
 import GeneralError from '../../error/general-error';

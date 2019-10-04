@@ -6,9 +6,9 @@ import { writeFile } from '../utils';
 import Remote from '../remotes/remote';
 
 export default class GlobalRemotes {
-  remotes: { [string]: string };
+  remotes: { [key: string]: string };
 
-  constructor(remotes: { [string]: string }) {
+  constructor(remotes: { [key: string]: string }) {
     this.remotes = remotes;
   }
 

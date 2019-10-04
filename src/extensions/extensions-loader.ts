@@ -9,6 +9,49 @@ import logger from '../logger/logger';
 import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 
 /**
+ * Load the global bit.json file (in order to get the global extensions)
+ * @param {boolean} throws - whether to throw an error if the file corrupted
+ */
+const _getGlobalBitJson = async (throws: boolean) => {
+  const globalBitJsonPath = path.join(GLOBAL_CONFIG, BIT_JSON);
+  const exists = await fs.pathExists(globalBitJsonPath);
+  if (!exists) return null;
+
+  return (
+    fs
+      .readJson(globalBitJsonPath, { throws })
+      // Implementing the catch my self since the throws: false not really workging
+      .catch(e => {
+        if (throws) {
+          throw e;
+        }
+        logger.debug('error during loading global bit.json');
+        logger.debug(e);
+        return null;
+      })
+  );
+};
+
+/**
+ * Load specific extension
+ * @param {string} consumerPath
+ * @param {string} scopePath
+ */
+const _loadExtension = (consumerPath: string | null | undefined, scopePath: string | null | undefined) => (
+  rawConfig: Object = {},
+  name: string
+): Promise<Extension> => {
+  const loadArgs: LoadArgsProps = {
+    name,
+    rawConfig: rawConfig.config,
+    options: rawConfig.options,
+    consumerPath,
+    scopePath
+  };
+  return Extension.load(loadArgs);
+};
+
+/**
  * Load all extensions
  * Regular, core, globals
  */
@@ -50,46 +93,3 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     return [];
   }
 });
-
-/**
- * Load specific extension
- * @param {string} consumerPath
- * @param {string} scopePath
- */
-const _loadExtension = (consumerPath: string | null | undefined, scopePath: string | null | undefined) => (
-  rawConfig: Object = {},
-  name: string
-): Promise<Extension> => {
-  const loadArgs: LoadArgsProps = {
-    name,
-    rawConfig: rawConfig.config,
-    options: rawConfig.options,
-    consumerPath,
-    scopePath
-  };
-  return Extension.load(loadArgs);
-};
-
-/**
- * Load the global bit.json file (in order to get the global extensions)
- * @param {boolean} throws - whether to throw an error if the file corrupted
- */
-const _getGlobalBitJson = async (throws: boolean) => {
-  const globalBitJsonPath = path.join(GLOBAL_CONFIG, BIT_JSON);
-  const exists = await fs.pathExists(globalBitJsonPath);
-  if (!exists) return null;
-
-  return (
-    fs
-      .readJson(globalBitJsonPath, { throws })
-      // Implementing the catch my self since the throws: false not really workging
-      .catch(e => {
-        if (throws) {
-          throw e;
-        }
-        logger.debug('error during loading global bit.json');
-        logger.debug(e);
-        return null;
-      })
-  );
-};

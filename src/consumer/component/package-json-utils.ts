@@ -106,7 +106,7 @@ export function preparePackageJsonToWrite(
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): { packageJson: PackageJsonFile, distPackageJson: PackageJsonFile | null | undefined } {
+): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
@@ -117,10 +117,6 @@ export function preparePackageJsonToWrite(
       return acc;
     }, {});
   };
-  const addDependencies = (packageJsonFile: PackageJsonFile) => {
-    packageJsonFile.addDependencies(bitDependencies);
-    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
-  };
   const bitDependencies = getBitDependencies(component.dependencies);
   const bitDevDependencies = getBitDependencies(component.devDependencies);
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
@@ -128,6 +124,10 @@ export function preparePackageJsonToWrite(
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
   const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   packageJson.addOrUpdateProperty('main', main);
+  const addDependencies = (packageJsonFile: PackageJsonFile) => {
+    packageJsonFile.addDependencies(bitDependencies);
+    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
+  };
   addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
@@ -201,7 +201,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   const registryPrefix = npmRegistryName();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
-    .map((id) => {
+    .map(id => {
       return id.scope ? getNodeModulesPathOfComponent(registryPrefix, id) : null;
     })
     .filter(a => a); // remove null

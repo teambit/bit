@@ -1,7 +1,8 @@
-/** @flow */
+/* eslint max-classes-per-file: 0 */
+
 import chalk from 'chalk';
 import Command from '../../command';
-import { getResolver, setResolver, resetResolver } from '../../../api/scope';
+import { getResolver, setResolver, resetResolver } from '../../../api/scope/lib/resolver';
 
 class ResolverSet extends Command {
   name = 'set <resolverPath>';

@@ -25,7 +25,7 @@ export type LinkFileType = {
   postInstallLink?: boolean; // postInstallLink is needed when custom module resolution was used
   postInstallSymlink?: boolean; // postInstallSymlink is needed when custom module resolution was used with unsupported file extension
   symlinkTo?: PathOsBased | null | undefined; // symlink (instead of link) is needed for unsupported files, such as binary files
-  customResolveMapping?: { [string]: string } | null | undefined; // needed when custom module resolution was used
+  customResolveMapping?: { [key: string]: string } | null | undefined; // needed when custom module resolution was used
 };
 
 /**

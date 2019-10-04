@@ -17,7 +17,7 @@ export type ComponentOverridesData = {
   dependencies?: Object;
   devDependencies?: Object;
   peerDependencies?: Object;
-  [string]: any; // any package.json field should be valid here. can't be overridesSystemFields
+  [key: string]: any; // any package.json field should be valid here. can't be overridesSystemFields
 };
 
 export default class ComponentOverrides {
