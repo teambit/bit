@@ -17,7 +17,6 @@ export default class ExtensionsHelper {
   importAndConfigureExtension(id: string) {
     this.command.importExtension(id);
     const bitJson = this.bitJson.read();
-    // $FlowFixMe
     bitJson.extensions = { [id]: {} };
     this.bitJson.write(bitJson);
   }

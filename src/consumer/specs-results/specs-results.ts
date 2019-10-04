@@ -119,15 +119,12 @@ export default class SpecsResults {
 
     const tests = rawResults.tests.map(result => {
       result.duration = parseInt(result.duration);
-      // $FlowFixMe
       return result;
     });
 
     if (hasFailures) {
-      // $FlowFixMe
       failures = rawResults.failures.map(failure => {
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
-        // $FlowFixMe
         return failure;
       });
     }

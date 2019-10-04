@@ -146,7 +146,6 @@ async function getMergeResults(
     const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {
-        // $FlowFixMe
         label: modifiedFile.currentFile.version,
         path: currentFilePath
       },

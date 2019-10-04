@@ -90,7 +90,6 @@ function getEdges(graph: Object, id: BitIdStr): BitIdStr[] | null | undefined {
  */
 function getEdgesWithProdGraph(prodGraph: Object | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
   if (!prodGraph) return dependencies;
-  // $FlowFixMe
   const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
   return R.uniq([...dependencies, ...prodDependencies]);
 }
@@ -115,7 +114,6 @@ async function setFutureVersions(
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async componentToTag => {
-      // $FlowFixMe
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance

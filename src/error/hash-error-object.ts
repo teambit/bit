@@ -12,7 +12,6 @@ export default function hashErrorIfNeeded(error: Error) {
   const fieldToHash = fields.filter(field => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
   fieldToHash.forEach(field => {
-    // $FlowFixMe
     clonedError[field] = hashValue(clonedError[field]);
   });
   return clonedError;

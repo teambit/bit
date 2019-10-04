@@ -51,7 +51,6 @@ export default class List extends Command {
     }
     if (namespace) {
       const namespaceWithWildcard = hasWildcard(namespace) ? namespace : `${namespace}/*`;
-      // $FlowFixMe
       params.namespacesUsingWildcards = namespaceWithWildcard;
     }
     return listScope(params).then(listScopeResults => ({

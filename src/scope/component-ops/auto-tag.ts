@@ -96,12 +96,10 @@ async function updateComponents(
           // in case round2 updates the same component it updated in round1 or updated during the
           // tag, we should use the same updated version, and not creating a new version.
           if (isTaggedComponent) {
-            // $FlowFixMe
             return taggedId.version;
           }
           const componentChangedInRound1 = changedComponents.searchWithoutVersion(bitId);
           if (componentChangedInRound1) {
-            // $FlowFixMe
             return componentChangedInRound1.version;
           }
         }

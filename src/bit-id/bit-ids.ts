@@ -21,7 +21,6 @@ export default class BitIds extends Array<BitId> {
    * @memberof BitIds
    */
   resolveVersion(idWithLatest: BitId) {
-    // $FlowFixMe
     return getLatestVersionNumber(this, idWithLatest);
   }
 
@@ -99,9 +98,7 @@ export default class BitIds extends Array<BitId> {
       if (!scopeName) {
         throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
       }
-      // $FlowFixMe
       if (acc[scopeName]) acc[scopeName].push(current);
-      // $FlowFixMe
       else acc[scopeName] = new BitIds(current);
       return acc;
     }, {});

@@ -15,7 +15,6 @@ export default class FsHelper {
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true, includeNodeModules: boolean = true) {
     const params = { cwd: this.scopes.localPath, dot: includeDot };
     if (!includeNodeModules) {
-      // $FlowFixMe
       params.ignore = 'node_modules/**/*';
     }
 

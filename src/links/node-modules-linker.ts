@@ -107,7 +107,6 @@ export default class NodeModuleLinker {
     const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
-    // $FlowFixMe
     const srcTarget: PathOsBasedRelative = component.writtenPath || componentMap.rootDir;
     const shouldDistsBeInsideTheComponent = this.consumer ? this.consumer.shouldDistsBeInsideTheComponent() : true;
     if (

@@ -72,7 +72,6 @@ export async function changeDependenciesToRelativeSyntax(
     return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
-  // $FlowFixMe
   return packageJsonFiles.filter(file => file);
 
   function getPackages(deps: Dependencies, componentMap: ComponentMap) {

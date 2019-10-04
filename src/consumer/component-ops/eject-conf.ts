@@ -25,7 +25,6 @@ export default (async function ejectConf(
   consumer: Consumer,
   configDir: ConfigDir
 ): Promise<EjectConfResult> {
-  // $FlowFixMe
   const { id, ejectedPath, ejectedFullPath, dataToPersist } = await getEjectConfDataToPersist(
     component,
     consumer,

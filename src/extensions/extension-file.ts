@@ -106,7 +106,6 @@ export default class ExtensionFile extends AbstractVinyl {
   }
 
   static async loadFromExtensionFileModel(file: ExtensionFileModel, repository: Repository): Promise<ExtensionFile> {
-    // $FlowFixMe
     const content = await file.file.load(repository);
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
     extensionFile.file = Source.from(extensionFile.contents);

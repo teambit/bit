@@ -94,7 +94,6 @@ async function exportComponents({
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  // $FlowFixMe
   return { updatedIds, nonExistOnBitMap, missingScope, exported };
 }
 

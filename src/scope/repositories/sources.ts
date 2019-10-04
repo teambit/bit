@@ -55,14 +55,11 @@ export default class SourceRepository {
     const component = ModelComponent.fromBitId(bitId);
     const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
-      // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
-      // $FlowFixMe
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
-      // $FlowFixMe
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
@@ -186,7 +183,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     verbose?: boolean;
     specsResults?: any;
   }): Promise<Object> {
-    // $FlowFixMe
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return;

@@ -51,7 +51,6 @@ export default class Remote extends Command {
   migration = true;
   commands = [new RemoteAdd(), new RemoteRm()];
 
-  // $FlowFixMe
   action(args: string[], { global }: { glboal: boolean }): Promise<any> {
     return remoteList(global);
   }

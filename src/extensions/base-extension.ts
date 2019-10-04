@@ -251,7 +251,6 @@ export default class BaseExtension {
   static async load({
     name,
     rawConfig = {},
-    // $FlowFixMe
     options = {},
     consumerPath,
     scopePath,
@@ -337,7 +336,6 @@ export default class BaseExtension {
     filePath,
     rootDir,
     rawConfig = {},
-    // $FlowFixMe
     options = {},
     throws = false
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
@@ -377,7 +375,6 @@ export default class BaseExtension {
       return extensionProps;
     }
     try {
-      // $FlowFixMe
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {

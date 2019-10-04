@@ -24,13 +24,11 @@ export default (async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
-  // $FlowFixMe
   const newComponents: Component[] = await componentsList.listNewComponents(true);
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
-  // $FlowFixMe
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
     .filter(c => c.error instanceof ComponentsPendingImport)

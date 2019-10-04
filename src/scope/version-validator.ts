@@ -85,9 +85,7 @@ export default function validateVersionInstance(version: Version): void {
         );
       }
       validateType(message, envPackages[dependencyType], `${fieldName}.${dependencyType}`, 'object');
-      // $FlowFixMe
       Object.keys(envPackages[dependencyType]).forEach(pkg => {
-        // $FlowFixMe
         validateType(message, envPackages[dependencyType][pkg], `${fieldName}.${dependencyType}.${pkg}`, 'string');
       });
     });
@@ -142,7 +140,6 @@ export default function validateVersionInstance(version: Version): void {
   _validateEnvPackages(version.testerPackageDependencies, 'testerPackageDependencies');
   if (version.dists && version.dists.length) {
     validateType(message, version.dists, 'dist', 'array');
-    // $FlowFixMe
     version.dists.forEach(file => {
       validateFile(file, true);
     });
@@ -153,7 +150,6 @@ export default function validateVersionInstance(version: Version): void {
     throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
   DEPENDENCIES_TYPES.forEach(dependenciesType => {
-    // $FlowFixMe
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(
         `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof version[dependenciesType]}`
@@ -229,7 +225,6 @@ export default function validateVersionInstance(version: Version): void {
     if (componentOverridesForbiddenFields.includes(field)) {
       throw new VersionInvalid(`${message}, the "overrides" has a forbidden key "${field}"`);
     }
-    // $FlowFixMe
     validateOverrides(version.overrides[field], field);
   });
   validateType(message, version.packageJsonChangedProps, 'packageJsonChangedProps', 'object');

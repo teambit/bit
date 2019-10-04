@@ -136,7 +136,6 @@ export default class Dists {
       // it's IMPORTED. We first check that rootDir starts with dist.entry, it happens mostly when a user imports into
       // a specific directory (e.g. bit import --path src/). Then, we make sure all dists files start with that
       // dist.entry. In a case when originallySharedDir is the same as dist.entry, this second check returns false.
-      // $FlowFixMe
       return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
     };
     const distEntryShouldBeStripped = shouldDistEntryBeStripped();
@@ -288,7 +287,6 @@ export default class Dists {
       };
     });
     const mainDistFile = this._mainDistFile ? addSharedDirAndDistEntry(this._mainDistFile) : this._mainDistFile;
-    // $FlowFixMe
     return { dists, mainDistFile };
   }
 
@@ -320,7 +318,6 @@ export default class Dists {
   }
 
   clone(): Dists {
-    // $FlowFixMe
     const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     clone.dists = this.dists.map(d => d.clone());
     return clone;

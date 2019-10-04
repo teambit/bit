@@ -182,7 +182,6 @@ export default class Component extends BitObject {
   async collectLogs(
     repo: Repository
   ): Promise<{ [number]: { message: string; date: string; hash: string } | null | undefined }> {
-    // $FlowFixMe
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
     const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
@@ -425,9 +424,7 @@ export default class Component extends BitObject {
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
-    // $FlowFixMe
     if (!this.state.versions[version]) this.state.versions[version] = {};
-    // $FlowFixMe
     this.state.versions[version].local = true;
   }
 
@@ -439,7 +436,6 @@ export default class Component extends BitObject {
   isLocallyChanged(): boolean {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return false;
-    // $FlowFixMe
     const localVersions = this.getLocalVersions();
     return localVersions.length > 0;
   }

@@ -15,7 +15,6 @@ export default class BitMapHelper {
 
   read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
-    // $FlowFixMe
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
 
@@ -34,7 +33,6 @@ export default class BitMapHelper {
   }
   create(
     cwd: string = this.scopes.localPath,
-    // $FlowFixMe
     componentObject = {
       'bar/foo': {
         files: [
@@ -55,7 +53,6 @@ export default class BitMapHelper {
     const bitmap = {
       version: '0.11.1-testing'
     };
-    // $FlowFixMe
     Object.keys(componentObject).forEach(key => (bitmap[key] = componentObject[key]));
     fs.ensureFileSync(bitmapFile);
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });

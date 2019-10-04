@@ -91,7 +91,6 @@ export default class BitMap {
 
   setComponentProp(id: BitId, propName: $Keys<ComponentMap>, val: any) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    // $FlowFixMe
     componentMap[propName] = val;
     this.markAsChanged();
     return componentMap;
@@ -103,7 +102,6 @@ export default class BitMap {
 
   removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    // $FlowFixMe
     delete componentMap[propName];
     this.markAsChanged();
     return componentMap;
@@ -745,7 +743,6 @@ export default class BitMap {
       Object.keys(this.components).forEach(componentId => {
         const component = this.components[componentId];
         if (!component.trackDir) return;
-        // $FlowFixMe
         this.allTrackDirs[component.trackDir] = component.id;
       });
     }

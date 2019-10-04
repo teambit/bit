@@ -14,7 +14,6 @@ export default (async function paintGraph(id: string, options: Object): Promise<
   const getBitId = (): BitId | null | undefined => {
     if (!id) return null;
     if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
-    // $FlowFixMe
     return consumer.getParsedId(id);
   };
   const bitId = getBitId();

@@ -39,7 +39,6 @@ export default class DoctorRegistrar {
     if (!instance) {
       DoctorRegistrar.init();
     }
-    // $FlowFixMe
     return instance;
   }
 

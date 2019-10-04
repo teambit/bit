@@ -29,7 +29,6 @@ export default (async function fetch(
   const clientVersion = headers ? headers.version : null;
 
   const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(
-    // $FlowFixMe
     importedComponents,
     clientVersion
   );

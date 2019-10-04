@@ -107,7 +107,6 @@ function getComponentLinks({
   if (symlinks.length) {
     dataToPersist.addManySymlinks(symlinks.map(symlink => Symlink.makeInstance(symlink.source, symlink.dest)));
   }
-  // $FlowFixMe
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
   return dataToPersist;
 }
@@ -408,7 +407,6 @@ function getEntryPointsForComponent(
   const files = [];
   const indexName = getIndexFileName(mainFile);
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
-  // $FlowFixMe
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   const entryPointPath = path.join(componentRoot, indexName);
   if (
@@ -434,7 +432,6 @@ function getEntryPointForAngularComponent(
 ): LinkFile | null | undefined {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
-  // $FlowFixMe
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
   const content = getLinkToFileContent(component.mainFile, []);

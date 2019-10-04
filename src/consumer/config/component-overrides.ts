@@ -75,7 +75,6 @@ export default class ComponentOverrides {
       ) {
         overridesFromComponent[field] = Object.assign(overridesFromConsumer[field], overridesFromComponent[field]);
       } else if (!overridesFromComponent[field]) {
-        // $FlowFixMe
         overridesFromComponent[field] = overridesFromConsumer[field];
       }
       // when overridesFromComponent[field] is set and not an object, do not override it by overridesFromConsumer
@@ -84,7 +83,6 @@ export default class ComponentOverrides {
   }
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
-    // $FlowFixMe
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
   get componentOverridesData() {
@@ -170,11 +168,8 @@ export default class ComponentOverrides {
         const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
         // $FlowFixMe we made sure that sharedDir is not empty
         const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
-        // $FlowFixMe
         const value = this.overrides[field][rule];
-        // $FlowFixMe
         delete this.overrides[field][rule];
-        // $FlowFixMe
         this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithoutSharedDir}`] = value;
       });
     });
@@ -186,13 +181,9 @@ export default class ComponentOverrides {
       Object.keys(this.overrides[field]).forEach(rule => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
         const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        // $FlowFixMe
         const fileWithSharedDir = `${sharedDir}/${fileWithoutSharedDir}`;
-        // $FlowFixMe
         const value = this.overrides[field][rule];
-        // $FlowFixMe
         delete this.overrides[field][rule];
-        // $FlowFixMe
         this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithSharedDir}`] = value;
       });
     });

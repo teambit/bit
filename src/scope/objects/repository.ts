@@ -161,7 +161,6 @@ export default class Repository {
         return bitObject;
       })
     );
-    // $FlowFixMe
     return bitObjects.filter(b => b); // remove nulls;
   }
 

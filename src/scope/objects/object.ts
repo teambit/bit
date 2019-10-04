@@ -45,7 +45,6 @@ export default class BitObject {
       const refs = object.refs();
       const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
       refsCollection.push(...refs);
-      // $FlowFixMe
       await Promise.all(objs.map(obj => addRefs(obj)));
     }
 
@@ -71,7 +70,6 @@ export default class BitObject {
       });
 
       objects.concat(objs);
-      // $FlowFixMe
       objs.forEach(obj => addRefs(obj));
     }
 

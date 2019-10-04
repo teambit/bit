@@ -251,7 +251,6 @@ export default class AddComponents {
         (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
         (existingComponentOfFile && existingComponentOfFile.origin === COMPONENT_ORIGINS.IMPORTED);
       if (isImported) {
-        // $FlowFixMe
         const idFromBitMap = foundComponentFromBitMap ? foundComponentFromBitMap.id : existingComponentOfFile.id;
         // throw error in case user didn't add id to imported component or the id is incorrect
         if (!this.id) throw new MissingComponentIdForImportedComponent(idFromBitMap.toStringWithoutVersion());
@@ -605,7 +604,6 @@ export default class AddComponents {
     const componentId = finalBitId;
     componentsWithFiles = componentsWithFiles.filter(componentWithFiles => componentWithFiles.files.length);
 
-    // $FlowFixMe
     if (componentsWithFiles.length === 0) return { componentId, files: [] };
     if (componentsWithFiles.length === 1) return componentsWithFiles[0];
 
@@ -616,7 +614,6 @@ export default class AddComponents {
     const uniqComponents = Object.keys(groupedComponents).map(key =>
       assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
     );
-    // $FlowFixMe
     return {
       componentId,
       files: uniqComponents,
@@ -759,7 +756,6 @@ export default class AddComponents {
       if (!addedComponent.idFromPath) return; // when the id was not generated from the path do nothing.
       const componentsWithSameName = addedComponents // $FlowFixMe
         .filter(a => a.idFromPath && a.idFromPath.name === addedComponent.idFromPath.name);
-      // $FlowFixMe
       const bitIdFromNameOnly = new BitId({ name: addedComponent.idFromPath.name });
       const existingComponentWithSameName = allIds.searchWithoutScopeAndVersion(bitIdFromNameOnly);
       if (componentsWithSameName.length === 1 && !existingComponentWithSameName) {

@@ -71,7 +71,6 @@ export async function exportMany({
   if (includeDependencies) {
     const dependenciesIds = await getDependenciesImportIfNeeded();
     ids.push(...dependenciesIds);
-    // $FlowFixMe
     ids = BitIds.uniqFromArray(ids);
   }
   const remotes: Remotes = await getScopeRemotes(scope);
@@ -202,7 +201,6 @@ async function convertToCorrectScope(
   exportingIds: BitIds,
   codemod: boolean
 ): Promise<void> {
-  // $FlowFixMe
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
   await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
@@ -271,7 +269,6 @@ async function convertToCorrectScope(
   }
   async function _createNewFileIfNeeded(version: Version, file: Object): Promise<Source | null | undefined> {
     const currentHash = file.file;
-    // $FlowFixMe
     const fileObject: Source = await scope.objects.load(currentHash);
     const fileString = fileObject.contents.toString();
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
@@ -317,7 +314,6 @@ async function changePartialNamesToFullNamesInDists(
   component: ModelComponent,
   objects: BitObject[]
 ): Promise<void> {
-  // $FlowFixMe
   const versions: Version[] = objects.filter(object => object instanceof Version);
   await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
 
@@ -341,7 +337,6 @@ async function changePartialNamesToFullNamesInDists(
     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
     // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.
     // currently, we require calculating the hash for each one of the source every time.
-    // $FlowFixMe
     const distObject: Source =
       (await currentHash.load(scope.objects)) ||
       objects.filter(obj => obj instanceof Source).find(obj => obj.hash().toString() === currentHash.toString());

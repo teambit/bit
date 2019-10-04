@@ -18,7 +18,6 @@ export default class Login extends Command {
       'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)'
     ]
   ];
-  // $FlowFixMe
   action(
     [],
     {

@@ -48,10 +48,8 @@ export default class RemoveModelComponents {
    */
   async _removeSingle(bitId: BitId): Promise<{ bitId: BitId; removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
-    // $FlowFixMe
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
-    // $FlowFixMe
     const componentList = await this.scope.listIncludesSymlinks();
 
     const dependentBits = await this.scope.findDependentBits(

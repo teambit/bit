@@ -195,7 +195,6 @@ export default class ComponentsList {
 
   async listNonNewComponentsIds(): Promise<BitIds> {
     const authoredAndImported = await this.getAuthoredAndImportedFromFS();
-    // $FlowFixMe
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
     return BitIds.fromArray(nonNewComponents.map(c => c.id));
@@ -218,7 +217,6 @@ export default class ComponentsList {
 
   async listExportPendingComponents(): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
-    // $FlowFixMe
     return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }
 
@@ -351,7 +349,6 @@ export default class ComponentsList {
       else name = component;
       return name.toUpperCase(); // ignore upper and lowercase
     };
-    // $FlowFixMe
     return components.sort((a, b) => {
       const nameA = getName(a);
       const nameB = getName(b);
@@ -374,7 +371,6 @@ export default class ComponentsList {
       if (R.is(BitId, component)) return component;
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
-    // $FlowFixMe
     return components.filter(component => {
       const bitId: BitId = getBitId(component);
       return isBitIdMatchByWildcards(bitId, idsWithWildcard);

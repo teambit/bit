@@ -41,7 +41,6 @@ export default class Driver {
 
   runHook(hookName: string, param: any, returnValue?: any): Promise<any> {
     const driver = this.getDriver();
-    // $FlowFixMe
     if (!driver || !driver.lifecycleHooks || !driver.lifecycleHooks[hookName]) {
       if (!driver) logger.info('unable to find a driver, the hooks will be ignored');
       else logger.info(`the driver doesn't implement ${hookName} hook`);

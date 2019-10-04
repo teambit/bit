@@ -90,7 +90,6 @@ export default class Show extends Command {
     detailed: boolean;
   }): string {
     if (versions) {
-      // $FlowFixMe
       return JSON.stringify(components.map(c => c.toObject()), null, '  ');
     }
     if (component.componentFromModel) {

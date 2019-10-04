@@ -61,7 +61,6 @@ export default class ScopeHelper {
   }
 
   async initInteractive(inputs: InteractiveInputs) {
-    // $FlowFixMe
     return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 

@@ -115,7 +115,6 @@ async function getMergeResults(
         path: baseFilePath
       },
       otherFile: {
-        // $FlowFixMe
         label: modifiedFile.otherFile.version,
         path: otherFilePath
       }

@@ -116,7 +116,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       return null;
     }
     const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
-    // $FlowFixMe
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
     const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version

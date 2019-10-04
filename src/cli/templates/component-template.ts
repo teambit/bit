@@ -13,12 +13,10 @@ import { DependenciesInfo } from '../../scope/graph/scope-graph';
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
   columns: {
-    // $FlowFixMe
     1: {
       alignment: 'left',
       width: COLUMN_WIDTH
     },
-    // $FlowFixMe
     2: {
       alignment: 'left',
       width: COLUMN_WIDTH
@@ -176,11 +174,8 @@ export default function paintComponent(
             (!remoteVersion && localVersion === dependencyVersion)
               ? 'green'
               : 'red';
-          // $FlowFixMe
           row.push(c[color](dependencyVersion));
-          // $FlowFixMe
           row.push(c[color](localVersion));
-          // $FlowFixMe
           row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
         }
         dependencyRows.push(row);

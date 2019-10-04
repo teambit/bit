@@ -58,7 +58,6 @@ export default class ComponentVersion {
   }
 
   toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ConsumerComponent> {
-    // $FlowFixMe
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 

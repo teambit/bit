@@ -58,7 +58,6 @@ export default class DependencyGraph {
   static async buildGraphWithAllVersions(scope: Scope): Graph {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
-    // $FlowFixMe
     const allComponents = await scope.list();
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
@@ -92,7 +91,6 @@ export default class DependencyGraph {
     const allModelComponents: ModelComponent[] = await scope.list();
     const buildGraphP = allModelComponents.map(async modelComponent => {
       const buildVersionP = modelComponent.listVersions().map(async versionNum => {
-        // $FlowFixMe
         const version = await modelComponent.loadVersion(versionNum, scope.objects);
         if (!version) {
           // a component might be in the scope with only the latest version
@@ -116,7 +114,6 @@ export default class DependencyGraph {
       const latestVersion = modelComponent.latest();
       const buildVersionP = modelComponent.listVersions().map(async versionNum => {
         if (onlyLatest && latestVersion !== versionNum) return;
-        // $FlowFixMe
         const id = modelComponent.toBitId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find(comp => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
@@ -159,7 +156,6 @@ export default class DependencyGraph {
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
     DEPENDENCIES_TYPES.forEach(depType => {
-      // $FlowFixMe
       component[depType].get().forEach(dependency => {
         const depIdStr = dependency.id.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);

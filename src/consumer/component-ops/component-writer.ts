@@ -256,7 +256,6 @@ export default class ComponentWriter {
    * see https://github.com/teambit/bit/issues/1808 for more info why it's needed
    */
   _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Object {
-    // $FlowFixMe
     const packageJsonChangedProps: Object = this.component.packageJsonChangedProps;
     const isReplaceNeeded = R.values(packageJsonChangedProps).some(val => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
     if (!isReplaceNeeded) {

@@ -601,7 +601,6 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  */
 function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
-  // $FlowFixMe
   const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
   // only level FATAL are reported to Sentry.
   const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;

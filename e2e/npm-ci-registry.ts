@@ -96,7 +96,6 @@ EOD`;
    */
   setCiScopeInBitJson() {
     const bitJson = this.helper.bitJson.read();
-    // $FlowFixMe
     bitJson.bindingPrefix = '@ci';
     this.helper.bitJson.write(bitJson);
   }
@@ -139,7 +138,6 @@ EOD`;
     const scopeJsonPath = '.bit/scope.json';
     const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
     const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
-    // $FlowFixMe
     scopeJson.resolverPath = resolverPath;
     this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
     this.helper.fs.createFile('', 'resolver.js', this._getResolverContent());

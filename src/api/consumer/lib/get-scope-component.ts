@@ -33,7 +33,6 @@ export default (async function getScopeComponent({
   }
 
   const consumer: Consumer | null | undefined = await loadConsumerIfExist();
-  // $FlowFixMe
   const remote = await getRemote();
   loader.start(BEFORE_REMOTE_SHOW);
   const component = await remote.show(bitId);

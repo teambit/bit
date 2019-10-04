@@ -305,11 +305,9 @@ export default class Scope {
       const getCurrentNodePathWithDirDist = () => {
         if (!process.env.NODE_PATH) return nodePathDirDist;
         const separator = process.env.NODE_PATH.endsWith(NODE_PATH_SEPARATOR) ? '' : NODE_PATH_SEPARATOR;
-        // $FlowFixMe
         return process.env.NODE_PATH + separator + nodePathDirDist;
       };
       process.env.NODE_PATH = getCurrentNodePathWithDirDist();
-      // $FlowFixMe
       require('module').Module._initPaths(); // eslint-disable-line
     }
   }
@@ -523,7 +521,6 @@ export default class Scope {
       // search for the complete ID
       const components: ModelComponent[] = await this.list();
       const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
-      // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);
     }
     throw new ComponentNotFound(id.toString());
@@ -667,7 +664,6 @@ export default class Scope {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
-    // $FlowFixMe
     return this.objects.load(ref);
   }
 

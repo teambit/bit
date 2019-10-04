@@ -1,4 +1,3 @@
-// $FlowFixMe
 import Module from 'module';
 import filterObject from './filter-object';
 

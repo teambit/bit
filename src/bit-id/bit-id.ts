@@ -37,7 +37,6 @@ export default class BitId {
   }
 
   clone(): BitId {
-    // $FlowFixMe
     return new BitId(this);
   }
 
@@ -199,7 +198,6 @@ export default class BitId {
     if (idSplit.length === 3) {
       const [scope, box, name] = idSplit;
       if (!isValidIdChunk(name, false) || !isValidIdChunk(box, false) || !isValidScopeName(scope)) {
-        // $FlowFixMe
         throw new InvalidIdChunk(`${scope}/${box}/${name}`);
       }
       // $FlowFixMe (in this case the realScopeName is not null)
@@ -214,10 +212,8 @@ export default class BitId {
     if (idSplit.length === 2) {
       const [box, name] = idSplit;
       if (!isValidIdChunk(name, false) || !isValidIdChunk(box, false)) {
-        // $FlowFixMe
         throw new InvalidIdChunk(`${box}/${name}`);
       }
-      // $FlowFixMe
       return new BitId({
         box,
         name,
@@ -228,10 +224,8 @@ export default class BitId {
     if (idSplit.length === 1) {
       const [name] = idSplit;
       if (!isValidIdChunk(name)) {
-        // $FlowFixMe
         throw new InvalidIdChunk(name);
       }
-      // $FlowFixMe
       return new BitId({
         name,
         version

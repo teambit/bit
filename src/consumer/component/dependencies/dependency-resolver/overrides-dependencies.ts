@@ -120,7 +120,6 @@ export default class OverridesDependencies {
           idsFromModel
         );
         if (componentId) {
-          // $FlowFixMe
           const dependencyExist = existingDependencies[depField].find(d =>
             d.id.isEqualWithoutScopeAndVersion(componentId)
           );

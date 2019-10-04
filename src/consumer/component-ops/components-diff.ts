@@ -158,9 +158,7 @@ async function getEnvFilesDiff(
 ): Promise<FileDiff[]> {
   const envs = ['compiler', 'tester'];
   const envsDiffP = envs.map(env => {
-    // $FlowFixMe
     const filesA = componentA[env] && componentA[env].files ? componentA[env].files : [];
-    // $FlowFixMe
     const filesB = componentB[env] && componentB[env].files ? componentB[env].files : [];
     const filesAVersion = componentA.version;
     const filesBVersion = componentB.version;

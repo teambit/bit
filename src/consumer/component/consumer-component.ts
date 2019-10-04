@@ -279,7 +279,6 @@ export default class Component {
    * Implement deep copy of other properties if needed
    */
   clone() {
-    // $FlowFixMe
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
@@ -936,10 +935,8 @@ export default class Component {
       deprecated
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
-    // $FlowFixMe
     const compilerInstance = compilerProps ? await makeEnv(COMPILER_ENV_TYPE, compilerProps) : null;
     const testerProps = tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null;
-    // $FlowFixMe
     const testerInstance = testerProps ? await makeEnv(TESTER_ENV_TYPE, testerProps) : null;
     return new Component({
       name: box ? `${box}/${name}` : name,

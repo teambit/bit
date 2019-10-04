@@ -145,11 +145,8 @@ export default class Dependencies {
       const modelVersionId = modelDependencies
         .get()
         .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
-      // $FlowFixMe
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
-      // $FlowFixMe
       dependency.localVersion = localVersionId ? localVersionId.version : null;
-      // $FlowFixMe
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });
   }

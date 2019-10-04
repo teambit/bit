@@ -49,7 +49,6 @@ export default class SourceFile extends AbstractVinyl {
   }
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
-    // $FlowFixMe
     const content = await file.file.load(repository);
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }

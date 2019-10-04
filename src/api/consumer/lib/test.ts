@@ -29,14 +29,12 @@ export default (async function test(
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
     const ids = id ? [id] : undefined;
-    // $FlowFixMe
     return specsRunner({ ids, forkLevel, includeUnmodified, verbose });
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
     const consumer: Consumer = await loadConsumer();
     const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
     const ids = components.map(component => component.id.toString());
-    // $FlowFixMe
     const results = await specsRunner({ ids, forkLevel, verbose });
     return results;
   }

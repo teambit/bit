@@ -135,7 +135,6 @@ function _extractAndVerifyCompilerResults(
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
   if (typeof compilerResults === 'object') {
-    // $FlowFixMe
     if (compilerResults.files && !compilerResults.dists) {
       // previously, the new compiler "action" method expected to get "files", suggest to replace with 'dists'.
       throw new GeneralError('fatal: compiler returned "files" instead of "dists", please change it to "dists"');
@@ -199,7 +198,6 @@ async function _buildIfNeeded({
     return _runBuild({ ...runBuildParams, componentRoot: consumer.getPath() });
   }
   if (component.isolatedEnvironment) {
-    // $FlowFixMe
     return _runBuild({ ...runBuildParams, componentRoot: component.writtenPath });
   }
 

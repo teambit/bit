@@ -51,7 +51,6 @@ function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | str
 }
 
 function execAction(command, concrete, args) {
-  // $FlowFixMe
   const flags = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
@@ -136,7 +135,6 @@ function createOptStr(alias, name) {
 }
 
 function register(command: Command, commanderCmd) {
-  // $FlowFixMe
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)

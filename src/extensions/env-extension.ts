@@ -203,7 +203,6 @@ export default class EnvExtension extends BaseExtension {
     }
     const throws = true;
     await super.reload(scopePath, { throws });
-    // $FlowFixMe
     const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
@@ -215,9 +214,7 @@ export default class EnvExtension extends BaseExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
-    // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(
-      // $FlowFixMe
       props.files, // $FlowFixMe
       props.consumerPath,
       props.bitJsonPath,
@@ -227,7 +224,6 @@ export default class EnvExtension extends BaseExtension {
     const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
     const dynamicConfig = EnvExtension.loadDynamicConfig(envExtensionProps);
-    // $FlowFixMe
     envExtensionProps.dynamicConfig = dynamicConfig;
     return envExtensionProps;
   }
@@ -264,7 +260,6 @@ export default class EnvExtension extends BaseExtension {
     return dynamicPackageDependencies;
   }
 
-  // $FlowFixMe
   static loadDynamicConfig(envExtensionProps: EnvExtensionProps): Object | null | undefined {
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
@@ -286,11 +281,9 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async loadFromModelObject(
-    // $FlowFixMe
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {
-    // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {
@@ -305,7 +298,6 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
     logger.debug('env-extension, loadFromModelObject');
-    // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {
@@ -349,7 +341,6 @@ export default class EnvExtension extends BaseExtension {
     logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
     const componentHasWrittenConfig = componentConfig && componentConfig.componentHasWrittenConfig;
-    // $FlowFixMe
     if (componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
       if (Object.keys(componentConfig[envType])[0] === MANUALLY_REMOVE_ENVIRONMENT) {
@@ -373,14 +364,11 @@ export default class EnvExtension extends BaseExtension {
         return null;
       }
       logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
-      // $FlowFixMe
       const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
-    // $FlowFixMe
     if (isAuthor && workspaceConfig[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config`);
-      // $FlowFixMe
       const envConfig = { [envType]: workspaceConfig[envType] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
@@ -438,6 +426,5 @@ async function loadFromConfig({
     envType,
     context
   };
-  // $FlowFixMe
   return makeEnv(envType, envProps);
 }

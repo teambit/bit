@@ -75,7 +75,6 @@ export default class AbstractVinyl extends Vinyl {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
-    // $FlowFixMe
     return Source.from(eol.lf(this.contents));
   }
 

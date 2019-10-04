@@ -39,7 +39,6 @@ export default function loginToBitSrc(
     const clientGeneratedId = uuid();
     const driver = Driver.load(DEFAULT_LANGUAGE);
     if (getSync(CFG_USER_TOKEN_KEY)) {
-      // $FlowFixMe
       return resolve({
         isAlreadyLoggedIn: true
       });

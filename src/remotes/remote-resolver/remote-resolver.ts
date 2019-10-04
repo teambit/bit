@@ -6,7 +6,7 @@ import { DEFAULT_HUB_DOMAIN, CFG_HUB_DOMAIN_KEY } from '../../constants';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 
-const hubResolver = (scopeName) => {
+const hubResolver = scopeName => {
   const hubPrefix = `ssh://bit@${hubDomain}:`;
   return Promise.resolve(hubPrefix + scopeName);
 };
@@ -18,7 +18,6 @@ const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> =
     resolverFunction = hubResolver;
   } else {
     // use the default resolver
-    // $FlowFixMe
     resolverFunction = require(resolverPath);
   } // use the resolver described in the scopeJson
 

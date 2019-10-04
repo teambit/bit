@@ -133,12 +133,10 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<CompilerExtension | null | undefined> {
-    // $FlowFixMe
     return this.getEnv(COMPILER_ENV_TYPE);
   }
 
   get tester(): Promise<TesterExtension | null | undefined> {
-    // $FlowFixMe
     return this.getEnv(TESTER_ENV_TYPE);
   }
 

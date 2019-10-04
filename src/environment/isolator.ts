@@ -102,9 +102,7 @@ export default class Isolator {
   }
 
   async installComponentPackages() {
-    // $FlowFixMe
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
-    // $FlowFixMe
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');

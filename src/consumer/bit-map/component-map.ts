@@ -360,7 +360,6 @@ export default class ComponentMap {
     if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
       throw new ValidationError(`${errorMessage} rootDir attribute is missing`);
     }
-    // $FlowFixMe
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }

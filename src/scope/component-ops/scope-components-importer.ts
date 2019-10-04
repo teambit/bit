@@ -130,9 +130,7 @@ export default class ScopeComponentsImporter {
   }
 
   async componentToVersionDependencies(component: ModelComponent, id: BitId): Promise<VersionDependencies> {
-    // $FlowFixMe
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
-    // $FlowFixMe
     const source: string = id.scope;
     const version: Version = await versionComp.getVersion(this.scope.objects);
     if (!version) {
@@ -322,7 +320,6 @@ export default class ScopeComponentsImporter {
           'scope.getExternalOnes',
           'no more ids left, all found locally, exiting the method'
         );
-        // $FlowFixMe
         return Promise.all(defs.map(def => def.component.toComponentVersion(def.id.version)));
       }
 

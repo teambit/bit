@@ -75,6 +75,5 @@ export default (docs: Doclet[] | null | undefined) => {
   if (R.isEmpty(docs) || R.isNil(docs)) {
     return '\nNo documentation found';
   }
-  // $FlowFixMe
   return `\n${paintHeader('Documentation')}${docs.map(paintDoc).join('')}`;
 };

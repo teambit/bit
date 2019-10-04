@@ -60,7 +60,6 @@ export default class Remove extends Command {
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
-    // $FlowFixMe
     return removedObjectsArray.map(item => paintRemoved(item, true));
   }
 }

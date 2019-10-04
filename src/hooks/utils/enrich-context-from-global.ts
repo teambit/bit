@@ -19,7 +19,6 @@ import logger from '../../logger/logger';
 export default function enrichContextFromGlobal(context: Object = {}) {
   logger.debug('enrich context from global config');
   const getContextToEnrich = () => {
-    // $FlowFixMe
     if (!enrichContextFromGlobal.context) {
       const username = globalConfig.getSync(CFG_USER_NAME_KEY);
       const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);

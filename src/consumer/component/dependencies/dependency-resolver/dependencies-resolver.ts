@@ -230,7 +230,6 @@ export default class DependencyResolver {
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach(depField => {
       if (components[depField] && components[depField].length) {
-        // $FlowFixMe
         components[depField].forEach(id => this.allDependencies[depField].push({ id, relativePaths: [] }));
       }
       if (packages[depField] && !R.isEmpty(packages[depField])) {
@@ -791,7 +790,6 @@ either, use the ignore file syntax or change the require statement to have a mod
         );
         const currentComponentDeps = {
           id: dependencyId,
-          // $FlowFixMe
           relativePaths: clonedDependencies.getById(dependencyId).relativePaths
         };
         if (fileType.isTestFile && !existingDevDependency) {
@@ -983,7 +981,6 @@ either, use the ignore file syntax or change the require statement to have a mod
    */
   _getPackageJson(): Object | null | undefined {
     const componentMap = this.component.componentMap;
-    // $FlowFixMe
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     if (isAuthor) {
       return this.consumer.config.packageJsonObject;
@@ -994,7 +991,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (this.componentFromModel) {
       // a component is imported but the package.json file is missing or never written
       // read the values from the model
-      // $FlowFixMe
       const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
       return packageJson.packageJsonObject;
     }

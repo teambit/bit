@@ -13,7 +13,6 @@ export type SerializedSpecsResultsWithComponentId = {
 };
 
 const testOneComponent = verbose => async (id: string) => {
-  // $FlowFixMe
   const res = await testInProcess(id, false, verbose);
   return res.results[0];
 };
@@ -27,7 +26,6 @@ export default function run(): Promise<void> {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then(results => {
         const serializedResults = serializeResults(results.results);
-        // $FlowFixMe
         process.send(serializedResults);
         // Make sure the child process will not hang
         process.exit();
@@ -35,7 +33,6 @@ export default function run(): Promise<void> {
       .catch(e => {
         loader.off();
         const serializedResults = serializeResults(e);
-        // $FlowFixMe
         process.send(serializedResults);
         // Make sure the child process will not hang
         process.exit();
@@ -45,7 +42,6 @@ export default function run(): Promise<void> {
   return Promise.all(testAllP)
     .then(results => {
       const serializedResults = serializeResults(results);
-      // $FlowFixMe
       process.send(serializedResults);
       // Make sure the child process will not hang
       process.exit();
@@ -53,7 +49,6 @@ export default function run(): Promise<void> {
     .catch(e => {
       loader.off();
       const serializedResults = serializeResults(e);
-      // $FlowFixMe
       process.send(serializedResults);
       // Make sure the child process will not hang
       process.exit();
@@ -108,6 +103,5 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
   };
 
   const serializedResults = results.map(serializeResult);
-  // $FlowFixMe
   return { type: 'results', results: serializedResults };
 }

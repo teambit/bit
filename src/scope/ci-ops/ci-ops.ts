@@ -29,7 +29,6 @@ export default (component: ConsumerComponent, scopePath: string) => {
 
   if (!ciFuncPath) ciFunc = defaultCIFunc;
   else {
-    // $FlowFixMe
     ciFunc = require(ciFuncPath);
   }
 

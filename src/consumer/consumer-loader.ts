@@ -6,12 +6,9 @@ export async function loadConsumer(
   currentPath?: string = process.cwd(),
   newInstance?: boolean = false
 ): Promise<Consumer> {
-  // $FlowFixMe
   if (newInstance || !loadConsumer.cache || !loadConsumer.cache[currentPath]) {
     const consumer = await Consumer.load(path.resolve(currentPath));
-    // $FlowFixMe
     if (!loadConsumer.cache) loadConsumer.cache = {};
-    // $FlowFixMe
     loadConsumer.cache[currentPath] = consumer;
   }
   return loadConsumer.cache[currentPath];

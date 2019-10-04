@@ -9,7 +9,6 @@ export default (async function untrack(componentIds: string[], all: boolean | nu
   const unRemovableComponents: BitId[] = [];
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
-  // $FlowFixMe
   const newComponents: BitIds = await componentsList.listNewComponents(false);
   const idsHaveWildcard = hasWildcard(componentIds);
   if (all || idsHaveWildcard) {
