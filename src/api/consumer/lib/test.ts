@@ -18,13 +18,16 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
  */
 export default (async function test(
   id?: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
   includeUnmodified: boolean = false,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined
 ): Promise<SpecsResultsWithMetaData> {
   loader.start(BEFORE_RUNNING_SPECS);
 
   if (forkLevel === TESTS_FORK_LEVEL.NONE) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return testInProcess(id, includeUnmodified, verbose);
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
@@ -33,8 +36,10 @@ export default (async function test(
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
     const consumer: Consumer = await loadConsumer();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
     const ids = components.map(component => component.id.toString());
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const results = await specsRunner({ ids, forkLevel, verbose });
     return results;
   }
@@ -44,6 +49,7 @@ export default (async function test(
 export async function testInProcess(
   id?: string,
   includeUnmodified: boolean = false,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined
 ): Promise<SpecsResultsWithMetaData> {
@@ -62,6 +68,7 @@ async function _getComponentsAfterBuild(
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined
 ) {

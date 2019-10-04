@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import yn from 'yn';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import winston from 'winston';
 import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';

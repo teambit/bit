@@ -1,6 +1,7 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import * as path from 'path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess from 'child_process';
 import { expect } from 'chai';
 import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
@@ -122,6 +123,7 @@ export default class CommandHelper {
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   export(options?: string = '') {
     // --force just silents the prompt, which obviously needed for CIs
     return this.runCmd(`bit export --force ${options}`);
@@ -169,6 +171,7 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   build(id?: string = '') {
     return this.runCmd(`bit build ${id}`);
   }
@@ -238,6 +241,7 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diff(id?: string = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);

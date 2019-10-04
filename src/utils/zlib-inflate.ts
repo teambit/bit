@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import zlib from 'zlib';
 
 export default function inflate(buffer: Buffer): Promise<Buffer> {

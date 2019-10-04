@@ -54,6 +54,7 @@ export default function testInScope({
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (scopePath) return loadFromScope();
 
   return loadFromConsumer().catch(err => {

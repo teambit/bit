@@ -3,27 +3,31 @@ import ComponentsList from './components-list';
 import { ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
-describe('ComponentList', function () {
+describe('ComponentList', function() {
   this.timeout(0);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
   const getScope = modelComponent => ({
     listLocal: () => {
       return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
     }
   });
-  describe('listLocalScope', function () {
+  describe('listLocalScope', function() {
     let modelComponent;
     before(() => {
       this.timeout(0);
       modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const scope = getScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await ComponentsList.listLocalScope(scope);
       expect(results).to.deep.equal([]);
     });
     it('should return results with the correct id', async () => {
       const scope = getScope(modelComponent);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await ComponentsList.listLocalScope(scope);
       const result = results[0];
       expect(result).to.have.property('id');
@@ -32,6 +36,7 @@ describe('ComponentList', function () {
     it('should return results with the correct deprecated status', async () => {
       modelComponent.deprecated = true;
       const scope = getScope(modelComponent);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await ComponentsList.listLocalScope(scope);
       const result = results[0];
       expect(result).to.have.property('deprecated');
@@ -44,10 +49,12 @@ describe('ComponentList', function () {
     before(() => {
       const bitMap = { getAuthoredAndImportedBitIds: () => new BitIds() };
       const consumer = { scope, bitMap };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentList = new ComponentsList(consumer);
     });
     it('should return results with the correct id', async () => {
       const modelComponent = getModelComponent();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope.list = async () => [modelComponent];
       const results = await componentList.listScope(false, true);
       const result = results[0];

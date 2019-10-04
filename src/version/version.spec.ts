@@ -4,6 +4,7 @@ import Version from '../version';
 describe('Version', () => {
   describe('toString()', () => {
     it('should return a latest tested version', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = new Version(10, true);
       expect(version.toString()).to.equal('*10');
     });
@@ -14,6 +15,7 @@ describe('Version', () => {
     });
 
     it('should return concrete version number', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = new Version(12, false);
       expect(version.toString()).to.equal('12');
     });

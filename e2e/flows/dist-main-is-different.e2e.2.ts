@@ -52,7 +52,10 @@ describe('mainFile of the dist is different than the source', function() {
     it('should save the mainDistFile to the scope', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
       expect(barFoo).to.have.property('mainDistFile');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.mainDistFile).to.equal('src/bar/foo-main.js');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.mainDistFile).to.not.equal(barFoo.mainFile);
     });
     describe('export the component', () => {
@@ -98,6 +101,7 @@ describe('mainFile of the dist is different than the source', function() {
           helper.scopeHelper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           helper.scopeHelper.addRemoteScope();
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { target: 'dist' });
           helper.command.importComponent('bar/foo');
         });
@@ -167,7 +171,10 @@ describe('mainFile of the dist is different than the source', function() {
     it('should save the mainDistFile to the scope', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
       expect(barFoo).to.have.property('mainDistFile');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.mainDistFile).to.equal('src/bar/foo-main.js');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(barFoo.mainDistFile).to.not.equal(barFoo.mainFile);
     });
   });

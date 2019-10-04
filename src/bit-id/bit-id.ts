@@ -240,6 +240,7 @@ export default class BitId {
    * since that version the ids are written as objects ({ scope: scopeName, name: compName, version: 0.0.1 })
    */
   static parseBackwardCompatible(id: string | Object): BitId {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return typeof id === 'string' ? BitId.parseObsolete(id) : new BitId(id);
   }
 
@@ -273,6 +274,7 @@ export default class BitId {
     return chunk;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static getValidBitId(box?: string, name: string): BitId {
     return new BitId({ name: BitId.getValidIdChunk(name), box: box ? BitId.getValidIdChunk(box) : undefined });
   }

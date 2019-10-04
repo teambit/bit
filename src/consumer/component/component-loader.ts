@@ -184,6 +184,7 @@ export default class ComponentLoader {
     const remotes = await getScopeRemotes(this.consumer.scope);
     let componentsObjects;
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
     } catch (err) {
       return null; // probably doesn't exist
@@ -195,7 +196,9 @@ export default class ComponentLoader {
   _isAngularProject(): boolean {
     return Boolean(
       this.consumer.config.packageJsonObject &&
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.consumer.config.packageJsonObject.dependencies &&
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }

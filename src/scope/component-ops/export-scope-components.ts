@@ -176,11 +176,14 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
   );
   const componentsWithConflicts = mergeResults.filter(result => result instanceof MergeConflict);
   if (componentsWithConflicts.length) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
     // sort to have a consistent error message
     const idsAndVersionsSorted = R.sortBy(R.prop('id'), idsAndVersions);
     throw new MergeConflictOnRemote(idsAndVersionsSorted);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
     mergedVersions.map(version => mergedComponent.toBitId().changeVersion(version));
@@ -201,6 +204,7 @@ async function convertToCorrectScope(
   exportingIds: BitIds,
   codemod: boolean
 ): Promise<void> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
   await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
@@ -268,7 +272,9 @@ async function convertToCorrectScope(
     );
   }
   async function _createNewFileIfNeeded(version: Version, file: Object): Promise<Source | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = file.file;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fileObject: Source = await scope.objects.load(currentHash);
     const fileString = fileObject.contents.toString();
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
@@ -314,6 +320,7 @@ async function changePartialNamesToFullNamesInDists(
   component: ModelComponent,
   objects: BitObject[]
 ): Promise<void> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versions: Version[] = objects.filter(object => object instanceof Version);
   await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
 
@@ -333,6 +340,7 @@ async function changePartialNamesToFullNamesInDists(
   }
 
   async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<Source | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = dist.file;
     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
     // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.

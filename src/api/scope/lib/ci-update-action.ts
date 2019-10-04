@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import runAndUpdateCi from '../../../scope/ci-ops/run-and-update-ci';
 
 export default function CiUpdateAction(

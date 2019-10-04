@@ -28,6 +28,7 @@ export default class ComponentConfig extends AbstractConfig {
       tester,
       lang,
       bindingPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extensions
     });
     this.overrides = overrides;
@@ -50,6 +51,8 @@ export default class ComponentConfig extends AbstractConfig {
     if (
       typeof this.compiler !== 'object' ||
       typeof this.tester !== 'object' ||
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
       throw new ShowDoctorError(
@@ -59,6 +62,11 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   static fromPlainObject(object: Object): ComponentConfig {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentConfig({
@@ -77,7 +85,9 @@ export default class ComponentConfig extends AbstractConfig {
       scope: component.scope,
       lang: component.lang,
       bindingPrefix: component.bindingPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler: component.compiler || {},
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester: component.tester || {},
       overrides: component.overrides.componentOverridesData
     });
@@ -151,7 +161,9 @@ export default class ComponentConfig extends AbstractConfig {
     const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
     const bitJsonConfig = bitJsonFile || {};
     const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonConfig = packageJsonHasConfig ? packageJsonObject.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);

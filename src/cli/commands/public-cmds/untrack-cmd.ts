@@ -11,6 +11,7 @@ export default class Untrack extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html
   ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['a', 'all', 'revert add for all tracked components']];
   loader = true;
   migration = true;

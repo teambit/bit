@@ -1,5 +1,6 @@
 import * as path from 'path';
 import fs from 'fs-extra';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import graphviz from 'graphviz';
 import GraphLib from 'graphlib';
@@ -31,25 +32,32 @@ const defaultConfig: ConfigProps = {
   backgroundColor: '#000000',
   nodeColor: '#c6c5fe',
   noDependencyColor: '#cfffac',
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencyColor: '#ff0000',
   edgeColor: '#757575',
   highlightColor: 'green'
 };
 
 export default class VisualDependencyGraph {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graphlib: Graph;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graph: Digraph;
   config: ConfigProps;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   constructor(graphlib: Graph, graph: Digraph, config: ConfigProps) {
     this.graph = graph;
     this.graphlib = graphlib;
     this.config = config;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async loadFromGraphlib(graphlib: Graph, config: ConfigProps = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
     checkGraphvizInstalled(config.graphVizPath);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
     return new VisualDependencyGraph(graphlib, graph, mergedConfig);
   }
@@ -57,6 +65,8 @@ export default class VisualDependencyGraph {
   /**
    * Creates the graphviz graph
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static buildDependenciesGraph(graphlib: Graph, config: ConfigProps): Digraph {
     const graph = graphviz.digraph('G');
 
@@ -74,6 +84,7 @@ export default class VisualDependencyGraph {
       const edgeType = graphlib.edge(edge);
       const vizEdge = graph.addEdge(edge.v, edge.w);
       if (edgeType !== 'dependencies') {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         setEdgeColor(vizEdge, config.devDependencyColor);
       }
     });
@@ -105,6 +116,7 @@ export default class VisualDependencyGraph {
   async image(imagePath: string): Promise<string> {
     const options: Object = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options.type = type;
 
     const outputP: Promise<Buffer> = new Promise((resolve, reject) => {
@@ -158,6 +170,7 @@ function checkGraphvizInstalled(graphVizPath?: string) {
     shell: true
   };
   if (graphVizPath) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options.cwd = graphVizPath;
   }
 

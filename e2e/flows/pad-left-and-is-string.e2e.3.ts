@@ -33,6 +33,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
       helper.env.importCompiler('bit.envs/compilers/flow@0.0.6');
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.runCmd('npm init -y');
       helper.command.runCmd('npm install chai -D');
@@ -46,6 +47,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.importComponent('string/pad-left -p src/pad-left');
       scopeAfterImport = helper.scopeHelper.cloneLocalScope();
@@ -56,9 +58,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     });
     it('should save the paths in the model as Linux format', () => {
       const isString = helper.command.catComponent(`${helper.scopes.remote}/string/is-string@latest`);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(isString.docs[0].filePath).to.equal('src/is-string/is-string.js');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(isString.specsResults[0].specFile).to.equal('is-string/is-string.spec.js');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isString.dists.forEach(dist => expect(dist.relativePath.startsWith('src/is-string')).to.be.true);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isString.files.forEach(file => expect(file.relativePath.startsWith('src/is-string')).to.be.true);
     });
     describe('changing to absolute syntax and tagging', () => {
@@ -78,15 +84,18 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should not add the dist.entry if it was not removed before', () => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'any' });
         helper.command.importComponent('string/pad-left -p src/pad-left');
         helper.command.tagComponent('string/pad-left', 'msg', '-f');
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       describe('importing back to the original repo', () => {
@@ -186,10 +195,12 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
       it('should indicate that the dependency used custom-module-resolution', () => {
         const padLeftModel = helper.command.catComponent(`${helper.scopes.remote}/string/pad-left@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const relativePath = padLeftModel.dependencies[0].relativePaths[0];
         expect(relativePath).to.have.property('isCustomResolveUsed');
         expect(relativePath).to.have.property('importSource');
@@ -199,6 +210,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           helper.command.importComponent('string/pad-left -p src/pad-left');
         });
@@ -458,13 +470,16 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       it('should save pad-left without is-string dependency', () => {
         const padLeft = helper.command.catComponent('string/pad-left@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(padLeft.dependencies).to.have.lengthOf(0);
       });
       it('should save the overrides data in both components', () => {
         const padLeft = helper.command.catComponent('string/pad-left@latest');
         const isString = helper.command.catComponent('string/is-string@latest');
         const expectedOverrides = { dependencies: { 'file://src/**/*': '-' } };
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(padLeft.overrides).to.deep.equal(expectedOverrides);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(isString.overrides).to.deep.equal(expectedOverrides);
       });
       describe('import in another workspace', () => {
@@ -515,6 +530,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.scopeHelper.getClonedLocalScope(scopeBeforeImport);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importComponent('string/pad-left -p src/pad-left');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       });
       it('should show a descriptive error when tagging the component', () => {

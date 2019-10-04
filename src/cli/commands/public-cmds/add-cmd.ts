@@ -17,6 +17,7 @@ export default class Add extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components.html
   https://${BASE_DOCS_DOMAIN}/docs/manage-component-files.html`;
   alias = 'a';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],

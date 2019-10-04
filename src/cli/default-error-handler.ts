@@ -109,6 +109,8 @@ import { importPendingMsg } from './commands/public-cmds/status-cmd';
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     RemoteUndefined,
@@ -557,6 +559,7 @@ function getErrorFunc(errorDefinition) {
 function getErrorMessage(error: Error | null | undefined, func: Function | null | undefined): string {
   if (!error || !func) return '';
   let errorMessage = func(error);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (error.showDoctorMessage) {
     errorMessage = `${errorMessage}
 
@@ -601,6 +604,8 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
  */
 function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
   // only level FATAL are reported to Sentry.
   const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;
@@ -608,12 +613,15 @@ function sendToAnalyticsAndSentry(err: Error) {
 }
 
 function handleNonBitCustomErrors(err: Error): string {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (err.code === 'EACCES') {
     // see #1774
     return chalk.red(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
     );
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return chalk.red(err.message || err);
 }
 

@@ -47,6 +47,7 @@ export default (async function getScopeComponent({
       dependenciesInfo = componentDepGraph.getDependenciesInfo(component.id);
     }
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return { component, dependentsInfo, dependenciesInfo };
 
   async function showComponentUsingScope(scope: Scope) {

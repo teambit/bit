@@ -7,6 +7,7 @@ export type FileTypePlugin = {
   detective: Function;
 };
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const fileTypesPlugins: FileTypePlugin[] = [stylable];
 
 export default fileTypesPlugins;

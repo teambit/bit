@@ -7,6 +7,7 @@ import { SourceFileModel } from '../../../scope/models/version';
 import { PathOsBased } from '../../../utils/path';
 import { Repository } from '../../../scope/objects';
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: string | null | undefined;
@@ -14,11 +15,13 @@ export default class SourceFile extends AbstractVinyl {
   static load(
     filePath: PathOsBased,
     distTarget: PathOsBased,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     base: PathOsBased = consumerPath, // TODO: change params order to fix lint error
     consumerPath: PathOsBased,
     extendedProps: Object
   ): SourceFile | null {
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       R.forEachObjIndexed(addToFile, extendedProps);
@@ -40,6 +43,7 @@ export default class SourceFile extends AbstractVinyl {
   static loadFromParsedString(parsedString: Object): SourceFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(opts);
   }
 
@@ -50,10 +54,13 @@ export default class SourceFile extends AbstractVinyl {
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
     const content = await file.file.load(repository);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
   clone(): SourceFile {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(this);
   }
 }

@@ -1,6 +1,8 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import tar from 'tar-stream';
 import fs from 'fs-extra';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import DoctorRegistrar from '../../../doctor/doctor-registrar';

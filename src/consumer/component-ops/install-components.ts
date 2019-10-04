@@ -30,6 +30,7 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
  * 2) link the provided ids.
  */
 export async function installIds(consumer: Consumer, ids: BitId[], verbose: boolean): Promise<LinksResult[]> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
   const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
   if (dirs.length) await installPackages(consumer, dirs, verbose);

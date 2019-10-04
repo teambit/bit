@@ -33,7 +33,9 @@ export default class RemoveModelComponents {
       // a dependency and the dependency itself)
       const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
       await this.scope.objects.persist();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const ids = new BitIds(...removedComponents.map(x => x.bitId));
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
       return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
     }
@@ -48,7 +50,9 @@ export default class RemoveModelComponents {
    */
   async _removeSingle(bitId: BitId): Promise<{ bitId: BitId; removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     const componentList = await this.scope.listIncludesSymlinks();
 

@@ -1,5 +1,7 @@
 // import serverlessIndex from './serverless-index';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import indexer from './indexer';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { search } from './searcher';
 import { loadConsumer } from '../consumer';
 import { loadScope } from '../scope';
@@ -28,6 +30,7 @@ async function searchLocally(queryStr: string, reindex: boolean = false): Promis
 async function searchRemotely(queryStr: string, scope: string, reindex: boolean = false): Promise<any> {
   return loadConsumer().then(consumer => {
     return getScopeRemotes(consumer.scope).then(remotes =>
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       remotes.resolve(scope, consumer.scope.name).then(remote => {
         return remote.search(queryStr, reindex);
       })

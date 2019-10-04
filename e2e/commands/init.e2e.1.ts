@@ -228,6 +228,7 @@ describe('run bit init', function() {
       it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.scopes.localPath, BIT_JSON);
         const statusCmd = () => helper.command.runCmd('bit status');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const error = new InvalidBitJson(bitJsonPath, 'Unexpected token t');
         helper.general.expectToThrow(statusCmd, error);
       });

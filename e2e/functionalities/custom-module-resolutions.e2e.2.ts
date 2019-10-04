@@ -170,7 +170,9 @@ describe('custom module resolutions', function() {
           // an intermediate step, make sure it saves the customResolvedPaths in the model
           const catComponent = helper.command.catComponent('bar/foo@latest');
           expect(catComponent).to.have.property('customResolvedPaths');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.customResolvedPaths[0].destinationPath).to.equal('src/utils/is-string.js');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.customResolvedPaths[0].importSource).to.equal('utils/is-string');
           helper.command.exportAllComponents();
 
@@ -213,11 +215,14 @@ describe('custom module resolutions', function() {
       it('should show the customResolvedPaths correctly', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         expect(barFoo).to.have.property('customResolvedPaths');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-string.js',
           importSource: 'utils/is-string'
         });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-type.js',
           importSource: 'utils/is-type'
@@ -305,11 +310,14 @@ describe('custom module resolutions', function() {
       it('should show the customResolvedPaths correctly', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         expect(barFoo).to.have.property('customResolvedPaths');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/index.js',
           importSource: '@/utils'
         });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
           destinationPath: 'src/utils/is-type.js',
           importSource: '@/utils/is-type'

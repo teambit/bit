@@ -21,6 +21,7 @@ export default (async function injectConf(
   consumerPath: string,
   bitMap: BitMap,
   configDir: ConfigDir,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force?: boolean = false
 ): Promise<InjectConfResult> {
   const componentMap = component.componentMap;
@@ -44,6 +45,7 @@ export default (async function injectConf(
     ? component.tester.removeFilesFromFs(component.testerDependencies, configDir, TESTER_ENV_TYPE, consumerPath)
     : Promise.resolve('');
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await Promise.all([deleteCompilerFilesP, deleteTesterFilesP]);
 
   // Delete bit.json and bit.json dir

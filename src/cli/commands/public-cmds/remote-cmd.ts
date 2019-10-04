@@ -12,6 +12,7 @@ class RemoteAdd extends Command {
   name = 'add <url>';
   description = 'add a tracked bit remote';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['g', 'global', 'configure a remote bit scope']];
 
   action([url]: [string], { global }: { global: boolean }): Promise<any> {
@@ -32,6 +33,7 @@ class RemoteRm extends Command {
   name = 'del <name>';
   description = 'remove a tracked bit remote';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['g', 'global', 'remove a global configured remote scope']];
 
   action([name]: [string], { global }: { global: boolean }): Promise<any> {
@@ -47,10 +49,13 @@ export default class Remote extends Command {
   name = 'remote';
   description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-remote.html`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['g', 'global', 'see globally configured remotes']];
   migration = true;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm()];
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   action(args: string[], { global }: { glboal: boolean }): Promise<any> {
     return remoteList(global);
   }

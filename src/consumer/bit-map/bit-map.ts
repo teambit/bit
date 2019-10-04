@@ -50,6 +50,7 @@ export default class BitMap {
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | null | undefined };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
 
   constructor(projectRoot: string, mapPath: string, version: string) {
@@ -89,6 +90,7 @@ export default class BitMap {
     this.markAsChanged();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   setComponentProp(id: BitId, propName: $Keys<ComponentMap>, val: any) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     componentMap[propName] = val;
@@ -100,6 +102,7 @@ export default class BitMap {
     return R.isEmpty(this.components);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     delete componentMap[propName];
@@ -185,6 +188,7 @@ export default class BitMap {
    */
   static resolveIgnoreFilesAndDirs(
     configDir?: PathLinux,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     rootDir: PathLinux,
     compilerFilesPaths: PathLinux[] = [],
     testerFilesPaths: PathLinux[] = []
@@ -231,10 +235,12 @@ export default class BitMap {
    */
   static parseConfigDir(configDir: ConfigDir, rootDir: string) {
     const configDirResolved = {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     configDirResolved.compiler = configDir.getResolved({
       componentDir: rootDir,
       envType: COMPILER_ENV_TYPE
     }).linuxDirPath;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     configDirResolved.tester = configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath;
     return configDirResolved;
   }
@@ -595,6 +601,7 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const componentMap = new ComponentMap({ files, origin });
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, componentMap);

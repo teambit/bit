@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import detectIndent from 'detect-indent';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectNewline from 'detect-newline';
 import stringifyPackage from 'stringify-package';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
@@ -59,6 +60,7 @@ export default class PackageJsonFile {
    * load from the given dir, if not exist, don't throw an error, just set packageJsonObject as an
    * empty object
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async load(workspaceDir: PathOsBasedAbsolute, componentDir?: PathRelative = '.'): Promise<PackageJsonFile> {
     const filePath = composePath(componentDir);
     const filePathAbsolute = path.join(workspaceDir, filePath);
@@ -75,6 +77,7 @@ export default class PackageJsonFile {
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     excludeRegistryPrefix?: boolean = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
@@ -88,17 +91,23 @@ export default class PackageJsonFile {
       main: component.mainFile,
       dependencies: {
         ...component.packageDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.dependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.testerPackageDependencies.dependencies
       },
       devDependencies: {
         ...component.devPackageDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.devDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.testerPackageDependencies.devDependencies
       },
       peerDependencies: {
         ...component.peerPackageDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.compilerPackageDependencies.peerDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ...component.testerPackageDependencies.peerDependencies
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
@@ -117,10 +126,14 @@ export default class PackageJsonFile {
   }
 
   addDependencies(dependencies: Object) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
   addDevDependencies(dependencies: Object) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 

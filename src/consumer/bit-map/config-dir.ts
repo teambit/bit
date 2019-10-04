@@ -11,18 +11,22 @@ export default class ConfigDir {
     this.dirPath = dirPath;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get linuxDirPath() {
     return pathNormalizeToLinux(this.dirPath);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get isUnderComponentDir() {
     return this.dirPath.startsWith(`{${COMPONENT_DIR}}`);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get hasEnvType() {
     return this.dirPath.includes('{ENV_TYPE}');
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get isWorkspaceRoot() {
     const linDirPath = this.linuxDirPath;
     return linDirPath === '.' || linDirPath === './';

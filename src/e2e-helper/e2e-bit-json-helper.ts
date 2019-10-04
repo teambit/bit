@@ -70,6 +70,7 @@ export default class BitJsonHelper {
     this.write(bitJson);
   }
   _getEnvNameByType(bitJson: Object, envType: 'compiler' | 'tester') {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const env = bitJson.env[envType];
     const envName = typeof env === 'string' ? env : Object.keys(env)[0];
     return envName;

@@ -20,6 +20,8 @@ export function componentToPrintableForDiff(component: Component): Object {
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
   const {
@@ -40,17 +42,23 @@ export function componentToPrintableForDiff(component: Component): Object {
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.devDependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.devDependencies
   };
   const allPackages = {
     ...packageDependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.dependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.dependencies
   };
   const allPeerPackages = {
     ...component.peerPackageDependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.peerDependencies,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.peerDependencies
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
@@ -59,18 +67,27 @@ export function componentToPrintableForDiff(component: Component): Object {
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter(x => x);
   const overrides = component.overrides.componentOverridesData;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.id = component.id.toStringWithoutScope();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.compiler = compiler ? compiler.name : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.compilerFiles = parseEnvFiles(compiler);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.language = lang || null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.tester = tester ? tester.name : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.testerFiles = parseEnvFiles(tester);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.mainFile = mainFile ? normalize(mainFile) : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.dependencies = dependencies
     .toStringOfIds()
     .sort()
     .concat(parsePackages(allPackages))
     .filter(x => x);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .sort()
@@ -78,20 +95,32 @@ export function componentToPrintableForDiff(component: Component): Object {
     .concat(printableCompilerDependencies)
     .concat(printableTesterDependencies)
     .filter(x => x);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.files =
     files && !R.isEmpty(files) && !R.isNil(files)
-      ? files.filter(file => !file.test).map(file => normalize(file.relative))
+      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        files.filter(file => !file.test).map(file => normalize(file.relative))
       : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.specs =
     files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
-      ? files.filter(file => file.test).map(file => normalize(file.relative))
+      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.deprecated = deprecated ? 'True' : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesDependencies = parsePackages(overrides.dependencies);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesPackageJsonProps = JSON.stringify(component.overrides.componentOverridesPackageJsonData);
   return obj;
 }

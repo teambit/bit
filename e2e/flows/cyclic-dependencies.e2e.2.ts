@@ -29,12 +29,16 @@ describe('cyclic dependencies', function() {
     });
     it('should save the dependencies and flattenedDependencies of A correctly', () => {
       const compA = helper.command.catComponent('comp/a@0.0.1');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/b', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/b', version: '0.0.1' });
     });
     it('should save the dependencies and flattenedDependencies of B correctly', () => {
       const compA = helper.command.catComponent('comp/b@0.0.1');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
     });
     describe('exporting the component', () => {
@@ -101,87 +105,137 @@ describe('cyclic dependencies', function() {
       const leaves = ['comp/a3@latest', 'utils/is-type@latest'];
       leaves.forEach(leaf => {
         const catComp = helper.command.catComponent(leaf);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComp.dependencies).to.have.lengthOf(0);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComp.flattenedDependencies).to.have.lengthOf(0);
       });
     });
     // A2 => A3 (leaf)
     it('A2 should have only A3 as a dependency and flattenedDependency', () => {
       const A2 = helper.command.catComponent('comp/a2@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A2.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A2.flattenedDependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A2.dependencies[0].id).to.deep.equal({ name: 'comp/a3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A2.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a3', version: '0.0.1' });
     });
     // A1 => A2 => A3 (leaf). A1 => B1. B1 => B2 => B3 => B4.
     it('A1 should have A2 and B1 as direct dependencies, and all the rest as flattenedDependencies', () => {
       const A1 = helper.command.catComponent('comp/a1@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.dependencies).to.have.lengthOf(2);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = A1.dependencies.map(dep => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
       expect(dependenciesIds).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.have.lengthOf(8);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(A1.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
     });
     // B2 => B3 => B4. B2 => A1. A1 => A2 => A3 (leaf). A1 => B1.
     it('B2 should have A1 and B3 as direct dependencies, and all the rest as flattenedDependencies', () => {
       const B2 = helper.command.catComponent('comp/b2@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.dependencies).to.have.lengthOf(2);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B2.dependencies.map(dep => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
       expect(dependenciesIds).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.have.lengthOf(8);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B2.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
     });
     // B1 => B2 => B3 => B4. B2 => A1. A1 => A2 => A3 (leaf)
     it('B1 should have B2 as direct dependencies, and all the rest as flattenedDependencies', () => {
       const B1 = helper.command.catComponent('comp/b1@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B1.dependencies.map(dep => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.have.lengthOf(8);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a1', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/a3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b2', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b3', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B1.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
     });
     // B3 => B4 => is-string => is-type (leaf)
     it('B3 should have B4 as direct dependencies, and B4, is-type, is-string as flattenedDependencies', () => {
       const B3 = helper.command.catComponent('comp/b3@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B3.dependencies.map(dep => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.have.lengthOf(3);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.deep.include({ name: 'comp/b4', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B3.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
     });
     // B4 => is-string => is-type (leaf)
     it('B4 should have is-string as a direct dependency, and is-type, is-string as flattenedDependencies', () => {
       const B4 = helper.command.catComponent('comp/b4@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependenciesIds = B4.dependencies.map(dep => dep.id);
       expect(dependenciesIds).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.flattenedDependencies).to.have.lengthOf(2);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
     });
     describe('exporting the component', () => {
@@ -232,6 +286,7 @@ describe('cyclic dependencies', function() {
     });
     it('should not save the component itself as a dependency', () => {
       const catComponent = helper.command.catComponent('bar/foo@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.dependencies).to.be.lengthOf(0);
     });
   });

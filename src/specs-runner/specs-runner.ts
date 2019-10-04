@@ -1,5 +1,6 @@
 import R from 'ramda';
 import * as path from 'path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import pEvent from 'p-event';
 import { deserializeError } from 'serialize-error';
@@ -102,6 +103,7 @@ async function runOnChildProcess({
   // It will pass to the fork as "undefined" (string) instad of not passing it at all
   // __ids__: ids ? ids.join() : undefined,
   if (ids) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     baseEnv.__ids__ = ids.join();
   }
   // Merge process.env from the main process
@@ -137,19 +139,28 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);
     // Special desrialization for external errors
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (deserializedError.originalErrors) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const deserializedOriginalErrors = deserializedError.originalErrors.map(deserializeError);
       if (results.error.name === ExternalBuildErrors.name) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         deserializedError = new ExternalBuildErrors(deserializedError.id, deserializedOriginalErrors);
       } else if (results.error.name === ExternalTestErrors.name) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         deserializedError = new ExternalTestErrors(deserializedError.id, deserializedOriginalErrors);
       } else {
         deserializedError = new ExternalErrors(deserializedOriginalErrors);
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (deserializedError.originalError) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const deserializedOriginalError = deserializeError(deserializedError.originalError);
       const compName =
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         deserializedError.compName && typeof deserializedError.compName === 'string' ? deserializedError.compName : '';
       deserializedError = new ExternalTestErrors(compName, [deserializedOriginalError]);
     }
@@ -157,6 +168,7 @@ function deserializeResults(results): SpecsResultsWithMetaData | null | undefine
       type: 'error',
       error: deserializedError
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return finalResults;
   }
   const deserializeFailure = failure => {

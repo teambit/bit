@@ -1,6 +1,7 @@
 import * as path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
@@ -113,17 +114,21 @@ export default class BaseExtension {
     this.api = extensionProps.api;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get writeConfigFilesOnAction() {
     if (!this.initOptions) {
       return false;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.initOptions.writeConfigFilesOnAction;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get initOptions() {
     return this._initOptions;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set initOptions(opts: Object | null | undefined) {
     const defaultInitOpts = {
       writeConfigFilesOnAction: false
@@ -133,9 +138,12 @@ export default class BaseExtension {
       return;
     }
     const res = {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (opts.write) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       res.writeConfigFilesOnAction = true;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this._initOptions = res;
   }
 
@@ -146,7 +154,10 @@ export default class BaseExtension {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       let initOptions = {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.script && this.script.init && typeof this.script.init === 'function') {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         initOptions = this.script.init({
           rawConfig: this.rawConfig,
           dynamicConfig: this.dynamicConfig,
@@ -200,9 +211,12 @@ export default class BaseExtension {
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async reload(scopePath: string, { throws }: Object): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.filePath && !this.options.core) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
       this.filePath = resolvedPath;
       this.rootDir = componentPath;
@@ -225,6 +239,7 @@ export default class BaseExtension {
   }
 
   setExtensionPathInScope(scopePath: string): void {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
     this.filePath = resolvedPath;
     this.rootDir = componentPath;
@@ -287,6 +302,7 @@ export default class BaseExtension {
     };
     // Require extension from scope
     if (scopePath) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
       const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
       staticExtensionProps = await BaseExtension.loadFromFile({
@@ -351,6 +367,7 @@ export default class BaseExtension {
       rootDir: ''
     };
     // Skip disabled extensions
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (options.disabled) {
       extensionProps.disabled = true;
       logger.info(`skip extension ${extensionProps.name} because it is disabled`);
@@ -377,8 +394,11 @@ export default class BaseExtension {
     try {
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
         // the function may or may not be a promise
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         extensionProps.schema = await Promise.resolve(extensionProps.script.getSchema());
         const valid = ajv.validate(extensionProps.schema, rawConfig);
         if (!valid) {
@@ -481,6 +501,7 @@ function _getExtensionVersionFromComponentPath(componentPath: string): string | 
 }
 
 function _addVersionToNameFromPathIfMissing(name: string, componentPath: string, options: Object): string {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (options && options.core) return name; // if it's a core extension, it's not a bit-id.
   let bitId: BitId;
   try {

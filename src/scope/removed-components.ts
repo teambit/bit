@@ -46,10 +46,15 @@ export default class RemovedObjects {
     dependentBits: { [key: string]: Object[] };
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => BitId.parse(id, true)));
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const removedDependencies = new BitIds(...payload.removedDependencies.map(id => BitId.parse(id, true)));
     const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       acc[current] = new BitIds(...payload.dependentBits[current].map(id => new BitId(id)));
       return acc;
     }, {});

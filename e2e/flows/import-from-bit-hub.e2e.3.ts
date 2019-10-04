@@ -106,6 +106,7 @@ chai.use(require('chai-fs'));
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('saveDependenciesAsComponents', true);
       helper.command.runCmd(`bit import ${componentTestId}`);
     });

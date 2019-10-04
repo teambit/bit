@@ -29,6 +29,7 @@ export default (async function show({
       versions
     }));
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getComponent().then(({ component, componentModel, dependentsInfo, dependenciesInfo }) => ({
     component,
     componentModel,
@@ -49,6 +50,7 @@ export default (async function show({
     };
     if (remote) {
       loader.start(BEFORE_SHOW_REMOTE);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return getScopeComponent(params);
     }
     return getConsumerComponent({ ...params, compare });

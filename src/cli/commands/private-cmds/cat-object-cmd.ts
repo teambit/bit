@@ -6,6 +6,7 @@ export default class CatObject extends Command {
   description = 'cat a bit object by hash';
   private = true;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"']

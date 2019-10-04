@@ -8,6 +8,7 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
   const driver = consumer.driver.getDriver(false);
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const tree = await driver.getDependencyTree({
     baseDir: consumerPath,
     consumerPath,

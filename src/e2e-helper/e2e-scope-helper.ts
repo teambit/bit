@@ -33,7 +33,9 @@ export default class ScopeHelper {
     fs.removeSync(this.scopes.localPath);
     fs.removeSync(this.scopes.remotePath);
     if (this.cache) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       fs.removeSync(this.cache.localScopePath);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       fs.removeSync(this.cache.remoteScopePath);
       delete this.cache;
     }
@@ -61,6 +63,7 @@ export default class ScopeHelper {
   }
 
   async initInteractive(inputs: InteractiveInputs) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 
@@ -112,6 +115,7 @@ export default class ScopeHelper {
     return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   reInitRemoteScope(scopePath?: string = this.scopes.remotePath) {
     fs.emptyDirSync(scopePath);
     return this.command.runCmd('bit init --bare', scopePath);
@@ -133,6 +137,7 @@ export default class ScopeHelper {
     return this.command.runCmd('bit init --bare', this.scopes.envPath);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getNewBareScope(scopeNameSuffix?: string = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);

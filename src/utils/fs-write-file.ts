@@ -9,6 +9,7 @@ export type Options = {
 export default (async function writeFile(
   path: string,
   contents: string | Buffer,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   options?: Options = {}
 ): Promise<void> {
   await fs.outputFile(path, contents);

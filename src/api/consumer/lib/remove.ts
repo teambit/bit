@@ -56,6 +56,7 @@ async function getRemoteBitIdsToRemove(ids: string[]): Promise<BitId[]> {
 
 async function getIdsFromRemoteByWildcards(ids: string[]): Promise<BitId[]> {
   const remoteIds = await Promise.all(
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ids.map(id => {
       if (hasWildcard(id)) {
         return getRemoteBitIdsByWildcards(id);

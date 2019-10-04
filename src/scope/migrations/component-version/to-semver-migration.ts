@@ -23,14 +23,24 @@ function changeVersionToSemVer(versionModel: Object): Object {
   };
 
   // Go over the versions array and update them
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const dependencies = R.map(getUpdatedDependency, versionModel.dependencies);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const flattenedDependencies = R.map(_getUpdatedId, versionModel.flattenedDependencies);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   versionModel.dependencies = dependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   versionModel.flattenedDependencies = flattenedDependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (versionModel.tester) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.tester = _getUpdatedId(versionModel.tester);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (versionModel.compiler) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.compiler = _getUpdatedId(versionModel.compiler);
   }
   return versionModel;

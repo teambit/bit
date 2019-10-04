@@ -40,6 +40,7 @@ export default class ExtensionFile extends AbstractVinyl {
   ): Promise<ExtensionFile> {
     try {
       const baseFile = await vinylFile.read(filePath, { base, cwd: consumerPath });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new ExtensionFile(baseFile);
       file.name = name;
       file.file = Source.from(file.contents);
@@ -95,6 +96,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static loadFromParsedString(parsedString: Object): ExtensionFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile(opts);
     extensionFile.file = Source.from(extensionFile.contents);
     return extensionFile;
@@ -107,6 +109,8 @@ export default class ExtensionFile extends AbstractVinyl {
 
   static async loadFromExtensionFileModel(file: ExtensionFileModel, repository: Repository): Promise<ExtensionFile> {
     const content = await file.file.load(repository);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
@@ -122,6 +126,7 @@ export default class ExtensionFile extends AbstractVinyl {
    */
   static async loadFromExtensionFileSerializedModel(file: ExtensionFileSerializedModel): Promise<ExtensionFile> {
     const contents = Buffer.from(file.file.contents);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath || '', contents });
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
@@ -164,20 +169,27 @@ export default class ExtensionFile extends AbstractVinyl {
    */
   toModelObject(): ExtensionFileModel {
     return {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name: this.name,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: pathNormalizeToLinux(this.relative),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file: this.file.hash()
     };
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toReadableString() {
     return {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name: this.name,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       content: this.contents.toString()
     };
   }
 
   clone(): ExtensionFile {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ExtensionFile(this);
   }
 }

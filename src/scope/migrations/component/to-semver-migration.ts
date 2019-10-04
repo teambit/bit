@@ -17,7 +17,9 @@ function changeVersionToSemVer(componentModel: Object): Object {
     }
   };
   // Go over the versions array and update them
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   R.forEachObjIndexed(addUpdatedVersion, componentModel.versions);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentModel.versions = semVerVersions;
   return componentModel;
 }

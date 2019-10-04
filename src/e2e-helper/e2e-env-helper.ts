@@ -40,6 +40,7 @@ export default class EnvHelper {
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   importDummyCompiler(dummyType?: string = 'dummy') {
     const id = `${this.scopes.env}/compilers/dummy`;
     this.createDummyCompiler(dummyType);
@@ -53,6 +54,7 @@ export default class EnvHelper {
     this.fs.outputFile(compilerPath, changedCompiler);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   importDummyTester(dummyType?: string = 'dummy') {
     const id = `${this.scopes.env}/testers/dummy`;
     this.createDummyTester(dummyType);

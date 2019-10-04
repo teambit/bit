@@ -74,6 +74,7 @@ export default class Environment {
       writePackageJson: !opts.noPackageJson,
       writeConfig: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       createNpmLinkFiles: opts.createNpmLinkFiles,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
@@ -81,6 +82,7 @@ export default class Environment {
       addToRootPackageJson: false,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

@@ -19,6 +19,7 @@ export default class Import extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/importing-components.html
   ${WILDCARD_HELP('import')}`;
   alias = 'i';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],
@@ -189,8 +190,11 @@ export default class Import extends Command {
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
       const componentDependencies = components.map(component => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return formatPlainComponentItemWithVersions(component, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
@@ -208,6 +212,7 @@ export default class Import extends Command {
 
     if (envComponents && !R.isEmpty(envComponents)) {
       envComponentsOutput = immutableUnshift(
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         envComponents.map(envDependency => formatPlainComponentItem(envDependency.component)),
         chalk.green('the following component environments were installed')
       ).join('\n');

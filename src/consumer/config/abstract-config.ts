@@ -85,22 +85,30 @@ export default class AbstractConfig {
     this.extensions = props.extensions || DEFAULT_EXTENSIONS;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get compiler(): Compilers | null | undefined {
     const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set compiler(compiler: string | Compilers) {
     this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get tester(): Testers | null | undefined {
     const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set tester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
   }
@@ -188,6 +196,7 @@ export default class AbstractConfig {
     const dataToPersist = new DataToPersist();
     dataToPersist.addManyFiles(jsonFiles);
     dataToPersist.addBasePath(workspaceDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return dataToPersist.persistAllToFS();
   }
 
@@ -249,10 +258,12 @@ export default class AbstractConfig {
   static transformEnvToObject(env: string | Object): Envs {
     if (typeof env === 'string') {
       if (env === NO_PLUGIN_TYPE) return {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return {
         [env]: {}
       };
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 }

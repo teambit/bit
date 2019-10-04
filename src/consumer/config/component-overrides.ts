@@ -83,12 +83,15 @@ export default class ComponentOverrides {
   }
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get componentOverridesData() {
     const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
     return R.pickBy(isNotSystemField, this.overrides);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get componentOverridesPackageJsonData() {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
     return R.pickBy(isPackageJsonField, this.overrides);
@@ -190,6 +193,9 @@ export default class ComponentOverrides {
   }
   static getAllFilesPaths(overrides: Object): string[] {
     if (!overrides) return [];
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);
     return Object.keys(allDeps)
       .filter(rule => rule.startsWith(OVERRIDE_FILE_PREFIX))

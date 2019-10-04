@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import crypto from 'crypto';
 
 /**

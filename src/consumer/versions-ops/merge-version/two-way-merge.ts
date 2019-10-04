@@ -47,29 +47,39 @@ export default (async function twoWayMergeVersions({
     addFiles: [],
     modifiedFiles: [],
     unModifiedFiles: [],
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     overrideFiles: [],
     hasConflicts: false
   };
   const getFileResult = (otherFile: SourceFile, currentFile?: SourceFile) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filePath = pathNormalizeToLinux(otherFile.relative);
     if (!currentFile) {
       results.addFiles.push({ filePath, otherFile });
       return;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const otherFileHash = sha1(otherFile.contents);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentFileHash = sha1(currentFile.contents);
     if (otherFileHash === currentFileHash) {
       results.unModifiedFiles.push({ filePath, currentFile });
       return;
     }
     // it was changed in both, there is a chance for conflict
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     currentFile.version = currentVersion;
     // $FlowFixMe it's a hack to pass the data, version is not a valid attribute.
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     otherFile.version = otherVersion;
     results.modifiedFiles.push({ filePath, currentFile, otherFile, output: null, conflict: null });
   };
 
   otherFiles.forEach((otherFile: SourceFile) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentFile = currentFiles.find(file => file.relative === otherFile.relative);
     getFileResult(otherFile, currentFile);
   });
@@ -90,12 +100,14 @@ export default (async function twoWayMergeVersions({
 
 async function getMergeResults(
   consumer: Consumer,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modifiedFiles: $PropertyType<MergeResultsTwoWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async modifiedFile => {
     const currentFilePathP = tmp.save(modifiedFile.currentFile.contents);
     const writeFile = async (file: SourceFile): Promise<PathOsBased> => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return tmp.save(file.contents);
     };
     const baseFilePathP: Promise<PathOsBased> = tmp.save('');

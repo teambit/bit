@@ -101,11 +101,13 @@ export default class Scope {
     return this._dependencyGraph;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get groupName(): string | null | undefined {
     if (!this.scopeJson.groupName) return null;
     return this.scopeJson.groupName;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this.scopeJson.name;
   }
@@ -213,15 +215,18 @@ export default class Scope {
     return Promise.all(
       components
         .filter(comp => !(comp instanceof Symlink))
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .map(c => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
   }
 
   async list(): Promise<ModelComponent[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.listComponents();
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.listComponentsIncludeSymlinks();
   }
 
@@ -264,6 +269,7 @@ export default class Scope {
     consumer: Consumer,
     noCache: boolean,
     verbose: boolean,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string; buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
@@ -347,6 +353,7 @@ export default class Scope {
         verbose,
         dontPrintEnvMsg
       });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };
     };
@@ -384,6 +391,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getRawObject(hash: string): Promise<BitRawObject> {
     return this.objects.loadRawObject(new Ref(hash));
   }
@@ -415,6 +423,8 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
@@ -423,6 +433,7 @@ export default class Scope {
           Object.keys(component.versions).map(async version => {
             const componentVersion = await component.loadVersion(version, this.objects);
             if (!componentVersion) return;
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();
             return componentVersion;
           })
@@ -483,6 +494,8 @@ export default class Scope {
     return removeNils(components);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string; date: string; hash: string } }> {
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
@@ -533,6 +546,7 @@ export default class Scope {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
     const componentVersion = modelComponent.toComponentVersion(id.version);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
   }
 
@@ -664,6 +678,7 @@ export default class Scope {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.load(ref);
   }
 

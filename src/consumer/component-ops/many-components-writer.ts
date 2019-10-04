@@ -94,6 +94,7 @@ export default class ManyComponentsWriter {
     this.verbose = this._setBooleanDefault(params.verbose, false);
     this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
@@ -193,6 +194,7 @@ export default class ManyComponentsWriter {
         existingComponentMap: componentMap
       };
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
       ...this._getDefaultWriteParams(),
       component: componentWithDeps.component,
@@ -265,6 +267,7 @@ export default class ManyComponentsWriter {
         // When a component is NESTED we do interested in the exact version, because multiple
         // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
           writeConfig: false,
@@ -326,6 +329,7 @@ to move all component files to a different directory, run bit remove and then bi
       consumer: this.consumer,
       bitMap: this.bitMap,
       createNpmLinkFiles: this.createNpmLinkFiles,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writePackageJson: this.writePackageJson
     });
   }

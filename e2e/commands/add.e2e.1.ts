@@ -52,6 +52,7 @@ describe('bit add command', function() {
       helper.bitMap.delete();
       helper.fs.deletePath('.bit');
       helper.fs.deletePath('bit.json');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.scopeHelper.initLocalScope('bit init');
       helper.fs.createFile('bar', 'foo.js');
       const addCmd = () => helper.command.addComponent('bar/foo.js', { i: 'bar/foo ' });
@@ -227,6 +228,7 @@ describe('bit add command', function() {
       helper.command.addComponent(normalizedPath);
       const specNormalizedPath = path.normalize('bar/foo2.spec.js');
       const addCmd = () => helper.command.addComponent(` -t ${specNormalizedPath}`);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const error = new AddTestsWithoutId(specNormalizedPath);
       helper.general.expectToThrow(addCmd, error);
     });
@@ -355,6 +357,7 @@ describe('bit add command', function() {
       helper.fs.createFile('bar', file2);
 
       const addCmd = () => helper.command.addComponent('bar', { n: 'test' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const error = new MissingMainFile('test/bar');
       helper.general.expectToThrow(addCmd, error);
     });

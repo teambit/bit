@@ -1,7 +1,10 @@
 function updateBindingPrefixToNewDefault(versionModel: Object): Object {
   const oldDefault = 'bit';
   const newDefault = '@bit';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (versionModel.bindingPrefix && versionModel.bindingPrefix === oldDefault) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.bindingPrefix = newDefault;
   }
   return versionModel;

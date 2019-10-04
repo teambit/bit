@@ -14,6 +14,7 @@ export default class Test extends Command {
   name = 'test [id]';
   description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html)`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
@@ -44,6 +45,7 @@ export default class Test extends Command {
       return Promise.reject(new GeneralError(`fork level must be one of: ${validForkLevels.join()}`));
     }
     verboseReport = verbose || false;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testRes = await test(id, forkLevel, all, verbose);
     const pass = testRes.results.every(comp => comp.pass);
     const res = {
@@ -54,6 +56,7 @@ export default class Test extends Command {
   }
 
   report(results: SpecsResultsWithMetaData, args: string[], flags: Object): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (flags.json) return JSON.stringify(results, null, 2);
     const specsResultsWithComponentId = results.results;
     if (specsResultsWithComponentId && Array.isArray(specsResultsWithComponentId)) {

@@ -23,6 +23,7 @@ export function getInvalidComponentLabel(error: Error) {
     case 'ComponentNotFoundInPath':
       return 'component files were deleted (use "bit remove [component_id]" or "bit untrack [component_id]" to remove the component from your workspace)';
     case 'ExtensionFileNotFound': // $FlowFixMe error.path is set for ExtensionFileNotFound
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return `extension file is missing at ${chalk.bold(error.path)}`;
     case 'ComponentsPendingImport':
       return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
@@ -58,6 +59,7 @@ function formatMissing(missingComponent: Object) {
   }
 
   const missingStr = Object.keys(componentIssuesLabels)
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .map(key => formatMissingStr(missingComponent.issues[key], componentIssuesLabels[key]))
     .join('');
 

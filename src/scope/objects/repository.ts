@@ -19,13 +19,21 @@ import { ModelComponent } from '../models';
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   objects: { [string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   types: { [string]: Function };
   componentsIndex: ComponentsIndex;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [string]: BitObject } = {};
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   constructor(scopePath: string, scopeJson: ScopeJson, types: { [string]: Function } = typesObj) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
@@ -107,6 +115,7 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async listRefs(): Promise<Refs[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
     const refs = matches.map(str => {
@@ -156,6 +165,7 @@ export default class Repository {
             return null;
           }
           // $FlowFixMe componentId must be set as it was retrieved from indexPath before
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           throw new OutdatedIndexJson(componentId, indexJsonPath);
         }
         return bitObject;
@@ -328,9 +338,11 @@ export default class Repository {
   async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.debug(`repository._writeOne: ${objectPath}`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return writeFile(objectPath, contents, options);
   }
 }

@@ -22,6 +22,7 @@ export default class ComponentWithDependencies {
     this.testerDependencies = props.testerDependencies || [];
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get allDependencies() {
     return [...this.dependencies, ...this.devDependencies, ...this.compilerDependencies, ...this.testerDependencies];
   }

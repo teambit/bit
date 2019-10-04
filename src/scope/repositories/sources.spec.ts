@@ -5,6 +5,7 @@ describe('SourceRepository', () => {
   describe('mergeTwoComponentsObjects', () => {
     let sources;
     before(() => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       sources = new Sources();
     });
     it('should not remove a version that exist locally but not in the incoming component', () => {

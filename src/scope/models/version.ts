@@ -2,6 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -12,6 +13,7 @@ import {
   COMPONENT_ORIGINS,
   DEPENDENCIES_FIELDS
 } from '../../constants';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
@@ -67,8 +69,14 @@ export type VersionProps = {
   flattenedDevDependencies?: BitIds;
   flattenedCompilerDependencies?: BitIds;
   flattenedTesterDependencies?: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [string]: string };
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
@@ -100,8 +108,14 @@ export default class Version extends BitObject {
   flattenedDevDependencies: BitIds;
   flattenedCompilerDependencies: BitIds;
   flattenedTesterDependencies: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies: { [string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies: { [string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
@@ -187,19 +201,29 @@ export default class Version extends BitObject {
     return JSON.stringify(
       filterObject(
         {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           mainFile: obj.mainFile,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           files: obj.files,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           compiler: obj.compiler,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           tester: obj.tester,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
           compilerDependencies: getDependencies(this.compilerDependencies),
           testerDependencies: getDependencies(this.testerDependencies),
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           packageDependencies: obj.packageDependencies,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           devPackageDependencies: obj.devPackageDependencies,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           peerPackageDependencies: obj.peerPackageDependencies,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           bindingPrefix: obj.bindingPrefix,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides
         },
         filterFunction
@@ -388,6 +412,7 @@ export default class Version extends BitObject {
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return deps.map(dependency => ({ id: BitId.parseObsolete(dependency) }));
       }
 
@@ -568,6 +593,7 @@ export default class Version extends BitObject {
   }
 
   setDist(dist: Source | null | undefined) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {
           file: dist.hash(),

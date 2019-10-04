@@ -16,6 +16,7 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   validate() {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const primary = this.values.filter(remote => remote.primary);
     if (primary.length > 1) throw new PrimaryOverloaded();
     return this.forEach(remote => remote.validate());
@@ -113,6 +114,8 @@ export default class Remotes extends Map<string, Remote> {
       .then(remotes => Remotes.load(remotes));
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static load(remotes: { [string]: string }): Remotes {
     const models = [];
 

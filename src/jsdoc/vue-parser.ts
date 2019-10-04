@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import domain from 'domain';
 import vuedoc from '@vuedoc/parser';
 import { PathOsBased } from '../utils/path';

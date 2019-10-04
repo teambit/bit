@@ -34,18 +34,23 @@ describe('bit untag command', function() {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
 
         helper.command.runCmd('bit untag bar/foo 0.0.2');
       });
       it('should delete only the specified tag', () => {
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.not.have.property('0.0.2');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
       });
       it('should delete the specified version from the "state" attribute', () => {
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.not.have.property('0.0.2');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.have.property('0.0.1');
       });
       it('bit show should work', () => {
@@ -62,6 +67,7 @@ describe('bit untag command', function() {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
         const componentStatus = helper.command.runCmd('bit status');
         expect(componentStatus).to.have.string('staged components');
@@ -72,7 +78,9 @@ describe('bit untag command', function() {
       });
       it('should delete only the specified tag', () => {
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.not.have.property('0.0.2');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
       });
     });
@@ -82,6 +90,7 @@ describe('bit untag command', function() {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.tagComponent('bar/foo', undefined, '-f');
           const catComponent = helper.command.catComponent('bar/foo');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.have.property('0.0.2');
 
           helper.command.runCmd('bit untag bar/foo');
@@ -100,6 +109,7 @@ describe('bit untag command', function() {
         helper.command.exportAllComponents();
         helper.command.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       describe('untagging an exported version', () => {
@@ -123,7 +133,9 @@ describe('bit untag command', function() {
         });
         it('should delete only the local tag and leave the exported tag', () => {
           const catComponent = helper.command.catComponent('bar/foo');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.not.have.property('0.0.2');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.versions).to.have.property('0.0.1');
         });
       });

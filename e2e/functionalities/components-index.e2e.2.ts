@@ -56,6 +56,7 @@ describe('scope components index mechanism', function() {
       it('bit list should show only one component', () => {
         const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(list[0].id).to.contain(helper.scopes.remote);
       });
       describe('removing the component', () => {

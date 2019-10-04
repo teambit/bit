@@ -8,7 +8,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
     return (
       chalk.red('missing components (try to `bit untrack` them instead):') +
       chalk(
-        ` ${missingComponents.map((id) => {
+        ` ${missingComponents.map(id => {
           if (!(id instanceof BitId)) id = new BitId(id); // when the id was received from a remote it's not an instance of BitId
           return id.version === 'latest' ? id.toStringWithoutVersion() : id.toString();
         })}\n`
@@ -31,7 +31,7 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
   const paintUnRemovedComponents = () => {
     if (R.isEmpty(dependentBits)) return '';
     return Object.keys(dependentBits)
-      .map((key) => {
+      .map(key => {
         const header = chalk.underline.red(
           `error: unable to delete ${key}, because the following components depend on it:`
         );
@@ -42,19 +42,23 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
   };
 
   const paintModifiedComponents = () =>
-    (!R.isEmpty(modifiedComponents)
+    !R.isEmpty(modifiedComponents)
       ? `${chalk.red(
-        'error: unable to remove modified components (please use --force to remove modified components)\n'
-      ) +
+          'error: unable to remove modified components (please use --force to remove modified components)\n'
+        ) +
           chalk(
             `- ${modifiedComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}`
           )}`
-      : '');
+      : '';
 
   return (
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     paintUnRemovedComponents(dependentBits) +
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     paintRemoved(removedComponentIds) +
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     paintMissingComponents(missingComponents) +
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     paintModifiedComponents(modifiedComponents)
   );
 };

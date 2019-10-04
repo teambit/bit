@@ -18,23 +18,32 @@ export default class AbstractVinyl extends Vinyl {
 
   static fromVinyl(vinyl: Vinyl): AbstractVinyl {
     if (vinyl instanceof AbstractVinyl) return vinyl;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new AbstractVinyl(vinyl);
   }
 
   // Update the base path and keep the relative value to be the same
   updatePaths({ newBase, newRelative, newCwd }: { newBase?: string; newRelative?: string; newCwd?: string }) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const relative = newRelative || this.relative;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const base = newBase || this.base;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (newCwd) this.cwd = newCwd;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.base = base;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.path = path.join(this.base, relative);
   }
 
   async write(
     writePath?: string,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     override?: boolean = this.override,
     verbose?: boolean = this.verbose
   ): Promise<string | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filePath = writePath || this.path;
     const msg = _verboseMsg(filePath, override);
     if (verbose) {
@@ -42,24 +51,34 @@ export default class AbstractVinyl extends Vinyl {
     }
     logger.debug(msg);
     if (!override && fs.existsSync(filePath)) return null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
   }
 
   toReadableString() {
     return {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       relativePath: this.relative,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       content: this.contents.toString()
     };
   }
 
   static loadFromParsedString(parsedString: Object): AbstractVinylProps {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const contents = Buffer.isBuffer(parsedString._contents)
-      ? parsedString._contents
-      : Buffer.from(parsedString._contents);
+      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        parsedString._contents
+      : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        Buffer.from(parsedString._contents);
     return {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cwd: parsedString._cwd,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       path: parsedString.history[parsedString.history.length - 1],
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       base: parsedString._base,
       contents
     };
@@ -75,11 +94,13 @@ export default class AbstractVinyl extends Vinyl {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Source.from(eol.lf(this.contents));
   }
 
   async _getStatIfFileExists(): Promise<fs.Stats | null | undefined> {
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return await fs.lstat(this.path);
     } catch (err) {
       return null; // probably file does not exist

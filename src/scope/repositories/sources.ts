@@ -76,6 +76,7 @@ export default class SourceRepository {
       if (foundComponent instanceof Symlink) {
         return this._findComponentBySymlink(foundComponent);
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (foundComponent) return foundComponent;
     } catch (err) {
       logger.error(`findComponent got an error ${err}`);
@@ -95,6 +96,7 @@ if you have the steps to reproduce the issue, please open a Github issue with th
 to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
       );
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return foundComponent;
   }
 
@@ -118,6 +120,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     return this.findOrAddComponent(source).then(component => {
       return component.loadVersion(component.latest(), objectRepo).then(version => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         version.setCIProps(ciProps);
         return objectRepo._writeOne(version);
       });
@@ -141,6 +144,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     return this.findOrAddComponent(source).then(component => {
       return component.loadVersion(component.latest(), objectRepo).then(version => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
@@ -171,6 +176,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies,
     specsResults
   }: {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     consumerComponent: $ReadOnly<ConsumerComponent>;
     consumer: Consumer;
     versionFromModel?: Version;
@@ -187,6 +193,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return;
       const result = files.map(file => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         file.file = file.toSourceAsLinuxEOL();
         return file;
       });
@@ -246,9 +253,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       files,
       dists,
       mainDistFile,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedCompilerDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedTesterDependencies,
       specsResults,
       message,
@@ -287,12 +298,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // TODO: instead of doing that like this we should use:
     // const versionFromModel = await component.loadVersion(source.usedVersion, this.scope.objects);
     // it looks like it's exactly the same code but it's not working from some reason
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionRef = component.versions[source.usedVersion];
 
     let versionFromModel;
     if (versionRef) {
       versionFromModel = await this.scope.getObject(versionRef.hash);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
@@ -345,6 +362,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (obj instanceof ModelComponent) {
         const loaded = repo.loadSync(obj.hash(), false);
         if (loaded) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
             return false;
           }

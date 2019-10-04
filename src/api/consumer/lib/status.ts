@@ -24,6 +24,7 @@ export default (async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const newComponents: Component[] = await componentsList.listNewComponents(true);
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
@@ -31,14 +32,19 @@ export default (async function status(): Promise<StatusResult> {
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .filter(c => c.error instanceof ComponentsPendingImport)
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .map(i => i.id);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const invalidComponents = allInvalidComponents.filter(c => !(c.error instanceof ComponentsPendingImport));
   const outdatedComponents = await componentsList.listOutdatedComponents();
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't tag anything
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return Boolean(component.issues);
   });
@@ -50,11 +56,13 @@ export default (async function status(): Promise<StatusResult> {
   await consumer.onDestroy();
   return {
     newComponents: ComponentsList.sortComponentsByName(newComponents),
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),
     stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
     componentsWithMissingDeps, // no need to sort, we don't print it as is
     importPendingComponents, // no need to sort, we use only its length
     autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     invalidComponents,
     outdatedComponents
   };

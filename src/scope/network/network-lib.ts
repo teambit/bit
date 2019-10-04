@@ -10,10 +10,12 @@ export default function connect(host: string, strategiesNames?: SSHConnectionStr
   if (host.startsWith('ssh://') || host.startsWith('bit://')) {
     logger.debug(`Establishing a new SSH connection to ${host}`);
     const sshProps = parseSSHUrl(host);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SSH(sshProps).connect(strategiesNames);
   }
 
   if (host.startsWith('file://')) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Fs(host.replace('file://', '')).connect();
   }
 

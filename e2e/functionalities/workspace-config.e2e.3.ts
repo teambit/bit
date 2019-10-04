@@ -104,7 +104,9 @@ describe('workspace config', function() {
           });
           it('should save the overridden dependency version', () => {
             const bar = helper.command.catComponent('bar@latest');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(bar.dependencies[0].id.version).to.equal('0.0.1');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
           });
         });
@@ -143,7 +145,9 @@ describe('workspace config', function() {
           });
           it('should save the overridden dependency version', () => {
             const bar = helper.command.catComponent('bar@latest');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(bar.dependencies[0].id.version).to.equal('0.0.1');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
           });
         });
@@ -175,6 +179,7 @@ describe('workspace config', function() {
         });
         it('should save the overridden package version', () => {
           const bar = helper.command.catComponent('bar/foo@latest');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(bar.packageDependencies).to.deep.equal({ chai: '4.0.0' });
         });
       });
@@ -721,11 +726,14 @@ describe('workspace config', function() {
       });
       it('should be saved into the model with an empty overrides', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.overrides).to.have.property('dependencies');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.overrides.dependencies).to.be.empty;
       });
       it('should be saved into the model with the package in place', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.4' });
       });
       describe('then, author re-import', () => {
@@ -1232,7 +1240,9 @@ describe('workspace config', function() {
         helper.command.tagAllComponents();
         // intermediate step, make sure the dependency is-string is ignored
         const foo = helper.command.catComponent('foo@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(foo.dependencies).to.have.lengthOf(0);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(Object.keys(foo.overrides.dependencies)).to.have.lengthOf(1);
 
         helper.command.exportAllComponents();
@@ -1262,6 +1272,7 @@ describe('workspace config', function() {
         });
         it('should add back the sharedDir into the overrides', () => {
           const catFoo = helper.command.catComponent(`${helper.scopes.remote}/foo@latest`);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catFoo.overrides.dependencies).to.deep.equal({ 'file://src/utils/*': '-' });
         });
       });

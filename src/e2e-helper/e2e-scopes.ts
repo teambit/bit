@@ -1,4 +1,5 @@
 import * as path from 'path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import fs from 'fs-extra';
 import { generateRandomStr } from './e2e-helper';

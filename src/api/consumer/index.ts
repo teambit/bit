@@ -14,6 +14,7 @@ import getScopeComponent from './lib/get-scope-component';
 import test from './lib/test';
 import getComponentLogs from './lib/get-component-logs';
 import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/remote';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import config from './lib/global-config';
 import getDriver from './lib/get-driver';
 import watchAll from './lib/watch';

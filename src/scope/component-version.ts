@@ -53,6 +53,7 @@ export default class ComponentVersion {
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return this.toId();
   }

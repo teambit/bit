@@ -127,7 +127,9 @@ export default class WorkspaceConfig extends AbstractConfig {
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.distEntry) dist.entry = this.distEntry;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.distTarget) dist.target = this.distTarget;
       consumerObject = R.merge(consumerObject, { dist });
     }
@@ -186,22 +188,39 @@ export default class WorkspaceConfig extends AbstractConfig {
   static fromPlainObject(object: Object) {
     WorkspaceConfig.validate(object);
     const {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       env,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentsDefaultDirectory,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesDirectory,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ejectedEnvsDirectory,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dist,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extensions,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       saveDependenciesAsComponents,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManager,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManagerArgs,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManagerProcessOptions,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       useWorkspaces,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       manageWorkspaces,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       resolveModules,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultScope,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides
     } = object;
 
@@ -237,7 +256,9 @@ export default class WorkspaceConfig extends AbstractConfig {
       this.loadPackageJson(packageJsonPath)
     ]);
     const bitJsonConfig = bitJsonFile || {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
     if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
     // in case of conflicts, bit.json wins package.json
@@ -267,6 +288,9 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static validate(object: Object) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory } = object;
     const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory };
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
@@ -275,6 +299,7 @@ export default class WorkspaceConfig extends AbstractConfig {
         throw new InvalidConfigPropPath(fieldName, pathToValidate);
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ConsumerOverrides.validate(object.overrides);
   }
 }

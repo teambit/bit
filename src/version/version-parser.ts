@@ -43,6 +43,8 @@ export default function versionParser(versionStr: string | null | undefined): Ve
   if (isLatest(versionStr)) return returnLatest();
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (isRegular(versionStr)) return returnRegular(versionStr);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!Number.isNaN(versionStr)) return convertToSemVer(versionStr);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   throw new InvalidVersion(versionStr);
 }

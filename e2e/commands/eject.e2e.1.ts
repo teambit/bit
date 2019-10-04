@@ -114,6 +114,7 @@ describe('bit eject command', function() {
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(listScope[0].id).to.have.string('foo');
         });
         describe('importing the component after ejecting it', () => {
@@ -343,6 +344,7 @@ describe('bit eject command', function() {
           });
           it('should not delete the objects from the scope', () => {
             const listScope = helper.command.listLocalScopeParsed('--scope');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(listScope[0].id).to.have.string('foo');
           });
         });

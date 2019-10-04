@@ -91,9 +91,11 @@ export function listSync(): any {
 function cache() {
   return {
     get: () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return cache.config;
     },
     set: config => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cache.config = config;
     }
   };

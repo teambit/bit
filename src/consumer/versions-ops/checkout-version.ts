@@ -41,6 +41,7 @@ export default (async function checkoutVersion(
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
   const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
@@ -74,6 +75,7 @@ export default (async function checkoutVersion(
         components.map(component => getComponentStatus(consumer, component, checkoutProps))
       );
       await tmp.clear();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return componentsStatus;
     } catch (err) {
       await tmp.clear();
@@ -139,6 +141,7 @@ async function getComponentStatus(
   const versionRef = componentModel.versions[newVersion];
   const componentVersion = await consumer.scope.getObject(versionRef.hash);
   const newId = component.id.changeVersion(newVersion);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return { componentFromFS: component, componentFromModel: componentVersion, id: newId, mergeResults };
 }
 
@@ -170,6 +173,7 @@ async function applyVersion(
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     componentFromFS.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
@@ -198,6 +202,7 @@ async function applyVersion(
 
   const files = componentWithDependencies.component.files;
   files.forEach(file => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
@@ -216,6 +221,7 @@ async function applyVersion(
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
     writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     configDir: componentMap.configDir,
     verbose,
     writeDists: !ignoreDist,
@@ -242,12 +248,15 @@ export function applyModifiedVersion(
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
     } else if (file.output) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
@@ -260,8 +269,11 @@ export function applyModifiedVersion(
   });
   mergeResults.overrideFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });

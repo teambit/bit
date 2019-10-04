@@ -8,6 +8,7 @@ export default class Build extends Command {
   name = 'build [id]';
   description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components.html`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
     ['c', 'no-cache', 'ignore component cache when creating dist file']

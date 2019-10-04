@@ -210,6 +210,7 @@ chai.use(require('chai-fs'));
               });
               it('should save the version from package.json into the scope', () => {
                 const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+                // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
                 expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
               });
               it('bit status should not show the component as modified', () => {
@@ -338,6 +339,7 @@ chai.use(require('chai-fs'));
         describe('import with dist outside the component directory', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.bitJson.modifyField('dist', { target: 'dist' });
             helper.command.importComponent('bar/foo');
           });

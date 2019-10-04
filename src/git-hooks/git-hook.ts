@@ -14,6 +14,7 @@ export default class GitHook {
     this.content = content;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get fullPath(): string {
     return path.join(this.hooksDirPath, this.name);
   }

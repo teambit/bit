@@ -8,11 +8,13 @@ export default class Deprecate extends Command {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
   alias = 'd';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['r', 'remote [boolean]', 'deprecate a component from a remote scope']];
   loader = true;
   migration = true;
 
   action([ids]: [string], { remote = false }: { remote: boolean }): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return deprecate({ ids, remote });
   }
 

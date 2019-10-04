@@ -81,7 +81,11 @@ export default class SSH implements Network {
    * 3) ssh-key. (user can specify location by `bit config`, if not, the default one is used. doesn't support passphrase)
    * 4) prompt of user/password
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async connect(strategiesNames: SSHConnectionStrategyName[] = ALL_STRATEGIES): Promise<SSH> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const strategies: { [string]: Function } = {
       token: this._tokenAuthentication,
       'ssh-agent': this._sshAgentAuthentication,
@@ -126,17 +130,20 @@ export default class SSH implements Network {
         'unable to get SSH keys from ssh-agent to. perhaps service is down or disabled.'
       );
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const sshConfig = merge(this._composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     const authFailedMsg = 'no matching private key found in ssh-agent to authenticate to remote server.';
     return this._connectWithConfig(sshConfig, 'ssh-agent', authFailedMsg);
   }
   async _sshKeyAuthentication(): Promise<SSH> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
       throw new AuthenticationStrategyFailed(
         'SSH key not found in `~/.ssh/id_rsa` or `ssh_key_file` config in `bit config` either not configured or refers to wrong path.'
       );
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
     const authFailedMsg = 'failed connecting to remote server using `~/.ssh/id_rsa` or `ssh_key_file` in `bit config`.';
     return this._connectWithConfig(sshConfig, 'ssh-key', authFailedMsg);
@@ -165,14 +172,18 @@ export default class SSH implements Network {
     const token = getSync(CFG_USER_TOKEN_KEY);
     if (token) {
       this._sshUsername = 'token';
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return merge(this._composeBaseObject(), { username: 'token', password: token });
     }
     return null;
   }
   _composeUserPassObject() {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return promptUserpass().then(({ username, password }) => {
       Analytics.setExtraData('authentication_method', 'user_password');
       this._sshUsername = username;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return merge(this._composeBaseObject(), { username, password });
     });
   }
@@ -231,6 +242,7 @@ export default class SSH implements Network {
     // Add the entered username to context
     if (this._sshUsername) {
       context = context || {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       context.sshUsername = this._sshUsername;
     }
     return new Promise((resolve, reject) => {
@@ -346,6 +358,7 @@ export default class SSH implements Network {
   }
 
   deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec(
       '_delete',
       {
@@ -383,10 +396,12 @@ export default class SSH implements Network {
     });
   }
   push(componentObjects: ComponentObjects): Promise<string[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.pushMany([componentObjects]);
   }
 
   describeScope(): Promise<ScopeDescriptor> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_scope')
       .then(data => {
         const { payload, headers } = this._unpack(data);
@@ -399,6 +414,7 @@ export default class SSH implements Network {
   }
 
   async list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_list', namespacesUsingWildcards).then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -411,6 +427,7 @@ export default class SSH implements Network {
 
   latestVersions(componentIds: BitId[]) {
     const componentIdsStr = componentIds.map(componentId => componentId.toString());
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_latest', componentIdsStr).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -419,6 +436,7 @@ export default class SSH implements Network {
   }
 
   search(query: string, reindex: boolean) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_search', { query, reindex: reindex.toString() }).then(data => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
@@ -427,6 +445,7 @@ export default class SSH implements Network {
   }
 
   show(id: BitId): Promise<ConsumerComponent | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_show', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -436,6 +455,7 @@ export default class SSH implements Network {
 
   graph(bitId?: BitId): Promise<DependencyGraph> {
     const idStr = bitId ? bitId.toString() : '';
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec('_graph', idStr).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
@@ -443,6 +463,7 @@ export default class SSH implements Network {
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   fetch(ids: BitIds, noDeps: boolean = false, context: Object | null | undefined): Promise<ComponentObjects[]> {
     let options = '';
     const idsStr = ids.serialize();

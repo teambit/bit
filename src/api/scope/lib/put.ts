@@ -24,6 +24,8 @@ export default (async function put(
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
   const scope = await loadScope(path);
   // @todo: remove this once v15 is out.
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const clientIsOld = Boolean(headers && headers.version && isClientHasVersionBefore('14.1.1', headers.version));
   const componentsBitIds: BitIds = await exportManyBareScope(scope, componentObjects, clientIsOld);
   const componentsIds: string[] = componentsBitIds.map(id => id.toString());

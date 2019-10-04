@@ -21,6 +21,7 @@ describe('component with package.json as a file of the component', function() {
     let componentMap;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
       const addOutput = helper.command.addComponent('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
@@ -84,6 +85,7 @@ describe('component with package.json as a file of the component', function() {
     let componentMap;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('bar/package.json', fixturePackageJson);
       helper.fs.createFile('bar', 'foo.js');
       const addOutput = helper.command.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
@@ -128,6 +130,7 @@ describe('component with package.json as a file of the component', function() {
     const fooFixture = 'require("./package.json");';
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
       helper.command.addComponent('package.json', { i: 'foo/pkg' });
       helper.fs.createFile('', 'foo.js', fooFixture);
@@ -186,22 +189,29 @@ describe('component with package.json as a file of the component', function() {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
 
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.fs.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
         helper.command.tagAllComponents();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
         const fooPkg = helper.command.catComponent(`${helper.scopes.remote}/foo/pkg@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(fooPkg.mainFile).to.equal('package.json');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(fooPkg.files[0].relativePath).to.equal('package.json');
       });
       it('should strip the wrap dir from the dependent', () => {
         const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.mainFile).to.equal('foo.js');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.files[0].relativePath).to.equal('foo.js');
       });
       it('should strip the wrap dir from the dependency relative paths', () => {
         const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
 

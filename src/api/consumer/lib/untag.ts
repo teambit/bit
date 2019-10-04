@@ -7,6 +7,7 @@ import {
 import { untagResult } from '../../../scope/component-ops/untag-component';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default (async function unTagAction(version?: string, force: boolean, id?: string): Promise<untagResult[]> {
   const consumer: Consumer = await loadConsumer();
   const untag = async (): Promise<untagResult[]> => {

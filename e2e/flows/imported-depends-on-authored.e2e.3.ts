@@ -22,6 +22,7 @@ describe('imported component that depends on authored component', function() {
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.importComponent('utils/is-string');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);

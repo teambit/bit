@@ -63,9 +63,11 @@ export async function tagAction(args: {
     ignoreNewestVersion,
     skipTests
   );
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, tagResults);
   await consumer.onDestroy();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return tagResults;
 }
 
@@ -127,6 +129,7 @@ export async function tagAllAction(args: {
     : tagPendingComponents;
 
   const tagResults = await consumer.tag(
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     componentsToTag,
     message,
     validExactVersion,

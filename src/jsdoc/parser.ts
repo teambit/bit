@@ -33,9 +33,11 @@ export type Doclet = {
   filePath: PathLinux;
   name: string;
   description: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   args?: Array;
   returns?: Object;
   access?: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   examples?: Array;
   methods?: Method[];
   properties?: DocProp[];
@@ -43,19 +45,25 @@ export type Doclet = {
 };
 
 function formatTag(tag: Object): Object {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   delete tag.title;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!tag.type) return tag;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   let formattedType = doctrine.type.stringify(tag.type);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (tag.type.type === doctrine.type.Syntax.TypeApplication) {
     // Doctrine adds a dot after the generic type for historical reasons.
     // see here for more info: https://github.com/eslint/doctrine/issues/185
     formattedType = formattedType.replace('.<', '<');
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (tag.type.type === doctrine.type.Syntax.OptionalType) {
     // Doctrine shows an optional type with a suffix `=` (e.g. `string=`), we prefer the more
     // common syntax `?` (e.g. `string?`)
     formattedType = formattedType.replace('=', '?');
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tag.type = formattedType;
 
   return tag;
@@ -124,6 +132,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
     returns,
     access,
     examples,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     render,
     properties,
     static: isStatic,
@@ -178,6 +187,7 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
     description,
     properties: formatProperties(props),
     access: 'public',
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     methods: formatMethods(methods)
   };
 }
@@ -261,5 +271,6 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
     logger.debug(`failed parsing docs using on path ${filePath} with error`);
     logger.debug(e);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return doclets.filter(doclet => doclet.access === 'public');
 }

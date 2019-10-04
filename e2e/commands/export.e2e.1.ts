@@ -513,6 +513,7 @@ describe('bit export command', function() {
 
       helper.command.exportAllComponents();
       const bar = helper.command.catComponent('bar@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const distObject = bar.dists[0].file;
       distContent = helper.command.catObject(distObject);
     });
@@ -772,6 +773,7 @@ describe('bit export command', function() {
         });
         it('should not change the scope name to the new remote', () => {
           const list = helper.command.listLocalScopeParsed();
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const ids = list.map(i => i.id);
           expect(ids).to.include(`${helper.scopes.remote}/utils/is-type`);
           expect(ids).to.not.include(`${forkScope}/utils/is-type`);
@@ -786,7 +788,9 @@ describe('bit export command', function() {
           expect(isType)
             .to.have.property('remotes')
             .that.have.lengthOf(2);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
@@ -806,6 +810,7 @@ describe('bit export command', function() {
         });
         it('should change the scope name to the new remote', () => {
           const list = helper.command.listLocalScopeParsed();
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const ids = list.map(i => i.id);
           expect(ids).to.not.include(`${helper.scopes.remote}/utils/is-type`);
           expect(ids).to.include(`${forkScope}/utils/is-type`);
@@ -820,7 +825,9 @@ describe('bit export command', function() {
           expect(isType)
             .to.have.property('remotes')
             .that.have.lengthOf(2);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[0].name).to.equal(helper.scopes.remote);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(isType.remotes[1].name).to.equal(forkScope);
         });
       });
@@ -904,6 +911,7 @@ describe('bit export command', function() {
           });
           it('should not change the objects locally', () => {
             const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const fileHash = barFoo.files[0].file;
             const fileContent = helper.command.catObject(fileHash);
             expect(fileContent).to.have.string(helper.scopes.remote);
@@ -945,6 +953,7 @@ describe('bit export command', function() {
           });
           it('should change the files objects locally', () => {
             const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const fileHash = barFoo.files[0].file;
             const fileContent = helper.command.catObject(fileHash);
             expect(fileContent).to.not.have.string(helper.scopes.remote);
@@ -952,6 +961,7 @@ describe('bit export command', function() {
           });
           it('should change the dists objects locally', () => {
             const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const fileHash = barFoo.dists[0].file;
             const fileContent = helper.command.catObject(fileHash);
             expect(fileContent).to.not.have.string(helper.scopes.remote);
@@ -988,6 +998,7 @@ describe('bit export command', function() {
             });
             it('should change the files objects locally', () => {
               const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               const fileHash = barFoo.files[0].file;
               const fileContent = helper.command.catObject(fileHash);
               expect(fileContent).to.not.have.string(helper.scopes.remote);
@@ -995,6 +1006,7 @@ describe('bit export command', function() {
             });
             it('should change the dists objects locally', () => {
               const barFoo = helper.command.catComponent(`${forkScope}/bar/foo@latest`);
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               const fileHash = barFoo.dists[0].file;
               const fileContent = helper.command.catObject(fileHash);
               expect(fileContent).to.not.have.string(helper.scopes.remote);

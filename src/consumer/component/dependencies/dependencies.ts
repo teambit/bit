@@ -49,6 +49,7 @@ export default class Dependencies {
   }
 
   getClone(): Dependency[] {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }
 
@@ -145,8 +146,11 @@ export default class Dependencies {
       const modelVersionId = modelDependencies
         .get()
         .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependency.localVersion = localVersionId ? localVersionId.version : null;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });
   }

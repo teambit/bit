@@ -1,6 +1,7 @@
 /* eslint no-console: 0 */
 import rightpad from 'pad-right';
 import chalk from 'chalk';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { ChildProcess } from 'child_process';
 import Helper from '../src/e2e-helper/e2e-helper';
 import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/consumer/component-ops/watch-components';

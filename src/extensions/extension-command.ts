@@ -38,6 +38,7 @@ export default class ExtensionCommand extends Command {
     if (this._report && typeof this._report === 'function') {
       return this._report(data);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return super.report();
   }
 }

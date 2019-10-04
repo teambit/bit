@@ -80,6 +80,7 @@ describe('javascript-hooks', function() {
     describe.skip('without build', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         createFile('foo');
       });
       it('should create links in the component level', () => {
@@ -115,6 +116,7 @@ describe('javascript-hooks', function() {
     describe.skip('without build', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         createFile('foo');
         helper.command.tagComponent('foo');
       });
@@ -153,6 +155,7 @@ describe('javascript-hooks', function() {
     describe.skip('without build', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         createFile('foo');
         helper.command.tagComponent('foo');
         helper.scopeHelper.reInitRemoteScope();
@@ -198,6 +201,7 @@ describe('javascript-hooks', function() {
     describe.skip('without build', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         createFile('foo');
         helper.command.tagComponent('foo');
         helper.scopeHelper.reInitRemoteScope();
@@ -273,6 +277,7 @@ describe('javascript-hooks', function() {
       before(() => {
         helper.scopeHelper.clean();
         helper.scopeHelper.initWorkspace();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         createFile('foo');
         helper.command.tagComponent('foo');
         helper.command.runCmd('bit init --bare', helper.scopes.remotePath);
@@ -284,6 +289,7 @@ describe('javascript-hooks', function() {
         createFile('bar', barComponentFixture);
 
         const barJsonPath = path.join(helper.scopes.localPath, 'components', 'global', 'bar', 'bit.json');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.addBitJsonDependencies(barJsonPath, { [`${helper.scopes.remote}/global/foo`]: '0.0.1' });
         helper.command.tagComponent('bar');
         helper.command.exportComponent('bar');
@@ -320,6 +326,7 @@ describe('javascript-hooks', function() {
           createFile('baz', bazComponentFixture);
 
           const bazJsonPath = path.join(helper.scopes.localPath, 'components', 'global', 'baz', 'bit.json');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.addBitJsonDependencies(bazJsonPath, { [`${helper.scopes.remote}/global/bar`]: '0.0.1' });
           helper.command.tagComponent('baz');
           helper.command.exportComponent('baz');

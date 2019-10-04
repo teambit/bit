@@ -78,6 +78,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       }
     });
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): BitId | null | undefined {
     if (!componentFromModel) return null;
     const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
@@ -99,8 +100,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
     const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
     const packageName = packagePath.replace(`node_modules${path.sep}`, '');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
@@ -112,10 +115,12 @@ export default function updateDependenciesVersions(consumer: Consumer, component
 
   function getIdFromDependentPackageJson(componentId: BitId): BitId | null | undefined {
     // for author, there is not package.json of a component
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
     }
     const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
     const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version

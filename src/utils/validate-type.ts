@@ -13,6 +13,7 @@ export function validateUserInputType(message: string, value: any, fieldName: st
 
 function validate(message: string, value: any, fieldName: string, expectedType: Value, isUserInput: boolean) {
   let type = typeof value;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if ((expectedType === 'array' || expectedType === 'object') && Array.isArray(value)) type = 'array';
   if (type !== expectedType) {
     const errorMessage = `${message}, expected ${fieldName} to be ${expectedType}, got ${type}`;

@@ -16,6 +16,7 @@ describe('logger', () => {
     it('should not throw when the metadata object has a circular structure', () => {
       const foo = {};
       const bar = { foo };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foo.bar = bar;
       const metadata = { foo };
       const myFormat = getFormat();

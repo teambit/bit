@@ -205,6 +205,7 @@ describe('envs', function() {
       describe('negative tests', () => {
         it('should show error for authored component if it is not detached', () => {
           const error = new EjectBoundToWorkspace();
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const ejectFunc = () => helper.command.ejectConf('comp/my-comp');
           helper.general.expectToThrow(ejectFunc, error);
         });
@@ -239,6 +240,7 @@ describe('envs', function() {
       });
       it('should show error when trying to eject conf without path provided', () => {
         const error = new EjectNoDir(`${helper.scopes.remote}/comp/my-comp`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const ejectFunc = () => helper.command.ejectConf('comp/my-comp');
         helper.general.expectToThrow(ejectFunc, error);
       });
@@ -572,6 +574,7 @@ describe('envs', function() {
           expect(diff).to.have.string('+ "a": "c",');
         });
         it('should show error if the raw config is not valid', () => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.addToRawConfigOfEnv(undefined, 'bablercPath', 5, COMPILER_ENV_TYPE);
           const fullCompilerId = `${helper.scopes.env}/${compilerId}@0.0.1`;
           const schemaRawError = 'data.bablercPath should be string';
@@ -720,6 +723,7 @@ describe('envs', function() {
         describe('negative tests', () => {
           it('should show error if the component id does not exist', () => {
             const error = new MissingBitMapComponent('fake/comp');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const ejectFunc = () => helper.command.ejectConf('fake/comp');
             helper.general.expectToThrow(ejectFunc, error);
           });
@@ -753,6 +757,7 @@ describe('envs', function() {
             bitJsonPath = path.join(fullComponentFolder, 'bit.json');
             babelrcPath = path.join(fullComponentFolder, '.babelrc');
             mochaConfPath = path.join(fullComponentFolder, 'mocha-config.opts');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.command.ejectConf('comp/my-comp');
           });
           it('should write the bit.json to the component folder', () => {
@@ -942,12 +947,14 @@ describe('envs', function() {
         describe('negative tests', () => {
           it('should show error if the component id does not exist', () => {
             const error = new MissingBitMapComponent('fake/comp');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const injectFunc = () => helper.command.injectConf('fake/comp');
             helper.general.expectToThrow(injectFunc, error);
           });
           // @todo: this has been skipped temporarily since the change of overriding envs via package.json, see PR #1576
           it.skip('should show error if the component was not ejected before', () => {
             const error = new InjectNonEjected();
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const injectFunc = () => helper.command.injectConf('comp/my-comp');
             helper.general.expectToThrow(injectFunc, error);
           });
@@ -958,6 +965,7 @@ describe('envs', function() {
             before(() => {
               const confFolder = '{COMPONENT_DIR}/{ENV_TYPE}';
               helper.command.ejectConf('comp/my-comp', { p: confFolder });
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('comp/my-comp');
               compilerFolder = path.join(fullComponentFolder, COMPILER_ENV_TYPE);
               babelRcPath = path.join(compilerFolder, '.babelrc');
@@ -983,6 +991,7 @@ describe('envs', function() {
             before(() => {
               const confFolder = '{COMPONENT_DIR}';
               helper.command.ejectConf('comp/my-comp', { p: confFolder });
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('comp/my-comp');
               babelRcPath = path.join(fullComponentFolder, '.babelrc');
               mochaConfigPath = path.join(fullComponentFolder, 'mocha-config.opts');
@@ -1008,6 +1017,7 @@ describe('envs', function() {
             before(() => {
               const confFolder = 'conf-folder/{ENV_TYPE}';
               helper.command.ejectConf('comp/my-comp', { p: confFolder });
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('comp/my-comp');
               const confFolderFullPath = path.join(helper.scopes.localPath, 'conf-folder');
               compilerFolder = path.join(confFolderFullPath, COMPILER_ENV_TYPE);
@@ -1034,6 +1044,7 @@ describe('envs', function() {
             before(() => {
               const confFolder = 'conf-folder';
               helper.command.ejectConf('comp/my-comp', { p: confFolder });
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('comp/my-comp');
               const confFolderFullPath = path.join(helper.scopes.localPath, 'conf-folder');
               compilerFolder = path.join(confFolderFullPath);
@@ -1324,6 +1335,7 @@ describe('envs', function() {
             describe('running eject-conf with --force flag', () => {
               let output;
               before(() => {
+                // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
                 output = helper.command.injectConf('comp/my-comp --force');
               });
               it('should show a success message', () => {
@@ -1504,8 +1516,11 @@ describe('envs with relative paths', function() {
     });
     it('should save the relative paths of the compiler files', () => {
       const catComponent = helper.command.catComponent('bar/foo@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.compiler.files).to.have.lengthOf(2);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.compiler.files[0].relativePath).to.equal('base/base.config.js');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.compiler.files[1].relativePath).to.equal('dev.config.js');
     });
     describe('exporting and importing the component with --conf', () => {

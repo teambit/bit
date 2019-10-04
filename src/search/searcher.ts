@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import serverlessIndex from './serverless-index';
 import { Doc } from './indexer';
 import buildQuery from './query-builder';

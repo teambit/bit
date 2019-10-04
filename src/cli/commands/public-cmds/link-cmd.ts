@@ -16,6 +16,7 @@ export default class Create extends Command {
   }
 
   report(results: Array<{ id: string; bound: Object | null | undefined }>): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return linkTemplate(results);
   }
 }

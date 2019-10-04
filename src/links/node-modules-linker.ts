@@ -90,6 +90,7 @@ export default class NodeModuleLinker {
       addLinkResult(symlink.componentId, symlink.src, symlink.dest);
     });
     this.dataToPersist.files.forEach((file: LinkFile) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       addLinkResult(file.componentId, file.srcPath, file.path);
     });
     this.components.forEach(component => {
@@ -178,6 +179,8 @@ export default class NodeModuleLinker {
     const componentMap: ComponentMap = component.componentMap;
     if (
       component.issues &&
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       (component.issues.missingLinks || component.issues.missingCustomModuleResolutionLinks) &&
       this.consumer &&
       component.componentFromModel
@@ -273,6 +276,7 @@ export default class NodeModuleLinker {
    * It makes it easier for Author to use absolute syntax between their own components.
    */
   _createPackageJsonForAuthor(component: Component) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true));

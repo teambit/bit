@@ -13,6 +13,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
 export default function createSymlinkOrCopy(
   srcPath: PathOsBased,
   destPath: PathOsBased,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentId?: string | null | undefined = ''
 ) {
   logger.info(`create-symlink-or-copy, deleting ${destPath}`);

@@ -29,6 +29,7 @@ export default class ConsumerOverrides {
     this.overrides = overrides;
   }
   static load(overrides: Object = {}) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ConsumerOverrides(overrides);
   }
   getOverrideComponentData(bitId: BitId): ConsumerOverridesOfComponent | null | undefined {
@@ -54,7 +55,11 @@ export default class ConsumerOverrides {
         case 'env':
           if (!specificOverrides[field]) specificOverrides[field] = {};
           ['compiler', 'tester'].forEach(envField => {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             if (specificOverrides.env[envField] || !generalOverrides.env[envField]) return;
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             specificOverrides.env[envField] = generalOverrides.env[envField];
           });
           break;
@@ -85,9 +90,12 @@ export default class ConsumerOverrides {
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
   }
   _isExcluded(overridesValues: Object, bitId: BitId) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!overridesValues.exclude || !overridesValues.exclude.length) {
       return false;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return overridesValues.exclude.some(
       excludeRule =>
         this._isMatchByWildcard(bitId, excludeRule) ||
@@ -137,9 +145,11 @@ export default class ConsumerOverrides {
     const key = exactMatch || id.toStringWithoutVersion();
     const env = {};
     if (component.compiler) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       env.compiler = AbstractConfig.convertEnvToStringIfPossible(component.compiler.toBitJsonObject('.'));
     }
     if (component.tester) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       env.tester = AbstractConfig.convertEnvToStringIfPossible(component.tester.toBitJsonObject('.'));
     }
     if (!R.isEmpty(env)) overrides.env = env;
@@ -200,6 +210,7 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
       });
     }
     function validateEnv(override: Object, id: string) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       validateUserInputType(message, override.env, `overrides.${id}.env`, 'object');
     }
   }

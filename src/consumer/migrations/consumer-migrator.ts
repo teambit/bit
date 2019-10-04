@@ -35,6 +35,7 @@ export default (async function migrate(
 ): Promise<ConsumerMigrationResult> {
   globalVerbose = verbose;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const bitMapMigrations: VersionMigrations[] = getMigrationVersions(
     BIT_VERSION,
     bitmapVersion,

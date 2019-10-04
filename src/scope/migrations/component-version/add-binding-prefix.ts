@@ -5,7 +5,9 @@ import { DEFAULT_BINDINGS_PREFIX } from '../../../constants';
  * @param {*} versionModel - The parsed component model
  */
 function addBindingPrefix(versionModel: Object): Object {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.bindingPrefix) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     versionModel.bindingPrefix = DEFAULT_BINDINGS_PREFIX;
   }
   return versionModel;

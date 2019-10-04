@@ -16,10 +16,13 @@ chai.use(assertArrays);
 chai.use(require('chai-fs'));
 
 const inputsWithDefaultsNoCompiler = [
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   { triggerText: PACKAGE_MANAGER_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
   {
     triggerText: CHOOSE_COMPILER_MSG_Q,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     inputs: [{ value: INTERACTIVE_KEYS.enter }]
   }
 ];
@@ -72,11 +75,16 @@ describe('run bit init - interactive', function() {
         const inputs = [
           {
             triggerText: PACKAGE_MANAGER_MSG_Q,
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
           },
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: 'my-comps' }, { value: INTERACTIVE_KEYS.enter }] },
           {
             triggerText: CHOOSE_COMPILER_MSG_Q,
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             inputs: [{ value: INTERACTIVE_KEYS.down }, { value: INTERACTIVE_KEYS.enter }]
           }
         ];
@@ -111,15 +119,20 @@ describe('run bit init - interactive', function() {
         const inputs = [
           {
             triggerText: PACKAGE_MANAGER_MSG_Q,
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             inputs: [{ value: INTERACTIVE_KEYS.enter }]
           },
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           { triggerText: DEFAULT_DIR_MSG_Q, inputs: [{ value: INTERACTIVE_KEYS.enter }] },
           {
             triggerText: CHOOSE_COMPILER_MSG_Q,
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             inputs: [{ value: INTERACTIVE_KEYS.up }, { value: INTERACTIVE_KEYS.enter }]
           },
           {
             triggerText: CHOOSE_CUSTOM_COMPILER_MSG_Q,
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             inputs: [{ value: `bit import ${compilerName}` }, { value: INTERACTIVE_KEYS.enter }]
           }
         ];
@@ -151,13 +164,16 @@ describe('run bit init - interactive', function() {
         helper.config.restoreConfigs(configsBackup);
       });
       it('should prefer interactive.init config over interactive config', async () => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.command.setConfig(CFG_INTERACTIVE, true);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.command.setConfig(CFG_INIT_INTERACTIVE, false);
         const output = helper.scopeHelper.initWorkspace();
         // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
         expect(output).to.have.string('successfully initialized');
       });
       it('should should show interactive when interactive config set to true', async () => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.command.setConfig(CFG_INTERACTIVE, true);
         const output = helper.scopeHelper.initWorkspace();
         // We don't enter anything we just want to see that any question has been asked

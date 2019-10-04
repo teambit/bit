@@ -11,6 +11,7 @@ export default class Untag extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/cli-untag.html
   ${WILDCARD_HELP('untag')}`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
     [

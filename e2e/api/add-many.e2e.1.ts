@@ -88,6 +88,7 @@ describe('bit add many programmatically', function() {
       helper.fixtures.copyFixtureComponents('add-many');
     });
     it('should transfer right script path ', async function() {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const result = await api.addMany(components, helper.scopes.localPath);
       nodeStartOutputObj = result;
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
@@ -102,6 +103,7 @@ describe('bit add many programmatically', function() {
       helper.fixtures.copyFixtureComponents('add-many');
       const innerScriptPathRelative = 'add_many_test_files/inner_folder';
       const innerScriptPathAbsolute = path.join(helper.scopes.localPath, innerScriptPathRelative);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(componentsInside, innerScriptPathAbsolute);
       status = helper.command.status();
     });
@@ -148,6 +150,7 @@ describe('bit add many programmatically', function() {
       const newDirPath = helper.fs.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.fixtures.copyFixtureComponents(scriptRelativePath, newDirPath);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(components, helper.scopes.localPath);
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
       status = helper.command.status();
@@ -261,6 +264,7 @@ describe('bit add many programmatically', function() {
       helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
       nodeStartOutput = undefined;
       try {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         nodeStartOutput = await api.addMany(componentsGitIgnoreMatch, helper.scopes.localPath);
       } catch (err) {
         expect(err.name).to.equal('NoFiles');
@@ -276,6 +280,7 @@ describe('bit add many programmatically', function() {
         }
       ];
       helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(componentsUnmatched, helper.scopes.localPath);
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
@@ -284,6 +289,7 @@ describe('bit add many programmatically', function() {
     });
     it('should add a component on root level if its pattern not matches to .gitignore', async function() {
       helper.git.writeGitIgnore(['**/add_many_test_files/c.js']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(componentsRootLevel, helper.scopes.localPath);
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
@@ -294,6 +300,7 @@ describe('bit add many programmatically', function() {
       helper.git.writeGitIgnore(['/c.js']);
       let addMany;
       try {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsRootLevel, helper.scopes.localPath);
       } catch (err) {
         expect(err.name).to.equal('ExcludedMainFile');
@@ -303,6 +310,7 @@ describe('bit add many programmatically', function() {
     });
     it('should add a component with gitignore on root but not inner folder', async function() {
       helper.git.writeGitIgnore(['/bar']);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(componentsInner, helper.scopes.localPath);
       expect(nodeStartOutputObj).to.be.an('array');
     });
@@ -310,6 +318,7 @@ describe('bit add many programmatically', function() {
       helper.git.writeGitIgnore(['/foo/gitignoredir']);
       let addMany;
       try {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsInner, helper.scopes.localPath);
       } catch (err) {
         expect(err.name).to.equal('ExcludedMainFile');
@@ -329,6 +338,7 @@ describe('bit add many programmatically', function() {
       ];
       let addMany;
       try {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         addMany = await api.addMany(componentsIgnoreConst, helper.scopes.localPath);
       } catch (err) {
         expect(err.name).to.equal('NoFiles');

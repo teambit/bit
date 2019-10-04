@@ -99,6 +99,7 @@ export default class ComponentsList {
       if (!modelComponent) return false;
       const latestVersion = modelComponent.latest();
       if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.latestVersion = latestVersion;
         return true;
       }
@@ -115,6 +116,7 @@ export default class ComponentsList {
     const autoTagPendingModel: ModelComponent[] = await this.listAutoTagPendingComponents();
     const autoTagPending: Component[] = await this.scope.toConsumerComponents(autoTagPendingModel);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const components: Component[] = [...newComponents, ...modifiedComponents, ...autoTagPending];
 
     return Promise.all(components);
@@ -126,6 +128,7 @@ export default class ComponentsList {
 
   async idsFromObjects(): Promise<BitIds> {
     const fromObjects = await this.getFromObjects();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...fromObjects);
   }
 
@@ -145,6 +148,7 @@ export default class ComponentsList {
         newComponents.push(id);
       }
     });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponentsIds = new BitIds(...newComponents);
     if (!load || !newComponents.length) return newComponentsIds;
 
@@ -183,6 +187,7 @@ export default class ComponentsList {
       this.listModifiedComponents()
     ]);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromArray([...newComponents, ...modifiedComponents]);
   }
 
@@ -195,6 +200,7 @@ export default class ComponentsList {
 
   async listNonNewComponentsIds(): Promise<BitIds> {
     const authoredAndImported = await this.getAuthoredAndImportedFromFS();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const newComponents: BitIds = await this.listNewComponents();
     const nonNewComponents = authoredAndImported.filter(component => !newComponents.has(component.id));
     return BitIds.fromArray(nonNewComponents.map(c => c.id));
@@ -223,6 +229,7 @@ export default class ComponentsList {
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
     const modifiedComponents = await this.listModifiedComponents();
     if (!modifiedComponents || !modifiedComponents.length) return [];
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modifiedComponentsLatestVersions = await this.scope.latestVersions(modifiedComponents);
     return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
@@ -242,6 +249,7 @@ export default class ComponentsList {
     const cacheKeyName = origin || 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = this.idsFromBitMap(origin);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false);
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents && !origin) {
@@ -258,6 +266,7 @@ export default class ComponentsList {
     if (!this._invalidComponents) {
       await this.getFromFileSystem();
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this._invalidComponents;
   }
 
@@ -349,6 +358,7 @@ export default class ComponentsList {
       else name = component;
       return name.toUpperCase(); // ignore upper and lowercase
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return components.sort((a, b) => {
       const nameA = getName(a);
       const nameB = getName(b);
@@ -371,6 +381,7 @@ export default class ComponentsList {
       if (R.is(BitId, component)) return component;
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return components.filter(component => {
       const bitId: BitId = getBitId(component);
       return isBitIdMatchByWildcards(bitId, idsWithWildcard);

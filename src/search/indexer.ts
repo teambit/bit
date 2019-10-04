@@ -1,6 +1,7 @@
 import { Readable } from 'stream';
 import { stemmer } from 'porter-stemmer';
 import Component from '../consumer/component/consumer-component';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import serverlessIndex from './serverless-index';
 import logger from '../logger/logger';
 
@@ -45,7 +46,9 @@ function minimizeDescription(desc: string = ''): string {
 function prepareDoc(docs: Object, component: Component): Doc {
   const name = component.name;
   const tokenizedName = tokenizeStr(name);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const functionNames = docs.map(doc => doc.name).join(' ');
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const minDescription = docs.map(doc => minimizeDescription(doc.description)).join(' ');
   return {
     id: name,
@@ -54,6 +57,7 @@ function prepareDoc(docs: Object, component: Component): Doc {
     stemmedName: stem(tokenizedName),
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     description: docs.map(doc => doc.description).join(' '),
     minDescription,
     stemmedMinDescription: stem(minDescription)

@@ -19,10 +19,14 @@ type NewCommand = {
 };
 
 type RegisteredHooksActions = {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   [string]: HookAction;
 };
 
 export type Commands = {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   [string]: NewCommand;
 };
 
@@ -59,6 +63,7 @@ export default class Extension extends BaseExtension {
     registerCommand: (newCommand: NewCommand): void => {
       // TODO: validate new command format
       logger.info(`registering new command ${newCommand.name}`);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.commands.push(new ExtensionCommand(newCommand));
     },
     /**
@@ -91,6 +96,7 @@ export default class Extension extends BaseExtension {
     getLoader: () => loader,
     HOOKS_NAMES: _getHooksNames(),
     createIsolatedEnv: _createIsolatedEnv,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...super.api
   };
 

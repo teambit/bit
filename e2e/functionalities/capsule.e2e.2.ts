@@ -320,6 +320,7 @@ describe('capsule', function() {
     });
     it('should save the link into the dists', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
       expect(distLink).to.not.be.undefined;
       const fileHash = distLink.file;
@@ -334,6 +335,7 @@ describe('capsule', function() {
       });
       it('should change the dists', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
         expect(distLink).to.not.be.undefined;
         const fileHash = distLink.file;

@@ -58,6 +58,7 @@ export default class Dists {
   distEntryShouldBeStripped: boolean | null | undefined = false;
   _mainDistFile: PathOsBasedRelative | null | undefined;
   distsRootDir: PathOsBasedRelative | null | undefined; // populated only after getDistDirForConsumer() is called
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   constructor(dists?: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
     this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
@@ -72,6 +73,7 @@ export default class Dists {
   }
 
   getAsReadable(): string[] {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.dists.map(file => file.toReadableString());
   }
   getMainDistFile() {
@@ -128,6 +130,7 @@ export default class Dists {
       if (this.distEntryShouldBeStripped) return false; // it has been already stripped, don't strip twice!
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
       const areAllDistsStartWithDistEntry = () => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
       };
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -142,6 +145,7 @@ export default class Dists {
     if (!distEntryShouldBeStripped) return;
     logger.debug(`stripping dist.entry "${distEntry}" from ${id.toString()}`);
     this.distEntryShouldBeStripped = true;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dists.forEach(dist => dist.updatePaths({ newRelative: dist.relative.replace(distEntry, '') }));
     if (this._mainDistFile) {
       this._mainDistFile.replace(distEntry, '');
@@ -150,6 +154,7 @@ export default class Dists {
 
   stripOriginallySharedDir(originallySharedDir: string | null | undefined) {
     this.dists.forEach(distFile => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newRelative });
     });
@@ -164,12 +169,14 @@ export default class Dists {
   async writeDists(
     component: Component,
     consumer: Consumer,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     writeLinks?: boolean = true
   ): Promise<string[] | null | undefined> {
     const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.dists.map(distFile => distFile.path);
   }
 
@@ -196,6 +203,7 @@ export default class Dists {
     component: Component,
     bitMap: BitMap,
     consumer: Consumer | null | undefined,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     writeLinks?: boolean = true,
     componentWithDependencies?: ComponentWithDependencies
   ): Promise<DataToPersist | null | undefined> {
@@ -229,6 +237,7 @@ export default class Dists {
       const getMainFile = () => {
         if (this._mainDistFile) return this._mainDistFile;
         // Take the only dist file if there is only one or search for one with the same name as the main source file
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.dists && this.dists.length === 1) return this.dists[0].relative;
         return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
       };
@@ -280,13 +289,18 @@ export default class Dists {
 
     const dists = this.get().map(dist => {
       return {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         name: dist.basename,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         relativePath: addSharedDirAndDistEntry(dist.relative),
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         file: Source.from(dist.contents),
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         test: dist.test
       };
     });
     const mainDistFile = this._mainDistFile ? addSharedDirAndDistEntry(this._mainDistFile) : this._mainDistFile;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return { dists, mainDistFile };
   }
 

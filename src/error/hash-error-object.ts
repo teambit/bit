@@ -26,6 +26,7 @@ function hashValue(value: any): string {
     case 'boolean':
       return value;
     case 'object':
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Array.isArray(value)) return value.map(v => hash(v));
       return hash(value);
     default:

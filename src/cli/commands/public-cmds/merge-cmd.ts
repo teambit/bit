@@ -33,6 +33,7 @@ export default class Merge extends Command {
   description = `merge changes of different component versions
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],

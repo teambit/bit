@@ -85,6 +85,7 @@ export default class ImportComponents {
     return this.importSpecificComponents();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async importSpecificComponents(): ImportResult {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     const bitIds: BitIds = await this._getBitIds();
@@ -176,6 +177,7 @@ export default class ImportComponents {
     return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async importAccordingToBitMap(): ImportResult {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
@@ -196,11 +198,14 @@ export default class ImportComponents {
         throw new NothingToImport();
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
 
     let componentsAndDependencies = [];
     if (componentsIdsToImport.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentsAndDependencies = await this.consumer.importComponents(componentsIdsToImport, true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
@@ -228,6 +233,7 @@ export default class ImportComponents {
     return { dependencies: componentsAndDependencies, importDetails };
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async _getCurrentVersions(ids: BitIds): ImportedVersions {
     const versionsP = ids.map(async id => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
@@ -368,6 +374,7 @@ export default class ImportComponents {
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach(file => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
       this.consumer.bitMap.updateComponentId(component.id);
@@ -377,6 +384,7 @@ export default class ImportComponents {
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach(file => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
       return filesStatus;
@@ -424,6 +432,7 @@ export default class ImportComponents {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
     if (this.options.writeConfig && !this.options.configDir) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
     }
     const manyComponentsWriter = new ManyComponentsWriter({

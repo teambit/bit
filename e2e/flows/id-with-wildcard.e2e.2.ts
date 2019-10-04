@@ -286,6 +286,7 @@ describe('component id with wildcard', function() {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const mergeFunc = () => helper.command.mergeVersion('0.0.1 "none/*"');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.general.expectToThrow(mergeFunc, error);

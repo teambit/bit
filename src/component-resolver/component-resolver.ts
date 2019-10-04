@@ -7,6 +7,7 @@ import logger from '../logger/logger';
 import { PathOsBased } from '../utils/path';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (bitId.hasVersion()) return bitId.version;
   const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
   const relativePathWithoutVersion = bitId.toFullPath().replace(regexRemoveLatestVersion, '');

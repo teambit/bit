@@ -8,6 +8,10 @@ import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 
 export default (async function paintGraph(id: string, options: Object): Promise<string> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { image, remote, layout, allVersions } = options;
   const consumer: Consumer | null | undefined = await loadConsumerIfExist();
   if (!consumer && !remote) throw new ConsumerNotFound();
@@ -19,6 +23,7 @@ export default (async function paintGraph(id: string, options: Object): Promise<
   const bitId = getBitId();
   const graph = await getGraph();
   const config = {};
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (layout) config.layout = layout;
   const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
   if (bitId) {

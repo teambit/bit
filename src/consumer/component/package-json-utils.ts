@@ -83,6 +83,7 @@ export async function changeDependenciesToRelativeSyntax(
           throw new Error('getDependenciesAsPackages, dependencyComponent is missing');
         }
         const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
         if (dependencyPackageValue) {
           const packageName = componentIdToPackageName(
@@ -101,6 +102,7 @@ export function preparePackageJsonToWrite(
   bitMap: BitMap,
   component: Component,
   bitDir: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
@@ -161,6 +163,7 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
     const dependenciesDirectory = consumer.config.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = consumer.driver.getDriver(false);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
@@ -175,6 +178,7 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
 export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
   const rootDir = consumer.getPath();
   const driver = consumer.driver.getDriver(false);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const PackageJson = driver.PackageJson;
   if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);

@@ -51,6 +51,7 @@ export default class Isolator {
 
   async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
@@ -64,22 +65,35 @@ export default class Isolator {
         }
       });
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       override: opts.override,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writePackageJson: !opts.noPackageJson,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writeConfig: opts.conf,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writeBitDependencies: opts.writeBitDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       createNpmLinkFiles: opts.createNpmLinkFiles,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writeDists: opts.dist,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       installNpmPackages: !!opts.installPackages, // convert to boolean
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       installPeerDependencies: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose: opts.verbose,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: opts.silentPackageManagerResult,
       isolated: true,
       capsule: this.capsule
@@ -164,6 +178,8 @@ export default class Isolator {
   }
 
   async _addComponentsToRoot(): Promise<void> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const capsulePath = this.capsule.container.getPath();
     // the capsulePath hack only works for the fs-capsule
     // for other capsule types, we would need to do this
@@ -247,7 +263,9 @@ export default class Isolator {
     if (installPeerDependencies) {
       const peers = await this._getPeerDependencies();
       if (!R.isEmpty(peers)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.capsulePackageJson.packageJsonObject.devDependencies = Object.assign(
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.capsulePackageJson.packageJsonObject.devDependencies || {},
           peers
         );

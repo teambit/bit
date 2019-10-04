@@ -77,6 +77,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist' });
       helper.command.importComponent('bar/foo');
     });
@@ -130,6 +131,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as author', () => {
       // this tests also the node_modules generated link for authored component. See similar test without dist in link.e2e file.
       before(() => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
         helper.command.build();
         helper.command.tagAllComponents();
@@ -151,6 +153,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist' });
         helper.command.importComponent('bar/foo');
         scopeAfterImport = helper.scopeHelper.cloneLocalScope();
@@ -192,6 +195,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             helper.command.exportAllComponents();
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.bitJson.modifyField('dist', { target: 'dist' });
             helper.command.importComponent('bar/foo');
           });
@@ -240,6 +244,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as author', () => {
       describe('with dist.entry populated', () => {
         before(() => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { entry: 'src' });
           helper.command.build();
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts}', false);
@@ -252,6 +257,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(clonedScope);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { entry: 'src', target: 'my-dist' });
           helper.command.build();
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts}', false);
@@ -277,6 +283,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       });
       describe('with dist.entry populated', () => {
         before(() => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { entry: 'src' });
           helper.command.build('bar/foo');
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts}', false);
@@ -293,6 +300,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       describe('with dist.entry and dist.target populated', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(clonedScope);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { entry: 'src', target: 'my-dist' });
           helper.command.build('bar/foo');
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts}', false);
@@ -347,6 +355,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist' });
       helper.command.importComponent('bar/foo');
     });
@@ -391,6 +400,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist' });
       helper.command.importComponent('bar/foo');
     });
@@ -431,6 +441,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           helper.command.exportAllComponents();
           helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
           if (distIsOutside) {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           }
           helper.command.importComponent('utils/is-string');
@@ -488,6 +499,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           });
           it('should tag with the correct version of the author component from .bitmap and not use the root package.json version', () => {
             const cmp = helper.command.catComponent(`${helper.scopes.remote}/utils/is-string@latest`);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             expect(cmp.dependencies[0].id.version).to.equal('0.0.1');
             // a previous bug showed it as 1.0.0, see #1698
           });
@@ -504,6 +516,7 @@ describe('dist-outside-components when no compiler has been set up', function() 
   const helper = new Helper();
   before(() => {
     helper.scopeHelper.reInitLocalScope();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     helper.bitJson.modifyField('dist', { target: 'dist' });
     helper.fixtures.createComponentBarFoo();
     helper.fixtures.addComponentBarFoo();

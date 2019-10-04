@@ -11,6 +11,7 @@ describe('versionParser()', () => {
   it('should throw invalid version', () => {
     const version = versionParser('latest');
     expect(() => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version('$1');
     }).to.throw();
   });

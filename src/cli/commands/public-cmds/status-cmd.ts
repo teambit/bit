@@ -29,6 +29,7 @@ export default class Status extends Command {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
   alias = 's';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['j', 'json', 'return a json version of the component']];
   loader = true;
   migration = true;
@@ -84,6 +85,7 @@ export default class Status extends Command {
 
       const missingStr = Object.keys(componentIssuesLabels)
         .map(key => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
           return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
         })
@@ -93,14 +95,18 @@ export default class Status extends Command {
 
     function format(component: string | Component, showVersions: boolean = false, message?: string): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const compId = component.id ? component.id.toString() : component;
         return missingComp.id.toString() === compId;
       });
       const messageStatus = message ? chalk.yellow(message) : chalk.green('ok');
 
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (isString(component)) return `${formatBitString(component)} ... ${messageStatus}`;
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const localVersions = component.getLocalVersions();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
@@ -123,6 +129,7 @@ export default class Status extends Command {
     const outdatedComps = outdatedComponents
       .map(component => {
         return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           component.latestVersion
         }\n`;
       })
@@ -160,6 +167,7 @@ export default class Status extends Command {
 
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
     const stagedComponentsOutput = immutableUnshift(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       stagedComponents.map(c => format(c, true)),
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');

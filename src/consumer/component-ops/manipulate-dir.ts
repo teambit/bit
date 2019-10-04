@@ -135,6 +135,7 @@ function calculateOriginallySharedDirForVersion(version: Version): PathLinux | n
 }
 
 function calculateOriginallySharedDirForConsumerComponent(component: Component): PathLinux | null | undefined {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const filePaths = component.files.map(file => pathNormalizeToLinux(file.relative));
   const allDependencies = new Dependencies(component.getAllDependencies());
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(component.overrides);
@@ -185,6 +186,7 @@ function isWrapperDirNeededForConsumerComponent(component: Component) {
   const allDependencies = new Dependencies(component.getAllDependencies());
   const dependenciesSourcePaths = allDependencies.getSourcesPaths();
   return (
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.files.some(file => file.relative === PACKAGE_JSON) ||
     dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
   );

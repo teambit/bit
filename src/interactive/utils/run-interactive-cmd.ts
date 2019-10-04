@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import rightpad from 'pad-right';
 import chalk from 'chalk';
@@ -69,6 +70,7 @@ export default (async function runInteractive({
   const actualDefaultIntervalBetweenInputs =
     opts.defaultIntervalBetweenInputs || DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS;
   if (opts.verbose) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     console.log(rightpad(chalk.green('cwd: '), 20, ' '), processOpts.cwd); // eslint-disable-line no-console
     console.log(rightpad(chalk.green('command: '), 20, ' '), `${processName} ${args.join(' ')}`); // eslint-disable-line no-console
     _printInputs(inputs, actualDefaultIntervalBetweenInputs);

@@ -1,4 +1,5 @@
 import * as path from 'path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import chalk from 'chalk';
 import Command from '../../command';
@@ -9,6 +10,7 @@ export default class Graph extends Command {
   name = 'graph [id]';
   description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],

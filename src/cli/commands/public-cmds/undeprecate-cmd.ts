@@ -8,11 +8,13 @@ export default class Undeprecate extends Command {
   name = 'undeprecate <ids...>';
   description = 'undeprecate a deprecated component (local/remote)';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['r', 'remote [boolean]', 'undeprecate a component from a remote scope']];
   loader = true;
   migration = true;
 
   action([ids]: [string], { remote = false }: { remote: boolean }): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return undeprecate({ ids, remote });
   }
 

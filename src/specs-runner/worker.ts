@@ -13,16 +13,21 @@ export type SerializedSpecsResultsWithComponentId = {
 };
 
 const testOneComponent = verbose => async (id: string) => {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const res = await testInProcess(id, false, verbose);
   return res.results[0];
 };
 
 export default function run(): Promise<void> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
   const includeUnmodified: boolean =
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     process.env.__includeUnmodified__ === true || process.env.__includeUnmodified__ === 'true';
   if (!ids || !ids.length) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return testInProcess(undefined, includeUnmodified, verbose)
       .then(results => {
         const serializedResults = serializeResults(results.results);
@@ -66,10 +71,12 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
   if (results instanceof Error) {
     // In case of external error also serialize the original error
     if (results instanceof ExternalErrors) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.originalErrors = results.originalErrors.map(serializeError);
     }
 
     if (results instanceof ExternalError) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.originalError = serializeError(results);
     }
 
@@ -78,6 +85,7 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
       type: 'error',
       error: serializedErr
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return finalResults;
   }
   const serializeFailure = failure => {

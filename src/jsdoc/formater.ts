@@ -22,11 +22,15 @@ export default function format(doc: Doclet): string {
     formattedDoc += `args: ${args}\n`;
   }
   if (doc.returns) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (doc.returns.description) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       returns = `${doc.returns.description} `;
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (doc.returns.type) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       returns += `(${doc.returns.type})`;
     }
 

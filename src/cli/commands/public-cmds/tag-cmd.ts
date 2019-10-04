@@ -16,6 +16,7 @@ export default class Tag extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
@@ -98,6 +99,7 @@ export default class Tag extends Command {
     if (all || scope || idHasWildcard) {
       return tagAllAction({
         message: message || '',
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         exactVersion: getVersion(),
         releaseType,
         force,
@@ -105,6 +107,7 @@ export default class Tag extends Command {
         ignoreUnresolvedDependencies,
         ignoreNewestVersion,
         skipTests,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         scope,
         includeImported,
         idWithWildcard: id
@@ -113,6 +116,7 @@ export default class Tag extends Command {
     return tagAction({
       id,
       message,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       exactVersion: getVersion(),
       releaseType,
       force,

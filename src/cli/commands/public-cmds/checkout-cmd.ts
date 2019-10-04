@@ -15,6 +15,7 @@ export default class Checkout extends Command {
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     [
       'i',

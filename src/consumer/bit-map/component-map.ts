@@ -15,6 +15,7 @@ import ComponentNotFoundInPath from '../component/exceptions/component-not-found
 import ConfigDir from './config-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
 export type ComponentMapFile = {

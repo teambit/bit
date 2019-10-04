@@ -46,6 +46,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
     if (localMajor < throwErrorFromServerSinceVersion) return;
     loader.stop();
     logger.console.error(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
     return;
   }
@@ -53,6 +54,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
   if (remoteMinor > localMinor) {
     loader.stop();
     logger.console.error(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
     return;
   }
@@ -60,6 +62,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
   if (remotePatch > localPatch) {
     loader.stop();
     logger.console.warn(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
   }
 }

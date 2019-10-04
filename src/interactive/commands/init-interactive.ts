@@ -138,6 +138,7 @@ async function _fetchComps(scopeName: string, namespaces: string[] = []) {
     showAll: false,
     showRemoteVersion: true,
     namespacesUsingWildcards,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     strategiesNames
   });
   const ids = listScopeResults.map(result => result.id.toString());

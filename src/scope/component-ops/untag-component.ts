@@ -14,6 +14,7 @@ export async function removeLocalVersion(
   scope: Scope,
   id: BitId,
   version?: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force?: boolean = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
@@ -52,6 +53,7 @@ export async function removeLocalVersion(
 export async function removeLocalVersionsForAllComponents(
   scope: Scope,
   version?: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force?: boolean = false
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(scope, version);
@@ -61,6 +63,7 @@ export async function removeLocalVersionsForAllComponents(
 export async function removeLocalVersionsForComponentsMatchedByWildcard(
   scope: Scope,
   version?: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force?: boolean = false,
   idWithWildcard?: string
 ): Promise<untagResult[]> {
@@ -74,6 +77,7 @@ export async function removeLocalVersionsForComponentsMatchedByWildcard(
 async function removeLocalVersionsForMultipleComponents(
   componentsToUntag: ModelComponent[],
   version?: string,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force: boolean,
   scope: Scope
 ) {
@@ -91,6 +95,7 @@ async function removeLocalVersionsForMultipleComponents(
     const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
     candidateComponentsIds.forEach((bitId: BitId) => {
       const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
         throw new GeneralError( // $FlowFixMe

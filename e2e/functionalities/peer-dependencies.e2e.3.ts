@@ -90,6 +90,7 @@ describe('peer-dependencies functionality', function() {
     it('should not save the peer dependencies in the model', () => {
       const output = helper.command.catComponent('bar/foo@latest');
       expect(output).to.have.property('peerPackageDependencies');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(output.peerPackageDependencies).to.not.have.property('chai');
     });
     it('bit show should not display the peer dependencies', () => {

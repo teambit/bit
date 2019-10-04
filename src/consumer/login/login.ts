@@ -1,8 +1,11 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import http from 'http';
 import uuid from 'uuid';
 import opn from 'opn';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import chalk from 'chalk';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import url from 'url';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import {
@@ -74,8 +77,10 @@ export default function loginToBitSrc(
               // some packages might have links in package-lock.json to the previous registry
               // this makes sure to have also the auth-token of the previous registry.
               // (the @bit:registry part points only to the current registry).
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               actualNpmrcPath = driver.npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
             }
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             actualNpmrcPath = driver.npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
           } catch (e) {
             actualNpmrcPath = e.path;
@@ -90,6 +95,7 @@ export default function loginToBitSrc(
         resolve({
           username,
           npmrcPath: actualNpmrcPath,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           writeToNpmrcError
         });
       } catch (err) {

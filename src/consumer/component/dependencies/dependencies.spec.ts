@@ -1,6 +1,7 @@
 import R from 'ramda';
 import { expect } from 'chai';
 import { Dependencies } from './';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
 import { BitId } from '../../../bit-id';
 

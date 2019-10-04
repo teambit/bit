@@ -41,12 +41,15 @@ export default class Driver {
 
   runHook(hookName: string, param: any, returnValue?: any): Promise<any> {
     const driver = this.getDriver();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!driver || !driver.lifecycleHooks || !driver.lifecycleHooks[hookName]) {
       if (!driver) logger.info('unable to find a driver, the hooks will be ignored');
       else logger.info(`the driver doesn't implement ${hookName} hook`);
       return Promise.resolve(returnValue); // it's ok for a driver to not implement a hook
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return driver.lifecycleHooks[hookName](param).then(() => returnValue);
   }
 
@@ -65,6 +68,7 @@ export default class Driver {
     const fullPaths = filePaths.map(filePath => path.join(cwd, filePath));
     const driver = this.getDriver(false);
     // $FlowFixMe driver must be set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return driver.getDependencyTree({
       baseDir: cwd,
       consumerPath,
@@ -79,6 +83,7 @@ export default class Driver {
   // TODO: Improve flow object return type
   npmLogin(token: string, npmrcPath: string, registryUrl: string): Object {
     const driver = this.getDriver(false);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return driver.npmLogin(token, npmrcPath, registryUrl);
   }
 

@@ -19,6 +19,7 @@ import logger from '../../logger/logger';
 export default function enrichContextFromGlobal(context: Object = {}) {
   logger.debug('enrich context from global config');
   const getContextToEnrich = () => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!enrichContextFromGlobal.context) {
       const username = globalConfig.getSync(CFG_USER_NAME_KEY);
       const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
@@ -29,8 +30,10 @@ export default function enrichContextFromGlobal(context: Object = {}) {
       const repo = yn(globalConfig.getSync(CFG_REPOSITORY_REPORTING_KEY), { default: true })
         ? gitconfig.getUrl()
         : undefined;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       enrichContextFromGlobal.context = { username, email, pubSshKey, token, repo };
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return enrichContextFromGlobal.context;
   };
   const contextToEnrich = getContextToEnrich();

@@ -458,6 +458,7 @@ describe('bit import', function() {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.bitJson.modifyField('dist', { target: 'another-dist' });
             helper.command.importComponent('imprel/impreldist');
             localConsumerFiles = helper.fs.getConsumerFiles();
@@ -953,6 +954,7 @@ describe('bit import', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist' });
         helper.command.importComponent('bar/foo');
         localConsumerFiles = helper.fs.getConsumerFiles();
@@ -1482,6 +1484,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
 
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.command.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
@@ -2040,13 +2043,17 @@ console.log(barFoo.default());`;
       });
       it('should not remove the local version', () => {
         const catComponent = helper.command.catComponent('bar/foo');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       it('should not override the local component', () => {
         const catComponent = helper.command.catComponent('bar/foo');
         expect(catComponent).to.have.property('state');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state).to.have.property('versions');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.have.property('0.0.2');
       });
     });
@@ -2064,13 +2071,17 @@ console.log(barFoo.default());`;
       });
       it('should not remove the local version', () => {
         const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.1');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.versions).to.have.property('0.0.2');
       });
       it('should not override the local component', () => {
         const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo`);
         expect(catComponent).to.have.property('state');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state).to.have.property('versions');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(catComponent.state.versions).to.have.property('0.0.2');
       });
       describe('importing a specific version', () => {
@@ -2229,6 +2240,7 @@ console.log(barFoo.default());`;
       it('bit ls should show that only bar/foo has imported', () => {
         const ls = helper.command.listLocalScopeParsed();
         expect(ls).to.be.lengthOf(1);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(ls[0].id).to.equal(`${helper.scopes.remote}/bar/foo`);
       });
     });

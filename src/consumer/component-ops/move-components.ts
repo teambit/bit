@@ -62,11 +62,13 @@ export function moveExistingComponent(
   consumer.bitMap.markAsChanged();
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
     component.dataToPersist.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newRelative });
     });
   } else {
     component.dataToPersist.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newBase = file.base.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newBase });
     });

@@ -32,12 +32,16 @@ import ValidationError from '../../error/validation-error';
 
 type State = {
   versions?: {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     [string]: {
       local?: boolean; // whether a component was changed locally
     };
   };
 };
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Versions = { [string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
@@ -87,6 +91,7 @@ export default class Component extends BitObject {
     this.scopesList = props.scopesList || [];
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get versionArray(): Ref[] {
     return values(this.versions);
   }
@@ -181,7 +186,10 @@ export default class Component extends BitObject {
 
   async collectLogs(
     repo: Repository
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): Promise<{ [number]: { message: string; date: string; hash: string } | null | undefined }> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
     const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
@@ -194,6 +202,7 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map(versionNum => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -256,7 +265,9 @@ export default class Component extends BitObject {
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
 
     return componentObject;
@@ -265,12 +276,14 @@ export default class Component extends BitObject {
   async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound(version);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.load(repository);
   }
 
   loadVersionSync(version: string, repository: Repository, throws: boolean = true): Version {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound(version);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
 
@@ -330,6 +343,7 @@ export default class Component extends BitObject {
     const log = version.log || null;
     const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
     const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
       filesP,
       distsP,
@@ -344,6 +358,7 @@ export default class Component extends BitObject {
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
@@ -461,6 +476,7 @@ export default class Component extends BitObject {
 
   static fromBitId(bitId: BitId): Component {
     if (bitId.box) throw new Error('component.fromBitId, bitId should not have the "box" property populated');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.name,
       scope: bitId.scope

@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import pMapSeries from 'p-map-series';
 import semver from 'semver';
@@ -64,6 +65,8 @@ const getAllowdPackageManagerProcessOptions = userOptions => {
 };
 
 type installArgs = {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [string]: number | string };
   packageManager: 'npm' | 'yarn';
   packageManagerArgs: string[];
@@ -191,9 +194,11 @@ async function getPeerDepsFromNpmList(npmList: string, packageManager: string): 
   };
 
   const npmListObject = await parseNpmListJsonGracefully(npmList, packageManager);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return parsePeers(npmListObject.dependencies);
 }
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
   try {
     const json = JSON.parse(str);
@@ -235,6 +240,7 @@ const _installInOneDirectoryWithPeerOption = async ({
     packageManagerArgs,
     packageManagerProcessOptions,
     dir,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     installPeerDependencies,
     verbose
   });
@@ -271,6 +277,7 @@ const installAction = async ({
 }: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
     await _installInOneDirectoryWithPeerOption({
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
       packageManagerArgs,
@@ -285,6 +292,7 @@ const installAction = async ({
   if (installRootPackageJson) {
     // installation of the root package.json has to be completed before installing the sub-directories package.json.
     const rootDirResults = await _installInOneDirectoryWithPeerOption({
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
       packageManagerArgs,
@@ -302,6 +310,7 @@ const installAction = async ({
 
   const installInDir = dir =>
     _installInOneDirectoryWithPeerOption({
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
       packageManagerArgs,

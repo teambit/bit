@@ -191,6 +191,7 @@ describe('bit build', function() {
       describe('changing dist target', () => {
         let rebuildOutput;
         before(() => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           rebuildOutput = helper.command.build();
         });
@@ -259,6 +260,7 @@ describe('bit build', function() {
         it('should save the additional package.json props into the scope', () => {
           const catComponent = helper.command.catComponent('bar/foo@latest');
           expect(catComponent).to.have.property('packageJsonChangedProps');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.packageJsonChangedProps)
             .to.have.property('foo')
             .that.equal('bar');
@@ -282,6 +284,7 @@ describe('bit build', function() {
           });
           describe('importing when the dist is outside the components dir', () => {
             before(() => {
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
               helper.command.importComponent('bar/foo -O');
               packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
@@ -327,6 +330,7 @@ describe('bit build', function() {
         it('should save the additional package.json props into the scope', () => {
           const catComponent = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
           expect(catComponent).to.have.property('packageJsonChangedProps');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(catComponent.packageJsonChangedProps)
             .to.have.property('foo')
             .that.equal('bar');

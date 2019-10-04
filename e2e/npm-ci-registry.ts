@@ -1,6 +1,7 @@
 /* eslint no-console: 0 */
 import fs from 'fs-extra';
 import * as path from 'path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import tar from 'tar';
 import { ChildProcess } from 'child_process';
@@ -110,6 +111,7 @@ EOD`;
    * this method does the last two. the end result is that Verdaccio registry has this component
    * published and ready to be consumed later on when running 'npm install package-name'.
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
     const packDir = path.join(this.helper.scopes.localPath, 'pack');
     const result = this.helper.command.runCmd(
@@ -138,6 +140,7 @@ EOD`;
     const scopeJsonPath = '.bit/scope.json';
     const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
     const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     scopeJson.resolverPath = resolverPath;
     this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
     this.helper.fs.createFile('', 'resolver.js', this._getResolverContent());

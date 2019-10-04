@@ -1,4 +1,5 @@
 import cliSpinners from 'cli-spinners';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import * as path from 'path';
 import format from 'string-format';

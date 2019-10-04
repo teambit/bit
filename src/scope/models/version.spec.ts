@@ -1,7 +1,9 @@
 import R from 'ramda';
 import { expect } from 'chai';
 import Version from '../../scope/models/version';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import versionFixture from '../../../fixtures/version-model-object.json';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
 
 const getVersionWithDepsFixture = () => {

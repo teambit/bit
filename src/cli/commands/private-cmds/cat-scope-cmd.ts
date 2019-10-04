@@ -8,6 +8,7 @@ export default class CatScope extends Command {
   description = 'cat a scope and show all the contents';
   private = true;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['f', 'full', 'show all of the objects in the scope'],
     ['j', 'json', 'print the objects as a json format'],
@@ -38,7 +39,9 @@ export default class CatScope extends Command {
   }): string {
     if (jsonExtra) {
       payload.forEach(obj => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         obj.hash = obj.hash().toString();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         obj.type = obj.constructor.name;
       });
       return JSON.stringify(payload, null, 2);

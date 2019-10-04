@@ -10,10 +10,14 @@ export type HookAction = {
 };
 
 export type Hooks = {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   [string]: HookAction[];
 };
 
 type HookFailures = {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   [string]: Error;
 };
 
@@ -64,6 +68,8 @@ export default class HooksManager {
    */
   registerNewHook(hookName: string, context: Object = {}, throwIfExist: boolean = false): boolean {
     if (this.hooks.has(hookName)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const contextMsg = context.extension ? `from ${context.extension}` : '';
       logger.warn(`trying to register an already existing hook ${hookName} ${contextMsg}`);
       if (throwIfExist) {
@@ -89,6 +95,8 @@ export default class HooksManager {
     throwIfNotExist: boolean = false
   ) {
     if (!this.hooks.has(hookName)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const contextMsg = context.extension ? `from ${context.extension}` : '';
       logger.warn(`trying to register to a non existing hook ${hookName} ${contextMsg}`);
       if (throwIfNotExist) {
@@ -111,6 +119,7 @@ export default class HooksManager {
     args: Object = {},
     headers: Object = {},
     context: Object = {}
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): HookFailures[] | null | undefined {
     const resultErrors = [];
     if (!this.hooks.has(hookName)) {

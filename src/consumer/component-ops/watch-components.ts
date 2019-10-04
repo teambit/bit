@@ -1,4 +1,5 @@
 /* eslint no-console: 0 */
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import chokidar from 'chokidar';
 import R from 'ramda';
 import chalk from 'chalk';

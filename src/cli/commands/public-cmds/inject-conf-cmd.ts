@@ -7,6 +7,7 @@ export default class InjectConf extends Command {
   name = 'inject-conf [id]';
   description = 'injecting components configuration';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['f', 'force', 'force injecting even if there are config files changes']];
   loader = true;
   migration = true;

@@ -15,8 +15,11 @@ describe('Environment', () => {
   describe('constructor', () => {
     it.skip('should generate a unique path for every instance', () => {
       sandbox.stub(Scope, 'load').returns({ getPath: () => '' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const scope = Scope.load();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const environment1 = new Environment(scope);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const environment2 = new Environment(scope);
       expect(environment1.path).not.to.be.equal(environment2.path);
     });

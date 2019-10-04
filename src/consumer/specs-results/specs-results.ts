@@ -104,12 +104,15 @@ export default class SpecsResults {
 
     const calcDuration = (endDateString, startDateString) => {
       if (!endDateString || !startDateString) return undefined;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return new Date(endDateString) - new Date(startDateString);
     };
 
     const start = rawResults.stats ? rawResults.stats.start : undefined;
     const end = rawResults.stats ? rawResults.stats.end : undefined;
     const duration =
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       rawResults.stats && rawResults.stats.duration ? parseInt(rawResults.stats.duration) : calcDuration(end, start);
     const stats = {
       start,
@@ -118,17 +121,20 @@ export default class SpecsResults {
     };
 
     const tests = rawResults.tests.map(result => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       result.duration = parseInt(result.duration);
       return result;
     });
 
     if (hasFailures) {
       failures = rawResults.failures.map(failure => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         return failure;
       });
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SpecsResults({ tests, stats, pass, failures, specFile: rawResults.specPath });
   }
 }

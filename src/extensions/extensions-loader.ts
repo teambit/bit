@@ -42,7 +42,9 @@ const _loadExtension = (consumerPath: string | null | undefined, scopePath: stri
 ): Promise<Extension> => {
   const loadArgs: LoadArgsProps = {
     name,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     rawConfig: rawConfig.config,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options: rawConfig.options,
     consumerPath,
     scopePath

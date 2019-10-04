@@ -17,15 +17,22 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     const stat = await this._getStatIfFileExists();
     if (stat) {
       if (stat.isSymbolicLink()) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         throw new ValidationError(`fatal: trying to write a package.json file into a symlink file at "${this.path}"`);
       }
       if (!this.override) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         logger.debug(`package-json-vinyl.write, ignore existing file ${this.path}`);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.path;
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     logger.debug(`package-json-vinyl.write, path ${this.path}`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     await fs.outputFile(this.path, this.contents);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.path;
   }
 
@@ -45,6 +52,7 @@ export default class PackageJsonVinyl extends AbstractVinyl {
     override?: boolean;
   }): PackageJsonVinyl {
     const jsonStr = stringifyPackage(content, indent, newline);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const jsonFile = new PackageJsonVinyl({ base, path, contents: Buffer.from(jsonStr) });
     jsonFile.override = override;
     return jsonFile;

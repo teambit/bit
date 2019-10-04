@@ -102,7 +102,9 @@ describe('track directories functionality', function() {
       });
       it('should save the files with relativePaths relative to consumer root', () => {
         const output = helper.command.catComponent('utils/bar@latest');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(output.mainFile).to.equal('utils/bar/foo.js');
       });
       describe('then adding a new file to the directory', () => {
@@ -278,8 +280,11 @@ describe('track directories functionality', function() {
         });
         it('should save both files to the model', () => {
           const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(barFoo.files[0].name).to.equal('foo.js');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(barFoo.files[1].name).to.equal('foo2.js');
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           expect(barFoo.files).to.have.lengthOf(2);
         });
       });

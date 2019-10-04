@@ -15,6 +15,7 @@ import { Tmp } from '../../../scope/repositories';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export type MergeStrategy = $Keys<typeof MergeOptions>;
 export const FileStatus = {
   merged: chalk.green('auto-merged'),
@@ -24,6 +25,8 @@ export const FileStatus = {
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged')
 };
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
 export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
 export type FailedComponents = { id: BitId; failureMessage: string };
@@ -123,6 +126,7 @@ async function applyVersion(
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     componentFromFS.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     return { id, filesStatus };
@@ -135,6 +139,7 @@ async function applyVersion(
   component.files = files;
 
   files.forEach(file => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
   });
 
@@ -143,6 +148,7 @@ async function applyVersion(
 
   const componentWriter = ComponentWriter.getInstance({
     component,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     writeToPath: component.files[0].base, // find the current path from the files. (we use the first one but it's the same for all)
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
@@ -157,6 +163,7 @@ async function applyVersion(
   consumer.bitMap.removeComponent(component.id);
   componentWriter.origin = componentMap.origin;
   // $FlowFixMe todo: fix this. does configDir should be a string or ConfigDir?
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentWriter.configDir = componentMap.configDir;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 
@@ -172,17 +179,22 @@ function applyModifiedVersion(
   const filesStatus = {};
   mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
       const otherFile: SourceFile = file.otherFile;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = otherFile.contents;
       filesStatus[file.filePath] = FileStatus.updated;
     } else if (file.conflict) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
     } else if (file.output) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
@@ -201,6 +213,7 @@ function applyModifiedVersion(
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {
     const result = await resolveConflictPrompt();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return mergeOptionsCli[result.mergeStrategy];
   } catch (err) {
     // probably user clicked ^C

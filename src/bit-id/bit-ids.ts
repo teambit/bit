@@ -85,6 +85,7 @@ export default class BitIds extends Array<BitId> {
    * this is mainly useful for remote commands where it is impossible to have a component without scope.
    */
   static deserialize(array: string[] = []): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...array.map(id => BitId.parse(id, true)));
   }
 
@@ -111,10 +112,12 @@ export default class BitIds extends Array<BitId> {
       array.push(BitId.parse(id, true, version)); // bit.json has only imported dependencies, they all have scope
     });
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...array);
   }
 
   static fromArray(bitIds: BitId[]): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...bitIds);
   }
 
@@ -125,6 +128,7 @@ export default class BitIds extends Array<BitId> {
 
   clone(): BitIds {
     const cloneIds = this.map(id => id.clone());
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitIds(...cloneIds);
   }
 }

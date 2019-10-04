@@ -15,6 +15,7 @@ export default class FsHelper {
   getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true, includeNodeModules: boolean = true) {
     const params = { cwd: this.scopes.localPath, dot: includeDot };
     if (!includeNodeModules) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       params.ignore = 'node_modules/**/*';
     }
 
@@ -26,6 +27,7 @@ export default class FsHelper {
   /**
    * @deprecated use outputFile instead
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, folder, name);
     fs.outputFileSync(filePath, impl);
@@ -36,6 +38,7 @@ export default class FsHelper {
     ensureAndWriteJson(filePath, jsonContent);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   createFileOnRootLevel(name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, name);
     fs.outputFileSync(filePath, impl);

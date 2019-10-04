@@ -1,3 +1,4 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import runAndUpdateCI from './run-and-update-ci';
 
 const scopePath = process.env.__scope__;

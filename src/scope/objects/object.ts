@@ -11,6 +11,7 @@ function parse(buffer: Buffer, types: { [key: string]: Function }): BitObject {
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
   const [type] = headers.split(SPACE_DELIMITER);
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return types[type].parse(contents);
 }
 
@@ -110,6 +111,7 @@ export default class BitObject {
   }
 
   static makeHash(str: string | Buffer): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return sha1(str);
   }
 }

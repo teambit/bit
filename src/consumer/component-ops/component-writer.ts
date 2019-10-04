@@ -181,6 +181,7 @@ export default class ComponentWriter {
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
       // $FlowFixMe this.component.license is set
@@ -192,6 +193,9 @@ export default class ComponentWriter {
 
   addComponentToBitMap(rootDir: string | null | undefined): ComponentMap {
     const filesForBitMap = this.component.files.map(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
     const getConfigDir = () => {
@@ -205,6 +209,7 @@ export default class ComponentWriter {
       files: filesForBitMap,
       mainFile: pathNormalizeToLinux(this.component.mainFile), // $FlowFixMe
       rootDir, // $FlowFixMe
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       configDir: getConfigDir(),
       origin: this.origin,
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
@@ -307,6 +312,7 @@ export default class ComponentWriter {
     if (componentMapExistWithSameVersion) {
       if (
         this.existingComponentMap &&
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.existingComponentMap !== COMPONENT_ORIGINS.NESTED &&
         this.origin === COMPONENT_ORIGINS.NESTED
       ) {

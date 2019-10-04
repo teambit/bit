@@ -20,6 +20,7 @@ function createRow(diagnosis: Diagnosis): DiagnosisRow {
 export default function formatDiagnosesList(diagnosesList: Diagnosis[]): string {
   const header = [chalk.bold('category'), chalk.bold('name'), chalk.bold('description')];
   const rows = diagnosesList.map(createRow);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   rows.unshift(header);
   const output = table(rows, tableColumnConfig);
   return output;

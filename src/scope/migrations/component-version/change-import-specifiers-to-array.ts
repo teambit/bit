@@ -2,7 +2,10 @@
  * When a component has ImportSpecifier data, change it from an object to an array
  */
 function updateImportSpecifiers(versionModel: Object): Object {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.dependencies || !versionModel.dependencies.length) return versionModel;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   versionModel.dependencies.forEach(dependency => {
     dependency.relativePaths.forEach(relativePath => {
       if (relativePath.importSpecifier) {

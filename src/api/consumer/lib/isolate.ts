@@ -21,9 +21,11 @@ export type IsolateOptions = {
 
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {
   if (opts.useCapsule) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return isolateUsingCapsule(componentId, opts);
   }
   logger.debugAndAddBreadCrumb('isolate', 'starting isolation process');
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (opts.verbose) console.log('starting isolation process'); // eslint-disable-line no-console
   let scope: Scope;
   // If a scope path provided we will take the component from that scope
@@ -42,6 +44,7 @@ export default (async function isolate(componentId: string, scopePath: string, o
 async function isolateUsingCapsule(componentId: string, opts: IsolateOptions) {
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(componentId);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const isolator: Isolator = await Isolator.getInstance('fs', consumer.scope, consumer, opts.directory);
   return isolator.isolate(bitId, opts);
 }

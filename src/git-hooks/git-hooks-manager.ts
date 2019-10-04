@@ -20,6 +20,7 @@ let instance = null;
  */
 export default class GitHooksManager {
   basePath: string; // path to the .git dir
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   hooks: Map<hookName, GitHook> = new Map();
 
   constructor(basePath: string) {
@@ -31,6 +32,7 @@ export default class GitHooksManager {
     return instance;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get hooksDirPath(): string {
     return path.join(this.basePath, HOOKS_DIR_NAME);
   }

@@ -27,6 +27,7 @@ const tableColumnConfig = {
 export default function paintComponent(
   component: ConsumerComponent,
   componentModel?: ConsumerComponent,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   showRemoteVersion: boolean,
   detailed: boolean,
   dependenciesInfo: DependenciesInfo[],
@@ -36,6 +37,7 @@ export default function paintComponent(
 
   function paintWithoutCompare() {
     const printableComponent = componentToPrintableForDiff(component);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     printableComponent.scopesList = (component.scopesList || []).map(s => s.name).join('\n');
     const rows = getFields()
       .map(field => {
@@ -77,6 +79,7 @@ export default function paintComponent(
   function paintWithCompare() {
     if (!componentModel) throw new Error('paintWithCompare, componentModel must be defined');
     const printableOriginalComponent = componentToPrintableForDiff(component);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     printableOriginalComponent.id += ' [file system]';
     const printableComponentToCompare = componentToPrintableForDiff(componentModel);
 

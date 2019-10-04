@@ -17,6 +17,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toString = bareResult.data.brokenSymlinks
       .map(brokenSymlink => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`)
       .join('\n');
@@ -25,6 +26,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toString = R.uniq(bareResult.data.brokenSymlinks.map(b => b.pathToDelete)).join('\n');
     return `please delete the following paths:\n${toString}`;
   }

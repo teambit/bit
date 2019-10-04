@@ -43,17 +43,21 @@ export default (async function migrate(
   verbose: boolean = false
 ): Promise<ScopeMigrationResult> {
   globalVerbose = verbose;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const migrations: VersionMigrations[] = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
   const result = { newObjects: {}, refsToRemove: [] };
   if (R.isEmpty(migrations)) {
     const noMigrationMsg = 'there are no migrations to run, leaving the scope as is with no changes';
     logger.debug(noMigrationMsg);
     if (verbose) console.log(noMigrationMsg); // eslint-disable-line
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return result;
   }
   R.forEach(_runAllMigrationsForObject(migrations), objects);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   R.forEach(_getRealObjectWithUpdatedRefs(result, refsIndex), objects);
   result.newObjects = R.values(result.newObjects);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return result;
 });
 
@@ -109,6 +113,8 @@ const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migrat
  * To improve performence in case we need to update objet in case the id of the ref has been changed
  * @param {BitRawObject} rawObject
  */
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: BitRawObject) {
   const refs = rawObject.refs();
   refs.forEach(ref => {
@@ -122,6 +128,8 @@ function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: Bit
  * @param {*} oldRef
  * @param {*} newRef
  */
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string, newRef: string): BitObject => {
   // If the object doesn't has a dependent object return null
   // This object reference won't be update anywhere
@@ -149,6 +157,8 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
  */
 const _getRealObjectWithUpdatedRefs = (
   result: ScopeMigrationResultCache,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   index: { [string]: BitRawObject }
 ): Function => (object: BitRawObject) => {
   // Make sure we got a rawObject (we might get a null object in case of corrupted object)

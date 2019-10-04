@@ -39,6 +39,7 @@ export async function bumpDependenciesVersions(
   taggedComponents: Component[]
 ): Promise<AutoTagResult[]> {
   const taggedComponentsIds = BitIds.fromArray(taggedComponents.map(c => c.id));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const allComponents = new BitIds(...potentialComponents, ...taggedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
   const graph = buildGraph(componentsAndVersions);
@@ -70,6 +71,7 @@ async function updateComponents(
     let pendingUpdate = false;
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!graph.hasNode(idStr)) return null;
     const taggedId = taggedComponents.searchWithoutVersion(bitId);
     const isTaggedComponent = Boolean(taggedId);
@@ -81,6 +83,7 @@ async function updateComponents(
     const allDependencies = graphlib.alg.preorder(graph, idStr); // same as flattenDependencies
     const triggeredBy = new BitIds();
     allDependencies.forEach((dependency: string) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependencyId: BitId = graph.node(dependency);
       const changedComponentId = changedComponents.searchWithoutVersion(dependencyId);
       if (changedComponentId && semver.gt(changedComponentId.version, dependencyId.version)) {
@@ -104,6 +107,7 @@ async function updateComponents(
           }
         }
         // it's round 1 or it's round2 but wasn't updated before. create a new version
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return component.getVersionToAdd();
       };
       const versionToAdd = getVersionToAdd();
@@ -151,6 +155,7 @@ export async function getAutoTagPending(
   changedComponents: BitIds
 ): Promise<ModelComponent[]> {
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     new BitIds(...potentialComponents, ...changedComponents)
   );
   const graph = buildGraph(componentsAndVersions);

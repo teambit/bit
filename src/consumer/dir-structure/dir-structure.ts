@@ -22,14 +22,17 @@ export default class BitStructure {
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dependenciesDirStructure(): string {
     return this.dependenciesDirectory;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get ejectedEnvsDirStructure(): ConfigDir {
     return new ConfigDir(this.ejectedEnvsDirectory);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get componentsDefaultDirectory(): string {
     if (!this._componentsDefaultDirectory) {
       const dirStructure = this._componentsDefaultDirectoryUnProcessed;

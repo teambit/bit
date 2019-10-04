@@ -5,6 +5,7 @@ export default class Isolate extends Command {
   name = 'isolate <id> [scopePath]';
   description = 'isolate component';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['d', 'directory [directory] ', 'path to store isolated component'],
     ['w', 'write-bit-dependencies [boolean] ', 'write bit components dependencies to package.json file'],
@@ -50,7 +51,9 @@ export default class Isolate extends Command {
       useCapsule: boolean | null | undefined;
     }
   ): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     opts.writeToPath = opts.directory;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return isolate(id, scopePath || process.cwd(), opts);
   }
 

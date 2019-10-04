@@ -39,12 +39,14 @@ export default (async function importAction(
     const id = envComponents[0].component.id.toString();
     function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         consumer.config.compiler = id;
         Analytics.setExtraData('build_env', id);
         return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         consumer.config.tester = id;
         Analytics.setExtraData('test_env', id);
         return consumer.config.write({ workspaceDir: consumer.getPath() });
@@ -63,6 +65,7 @@ export default (async function importAction(
         }
         consumer.config.extensions[id] = {
           options: {},
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           config: {}
         };
         return consumer.config.write({ workspaceDir: consumer.getPath() });
@@ -85,6 +88,7 @@ export default (async function importAction(
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     envComponents,
     consumer,
     installNpmPackages: importOptions.installNpmPackages

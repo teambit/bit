@@ -3,6 +3,7 @@ import forEach from './object/foreach';
 /**
  *
  */
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default function filterObject(obj: { [string: any]: any }, fn: (val: any, key: any) => boolean): Object {
   const newObj = {};
   forEach(obj, (val, key) => {

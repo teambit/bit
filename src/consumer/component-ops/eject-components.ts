@@ -24,15 +24,15 @@ import Component from '../component/consumer-component';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export type EjectResults = {
-  ejectedComponents: BitIds,
-  failedComponents: FailedComponents
+  ejectedComponents: BitIds;
+  failedComponents: FailedComponents;
 };
 
 type FailedComponents = {
-  modifiedComponents: BitIds,
-  stagedComponents: BitIds,
-  notExportedComponents: BitIds,
-  selfHostedExportedComponents: BitIds
+  modifiedComponents: BitIds;
+  stagedComponents: BitIds;
+  notExportedComponents: BitIds;
+  selfHostedExportedComponents: BitIds;
 };
 
 export default class EjectComponents {
@@ -40,7 +40,7 @@ export default class EjectComponents {
   componentsIds: BitId[];
   force: boolean;
   componentsToEject: BitIds;
-  notEjectedDependents: Array<{ dependent: Component, ejectedDependencies: Component[] }>;
+  notEjectedDependents: Array<{ dependent: Component; ejectedDependencies: Component[] }>;
   failedComponents: FailedComponents;
   packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
   constructor(consumer: Consumer, componentsIds: BitId[], force?: boolean) {
@@ -83,8 +83,9 @@ export default class EjectComponents {
     // this also loads all non-nested components into the memory, so retrieving them later is at no cost
     const graph = await DependencyGraph.buildGraphFromCurrentlyUsedComponents(this.consumer);
     const scopeGraph = new DependencyGraph(graph);
-    const notEjectedData: Array<{ id: BitId, dependencies: BitId[] }> = [];
-    this.componentsToEject.forEach((componentId) => {
+    const notEjectedData: Array<{ id: BitId; dependencies: BitId[] }> = [];
+    this.componentsToEject.forEach(componentId => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependents: BitId[] = scopeGraph.getImmediateDependentsPerId(componentId, true);
       const notEjectedDependents: BitId[] = dependents.filter(
         d => !this.componentsToEject.hasWithoutScopeAndVersion(d)
@@ -95,8 +96,9 @@ export default class EjectComponents {
         else notEjectedData.push({ id: dependentId, dependencies: [componentId] });
       });
     });
-    const notEjectedComponentsDataP = notEjectedData.map(async (notEjectedItem) => {
+    const notEjectedComponentsDataP = notEjectedData.map(async notEjectedItem => {
       const dependent = await this.consumer.loadComponent(notEjectedItem.id);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { components: ejectedDependencies } = await this.consumer.loadComponents(notEjectedItem.dependencies);
       return { dependent, ejectedDependencies };
     });
@@ -118,7 +120,7 @@ export default class EjectComponents {
     if (R.isEmpty(this.componentsIds)) return;
     const remotes = await getScopeRemotes(this.consumer.scope);
     const hubExportedComponents = new BitIds();
-    this.componentsIds.forEach((bitId) => {
+    this.componentsIds.forEach(bitId => {
       if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);
       else if (remotes.isHub(bitId.scope)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
@@ -127,7 +129,7 @@ export default class EjectComponents {
       this.componentsToEject = hubExportedComponents;
     } else {
       await Promise.all(
-        hubExportedComponents.map(async (id) => {
+        hubExportedComponents.map(async id => {
           try {
             const componentStatus = await this.consumer.getComponentStatusById(id);
             if (componentStatus.modified) this.failedComponents.modifiedComponents.push(id);
@@ -162,7 +164,7 @@ export default class EjectComponents {
     try {
       logger.debugAndAddBreadCrumb('eject', action);
       const componentsVersions = await Promise.all(
-        this.componentsToEject.map(async (bitId) => {
+        this.componentsToEject.map(async bitId => {
           const modelComponent = await this.consumer.scope.getModelComponent(bitId);
           // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
           return new ComponentVersion(modelComponent, bitId.version);
@@ -203,7 +205,7 @@ export default class EjectComponents {
 
   async rollBack(action: string): Promise<void> {
     await Promise.all(
-      this.packageJsonFilesBeforeChanges.map(async (packageJsonFile) => {
+      this.packageJsonFilesBeforeChanges.map(async packageJsonFile => {
         if (packageJsonFile.fileExist) {
           logger.warn(`eject: failed ${action}, restoring package.json at ${packageJsonFile.filePath}`);
           await packageJsonFile.write();
@@ -250,6 +252,7 @@ please use bit remove command to remove them.`,
 
   throwEjectError(message: string, originalError: Error) {
     // $FlowFixMe that's right, we don't know whether originalError has 'msg' property, but most have. what other choices do we have?
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const originalErrorMessage: string = defaultErrorHandler(originalError) || originalError.msg || originalError;
     logger.error(`eject has stopped due to an error ${originalErrorMessage}`, originalError);
     throw new Error(`${message}
@@ -258,7 +261,7 @@ got the following error: ${originalErrorMessage}`);
   }
 
   _validateIdsHaveScopesAndVersions() {
-    this.componentsToEject.forEach((id) => {
+    this.componentsToEject.forEach(id => {
       if (!id.hasScope() || !id.hasVersion()) {
         throw new TypeError(`EjectComponents expects ids with scope and version, got ${id.toString()}`);
       }

@@ -21,6 +21,7 @@ import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { CompilerResults } from '../../extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
@@ -102,6 +103,7 @@ export default (async function buildComponent({
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
   });
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   component.setDists(builtFiles.map(file => new Dist(file)), mainDist);
   if (save) {
     await scope.sources.updateDist({ source: component });
@@ -209,6 +211,7 @@ async function _buildIfNeeded({
       installPackages: true,
       noPackageJson: false
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;
     const result = await _runBuild({ ...runBuildParams, componentRoot: isolatedComponent.writtenPath });
@@ -288,6 +291,7 @@ async function _runBuild({
         });
         const writeDists = async (builtFiles, mainDist): Promise<void> => {
           const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
           // $FlowFixMe result is not null here because the dists exist
           const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
@@ -329,6 +333,7 @@ async function _runBuild({
         const capsuleFiles = componentWithDependencies.component.files;
         return {
           capsule: isolator.capsule,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           capsuleFiles,
           componentWithDependencies,
           writeDists,

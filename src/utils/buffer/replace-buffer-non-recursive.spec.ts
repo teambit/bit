@@ -20,6 +20,7 @@ describe('ReplaceBuffer', () => {
   });
   it('should throw an error if non-buffer argument was passed', () => {
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       replaceBuffer('hello world', 'l', '!');
     } catch (err) {
       expect(err.message).to.equal('replaceBuffer expect to get Buffer, got string instead');

@@ -29,11 +29,13 @@ export default class GeneralHelper {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
   installAndGetTypeScriptCompilerDir(): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.npm.installNpmPackage('typescript');
     return path.join(this.scopes.localPath, 'node_modules', '.bin');
   }
   setProjectAsAngular() {
     this.npm.initNpm();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.npm.installNpmPackage('@angular/core');
   }
   nodeStart(mainFilePath: string, cwd?: string) {

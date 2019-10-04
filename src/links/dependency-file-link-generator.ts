@@ -254,6 +254,7 @@ export default class DependencyFileLinkGenerator {
     return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _getPackagePathToInternalFile(filePath?: string = this.relativePath.destinationRelativePath) {
     const packageName = this._getPackageName();
     const internalFileInsidePackage = this._getInternalFileInsidePackage(filePath);

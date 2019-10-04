@@ -9,6 +9,7 @@ export default class Migrate extends Command {
   loader = true;
   migration = false;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['v', 'verbose', 'showing logs for the migration process']];
 
   action([scopePath]: [string], { verbose }: { verbose: boolean | null | undefined }): Promise<any> {

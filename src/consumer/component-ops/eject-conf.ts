@@ -64,6 +64,7 @@ export async function getEjectConfDataToPersist(
     const configDirToValidate = _getDirToValidateAgainstOtherComps(configDir);
     bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir.linuxDirPath;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = configDir.getResolved({ componentDir });

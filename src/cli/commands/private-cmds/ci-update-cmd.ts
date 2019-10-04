@@ -10,6 +10,7 @@ export default class CiUpdate extends Command {
   name = 'ci-update <id> [scopePath]';
   description = 'run an update for build and test of a certain bit-component';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     // ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
     ['d', 'directory [file]', 'directory to run ci-update'],
@@ -68,8 +69,11 @@ export default class CiUpdate extends Command {
     // check if there is build results
     if (output && dists) {
       const ci = {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ci.specResults = specsResults;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ci.cwd = directory || process.cwd;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ci.buildResults = dists;
       outputJsonFile(output, ci);
     }

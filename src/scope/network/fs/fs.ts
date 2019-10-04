@@ -38,29 +38,35 @@ export default class Fs implements Network {
   }
 
   pushMany(components: ComponentObjects[]): Promise<string[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return put({ path: this.scopePath, componentObjects: components });
   }
 
   deleteMany(ids: string[], force: boolean): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return remove({ path: this.scopePath, ids, force });
   }
 
   deprecateMany(ids: string[]): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return deprecate({ path: this.scopePath, ids });
   }
 
   undeprecateMany(ids: string[]): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return undeprecate({ path: this.scopePath, ids });
   }
 
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
     const idsStr = bitIds.serialize();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return fetch(this.scopePath, idsStr, noDependencies).then(bitsMatrix => {
       if (noDependencies) return bitsMatrix;
       return flatten(bitsMatrix);
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   latestVersions(componentIds: BitId[]) {
     return this.getScope()
       .latestVersions(componentIds)
@@ -71,10 +77,13 @@ export default class Fs implements Network {
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   search(query: string, reindex: boolean): Promise<[]> {
     return searchAdapter.scopeSearch(this.scopePath, query, reindex);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   show(bitId: BitId): Promise<> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
     return scopeComponentsImporter.loadComponent(bitId);
@@ -95,6 +104,7 @@ export default class Fs implements Network {
     return DependencyGraph.loadFromString(graphStr);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   connect() {
     return loadScope(this.scopePath).then(scope => {
       this.scope = scope;

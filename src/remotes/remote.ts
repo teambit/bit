@@ -64,10 +64,12 @@ export default class Remote {
   }
 
   fetch(bitIds: BitIds, withoutDeps: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
   }
 
   latestVersions(bitIds: BitId[]): Promise<ComponentObjects[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then(network => network.latestVersions(bitIds));
   }
 
@@ -76,13 +78,16 @@ export default class Remote {
   }
 
   push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
   pushMany(components: ComponentObjects[], context: Object | null | undefined): Promise<string[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }
   deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<Object[]> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.deleteMany(ids, force, context));
   }
   deprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]> {

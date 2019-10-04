@@ -128,6 +128,7 @@ async function getComponentsToExport(
     const idsToFork = bitIds.filter(id => id.scope && id.scope !== remote);
     if (!idsToFork.length) return;
     const forkPromptResult = await forkComponentsPrompt(idsToFork, remote)();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!yn(forkPromptResult.shouldFork)) {
       throw new GeneralError('the operation has been canceled');
     }
@@ -234,6 +235,7 @@ async function reImportComponent(consumer: Consumer, id: BitId) {
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
     writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     configDir: componentMap.configDir,
     writePackageJson
   });
@@ -251,6 +253,7 @@ async function cleanOldComponents(consumer: Consumer, updatedIds: BitIds, idsToE
 async function _throwForModified(consumer: Consumer, ids: BitIds) {
   await pMapSeries(ids, async id => {
     const status = consumer.getComponentStatusById(id);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (status.modified) {
       throw new GeneralError(
         `unable to perform rewire on "${id.toString()}" because it is modified, please tag or discard your changes before re-trying`

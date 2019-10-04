@@ -91,6 +91,7 @@ export default class ScopeComponentsImporter {
    */
   async importManyWithAllVersions(
     ids: BitIds,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     cache?: boolean = true,
     allDepsVersions: boolean = false
   ): Promise<VersionDependencies[]> {
@@ -183,6 +184,7 @@ export default class ScopeComponentsImporter {
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     return this._getComponentVersion(id).then(component => {
       if (!component) throw new ComponentNotFound(id.toString());
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toConsumer(this.scope.objects);
     });
   }

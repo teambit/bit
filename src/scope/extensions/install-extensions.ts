@@ -69,6 +69,7 @@ export default function installExtensions({
     await env.destroyIfExist();
     await env.create();
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
       if (!dontPrintEnvMsg) {
         // eslint-disable-next-line no-console

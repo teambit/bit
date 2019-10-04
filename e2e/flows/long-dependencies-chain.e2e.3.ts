@@ -51,6 +51,7 @@ describe('flow of a long-dependencies-chain', function() {
         const appJsFixture = `const barFoo = require('./components/${lastComponent}'); console.log(barFoo());`;
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const arrayOfSizeOfChain = [...Array(sizeOfChain).keys()];
         const expectedResult = arrayOfSizeOfChain.map(num => `got foo${num}`).join(' and ');
         expect(result.trim()).to.equal(expectedResult);

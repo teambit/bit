@@ -3,6 +3,7 @@ import GeneralError from '../error/general-error';
 type Example = {
   raw: string;
   description?: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   code?: Array;
   returns?: Object;
 };
@@ -14,6 +15,7 @@ const token = {
   COMMENT: 'COMMENT'
 };
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Token = $Keys<typeof token>;
 
 const status = {
@@ -23,6 +25,7 @@ const status = {
   NONE: 'NONE'
 };
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Status = $Keys<typeof status>;
 
 function isComment(str: string): Boolean {
@@ -123,6 +126,7 @@ function parseToken(currentToken, line, currentStatus, example): Status {
  * }
  */
 export default function parse(exampleRaw: string): Example {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const example: Example = {};
   let currentStatus: Status = status.NONE;
   example.raw = exampleRaw;

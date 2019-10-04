@@ -63,6 +63,7 @@ async function _deprecationRemote(
       : await resolvedRemote.undeprecateMany(idsStr, context);
     return deprecateResult;
   });
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return Promise.all(deprecateP);
 }
 

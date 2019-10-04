@@ -18,6 +18,8 @@ export default class Config extends Command {
     return config.list();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
       .map(tuple => {
@@ -38,6 +40,8 @@ class ConfigSet extends Command {
     return config.set(key, value);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return chalk.green('added configuration successfully');
   }
@@ -68,6 +72,8 @@ class ConfigList extends Command {
     return config.list();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
       .map(tuple => {
@@ -87,6 +93,8 @@ class ConfigDel extends Command {
     return config.del(key);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return chalk.green('deleted successfully');
   }

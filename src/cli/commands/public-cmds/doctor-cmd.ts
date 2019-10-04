@@ -9,6 +9,7 @@ export default class Doctor extends Command {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
@@ -31,6 +32,7 @@ export default class Doctor extends Command {
     }
     let filePath = save;
     // Happen when used --save without specify the location
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (save === true) {
       filePath = '.';
     }
@@ -41,12 +43,19 @@ export default class Doctor extends Command {
   }
 
   report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Object): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (flags.list) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return _listReport(res, flags.json);
     }
     if (args && args[0]) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return _runOneReport(res, flags.json);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return _runAllReport(res, flags.json);
   }
 }

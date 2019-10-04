@@ -7,5 +7,6 @@ export default function outputJsonFile(file: string, data: Object): void {
   } catch (e) {
     console.error(`failed to write output to file:${e}`); // eslint-disable-line no-console
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return file;
 }

@@ -19,6 +19,7 @@ import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import { Log } from '../../scope/models/version';
 import { ScopeListItem } from '../../scope/models/model-component';
@@ -29,6 +30,7 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { EnvType } from '../../extensions/env-extension';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
@@ -63,6 +65,7 @@ import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-no
 import { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
@@ -103,6 +106,8 @@ export type ComponentProps = {
   customResolvedPaths?: customResolvedPath[] | null | undefined;
   overrides: ComponentOverrides;
   packageJsonFile?: PackageJsonFile | null | undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageJsonChangedProps?: { [string]: any } | null | undefined;
   files: SourceFile[];
   docs?: Doclet[] | null | undefined;
@@ -131,9 +136,13 @@ export default class Component {
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
   testerDependencies: Dependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDevDependencies: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedCompilerDependencies: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedTesterDependencies: BitIds;
   packageDependencies: Object;
   devPackageDependencies: Object;
@@ -158,6 +167,8 @@ export default class Component {
   componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
   origin: ComponentOrigin;
@@ -171,6 +182,7 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
       scope: this.scope,
@@ -179,6 +191,7 @@ export default class Component {
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get driver(): Driver {
     if (!this._driver) {
       this._driver = Driver.load(this.lang);
@@ -253,6 +266,7 @@ export default class Component {
     this.packageJsonChangedProps = packageJsonChangedProps;
     this.docs = docs || [];
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -361,6 +375,7 @@ export default class Component {
     const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap, configDir);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ejectConfData;
   }
 
@@ -393,6 +408,7 @@ export default class Component {
     return res;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force?: boolean = false): Promise<EjectConfResult> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
@@ -406,24 +422,34 @@ export default class Component {
 
     const res = await injectConf(this, consumerPath, bitMap, configDir, force);
     if (this.componentMap) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.componentMap.setConfigDir();
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return res;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies(): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromObject(this.flattenedDependencies);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDevDependencies(): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedCompilerDependencies(): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromObject(this.flattenedCompilerDependencies);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedTesterDependencies(): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromObject(this.flattenedTesterDependencies);
   }
 
@@ -490,7 +516,9 @@ export default class Component {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
     this.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file.updatePaths({ newBase: file.base, newRelative });
     });
     this.dists.stripOriginallySharedDir(originallySharedDir);
@@ -517,7 +545,9 @@ export default class Component {
       return path.join(this.wrapDir, pathStr);
     };
     this.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = pathWithWrapDir(file.relative);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file.updatePaths({ newBase: file.base, newRelative });
     });
     // @todo: for dist also.
@@ -582,6 +612,7 @@ export default class Component {
     directory?: string;
     keep?: boolean;
   }): Promise<SpecsResults | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testFiles = this.files.filter(file => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
     if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
@@ -607,8 +638,10 @@ export default class Component {
       }
       loader.start(BEFORE_RUNNING_SPECS);
       const testFilesList = !component.dists.isEmpty()
-        ? component.dists.get().filter(dist => dist.test)
-        : component.files.filter(file => file.test);
+        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          component.dists.get().filter(dist => dist.test)
+        : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          component.files.filter(file => file.test);
 
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;
@@ -621,7 +654,9 @@ export default class Component {
           workspaceDir: consumer.bitMap.projectRoot
         };
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!contextPaths.componentDir && component.writtenPath) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         contextPaths.componentDir = component.writtenPath;
       }
       try {
@@ -683,6 +718,7 @@ export default class Component {
                   testFilePath,
                   componentWithDependencies.component.originallySharedDir
                 );
+                // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
                 return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
               };
               const context: Object = {
@@ -728,8 +764,10 @@ export default class Component {
         // some or all the tests were failed.
         loader.stop();
         if (verbose) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           return Promise.reject(new ComponentSpecsFailed(this.id.toString(), this.specsResults));
         }
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return Promise.reject(new ComponentSpecsFailed());
       }
 
@@ -745,6 +783,7 @@ export default class Component {
 
     if (!isolated && consumer) {
       // we got here from either bit-tag or bit-test. either way we executed already the build process
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return run(this, consumer.getPath());
     }
 
@@ -761,6 +800,7 @@ export default class Component {
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
 
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
 
       createSymlinkOrCopy(testerFilePath, localTesterPath);
@@ -776,6 +816,7 @@ export default class Component {
 
       const results = await run(component);
       if (!keep) await isolatedEnvironment.destroy();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return results;
     } catch (e) {
       if (!keep) await isolatedEnvironment.destroy();
@@ -832,6 +873,10 @@ export default class Component {
   }
 
   copyFilesIntoDists() {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
     this.setDists(dists);
   }
@@ -906,38 +951,67 @@ export default class Component {
     this.setTesterDependencies(componentFromModel.testerDependencies.get());
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async fromObject(object: Object): Component {
     const {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       box,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       lang,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compilerDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       testerDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devPackageDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       peerPackageDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compilerPackageDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       testerPackageDependencies,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dists,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       specsResults,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       license,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       overrides,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       deprecated
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const compilerInstance = compilerProps ? await makeEnv(COMPILER_ENV_TYPE, compilerProps) : null;
     const testerProps = tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testerInstance = testerProps ? await makeEnv(TESTER_ENV_TYPE, testerProps) : null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: box ? `${box}/${name}` : name,
       version,
@@ -966,6 +1040,7 @@ export default class Component {
     });
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async fromString(str: string): Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
@@ -1089,8 +1164,10 @@ export default class Component {
       context: envsContext
     };
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const compilerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
     propsToLoadEnvs.envType = TESTER_ENV_TYPE;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
@@ -1137,6 +1214,7 @@ export default class Component {
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
       files,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       loadedFromFileSystem: true,
       componentFromModel,
       componentMap,
@@ -1155,5 +1233,8 @@ export default class Component {
 }
 
 function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }

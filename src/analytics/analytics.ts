@@ -5,6 +5,7 @@ import hashObj from 'object-hash';
 import uniqid from 'uniqid';
 import yn from 'yn';
 import R from 'ramda';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import { fork } from 'child_process';
 import { setSync, getSync } from '../api/consumer/lib/global-config';
@@ -49,6 +50,7 @@ class Analytics {
   static nodeVersion: string;
   static os: string;
   static extra: Object | null | undefined = {};
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static level: LEVEL;
   static error: Error | string | Object;
   static breadcrumbs: Array<Breadcrumb> = [];
@@ -79,9 +81,12 @@ class Analytics {
     if (shouldPromptForAnalytics()) {
       const uniqId = uniqid();
       if (!getSync(CFG_ANALYTICS_USERID_KEY)) setSync(CFG_ANALYTICS_USERID_KEY, uniqId);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return analyticsPrompt().then(({ analyticsResponse }) => {
         setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
         if (!yn(analyticsResponse)) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           return errorReportingPrompt().then(({ errResponse }) => {
             return setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
           });
@@ -146,6 +151,7 @@ class Analytics {
     return new Promise((resolve, reject) => {
       if (this.analytics_usage || (this.error_usage && !this.success)) {
         const file = path.join(__dirname, 'analytics-sender.js');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const forked = fork(file, { silent: true }); // switch to `false` to debug the child
         // console.log('sending', this.toObject()); // un-comment to see the data sent to Analytics
         forked.send(this.toObject());

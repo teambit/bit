@@ -12,6 +12,7 @@ export default class List extends Command {
   name = 'list [scope]';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-link.html`;
   alias = 'ls';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
@@ -51,6 +52,7 @@ export default class List extends Command {
     }
     if (namespace) {
       const namespaceWithWildcard = hasWildcard(namespace) ? namespace : `${namespace}/*`;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       params.namespacesUsingWildcards = namespaceWithWildcard;
     }
     return listScope(params).then(listScopeResults => ({

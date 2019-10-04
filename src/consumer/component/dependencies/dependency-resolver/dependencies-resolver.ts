@@ -54,6 +54,7 @@ export default class DependencyResolver {
   tree: Tree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   issues: $PropertyType<Component, 'issues'>;
   processedFiles: string[];
   compilerFiles: PathLinux[];
@@ -149,14 +150,18 @@ export default class DependencyResolver {
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
     if (shouldProcessEnvDependencies(this.component.compiler)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.compilerPackageDependencies.devDependencies = R.merge(
         this.allPackagesDependencies.compilerPackageDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.component.compilerPackageDependencies.devDependencies
       );
     }
     if (shouldProcessEnvDependencies(this.component.tester)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.testerPackageDependencies.devDependencies = R.merge(
         this.allPackagesDependencies.testerPackageDependencies,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.component.testerPackageDependencies.devDependencies
       );
     }
@@ -252,7 +257,9 @@ export default class DependencyResolver {
         if (componentId) return componentId; // eslint-disable-line consistent-return
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.tree[depFile].bits && this.tree[depFile].bits.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       for (const bit of this.tree[depFile].bits) {
         const componentId = this.consumer.getComponentIdFromNodeModulesPath(bit, this.component.bindingPrefix);
         if (componentId) return componentId; // eslint-disable-line consistent-return
@@ -373,6 +380,7 @@ export default class DependencyResolver {
       isRelativeToConfigDir,
       rootDir,
       depFile,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isCompilerDependency
     );
     const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
@@ -399,6 +407,8 @@ export default class DependencyResolver {
       // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
       const resolvedSource = path.resolve(rootDir, depFile);
       // @todo: use the new ConfigDir class that Gilad added once it is merged.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
         this.componentMap.configDir,
         this.componentMap.rootDir
@@ -427,6 +437,7 @@ export default class DependencyResolver {
     depFile: string,
     importSpecifiers?: ImportSpecifier[],
     linkFile?: string,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     fileType: FileType,
     depFileObject: FileObject
   ) {
@@ -443,8 +454,10 @@ export default class DependencyResolver {
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.tree[depFile] && this.tree[depFile].missing && this.tree[depFile].missing.bits) {
         // this depFile is a dependency link and this dependency is missing
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
         return;
       }
@@ -492,7 +505,9 @@ either, use the ignore file syntax or change the require statement to have a mod
     };
     if (importSpecifiers) {
       importSpecifiers.map(importSpecifier => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (importSpecifier.linkFile) delete importSpecifier.linkFile.exported;
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (importSpecifier.mainFile) delete importSpecifier.mainFile.exported;
       });
       depsPaths.importSpecifiers = importSpecifiers;
@@ -570,12 +585,16 @@ either, use the ignore file syntax or change the require statement to have a mod
         // with all importSpecifiers of that linkFile.
         // also, delete the linkFile attribute of importSpecifiers so then once the component is
         // imported and the link is generated, it won't be treated as a linkFile.
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependency.importSpecifiers.map(a => delete a.linkFile);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         nonLinkImportSpecifiers.push(dependency.importSpecifiers);
       } else {
         this.processOneDepFile(
           originFile,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           dependency.file,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           dependency.importSpecifiers,
           linkFile.file,
           fileType,
@@ -602,6 +621,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   processBits(originFile: PathLinuxRelative, fileType: FileType) {
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     bits.forEach(bitDep => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
@@ -616,6 +636,7 @@ either, use the ignore file syntax or change the require statement to have a mod
             ? path.join(this.consumerPath, this.componentMap.rootDir)
             : this.consumerPath;
           const depPath = path.join(basePath, bitDep);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
           if (packageJson) {
             const depVersion = packageJson.version;
@@ -674,8 +695,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     const missing = this.tree[originFile].missing;
     if (!missing) return;
     const processMissingFiles = () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.files)) return;
       const absOriginFile = this.consumer.toAbsolutePath(originFile);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingFiles = missing.files.filter(missingFile => {
         // convert from importSource (the string inside the require/import call) to the path relative to consumer
         const resolvedPath = path.resolve(path.dirname(absOriginFile), missingFile);
@@ -686,7 +709,9 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.packages)) return;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingPackages = missing.packages.filter(
         pkg => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
@@ -707,7 +732,9 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (RA.isNilOrEmpty(missing.bits)) return;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();
@@ -740,6 +767,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     );
     logger.error('dependency-resolver.processErrors', error);
     // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;
   }
@@ -840,6 +868,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     );
 
     // remove dev and env dependencies that are also regular dependencies
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map(c => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       d => !componentDepsIds.has(d.id)
@@ -937,6 +966,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const getPathsRelativeToComponentRoot = () => {
       const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.getRootDir());
       return files.map(file => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const envAbsolute = file.path;
         return path.relative(rootDirAbsolute, envAbsolute);
       });
@@ -953,6 +983,8 @@ either, use the ignore file syntax or change the require statement to have a mod
   populatePeerPackageDependencies(): void {
     const getPeerDependencies = (): Object => {
       const packageJson = this._getPackageJson();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
       return {};
     };
@@ -1093,5 +1125,6 @@ either, use the ignore file syntax or change the require statement to have a mod
  * to the dependencyResolver
  */
 function shouldProcessEnvDependencies(env: EnvExtension): boolean {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return Boolean(env && env.files && env.files.every(file => !file.fromModel));
 }

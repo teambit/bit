@@ -42,6 +42,8 @@ async function getFlattenedDependencies(
   const flattenDependency = async dependency => {
     if (cache[dependency]) return cache[dependency];
     // $FlowFixMe if graph doesn't have the node, prodGraph must have it
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
     let versionDependencies;
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
@@ -75,6 +77,7 @@ this dependency was not included in the tag command.`);
 }
 
 function getEdges(graph: Object, id: BitIdStr): BitIdStr[] | null | undefined {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!graph.hasNode(id)) return null;
   const edges = graphlib.alg.preorder(graph, id);
   return R.tail(edges); // the first item is the component itself
@@ -117,6 +120,7 @@ async function setFutureVersions(
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentToTag.usedVersion = componentToTag.version;
       componentToTag.version = version;
     })
@@ -171,9 +175,11 @@ function validateDirManipulation(components: Component[]): void {
       return pathWithSharedDir(withoutWrapDir);
     };
     const expectedMainFile = pathAfterDirManipulation(component.componentMap.mainFile);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     throwOnError(expectedMainFile, component.pendingVersion.mainFile);
     // $FlowFixMe componentMap is set here
     const componentMapFiles = component.componentMap.getAllFilesPaths();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
     componentMapFiles.forEach(file => {
       const expectedFile = pathAfterDirManipulation(file);
@@ -226,6 +232,7 @@ export default (async function tagModelComponent({
   // $FlowFixMe unclear error
   const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
@@ -251,6 +258,7 @@ export default (async function tagModelComponent({
     const newestVersions = await Promise.all(newestVersionsP);
     const newestVersionsWithoutEmpty = newestVersions.filter(newest => newest);
     if (!RA.isNilOrEmpty(newestVersionsWithoutEmpty)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
     }
   }
@@ -273,6 +281,7 @@ export default (async function tagModelComponent({
     } catch (err) {
       // if force is true, ignore the tests and continue
       if (!force) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (!verbose) throw new ComponentSpecsFailed();
         throw err;
       }

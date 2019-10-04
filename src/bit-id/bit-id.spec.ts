@@ -5,16 +5,21 @@ import { InvalidName, InvalidScopeName } from './exceptions';
 describe('Bit-id', () => {
   it('should be frozen', () => {
     const bitId = new BitId({ name: 'my-name' });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     expect(() => (bitId.scope = 'name')).to.throw();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     expect(() => (bitId.name = 'name')).to.throw();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     expect(() => (bitId.version = 'name')).to.throw();
   });
   describe('constructor', () => {
     it('should not throw for an invalid scope as it hurts performance (it is done on .parse() instead)', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const invalidScope = () => new BitId({ scope: 123, name: 'my-name' });
       expect(invalidScope).to.not.throw(InvalidScopeName);
     });
     it('should not throw for an invalid name as it hurts performance (it is done on .parse() instead)', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const invalidName = () => new BitId({ name: ['a', 'b'] });
       expect(invalidName).to.not.throw(InvalidName);
     });
@@ -25,6 +30,7 @@ describe('Bit-id', () => {
     it('should not accept an empty name', () => {
       expect(() => new BitId({ scope: 'my-scope', name: null })).to.throw(InvalidName);
       expect(() => new BitId({ scope: 'my-scope', name: undefined })).to.throw(InvalidName);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(() => new BitId({ scope: 'my-scope' })).to.throw(InvalidName);
     });
   });
@@ -49,6 +55,7 @@ describe('Bit-id', () => {
     });
     it('should accept an empty parameter to remove the version', () => {
       const bitId = new BitId({ scope: 'my-scope', name: 'my-name', version: '0.0.1' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(bitId.changeVersion()).to.have.property('version').that.is.null;
     });
   });
@@ -66,6 +73,7 @@ describe('Bit-id', () => {
     it('should convert CSSComp to css-comp', () => {
       const bitName = 'CSSComp';
       expect(BitId.getValidBitId('global', bitName).toString()).to.equal('global/css-comp');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     }).timeout(5000);
     it('should convert EN-US to en-us', () => {
       const bitName = 'EN-US';

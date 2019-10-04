@@ -10,6 +10,8 @@ HooksManager.init();
 
 module.exports = {
   show: (scopePath: string, id: string, opts: Object) =>
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
       if (Array.isArray(component)) {
         return component.map(v => v.toObject());

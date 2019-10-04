@@ -50,8 +50,12 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Return the action
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get action(): Function | null | undefined {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.script && this.script.action && typeof this.script.action === 'function') {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return this.script.action;
     }
     return undefined;
@@ -60,11 +64,18 @@ export default class EnvExtension extends BaseExtension {
   /**
    * return old actions (to support old compilers / testers which uses run / compile functions)
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get oldAction(): Function | null | undefined {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.script && this.script.run && typeof this.script.run === 'function') {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return this.script.run;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.script && this.script.compile && typeof this.script.compile === 'function') {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return this.script.compile;
     }
     return undefined;
@@ -87,6 +98,7 @@ export default class EnvExtension extends BaseExtension {
 
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.options.file) {
       return undefined;
     }
@@ -97,6 +109,7 @@ export default class EnvExtension extends BaseExtension {
       scope,
       ...opts
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const installResult = await installExtensions(installOpts);
     this.setExtensionPathInScope(scope.getPath());
     await this.reload(scope.getPath(), context);
@@ -110,6 +123,7 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toObject(): Object {
     const baseObject: Object = super.toObject();
     const files = this.files;
@@ -122,11 +136,14 @@ export default class EnvExtension extends BaseExtension {
    * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toBitJsonObject(ejectedEnvDirectory: string): { [key: string]: EnvExtensionObject } {
     logger.debug('env-extension, toBitJsonObject');
     const files = {};
     this.files.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files[file.name] = `./${relativePath}`;
     });
     const envVal = {
@@ -134,6 +151,7 @@ export default class EnvExtension extends BaseExtension {
       options: this.options,
       files
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
       [this.name]: envVal
     };
@@ -157,9 +175,12 @@ export default class EnvExtension extends BaseExtension {
 
     this.files.forEach(file => {
       if (deleteOldFiles) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const pathToDelete = consumer ? consumer.getPathRelativeToConsumer(file.path) : file.path;
         filePathsToRemove.push(pathToDelete);
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
       file.verbose = verbose;
     });
@@ -167,6 +188,7 @@ export default class EnvExtension extends BaseExtension {
     this.files.forEach(file => {
       const cloned = file.clone();
       cloned.verbose = verbose;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.dataToPersist.addFile(cloned);
     });
     filePathsToRemove.map(file => this.dataToPersist.removePath(new RemovePath(file, true)));
@@ -183,9 +205,11 @@ export default class EnvExtension extends BaseExtension {
     consumerPath: PathOsBased
   ): Promise<boolean> {
     Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filePaths = this.files.map(file => file.path);
     const relativeSourcePaths = dependencies.getSourcesPaths();
     if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDir = this.context.componentDir;
     const configDirResolved = configDir.getResolved({ componentDir, envType });
     const configDirPath = configDirResolved.dirPath;
@@ -215,6 +239,7 @@ export default class EnvExtension extends BaseExtension {
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     const files = await ExtensionFile.loadFromBitJsonObject(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       props.files, // $FlowFixMe
       props.consumerPath,
       props.bitJsonPath,
@@ -399,6 +424,8 @@ export default class EnvExtension extends BaseExtension {
     };
     const envModelAString = stringifyEnv(envModelA);
     const envModelBString = stringifyEnv(envModelB);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return sha1(envModelAString) !== sha1(envModelBString);
   }
 }

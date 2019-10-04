@@ -167,6 +167,7 @@ describe('environments with dependencies', function() {
         // @todo: skipped temporarily, failed on Windows for some reason.
         describe.skip('ejecting the environment configuration to component dir', () => {
           before(() => {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.command.ejectConf('bar/foo');
           });
           it('still should not show the component as modified', () => {
@@ -178,6 +179,7 @@ describe('environments with dependencies', function() {
         describe.skip('ejecting the environment configuration to a directory outside the component dir', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.command.ejectConf('bar/foo -p my-conf-dir');
           });
           it('still should not show the component as modified', () => {
@@ -189,6 +191,7 @@ describe('environments with dependencies', function() {
         describe.skip('ejecting the environment configuration to a an inner component dir directory', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.command.ejectConf('bar/foo -p {COMPONENT_DIR}/my-inner-dir');
           });
           it('still should not show the component as modified', () => {
@@ -213,6 +216,7 @@ describe('environments with dependencies', function() {
           });
           describe('injecting the configuration back', () => {
             before(() => {
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('bar/foo');
             });
             it('should remove not only the configuration files but also the generated links', () => {
@@ -241,6 +245,7 @@ describe('environments with dependencies', function() {
           });
           describe('running inject-conf', () => {
             before(() => {
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               helper.command.injectConf('bar/foo');
             });
             it('should delete not only the configuration files but also the link file', () => {

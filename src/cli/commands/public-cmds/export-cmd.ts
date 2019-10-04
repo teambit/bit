@@ -17,6 +17,7 @@ export default class Export extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['a', 'all', 'export all components include non-staged'],

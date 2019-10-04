@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import pathlib from 'path';
 import { writeFile, cleanObject } from '../utils';
 import { Remote } from '../remotes';
@@ -25,6 +26,8 @@ export class ScopeJson {
   version: string | null | undefined;
   resolverPath: string | null | undefined;
   license: string | null | undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   remotes: { [string]: string };
   groupName: string;
 
@@ -37,11 +40,14 @@ export class ScopeJson {
     this.groupName = groupName || '';
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set name(suggestedName: string) {
     this._name = BitId.getValidScopeName(suggestedName);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this._name;
   }
@@ -108,6 +114,7 @@ export class ScopeJson {
   }
 
   getPopulatedLicense(): Promise<string | null | undefined> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.get('license') || !fs.existsSync(this.get('license'))) return Promise.resolve();
     return fs.readFile(this.get('license')).then(license => license.toString());
   }

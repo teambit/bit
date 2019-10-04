@@ -14,6 +14,7 @@ export default class Remove extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/removing-components.html
   ${WILDCARD_HELP('remove')}`;
   alias = 'rm';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
@@ -44,10 +45,12 @@ export default class Remove extends Command {
   ): Promise<any> {
     if (!silent) {
       const removePromptResult = await removePrompt();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!yn(removePromptResult.shouldRemove)) {
         throw new GeneralError('the operation has been canceled');
       }
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return remove({ ids, remote, force, track, deleteFiles });
   }
   report({

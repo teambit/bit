@@ -8,6 +8,7 @@ export default class Install extends Command {
   name = 'install [ids...]';
   description = `Installs all dependencies for all the sourced components (or for a specific one), whether they were defined in your package.json or in each of the sourced components, and links them. \n  https://${BASE_DOCS_DOMAIN}/docs/cli-install.html`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
 

@@ -25,6 +25,7 @@ async function parseValues(
   if (!values.length) {
     const componentsList = new ComponentsList(consumer);
     const bitIds = await componentsList.listModifiedComponents();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return { bitIds };
   }
   const firstValue = values[0];

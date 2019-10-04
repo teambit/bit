@@ -5,6 +5,7 @@ import { getScopeRemotes } from '../../../scope/scope-remotes';
 import GeneralError from '../../../error/general-error';
 
 function buildRemote(url: string): Remote {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return new Remote(url);
 }
 
@@ -22,6 +23,7 @@ export function add(url: string, global: boolean) {
       });
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return loadScope().then(scope => {
       return scope.scopeJson
         .addRemote(remote)
@@ -44,6 +46,7 @@ export async function remove(name: string, global: boolean) {
     return name;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const scope = await loadScope();
   const hasRemoved = scope.scopeJson.rmRemote(name);
   if (!hasRemoved) {
@@ -60,6 +63,7 @@ export function list(global: boolean) {
     return GlobalRemotes.load().then(globalRemotes => globalRemotes.toPlainObject());
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return loadScope().then(scope => {
     return getScopeRemotes(scope).then(remotes => remotes.toPlainObject());
   });

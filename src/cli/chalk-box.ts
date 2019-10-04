@@ -141,6 +141,7 @@ export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose:
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
       const componentId = c.bold(idStr);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (result.specs) return componentId + paintSpecsResults(result.specs, verbose);
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
@@ -172,6 +173,7 @@ export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): 
 export const paintBuildResults = (buildResults: []): string => {
   if (buildResults) {
     const statsHeader = c.underline.green('\nbuilt Files:\n');
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return statsHeader + buildResults.map(file => `${c.cyan(`${file.path}`)}`).join('\n');
   }
   return '';

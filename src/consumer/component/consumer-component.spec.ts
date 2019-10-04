@@ -1,10 +1,11 @@
 import { expect } from 'chai';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import withCompilerFixture from '../../../fixtures/consumer-components/with-compiler/with-compiler.json';
 import Component from './consumer-component';
 import CompilerExtension from '../../extensions/compiler-extension';
 import { SourceFile } from './sources';
 
-describe('ConsumerComponent', function () {
+describe('ConsumerComponent', function() {
   this.timeout(0);
   describe('fromString()', () => {
     describe('component with compiler', () => {
@@ -24,9 +25,11 @@ describe('ConsumerComponent', function () {
     const componentProps = {
       name: 'is-string',
       mainFile: 'is-string.js',
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       files: [new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(''), test: false })]
     };
     it('should return an empty array when there is no docs', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       expect(component.docs).to.deep.equal([]);
     });
@@ -35,8 +38,10 @@ describe('ConsumerComponent', function () {
       * is a given variable a string
       */
       function isString() {}`;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const sourceFile = new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(src), test: false });
       componentProps.files = [sourceFile];
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       await component.recalculateDocs();
       const docs = component.docs;
@@ -48,7 +53,9 @@ describe('ConsumerComponent', function () {
       * is a given variable a string
       */
       function isString() {}`;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const sourceFile = new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(src), test: false });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const sourceFileSpec = new SourceFile({
         base: '.',
         path: 'is-string.spec.js',
@@ -56,6 +63,7 @@ describe('ConsumerComponent', function () {
         test: true
       });
       componentProps.files = [sourceFile, sourceFileSpec];
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);
       await component.recalculateDocs();
       expect(component.docs).to.have.lengthOf(1);

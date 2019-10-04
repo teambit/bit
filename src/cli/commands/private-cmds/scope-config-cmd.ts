@@ -14,6 +14,8 @@ export default class ScopeConfig extends Command {
     return scopeConfig.list();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return objectToStringifiedTupleArray(conf)
       .map(tuple => {
@@ -35,6 +37,7 @@ class ScopeConfigSet extends Command {
   }
 
   report({ key, value }: { key: string; value: number }): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return `${chalk.yellow(key)} has been set to - ${chalk.yellow(value)}`;
   }
 }
@@ -65,6 +68,8 @@ class ScopeConfigList extends Command {
     return scopeConfig.list();
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: any }): string {
     return objectToStringifiedTupleArray(conf)
       .map(tuple => {
@@ -84,6 +89,8 @@ class ScopeConfigDel extends Command {
     return scopeConfig.del(key);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   report(conf: { [string]: string }): string {
     return 'deleted successfully';
   }

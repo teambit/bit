@@ -19,6 +19,7 @@ export type DependenciesInfo = {
 };
 
 export default class DependencyGraph {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graph: Graph;
   scopeName: string;
 
@@ -55,6 +56,7 @@ export default class DependencyGraph {
   /**
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphWithAllVersions(scope: Scope): Graph {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
@@ -71,6 +73,7 @@ export default class DependencyGraph {
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();
             depObj[idWithVersion] = componentVersion;
           })
@@ -86,6 +89,7 @@ export default class DependencyGraph {
     return graph;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
@@ -105,6 +109,7 @@ export default class DependencyGraph {
     return graph;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest: boolean = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
@@ -140,6 +145,7 @@ export default class DependencyGraph {
    * ignore nested dependencies. build the graph from only imported and authored components
    * according to currently used versions (.bitmap versions)
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getAuthoredAndImportedFromFS();
@@ -151,6 +157,7 @@ export default class DependencyGraph {
     return graph;
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
@@ -168,6 +175,7 @@ export default class DependencyGraph {
    * returns a new Graph that has only nodes that are related to the given id.
    * (meaning, they're either dependents or dependencies)
    */
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getSubGraphOfConnectedComponents(id: BitId): Graph {
     const connectedGraphs = GraphLib.alg.components(this.graph);
     const idWithVersion = this._getIdWithLatestVersion(id);

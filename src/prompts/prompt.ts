@@ -19,6 +19,7 @@ export default function(schema: Object): () => Promise<{ string: any }> {
           }
           return reject(err);
         }
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         loader.start();
         return resolve(res);
       });

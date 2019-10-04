@@ -56,6 +56,8 @@ type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
   componentId: BitId;
@@ -273,9 +275,12 @@ export default class AddComponents {
         delete component.trackDir;
       } else if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.warnings.alreadyUsed[existingIdOfFile]) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath);
         } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
         }
         // $FlowFixMe null is removed later on
@@ -297,6 +302,7 @@ export default class AddComponents {
     }
     if (this.trackDirFeature) {
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
       }
     }
@@ -319,6 +325,7 @@ export default class AddComponents {
         mainFile,
         trackDir,
         origin: COMPONENT_ORIGINS.AUTHORED,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override
       });
     };
@@ -604,6 +611,7 @@ export default class AddComponents {
     const componentId = finalBitId;
     componentsWithFiles = componentsWithFiles.filter(componentWithFiles => componentWithFiles.files.length);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (componentsWithFiles.length === 0) return { componentId, files: [] };
     if (componentsWithFiles.length === 1) return componentsWithFiles[0];
 

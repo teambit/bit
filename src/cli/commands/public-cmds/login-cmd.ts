@@ -7,6 +7,7 @@ export default class Login extends Command {
   name = 'login';
   description = 'log the CLI into Bit';
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
@@ -35,6 +36,7 @@ export default class Login extends Command {
     }
   ): Promise<any> {
     return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ({ isAlreadyLoggedIn, username, npmrcPath, writeToNpmrcError }) => ({
         isAlreadyLoggedIn,
         username,

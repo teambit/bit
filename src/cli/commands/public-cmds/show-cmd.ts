@@ -10,6 +10,7 @@ export default class Show extends Command {
   name = 'show <id>';
   description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/cli-show.html`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['r', 'remote', 'show a remote component'],
@@ -108,24 +109,32 @@ export default class Show extends Command {
       const makeComponentReadable = (comp: ConsumerComponent) => {
         if (!comp) return comp;
         const componentObj = comp.toObject();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentObj.files = comp.files.map(file => file.toReadableString());
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentObj.dists = componentObj.dists.getAsReadable();
         if (comp.compiler) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           componentObj.compiler.files = makeEnvFilesReadable(comp.compiler);
         }
         if (comp.tester) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           componentObj.tester.files = makeEnvFilesReadable(comp.tester);
         }
         return componentObj;
       };
       const componentFromFileSystem = makeComponentReadable(component);
       if (dependenciesInfo) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentFromFileSystem.dependenciesInfo = dependenciesInfo;
       }
       if (dependentsInfo) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentFromFileSystem.dependentsInfo = dependentsInfo;
       }
       if (component.scopesList) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentFromFileSystem.scopesList = component.scopesList;
       }
       const componentFromModel = componentModel ? makeComponentReadable(componentModel) : undefined;

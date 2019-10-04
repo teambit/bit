@@ -11,6 +11,7 @@ function converts(text: string | Buffer, to: string) {
     if (isBinaryFileSync(text)) return text; // don't touch binary files
     newLines.forEach(newLine => {
       // $FlowFixMe text is Buffer here
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (newLine !== to) text = replaceBuffer(text, newLine, to);
     });
     return text;

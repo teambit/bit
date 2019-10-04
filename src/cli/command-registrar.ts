@@ -1,5 +1,6 @@
 import { serializeError } from 'serialize-error';
 import R from 'ramda';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
 import Command from './command';
@@ -16,6 +17,7 @@ function logAndExit(msg: string, commandName, code = 0) {
 }
 
 function logErrAndExit(msg: Error | string, commandName: string) {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
@@ -31,6 +33,8 @@ function parseCommandName(commandName: string): string {
   return first(commandName.split(' '));
 }
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | string } {
   const options = {};
 
@@ -63,6 +67,7 @@ function execAction(command, concrete, args) {
   if (command.loader) {
     loader.on();
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (flags.json) {
     loader.off();
     logger.shouldWriteToConsole = false;
@@ -76,6 +81,7 @@ function execAction(command, concrete, args) {
   };
 
   migrateWrapper(command.migration)
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .then(() => {
       return command.action(relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
@@ -114,6 +120,7 @@ function serializeErrAndExit(err, commandName) {
 function registerAction(command: Command, concrete) {
   concrete.action((...args) => {
     if (!empty(command.commands)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
       const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
@@ -182,6 +189,7 @@ export default class CommandRegistrar {
     this.description = description;
     this.version = version;
     this.commands = commands;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.extensionsCommands = extensionsCommands;
   }
 

@@ -1,3 +1,5 @@
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { tokenizeStr, stem } from './indexer';
 import stopwords from './stopwords';
 

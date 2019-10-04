@@ -13,6 +13,7 @@ export default class Diff extends Command {
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files
   ${WILDCARD_HELP('diff')}`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
 

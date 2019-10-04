@@ -400,6 +400,7 @@ describe('typescript', function() {
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
         helper.command.importComponent('bar/foo');
       });
@@ -445,6 +446,7 @@ describe('typescript', function() {
             helper.scopeHelper.reInitLocalScope();
             npmCiRegistry.setCiScopeInBitJson();
             npmCiRegistry.setResolver();
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
             helper.command.importComponent('bar/foo');
           });

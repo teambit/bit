@@ -54,7 +54,8 @@ export default (async function removeComponents({
   const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(consumer, remoteIds, force) : [];
   const localResult = !remote
     ? await removeLocal(consumer, bitIdsLatest, force, track, deleteFiles) // $FlowFixMe
-    : new RemovedLocalObjects();
+    : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new RemovedLocalObjects();
 
   return { localResult, remoteResult };
 });
@@ -96,6 +97,7 @@ async function removeLocal(
   // local remove in case user wants to delete tagged components
   const modifiedComponents = new BitIds();
   const nonModifiedComponents = new BitIds(); // $FlowFixMe
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
   if (!force) {
     await Promise.all(
