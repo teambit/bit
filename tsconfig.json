@@ -11,11 +11,12 @@
     "sourceMap": true
   },
   "include": [
-    "src/**/*",
-    "e2e/**/*"
+    "src",
+    "e2e"
   ],
   "exclude": [
+    "components",
     "node_modules",
-    "e2e/fixtures/**/*"
+    "e2e/fixtures"
   ]
 }
