@@ -67,7 +67,7 @@ const getAllowdPackageManagerProcessOptions = userOptions => {
 type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  modules?: string[] | { [string]: number | string };
+  modules?: string[] | { [key: string]: number | string };
   packageManager: 'npm' | 'yarn';
   packageManagerArgs: string[];
   packageManagerProcessOptions: Object;

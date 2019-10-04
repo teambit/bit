@@ -1,3 +1,4 @@
+/* eslint max-classes-per-file: 0 */
 import Command from '../../command';
 import chalk from 'chalk';
 import { objectToStringifiedTupleArray } from '../../../utils';

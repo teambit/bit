@@ -10,7 +10,7 @@ export default class BitRawObject {
   parsedContent: Any;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  types: { [string]: Function };
+  types: { [key: string]: Function };
   _ref: string;
 
   constructor(
@@ -18,7 +18,7 @@ export default class BitRawObject {
     ref: string | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    types: { [string]: Function } | null | undefined,
+    types: { [key: string]: Function } | null | undefined,
     type: string | null | undefined,
     content: Buffer | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -118,7 +118,7 @@ export default class BitRawObject {
     ref: string | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    types: { [string]: Function } | null | undefined
+    types: { [key: string]: Function } | null | undefined
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): Promise<BitObject> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -131,6 +131,7 @@ export default class BitRawObject {
    * @param {Any} parsedContent
    */
   toRealObject() {
+    // @ts-ignore
     return this.types[this.type].from(this.parsedContent || this.getParsedContent());
   }
 

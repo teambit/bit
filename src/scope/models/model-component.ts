@@ -33,16 +33,14 @@ import ValidationError from '../../error/validation-error';
 type State = {
   versions?: {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    [string]: {
+    [version: string]: {
       local?: boolean; // whether a component was changed locally
     };
   };
 };
 
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-type Versions = { [string]: Ref };
+type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
 export type ComponentProps = {
@@ -188,7 +186,7 @@ export default class Component extends BitObject {
     repo: Repository
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  ): Promise<{ [number]: { message: string; date: string; hash: string } | null | undefined }> {
+  ): Promise<{ [key: number]: { message: string; date: string; hash: string } | null | undefined }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
@@ -386,6 +384,7 @@ export default class Component extends BitObject {
       mainDistFile: version.mainDistFile,
       docs: version.docs,
       license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
@@ -409,6 +408,7 @@ export default class Component extends BitObject {
   replaceRef(oldRef: Ref, newRef: Ref) {
     const replace = (value, key) => {
       if (value === oldRef.hash) {
+        // @ts-ignore
         this.versions[key] = newRef.hash;
       }
     };

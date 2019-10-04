@@ -60,5 +60,6 @@ async function isolateUsingCapsule(componentId: string, opts: IsolateOptions) {
 async function isolateComponent(scope: Scope, bitId: BitId, opts: IsolateOptions): Promise<string> {
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   const component = await scopeComponentsImporter.loadComponent(bitId);
+  // @ts-ignore
   return component.isolate(scope, opts);
 }

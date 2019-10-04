@@ -116,7 +116,7 @@ export default class Remotes extends Map<string, Remote> {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static load(remotes: { [string]: string }): Remotes {
+  static load(remotes: { [key: string]: string }): Remotes {
     const models = [];
 
     if (!remotes) return new Remotes();

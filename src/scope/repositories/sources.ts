@@ -2,7 +2,7 @@ import R from 'ramda';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
@@ -168,7 +168,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async consumerComponentToVersion({
     consumerComponent,
     consumer,
-    versionFromModel,
     message,
     flattenedDependencies,
     flattenedDevDependencies,
@@ -179,7 +178,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     consumerComponent: $ReadOnly<ConsumerComponent>;
     consumer: Consumer;
-    versionFromModel?: Version;
     message?: string;
     flattenedDependencies?: Object;
     flattenedDevDependencies?: Object;
@@ -191,7 +189,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }): Promise<Object> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
-      if (!files) return;
+      if (!files) return null;
       const result = files.map(file => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         file.file = file.toSourceAsLinuxEOL();
@@ -249,7 +247,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
-      versionFromModel,
       files,
       dists,
       mainDistFile,
@@ -295,25 +292,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.findOrAddComponent(source);
-    // TODO: instead of doing that like this we should use:
-    // const versionFromModel = await component.loadVersion(source.usedVersion, this.scope.objects);
-    // it looks like it's exactly the same code but it's not working from some reason
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versionRef = component.versions[source.usedVersion];
 
-    let versionFromModel;
-    if (versionRef) {
-      versionFromModel = await this.scope.getObject(versionRef.hash);
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
-      versionFromModel,
       message,
       flattenedDependencies,
       flattenedDevDependencies,

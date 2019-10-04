@@ -134,9 +134,10 @@ export default function parse(exampleRaw: string): Example {
     const lines = exampleRaw.split('\n');
     for (let line of lines) {
       line = line.trim();
-      if (!line) continue;
-      const currentToken = tokenize(line);
-      currentStatus = parseToken(currentToken, line, currentStatus, example);
+      if (line) {
+        const currentToken = tokenize(line);
+        currentStatus = parseToken(currentToken, line, currentStatus, example);
+      }
     }
   } catch (e) {
     // That's fine. The example probably doesn't comply with our standard

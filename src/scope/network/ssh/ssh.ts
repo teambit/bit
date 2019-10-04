@@ -1,8 +1,9 @@
+/* eslint max-classes-per-file: 0 */
 import SSH2 from 'ssh2';
 import R from 'ramda';
 import * as os from 'os';
 import merge from 'lodash.merge';
-import { passphrase as promptPassphrase, userpass as promptUserpass } from '../../../prompts';
+import { userpass as promptUserpass } from '../../../prompts';
 import keyGetter from './key-getter';
 import ComponentObjects from '../../component-objects';
 import {
@@ -29,16 +30,12 @@ import { getSync } from '../../../api/consumer/lib/global-config';
 import GeneralError from '../../../error/general-error';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
-import RemoteResolverError from '../exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import DependencyGraph from '../../graph/scope-graph';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
-const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
 const PASSPHRASE_POSSIBLY_MISSING_MESSAGE = 'Cannot parse privateKey: Unsupported key format';
-
-const cachedPassphrase = null;
 
 function absolutePath(path: string) {
   if (!path.startsWith('/')) return `~/${path}`;
@@ -57,6 +54,8 @@ export type SSHProps = {
 };
 
 export type SSHConnectionStrategyName = 'token' | 'ssh-agent' | 'ssh-key' | 'user-password';
+
+class AuthenticationStrategyFailed extends Error {}
 
 const ALL_STRATEGIES = ['token', 'ssh-agent', 'ssh-key', 'user-password'];
 export default class SSH implements Network {
@@ -82,11 +81,8 @@ export default class SSH implements Network {
    * 4) prompt of user/password
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async connect(strategiesNames: SSHConnectionStrategyName[] = ALL_STRATEGIES): Promise<SSH> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const strategies: { [string]: Function } = {
+    const strategies: { [key: string]: Function } = {
       token: this._tokenAuthentication,
       'ssh-agent': this._sshAgentAuthentication,
       'ssh-key': this._sshKeyAuthentication,
@@ -245,6 +241,7 @@ export default class SSH implements Network {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       context.sshUsername = this._sshUsername;
     }
+    // eslint-disable-next-line consistent-return
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
@@ -262,6 +259,7 @@ export default class SSH implements Network {
         logger.error('ssh', err);
         return reject(err);
       }
+      // eslint-disable-next-line consistent-return
       this.connection.exec(cmd, (error, stream) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
@@ -408,7 +406,7 @@ export default class SSH implements Network {
         checkVersionCompatibility(headers.version);
         return payload;
       })
-      .catch(err => {
+      .catch(() => {
         throw new RemoteScopeNotFound(this.path);
       });
   }
@@ -484,5 +482,3 @@ export default class SSH implements Network {
     });
   }
 }
-
-class AuthenticationStrategyFailed extends Error {}

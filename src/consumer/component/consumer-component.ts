@@ -19,8 +19,7 @@ import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import IsolatedEnvironment, { IsolateOptions } from '../../environment';
+import IsolatedEnvironment, { IsolateOptions } from '../../environment/environment';
 import { Log } from '../../scope/models/version';
 import { ScopeListItem } from '../../scope/models/model-component';
 import BitMap from '../bit-map';
@@ -30,8 +29,7 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import { EnvType } from '../../extensions/env-extension';
+import { EnvType } from '../../extensions/env-extension-types';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -65,15 +63,13 @@ import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-no
 import { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
+import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
 import PackageJsonFile from './package-json-file';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
-import ShowDoctorError from '../../error/show-doctor-error';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
@@ -106,9 +102,7 @@ export type ComponentProps = {
   customResolvedPaths?: customResolvedPath[] | null | undefined;
   overrides: ComponentOverrides;
   packageJsonFile?: PackageJsonFile | null | undefined;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  packageJsonChangedProps?: { [string]: any } | null | undefined;
+  packageJsonChangedProps?: { [key: string]: any } | null | undefined;
   files: SourceFile[];
   docs?: Doclet[] | null | undefined;
   dists?: Dist[];
@@ -144,13 +138,13 @@ export default class Component {
   flattenedCompilerDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedTesterDependencies: BitIds;
-  packageDependencies: Object;
-  devPackageDependencies: Object;
-  peerPackageDependencies: Object;
+  packageDependencies: any;
+  devPackageDependencies: any;
+  peerPackageDependencies: any;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
-  manuallyRemovedDependencies: OverriddenDependencies = {};
-  manuallyAddedDependencies: OverriddenDependencies = {};
+  manuallyRemovedDependencies: ManuallyChangedDependencies = {};
+  manuallyAddedDependencies: ManuallyChangedDependencies = {};
   overrides: ComponentOverrides;
   docs: Doclet[] | null | undefined;
   files: SourceFile[];

@@ -14,8 +14,7 @@ export default class SourceFile extends AbstractVinyl {
   static load(
     filePath: PathOsBased,
     distTarget: PathOsBased,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    base: PathOsBased = consumerPath, // TODO: change params order to fix lint error
+    base: PathOsBased,
     consumerPath: PathOsBased,
     extendedProps: Object
   ): SourceFile | null {

@@ -17,7 +17,6 @@ import {
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
-import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import {
   NetworkError,
@@ -82,7 +81,6 @@ import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-f
 import ExtensionNameNotValid from '../extensions/exceptions/extension-name-not-valid';
 import GeneralError from '../error/general-error';
 import ValidationError from '../error/validation-error';
-import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
 import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
@@ -277,7 +275,7 @@ Original Error: ${err.message}`
         'bit init'
       )} to recreate the file`
   ],
-  [MissingDiagnosisName, err => 'error: please provide a diagnosis name'],
+  [MissingDiagnosisName, () => 'error: please provide a diagnosis name'],
   [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
   [ComponentSpecsFailed, err => formatComponentSpecsFailed(err.id, err.specsResults)],
   [

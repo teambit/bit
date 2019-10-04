@@ -33,9 +33,7 @@ function parseCommandName(commandName: string): string {
   return first(commandName.split(' '));
 }
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | string } {
+function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean | string } {
   const options = {};
 
   opts.forEach(([, name]) => {

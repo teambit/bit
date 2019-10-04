@@ -67,11 +67,10 @@ import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import { EnvType } from '../extensions/env-extension';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
+import { EnvType } from '../extensions/env-extension-types';
 
 type ConsumerProps = {
   projectPath: string;
@@ -473,8 +472,7 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const { version } = await this.scope.sources.consumerComponentToVersion({
         consumer: this,
-        consumerComponent: componentFromFileSystem,
-        versionFromModel: componentFromModel
+        consumerComponent: componentFromFileSystem
       });
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
@@ -814,7 +812,10 @@ export default class Consumer {
     if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
       return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
     }
-    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
+    if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
+      return path.join(projectPath, BIT_HIDDEN_DIR);
+    }
+    return null;
   }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);

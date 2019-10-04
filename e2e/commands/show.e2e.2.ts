@@ -160,7 +160,6 @@ describe('bit show command', function() {
         const dependencies = output.dependencies;
         // TODO: Should be concrete version after we resolve the dep version
         const depPaths = [{ sourceRelativePath: 'utils/is-string.js', destinationRelativePath: 'utils/is-string.js' }];
-        const depObject = { id: 'utils/is-string', relativePaths: depPaths };
         expect(dependencies[0].relativePaths[0]).to.include(depPaths[0]);
       });
 
@@ -562,11 +561,6 @@ describe('bit show command', function() {
         name: 'bar/foo',
         version: '0.0.1'
       });
-    });
-    // TODO: complete tests after feature is finished
-    it.skip('Should show versions of a remote component using scope name when you are not the author', () => {
-      output = helper.command.runCmd('bit show bit.envs/compilers/babel -v');
-      console.log(output);
     });
   });
   describe('component with overrides data', () => {

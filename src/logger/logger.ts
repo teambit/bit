@@ -129,7 +129,7 @@ function addBreakCrumb(category: string, message: string, data: Object = {}, ext
 }
 
 logger.debugAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
-  addToLoggerAndToBreadCrumb('debug', category, message, data);
+  addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
 };
 
 logger.warnAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
@@ -171,7 +171,7 @@ if (process.env.BIT_LOG) {
     const prefixes = process.env.BIT_LOG.split(',');
     logger.on('logging', (transport, level, msg) => {
       if (prefixes.some(prefix => msg.startsWith(prefix))) {
-        console.log(`\n${msg}`);
+        console.log(`\n${msg}`); // eslint-disable-line no-console
       }
     });
   }

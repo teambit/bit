@@ -2,19 +2,12 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import { customResolvedPath } from '../../consumer/component';
+import { customResolvedPath } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/parser';
-import {
-  DEFAULT_BUNDLE_FILENAME,
-  DEFAULT_BINDINGS_PREFIX,
-  COMPONENT_ORIGINS,
-  DEPENDENCIES_FIELDS
-} from '../../constants';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import { Results } from '../../specs-runner/specs-runner';
+import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS } from '../../constants';
+import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
 import { CompilerExtensionModel } from '../../extensions/compiler-extension';
@@ -71,13 +64,13 @@ export type VersionProps = {
   flattenedTesterDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  packageDependencies?: { [string]: string };
+  packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  devPackageDependencies?: { [string]: string };
+  devPackageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  peerPackageDependencies?: { [string]: string };
+  peerPackageDependencies?: { [key: string]: string };
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
@@ -110,13 +103,13 @@ export default class Version extends BitObject {
   flattenedTesterDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  packageDependencies: { [string]: string };
+  packageDependencies: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  devPackageDependencies: { [string]: string };
+  devPackageDependencies: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  peerPackageDependencies: { [string]: string };
+  peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
   bindingPrefix: string | null | undefined;
@@ -502,7 +495,6 @@ export default class Version extends BitObject {
    */
   static fromComponent({
     component,
-    versionFromModel,
     files,
     dists,
     mainDistFile,
@@ -516,7 +508,6 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent;
-    versionFromModel: Version;
     files: Array<SourceFileModel>;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
@@ -545,8 +536,6 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
-    const compilerFromModel = R.path(['compiler'], versionFromModel);
-    const testerFromModel = R.path(['tester'], versionFromModel);
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -618,7 +607,7 @@ export default class Version extends BitObject {
   }
 }
 
-const parseEnv = env => {
+function parseEnv(env) {
   if (typeof env === 'string') {
     return env;
   }
@@ -631,22 +620,11 @@ const parseEnv = env => {
     config: env.config,
     files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
   };
-};
+}
 
-const envNameOnly = env => {
+function envNameOnly(env) {
   if ((!env.config || R.isEmpty(env.config)) && (!env.files || R.isEmpty(env.files))) {
     return true;
   }
   return false;
-};
-
-const getEnvModelOrName = env => {
-  if (typeof env === 'string') {
-    return env;
-  }
-  // Store the env as string in case there is no config and files (for backward compatibility)
-  if (envNameOnly(env)) {
-    return env.name;
-  }
-  return env;
-};
+}

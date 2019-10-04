@@ -425,14 +425,17 @@ export default class Scope {
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
+  async findDependentBits(
+    bitIds: BitIds,
+    returnResultsWithVersion: boolean = false
+  ): Promise<{ [key: string]: BitId[] }> {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async version => {
             const componentVersion = await component.loadVersion(version, this.objects);
-            if (!componentVersion) return;
+            if (!componentVersion) return null;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();
             return componentVersion;
@@ -496,7 +499,7 @@ export default class Scope {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<{ [number]: { message: string; date: string; hash: string } }> {
+  loadComponentLogs(id: BitId): Promise<{ [key: number]: { message: string; date: string; hash: string } }> {
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
     });

@@ -279,7 +279,7 @@ export default class ComponentsList {
     // TODO: maybe cache this as well
     const componentsFromBitMap = this.bitMap.getAllComponents(origin);
     const res = [];
-    const getPaths = (agg, isAbsolute) => (componentMap, componentId) => {
+    const getPaths = (agg, isAbsolute) => componentMap => {
       const relativePaths = componentMap.getFilesRelativeToConsumer();
       if (!isAbsolute) {
         agg.push(...relativePaths);

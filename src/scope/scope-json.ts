@@ -26,9 +26,7 @@ export class ScopeJson {
   version: string | null | undefined;
   resolverPath: string | null | undefined;
   license: string | null | undefined;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  remotes: { [string]: string };
+  remotes: { [key: string]: string };
   groupName: string;
 
   constructor({ name, remotes, resolverPath, license, groupName, version }: ScopeJsonProps) {
@@ -68,17 +66,20 @@ export class ScopeJson {
   }
 
   set(key: string, val: string) {
+    // eslint-disable-next-line no-prototype-builtins
     if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     this[key] = val;
     return this;
   }
 
   get(key: string): string {
+    // eslint-disable-next-line no-prototype-builtins
     if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     return this[key];
   }
 
   del(key: string): string {
+    // eslint-disable-next-line no-prototype-builtins
     if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     return this[key];
   }

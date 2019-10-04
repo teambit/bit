@@ -218,7 +218,7 @@ function stringifyType(prop: { name: string; value?: any }): string {
       transformed = prop.value;
       break;
     case 'union':
-      transformed = prop.value.map(prop => stringifyType(prop)).join(' | ');
+      transformed = prop.value.map(p => stringifyType(p)).join(' | ');
       break;
     case 'arrayOf':
       transformed = `${stringifyType(prop.value)}[]`;

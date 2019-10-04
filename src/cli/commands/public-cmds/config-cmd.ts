@@ -1,3 +1,4 @@
+/* eslint max-classes-per-file: 0 */
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import Command from '../../command';

@@ -1,5 +1,4 @@
 import * as path from 'path';
-import fs from 'fs-extra';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -504,7 +503,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       destinationRelativePath
     };
     if (importSpecifiers) {
-      importSpecifiers.map(importSpecifier => {
+      importSpecifiers.forEach(importSpecifier => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (importSpecifier.linkFile) delete importSpecifier.linkFile.exported;
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -50,9 +50,11 @@ export const paintHeader = (value: string): string => {
 const paintAuthor = (email: string | null | undefined, username: string | null | undefined): string => {
   if (email && username) {
     return c.white(`author: ${username} <${email}>\n`);
-  } else if (email && !username) {
+  }
+  if (email && !username) {
     return c.white(`author: <${email}>\n`);
-  } else if (!email && username) {
+  }
+  if (!email && username) {
     return c.white(`author: ${username}\n`);
   }
 

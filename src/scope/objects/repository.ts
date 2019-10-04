@@ -14,27 +14,26 @@ import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
 import { ScopeJson } from '../scope-json';
 import { typesObj } from '../object-registrar';
-import { ModelComponent } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  objects: { [string]: BitObject } = {};
+  objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  types: { [string]: Function };
+  types: { [key: string]: Function };
   componentsIndex: ComponentsIndex;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _cache: { [string]: BitObject } = {};
+  _cache: { [key: string]: BitObject } = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(scopePath: string, scopeJson: ScopeJson, types: { [string]: Function } = typesObj) {
+  constructor(scopePath: string, scopeJson: ScopeJson, types: { [key: string]: Function } = typesObj) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.types = types;
@@ -291,8 +290,9 @@ export default class Repository {
   _validateObjects(validate: boolean) {
     Object.keys(this.objects).forEach(hash => {
       const bitObject = this.objects[hash];
-      // $FlowFixMe some BitObject classes have validate() method
+      // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
+        // @ts-ignore
         bitObject.validate();
       }
       if (!validate) {
