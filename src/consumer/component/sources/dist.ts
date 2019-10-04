@@ -1,7 +1,6 @@
 import AbstractVinyl from './abstract-vinyl';
 
 export default class Dist extends AbstractVinyl {
-  test: boolean;
   static loadFromParsedString(parsedString: Object) {
     if (!parsedString) return;
     const opts = super.loadFromParsedString(parsedString);

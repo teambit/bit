@@ -11,7 +11,6 @@ import { Repository } from '../../../scope/objects';
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
   distFilePath: string | null | undefined;
-  test: boolean;
   static load(
     filePath: PathOsBased,
     distTarget: PathOsBased,
@@ -54,7 +53,6 @@ export default class SourceFile extends AbstractVinyl {
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
     const content = await file.file.load(repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }

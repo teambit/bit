@@ -638,10 +638,8 @@ export default class Component {
       }
       loader.start(BEFORE_RUNNING_SPECS);
       const testFilesList = !component.dists.isEmpty()
-        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.dists.get().filter(dist => dist.test)
-        : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          component.files.filter(file => file.test);
+        ? component.dists.get().filter((dist: any) => dist.test)
+        : component.files.filter((file: any) => file.test);
 
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;
@@ -873,9 +871,6 @@ export default class Component {
   }
 
   copyFilesIntoDists() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dists = this.files.map(file => new Dist({ base: file.base, path: file.path, contents: file.contents }));
     this.setDists(dists);
@@ -1233,8 +1228,6 @@ export default class Component {
 }
 
 function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }
