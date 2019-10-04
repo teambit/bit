@@ -4,9 +4,6 @@ specs/jsdoc/fixtures
 e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
-src/analytics/analytics.ts
-e2e/commands/extentsion.e2e.1.ts
-e2e/commands/init.e2e.1.ts
 specs/scope/migrations/objectsFixtures/simple-component.ts
 specs/specs-runner/fixtures/invalid-tester.ts
 src/api/consumer/lib/isolate.ts

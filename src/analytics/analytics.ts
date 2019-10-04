@@ -1,3 +1,4 @@
+/* eslint max-classes-per-file: 0 */
 import { serializeError } from 'serialize-error';
 import * as path from 'path';
 import hashObj from 'object-hash';

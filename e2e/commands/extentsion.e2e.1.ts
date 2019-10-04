@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import chai from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 const assertArrays = require('chai-arrays');
