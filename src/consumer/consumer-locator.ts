@@ -9,7 +9,12 @@ import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DI
 import WorkspaceConfig from './config/workspace-config';
 import { BitConfigNotFound } from './config/exceptions';
 
-export type ConsumerInfo = { path: string, consumerConfig: WorkspaceConfig | null | undefined, hasBitMap: boolean, hasScope: boolean };
+export type ConsumerInfo = {
+  path: string;
+  consumerConfig: WorkspaceConfig | null | undefined;
+  hasBitMap: boolean;
+  hasScope: boolean;
+};
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);

@@ -17,7 +17,11 @@ export default class CatScope extends Command {
 
   action(
     [scopePath]: [string],
-    { full, json, jsonExtra }: { full: boolean | null | undefined, json: boolean | null | undefined, jsonExtra: boolean | null | undefined }
+    {
+      full,
+      json,
+      jsonExtra
+    }: { full: boolean | null | undefined; json: boolean | null | undefined; jsonExtra: boolean | null | undefined }
   ): Promise<any> {
     return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json, jsonExtra }));
   }
@@ -28,13 +32,13 @@ export default class CatScope extends Command {
     json,
     jsonExtra
   }: {
-    payload: ModelComponent[],
-    full: boolean | null | undefined,
-    json: boolean | null | undefined,
-    jsonExtra: boolean | null | undefined
+    payload: ModelComponent[];
+    full: boolean | null | undefined;
+    json: boolean | null | undefined;
+    jsonExtra: boolean | null | undefined;
   }): string {
     if (jsonExtra) {
-      payload.forEach((obj) => {
+      payload.forEach(obj => {
         // $FlowFixMe
         obj.hash = obj.hash().toString();
         // $FlowFixMe

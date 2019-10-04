@@ -23,7 +23,10 @@ export default class Untag extends Command {
   loader = true;
   migration = true;
 
-  action([id, version]: string[], { all, force }: { all: boolean | null | undefined, force: boolean | null | undefined }): Promise<untagResult[]> {
+  action(
+    [id, version]: string[],
+    { all, force }: { all: boolean | null | undefined; force: boolean | null | undefined }
+  ): Promise<untagResult[]> {
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
     }
@@ -37,7 +40,7 @@ export default class Untag extends Command {
 
   report(results: untagResult[]): string {
     const title = chalk.green(`${results.length} component(s) were untagged:\n`);
-    const components = results.map((result) => {
+    const components = results.map(result => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
     return title + components.join('\n');

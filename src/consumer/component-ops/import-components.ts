@@ -26,34 +26,39 @@ import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 export type ImportOptions = {
-  ids: string[], // array might be empty
-  verbose: boolean, // default: false
-  merge?: boolean, // default: false
-  mergeStrategy?: MergeStrategy,
-  withEnvironments: boolean, // default: false
-  writeToPath?: string,
-  writePackageJson: boolean, // default: true
-  writeConfig: boolean, // default: false
-  configDir?: string,
-  writeDists: boolean, // default: true
-  override: boolean, // default: false
-  installNpmPackages: boolean, // default: true
-  objectsOnly: boolean, // default: false
-  saveDependenciesAsComponents?: boolean, // default: false,
-  importDependenciesDirectly?: boolean, // default: false, normally it imports them as packages or nested, not as imported
-  importDependents?: boolean // default: false,
+  ids: string[]; // array might be empty
+  verbose: boolean; // default: false
+  merge?: boolean; // default: false
+  mergeStrategy?: MergeStrategy;
+  withEnvironments: boolean; // default: false
+  writeToPath?: string;
+  writePackageJson: boolean; // default: true
+  writeConfig: boolean; // default: false
+  configDir?: string;
+  writeDists: boolean; // default: true
+  override: boolean; // default: false
+  installNpmPackages: boolean; // default: true
+  objectsOnly: boolean; // default: false
+  saveDependenciesAsComponents?: boolean; // default: false,
+  importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
+  importDependents?: boolean; // default: false,
 };
 type ComponentMergeStatus = {
-  componentWithDependencies: ComponentWithDependencies,
-  mergeResults: MergeResultsThreeWay | null | undefined
+  componentWithDependencies: ComponentWithDependencies;
+  mergeResults: MergeResultsThreeWay | null | undefined;
 };
 type ImportedVersions = { [id: string]: string[] };
 export type ImportStatus = 'added' | 'updated' | 'up to date';
-export type ImportDetails = { id: string, versions: string[], status: ImportStatus, filesStatus: FilesStatus | null | undefined };
+export type ImportDetails = {
+  id: string;
+  versions: string[];
+  status: ImportStatus;
+  filesStatus: FilesStatus | null | undefined;
+};
 export type ImportResult = Promise<{
-  dependencies: ComponentWithDependencies[],
-  envComponents?: Component[],
-  importDetails: ImportDetails[]
+  dependencies: ComponentWithDependencies[];
+  envComponents?: Component[];
+  importDetails: ImportDetails[];
 }>;
 
 export default class ImportComponents {
@@ -105,7 +110,7 @@ export default class ImportComponents {
   _filterComponentsWithLowerVersions(
     componentsWithDependencies: ComponentWithDependencies[]
   ): ComponentWithDependencies[] {
-    return componentsWithDependencies.filter((comp) => {
+    return componentsWithDependencies.filter(comp => {
       const sameIdHigherVersion = componentsWithDependencies.find(
         c =>
           !c.component.id.isEqual(comp.component.id) &&
@@ -144,7 +149,7 @@ export default class ImportComponents {
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependencies = bitIds.map((bitId) => {
+    const dependencies = bitIds.map(bitId => {
       const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
       if (!componentGraph) {
         throw new Error(`unable to find a graph for ${bitId.toString()}`);
@@ -156,7 +161,7 @@ export default class ImportComponents {
   }
 
   _getDependentsFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {
-    const dependents = bitIds.map((bitId) => {
+    const dependents = bitIds.map(bitId => {
       const componentGraph = graphs.find(graph => graph.scopeName === bitId.scope);
       if (!componentGraph) {
         throw new Error(`unable to find a graph for ${bitId.toString()}`);
@@ -225,7 +230,7 @@ export default class ImportComponents {
   }
 
   async _getCurrentVersions(ids: BitIds): ImportedVersions {
-    const versionsP = ids.map(async (id) => {
+    const versionsP = ids.map(async id => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       const idStr = id.toStringWithoutVersion();
       if (!modelComponent) return [idStr, []];
@@ -242,7 +247,7 @@ export default class ImportComponents {
     currentVersions: ImportedVersions,
     components: ComponentWithDependencies[]
   ): Promise<ImportDetails[]> {
-    const detailsP = components.map(async (component) => {
+    const detailsP = components.map(async component => {
       const id = component.component.id;
       const idStr = id.toStringWithoutVersion();
       const beforeImportVersions = currentVersions[idStr];
@@ -279,7 +284,7 @@ export default class ImportComponents {
     // on the model objects when there are dependencies
     if (this.options.override || this.options.objectsOnly || this.options.merge) return;
     // $FlowFixMe BitIds is an array
-    const modifiedComponents = await filterAsync(ids, (id) => {
+    const modifiedComponents = await filterAsync(ids, id => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
     if (modifiedComponents.length) {
@@ -363,7 +368,7 @@ export default class ImportComponents {
     const filesStatus = {};
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
       // don't write the files to the filesystem, only bump the bitmap version.
-      files.forEach((file) => {
+      files.forEach(file => {
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
       this.consumer.bitMap.updateComponentId(component.id);
@@ -372,7 +377,7 @@ export default class ImportComponents {
     }
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.theirs) {
       // the local changes will be overridden (as if the user entered --override flag for this component)
-      files.forEach((file) => {
+      files.forEach(file => {
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
       return filesStatus;
@@ -400,7 +405,7 @@ export default class ImportComponents {
     }
     this.mergeStatus = {};
 
-    const componentsToWrite = componentsStatus.map((componentStatus) => {
+    const componentsToWrite = componentsStatus.map(componentStatus => {
       const filesStatus: FilesStatus | null | undefined = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
       if (!filesStatus) return componentWithDependencies;

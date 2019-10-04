@@ -36,7 +36,10 @@ export default class VersionDependencies {
     this.sourceScope = sourceScope;
   }
 
-  async toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ComponentWithDependencies> {
+  async toConsumer(
+    repo: Repository,
+    manipulateDirData: ManipulateDirItem[] | null | undefined
+  ): Promise<ComponentWithDependencies> {
     const depToConsumer = dep => dep.toConsumer(repo, manipulateDirData);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));
     const devDependenciesP = Promise.all(this.devDependencies.map(depToConsumer));

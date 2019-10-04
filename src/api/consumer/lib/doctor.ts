@@ -20,16 +20,24 @@ import npmClient from '../../../npm-client';
 
 // run specific check
 export type DoctorMetaData = {
-  nodeVersion: string,
-  runningTimestamp: number,
-  platform: string,
-  bitVersion: string,
-  npmVersion: string,
-  yarnVersion: string,
-  userDetails: string
+  nodeVersion: string;
+  runningTimestamp: number;
+  platform: string;
+  bitVersion: string;
+  npmVersion: string;
+  yarnVersion: string;
+  userDetails: string;
 };
-export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: string | null | undefined, metaData: DoctorMetaData };
-export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: string | null | undefined, metaData: DoctorMetaData };
+export type DoctorRunAllResults = {
+  examineResults: ExamineResult[];
+  savedFilePath: string | null | undefined;
+  metaData: DoctorMetaData;
+};
+export type DoctorRunOneResult = {
+  examineResult: ExamineResult;
+  savedFilePath: string | null | undefined;
+  metaData: DoctorMetaData;
+};
 
 let runningTimeStamp;
 
@@ -48,8 +56,8 @@ export async function runOne({
   diagnosisName,
   filePath
 }: {
-  diagnosisName: string,
-  filePath?: string
+  diagnosisName: string;
+  filePath?: string;
 }): Promise<DoctorRunOneResult> {
   if (!diagnosisName) {
     throw new MissingDiagnosisName();
@@ -88,8 +96,8 @@ async function _saveExamineResultsToFile(
 
   packStream.pipe(yourTarball);
 
-  return new Promise((resolve) => {
-    yourTarball.on('close', function () {
+  return new Promise(resolve => {
+    yourTarball.on('close', function() {
       logger.info(`wrote a file by bit doctor, file path: ${finalFilePath}`);
       resolve(finalFilePath);
       // fs.stat(finalFilePath, function (err, stats) {
