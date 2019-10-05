@@ -204,11 +204,11 @@
     "mocha-junit-reporter": "^1.13.0",
     "prettier": "^1.18.2",
     "prettier-eslint": "^9.0.0",
-    "prettier-eslint-cli": "^4.7.1",
+    "prettier-eslint-cli": "^5.0.0",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
-    "typescript": "^3.6.3",
+    "typescript": "3.6.3",
     "verdaccio": "^4.1.0"
   },
   "files": [
