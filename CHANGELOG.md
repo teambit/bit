@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.4.1-dev.2] - 2019-10-06
+
 - [#2019](https://github.com/teambit/bit/issues/2019) fix `bit import --merge` to not override changed dependencies
 - [#2023](https://github.com/teambit/bit/issues/2023) better handle external errors from compilers
 
