@@ -1,11 +1,8 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import http from 'http';
 import uuid from 'uuid';
 import opn from 'opn';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import chalk from 'chalk';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import url from 'url';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import {
@@ -53,7 +50,7 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'received non get request, closing connection');
+        logger['errorAndAddBreadCrumb']('login.loginToBitSrc', 'received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
@@ -61,7 +58,7 @@ export default function loginToBitSrc(
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
-          logger.errorAndAddBreadCrumb(
+          logger['errorAndAddBreadCrumb'](
             'login.loginToBitSrc',
             'clientId mismatch, expecting: {clientGeneratedId} got {clientId}',
             { clientGeneratedId, clientId }
@@ -69,7 +66,7 @@ export default function loginToBitSrc(
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
-        setSync(CFG_USER_TOKEN_KEY, token);
+        setSync(CFG_USER_TOKEN_KEY, token as string);
         const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
@@ -99,16 +96,20 @@ export default function loginToBitSrc(
           writeToNpmrcError
         });
       } catch (err) {
-        logger.err(`err on login: ${err}`);
+        logger.error(`err on login: ${err}`);
         closeConnection(ERROR_RESPONSE);
         reject(new LoginFailed());
       }
     });
 
-    logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
-    server.listen(port || DEFAULT_PORT, err => {
+    logger['debugAndAddBreadCrumb'](
+      'login.loginToBitSrc',
+      `initializing login server on port: ${port || DEFAULT_PORT}`
+    );
+    // @ts-ignore
+    server.listen(port || DEFAULT_PORT, (err: Error) => {
       if (err) {
-        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
+        logger['errorAndAddBreadCrumb']('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
       }
 
@@ -126,8 +127,8 @@ export default function loginToBitSrc(
     });
 
     server.on('error', e => {
-      if (e.code === 'EADDRINUSE') {
-        reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
+      if (e['code'] === 'EADDRINUSE') {
+        reject(new GeneralError(`port: ${e['port']} already in use, please run bit login --port <port>`));
       }
       reject(e);
     });

@@ -76,7 +76,6 @@ export default (async function runInteractive({
   }
 
   const child = execa(processName, args, processOpts);
-  child.stdin.setEncoding('utf-8');
 
   let currentInputTimeout;
 

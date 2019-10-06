@@ -1,5 +1,6 @@
 // @ts-ignore
 import { Container, ExecOptions, Exec, ContainerStatus } from '@bit/bit.capsule-dev.core.capsule';
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class FsContainer implements Container {
     id: string;
     path: string;

@@ -28,6 +28,6 @@ export default class Version {
     if (!this.versionNum && this.latest) return 'latest';
     if (this.versionNum && this.latest) return `*${this.versionNum}`;
     if (this.versionNum && !this.latest) return this.versionNum.toString();
-    throw new InvalidVersion();
+    throw new InvalidVersion(this.versionNum);
   }
 }

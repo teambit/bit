@@ -15,6 +15,8 @@ import ComponentNotFoundInPath from '../component/exceptions/component-not-found
 import ConfigDir from './config-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
 
+// TODO: should be better defined
+// @ts-ignore
 export type ComponentOrigin = keyof typeof COMPONENT_ORIGINS;
 
 export type ComponentMapFile = {

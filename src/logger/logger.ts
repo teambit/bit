@@ -165,7 +165,11 @@ if (process.env.BIT_LOG) {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
   if (levels.includes(process.env.BIT_LOG)) {
     const level = process.env.BIT_LOG;
+    // TODO: the level arg is not supported anymore, should be fixed
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     logger.add(winston.transports.Console, { level });
+    // TODO: the cli method is not supported anymore, should be fixed
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     logger.cli();
   } else {
     const prefixes = process.env.BIT_LOG.split(',');

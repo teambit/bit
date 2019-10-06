@@ -24,7 +24,9 @@ const addComponentParamsImportedFixture = {
 };
 
 describe('BitMap', function() {
+  // @ts-ignore
   logger.debug = () => {};
+  // @ts-ignore
   logger.info = () => {};
   this.timeout(0);
   describe('toObject', () => {

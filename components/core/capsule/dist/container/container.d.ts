@@ -24,6 +24,7 @@ export default interface Container {
         overwrite?: boolean;
         path: string;
     }): Promise<void>;
+    // @ts-ignore 
     on(event: string, fn: (data: any) => void): void;
     /**
      * start a container.

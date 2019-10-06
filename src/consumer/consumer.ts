@@ -71,6 +71,7 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
+import { ComponentOrigin } from './bit-map/component-map';
 
 type ConsumerProps = {
   projectPath: string;

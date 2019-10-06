@@ -3,6 +3,7 @@ import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
 import { PathOsBased } from './utils/path';
+import { ComponentOrigin } from './consumer/bit-map/component-map';
 
 const userHome = require('user-home');
 const packageFile = require('../package.json');
@@ -44,9 +45,9 @@ export const BIT_MAP = '.bitmap';
 export const OLD_BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {
-  IMPORTED: 'IMPORTED',
-  AUTHORED: 'AUTHORED',
-  NESTED: 'NESTED' // which is a nested dependency
+  IMPORTED: 'IMPORTED' as ComponentOrigin,
+  AUTHORED: 'AUTHORED' as ComponentOrigin,
+  NESTED: 'NESTED' as ComponentOrigin // which is a nested dependency
 };
 
 export const TESTS_FORK_LEVEL = {
