@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [2.1.2-dev.1] - 2019-09-20
+## [2.1.2] - 2019-10-06
 
 - avoid recognizing any require/import starts with `.` as a custom-resolve-module on Windows
 
