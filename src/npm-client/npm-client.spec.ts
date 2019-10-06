@@ -1,7 +1,7 @@
-import { expect } from 'chai';
+// import { expect } from 'chai';
 import mockery from 'mockery';
 import sinon from 'sinon';
-import npmClient from '../npm-client';
+// import npmClient from '../npm-client';
 
 /**
  * Skipped the npm client tests because we changed the implementation of the npm install to stream (child process spawn)

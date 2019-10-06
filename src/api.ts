@@ -9,7 +9,7 @@ HooksManager.init();
 
 export function show(scopePath: string, id: string, opts?: Object) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
+  return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
     if (Array.isArray(component)) {
       return component.map(v => v.toObject());
     }
@@ -17,7 +17,7 @@ export function show(scopePath: string, id: string, opts?: Object) {
   });
 }
 export function list(scopePath: string) {
-  scopeList(scopePath).then(listScopeResult => listScopeResult.map(result => result.id.toString()));
+  return scopeList(scopePath).then(listScopeResult => listScopeResult.map(result => result.id.toString()));
 }
 export async function addMany(components: AddProps[], alternateCwd?: string) {
   return addManyInternal(components, alternateCwd);
