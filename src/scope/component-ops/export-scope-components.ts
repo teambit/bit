@@ -35,8 +35,10 @@ export async function exportManyBareScope(
     'will try to importMany in case there are missing dependencies'
   );
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependenc.debugAndAddBreadCrumbBreadCrumb']('exportManyBareScope', 'successfully ran importMany');
-  await scope.objects.persist.debugAndAddBreadCrumbBreadCrumb']('exportManyBareScope', 'objects were written successfully to the filesystem');
+  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+  logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
+  await scope.objects.persist();
+  logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
   // @todo: this is a temp workaround, remove once v15 is out
   if (clientIsOld) {
     const manyCompVersions = manyObjects.map(objects => objects.component.toComponentVersion(LATEST));
@@ -66,7 +68,8 @@ export async function exportMany({
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
   defaultScope: string | null | undefined;
-}): Promise<{ exported: BitIds; updatedLocally: BitIds }.debugAndAddBreadCrumbBreadCrumb']('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
+}): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
+  logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
   if (includeDependencies) {
     const dependenciesIds = await getDependenciesImportIfNeeded();
@@ -120,15 +123,16 @@ export async function exportMany({
     let exportedIds: string[];
     try {
       exportedIds = await remote.pushMany(manyObjects, context);
-.debugAndAddBreadCrumbBreadCrumb'](
+      logger.debugAndAddBreadCrumb(
         'exportMany',
         'successfully pushed all ids to the bare-scope, going to save them back to local scope'
       );
     } catch (err) {
-.warnAndAddBreadCrumbBreadCrumb']('exportMany', 'failed pushing ids to the bare-scope');
+      logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
     await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
+    // @ts-ignore
     idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
@@ -213,7 +217,7 @@ async function convertToCorrectScope(
       changeDependencyScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
-  .debugAndAddBreadCrumbBreadCrumb'](
+        logger.debugAndAddBreadCrumb(
           'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
           { id: componentsObjects.component.id().toString() }
