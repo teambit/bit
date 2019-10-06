@@ -7,13 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.4.1-dev.2] - 2019-10-06
+## [14.4.1] - 2019-10-06
+
+### Bug fixes
 
 - [#2019](https://github.com/teambit/bit/issues/2019) fix `bit import --merge` to not override changed dependencies
 - [#2023](https://github.com/teambit/bit/issues/2023) better handle external errors from compilers
-
-## [14.4.1-dev.1] - 2019-09-27
-
 - [#2013](https://github.com/teambit/bit/issues/2013) fix bit import when one module resolution alias is a directory of another alias for extensions other than `.js`
 - [#2033](https://github.com/teambit/bit/issues/2033) improve bit link to build unrecognized missing links
 - [#2035](https://github.com/teambit/bit/issues/2035) fix "unable to manually add the dependency" error when package.json of an imported component is missing
