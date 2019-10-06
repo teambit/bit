@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Container, ExecOptions, Exec, ContainerStatus } from '@bit/bit.capsule-dev.core.capsule';
 export default class FsContainer implements Container {
     id: string;

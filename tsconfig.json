@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "target": "es2015",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src",
+    "e2e"
+  ],
+  "exclude": [
+    "components",
+    "node_modules",
+    "e2e/fixtures"
+  ]
+}

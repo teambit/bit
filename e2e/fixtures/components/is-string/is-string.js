@@ -1,4 +1,3 @@
-/** @flow */
 
 /**
  * detemines whether `str` is a string.

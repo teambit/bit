@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import os from 'os';
 import v4 from 'uuid';
-import path from 'path';
+import * as path from 'path';
 import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus } from '../../core/capsule';
 
@@ -11,7 +11,7 @@ export default class FsContainer implements Container {
   id: string = 'FS Container';
   path: string;
 
-  constructor(path?: string ) {
+  constructor(path?: string) {
     this.path = path || this.generateDefaultTmpDir();
   }
 
@@ -59,15 +59,18 @@ export default class FsContainer implements Container {
     });
     return childProcess;
   }
-  async get(options: { path: string; }): Promise<NodeJS.ReadableStream> {
+  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
     const filePath = path.join(this.getPath(), options.path);
     return fs.createReadStream(filePath);
   }
-  async put(files: { [path: string]: string; }, options: { overwrite?: boolean | undefined; path: string; }): Promise<void> {
+  async put(
+    files: { [path: string]: string },
+    options: { overwrite?: boolean | undefined; path: string }
+  ): Promise<void> {
     const baseDir = path.join(this.getPath(), options.path || '');
     await fs.ensureDir(baseDir);
-    const fsOptions = (options.overwrite) ? {} : { flag: 'wx' };
-    const writeFilesP = Object.keys(files).map((filePath) => {
+    const fsOptions = options.overwrite ? {} : { flag: 'wx' };
+    const writeFilesP = Object.keys(files).map(filePath => {
       return fs.writeFile(path.join(baseDir, filePath), files[filePath], fsOptions);
     });
     await Promise.all(writeFilesP);
