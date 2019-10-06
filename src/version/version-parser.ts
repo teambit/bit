@@ -34,16 +34,16 @@ function returnLatest(): Version {
   return new Version(null, true);
 }
 
-function convertToSemVer(versionStr: string) {
+function convertToSemVer(versionStr: number) {
   return returnRegular(`0.0.${versionStr}`);
 }
 
-export default function versionParser(versionStr: string | null | undefined): Version {
+export default function versionParser(versionStr: string | number | null | undefined): Version {
   if (!versionStr) return returnLatest();
-  if (isLatest(versionStr)) return returnLatest();
-  if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
-  if (isRegular(versionStr)) return returnRegular(versionStr);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  if (!Number.isNaN(versionStr)) return convertToSemVer(versionStr);
-  throw new InvalidVersion(versionStr);
+  if (typeof versionStr === 'string' && isLatest(versionStr)) return returnLatest();
+  if (typeof versionStr === 'string' && isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
+  if (typeof versionStr === 'string' && isRegular(versionStr)) return returnRegular(versionStr);
+  if (typeof versionStr !== 'string' && Number.isInteger(versionStr)) return convertToSemVer(versionStr);
+
+  throw new InvalidVersion(versionStr.toString());
 }
