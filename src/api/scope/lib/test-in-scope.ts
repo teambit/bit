@@ -20,7 +20,7 @@ export default function testInScope({
   keep?: boolean;
 }): Promise<SpecsResults | null | undefined> {
   logger.debugAndAddBreadCrumb('testInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
-  async function loadFromScope(initialError: Error | null | undefined) {
+  async function loadFromScope(initialError?: Error | null | undefined) {
     const getScope = async () => {
       try {
         const scope = await loadScope(scopePath || process.cwd());
@@ -54,7 +54,6 @@ export default function testInScope({
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (scopePath) return loadFromScope();
 
   return loadFromConsumer().catch(err => {

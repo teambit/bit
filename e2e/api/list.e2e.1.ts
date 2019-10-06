@@ -17,7 +17,6 @@ describe('api', function() {
       helper.command.exportAllComponents();
     });
     it('should list the ids of the remote scope', async () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const result = await api.list(helper.scopes.remotePath);
       expect(result).to.be.an('array');
       expect(result).to.have.lengthOf(1);

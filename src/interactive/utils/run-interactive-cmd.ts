@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import rightpad from 'pad-right';
 import chalk from 'chalk';

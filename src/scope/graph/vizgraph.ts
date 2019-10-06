@@ -1,6 +1,5 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import graphviz from 'graphviz';
 import GraphLib from 'graphlib';

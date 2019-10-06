@@ -1,5 +1,4 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 /**
  * encrypt `data` buffer or string into a sha1 hash

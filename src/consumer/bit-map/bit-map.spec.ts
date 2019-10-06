@@ -111,30 +111,22 @@ describe('BitMap', function() {
   describe('parseConfigDir', () => {
     it('without any place holder', () => {
       const results = BitMap.parseConfigDir(new ConfigDir('config-dir'), 'root-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.compiler).to.equal('config-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.tester).to.equal('config-dir');
     });
     it('with {COMPONENT_DIR}', () => {
       const results = BitMap.parseConfigDir(new ConfigDir('{COMPONENT_DIR}'), 'root-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.compiler).to.equal('root-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.tester).to.equal('root-dir');
     });
     it('with {COMPONENT_DIR}/{ENV_TYPE}', () => {
       const results = BitMap.parseConfigDir(new ConfigDir('{COMPONENT_DIR}/{ENV_TYPE}'), 'root-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.compiler).to.equal('root-dir/compiler');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.tester).to.equal('root-dir/tester');
     });
     it('with dir/{ENV_TYPE}', () => {
       const results = BitMap.parseConfigDir(new ConfigDir('dir/{ENV_TYPE}'), 'root-dir');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.compiler).to.equal('dir/compiler');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(results.tester).to.equal('dir/tester');
     });
   });

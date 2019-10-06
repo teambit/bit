@@ -1,5 +1,4 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import fs from 'fs';
+import fs from 'fs-extra';
 import * as path from 'path';
 import { expect } from 'chai';
 import { parser } from '../jsdoc';
@@ -13,7 +12,6 @@ describe('JSDoc Parser', () => {
       before(async () => {
         const functionDeclarationFile = path.join(fixtures, 'functionDeclaration.js');
         const functionDeclaration = fs.readFileSync(functionDeclarationFile).toString();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const doclets = await parser(functionDeclaration);
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(1);
@@ -57,7 +55,6 @@ describe('JSDoc Parser', () => {
 
     describe('Invalid code', () => {
       it('should returns an empty array', async () => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const doclets = await parser('this is an invalid code');
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(0);
@@ -69,7 +66,6 @@ describe('JSDoc Parser', () => {
       before(async () => {
         const methodDeclarationFile = path.join(fixtures, 'methodDeclaration.js');
         const methodDeclaration = fs.readFileSync(methodDeclarationFile).toString();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(methodDeclaration);
       });
       it('should be a populated array', () => {
@@ -165,7 +161,6 @@ describe('JSDoc Parser', () => {
       before(async () => {
         const variableDeclarationFile = path.join(fixtures, 'variableDeclaration.js');
         const variableDeclaration = fs.readFileSync(variableDeclarationFile).toString();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(variableDeclaration);
       });
       it('should be an array of one Doclet', () => {
@@ -202,7 +197,6 @@ describe('JSDoc Parser', () => {
       let args;
       before(async () => {
         const file = path.join(fixtures, 'variousParamTypes.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -259,7 +253,6 @@ describe('JSDoc Parser', () => {
     describe('Flow Type File', () => {
       it('should parse the file with no errors', async () => {
         const file = path.join(fixtures, 'flowTypeFile.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -292,7 +285,6 @@ describe('JSDoc Parser', () => {
       let doclets;
       before(async () => {
         const file = path.join(fixtures, 'descriptionTag.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -321,7 +313,6 @@ describe('JSDoc Parser', () => {
       let doclets;
       before(async () => {
         const file = path.join(fixtures, 'misc.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
@@ -335,7 +326,6 @@ describe('JSDoc Parser', () => {
       let doclets;
       before(async () => {
         const file = path.join(fixtures, 'properties.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
@@ -355,7 +345,6 @@ describe('JSDoc Parser', () => {
       let doclets;
       before(async () => {
         const file = path.join(fixtures, 'endWithTwoStars.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclets = await parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
@@ -371,7 +360,6 @@ describe('JSDoc Parser', () => {
       let doclet;
       before(async () => {
         const file = path.join(fixtures, 'react-docs.js');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         doclet = await parser(fs.readFileSync(file).toString());
         expect(doclet).to.be.an('object');
       });

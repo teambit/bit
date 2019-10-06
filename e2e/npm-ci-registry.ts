@@ -1,7 +1,6 @@
 /* eslint no-console: 0 */
 import fs from 'fs-extra';
 import * as path from 'path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import tar from 'tar';
 import { ChildProcess } from 'child_process';

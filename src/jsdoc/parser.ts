@@ -228,7 +228,7 @@ function stringifyType(prop: { name: string; value?: any }): string {
   return transformed;
 }
 
-export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet | []> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
   const doclets: Array<Doclet> = [];
   if (filePath && getExt(filePath) === 'vue') {
     return vueParse(data, filePath);

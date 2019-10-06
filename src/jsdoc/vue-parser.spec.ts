@@ -1,5 +1,4 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import fs from 'fs';
+import fs from 'fs-extra';
 import * as path from 'path';
 import { expect } from 'chai';
 import parser from './vue-parser';
@@ -12,8 +11,7 @@ describe('Vue docs Parser', () => {
     before(async () => {
       const componentFile = path.join(fixtures, 'checkbox.vue');
       const componentFileContent = fs.readFileSync(componentFile).toString();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      doclet = await parser(componentFileContent);
+      doclet = await parser(componentFileContent, componentFile);
     });
 
     describe('name and description', () => {

@@ -239,8 +239,7 @@ export default class BitId {
    * before version 13.0.3 bitmap and component-dependencies ids were written as strings (e.g. scope/box/name@version)
    * since that version the ids are written as objects ({ scope: scopeName, name: compName, version: 0.0.1 })
    */
-  static parseBackwardCompatible(id: string | Object): BitId {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static parseBackwardCompatible(id: string | BitIdProps): BitId {
     return typeof id === 'string' ? BitId.parseObsolete(id) : new BitId(id);
   }
 

@@ -9,10 +9,10 @@ describe('versionParser()', () => {
   });
 
   it('should throw invalid version', () => {
-    const version = versionParser('latest');
+    const version = v => versionParser(v);
     expect(() => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version('$1');
+      // TODO: expect a specific error
     }).to.throw();
   });
 
