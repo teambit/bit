@@ -272,10 +272,7 @@ export default class Scope {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string; buildResults: Object }> {
-    logger.debugAndAddBreadCrumb(
-      'scope.buildMultiple',
-      'scope.buildMultiple: sequentially build multiple components'
-    );
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_BUILD);
@@ -338,7 +335,8 @@ export default class Scope {
     verbose: boolean;
     dontPrintEnvMsg?: boolean;
     rejectOnFailure?: boolean;
-  }): Promise<SpecsResultsWithCompone.debugAndAddBreadCrumbAndAddBreadCrumb']('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
+  }): Promise<SpecsResultsWithComponentId> {
+    logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     // Make sure not starting the loader when there is nothing to test
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_SPECS);
@@ -366,7 +364,8 @@ export default class Scope {
    * Writes a component as an object into the 'objects' directory
    */
   writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects(this.ob.debugAndAddBreadCrumbAndAddBreadCrumb'](
+    const objects = componentObjects.toObjects(this.objects);
+    logger.debugAndAddBreadCrumb(
       'writeComponentToModel',
       'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
       { id: objects.component.id().toString() }
@@ -377,7 +376,8 @@ export default class Scope {
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise.debugAndAddBreadCrumbAndAddBreadCrumb'](
+  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
+    logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
       `total componentsObjects ${componentsObjects.length}`
     );

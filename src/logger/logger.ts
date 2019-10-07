@@ -60,8 +60,13 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
 type OneOrMoreArray<T> = {
   0: T;
 } & Array<T>;
-interface LoggerConsoleInterface {}
-interface BitLoggerInterfact {
+interface LoggerConsoleInterface {
+  debug(...args): void;
+  info(...args): void;
+  warn(...args): void;
+  error(...args): void;
+}
+interface BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean;
   console: LoggerConsoleInterface;
@@ -73,7 +78,7 @@ interface BitLoggerInterfact {
   debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
 }
 
-class BitLogger implements BitLoggerInterfact {
+class BitLogger implements BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean = true;
   console: LoggerConsoleInterface = {
@@ -94,22 +99,22 @@ class BitLogger implements BitLoggerInterfact {
   //   return (...args: T): U => this.logger.debug(...args)
   // }
 
-  debug(...args: OneOrMoreArray<string>) {
+  debug(...args: OneOrMoreArray<any>) {
     // @ts-ignore
     this.logger.debug(...args);
   }
 
-  warn(...args: OneOrMoreArray<string>) {
+  warn(...args: OneOrMoreArray<any>) {
     // @ts-ignore
     this.logger.warn(...args);
   }
 
-  info(...args: OneOrMoreArray<string>) {
+  info(...args: OneOrMoreArray<any>) {
     // @ts-ignore
     this.logger.info(...args);
   }
 
-  error(...args: OneOrMoreArray<string>) {
+  error(...args: OneOrMoreArray<any>) {
     // @ts-ignore
     this.logger.error(...args);
   }
@@ -130,15 +135,15 @@ class BitLogger implements BitLoggerInterfact {
     process.exit(code);
   }
 
-  debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object) {
+  debugAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
     this.addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
   }
 
-  warnAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object) {
+  warnAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
     this.addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
   }
 
-  errorAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object) {
+  errorAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
     this.addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
   }
 
@@ -146,7 +151,7 @@ class BitLogger implements BitLoggerInterfact {
     level: string,
     category: string,
     message: string,
-    data: Object,
+    data?: Object,
     extraData?: Object | null | undefined
   ) {
     if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
