@@ -189,6 +189,14 @@ export default function validateVersionInstance(version: Version): void {
   validateFlattenedDependencies(version.flattenedDevDependencies);
   validateFlattenedDependencies(version.flattenedCompilerDependencies);
   validateFlattenedDependencies(version.flattenedTesterDependencies);
+  const allDependenciesIds = version.getAllDependenciesIds();
+  const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
+  if (!R.isEmpty(depsDuplications)) {
+    const duplicationStr = Object.keys(depsDuplications)
+      .map(id => `"${id}" shows as the following: ${depsDuplications[id].map(depId => depId.toString()).join(', ')} `)
+      .join('\n');
+    throw new VersionInvalid(`${message}, some dependencies are duplicated:\n${duplicationStr}`);
+  }
   if (!version.log) throw new VersionInvalid(`${message}, the log object is missing`);
   validateType(message, version.log, 'log', 'object');
   if (version.bindingPrefix) {
