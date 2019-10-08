@@ -50,7 +50,7 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger['errorAndAddBreadCrumb']('login.loginToBitSrc', 'received non get request, closing connection');
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
@@ -58,7 +58,7 @@ export default function loginToBitSrc(
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
-          logger['errorAndAddBreadCrumb'](
+          logger.errorAndAddBreadCrumb(
             'login.loginToBitSrc',
             'clientId mismatch, expecting: {clientGeneratedId} got {clientId}',
             { clientGeneratedId, clientId }
@@ -102,14 +102,11 @@ export default function loginToBitSrc(
       }
     });
 
-    logger['debugAndAddBreadCrumb'](
-      'login.loginToBitSrc',
-      `initializing login server on port: ${port || DEFAULT_PORT}`
-    );
+    logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
     // @ts-ignore
     server.listen(port || DEFAULT_PORT, (err: Error) => {
       if (err) {
-        logger['errorAndAddBreadCrumb']('login.loginToBitSrc', 'something bad happened', {}, err);
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
       }
 
@@ -127,8 +124,10 @@ export default function loginToBitSrc(
     });
 
     server.on('error', e => {
-      if (e['code'] === 'EADDRINUSE') {
-        reject(new GeneralError(`port: ${e['port']} already in use, please run bit login --port <port>`));
+      // @ts-ignore
+      if (e.code === 'EADDRINUSE') {
+        // @ts-ignore
+        reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
       }
       reject(e);
     });

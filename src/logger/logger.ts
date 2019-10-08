@@ -3,7 +3,7 @@ import yn from 'yn';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import winston, { Logger, LeveledLogMethod } from 'winston';
+import winston, { Logger } from 'winston';
 import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
 import { Analytics } from '../analytics/analytics';
@@ -60,18 +60,10 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
 type OneOrMoreArray<T> = {
   0: T;
 } & Array<T>;
-interface LoggerConsoleInterface {
-  debug(...args): void;
-  info(...args): void;
-  warn(...args): void;
-  error(...args): void;
-}
+
 interface BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean;
-  console: LoggerConsoleInterface;
-  _logIfNeeded(level: string, ...args): void;
-  // debug: LeveledLogMethod;
   debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
   warnAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
   errorAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
@@ -81,23 +73,10 @@ interface BitLoggerInterface {
 class BitLogger implements BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean = true;
-  console: LoggerConsoleInterface = {
-    debug(...args) {
-      this._logIfNeeded('debug', ...args);
-    },
-    info(...args) {
-      this._logIfNeeded('info', ...args);
-    },
-    warn(...args) {
-      this._logIfNeeded('warn', ...args);
-    },
-    error(...args) {
-      this._logIfNeeded('error', ...args);
-    }
-  };
-  // <T extends Array<any>, U>(debug: (...args: T) => U) {
-  //   return (...args: T): U => this.logger.debug(...args)
-  // }
+
+  constructor(logger: Logger) {
+    this.logger = logger;
+  }
 
   debug(...args: OneOrMoreArray<any>) {
     // @ts-ignore
@@ -117,6 +96,14 @@ class BitLogger implements BitLoggerInterface {
   error(...args: OneOrMoreArray<any>) {
     // @ts-ignore
     this.logger.error(...args);
+  }
+
+  console(msg: string, level: string = 'info') {
+    if (!this.shouldWriteToConsole) {
+      this[level](msg);
+      return;
+    }
+    winston.loggers.get('consoleOnly')[level](msg);
   }
 
   async exitAfterFlush(code: number = 0, commandName: string) {
@@ -159,16 +146,6 @@ class BitLogger implements BitLoggerInterface {
     const messageWithData = data ? format(message, data) : message;
     this.logger[level](`${category}, ${messageWithData}`, extraData);
     addBreadCrumb(category, message, data, extraData);
-  }
-  _logIfNeeded(level, ...args) {
-    if (!this.shouldWriteToConsole) {
-      logger[level](...args);
-      return;
-    }
-    winston.loggers.get('consoleOnly')[level](...args);
-  }
-  constructor(logger: Logger) {
-    this.logger = logger;
   }
 }
 

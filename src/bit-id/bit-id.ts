@@ -1,5 +1,5 @@
 import * as path from 'path';
-import semver from 'semver';
+import * as semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
@@ -279,6 +279,6 @@ export default class BitId {
   }
 
   static isValidVersion(version: string): boolean {
-    return semver.valid(version);
+    return Boolean(semver.valid(version));
   }
 }

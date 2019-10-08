@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { ReleaseType } from 'semver';
 import * as RA from 'ramda-adjunct';
 import graphlib from 'graphlib';
 import pMapSeries from 'p-map-series';
@@ -112,7 +113,7 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
 async function setFutureVersions(
   componentsToTag: Component[],
   scope: Scope,
-  releaseType: string,
+  releaseType: ReleaseType,
   exactVersion: string | null | undefined
 ): Promise<void> {
   await Promise.all(
@@ -209,7 +210,7 @@ export default (async function tagModelComponent({
   scope: Scope;
   message: string;
   exactVersion: string | null | undefined;
-  releaseType: string;
+  releaseType: ReleaseType;
   force: boolean | null | undefined;
   consumer: Consumer;
   ignoreNewestVersion: boolean;

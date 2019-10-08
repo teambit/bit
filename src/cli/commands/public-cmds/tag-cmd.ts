@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { ReleaseType } from 'semver';
 import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
@@ -85,7 +86,7 @@ export default class Tag extends Command {
     }
 
     // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
-    let releaseType = DEFAULT_BIT_RELEASE_TYPE;
+    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
     const includeImported = scope && all;
 
     if (major) releaseType = 'major';
