@@ -620,7 +620,7 @@ export default class Consumer {
     ids: BitIds,
     message: string,
     exactVersion: string | null | undefined,
-    releaseType: string,
+    releaseType: semver.ReleaseType,
     force: boolean | null | undefined,
     verbose: boolean | null | undefined,
     ignoreUnresolvedDependencies: boolean | null | undefined,

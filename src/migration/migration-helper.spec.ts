@@ -5,6 +5,7 @@ import logger from '../logger/logger';
 describe('migration helper', () => {
   let migrationVersions;
   let versionsNumbers;
+  // @ts-ignore
   logger.debug = () => {};
   before(() => {
     const storeVersion = '0.0.3';

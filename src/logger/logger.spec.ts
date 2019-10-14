@@ -14,9 +14,8 @@ describe('logger', () => {
       expect(result[Symbol.for('message')]).to.have.string('"foo": "bar"');
     });
     it('should not throw when the metadata object has a circular structure', () => {
-      const foo = {};
+      const foo: { bar?: Object } = {};
       const bar = { foo };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foo.bar = bar;
       const metadata = { foo };
       const myFormat = getFormat();

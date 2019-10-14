@@ -40,6 +40,11 @@ export type BitMapComponents = { [componentId: string]: ComponentMap };
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 
+export type ResolvedConfigDir = {
+  compiler: string;
+  tester: string;
+};
+
 export default class BitMap {
   projectRoot: string;
   mapPath: string;
@@ -233,15 +238,14 @@ export default class BitMap {
   /**
    * this is a temporarily method until ConfigDir class is merged into master
    */
-  static parseConfigDir(configDir: ConfigDir, rootDir: string) {
-    const configDirResolved = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDirResolved.compiler = configDir.getResolved({
-      componentDir: rootDir,
-      envType: COMPILER_ENV_TYPE
-    }).linuxDirPath;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDirResolved.tester = configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath;
+  static parseConfigDir(configDir: ConfigDir, rootDir: string): ResolvedConfigDir {
+    const configDirResolved: ResolvedConfigDir = {
+      compiler: configDir.getResolved({
+        componentDir: rootDir,
+        envType: COMPILER_ENV_TYPE
+      }).linuxDirPath,
+      tester: configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath
+    };
     return configDirResolved;
   }
 

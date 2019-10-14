@@ -30,7 +30,10 @@ export async function exportManyBareScope(
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
   const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
-  logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
+  logger.debugAndAddBreadCrumb(
+    'exportManyBareScope',
+    'will try to importMany in case there are missing dependencies'
+  );
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
@@ -129,6 +132,7 @@ export async function exportMany({
       return Promise.reject(err);
     }
     await Promise.all(idsToChangeLocally.map(id => scope.sources.removeComponentById(id)));
+    // @ts-ignore
     idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();

@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import versionParser from '../version/version-parser';
+import { InvalidVersion } from './exceptions';
 
 describe('versionParser()', () => {
   it('should return latest version representation', () => {
@@ -9,11 +10,8 @@ describe('versionParser()', () => {
   });
 
   it('should throw invalid version', () => {
-    const version = versionParser('latest');
-    expect(() => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      version('$1');
-    }).to.throw();
+    const version = () => versionParser('$1');
+    expect(version).to.throw(InvalidVersion);
   });
 
   it('should return a concrete version', () => {

@@ -3,6 +3,7 @@ import BitId from './bit-id';
 import { InvalidName, InvalidScopeName } from './exceptions';
 
 describe('Bit-id', () => {
+  // TODO: those tests are now verified by TS compiler, I think we can remove them
   it('should be frozen', () => {
     const bitId = new BitId({ name: 'my-name' });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

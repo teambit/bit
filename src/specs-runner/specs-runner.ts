@@ -1,6 +1,5 @@
 import R from 'ramda';
 import * as path from 'path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import pEvent from 'p-event';
 import { deserializeError } from 'serialize-error';

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import semver from 'semver';
+import * as semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
@@ -239,8 +239,7 @@ export default class BitId {
    * before version 13.0.3 bitmap and component-dependencies ids were written as strings (e.g. scope/box/name@version)
    * since that version the ids are written as objects ({ scope: scopeName, name: compName, version: 0.0.1 })
    */
-  static parseBackwardCompatible(id: string | Object): BitId {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static parseBackwardCompatible(id: string | BitIdProps): BitId {
     return typeof id === 'string' ? BitId.parseObsolete(id) : new BitId(id);
   }
 
@@ -280,6 +279,6 @@ export default class BitId {
   }
 
   static isValidVersion(version: string): boolean {
-    return semver.valid(version);
+    return Boolean(semver.valid(version));
   }
 }

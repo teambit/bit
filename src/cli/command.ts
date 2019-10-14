@@ -1,8 +1,11 @@
+export type CommandOption = [string, string, string];
+export type CommandOptions = Array<CommandOption>;
+
 export default class Cmd {
   name: string;
   description: string;
   alias: string;
-  opts: [string, string, string][];
+  opts: CommandOptions;
   commands: Cmd[] = [];
   private: boolean | null | undefined;
   loader: boolean | null | undefined;

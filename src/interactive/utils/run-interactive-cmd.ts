@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import rightpad from 'pad-right';
 import chalk from 'chalk';
@@ -77,7 +76,6 @@ export default (async function runInteractive({
   }
 
   const child = execa(processName, args, processOpts);
-  child.stdin.setEncoding('utf-8');
 
   let currentInputTimeout;
 
