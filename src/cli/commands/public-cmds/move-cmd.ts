@@ -6,7 +6,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Move extends Command {
   name = 'move <from> <to>';
-  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-move.html`;
+  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#move`;
   alias = 'mv';
   opts = [];
   loader = true;

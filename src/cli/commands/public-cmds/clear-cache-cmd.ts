@@ -8,7 +8,7 @@ const { BASE_DOCS_DOMAIN } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/cli-clear-cache.html`;
+  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#clear-cache`;
   alias = 'cc';
   opts = [];
   loader = false;

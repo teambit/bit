@@ -14,7 +14,7 @@ export default class Export extends Command {
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
   bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
   bit export => export all staged components to their current scope
-  https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
+  https://${BASE_DOCS_DOMAIN}/docs/export
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
