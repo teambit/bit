@@ -16,7 +16,7 @@ import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merg
 export default class Import extends Command {
   name = 'import [ids...]';
   description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html
+  https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
   ${WILDCARD_HELP('import')}`;
   alias = 'i';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

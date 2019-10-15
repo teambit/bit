@@ -8,7 +8,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
   description = `untrack a new component(s)
-  https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html
+  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#untrack
   ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

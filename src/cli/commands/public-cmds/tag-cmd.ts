@@ -14,7 +14,7 @@ export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 export default class Tag extends Command {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
-  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
+  https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

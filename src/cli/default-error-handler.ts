@@ -196,7 +196,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     PermissionDenied,
     err =>
-      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
+      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#authentication-issues`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
@@ -254,7 +254,7 @@ to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIs
     err => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bitdev-permissions.html`
+see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`
   ],
   [
     SSHInvalidResponse,
@@ -348,14 +348,14 @@ please make sure it's not absolute and doesn't contain invalid characters`
     err =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`
   ],
   [
     MissingMainFileMultipleComponents,
     err =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-point`
   ],
   [
     InvalidBitMap,
@@ -518,7 +518,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     err =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${err.debugInfo}`
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`
   ],
   [
     ObjectsWithoutConsumer,

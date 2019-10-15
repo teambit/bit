@@ -73,7 +73,7 @@ class ConfigDel extends Command {
 
 export default class Config extends Command {
   name = 'config';
-  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`;
+  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config`;
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];
