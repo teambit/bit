@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2072](https://github.com/teambit/bit/issues/2072) upgrade bit-javascript to support React fragments
 - [#2067](https://github.com/teambit/bit/issues/2067) fix `bit checkout` to not duplicate modified files when the shared dir has changed
 
 ## [14.4.1] - 2019-10-06
