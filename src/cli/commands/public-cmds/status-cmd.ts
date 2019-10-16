@@ -15,7 +15,7 @@ import { Analytics } from '../../../analytics/analytics';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/troubleshooting-isolating.html`
+  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
 )}`;
 
 export const statusFailureMsg = 'issues found';
@@ -27,7 +27,7 @@ export const importPendingMsg =
 
 export default class Status extends Command {
   name = 'status';
-  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
+  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#status`;
   alias = 's';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['j', 'json', 'return a json version of the component']];

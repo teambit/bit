@@ -11,7 +11,7 @@ import GeneralError from '../../../error/general-error';
 export default class Remove extends Command {
   name = 'remove <ids...>';
   description = `remove a component (local/remote)
-  https://${BASE_DOCS_DOMAIN}/docs/removing-components.html
+  https://${BASE_DOCS_DOMAIN}/docs/removing-components
   ${WILDCARD_HELP('remove')}`;
   alias = 'rm';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

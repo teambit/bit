@@ -12,7 +12,7 @@ let verboseReport = false;
 
 export default class Test extends Command {
   name = 'test [id]';
-  description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html)`;
+  description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

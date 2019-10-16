@@ -6,7 +6,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Build extends Command {
   name = 'build [id]';
-  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components.html`;
+  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
@@ -41,7 +41,7 @@ export default class Build extends Command {
       // $FlowFixMe - res is an object
       if (empty(res)) {
         return chalk.yellow(`nothing to build
-learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components.html`);
+learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components`);
       }
       return Object.keys(res)
         .map(component => {
