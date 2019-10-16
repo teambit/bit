@@ -393,7 +393,12 @@ export default class ImportComponents {
       });
       return filesStatus;
     }
-    return applyModifiedVersion(component.files, mergeResults, this.options.mergeStrategy);
+    return applyModifiedVersion(
+      component.files,
+      mergeResults,
+      this.options.mergeStrategy,
+      component.originallySharedDir
+    );
   }
 
   /**
