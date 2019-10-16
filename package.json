@@ -179,6 +179,7 @@
     "@babel/register": "^7.4.4",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.9",
+    "@types/vinyl": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
     "babel-eslint": "^9.0.0",
