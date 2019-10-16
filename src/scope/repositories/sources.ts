@@ -15,7 +15,6 @@ import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
-import { SourceFileModel, DistFileModel } from '../models/version';
 
 export type ComponentTree = {
   component: ModelComponent;

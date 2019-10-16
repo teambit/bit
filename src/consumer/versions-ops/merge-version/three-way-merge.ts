@@ -1,7 +1,7 @@
 import R from 'ramda';
 import Component from '../../component';
 import { Consumer } from '../..';
-import { sha1, pathNormalizeToLinux } from '../../../utils';
+import { sha1 } from '../../../utils';
 import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
