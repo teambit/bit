@@ -69,6 +69,15 @@ export default (async function threeWayMergeVersions({
   currentVersion: string;
   baseComponent: Version;
 }): Promise<MergeResultsThreeWay> {
+  // baseFiles and currentFiles come from the model, therefore their paths include the
+  // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
+  // sharedOriginallyDir.
+  // option 1) strip sharedOriginallyDir from baseFiles and currentFiles. the problem is that the
+  // sharedDir can be different if the dependencies were changes for example, as a result, it won't
+  // be possible to compare between the files as the paths are different.
+  // in the previous it was implemented this way and caused a bug, which now has an e2e-test to
+  // block it. see https://github.com/teambit/bit/pull/2070 PR.
+  // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
   const baseFiles: SourceFileModel[] = baseComponent.files;
   const currentFiles: SourceFileModel[] = currentComponent.files;
   const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
