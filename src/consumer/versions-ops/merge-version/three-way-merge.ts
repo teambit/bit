@@ -6,7 +6,7 @@ import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
 import { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import { PathOsBased, PathLinux } from '../../../utils/path';
+import { PathOsBased, PathLinux, pathNormalizeToLinux } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import { Version } from '../../../scope/models';
 import { SourceFileModel } from '../../../scope/models/version';
@@ -83,7 +83,7 @@ export default (async function threeWayMergeVersions({
   const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
-    const filePath: PathLinux = fsFile.relative;
+    const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
     if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag
       // if !currentFile && baseFile,  the file was created as part of the last tag
@@ -119,8 +119,9 @@ export default (async function threeWayMergeVersions({
   };
 
   fsFiles.forEach(fsFile => {
-    const baseFile = baseFiles.find(file => file.relativePath === fsFile.relative);
-    const currentFile = currentFiles.find(file => file.relativePath === fsFile.relative);
+    const relativePath = pathNormalizeToLinux(fsFile.relative);
+    const baseFile = baseFiles.find(file => file.relativePath === relativePath);
+    const currentFile = currentFiles.find(file => file.relativePath === relativePath);
     getFileResult(fsFile, baseFile, currentFile);
   });
 
