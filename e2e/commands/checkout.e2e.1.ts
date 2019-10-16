@@ -605,6 +605,8 @@ describe('bit checkout command', function() {
   });
   describe('component with originallySharedDir', () => {
     let output;
+    let authorScope;
+    let importedScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
@@ -612,10 +614,11 @@ describe('bit checkout command', function() {
       helper.fixtures.tagComponentBarFoo();
       helper.command.tagScope('0.0.5');
       helper.command.exportAllComponents();
-
+      authorScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
+      importedScope = helper.scopeHelper.cloneLocalScope();
       output = helper.command.checkoutVersion('0.0.1', 'bar/foo');
     });
     it('should show the updated files without the originallySharedDir', () => {
@@ -626,6 +629,36 @@ describe('bit checkout command', function() {
       const diffOutput = helper.general.runWithTryCatch('bit diff bar/foo');
       expect(diffOutput).to.have.string('no diff for');
       expect(diffOutput).to.not.have.string('foo.js');
+    });
+    // @see https://github.com/teambit/bit/issues/2067 for the complete use-case this tests
+    describe('author added overrides, changing the component to not have sharedDir', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(authorScope);
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              'file://some-file.js': '-'
+            }
+          }
+        };
+        helper.bitJson.addOverrides(overrides);
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+
+        helper.scopeHelper.getClonedLocalScope(importedScope);
+        helper.command.importAllComponents();
+        helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV2);
+        helper.command.checkout('latest bar/foo');
+      });
+      it('should not duplicate the component files', () => {
+        const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
+        expect(path.join(componentDir, 'bar/foo.js')).to.be.a.file();
+        expect(path.join(componentDir, 'foo.js')).to.not.be.a.path();
+      });
+      it('should write the updated content into the checked out file', () => {
+        const fileContent = helper.fs.readFile('components/bar/foo/bar/foo.js');
+        expect(fileContent).to.equal(fixtures.fooFixtureV2);
+      });
     });
   });
   describe('multiple components with different versions', () => {

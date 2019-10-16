@@ -46,6 +46,7 @@ module.exports = {
     // TEMP RULES
     // '@typescript-eslint/no-explicit-any': 'off',
     // END OF TEMP RULES
+    'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'promise/always-return': 'off',
     'promise/no-nesting': 'off',
     'prefer-object-spread': 'off',

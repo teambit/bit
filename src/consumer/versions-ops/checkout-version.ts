@@ -119,16 +119,14 @@ async function getComponentStatus(
       `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
     );
   }
-  const baseComponentVersion: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
-  const baseComponent: ConsumerComponent = await consumer.loadComponentFromModel(existingBitMapId);
-  const isModified = await consumer.isComponentModified(baseComponentVersion, component);
+  const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
+  const isModified = await consumer.isComponentModified(baseComponent, component);
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: MergeResultsThreeWay | null | undefined;
   if (isModified && version) {
-    const newBitId = component.id.changeVersion(newVersion);
-    const currentComponent: ConsumerComponent = await consumer.loadComponentFromModel(newBitId);
+    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
@@ -209,7 +207,12 @@ async function applyVersion(
   let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    modifiedStatus = applyModifiedVersion(files, mergeResults, mergeStrategy);
+    modifiedStatus = applyModifiedVersion(
+      files,
+      mergeResults,
+      mergeStrategy,
+      componentWithDependencies.component.originallySharedDir
+    );
   }
   const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
   componentWithDependencies.component.dependenciesSavedAsComponents =
@@ -242,14 +245,15 @@ async function applyVersion(
 export function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsThreeWay,
-  mergeStrategy: MergeStrategy | null | undefined
+  mergeStrategy: MergeStrategy | null | undefined,
+  sharedDir?: string
 ): Object {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    const pathWithSharedDir = (p: string) => (sharedDir ? path.join(sharedDir, p) : p);
+    const foundFile = componentFiles.find(componentFile => pathWithSharedDir(componentFile.relative) === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
