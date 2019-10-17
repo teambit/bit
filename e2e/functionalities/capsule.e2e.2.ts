@@ -260,6 +260,29 @@ describe('capsule', function() {
           expect(tagFunc).to.not.throw();
         });
       });
+      describe('tag, change a dependency then build the dependent', () => {
+        // change it-type and expect is-string to re-build although it was not modified itself
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
+          helper.command.tagAllComponents();
+          const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
+          helper.fs.createFile('utils', 'is-type.js', strToAdd + fixtures.isTypeV2);
+        });
+        it('should rebuild the component and not use the dists from cache', () => {
+          const buildResult = helper.command.build('utils/is-string');
+          expect(buildResult).to.have.string('generated a capsule for utils/is-string');
+        });
+      });
+      describe('tag, then build a component', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
+          helper.command.tagAllComponents();
+        });
+        it('should use the dists from cache and not rebuild the component', () => {
+          const buildResult = helper.command.build('utils/is-string');
+          expect(buildResult).to.not.have.string('generated a capsule');
+        });
+      });
       describe('when there is a circle dependencies', () => {
         let buildOutput;
         before(() => {

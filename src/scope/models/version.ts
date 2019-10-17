@@ -2,7 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { customResolvedPath } from '../../consumer/component/consumer-component';
+import { customResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/parser';
@@ -77,6 +77,7 @@ export type VersionProps = {
   customResolvedPaths?: customResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Object;
+  extensions?: ExtensionData[];
 };
 
 /**
@@ -116,6 +117,7 @@ export default class Version extends BitObject {
   customResolvedPaths: customResolvedPath[] | null | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Object;
+  extensions: ExtensionData[];
 
   constructor(props: VersionProps) {
     super();
@@ -146,6 +148,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
+    this.extensions = props.extensions || [];
     this.validateVersion();
   }
 
@@ -349,7 +352,8 @@ export default class Version extends BitObject {
         testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
-        packageJsonChangedProps: this.packageJsonChangedProps
+        packageJsonChangedProps: this.packageJsonChangedProps,
+        extensions: this.extensions
       },
       val => !!val
     );
@@ -400,7 +404,8 @@ export default class Version extends BitObject {
       packageDependencies,
       customResolvedPaths,
       overrides,
-      packageJsonChangedProps
+      packageJsonChangedProps,
+      extensions
     } = JSON.parse(contents);
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
@@ -478,7 +483,8 @@ export default class Version extends BitObject {
       packageDependencies,
       customResolvedPaths,
       overrides,
-      packageJsonChangedProps
+      packageJsonChangedProps,
+      extensions
     });
   }
 
@@ -573,7 +579,8 @@ export default class Version extends BitObject {
       flattenedTesterDependencies,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
-      packageJsonChangedProps: component.packageJsonChangedProps
+      packageJsonChangedProps: component.packageJsonChangedProps,
+      extensions: component.extensions
     });
   }
 

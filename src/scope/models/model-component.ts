@@ -394,7 +394,8 @@ export default class Component extends BitObject {
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
-      scopesList: clone(this.scopesList)
+      scopesList: clone(this.scopesList),
+      extensions: clone(version.extensions)
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

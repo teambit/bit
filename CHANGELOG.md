@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2024](https://github.com/teambit/bit/issues/2024) rebuild components upon dependencies changes for compilers that build dependencies
 - [#2067](https://github.com/teambit/bit/issues/2067) fix `bit checkout` to not duplicate modified files when the shared dir has changed
 
 ## [14.4.1] - 2019-10-06
