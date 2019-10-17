@@ -12,6 +12,7 @@ import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
 import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import { DEPENDENCIES_FIELDS } from '../constants';
+import GeneralError from '../error/general-error';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -195,7 +196,13 @@ export default function validateVersionInstance(version: Version): void {
     const duplicationStr = Object.keys(depsDuplications)
       .map(id => `"${id}" shows as the following: ${depsDuplications[id].map(depId => depId.toString()).join(', ')} `)
       .join('\n');
-    throw new VersionInvalid(`${message}, some dependencies are duplicated:\n${duplicationStr}`);
+    throw new GeneralError(`some dependencies are duplicated, see details below.
+if you added a dependency to "overrides" configuration with a plus sign, make sure to add it with a minus sign in the other dependency type
+for example, { dependencies: { "bar/foo": "+" }, devDependencies: { "bar/foo": "-" } }
+
+${duplicationStr}`);
+    // todo: once decided how to address duplicate dependencies, remove the line above and uncomment the line below
+    // throw new VersionInvalid(`${message}, some dependencies are duplicated:\n${duplicationStr}`);
   }
   if (!version.log) throw new VersionInvalid(`${message}, the log object is missing`);
   validateType(message, version.log, 'log', 'object');

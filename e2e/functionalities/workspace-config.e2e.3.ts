@@ -333,29 +333,33 @@ describe('workspace config', function() {
           });
         });
         // todo: make a decision about the desired behavior. see #2061
-        // describe('when adding the component as devDependency without removing it', () => {
-        //   let showBar;
-        //   before(() => {
-        //     helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
-        //     helper.command.tagAllComponents();
-        //     helper.command.exportAllComponents();
-        //     helper.fs.createFile(
-        //       'bar-dir',
-        //       'bar.js',
-        //       `require('@bit/${helper.scopes.remote}.utils.foo.foo1'); require('@bit/${helper.scopes.remote}.utils.foo.foo2'); `
-        //     );
-        //     const overrides = {
-        //       bar: {
-        //         devDependencies: {
-        //           [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+'
-        //         }
-        //       }
-        //     };
-        //     helper.bitJson.addOverrides(overrides);
-        //     showBar = helper.command.showComponentParsed('bar');
-        //   });
-        //   it.skip('should not show the component twice as dependency and as devDependencies', () => {});
-        // });
+        describe('when adding the component as devDependency without removing it', () => {
+          let showBar;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+            helper.fs.createFile(
+              'bar-dir',
+              'bar.js',
+              `require('@bit/${helper.scopes.remote}.utils.foo.foo1'); require('@bit/${helper.scopes.remote}.utils.foo.foo2'); `
+            );
+            const overrides = {
+              bar: {
+                devDependencies: {
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+'
+                }
+              }
+            };
+            helper.bitJson.addOverrides(overrides);
+            showBar = helper.command.showComponentParsed('bar');
+          });
+          it.skip('should not show the component twice as dependency and as devDependencies', () => {});
+          it.only('should not allow tagging the component', () => {
+            const tagFunc = () => helper.command.tagAllComponents();
+            expect(tagFunc).to.throw('some dependencies are duplicated');
+          });
+        });
       });
       describe('ignoring a dependencies components by wildcards', () => {
         let showBar;
