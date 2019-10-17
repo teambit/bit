@@ -10,7 +10,7 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default class List extends Command {
   name = 'list [scope]';
-  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-link.html`;
+  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#list`;
   alias = 'ls';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

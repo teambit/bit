@@ -12,7 +12,7 @@ import shouldShowInteractive from '../../../interactive/utils/should-show-intera
 
 export default class Init extends Command {
   name = 'init [path]';
-  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/cli-init.html`;
+  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#init`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

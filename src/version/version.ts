@@ -11,7 +11,7 @@ export default class Version {
     this.latest = latest;
   }
 
-  increase(releaseType: string = DEFAULT_BIT_RELEASE_TYPE): Version {
+  increase(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
     if (!this.versionNum) throw new InvalidVersionChange();
     this.versionNum = semver.inc(this.versionNum, releaseType);
     return this;
@@ -28,6 +28,6 @@ export default class Version {
     if (!this.versionNum && this.latest) return 'latest';
     if (this.versionNum && this.latest) return `*${this.versionNum}`;
     if (this.versionNum && !this.latest) return this.versionNum.toString();
-    throw new InvalidVersion();
+    throw new InvalidVersion(this.versionNum);
   }
 }

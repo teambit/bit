@@ -24,7 +24,7 @@ export async function tagAction(args: {
   id: string;
   message: string;
   exactVersion: string | null | undefined;
-  releaseType: string;
+  releaseType: semver.ReleaseType;
   force: boolean | null | undefined;
   verbose?: boolean;
   ignoreUnresolvedDependencies?: boolean;

@@ -553,6 +553,20 @@ export default class Component {
     });
   }
 
+  addSharedDir(pathStr: string): PathLinux {
+    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
+    return pathNormalizeToLinux(withSharedDir);
+  }
+
+  cloneFilesWithSharedDir(): SourceFile[] {
+    return this.files.map((file) => {
+      const newFile = file.clone();
+      const newRelative = this.addSharedDir(file.relative);
+      newFile.updatePaths({ newRelative });
+      return newFile;
+    });
+  }
+
   async build({
     scope,
     save,

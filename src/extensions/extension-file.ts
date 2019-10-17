@@ -188,6 +188,7 @@ export default class ExtensionFile extends AbstractVinyl {
     };
   }
 
+  // @ts-ignore
   clone(): ExtensionFile {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ExtensionFile(this);

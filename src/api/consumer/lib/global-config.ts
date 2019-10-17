@@ -6,7 +6,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`);
+    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config`);
   }
   return Config.load().then(config => {
     config.set(key, val);

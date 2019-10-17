@@ -8,7 +8,7 @@ import { DependenciesInfo } from '../../../scope/graph/scope-graph';
 
 export default class Show extends Command {
   name = 'show <id>';
-  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/cli-show.html`;
+  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#show`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

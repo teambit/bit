@@ -23,6 +23,7 @@ import { getScopeRemotes } from '../../scope/scope-remotes';
 import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { Version } from '../../scope/models';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -340,8 +341,11 @@ export default class ImportComponents {
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    const baseComponent: Component = await this.consumer.loadComponentFromModel(existingBitMapBitId);
-    const currentComponent: Component = await this.consumer.loadComponentFromModel(component.id);
+    const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
+    const currentComponent: Version = await componentModel.loadVersion(
+      component.id.version,
+      this.consumer.scope.objects
+    );
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
       otherComponent: fsComponent,
@@ -389,7 +393,12 @@ export default class ImportComponents {
       });
       return filesStatus;
     }
-    return applyModifiedVersion(component.files, mergeResults, this.options.mergeStrategy);
+    return applyModifiedVersion(
+      component.files,
+      mergeResults,
+      this.options.mergeStrategy,
+      component.originallySharedDir
+    );
   }
 
   /**

@@ -14,6 +14,7 @@ import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
+import { ComponentOrigin } from '../bit-map/component-map';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -270,12 +271,12 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  getFromBitMap(origin?: string): BitIds {
+  getFromBitMap(origin?: ComponentOrigin): BitIds {
     const originParam = origin ? [origin] : undefined;
     return this.bitMap.getAllBitIds(originParam);
   }
 
-  getPathsForAllFilesOfAllComponents(origin?: string, absolute: boolean = false): string[] {
+  getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute: boolean = false): string[] {
     // TODO: maybe cache this as well
     const componentsFromBitMap = this.bitMap.getAllComponents(origin);
     const res = [];

@@ -186,7 +186,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
-  }): Promise<Object> {
+  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return null;

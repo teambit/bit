@@ -7,6 +7,8 @@ import logger from '../../logger/logger';
 const LOWER_PRIORITY_EXTENSIONS = ['d.ts'];
 const HIGHER_PRIORITY_EXTENSIONS = ['js'];
 
+export default function searchFilesIgnoreExt(files: Vinyl[], fileName: PathOsBased): Vinyl;
+export default function searchFilesIgnoreExt(files: Vinyl[], fileName: PathOsBased, returnProp: string): PathOsBased;
 export default function searchFilesIgnoreExt(
   files: Vinyl[],
   fileName: PathOsBased,
@@ -17,7 +19,9 @@ export default function searchFilesIgnoreExt(
 
   if (files && !R.isEmpty(files)) {
     const foundFile = getFile();
-    return foundFile && returnProp && foundFile[returnProp] ? foundFile[returnProp] : foundFile;
+    return foundFile && returnProp && foundFile[returnProp]
+      ? (foundFile[returnProp] as PathOsBased)
+      : (foundFile as Vinyl);
   }
   return null;
 

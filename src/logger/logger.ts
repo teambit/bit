@@ -3,7 +3,7 @@ import yn from 'yn';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import winston from 'winston';
+import winston, { Logger } from 'winston';
 import * as path from 'path';
 import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
 import { Analytics } from '../analytics/analytics';
@@ -54,11 +54,108 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log')
 });
 
-const logger = winston.createLogger({
+// interface OneOrMoreArray<T> extends Array<T> {
+//   0: T
+// }
+type OneOrMoreArray<T> = {
+  0: T;
+} & Array<T>;
+
+interface BitLoggerInterface {
+  logger: Logger;
+  shouldWriteToConsole: boolean;
+  debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
+  warnAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
+  errorAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
+  debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
+}
+
+class BitLogger implements BitLoggerInterface {
+  logger: Logger;
+  shouldWriteToConsole: boolean = true;
+
+  constructor(logger: Logger) {
+    this.logger = logger;
+  }
+
+  debug(...args: OneOrMoreArray<any>) {
+    // @ts-ignore
+    this.logger.debug(...args);
+  }
+
+  warn(...args: OneOrMoreArray<any>) {
+    // @ts-ignore
+    this.logger.warn(...args);
+  }
+
+  info(...args: OneOrMoreArray<any>) {
+    // @ts-ignore
+    this.logger.info(...args);
+  }
+
+  error(...args: OneOrMoreArray<any>) {
+    // @ts-ignore
+    this.logger.error(...args);
+  }
+
+  console(msg: string, level: string = 'info') {
+    if (!this.shouldWriteToConsole) {
+      this[level](msg);
+      return;
+    }
+    winston.loggers.get('consoleOnly')[level](msg);
+  }
+
+  async exitAfterFlush(code: number = 0, commandName: string) {
+    await Analytics.sendData();
+    let level;
+    let msg;
+    if (code === 0) {
+      level = 'info';
+      msg = `[*] the command ${commandName} has been completed successfully`;
+    } else {
+      level = 'error';
+      msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
+    }
+    this.logger[level](msg);
+    await waitForLogger();
+    process.exit(code);
+  }
+
+  debugAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+    this.addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
+  }
+
+  warnAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+    this.addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
+  }
+
+  errorAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+    this.addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
+  }
+
+  addToLoggerAndToBreadCrumb(
+    level: string,
+    category: string,
+    message: string,
+    data?: Object,
+    extraData?: Object | null | undefined
+  ) {
+    if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
+    if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
+    const messageWithData = data ? format(message, data) : message;
+    this.logger[level](`${category}, ${messageWithData}`, extraData);
+    addBreadCrumb(category, message, data, extraData);
+  }
+}
+
+const winstonLogger = winston.createLogger({
   transports: [new winston.transports.File(baseFileTransportOpts)],
   exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
   exitOnError: false
 });
+
+const logger = new BitLogger(winstonLogger);
 
 /**
  * Create a logger instance for extension
@@ -94,64 +191,22 @@ export const printWarning = (msg: string) => {
   }
 };
 
-logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
-  await Analytics.sendData();
-  let level;
-  let msg;
-  if (code === 0) {
-    level = 'info';
-    msg = `[*] the command ${commandName} has been completed successfully`;
-  } else {
-    level = 'error';
-    msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
-  }
-  logger[level](msg);
-  await waitForLogger();
-  process.exit(code);
-};
-
 /**
  * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
  * it solves an issue when exiting the code explicitly and the log file is not written
  */
 async function waitForLogger() {
-  const loggerDone = new Promise(resolve => logger.on('finish', resolve));
-  logger.end();
+  const loggerDone = new Promise(resolve => logger.logger.on('finish', resolve));
+  logger.logger.end();
   return loggerDone;
 }
 
-function addBreakCrumb(category: string, message: string, data: Object = {}, extraData) {
+function addBreadCrumb(category: string, message: string, data: Object = {}, extraData) {
   const hashedData = {};
   Object.keys(data).forEach(key => (hashedData[key] = Analytics.hashData(data[key])));
   const messageWithHashedData = format(message, hashedData);
   extraData = extraData instanceof Error ? serializeError(extraData) : extraData;
   Analytics.addBreadCrumb(category, messageWithHashedData, extraData);
-}
-
-logger.debugAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
-  addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
-};
-
-logger.warnAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
-  addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
-};
-
-logger.errorAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
-  addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
-};
-
-function addToLoggerAndToBreadCrumb(
-  level: string,
-  category: string,
-  message: string,
-  data: Object,
-  extraData?: Object | null | undefined
-) {
-  if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
-  if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
-  const messageWithData = data ? format(message, data) : message;
-  logger[level](`${category}, ${messageWithData}`, extraData);
-  addBreakCrumb(category, message, data, extraData);
 }
 
 /**
@@ -165,11 +220,15 @@ if (process.env.BIT_LOG) {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
   if (levels.includes(process.env.BIT_LOG)) {
     const level = process.env.BIT_LOG;
-    logger.add(winston.transports.Console, { level });
-    logger.cli();
+    // TODO: the level arg is not supported anymore, should be fixed
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    logger.logger.add(winston.transports.Console, { level });
+    // TODO: the cli method is not supported anymore, should be fixed
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    logger.logger.cli();
   } else {
     const prefixes = process.env.BIT_LOG.split(',');
-    logger.on('logging', (transport, level, msg) => {
+    logger.logger.on('logging', (transport, level, msg) => {
       if (prefixes.some(prefix => msg.startsWith(prefix))) {
         console.log(`\n${msg}`); // eslint-disable-line no-console
       }
@@ -185,28 +244,5 @@ winston.loggers.add('consoleOnly', {
   format: winston.format.combine(winston.format.printf(info => info.message)),
   transports: [new winston.transports.Console({ level: 'silly' })]
 });
-
-logger.shouldWriteToConsole = true;
-logger.console = {
-  debug(...args) {
-    this._logIfNeeded('debug', ...args);
-  },
-  info(...args) {
-    this._logIfNeeded('info', ...args);
-  },
-  warn(...args) {
-    this._logIfNeeded('warn', ...args);
-  },
-  error(...args) {
-    this._logIfNeeded('error', ...args);
-  },
-  _logIfNeeded(level, ...args) {
-    if (!logger.shouldWriteToConsole) {
-      logger[level](...args);
-      return;
-    }
-    winston.loggers.get('consoleOnly')[level](...args);
-  }
-};
 
 export default logger;

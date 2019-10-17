@@ -47,7 +47,7 @@ class RemoteRm extends Command {
 
 export default class Remote extends Command {
   name = 'remote';
-  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-remote.html`;
+  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#remote`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['g', 'global', 'see globally configured remotes']];

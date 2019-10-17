@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import execa from 'execa';
 import pMapSeries from 'p-map-series';
 import semver from 'semver';
@@ -148,9 +147,7 @@ const _installInOneDirectory = ({
       let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
       throw new ShowDoctorError(
-        `${stderr}\n\n${chalk.yellow(
-          `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
-        )}`
+        `${stderr}\n\n${chalk.yellow(`see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/installing-components`)}`
       );
     });
 };
@@ -325,8 +322,8 @@ const installAction = async ({
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string; stderr: string }) => {
-  logger.console.info(chalk.yellow(stdout)); // eslint-disable-line
-  logger.console.info(chalk.yellow(stderr)); // eslint-disable-line
+  logger.console(chalk.yellow(stdout)); // eslint-disable-line
+  logger.console(chalk.yellow(stderr)); // eslint-disable-line
 };
 
 async function getNpmVersion(): Promise<string | null | undefined> {

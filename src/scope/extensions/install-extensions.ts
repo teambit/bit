@@ -73,7 +73,7 @@ export default function installExtensions({
       const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
       if (!dontPrintEnvMsg) {
         // eslint-disable-next-line no-console
-        logger.console.debug(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
+        logger.console(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`), 'debug');
       }
       return isolatedComponent;
     } catch (e) {

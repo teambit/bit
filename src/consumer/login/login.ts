@@ -1,11 +1,8 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import http from 'http';
 import uuid from 'uuid';
 import opn from 'opn';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import chalk from 'chalk';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import url from 'url';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import {
@@ -69,7 +66,7 @@ export default function loginToBitSrc(
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
-        setSync(CFG_USER_TOKEN_KEY, token);
+        setSync(CFG_USER_TOKEN_KEY, token as string);
         const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
@@ -99,14 +96,15 @@ export default function loginToBitSrc(
           writeToNpmrcError
         });
       } catch (err) {
-        logger.err(`err on login: ${err}`);
+        logger.error(`err on login: ${err}`);
         closeConnection(ERROR_RESPONSE);
         reject(new LoginFailed());
       }
     });
 
     logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
-    server.listen(port || DEFAULT_PORT, err => {
+    // @ts-ignore
+    server.listen(port || DEFAULT_PORT, (err: Error) => {
       if (err) {
         logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
@@ -126,7 +124,9 @@ export default function loginToBitSrc(
     });
 
     server.on('error', e => {
+      // @ts-ignore
       if (e.code === 'EADDRINUSE') {
+        // @ts-ignore
         reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
       }
       reject(e);

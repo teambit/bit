@@ -66,8 +66,7 @@ class ScopeConfigSet extends Command {
   }
 
   report({ key, value }: { key: string; value: number }): string {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return `${chalk.yellow(key)} has been set to - ${chalk.yellow(value)}`;
+    return `${chalk.yellow(key)} has been set to - ${chalk.yellow(value.toString())}`;
   }
 }
 

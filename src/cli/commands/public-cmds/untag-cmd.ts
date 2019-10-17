@@ -8,7 +8,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 export default class Untag extends Command {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/docs/cli-untag.html
+  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#untag
   ${WILDCARD_HELP('untag')}`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

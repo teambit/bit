@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { ReleaseType } from 'semver';
 import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import { TagResults } from '../../../api/consumer/lib/tag';
@@ -13,7 +14,7 @@ export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 export default class Tag extends Command {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
-  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
+  https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -85,7 +86,7 @@ export default class Tag extends Command {
     }
 
     // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
-    let releaseType = DEFAULT_BIT_RELEASE_TYPE;
+    let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
     const includeImported = scope && all;
 
     if (major) releaseType = 'major';

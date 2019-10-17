@@ -45,7 +45,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
   if (remoteMajor > localMajor) {
     if (localMajor < throwErrorFromServerSinceVersion) return;
     loader.stop();
-    logger.console.error(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console(createMajorMessage(remoteVersion, BIT_VERSION), 'error');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
     return;
@@ -53,7 +53,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 
   if (remoteMinor > localMinor) {
     loader.stop();
-    logger.console.error(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console(createMinorMessage(remoteVersion, BIT_VERSION), 'error');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
     return;
@@ -61,7 +61,7 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 
   if (remotePatch > localPatch) {
     loader.stop();
-    logger.console.warn(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    logger.console(createMinorMessage(remoteVersion, BIT_VERSION), 'warn');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     loader.start();
   }
@@ -81,9 +81,9 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 export function checkVersionCompatibilityOnTheServer(clientVersion: string) {
   const clientMajor = semver.major(clientVersion);
   const localMajor = semver.major(BIT_VERSION);
-  const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_DOCS_DOMAIN}/docs/latest-version.html`;
+  const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_DOCS_DOMAIN}/docs/installation#latest-version`;
   const oldClientVersionMessageAfterV14 = () => `Fatal: Bit client - server version mismatch. Using "${clientVersion}" Local version to communicate with "${BIT_VERSION}" on the Remove Server. Please update your Bit client.
-For additional information: https://${BASE_DOCS_DOMAIN}/docs/latest-version.html`;
+For additional information: https://${BASE_DOCS_DOMAIN}/docs/installation#latest-version`;
 
   if (localMajor > clientMajor) {
     if (clientMajor >= throwErrorFromServerSinceVersion) {

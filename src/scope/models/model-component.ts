@@ -1,4 +1,4 @@
-import semver from 'semver';
+import * as semver from 'semver';
 import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
@@ -209,7 +209,10 @@ export default class Component extends BitObject {
   /**
    * if exactVersion is defined, add exact version instead of using the semver mechanism
    */
-  getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: string | null | undefined): string {
+  getVersionToAdd(
+    releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
+    exactVersion: string | null | undefined
+  ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
@@ -222,7 +225,7 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: string = DEFAULT_BIT_RELEASE_TYPE) {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
     const latest = this.latest();
     if (latest) return semver.inc(latest, releaseType);
     return DEFAULT_BIT_VERSION;

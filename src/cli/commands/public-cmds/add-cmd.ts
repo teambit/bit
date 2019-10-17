@@ -13,9 +13,9 @@ export default class Add extends Command {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations
-  https://${BASE_DOCS_DOMAIN}/docs/cli-add.html
-  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components.html
-  https://${BASE_DOCS_DOMAIN}/docs/manage-component-files.html`;
+  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#add
+  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components
+  https://${BASE_DOCS_DOMAIN}docs/add-and-isolate-components#manage-components-files`;
   alias = 'a';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

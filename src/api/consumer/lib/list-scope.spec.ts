@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import listScope from '../../../api/consumer/lib/list-scope';
+import { listScope } from '../../../api/consumer/lib/list-scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import * as consumer from '../../../consumer';
 import { GlobalRemotes } from '../../../global-config';
@@ -31,7 +30,6 @@ describe('ListScope', () => {
         expect(resolveStub.getCall(0).args[0]).to.equal('non-exists-scope');
         expect(listSpy.called).to.be.true;
       });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     }).timeout(5000);
   });
 });
