@@ -33,7 +33,7 @@ const defaultLookups = {
 };
 
 // for some reason, .ts is not sufficient, .d.ts is needed as well
-// these extensions are used with commonJs and nonRelative lookups. When a partial doesn't have an
+// these extensions are used with commonJs and nonRelative lookups. When a dependency doesn't have an
 // extension it will look for files with these extensions in order.
 // for example, `const a = require('.a')`, it'll look for a.js, a.jsx, a.ts and so on.
 const resolveExtensions = Object.keys(defaultLookups).concat(['.d.ts', '.json', '.css']);
@@ -42,7 +42,7 @@ const resolveExtensions = Object.keys(defaultLookups).concat(['.d.ts', '.json', 
 const styleExtensions = ['.scss', '.sass', '.less', '.css'];
 
 type Options = {
-  partial: string,
+  dependency: string, // previous name was "partial"
   filename: string,
   directory: string,
   config: Object,
@@ -57,11 +57,9 @@ type Options = {
 };
 
 module.exports = function cabinet(options: Options) {
-  const partial = options.partial;
-  const filename = options.filename;
-  const directory = options.directory;
+  const { dependency, filename } = options;
   const ext = options.ext || path.extname(filename);
-  debug(`working on a dependency "${partial}" of a file "${filename}"`);
+  debug(`working on a dependency "${dependency}" of a file "${filename}"`);
 
   let resolver = defaultLookups[ext];
 
@@ -69,39 +67,30 @@ module.exports = function cabinet(options: Options) {
     debug('using generic resolver');
     resolver = resolveDependencyPath;
   }
-  if (ext === '.css' && partial.startsWith('~')) resolver = cssPreprocessorLookup;
+  if (ext === '.css' && dependency.startsWith('~')) resolver = cssPreprocessorLookup;
 
   debug(`found a resolver ${resolver.name} for ${ext}`);
 
-  const getResolverResults = () => {
-    // old resolver are not getting an object parameter
-    if (resolver.length > 1) {
-      // check whether the 'resolver' function gets more than one parameter
-      // $FlowFixMe
-      return resolver(partial, filename, directory);
-    }
-    return resolver(options);
-  };
-  let result = getResolverResults();
-  const partialExt = path.extname(partial);
-  if (!result && partialExt && partialExt !== ext) {
-    resolver = defaultLookups[partialExt];
+  let result = resolver(options);
+  const dependencyExt = path.extname(dependency);
+  if (!result && dependencyExt && dependencyExt !== ext) {
+    resolver = defaultLookups[dependencyExt];
     if (resolver) {
       // todo: this strategy probably fails often. if, for example, a dependency A.js inside B.ts
       // was not found using the ts resolve, it tries the js resolver, however, parsing the ts file
       // with js parser, won't work most of the time. A better approach would be to fix the
       // original resolver.
       debug(
-        `dependency has a different extension (${partialExt}) than the original file (${ext}), trying to use its resolver instead`
+        `dependency has a different extension (${dependencyExt}) than the original file (${ext}), trying to use its resolver instead`
       );
       try {
-        result = getResolverResults();
+        result = resolver(options);
       } catch (err) {
-        debug(`unable to use the resolver of ${partialExt} for ${filename}. got an error ${err.message}`);
+        debug(`unable to use the resolver of ${dependencyExt} for ${filename}. got an error ${err.message}`);
       }
     }
   }
-  debug(`resolved path for ${partial}: ${result}`);
+  debug(`resolved path for ${dependency}: ${result}`);
   return result;
 };
 
@@ -111,7 +100,7 @@ module.exports.supportedFileExtensions = Object.keys(defaultLookups);
  * Register a custom lookup resolver for a file extension
  *
  * @param  {String} extension - The file extension that should use the resolver
- * @param  {Function} lookupStrategy - A resolver of partial paths
+ * @param  {Function} lookupStrategy - A resolver of dependency paths
  */
 module.exports.register = function (extension, lookupStrategy) {
   defaultLookups[extension] = lookupStrategy;
@@ -154,7 +143,7 @@ module.exports._getJSType = function (options) {
 
 /**
  * @private
- * @param  {String} partial
+ * @param  {String} dependency
  * @param  {String} filename
  * @param  {String} directory
  * @param  {String} [config]
@@ -164,7 +153,7 @@ module.exports._getJSType = function (options) {
  * @return {String}
  */
 function jsLookup(options: Options) {
-  const { configPath, partial, directory, config, webpackConfig, filename, ast, isScript, content } = options;
+  const { configPath, dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
   const type = module.exports._getJSType({
     config,
     webpackConfig,
@@ -181,14 +170,14 @@ function jsLookup(options: Options) {
         config,
         // Optional in case a pre-parsed config is being passed in
         configPath,
-        partial,
+        partial: dependency,
         directory,
         filename
       });
 
     case 'webpack':
       debug('using webpack resolver for es6');
-      return resolveWebpackPath(partial, filename, directory, webpackConfig);
+      return resolveWebpackPath(dependency, filename, directory, webpackConfig);
 
     case 'commonjs':
     case 'es6':
@@ -212,28 +201,28 @@ function jsLookup(options: Options) {
     syntax for importing relative files. Writing `@import "file"` is the same as `@import "./file";
  */
 function cssPreprocessorLookup(options: Options) {
-  const { filename, partial, directory, resolveConfig } = options;
-  if (resolveConfig && !isRelativeImport(partial)) {
-    const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+  const { filename, dependency, directory, resolveConfig } = options;
+  if (resolveConfig && !isRelativeImport(dependency)) {
+    const result = resolveNonRelativePath(dependency, filename, directory, resolveConfig);
     if (result) {
       options.wasCustomResolveUsed = true;
       return result;
     }
   }
-  if (partial.startsWith('~') && !partial.startsWith('~/')) {
+  if (dependency.startsWith('~') && !dependency.startsWith('~/')) {
     // webpack syntax for resolving a module from node_modules
     debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
-    const partialWithNoTilda = partial.replace('~', '');
-    return resolveWebpack(partialWithNoTilda, filename, directory, { extensions: styleExtensions, symlinks: false });
+    const dependencyWithNoTilda = dependency.replace('~', '');
+    return resolveWebpack(dependencyWithNoTilda, filename, directory, { extensions: styleExtensions, symlinks: false });
   }
 
   // Less and Sass imports are very similar
-  return sassLookup(partial, filename, directory);
+  return sassLookup({ dependency, filename, directory });
 }
 
 function tsLookup(options: Options) {
-  const { partial, filename } = options;
-  if (partial[0] !== '.') {
+  const { dependency, filename } = options;
+  if (dependency[0] !== '.') {
     // when a path is not relative, use the standard commonJS lookup
     return commonJSLookup(options);
   }
@@ -245,11 +234,11 @@ function tsLookup(options: Options) {
 
   const host = ts.createCompilerHost({});
   debug('with options: ', tsOptions);
-  let resolvedModule = ts.resolveModuleName(partial, filename, tsOptions, host).resolvedModule;
+  let resolvedModule = ts.resolveModuleName(dependency, filename, tsOptions, host).resolvedModule;
   if (!resolvedModule) {
     // for some reason, on Windows, ts.resolveModuleName method tries to find the module in the
     // root directory. For example, it searches for module './bar', in 'c:\bar.ts'.
-    const fallbackModule = path.resolve(path.dirname(filename), partial);
+    const fallbackModule = path.resolve(path.dirname(filename), dependency);
     resolvedModule = ts.resolveModuleName(fallbackModule, filename, tsOptions, host).resolvedModule;
   }
   if (!resolvedModule) {
@@ -264,7 +253,7 @@ function tsLookup(options: Options) {
   return result ? path.resolve(result) : '';
 }
 
-function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
+function resolveNonRelativePath(dependency, filename, directory, resolveConfig) {
   const webpackResolveConfig = {};
   if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
   if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
@@ -272,35 +261,26 @@ function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
   // a resolve module might point to an imported component via the package name, in which case
   // the package name is a symlink to the imported component. we want it to be resolved as a pkg
   webpackResolveConfig.symlinks = false;
-  return resolveWebpack(partial, filename, directory, webpackResolveConfig);
+  return resolveWebpack(dependency, filename, directory, webpackResolveConfig);
 }
 
-/**
- * TODO: Export to a separate module
- *
- * @private
- * @param  {String} partial
- * @param  {String} filename
- * @param  {String} directory
- * @return {String}
- */
 function commonJSLookup(options: Options) {
   const { filename, resolveConfig } = options;
   const directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
-  // Need to resolve partials within the directory of the module, not filing-cabinet
+  // Need to resolve dependencies within the directory of the module, not filing-cabinet
   const moduleLookupDir = path.join(directory, 'node_modules');
 
   debug(`adding ${moduleLookupDir} to the require resolution paths`);
 
   appModulePath.addPath(moduleLookupDir);
 
-  let partial = options.partial;
+  let dependency = options.dependency;
 
   let result = '';
 
-  if (!isRelativeImport(partial) && resolveConfig) {
+  if (!isRelativeImport(dependency) && resolveConfig) {
     debug(`trying to resolve using resolveConfig ${JSON.stringify(resolveConfig)}`);
-    result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+    result = resolveNonRelativePath(dependency, filename, directory, resolveConfig);
     if (result) {
       debug('successfully resolved using resolveConfig');
       options.wasCustomResolveUsed = true;
@@ -309,27 +289,27 @@ function commonJSLookup(options: Options) {
     debug('failed resolved using resolveConfig, fall back to the standard resolver');
   }
 
-  // Make sure the partial is being resolved to the filename's context
+  // Make sure the dependency is being resolved to the filename's context
   // 3rd party modules will not be relative
-  if (partial[0] === '.') {
-    partial = path.resolve(path.dirname(filename), partial);
+  if (dependency[0] === '.') {
+    dependency = path.resolve(path.dirname(filename), dependency);
   }
 
   try {
-    result = resolve.sync(partial, {
+    result = resolve.sync(dependency, {
       extensions: resolveExtensions,
       basedir: directory,
       moduleDirectory: ['node_modules']
     });
     debug(`resolved path: ${result}`);
   } catch (e) {
-    debug(`could not resolve ${partial}`);
+    debug(`could not resolve ${dependency}`);
   }
 
   return result;
 }
 
-function resolveWebpackPath(partial, filename, directory, webpackConfig) {
+function resolveWebpackPath(dependency, filename, directory, webpackConfig) {
   webpackConfig = path.resolve(webpackConfig);
 
   try {
@@ -359,34 +339,34 @@ function resolveWebpackPath(partial, filename, directory, webpackConfig) {
     }
   }
 
-  return resolveWebpack(partial, filename, directory, resolveConfig);
+  return resolveWebpack(dependency, filename, directory, resolveConfig);
 }
 
-function resolveWebpack(partial, filename, directory, resolveConfig) {
+function resolveWebpack(dependency, filename, directory, resolveConfig) {
   try {
     const resolver = webpackResolve.create.sync(resolveConfig);
 
-    // We don't care about what the loader resolves the partial to
+    // We don't care about what the loader resolves the dependency to
     // we only want the path of the resolved file
-    partial = stripLoader(partial);
+    dependency = stripLoader(dependency);
 
-    const lookupPath = isRelative(partial) ? path.dirname(filename) : directory;
+    const lookupPath = isRelative(dependency) ? path.dirname(filename) : directory;
 
-    return resolver(lookupPath, partial);
+    return resolver(lookupPath, dependency);
   } catch (e) {
-    debug(`error when resolving ${partial}`);
+    debug(`error when resolving ${dependency}`);
     debug(e.message);
     debug(e.stack);
     return '';
   }
 }
 
-function stripLoader(partial) {
-  const exclamationLocation = partial.indexOf('!');
+function stripLoader(dependency) {
+  const exclamationLocation = dependency.indexOf('!');
 
   if (exclamationLocation === -1) {
-    return partial;
+    return dependency;
   }
 
-  return partial.slice(exclamationLocation + 1);
+  return dependency.slice(exclamationLocation + 1);
 }

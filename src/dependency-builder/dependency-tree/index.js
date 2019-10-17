@@ -96,7 +96,7 @@ module.exports._getDependencies = function (config) {
       return;
     }
     const cabinetParams = {
-      partial: dependency,
+      dependency,
       filename: config.filename,
       directory: config.directory,
       ast: precinct.ast,
@@ -119,7 +119,7 @@ module.exports._getDependencies = function (config) {
     }
 
     if (!result) {
-      debug(`skipping an empty filepath resolution for partial: ${dependency}`);
+      debug(`skipping an empty filepath resolution for dependency: ${dependency}`);
       addToNonExistent(dependency);
       return;
     }
@@ -128,7 +128,7 @@ module.exports._getDependencies = function (config) {
 
     if (!exists) {
       addToNonExistent(dependency);
-      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
+      debug(`skipping non-empty but non-existent resolution: ${result} for dependency: ${dependency}`);
       return;
     }
     const pathMap = { importSource: dependency, resolvedDep: result };

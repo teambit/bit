@@ -43,7 +43,7 @@ describe('filing-cabinet', () => {
 
     it('uses a generic resolve for unsupported file extensions', () => {
       const resolvedFile = cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'js/commonjs/foo.baz',
         directory: 'js/commonjs/'
       });
@@ -55,7 +55,7 @@ describe('filing-cabinet', () => {
         const ast = {};
 
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/',
           ast
@@ -63,9 +63,9 @@ describe('filing-cabinet', () => {
         assert.ok(result.endsWith('es6/bar.js'));
       });
 
-      it('resolves the partial successfully', () => {
+      it('resolves the dependency successfully', () => {
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/',
           ast: mockAST
@@ -77,7 +77,7 @@ describe('filing-cabinet', () => {
     describe('when not given an ast', () => {
       it('uses the filename to look for the module type', () => {
         const options = {
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/'
         };
@@ -93,7 +93,7 @@ describe('filing-cabinet', () => {
         const revert = cabinet.__set__('commonJSLookup', stub);
 
         cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/'
         });
@@ -107,7 +107,7 @@ describe('filing-cabinet', () => {
         const spy = sinon.spy(cabinet, '_getJSType');
 
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.js',
           directory: 'js/es6/',
           config: {
@@ -124,7 +124,7 @@ describe('filing-cabinet', () => {
     describe('jsx', () => {
       it('resolves files with the .jsx extension', () => {
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/es6/foo.jsx',
           directory: 'js/es6/'
         });
@@ -136,7 +136,7 @@ describe('filing-cabinet', () => {
     describe('amd', () => {
       it('uses the amd resolver', () => {
         const resolvedFile = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/amd/foo.js',
           directory: 'js/amd/'
         });
@@ -150,7 +150,7 @@ describe('filing-cabinet', () => {
         const config = { baseUrl: 'js' };
 
         cabinet({
-          partial: 'bar',
+          dependency: 'bar',
           config,
           configPath: 'config.js',
           filename: 'js/amd/foo.js',
@@ -159,7 +159,7 @@ describe('filing-cabinet', () => {
 
         const args = stub.getCall(0).args[0];
 
-        assert.equal(args.partial, 'bar');
+        assert.equal(args.dependency, 'bar');
         assert.equal(args.config, config);
         assert.equal(args.configPath, 'config.js');
         assert.equal(args.filename, 'js/amd/foo.js');
@@ -177,7 +177,7 @@ describe('filing-cabinet', () => {
         const revert = cabinet.__set__('commonJSLookup', stub);
 
         cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/commonjs/foo.js',
           directory: 'js/commonjs/'
         });
@@ -189,7 +189,7 @@ describe('filing-cabinet', () => {
 
       it('returns an empty string for an unresolved module', () => {
         const result = cabinet({
-          partial: 'foobar',
+          dependency: 'foobar',
           filename: 'js/commonjs/foo.js',
           directory: 'js/commonjs/'
         });
@@ -200,7 +200,7 @@ describe('filing-cabinet', () => {
       it('adds the directory to the require resolution paths', () => {
         const directory = 'js/commonjs/';
         const result = cabinet({
-          partial: 'foobar',
+          dependency: 'foobar',
           filename: 'js/commonjs/foo.js',
           directory
         });
@@ -212,12 +212,12 @@ describe('filing-cabinet', () => {
         );
       });
 
-      it('resolves a relative partial about the filename', () => {
+      it('resolves a relative dependency about the filename', () => {
         const directory = 'js/commonjs/';
         const filename = `${directory}foo.js`;
 
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename,
           directory
         });
@@ -225,12 +225,12 @@ describe('filing-cabinet', () => {
         assert.equal(result, path.join(path.resolve(directory), 'bar.js'));
       });
 
-      it("resolves a .. partial to its parent directory's index.js file", () => {
+      it("resolves a .. dependency to its parent directory's index.js file", () => {
         const directory = 'js/commonjs/';
         const filename = `${directory}subdir/module.js`;
 
         const result = cabinet({
-          partial: '../',
+          dependency: '../',
           filename,
           directory
         });
@@ -239,12 +239,12 @@ describe('filing-cabinet', () => {
       });
 
       // @todo: fix
-      it.skip('resolves a partial within a directory outside of the given file', () => {
+      it.skip('resolves a dependency within a directory outside of the given file', () => {
         const directory = 'js/commonjs/';
         const filename = `${directory}test/index.spec.js`;
 
         const result = cabinet({
-          partial: 'subdir',
+          dependency: 'subdir',
           filename,
           directory
         });
@@ -258,7 +258,7 @@ describe('filing-cabinet', () => {
         const filename = `${directory}module.entry.js`;
 
         const result = cabinet({
-          partial: 'module.entry',
+          dependency: 'module.entry',
           filename,
           directory,
           nodeModulesConfig: {
@@ -277,7 +277,7 @@ describe('filing-cabinet', () => {
         const filename = `${directory}index.js`;
 
         const result = cabinet({
-          partial: 'lodash.assign',
+          dependency: 'lodash.assign',
           filename,
           directory
         });
@@ -290,7 +290,7 @@ describe('filing-cabinet', () => {
         const filename = `${directory}/index.js`;
 
         const result = cabinet({
-          partial: './subdir',
+          dependency: './subdir',
           filename,
           directory
         });
@@ -300,7 +300,7 @@ describe('filing-cabinet', () => {
 
       it('resolves implicit .jsx requires', () => {
         const result = cabinet({
-          partial: './bar',
+          dependency: './bar',
           filename: 'js/cjs/foo.js',
           directory: 'js/cjs/'
         });
@@ -310,7 +310,7 @@ describe('filing-cabinet', () => {
 
       it('resolves implicit .scss requires', () => {
         const result = cabinet({
-          partial: './baz',
+          dependency: './baz',
           filename: 'js/cjs/foo.js',
           directory: 'js/cjs/'
         });
@@ -320,7 +320,7 @@ describe('filing-cabinet', () => {
 
       it('resolves implicit .json requires', () => {
         const result = cabinet({
-          partial: './pkg',
+          dependency: './pkg',
           filename: 'js/cjs/foo.js',
           directory: 'js/cjs/'
         });
@@ -335,7 +335,7 @@ describe('filing-cabinet', () => {
         const filename = `${directory}/index.ts`;
 
         const result = cabinet({
-          partial: './foo',
+          dependency: './foo',
           filename,
           directory
         });
@@ -343,13 +343,13 @@ describe('filing-cabinet', () => {
         assert.equal(result, path.join(path.resolve(directory), 'foo.ts'));
       });
 
-      describe('when a partial does not exist', () => {
+      describe('when a dependency does not exist', () => {
         it('returns an empty result', () => {
           const directory = 'js/ts';
           const filename = `${directory}/index.ts`;
 
           const result = cabinet({
-            partial: './barbar',
+            dependency: './barbar',
             filename,
             directory
           });
@@ -390,7 +390,7 @@ describe('filing-cabinet', () => {
     describe('sass', () => {
       it('uses the sass resolver for .scss files', () => {
         const result = cabinet({
-          partial: 'bar',
+          dependency: 'bar',
           filename: 'sass/foo.scss',
           directory: 'sass/'
         });
@@ -400,7 +400,7 @@ describe('filing-cabinet', () => {
 
       it('uses the sass resolver for .sass files', () => {
         const result = cabinet({
-          partial: 'bar',
+          dependency: 'bar',
           filename: 'sass/foo.sass',
           directory: 'sass/'
         });
@@ -412,7 +412,7 @@ describe('filing-cabinet', () => {
     describe('stylus', () => {
       it('uses the stylus resolver', () => {
         const result = cabinet({
-          partial: 'bar',
+          dependency: 'bar',
           filename: 'stylus/foo.styl',
           directory: 'stylus/'
         });
@@ -422,9 +422,9 @@ describe('filing-cabinet', () => {
     });
 
     describe('less', () => {
-      it('resolves extensionless partials', () => {
+      it('resolves extensionless dependencies', () => {
         const result = cabinet({
-          partial: 'bar',
+          dependency: 'bar',
           filename: 'less/foo.less',
           directory: 'less/'
         });
@@ -432,9 +432,9 @@ describe('filing-cabinet', () => {
         assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
       });
 
-      it('resolves partials with a less extension', () => {
+      it('resolves dependencies with a less extension', () => {
         const result = cabinet({
-          partial: 'bar.less',
+          dependency: 'bar.less',
           filename: 'less/foo.less',
           directory: 'less/'
         });
@@ -442,9 +442,9 @@ describe('filing-cabinet', () => {
         assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
       });
 
-      it('resolves partials with a css extension', () => {
+      it('resolves dependencies with a css extension', () => {
         const result = cabinet({
-          partial: 'bar.css',
+          dependency: 'bar.css',
           filename: 'less/foo.less',
           directory: 'less/'
         });
@@ -457,7 +457,7 @@ describe('filing-cabinet', () => {
   describe('unrecognized extension', () => {
     it('uses a generic resolve for unsupported file extensions', () => {
       const result = cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'barbazim/foo.baz',
         directory: 'barbazim/'
       });
@@ -472,7 +472,7 @@ describe('filing-cabinet', () => {
       cabinet.register('.foobar', stub);
 
       const path = cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'js/amd/foo.foobar',
         directory: 'js/amd/'
       });
@@ -494,13 +494,13 @@ describe('filing-cabinet', () => {
       cabinet.register('.foobar', stub);
 
       cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'js/amd/foo.foobar',
         directory: 'js/amd/'
       });
 
       const result = cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'stylus/foo.styl',
         directory: 'stylus/'
       });
@@ -519,13 +519,13 @@ describe('filing-cabinet', () => {
       cabinet.register('.barbar', stub2);
 
       cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'js/amd/foo.foobar',
         directory: 'js/amd/'
       });
 
       cabinet({
-        partial: './bar',
+        dependency: './bar',
         filename: 'js/amd/foo.barbar',
         directory: 'js/amd/'
       });
@@ -550,7 +550,7 @@ describe('filing-cabinet', () => {
   describe('.scss with a dependency prefix with a tilda', () => {
     it('should resolve the dependency to a node_module package (using webpack under the hood)', () => {
       const result = cabinet({
-        partial: '~bootstrap/index',
+        dependency: '~bootstrap/index',
         filename: `${fixtures}/foo.scss`,
         directory: fixtures
       });
@@ -564,7 +564,7 @@ describe('filing-cabinet', () => {
         const resolveConfig = { aliases: { '~bootstrap': path.normalize(fixtures) } };
         const result = cabinet({
           resolveConfig,
-          partial: '~bootstrap/foo2',
+          dependency: '~bootstrap/foo2',
           filename: `${fixtures}/foo.scss`,
           directory: fixtures
         });
@@ -572,12 +572,12 @@ describe('filing-cabinet', () => {
         assert.equal(result, path.resolve(`${fixtures}/foo2.scss`));
       });
     });
-    describe('when the alias in resolve-config does not match the partial', () => {
+    describe('when the alias in resolve-config does not match the dependency', () => {
       it('should fallback to the node-module resolution', () => {
         const resolveConfig = { aliases: { '~non-exist': 'some-dir' } };
         const result = cabinet({
           resolveConfig,
-          partial: '~bootstrap/index',
+          dependency: '~bootstrap/index',
           filename: `${fixtures}/foo.scss`,
           directory: fixtures
         });
@@ -595,9 +595,9 @@ describe('filing-cabinet', () => {
       directory = path.resolve(__dirname, '../../../');
     });
 
-    function testResolution(partial, expected) {
+    function testResolution(dependency, expected) {
       const resolved = cabinet({
-        partial,
+        dependency,
         filename: `${__dirname}/index.js`,
         directory,
         webpackConfig: `${fixtures}/webpack.config.js`
@@ -620,7 +620,7 @@ describe('filing-cabinet', () => {
 
     it('resolves an absolute path from a file within a subdirectory', () => {
       const resolved = cabinet({
-        partial: 'R',
+        dependency: 'R',
         filename: `${fixtures}/test/ast.js`,
         directory,
         webpackConfig: `${fixtures}/webpack.config.js`
@@ -631,7 +631,7 @@ describe('filing-cabinet', () => {
 
     it('resolves a path using resolve.root', () => {
       const resolved = cabinet({
-        partial: 'mod1',
+        dependency: 'mod1',
         filename: `${directory}/index.js`,
         directory,
         webpackConfig: `${directory}/webpack-root.config.js`
@@ -642,7 +642,7 @@ describe('filing-cabinet', () => {
 
     it('resolves NPM module when using resolve.root', () => {
       const resolved = cabinet({
-        partial: 'resolve',
+        dependency: 'resolve',
         filename: `${directory}/index.js`,
         directory,
         webpackConfig: `${directory}/webpack-root.config.js`
@@ -653,7 +653,7 @@ describe('filing-cabinet', () => {
 
     it('resolves NPM module when using resolve.modulesDirectories', () => {
       const resolved = cabinet({
-        partial: 'resolve',
+        dependency: 'resolve',
         filename: `${directory}/index.js`,
         directory,
         webpackConfig: `${directory}/webpack-root.config.js`
@@ -664,7 +664,7 @@ describe('filing-cabinet', () => {
 
     it('resolves a path using resolve.modulesDirectories', () => {
       const resolved = cabinet({
-        partial: 'mod2',
+        dependency: 'mod2',
         filename: `${directory}/index.js`,
         directory,
         webpackConfig: `${directory}/webpack-root.config.js`
@@ -675,7 +675,7 @@ describe('filing-cabinet', () => {
 
     it('resolves a path using webpack config that exports a function', () => {
       const resolved = cabinet({
-        partial: 'R',
+        dependency: 'R',
         filename: `${directory}/index.js`,
         directory,
         webpackConfig: `${directory}/webpack-env.config.js`
@@ -688,7 +688,7 @@ describe('filing-cabinet', () => {
       testResolution('./test/foo.jsx', `${directory}/test/foo.jsx`);
     });
 
-    describe('when the partial contains a loader', () => {
+    describe('when the dependency contains a loader', () => {
       it('still works', () => {
         testResolution('hgn!resolve', `${directory}/node_modules/resolve/index.js`);
       });

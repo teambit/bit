@@ -10,7 +10,7 @@ const languageMap = {
   stylus: 'styl'
 };
 module.exports = function (options) {
-  const { partial, filename, isScript, resolveConfig } = options;
+  const { dependency, filename, isScript } = options;
   const cabinet = require('../../filing-cabinet');
 
   const fileContent = fs.readFileSync(filename);
@@ -22,7 +22,7 @@ module.exports = function (options) {
         directory: path.dirname(filename),
         content: script.content,
         ast: null,
-        ext: `.${scriptExt}` || path.extname(partial)
+        ext: `.${scriptExt}` || path.extname(dependency)
       })
     );
   }
