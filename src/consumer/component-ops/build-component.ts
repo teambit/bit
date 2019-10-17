@@ -8,7 +8,6 @@ import { Scope } from '../../scope';
 import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
 import IsolatedEnvironment from '../../environment';
 import ComponentMap from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ExternalBuildErrors from '../component/exceptions/external-build-errors';
@@ -119,7 +118,7 @@ export default (async function buildComponent({
     component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
   }
   if (shouldBuildUponDependenciesChanges) {
-    component.addExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges', true );
+    component.addExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges', true);
   }
   return component.dists;
 });
@@ -150,6 +149,7 @@ function _extractAndVerifyCompilerResults(
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
   if (typeof compilerResults === 'object') {
+    // @ts-ignore yes, it should not contain files, it's only a verification
     if (compilerResults.files && !compilerResults.dists) {
       // previously, the new compiler "action" method expected to get "files", suggest to replace with 'dists'.
       throw new GeneralError('fatal: compiler returned "files" instead of "dists", please change it to "dists"');
@@ -248,11 +248,14 @@ async function _isNeededToReBuild(
   if (!consumer) return false;
   const componentStatus = await consumer.getComponentStatusById(component.id);
   if (componentStatus.modified) return true;
-  const shouldBuildUponDependenciesChanges = component.getExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges');
+  const shouldBuildUponDependenciesChanges = component.getExtensionValue(
+    component.compiler.name,
+    'shouldBuildUponDependenciesChanges'
+  );
   if (!shouldBuildUponDependenciesChanges) return false;
   const areDependenciesChangedP = component.dependencies.getAllIds().map(async dependencyId => {
     const dependencyStatus = await consumer.getComponentStatusById(dependencyId);
-    return (dependencyStatus.modified);
+    return dependencyStatus.modified;
   });
   const areDependenciesChanged = await Promise.all(areDependenciesChangedP);
   return areDependenciesChanged.some(isDependencyChanged => isDependencyChanged);
@@ -291,6 +294,7 @@ async function _runBuild({
       componentDir = componentMap.getComponentDir() || '';
     }
   }
+  let shouldBuildUponDependenciesChanges;
   const isolateFunc = async ({
     targetDir,
     shouldBuildDependencies
@@ -298,7 +302,7 @@ async function _runBuild({
     targetDir?: string;
     shouldBuildDependencies?: boolean;
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
-    isolateFunc.shouldBuildDependencies = shouldBuildDependencies;
+    shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
@@ -319,12 +323,7 @@ async function _runBuild({
       distsToWrite.persistAllToCapsule(isolator.capsule);
     };
     const getDependenciesLinks = (): Vinyl[] => {
-      const links = getComponentsDependenciesLinks(
-        [componentWithDependencies],
-        null,
-        false,
-        isolator.capsuleBitMap
-      );
+      const links = getComponentsDependenciesLinks([componentWithDependencies], null, false, isolator.capsuleBitMap);
       return links.files;
     };
     const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
@@ -422,6 +421,5 @@ async function _runBuild({
     }
   };
   const buildResults = await getBuildResults();
-  const shouldBuildUponDependenciesChanges = context.isolate.shouldBuildDependencies;
-  return { shouldBuildUponDependenciesChanges, ..._extractAndVerifyCompilerResults(buildResults) };
+  return { ..._extractAndVerifyCompilerResults(buildResults), shouldBuildUponDependenciesChanges };
 }

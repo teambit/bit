@@ -273,6 +273,16 @@ describe('capsule', function() {
           expect(buildResult).to.have.string('generated a capsule for utils/is-string');
         });
       });
+      describe('tag, then build a component', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
+          helper.command.tagAllComponents();
+        });
+        it('should use the dists from cache and not rebuild the component', () => {
+          const buildResult = helper.command.build('utils/is-string');
+          expect(buildResult).to.not.have.string('generated a capsule');
+        });
+      });
       describe('when there is a circle dependencies', () => {
         let buildOutput;
         before(() => {
