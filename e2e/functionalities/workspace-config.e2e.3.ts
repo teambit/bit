@@ -335,6 +335,7 @@ describe('workspace config', function() {
         describe('when adding the component as devDependency without removing it', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.scopeHelper.reInitRemoteScope();
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
             helper.fs.createFile(
