@@ -76,6 +76,8 @@ export type customResolvedPath = { destinationPath: PathLinux; importSource: str
 
 export type InvalidComponent = { id: BitId; error: Error };
 
+export type ExtensionData = { id: string; data: { [key: string]: any } };
+
 export type ComponentProps = {
   name: string;
   version?: string | null | undefined;
@@ -113,6 +115,7 @@ export type ComponentProps = {
   origin: ComponentOrigin;
   log?: Log | null | undefined;
   scopesList?: ScopeListItem[];
+  extensions: ExtensionData[];
   componentFromModel?: Component | null | undefined;
 };
 
@@ -175,6 +178,7 @@ export default class Component {
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
+  extensions: ExtensionData[] = [];
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
@@ -230,7 +234,8 @@ export default class Component {
     deprecated,
     origin,
     customResolvedPaths,
-    scopesList
+    scopesList,
+    extensions
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -268,6 +273,7 @@ export default class Component {
     this.origin = origin;
     this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
+    this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
     this.validateComponent();
   }
@@ -934,6 +940,22 @@ export default class Component {
     });
   }
 
+  addExtensionValue(extensionId: string, key: string, value: any): void {
+    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    if (existingExtension) {
+      existingExtension.data[key] = value;
+    } else {
+      const extension = { id: extensionId, data: { [key]: value } };
+      this.extensions.push(extension);
+    }
+  }
+
+  getExtensionValue(extensionId: string, key: string): any {
+    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    if (!existingExtension) return null;
+    return existingExtension.data[key];
+  }
+
   /**
    * Recalculate docs property based on the source files
    * used usually when setting the source files manually
@@ -1201,6 +1223,7 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
+    const extensions = componentFromModel ? componentFromModel.extensions : null;
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
@@ -1230,7 +1253,8 @@ export default class Component {
       origin: componentMap.origin,
       overrides,
       packageJsonFile,
-      packageJsonChangedProps
+      packageJsonChangedProps,
+      extensions
     });
   }
 }

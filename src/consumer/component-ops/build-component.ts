@@ -8,7 +8,6 @@ import { Scope } from '../../scope';
 import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
 import IsolatedEnvironment from '../../environment';
 import ComponentMap from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ExternalBuildErrors from '../component/exceptions/external-build-errors';
@@ -21,11 +20,18 @@ import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { CompilerResults } from '../../extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import { getComponentsDependenciesLinks } from '../../links/link-generator';
+import Component from '../component/consumer-component';
+
+type BuildResults = {
+  builtFiles: Vinyl[];
+  mainDist?: string;
+  packageJson?: Object;
+  shouldBuildUponDependenciesChanges?: boolean;
+};
 
 export default (async function buildComponent({
   component,
@@ -47,7 +53,7 @@ export default (async function buildComponent({
   verbose?: boolean;
   dontPrintEnvMsg?: boolean;
   keep?: boolean;
-}): Promise<Dists | null | undefined> {
+}): Promise<Dists> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
   // @TODO - write SourceMap Type
   if (!component.compiler) {
@@ -70,7 +76,7 @@ export default (async function buildComponent({
   if (componentMap) {
     componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
   }
-  const needToRebuild = await _isNeededToReBuild(consumer, component.id, noCache);
+  const needToRebuild = await _isNeededToReBuild(consumer, component, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
     logger.debugAndAddBreadCrumb(
       'build-component.buildComponent',
@@ -87,17 +93,16 @@ export default (async function buildComponent({
     );
   }
 
-  const compilerResults =
-    (await _buildIfNeeded({
-      component,
-      consumer,
-      componentMap,
-      scope,
-      keep,
-      directory,
-      verbose: !!verbose
-    })) || [];
-  const { builtFiles, mainDist, packageJson } = _extractAndVerifyCompilerResults(compilerResults);
+  const compilerResults: BuildResults = await _build({
+    component,
+    consumer,
+    componentMap,
+    scope,
+    keep,
+    directory,
+    verbose: !!verbose
+  });
+  const { builtFiles, mainDist, packageJson, shouldBuildUponDependenciesChanges } = compilerResults;
   builtFiles.forEach(file => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
@@ -111,6 +116,9 @@ export default (async function buildComponent({
   if (packageJson && !R.isEmpty(packageJson)) {
     await _updateComponentPackageJson(component, packageJson);
     component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
+  }
+  if (shouldBuildUponDependenciesChanges) {
+    component.addExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges', true);
   }
   return component.dists;
 });
@@ -132,11 +140,16 @@ async function _updateComponentPackageJson(component: ConsumerComponent, package
 
 function _extractAndVerifyCompilerResults(
   compilerResults: CompilerResults
-): { builtFiles: Vinyl[]; mainDist: string | null | undefined; packageJson: Object | null | undefined } {
+): {
+  builtFiles: Vinyl[];
+  mainDist: string | null | undefined;
+  packageJson: Object | null | undefined;
+} {
   if (Array.isArray(compilerResults)) {
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
   if (typeof compilerResults === 'object') {
+    // @ts-ignore yes, it should not contain files, it's only a verification
     if (compilerResults.files && !compilerResults.dists) {
       // previously, the new compiler "action" method expected to get "files", suggest to replace with 'dists'.
       throw new GeneralError('fatal: compiler returned "files" instead of "dists", please change it to "dists"');
@@ -167,7 +180,7 @@ function _verifyPackageJsonReturnedByCompiler(packageJson: Object) {
   });
 }
 
-async function _buildIfNeeded({
+async function _build({
   component,
   consumer,
   componentMap,
@@ -183,7 +196,7 @@ async function _buildIfNeeded({
   verbose: boolean;
   directory?: string | null | undefined;
   keep: boolean | null | undefined;
-}): Promise<CompilerResults> {
+}): Promise<BuildResults> {
   const compiler = component.compiler;
 
   if (!compiler) {
@@ -228,14 +241,24 @@ async function _buildIfNeeded({
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
 async function _isNeededToReBuild(
   consumer: Consumer | null | undefined,
-  componentId: BitId,
+  component: Component,
   noCache: boolean | null | undefined
 ): Promise<boolean> {
-  // Forcly rebuild
   if (noCache) return true;
   if (!consumer) return false;
-  const componentStatus = await consumer.getComponentStatusById(componentId);
-  return componentStatus.modified;
+  const componentStatus = await consumer.getComponentStatusById(component.id);
+  if (componentStatus.modified) return true;
+  const shouldBuildUponDependenciesChanges = component.getExtensionValue(
+    component.compiler.name,
+    'shouldBuildUponDependenciesChanges'
+  );
+  if (!shouldBuildUponDependenciesChanges) return false;
+  const areDependenciesChangedP = component.dependencies.getAllIds().map(async dependencyId => {
+    const dependencyStatus = await consumer.getComponentStatusById(dependencyId);
+    return dependencyStatus.modified;
+  });
+  const areDependenciesChanged = await Promise.all(areDependenciesChangedP);
+  return areDependenciesChanged.some(isDependencyChanged => isDependencyChanged);
 }
 
 async function _runBuild({
@@ -252,7 +275,7 @@ async function _runBuild({
   scope: Scope;
   componentMap: ComponentMap | null | undefined;
   verbose: boolean;
-}): Promise<CompilerResults> {
+}): Promise<BuildResults> {
   const compiler = component.compiler;
   if (!compiler) {
     throw new GeneralError('compiler was not found, nothing to build');
@@ -271,87 +294,79 @@ async function _runBuild({
       componentDir = componentMap.getComponentDir() || '';
     }
   }
-  return Promise.resolve()
-    .then(async () => {
-      if (!compiler.action && !compiler.oldAction) {
-        throw new InvalidCompilerInterface(compiler.name);
-      }
-
-      const isolateFunc = async ({
-        targetDir,
-        shouldBuildDependencies
-      }: {
-        targetDir?: string;
-        shouldBuildDependencies?: boolean;
-      }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
-        const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
-        const componentWithDependencies = await isolator.isolate(component.id, {
-          shouldBuildDependencies,
-          dist: false
+  let shouldBuildUponDependenciesChanges;
+  const isolateFunc = async ({
+    targetDir,
+    shouldBuildDependencies
+  }: {
+    targetDir?: string;
+    shouldBuildDependencies?: boolean;
+  }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
+    shouldBuildUponDependenciesChanges = shouldBuildDependencies;
+    const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
+    const componentWithDependencies = await isolator.isolate(component.id, {
+      shouldBuildDependencies,
+      dist: false
+    });
+    const writeDists = async (builtFiles, mainDist): Promise<void> => {
+      const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+      // $FlowFixMe result is not null here because the dists exist
+      const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
+        capsuleComponent,
+        isolator.capsuleBitMap,
+        null,
+        true,
+        componentWithDependencies
+      );
+      distsToWrite.persistAllToCapsule(isolator.capsule);
+    };
+    const getDependenciesLinks = (): Vinyl[] => {
+      const links = getComponentsDependenciesLinks([componentWithDependencies], null, false, isolator.capsuleBitMap);
+      return links.files;
+    };
+    const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
+      const sharedDir = componentWithDependencies.component.originallySharedDir;
+      let updatedFiles = filesToAdd;
+      if (sharedDir) {
+        updatedFiles = filesToAdd.map(file => {
+          const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
+          fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
+          return fileAsAbstractVinyl;
         });
-        const writeDists = async (builtFiles, mainDist): Promise<void> => {
-          const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
-          // $FlowFixMe result is not null here because the dists exist
-          const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
-            capsuleComponent,
-            isolator.capsuleBitMap,
-            null,
-            true,
-            componentWithDependencies
-          );
-          distsToWrite.persistAllToCapsule(isolator.capsule);
-        };
-        const getDependenciesLinks = (): Vinyl[] => {
-          const links = getComponentsDependenciesLinks(
-            [componentWithDependencies],
-            null,
-            false,
-            isolator.capsuleBitMap
-          );
-          return links.files;
-        };
-        const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
-          const sharedDir = componentWithDependencies.component.originallySharedDir;
-          let updatedFiles = filesToAdd;
-          if (sharedDir) {
-            updatedFiles = filesToAdd.map(file => {
-              const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
-              fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
-              return fileAsAbstractVinyl;
-            });
-          }
-          return updatedFiles;
-        };
-        const installPackages = async (packages: string[] = []) => {
-          await isolator.installPackagesOnRoot(packages);
-          // after installing packages on capsule root, some links/symlinks from node_modules might
-          // be deleted. rewrite the links to recreate them.
-          await isolator.writeLinksOnNodeModules();
-        };
-        const capsuleFiles = componentWithDependencies.component.files;
-        return {
-          capsule: isolator.capsule,
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          capsuleFiles,
-          componentWithDependencies,
-          writeDists,
-          getDependenciesLinks,
-          writeLinks: () => isolator.writeLinks(),
-          capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
-          installPackages,
-          addSharedDir
-        };
-      };
+      }
+      return updatedFiles;
+    };
+    const installPackages = async (packages: string[] = []) => {
+      await isolator.installPackagesOnRoot(packages);
+      // after installing packages on capsule root, some links/symlinks from node_modules might
+      // be deleted. rewrite the links to recreate them.
+      await isolator.writeLinksOnNodeModules();
+    };
+    const capsuleFiles = componentWithDependencies.component.files;
+    return {
+      capsule: isolator.capsule,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      capsuleFiles,
+      componentWithDependencies,
+      writeDists,
+      getDependenciesLinks,
+      writeLinks: () => isolator.writeLinks(),
+      capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
+      installPackages,
+      addSharedDir
+    };
+  };
 
-      const context: Object = {
-        componentObject: component.toObject(),
-        rootDistDir,
-        componentDir,
-        isolate: isolateFunc
-      };
-
+  const context: Object = {
+    componentObject: component.toObject(),
+    rootDistDir,
+    componentDir,
+    isolate: isolateFunc
+  };
+  const getBuildResults = async () => {
+    try {
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
@@ -381,7 +396,6 @@ async function _runBuild({
           api: compiler.api,
           context
         };
-        // $FlowFixMe we verified above that action is set
         const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
@@ -392,12 +406,8 @@ async function _runBuild({
         }
         return result;
       }
-      if (!compiler.oldAction) {
-        throw new InvalidCompilerInterface(compiler.name);
-      }
       return compiler.oldAction(files, rootDistDir, context);
-    })
-    .catch(e => {
+    } catch (e) {
       if (tmpFolderFullPath) {
         logger.info(`build-components, deleting ${tmpFolderFullPath}`);
         fs.removeSync(tmpFolderFullPath);
@@ -408,5 +418,8 @@ async function _runBuild({
       const errors = e.errors || (e.error ? [e.error] : [e]);
       const err = new ExternalBuildErrors(component.id.toString(), errors);
       throw err;
-    });
+    }
+  };
+  const buildResults = await getBuildResults();
+  return { ..._extractAndVerifyCompilerResults(buildResults), shouldBuildUponDependenciesChanges };
 }

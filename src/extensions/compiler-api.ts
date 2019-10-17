@@ -1,12 +1,11 @@
-//
-// import Vinyl from 'vinyl';
+import Vinyl from 'vinyl';
 // import { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 // import { SourceFile } from '../consumer/component/sources';
 // import ExtensionFile from './extension-file';
 // import Capsule from '../../components/core/capsule';
 // import ComponentWithDependencies from '../scope/component-dependencies';
 
-// export type CompilerResults = Vinyl[] | { dists: Vinyl[], mainFile?: string, packageJson?: Object };
+export type CompilerResults = Vinyl[] | { dists: Vinyl[]; mainFile?: string; packageJson?: Object };
 
 // export type IsolateFunction = ({ targetDir?: string, shouldBuildDependencies?: boolean }) => {
 //   capsule: Capsule,
