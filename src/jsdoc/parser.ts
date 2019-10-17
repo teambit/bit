@@ -247,8 +247,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
       return formatted;
     }
   } catch (err) {
-    logger.debug(`failed parsing docs using docgen on path ${filePath} with error`);
-    logger.debug(err);
+    logger.debug(`failed parsing docs using docgen on path ${filePath} with error`, err);
   }
   try {
     /**
@@ -268,8 +267,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
     docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
-    logger.debug(`failed parsing docs using on path ${filePath} with error`);
-    logger.debug(e);
+    logger.debug(`failed parsing docs using on path ${filePath} with error`, e);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return doclets.filter(doclet => doclet.access === 'public');
