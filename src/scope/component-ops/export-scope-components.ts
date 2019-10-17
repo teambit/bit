@@ -63,7 +63,7 @@ export async function exportMany({
   scope: Scope;
   ids: BitIds;
   remoteName: string | null | undefined;
-  context?: Object;
+  context?: Record<string, any>;
   includeDependencies: boolean;
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
@@ -275,7 +275,7 @@ async function convertToCorrectScope(
       })
     );
   }
-  async function _createNewFileIfNeeded(version: Version, file: Object): Promise<Source | null | undefined> {
+  async function _createNewFileIfNeeded(version: Version, file: Record<string, any>): Promise<Source | null | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = file.file;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -343,7 +343,7 @@ async function changePartialNamesToFullNamesInDists(
     );
   }
 
-  async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<Source | null | undefined> {
+  async function _createNewDistIfNeeded(version: Version, dist: Record<string, any>): Promise<Source | null | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = dist.file;
     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback

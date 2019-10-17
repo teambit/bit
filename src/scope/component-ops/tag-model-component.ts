@@ -30,10 +30,10 @@ import ShowDoctorError from '../../error/show-doctor-error';
 async function getFlattenedDependencies(
   scope: Scope,
   component: Component,
-  graph: Object,
-  cache: Object,
+  graph: Record<string, any>,
+  cache: Record<string, any>,
   notFoundDependencies: BitIds,
-  prodGraph?: Object
+  prodGraph?: Record<string, any>
 ): Promise<BitIds> {
   const id = component.id.toString();
   const edges = getEdges(graph, id);
@@ -77,7 +77,7 @@ this dependency was not included in the tag command.`);
   }
 }
 
-function getEdges(graph: Object, id: BitIdStr): BitIdStr[] | null | undefined {
+function getEdges(graph: Record<string, any>, id: BitIdStr): BitIdStr[] | null | undefined {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!graph.hasNode(id)) return null;
   const edges = graphlib.alg.preorder(graph, id);
@@ -92,7 +92,7 @@ function getEdges(graph: Object, id: BitIdStr): BitIdStr[] | null | undefined {
  * baz.js because the relationship between bar and baz are set on prodGraph only.
  * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
  */
-function getEdgesWithProdGraph(prodGraph: Object | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
+function getEdgesWithProdGraph(prodGraph: Record<string, any> | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
   if (!prodGraph) return dependencies;
   const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
   return R.uniq([...dependencies, ...prodDependencies]);

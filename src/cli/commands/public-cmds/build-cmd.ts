@@ -30,7 +30,7 @@ export default class Build extends Command {
     return build(id, noCache, verbose);
   }
 
-  report(res: string[] | null | undefined | string | Object): string {
+  report(res: string[] | null | undefined | string | Record<string, any>): string {
     const noCompilerSpecifiedError = chalk.yellow('compiler is not defined, please define a compiler in bit.json');
     if (!res) return noCompilerSpecifiedError;
     if (Array.isArray(res)) {

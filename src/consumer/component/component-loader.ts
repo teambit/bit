@@ -13,11 +13,11 @@ import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export default class ComponentLoader {
-  _componentsCache: Object = {}; // cache loaded components
-  _componentsCacheForCapsule: Object = {}; // cache loaded components for capsule, must not use the cache for the workspace
+  _componentsCache: Record<string, any> = {}; // cache loaded components
+  _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
-  cacheResolvedDependencies: Object;
-  cacheProjectAst: Object | null | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  cacheResolvedDependencies: Record<string, any>;
+  cacheProjectAst: Record<string, any> | null | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
@@ -37,7 +37,7 @@ export default class ComponentLoader {
 
   async loadMany(
     ids: BitIds,
-    throwOnFailure: boolean = true
+    throwOnFailure = true
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
       ids: ids.toString()

@@ -5,7 +5,7 @@ import Vinyl from 'vinyl';
 // import Capsule from '../../components/core/capsule';
 // import ComponentWithDependencies from '../scope/component-dependencies';
 
-export type CompilerResults = Vinyl[] | { dists: Vinyl[]; mainFile?: string; packageJson?: Object };
+export type CompilerResults = Vinyl[] | { dists: Vinyl[]; mainFile?: string; packageJson?: Record<string, any> };
 
 // export type IsolateFunction = ({ targetDir?: string, shouldBuildDependencies?: boolean }) => {
 //   capsule: Capsule,

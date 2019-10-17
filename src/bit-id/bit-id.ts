@@ -80,7 +80,7 @@ export default class BitId {
     return false; // one has version but not the other
   }
 
-  toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): BitIdStr {
+  toString(ignoreScope = false, ignoreVersion = false): BitIdStr {
     const { name, version } = this;
     const scope = this.scope;
     const componentStr = ignoreScope || !scope ? name : [scope, name].join('/');
@@ -148,7 +148,7 @@ export default class BitId {
     return id.split(VERSION_DELIMITER)[1];
   }
 
-  static parse(id: BitIdStr, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
+  static parse(id: BitIdStr, hasScope = true, version: string = LATEST_BIT_VERSION): BitId {
     if (!R.is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }

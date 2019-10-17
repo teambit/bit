@@ -281,7 +281,7 @@ export default class Component extends BitObject {
     return versionRef.load(repository);
   }
 
-  loadVersionSync(version: string, repository: Repository, throws: boolean = true): Version {
+  loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef: Ref = this.versions[version];
     if (!versionRef) throw new VersionNotFound(version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

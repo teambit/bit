@@ -1,7 +1,7 @@
 import Capsule from '../../components/core/capsule';
 import FsContainer from '../../components/container/fs-container';
 
-export default (async function createCapsule(type: string = 'fs', dir?: string): Promise<Capsule> {
+export default (async function createCapsule(type = 'fs', dir?: string): Promise<Capsule> {
   const containerFactory = getContainerFactory();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const capsule = await Capsule.create(containerFactory);

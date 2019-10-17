@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import GeneralError from '../../error/general-error';
 import { PathOsBasedAbsolute } from '../path';
 
-export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Object) {
+export default function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Record<string, any>) {
   if (!isAbsolute(src) || !isAbsolute(dest)) {
     throw new Error(`moveSync, src and dest must be absolute. Got src "${src}", dest "${dest}"`);
   }

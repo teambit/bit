@@ -10,7 +10,7 @@ import logger from '../logger/logger';
 export default (async function diffFiles(
   fileA: PathOsBased,
   fileB: PathOsBased,
-  colors: boolean = true
+  colors = true
 ): Promise<string> {
   const params = ['diff'];
   params.push('--no-index'); // ignores the working tree (in case the project is managed by git)

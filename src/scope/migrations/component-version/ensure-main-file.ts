@@ -1,4 +1,4 @@
-function ensureMainFile(versionModel: Object): Object {
+function ensureMainFile(versionModel: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.mainFile) {
     // Find the first file which is not test file

@@ -58,7 +58,7 @@ export default (async function runInteractive({
   processName: string;
   args: string[];
   inputs: InteractiveInputs;
-  processOpts: Object;
+  processOpts: Record<string, any>;
   opts: {
     // Default interval between inputs in case there is no specific interval
     defaultIntervalBetweenInputs: number;

@@ -96,11 +96,11 @@ export type ComponentProps = {
   flattenedDevDependencies?: BitIds | null | undefined;
   flattenedCompilerDependencies?: BitIds | null | undefined;
   flattenedTesterDependencies?: BitIds | null | undefined;
-  packageDependencies?: Object | null | undefined;
-  devPackageDependencies?: Object | null | undefined;
-  peerPackageDependencies?: Object | null | undefined;
-  compilerPackageDependencies?: Object | null | undefined;
-  testerPackageDependencies?: Object | null | undefined;
+  packageDependencies?: Record<string, any> | null | undefined;
+  devPackageDependencies?: Record<string, any> | null | undefined;
+  peerPackageDependencies?: Record<string, any> | null | undefined;
+  compilerPackageDependencies?: Record<string, any> | null | undefined;
+  testerPackageDependencies?: Record<string, any> | null | undefined;
   customResolvedPaths?: customResolvedPath[] | null | undefined;
   overrides: ComponentOverrides;
   packageJsonFile?: PackageJsonFile | null | undefined;
@@ -144,8 +144,8 @@ export default class Component {
   packageDependencies: any;
   devPackageDependencies: any;
   peerPackageDependencies: any;
-  compilerPackageDependencies: Object;
-  testerPackageDependencies: Object;
+  compilerPackageDependencies: Record<string, any>;
+  testerPackageDependencies: Record<string, any>;
   manuallyRemovedDependencies: ManuallyChangedDependencies = {};
   manuallyAddedDependencies: ManuallyChangedDependencies = {};
   overrides: ComponentOverrides;
@@ -160,7 +160,7 @@ export default class Component {
   originallySharedDir: PathLinux | null | undefined; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: boolean | null | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: PathLinux | null | undefined; // needed when a user adds a package.json file to the component root
-  loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
+  loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
@@ -173,7 +173,7 @@ export default class Component {
   _driver: Driver;
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | null | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
-  packageJsonChangedProps: Object | null | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
+  packageJsonChangedProps: Record<string, any> | null | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
@@ -409,7 +409,7 @@ export default class Component {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force?: boolean = false): Promise<EjectConfResult> {
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force? = false): Promise<EjectConfResult> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -692,7 +692,7 @@ export default class Component {
             });
           }
 
-          const context: Object = {
+          const context: Record<string, any> = {
             componentObject: component.toObject()
           };
 
@@ -733,7 +733,7 @@ export default class Component {
                 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
                 return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
               };
-              const context: Object = {
+              const context: Record<string, any> = {
                 componentDir: cwd,
                 isolate: isolateFunc
               };
@@ -848,7 +848,7 @@ export default class Component {
     }
   }
 
-  toObject(): Object {
+  toObject(): Record<string, any> {
     return {
       name: this.name,
       version: this.version,
@@ -977,7 +977,7 @@ export default class Component {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async fromObject(object: Object): Component {
+  static async fromObject(object: Record<string, any>): Component {
     const {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       name,

@@ -15,7 +15,7 @@ export async function removeLocalVersion(
   id: BitId,
   version?: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force?: boolean = false
+  force? = false
 ): Promise<untagResult> {
   const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
   const localVersions = component.getLocalVersions();
@@ -54,7 +54,7 @@ export async function removeLocalVersionsForAllComponents(
   scope: Scope,
   version?: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force?: boolean = false
+  force? = false
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(scope, version);
   return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, scope);
@@ -64,7 +64,7 @@ export async function removeLocalVersionsForComponentsMatchedByWildcard(
   scope: Scope,
   version?: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force?: boolean = false,
+  force? = false,
   idWithWildcard?: string
 ): Promise<untagResult[]> {
   const candidateComponents = await getComponentsWithOptionToUntag(scope, version);

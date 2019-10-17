@@ -78,7 +78,7 @@ export default class Dependency {
     });
   }
 
-  static getClone(dependency: Dependency): Object {
+  static getClone(dependency: Dependency): Record<string, any> {
     return {
       id: dependency.id,
       relativePaths: R.clone(dependency.relativePaths)

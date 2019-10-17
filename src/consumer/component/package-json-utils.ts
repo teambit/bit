@@ -103,8 +103,8 @@ export function preparePackageJsonToWrite(
   component: Component,
   bitDir: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  override?: boolean = true,
-  writeBitDependencies?: boolean = false,
+  override? = true,
+  writeBitDependencies? = false,
   excludeRegistryPrefix?: boolean
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
@@ -192,7 +192,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
-async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Object) {
+async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Record<string, any>) {
   const packageJsonFile = await PackageJsonFile.load(dir);
   packageJsonFile.addDependencies(dependencies);
   await packageJsonFile.write();

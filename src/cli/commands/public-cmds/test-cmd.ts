@@ -55,7 +55,7 @@ export default class Test extends Command {
     return res;
   }
 
-  report(results: SpecsResultsWithMetaData, args: string[], flags: Object): string {
+  report(results: SpecsResultsWithMetaData, args: string[], flags: Record<string, any>): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (flags.json) return JSON.stringify(results, null, 2);
     const specsResultsWithComponentId = results.results;

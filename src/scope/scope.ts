@@ -77,7 +77,7 @@ export type ComponentsAndVersions = {
 };
 
 export default class Scope {
-  created: boolean = false;
+  created = false;
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
@@ -235,7 +235,7 @@ export default class Scope {
     return listResults.filter(result => !result.scope || result.scope === this.name);
   }
 
-  async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitIds> {
+  async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
     const ids = components.map(component => {
@@ -270,8 +270,8 @@ export default class Scope {
     noCache: boolean,
     verbose: boolean,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    dontPrintEnvMsg?: boolean = false
-  ): Promise<{ component: string; buildResults: Object }> {
+    dontPrintEnvMsg? = false
+  ): Promise<{ component: string; buildResults: Record<string, any> }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
@@ -376,7 +376,7 @@ export default class Scope {
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
+  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist = true): Promise<any> {
     logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
       `total componentsObjects ${componentsObjects.length}`
@@ -407,7 +407,7 @@ export default class Scope {
   async removeMany(
     bitIds: BitIds,
     force: boolean,
-    removeSameOrigin: boolean = false,
+    removeSameOrigin = false,
     consumer?: Consumer
   ): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
@@ -427,7 +427,7 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async findDependentBits(
     bitIds: BitIds,
-    returnResultsWithVersion: boolean = false
+    returnResultsWithVersion = false
   ): Promise<{ [key: string]: BitId[] }> {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(

@@ -89,7 +89,7 @@ export default class ComponentMap {
     return new ComponentMap(componentMapObj);
   }
 
-  toPlainObject(): Object {
+  toPlainObject(): Record<string, any> {
     let res = {
       id: this.id,
       files: this.files,

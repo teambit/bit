@@ -9,7 +9,7 @@ export default function componentIdToPackageName(
   id: BitId,
   bindingPrefix: string | null | undefined,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  withPrefix?: boolean = true
+  withPrefix? = true
 ): string {
   const nameWithoutPrefix = `${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
   if (!withPrefix) return nameWithoutPrefix;

@@ -50,7 +50,7 @@ import ShowDoctorError from '../../../error/show-doctor-error';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
-  alreadyUsed: Object;
+  alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
   existInScope: BitId[];
 };
@@ -817,7 +817,7 @@ function validatePaths(fileArray: string[]): PathsStats {
 /**
  * validate that no two files where added with the same id in the same bit add command
  */
-function validateNoDuplicateIds(addComponents: Object[]) {
+function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
   const duplicateIds = {};
   const newGroupedComponents = groupby(addComponents, 'componentId');
   Object.keys(newGroupedComponents).forEach(key => {

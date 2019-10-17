@@ -98,9 +98,9 @@ export default class OverridesDependencies {
   }
 
   getDependenciesToAddManually(
-    packageJson: Object | null | undefined,
+    packageJson: Record<string, any> | null | undefined,
     existingDependencies: AllDependencies
-  ): { components: Object; packages: Object } | null | undefined {
+  ): { components: Record<string, any>; packages: Record<string, any> } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
@@ -162,8 +162,8 @@ export default class OverridesDependencies {
     field: string,
     dependency: string,
     dependencyValue: string,
-    packageJson: Object | null | undefined
-  ): Object | null | undefined {
+    packageJson: Record<string, any> | null | undefined
+  ): Record<string, any> | null | undefined {
     const packageVersionToAdd = (): string | null | undefined => {
       if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
         return dependencyValue;

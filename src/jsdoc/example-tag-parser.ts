@@ -5,7 +5,7 @@ type Example = {
   description?: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   code?: Array;
-  returns?: Object;
+  returns?: Record<string, any>;
 };
 
 const token = {
@@ -28,19 +28,19 @@ const status = {
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Status = $Keys<typeof status>;
 
-function isComment(str: string): Boolean {
+function isComment(str: string): boolean {
   return str.startsWith('//');
 }
 
-function isCode(str: string): Boolean {
+function isCode(str: string): boolean {
   return !isComment(str);
 }
 
-function isDescriptionDelimiter(str: string): Boolean {
+function isDescriptionDelimiter(str: string): boolean {
   return str === '//-';
 }
 
-function isReturnsDelimiter(str: string): Boolean {
+function isReturnsDelimiter(str: string): boolean {
   return str === '//=>';
 }
 

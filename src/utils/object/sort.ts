@@ -1,7 +1,7 @@
 /**
  * Sort an object.
  */
-export default function sortObject(obj: Object) {
+export default function sortObject(obj: Record<string, any>) {
   return Object.keys(obj)
     .sort()
     .reduce(function(result, key) {

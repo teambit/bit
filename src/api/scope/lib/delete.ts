@@ -8,7 +8,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export default function remove(
   { path, ids, force }: { path: string; ids: string[]; force: boolean },
-  headers: Object | null | undefined
+  headers: Record<string, any> | null | undefined
 ): Promise<RemovedObjectSerialized> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds, force };

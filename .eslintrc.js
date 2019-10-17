@@ -6,7 +6,7 @@ module.exports = {
   extends: [
     'airbnb-typescript/base',
     // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    // 'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
     // 'plugin:unicorn/recommended',
@@ -43,9 +43,12 @@ module.exports = {
     // 'unicorn/prevent-abbreviations': 'off',
     // END taken from https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
 
-    // TEMP RULES
-    // '@typescript-eslint/no-explicit-any': 'off',
-    // END OF TEMP RULES
+
+    // ERRORS OF plugin:@typescript-eslint/recommended
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    // END ERRORS OF plugin:@typescript-eslint/recommended
+
     'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'promise/always-return': 'off',
     'promise/no-nesting': 'off',

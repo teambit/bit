@@ -137,7 +137,7 @@ function compatibleWith(a: { [key: string]: string }, b: { [key: string]: string
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript
-function warnForPackageDependencies({ dependencies, consumer, installNpmPackages }): Promise<Object> {
+function warnForPackageDependencies({ dependencies, consumer, installNpmPackages }): Promise<Record<string, any>> {
   const warnings = {
     notInPackageJson: [],
     notInNodeModules: [],

@@ -64,15 +64,15 @@ type OneOrMoreArray<T> = {
 interface BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean;
-  debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
-  warnAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
-  errorAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
-  debugAndAddBreadCrumb(category: string, message: string, data: Object, extraData?: Object): void;
+  debugAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
+  warnAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
+  errorAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
+  debugAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
 }
 
 class BitLogger implements BitLoggerInterface {
   logger: Logger;
-  shouldWriteToConsole: boolean = true;
+  shouldWriteToConsole = true;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -98,7 +98,7 @@ class BitLogger implements BitLoggerInterface {
     this.logger.error(...args);
   }
 
-  console(msg: string, level: string = 'info') {
+  console(msg: string, level = 'info') {
     if (!this.shouldWriteToConsole) {
       this[level](msg);
       return;
@@ -106,7 +106,7 @@ class BitLogger implements BitLoggerInterface {
     winston.loggers.get('consoleOnly')[level](msg);
   }
 
-  async exitAfterFlush(code: number = 0, commandName: string) {
+  async exitAfterFlush(code = 0, commandName: string) {
     await Analytics.sendData();
     let level;
     let msg;
@@ -122,15 +122,15 @@ class BitLogger implements BitLoggerInterface {
     process.exit(code);
   }
 
-  debugAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+  debugAndAddBreadCrumb(category: string, message: string, data?: Record<string, any>, extraData?: Record<string, any>) {
     this.addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
   }
 
-  warnAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+  warnAndAddBreadCrumb(category: string, message: string, data?: Record<string, any>, extraData?: Record<string, any>) {
     this.addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
   }
 
-  errorAndAddBreadCrumb(category: string, message: string, data?: Object, extraData?: Object) {
+  errorAndAddBreadCrumb(category: string, message: string, data?: Record<string, any>, extraData?: Record<string, any>) {
     this.addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
   }
 
@@ -138,8 +138,8 @@ class BitLogger implements BitLoggerInterface {
     level: string,
     category: string,
     message: string,
-    data?: Object,
-    extraData?: Object | null | undefined
+    data?: Record<string, any>,
+    extraData?: Record<string, any> | null | undefined
   ) {
     if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
     if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
@@ -201,7 +201,7 @@ async function waitForLogger() {
   return loggerDone;
 }
 
-function addBreadCrumb(category: string, message: string, data: Object = {}, extraData) {
+function addBreadCrumb(category: string, message: string, data: Record<string, any> = {}, extraData) {
   const hashedData = {};
   Object.keys(data).forEach(key => (hashedData[key] = Analytics.hashData(data[key])));
   const messageWithHashedData = format(message, hashedData);

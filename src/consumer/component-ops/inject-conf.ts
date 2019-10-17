@@ -22,7 +22,7 @@ export default (async function injectConf(
   bitMap: BitMap,
   configDir: ConfigDir,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force?: boolean = false
+  force? = false
 ): Promise<InjectConfResult> {
   const componentMap = component.componentMap;
   if (!componentMap) {

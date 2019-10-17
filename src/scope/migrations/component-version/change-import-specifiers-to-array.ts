@@ -1,7 +1,7 @@
 /**
  * When a component has ImportSpecifier data, change it from an object to an array
  */
-function updateImportSpecifiers(versionModel: Object): Object {
+function updateImportSpecifiers(versionModel: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.dependencies || !versionModel.dependencies.length) return versionModel;

@@ -7,8 +7,8 @@ import { WILDCARD_HELP } from '../../../constants';
 
 export const applyVersionReport = (
   components: ApplyVersionResult[],
-  addName: boolean = true,
-  showVersion: boolean = false
+  addName = true,
+  showVersion = false
 ): string => {
   const tab = addName ? '\t' : '';
   return components

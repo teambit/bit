@@ -26,7 +26,7 @@ export default class Dependencies {
     this.dependencies = dependencies;
   }
 
-  serialize(): Object[] {
+  serialize(): Record<string, any>[] {
     return this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() }));
   }
 
@@ -69,7 +69,7 @@ export default class Dependencies {
     return R.mergeAll(this.dependencies.map(dependency => dependency.id.toObject()));
   }
 
-  cloneAsString(): Object[] {
+  cloneAsString(): Record<string, any>[] {
     return this.dependencies.map(dependency => {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.toString();
@@ -77,7 +77,7 @@ export default class Dependencies {
     });
   }
 
-  cloneAsObject(): Object[] {
+  cloneAsObject(): Record<string, any>[] {
     return this.dependencies.map(dependency => {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.serialize();

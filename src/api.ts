@@ -7,7 +7,7 @@ import { BaseLoadArgsProps } from './extensions/base-extension';
 
 HooksManager.init();
 
-export function show(scopePath: string, id: string, opts?: Object) {
+export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
     if (Array.isArray(component)) {

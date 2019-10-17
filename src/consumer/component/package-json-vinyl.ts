@@ -11,7 +11,7 @@ import logger from '../../logger/logger';
  * file is loaded. (@see package-json-file.js)
  */
 export default class PackageJsonVinyl extends AbstractVinyl {
-  override: boolean = true;
+  override = true;
 
   async write(): Promise<string> {
     const stat = await this._getStatIfFileExists();
@@ -46,7 +46,7 @@ export default class PackageJsonVinyl extends AbstractVinyl {
   }: {
     base: string;
     path: string;
-    content: Object;
+    content: Record<string, any>;
     indent?: string | null | undefined;
     newline?: string | null | undefined;
     override?: boolean;

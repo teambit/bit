@@ -5,7 +5,7 @@ export default class RemovePath {
   path: string;
   removeItsDirIfEmpty: boolean;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(path: string, removeItsDirIfEmpty?: boolean = false) {
+  constructor(path: string, removeItsDirIfEmpty? = false) {
     this.path = path;
     this.removeItsDirIfEmpty = removeItsDirIfEmpty;
   }

@@ -17,7 +17,7 @@ export default class ScopeMeta extends BitObject {
     this.name = props.name;
   }
 
-  toObject(): Object {
+  toObject(): Record<string, any> {
     return {
       license: this.license,
       name: this.name
@@ -30,8 +30,7 @@ export default class ScopeMeta extends BitObject {
     return JSON.stringify(this.toObject(), ...args);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  id(): Object {
+  id(): string {
     return this.name;
   }
 

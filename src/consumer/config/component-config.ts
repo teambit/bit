@@ -14,13 +14,13 @@ type ConfigProps = {
   compiler?: string | Compilers;
   tester?: string | Testers;
   bindingPrefix: string;
-  extensions?: Object;
+  extensions?: Record<string, any>;
   overrides?: ComponentOverridesData;
 };
 
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
-  componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
+  componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
@@ -61,7 +61,7 @@ export default class ComponentConfig extends AbstractConfig {
     }
   }
 
-  static fromPlainObject(object: Object): ComponentConfig {
+  static fromPlainObject(object: Record<string, any>): ComponentConfig {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -102,7 +102,7 @@ export default class ComponentConfig extends AbstractConfig {
    * Use the workspaceConfig as a base. Override values if exist in componentConfig
    */
   static mergeWithWorkspaceConfig(
-    componentConfig: Object,
+    componentConfig: Record<string, any>,
     consumerConfig: WorkspaceConfig | null | undefined
   ): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};

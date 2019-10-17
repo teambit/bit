@@ -41,7 +41,7 @@ export default class ComponentObjects {
     return JSON.parse(str).map(componentObject => ComponentObjects.fromString(componentObject));
   }
 
-  static fromObject(object: Object): ComponentObjects {
+  static fromObject(object: Record<string, any>): ComponentObjects {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { component, objects } = object;

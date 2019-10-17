@@ -26,14 +26,14 @@ export default class GitHelper {
     return this.command.runCmd('git init');
   }
 
-  addGitConfig(key: string, val: string, location: string = 'local') {
+  addGitConfig(key: string, val: string, location = 'local') {
     return this.command.runCmd(`git config --${location} ${key} ${val}`);
   }
 
-  unsetGitConfig(key: string, location: string = 'local') {
+  unsetGitConfig(key: string, location = 'local') {
     return this.command.runCmd(`git config --unset --${location} ${key}`);
   }
-  mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
+  mimicGitCloneLocalProject(cloneWithComponentsFiles = true) {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
     // delete all node-modules from all directories

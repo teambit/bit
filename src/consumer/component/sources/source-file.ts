@@ -16,7 +16,7 @@ export default class SourceFile extends AbstractVinyl {
     distTarget: PathOsBased,
     base: PathOsBased,
     consumerPath: PathOsBased,
-    extendedProps: Object
+    extendedProps: Record<string, any>
   ): SourceFile | null {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -38,14 +38,14 @@ export default class SourceFile extends AbstractVinyl {
     }
   }
 
-  static loadFromParsedString(parsedString: Object): SourceFile | null | undefined {
+  static loadFromParsedString(parsedString: Record<string, any>): SourceFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(opts);
   }
 
-  static loadFromParsedStringArray(arr: Object[]): SourceFile[] | null | undefined {
+  static loadFromParsedStringArray(arr: Record<string, any>[]): SourceFile[] | null | undefined {
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }

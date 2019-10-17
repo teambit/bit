@@ -14,7 +14,7 @@ export async function build(id: string, noCache: boolean, verbose: boolean): Pro
   return results[0].buildResults;
 }
 
-export async function buildAll(noCache: boolean, verbose: boolean): Promise<Object> {
+export async function buildAll(noCache: boolean, verbose: boolean): Promise<Record<string, any>> {
   const consumer: Consumer = await loadConsumer();
   const authoredAndImportedIds = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
   if (R.isEmpty(authoredAndImportedIds)) {

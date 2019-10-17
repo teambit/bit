@@ -13,7 +13,7 @@ export default class BitMapHelper {
     this.fs = fsHelper;
   }
 
-  read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment: boolean = true) {
+  read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
@@ -24,7 +24,7 @@ export default class BitMapHelper {
     return bitMap;
   }
 
-  write(bitMap: Object) {
+  write(bitMap: Record<string, any>) {
     const bitMapPath = path.join(this.scopes.localPath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
@@ -46,7 +46,7 @@ export default class BitMapHelper {
         origin: 'AUTHORED'
       }
     },
-    oldBitMapFile: boolean = false
+    oldBitMapFile = false
   ) {
     const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : BIT_MAP);
 
@@ -57,7 +57,7 @@ export default class BitMapHelper {
     fs.ensureFileSync(bitmapFile);
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
-  printFilesInCaseOfError(files: Object[]): string {
+  printFilesInCaseOfError(files: Record<string, any>[]): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesStr = files.map(f => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;

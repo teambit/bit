@@ -35,16 +35,16 @@ export type Doclet = {
   description: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   args?: Array;
-  returns?: Object;
+  returns?: Record<string, any>;
   access?: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   examples?: Array;
   methods?: Method[];
   properties?: DocProp[];
-  static?: Boolean;
+  static?: boolean;
 };
 
-function formatTag(tag: Object): Object {
+function formatTag(tag: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   delete tag.title;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

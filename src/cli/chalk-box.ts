@@ -122,7 +122,7 @@ const paintStats = results => {
   return `${statsHeader}${fileName}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = false): string[] => {
+export const paintSpecsResults = (results?: SpecsResults[], verbose = false): string[] => {
   if (!results) return [];
   return results.map(specResult => {
     const stats = paintStats(specResult);
@@ -135,7 +135,7 @@ export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = f
   });
 };
 
-export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose: boolean = false): string => {
+export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose = false): string => {
   const childOutput = results.childOutput ? `${results.childOutput}\n` : '';
   if (results.results && results.results.length === 0) return `${childOutput}${c.yellow('nothing to test')}`;
   const resultsOutput = results.results

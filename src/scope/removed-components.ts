@@ -5,14 +5,14 @@ export type RemovedObjectSerialized = {
   removedComponentIds: BitIdStr[];
   missingComponents: BitIdStr[];
   removedDependencies: BitIdStr[];
-  dependentBits: Object;
+  dependentBits: Record<string, any>;
 };
 
 export default class RemovedObjects {
   removedComponentIds: BitIds;
   missingComponents: BitIds;
   removedDependencies: BitIds;
-  dependentBits: Object;
+  dependentBits: Record<string, any>;
   constructor({
     removedComponentIds,
     missingComponents,
@@ -22,7 +22,7 @@ export default class RemovedObjects {
     removedComponentIds?: BitIds;
     missingComponents?: BitIds;
     removedDependencies?: BitIds;
-    dependentBits?: Object;
+    dependentBits?: Record<string, any>;
   }) {
     this.removedComponentIds = removedComponentIds || new BitIds();
     this.missingComponents = missingComponents || new BitIds();
@@ -43,7 +43,7 @@ export default class RemovedObjects {
     removedComponentIds: string[];
     missingComponents: string[];
     removedDependencies: string[];
-    dependentBits: { [key: string]: Object[] };
+    dependentBits: { [key: string]: Record<string, any>[] };
   }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
     const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));

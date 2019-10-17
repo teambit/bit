@@ -11,18 +11,18 @@ export default class PackageJsonHelper {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
   }
-  write(packageJson: Object, packageJsonFolder: string = this.scopes.localPath) {
+  write(packageJson: Record<string, any>, packageJsonFolder: string = this.scopes.localPath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
   }
-  create(data: Object, location: string = this.scopes.localPath) {
+  create(data: Record<string, any>, location: string = this.scopes.localPath) {
     const packageJsonPath = path.join(location, 'package.json');
     fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
   corrupt(packageJsonPath: string = path.join(this.scopes.localPath, 'package.json')) {
     fs.writeFileSync(packageJsonPath, '{ corrupted');
   }
-  addKeyValue(data: Object, pkgJsonPath: string = path.join(this.scopes.localPath)) {
+  addKeyValue(data: Record<string, any>, pkgJsonPath: string = path.join(this.scopes.localPath)) {
     const pkgJson = this.read(pkgJsonPath);
     fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
   }

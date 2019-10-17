@@ -64,7 +64,7 @@ export const FileStatusWithoutChalk = R.fromPairs(
   Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );
 
-export function generateRandomStr(size: number = 8): string {
+export function generateRandomStr(size = 8): string {
   return Math.random()
     .toString(36)
     .slice(size * -1)

@@ -42,7 +42,7 @@ export default class Doctor extends Command {
     return runAll({ filePath });
   }
 
-  report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Object): string {
+  report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Record<string, any>): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (flags.list) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

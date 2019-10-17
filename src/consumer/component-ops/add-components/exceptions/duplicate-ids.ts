@@ -3,8 +3,8 @@ import toArray from 'lodash.toarray';
 import AbstractError from '../../../../error/abstract-error';
 
 export default class DuplicateIds extends AbstractError {
-  componentObject: Object;
-  constructor(componentObject: Object) {
+  componentObject: Record<string, any>;
+  constructor(componentObject: Record<string, any>) {
     super();
     const componentIds = {};
     Object.keys(componentObject).forEach(key => {

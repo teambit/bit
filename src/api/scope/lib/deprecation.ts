@@ -14,7 +14,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export async function deprecate(
   { path, ids }: { path: string; ids: string[] },
-  headers: Object | null | undefined
+  headers: Record<string, any> | null | undefined
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
@@ -34,7 +34,7 @@ export async function deprecate(
 
 export async function undeprecate(
   { path, ids }: { path: string; ids: string[] },
-  headers: Object | null | undefined
+  headers: Record<string, any> | null | undefined
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };

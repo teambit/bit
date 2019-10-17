@@ -5,7 +5,7 @@ import semver from 'semver';
  * Change all the component's version to be a valid semver
  * @param {*} componentModel - The parsed component model
  */
-function changeVersionToSemVer(componentModel: Object): Object {
+function changeVersionToSemVer(componentModel: Record<string, any>): Record<string, any> {
   const semVerVersions = {};
   const addUpdatedVersion = (value, key) => {
     // In case there is already a semver, do nothing

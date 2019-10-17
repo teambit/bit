@@ -1,4 +1,4 @@
-function toFiles(versionModel: Object): Object {
+function toFiles(versionModel: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (versionModel.impl) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

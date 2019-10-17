@@ -37,7 +37,7 @@ export default class Init extends Command {
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
   ];
 
-  action([path]: [string], flags: Object): Promise<{ [key: string]: any }> {
+  action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
       return initInteractive();
@@ -110,7 +110,7 @@ export default class Init extends Command {
   }
 }
 
-function _isAnyNotInteractiveFlagUsed(flags: Object) {
+function _isAnyNotInteractiveFlagUsed(flags: Record<string, any>) {
   const withoutInteractive = R.omit(['interactive'], flags);
   const cleaned = clean(withoutInteractive);
   return !R.isEmpty(cleaned);

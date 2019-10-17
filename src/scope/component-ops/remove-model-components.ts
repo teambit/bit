@@ -14,7 +14,7 @@ export default class RemoveModelComponents {
   scope: Scope;
   bitIds: BitIds;
   force: boolean;
-  removeSameOrigin: boolean = false;
+  removeSameOrigin = false;
   consumer: Consumer | null | undefined;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
@@ -75,7 +75,7 @@ export default class RemoveModelComponents {
   }
 
   async _removeComponentsDependencies(
-    dependentBits: Object,
+    dependentBits: Record<string, any>,
     componentList: Array<ModelComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId

@@ -87,7 +87,7 @@ export default class Repository {
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
   }
 
-  load(ref: Ref, throws: boolean = false): Promise<BitObject> {
+  load(ref: Ref, throws = false): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return fs
       .readFile(this.objectPath(ref))
@@ -202,7 +202,7 @@ export default class Repository {
   /**
    * prefer using `this.load()` for an async version, which also writes to the cache
    */
-  loadSync(ref: Ref, throws: boolean = true): BitObject {
+  loadSync(ref: Ref, throws = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
       return BitObject.parseSync(objectFile, this.types);
@@ -268,7 +268,7 @@ export default class Repository {
    * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
    * call this function only once after you added and removed all applicable objects.
    */
-  async persist(validate: boolean = true): Promise<void> {
+  async persist(validate = true): Promise<void> {
     logger.debug(`Repository.persist, validate = ${validate.toString()}`);
     await this._deleteMany();
     this._validateObjects(validate);

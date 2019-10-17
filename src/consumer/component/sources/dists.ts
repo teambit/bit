@@ -53,7 +53,7 @@ import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
  */
 export default class Dists {
   dists: Dist[];
-  writeDistsFiles: boolean = true; // changed only when importing a component
+  writeDistsFiles = true; // changed only when importing a component
   areDistsInsideComponentDir: boolean | null | undefined = true;
   distEntryShouldBeStripped: boolean | null | undefined = false;
   _mainDistFile: PathOsBasedRelative | null | undefined;
@@ -170,7 +170,7 @@ export default class Dists {
     component: Component,
     consumer: Consumer,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    writeLinks?: boolean = true
+    writeLinks? = true
   ): Promise<string[] | null | undefined> {
     const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
@@ -204,7 +204,7 @@ export default class Dists {
     bitMap: BitMap,
     consumer: Consumer | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    writeLinks?: boolean = true,
+    writeLinks? = true,
     componentWithDependencies?: ComponentWithDependencies
   ): Promise<DataToPersist | null | undefined> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;

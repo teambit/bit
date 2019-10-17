@@ -7,10 +7,10 @@ import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default (async function init(
   absPath: string = process.cwd(),
-  noGit: boolean = false,
-  reset: boolean = false,
-  resetHard: boolean = false,
-  force: boolean = false,
+  noGit = false,
+  reset = false,
+  resetHard = false,
+  force = false,
   workspaceConfigProps: WorkspaceConfigProps
 ): Promise<Consumer> {
   if (reset || resetHard) {

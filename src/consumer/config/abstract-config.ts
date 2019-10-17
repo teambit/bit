@@ -22,7 +22,7 @@ import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 
 export type RegularExtensionObject = {
-  rawConfig: Object;
+  rawConfig: Record<string, any>;
   options: ExtensionOptions;
 };
 
@@ -31,7 +31,7 @@ export type EnvFile = {
 };
 
 export type EnvExtensionObject = {
-  rawConfig: Object;
+  rawConfig: Record<string, any>;
   options: EnvExtensionOptions;
   files: string[];
 };
@@ -48,10 +48,10 @@ export type Testers = { [testerName: string]: TesterExtensionObject };
 export type AbstractConfigProps = {
   compiler?: string | Compilers;
   tester?: string | Testers;
-  dependencies?: Object;
-  devDependencies?: Object;
-  compilerDependencies?: Object;
-  testerDependencies?: Object;
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  compilerDependencies?: Record<string, any>;
+  testerDependencies?: Record<string, any>;
   lang?: string;
   bindingPrefix?: string;
   extensions?: Extensions;
@@ -161,7 +161,7 @@ export default class AbstractConfig {
     return BitIds.fromObject(this.dependencies);
   }
 
-  toPlainObject(): Object {
+  toPlainObject(): Record<string, any> {
     const isPropDefaultOrNull = (val, key) => {
       if (!val) return false;
       if (key === 'lang') return val !== DEFAULT_LANGUAGE;
@@ -236,7 +236,7 @@ export default class AbstractConfig {
     return fs.exists(this.composePackageJsonPath(bitPath));
   }
 
-  static async loadJsonFileIfExist(jsonFilePath: string): Promise<Object | null | undefined> {
+  static async loadJsonFileIfExist(jsonFilePath: string): Promise<Record<string, any> | null | undefined> {
     try {
       const file = await fs.readJson(jsonFilePath);
       return file;
@@ -255,7 +255,7 @@ export default class AbstractConfig {
     return false;
   }
 
-  static transformEnvToObject(env: string | Object): Envs {
+  static transformEnvToObject(env: string | Record<string, any>): Envs {
     if (typeof env === 'string') {
       if (env === NO_PLUGIN_TYPE) return {};
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
