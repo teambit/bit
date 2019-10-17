@@ -1,10 +1,9 @@
 import R from 'ramda';
 import { expect } from 'chai';
 import Version from '../../scope/models/version';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import versionFixture from '../../../fixtures/version-model-object.json';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
+import GeneralError from '../../error/general-error';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
@@ -306,7 +305,7 @@ describe('Version', () => {
     it('should throw when a dependency is duplicated', () => {
       version.devDependencies = version.dependencies;
       version.flattenedDevDependencies = version.flattenedDependencies;
-      expect(validateFunc).to.throw('some dependencies are duplicated');
+      expect(validateFunc).to.throw(GeneralError);
     });
     it('should throw when the log is empty', () => {
       version.log = undefined;
