@@ -38,12 +38,7 @@ export default class Isolator {
     this.consumer = consumer;
   }
 
-  static async getInstance(
-    containerType = 'fs',
-    scope: Scope,
-    consumer?: Consumer | null | undefined,
-    dir?: string
-  ) {
+  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer | null | undefined, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);

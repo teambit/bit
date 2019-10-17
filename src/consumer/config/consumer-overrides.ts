@@ -48,7 +48,10 @@ export default class ConsumerOverrides {
       return acc;
     }, {});
   }
-  _updateSpecificOverridesWithGeneralOverrides(generalOverrides: Record<string, any>, specificOverrides: Record<string, any>) {
+  _updateSpecificOverridesWithGeneralOverrides(
+    generalOverrides: Record<string, any>,
+    specificOverrides: Record<string, any>
+  ) {
     const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
     Object.keys(generalOverrides).forEach(field => {
       switch (field) {

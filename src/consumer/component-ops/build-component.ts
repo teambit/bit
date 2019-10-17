@@ -123,7 +123,10 @@ export default (async function buildComponent({
   return component.dists;
 });
 
-async function _updateComponentPackageJson(component: ConsumerComponent, packageJsonPropsToAdd: Record<string, any>): Promise<void> {
+async function _updateComponentPackageJson(
+  component: ConsumerComponent,
+  packageJsonPropsToAdd: Record<string, any>
+): Promise<void> {
   const componentPackageJsonFile = component.packageJsonFile;
   if (!componentPackageJsonFile) {
     logger.debug(

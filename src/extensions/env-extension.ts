@@ -39,7 +39,11 @@ import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 import GeneralError from '../error/general-error';
 
-export type EnvPackages = { dependencies?: Record<string, any>; devDependencies?: Record<string, any>; peerDependencies?: Record<string, any> };
+export type EnvPackages = {
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
+};
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;

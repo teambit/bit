@@ -63,7 +63,11 @@ export default class Remote {
     return this.connect().then(network => network.graph(bitId));
   }
 
-  fetch(bitIds: BitIds, withoutDeps: boolean, context: Record<string, any> | null | undefined): Promise<ComponentObjects[]> {
+  fetch(
+    bitIds: BitIds,
+    withoutDeps: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
   }
@@ -86,7 +90,11 @@ export default class Remote {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }
-  deleteMany(ids: string[], force: boolean, context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<Record<string, any>[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.deleteMany(ids, force, context));
   }

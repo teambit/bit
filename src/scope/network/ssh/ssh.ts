@@ -186,7 +186,11 @@ export default class SSH implements Network {
   _hasAgentSocket() {
     return !!process.env.SSH_AUTH_SOCK;
   }
-  async _connectWithConfig(sshConfig: Record<string, any>, authenticationType: string, authFailedMsg: string): Promise<SSH> {
+  async _connectWithConfig(
+    sshConfig: Record<string, any>,
+    authenticationType: string,
+    authFailedMsg: string
+  ): Promise<SSH> {
     const connectWithConfigP = () => {
       const conn = new SSH2();
       return new Promise((resolve, reject) => {
@@ -345,7 +349,10 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[], context: Record<string, any> | null | undefined): Promise<string[]> {
+  pushMany(
+    manyComponentObjects: ComponentObjects[],
+    context: Record<string, any> | null | undefined
+  ): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
@@ -355,7 +362,11 @@ export default class SSH implements Network {
     });
   }
 
-  deleteMany(ids: string[], force: boolean, context: Record<string, any> | null | undefined): Promise<ComponentObjects[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec(
       '_delete',

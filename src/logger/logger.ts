@@ -64,10 +64,30 @@ type OneOrMoreArray<T> = {
 interface BitLoggerInterface {
   logger: Logger;
   shouldWriteToConsole: boolean;
-  debugAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
-  warnAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
-  errorAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
-  debugAndAddBreadCrumb(category: string, message: string, data: Record<string, any>, extraData?: Record<string, any>): void;
+  debugAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data: Record<string, any>,
+    extraData?: Record<string, any>
+  ): void;
+  warnAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data: Record<string, any>,
+    extraData?: Record<string, any>
+  ): void;
+  errorAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data: Record<string, any>,
+    extraData?: Record<string, any>
+  ): void;
+  debugAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data: Record<string, any>,
+    extraData?: Record<string, any>
+  ): void;
 }
 
 class BitLogger implements BitLoggerInterface {
@@ -122,7 +142,12 @@ class BitLogger implements BitLoggerInterface {
     process.exit(code);
   }
 
-  debugAndAddBreadCrumb(category: string, message: string, data?: Record<string, any>, extraData?: Record<string, any>) {
+  debugAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data?: Record<string, any>,
+    extraData?: Record<string, any>
+  ) {
     this.addToLoggerAndToBreadCrumb('debug', category, message, data, extraData);
   }
 
@@ -130,7 +155,12 @@ class BitLogger implements BitLoggerInterface {
     this.addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
   }
 
-  errorAndAddBreadCrumb(category: string, message: string, data?: Record<string, any>, extraData?: Record<string, any>) {
+  errorAndAddBreadCrumb(
+    category: string,
+    message: string,
+    data?: Record<string, any>,
+    extraData?: Record<string, any>
+  ) {
     this.addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
   }
 

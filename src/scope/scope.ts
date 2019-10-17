@@ -425,10 +425,7 @@ export default class Scope {
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async findDependentBits(
-    bitIds: BitIds,
-    returnResultsWithVersion = false
-  ): Promise<{ [key: string]: BitId[] }> {
+  async findDependentBits(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {

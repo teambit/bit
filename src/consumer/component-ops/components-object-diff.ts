@@ -136,7 +136,10 @@ function comparator(a, b) {
   return a === b;
 }
 
-export function getDiffBetweenObjects(objectLeft: Record<string, any>, objectRight: Record<string, any>): Record<string, any> {
+export function getDiffBetweenObjects(
+  objectLeft: Record<string, any>,
+  objectRight: Record<string, any>
+): Record<string, any> {
   return diff.custom(
     {
       equal: comparator

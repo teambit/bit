@@ -92,7 +92,10 @@ function getEdges(graph: Record<string, any>, id: BitIdStr): BitIdStr[] | null |
  * baz.js because the relationship between bar and baz are set on prodGraph only.
  * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
  */
-function getEdgesWithProdGraph(prodGraph: Record<string, any> | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
+function getEdgesWithProdGraph(
+  prodGraph: Record<string, any> | null | undefined,
+  dependencies: BitIdStr[]
+): BitIdStr[] {
   if (!prodGraph) return dependencies;
   const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
   return R.uniq([...dependencies, ...prodDependencies]);

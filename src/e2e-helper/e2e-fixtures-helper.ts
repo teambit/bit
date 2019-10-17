@@ -65,11 +65,7 @@ export default class FixtureHelper {
     fs.copySync(sourceDir, cwd);
   }
 
-  copyFixtureFile(
-    pathToFile = '',
-    newName: string = path.basename(pathToFile),
-    cwd: string = this.scopes.localPath
-  ) {
+  copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
     const sourceFile = path.join(this.getFixturesDir(), pathToFile);
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line

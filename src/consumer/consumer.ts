@@ -169,7 +169,10 @@ export default class Consumer {
     return this.bitMap.getAllBitIds();
   }
 
-  async getEnv(envType: EnvType, context: Record<string, any> | null | undefined): Promise<EnvExtension | null | undefined> {
+  async getEnv(
+    envType: EnvType,
+    context: Record<string, any> | null | undefined
+  ): Promise<EnvExtension | null | undefined> {
     const props = this._getEnvProps(envType, context);
     if (!props) return null;
     return makeEnv(envType, props);
@@ -328,10 +331,7 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  async loadComponentWithDependenciesFromModel(
-    id: BitId,
-    throwIfNotExist = true
-  ): Promise<ComponentWithDependencies> {
+  async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);

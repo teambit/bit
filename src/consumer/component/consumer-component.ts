@@ -565,7 +565,7 @@ export default class Component {
   }
 
   cloneFilesWithSharedDir(): SourceFile[] {
-    return this.files.map((file) => {
+    return this.files.map(file => {
       const newFile = file.clone();
       const newRelative = this.addSharedDir(file.relative);
       newFile.updatePaths({ newRelative });

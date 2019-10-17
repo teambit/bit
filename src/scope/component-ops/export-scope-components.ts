@@ -30,10 +30,7 @@ export async function exportManyBareScope(
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
   const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
-  logger.debugAndAddBreadCrumb(
-    'exportManyBareScope',
-    'will try to importMany in case there are missing dependencies'
-  );
+  logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
@@ -275,7 +272,10 @@ async function convertToCorrectScope(
       })
     );
   }
-  async function _createNewFileIfNeeded(version: Version, file: Record<string, any>): Promise<Source | null | undefined> {
+  async function _createNewFileIfNeeded(
+    version: Version,
+    file: Record<string, any>
+  ): Promise<Source | null | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = file.file;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -343,7 +343,10 @@ async function changePartialNamesToFullNamesInDists(
     );
   }
 
-  async function _createNewDistIfNeeded(version: Version, dist: Record<string, any>): Promise<Source | null | undefined> {
+  async function _createNewDistIfNeeded(
+    version: Version,
+    dist: Record<string, any>
+  ): Promise<Source | null | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentHash = dist.file;
     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback

@@ -5,11 +5,7 @@ import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versi
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
 import { WILDCARD_HELP } from '../../../constants';
 
-export const applyVersionReport = (
-  components: ApplyVersionResult[],
-  addName = true,
-  showVersion = false
-): string => {
+export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';
   return components
     .map((component: ApplyVersionResult) => {
