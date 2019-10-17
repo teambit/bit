@@ -332,9 +332,7 @@ describe('workspace config', function() {
             );
           });
         });
-        // todo: make a decision about the desired behavior. see #2061
         describe('when adding the component as devDependency without removing it', () => {
-          let showBar;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
             helper.command.tagAllComponents();
@@ -352,10 +350,13 @@ describe('workspace config', function() {
               }
             };
             helper.bitJson.addOverrides(overrides);
-            showBar = helper.command.showComponentParsed('bar');
           });
-          it.skip('should not show the component twice as dependency and as devDependencies', () => {});
-          it.only('should not allow tagging the component', () => {
+          // todo: make a decision about the desired behavior. see #2061
+          it.skip('should not show the component twice as dependency and as devDependencies', () => {
+            const showBar = helper.command.showComponentParsed('bar');
+            expect(showBar.dependencies).to.have.lengthOf(1);
+          });
+          it('should not allow tagging the component', () => {
             const tagFunc = () => helper.command.tagAllComponents();
             expect(tagFunc).to.throw('some dependencies are duplicated');
           });
