@@ -24,8 +24,7 @@ const _getGlobalBitJson = async (throws: boolean) => {
         if (throws) {
           throw e;
         }
-        logger.debug('error during loading global bit.json');
-        logger.debug(e);
+        logger.debug('error during loading global bit.json', e);
         return null;
       })
   );

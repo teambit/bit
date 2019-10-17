@@ -81,8 +81,7 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
       const parsingDomain = domain.create();
       parsingDomain
         .on('error', err => {
-          logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`);
-          logger.debug(err);
+          logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`, err);
           // never mind, ignore the doc of this source
           resolve([]);
         })
@@ -92,15 +91,13 @@ export default async function parse(data: string, filePath: PathOsBased): Promis
             const formattedDocs = fromVueDocs(vueDocs, filePath);
             resolve(formattedDocs);
           } catch (e) {
-            logger.debug(`failed parsing vue docs on path ${filePath} with error`);
-            logger.debug(e);
+            logger.debug(`failed parsing vue docs on path ${filePath} with error`, e);
             // never mind, ignore the doc of this source
             resolve([]);
           }
         });
     } catch (e) {
-      logger.debug(`failed parsing vue docs on path ${filePath} with error`);
-      logger.debug(e);
+      logger.debug(`failed parsing vue docs on path ${filePath} with error`, e);
       // never mind, ignore the doc of this source
       resolve([]);
     }
