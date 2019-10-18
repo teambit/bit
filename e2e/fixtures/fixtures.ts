@@ -33,7 +33,7 @@ export const isStringES6 =
   "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
 export const isStringTS =
   "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
-export const isStringModulePath = (remoteScope) =>
+export const isStringModulePath = remoteScope =>
   `const isType = require('@bit/${remoteScope}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
 export const barFooFixture =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -51,7 +51,7 @@ describe('foo', () => {
     expect(foo())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
   });
 });`;
-export const barFooModulePath = (remoteScope) =>
+export const barFooModulePath = remoteScope =>
   `const isString = require('@bit/${remoteScope}.utils.is-string'); module.exports = function foo() { return isString() + ' and got foo'; };`;
 export const appPrintIsType = "const isType = require('./components/utils/is-type'); console.log(isType());";
 export const appPrintIsTypeCapsule = "const isType = require('.'); console.log(isType());";
@@ -74,19 +74,19 @@ describe('group of passed tests', () => {
   it('passed test case', () => {
     expect(true).to.be.true;
   });
-});`
+});`;
 export const failTest = `const expect = require('chai').expect
 describe('group of failed tests', () => {
   it('failed test case', () => {
     expect(true).to.be.false;
   });
-});`
+});`;
 export const exceptionTest = `const expect = require('chai').expect
 describe('group of failed tests', () => {
   throw new Error('exception during test file');
   it('failed test case', () => {
     expect(true).to.be.false;
   });
-});`
+});`;
 export const fooFixture = "module.exports = function foo() { return 'got foo'; }";
 export const fooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; }";

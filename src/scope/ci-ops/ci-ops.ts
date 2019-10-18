@@ -29,6 +29,7 @@ export default (component: ConsumerComponent, scopePath: string) => {
 
   if (!ciFuncPath) ciFunc = defaultCIFunc;
   else {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
     ciFunc = require(ciFuncPath);
   }
 

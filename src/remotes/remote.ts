@@ -17,11 +17,11 @@ function isPrimary(alias: string): boolean {
 }
 
 export default class Remote {
-  primary: boolean = false;
+  primary = false;
   host: string;
   name: string;
 
-  constructor(host: string, name: string | null | undefined, primary: boolean = false) {
+  constructor(host: string, name: string | null | undefined, primary = false) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;
@@ -63,7 +63,11 @@ export default class Remote {
     return this.connect().then(network => network.graph(bitId));
   }
 
-  fetch(bitIds: BitIds, withoutDeps: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
+  fetch(
+    bitIds: BitIds,
+    withoutDeps: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
   }
@@ -82,18 +86,22 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[], context: Object | null | undefined): Promise<string[]> {
+  pushMany(components: ComponentObjects[], context: Record<string, any> | null | undefined): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }
-  deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<Object[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<Record<string, any>[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.deleteMany(ids, force, context));
   }
-  deprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]> {
+  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
   }
-  undeprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]> {
+  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then(network => network.undeprecateMany(ids, context));
   }
 

@@ -40,7 +40,7 @@ export default class ScopeComponentsImporter {
    * and save them locally.
    * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
-  async importMany(ids: BitIds, cache: boolean = true, persist: boolean = true): Promise<VersionDependencies[]> {
+  async importMany(ids: BitIds, cache = true, persist = true): Promise<VersionDependencies[]> {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'importMany: {ids}', { ids: ids.toString() });
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -61,7 +61,7 @@ export default class ScopeComponentsImporter {
     return versionDeps.concat(externalDeps);
   }
 
-  async importManyWithoutDependencies(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
+  async importManyWithoutDependencies(ids: BitIds, cache = true): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
     logger.debug(`importManyWithoutDependencies. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
     Analytics.addBreadCrumb('importManyWithoutDependencies', `Ids: ${Analytics.hashData(ids)}`);
@@ -92,8 +92,8 @@ export default class ScopeComponentsImporter {
   async importManyWithAllVersions(
     ids: BitIds,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    cache?: boolean = true,
-    allDepsVersions: boolean = false
+    cache? = true,
+    allDepsVersions = false
   ): Promise<VersionDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
@@ -189,7 +189,7 @@ export default class ScopeComponentsImporter {
     });
   }
 
-  loadComponent(id: BitId, localOnly: boolean = true): Promise<ConsumerComponent> {
+  loadComponent(id: BitId, localOnly = true): Promise<ConsumerComponent> {
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
 
     if (localOnly && !id.isLocal(this.scope.name)) {
@@ -205,9 +205,9 @@ export default class ScopeComponentsImporter {
   _getExternalMany(
     ids: BitId[],
     remotes: Remotes,
-    localFetch: boolean = true,
-    persist: boolean = true,
-    context: Object = {}
+    localFetch = true,
+    persist = true,
+    context: Record<string, any> = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return Promise.resolve([]);
     logger.debugAndAddBreadCrumb(
@@ -256,7 +256,7 @@ export default class ScopeComponentsImporter {
     id: BitId;
     remotes: Remotes;
     localFetch: boolean;
-    context?: Object;
+    context?: Record<string, any>;
   }): Promise<VersionDependencies> {
     enrichContextFromGlobal(context);
     return this.sources.get(id).then(component => {
@@ -282,7 +282,7 @@ export default class ScopeComponentsImporter {
     id: BitId;
     remotes: Remotes;
     localFetch: boolean;
-    context?: Object;
+    context?: Record<string, any>;
   }): Promise<ComponentVersion> {
     return this.sources.get(id).then(component => {
       if (component && localFetch) {
@@ -300,8 +300,8 @@ export default class ScopeComponentsImporter {
   _getExternalManyWithoutDependencies(
     ids: BitId[],
     remotes: Remotes,
-    localFetch: boolean = false,
-    context: Object = {}
+    localFetch = false,
+    context: Record<string, any> = {}
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return Promise.resolve([]);
     logger.debugAndAddBreadCrumb(

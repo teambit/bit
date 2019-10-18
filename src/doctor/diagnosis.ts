@@ -1,6 +1,6 @@
 export type ExamineBareResult = {
   valid: boolean;
-  data?: Object;
+  data?: Record<string, any>;
 };
 
 export type DiagnosisMetaData = {
@@ -20,7 +20,7 @@ export default class Diagnosis {
   name: string;
   description: string;
   category: string;
-  result: Object;
+  result: Record<string, any>;
 
   /**
    * A function that actually runs the examination

@@ -27,7 +27,7 @@ export type BaseExtensionOptions = {
 
 type BaseArgs = {
   name: string;
-  rawConfig: Object;
+  rawConfig: Record<string, any>;
   // options: BaseExtensionOptions
   options: ExtensionOptions | EnvExtensionOptions;
 };
@@ -35,7 +35,7 @@ type BaseArgs = {
 export type BaseLoadArgsProps = BaseArgs & {
   consumerPath?: PathOsBased | null | undefined;
   scopePath?: PathOsBased | null | undefined;
-  context?: Object | null | undefined;
+  context?: Record<string, any> | null | undefined;
   throws?: boolean;
 };
 
@@ -46,25 +46,25 @@ type BaseLoadFromFileArgsProps = BaseArgs & {
 };
 
 type StaticProps = BaseArgs & {
-  dynamicConfig: Object;
+  dynamicConfig: Record<string, any>;
   filePath: string;
   rootDir?: string | null | undefined;
-  schema?: Object | null | undefined;
+  schema?: Record<string, any> | null | undefined;
   script?: Function;
   disabled: boolean;
   loaded: boolean;
-  context?: Object | null | undefined;
+  context?: Record<string, any> | null | undefined;
 };
 
 type InstanceSpecificProps = {
-  api: Object;
+  api: Record<string, any>;
 };
 
 export type BaseExtensionProps = InstanceSpecificProps & StaticProps;
 
 export type BaseExtensionModel = {
   name: string;
-  config: Object;
+  config: Record<string, any>;
 };
 
 type ExtensionPath = {
@@ -90,11 +90,11 @@ export default class BaseExtension {
   disabled: boolean;
   filePath: string;
   rootDir: string;
-  rawConfig: Object;
-  schema: Object | null | undefined;
-  options: Object;
-  dynamicConfig: Object;
-  context: Object | null | undefined;
+  rawConfig: Record<string, any>;
+  schema: Record<string, any> | null | undefined;
+  options: Record<string, any>;
+  dynamicConfig: Record<string, any>;
+  context: Record<string, any> | null | undefined;
   script: Function | null | undefined; // Store the required plugin
   _initOptions: InitOptions | null | undefined; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
@@ -129,7 +129,7 @@ export default class BaseExtension {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  set initOptions(opts: Object | null | undefined) {
+  set initOptions(opts: Record<string, any> | null | undefined) {
     const defaultInitOpts = {
       writeConfigFilesOnAction: false
     };
@@ -150,7 +150,7 @@ export default class BaseExtension {
   /**
    * Run the extension's init function
    */
-  async init(throws: boolean = false): Promise<boolean> {
+  async init(throws = false): Promise<boolean> {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       let initOptions = {};
@@ -179,7 +179,7 @@ export default class BaseExtension {
     return true;
   }
 
-  extendAPI(baseApi: Object, api: Object): void {
+  extendAPI(baseApi: Record<string, any>, api: Record<string, any>): void {
     this.api = R.merge(baseApi, api);
   }
 
@@ -212,7 +212,7 @@ export default class BaseExtension {
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async reload(scopePath: string, { throws }: Object): Promise<void> {
+  async reload(scopePath: string, { throws }: Record<string, any>): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.filePath && !this.options.core) {
@@ -427,7 +427,7 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static loadDynamicConfig(extensionProps: StaticProps): Object | null | undefined {
+  static loadDynamicConfig(extensionProps: StaticProps): Record<string, any> | null | undefined {
     logger.debug('base-extension - loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
@@ -444,7 +444,7 @@ export default class BaseExtension {
   }
 }
 
-function _getExtensionPath(name: string, scopePath: string, isCore: boolean = false): ExtensionPath {
+function _getExtensionPath(name: string, scopePath: string, isCore = false): ExtensionPath {
   if (isCore) {
     return _getCoreExtensionPath(name);
   }
@@ -500,7 +500,7 @@ function _getExtensionVersionFromComponentPath(componentPath: string): string | 
   return version;
 }
 
-function _addVersionToNameFromPathIfMissing(name: string, componentPath: string, options: Object): string {
+function _addVersionToNameFromPathIfMissing(name: string, componentPath: string, options: Record<string, any>): string {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (options && options.core) return name; // if it's a core extension, it's not a bit-id.
   let bitId: BitId;

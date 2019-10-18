@@ -16,7 +16,7 @@ export type EnvType = 'compiler' | 'tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType;
-  dynamicPackageDependencies?: Object | null | undefined;
+  dynamicPackageDependencies?: Record<string, any> | null | undefined;
 };
 
 export type EnvExtensionOptions = BaseExtensionOptions;

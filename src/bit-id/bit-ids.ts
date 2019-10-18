@@ -8,7 +8,7 @@ export default class BitIds extends Array<BitId> {
     return this.map(bitId => bitId.toString());
   }
 
-  toObject(): Object {
+  toObject(): Record<string, any> {
     return R.mergeAll(this.map(bitId => bitId.toObject()));
   }
 

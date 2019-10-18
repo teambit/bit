@@ -11,8 +11,8 @@ const HooksManagerInstance = HooksManager.getInstance();
 export default (async function fetch(
   path: string,
   ids: string[],
-  noDependencies: boolean = false,
-  headers: Object | null | undefined
+  noDependencies = false,
+  headers: Record<string, any> | null | undefined
 ): Promise<ComponentObjects[]> {
   const bitIds: BitIds = BitIds.deserialize(ids);
 

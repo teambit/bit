@@ -45,7 +45,7 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
   return result;
 }
 
-function formatMissing(missingComponent: Object) {
+function formatMissing(missingComponent: Record<string, any>) {
   function formatMissingStr(value, label) {
     if (!value || value.length === 0) return '';
     return (

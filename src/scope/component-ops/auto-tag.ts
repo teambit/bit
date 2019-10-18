@@ -64,7 +64,7 @@ async function updateComponents(
   taggedComponents: BitIds,
   changedComponents: BitIds,
   isRound2 = false,
-  graph: Object
+  graph: Record<string, any>
 ): Promise<AutoTagResult[]> {
   const autoTagResults: AutoTagResult[] = [];
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {

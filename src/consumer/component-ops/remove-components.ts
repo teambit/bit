@@ -37,7 +37,7 @@ export default (async function removeComponents({
   remote: boolean;
   track: boolean;
   deleteFiles: boolean;
-}): Promise<{ localResult: RemovedLocalObjects; remoteResult: Object[] }> {
+}): Promise<{ localResult: RemovedLocalObjects; remoteResult: Record<string, any>[] }> {
   logger.debugAndAddBreadCrumb('removeComponents', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
   // added this to remove support for remove only one version from a component
   const bitIdsLatest = BitIds.fromArray(

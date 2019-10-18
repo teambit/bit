@@ -29,7 +29,7 @@ import Component from '../component/consumer-component';
 type BuildResults = {
   builtFiles: Vinyl[];
   mainDist?: string;
-  packageJson?: Object;
+  packageJson?: Record<string, any>;
   shouldBuildUponDependenciesChanges?: boolean;
 };
 
@@ -123,7 +123,10 @@ export default (async function buildComponent({
   return component.dists;
 });
 
-async function _updateComponentPackageJson(component: ConsumerComponent, packageJsonPropsToAdd: Object): Promise<void> {
+async function _updateComponentPackageJson(
+  component: ConsumerComponent,
+  packageJsonPropsToAdd: Record<string, any>
+): Promise<void> {
   const componentPackageJsonFile = component.packageJsonFile;
   if (!componentPackageJsonFile) {
     logger.debug(
@@ -143,7 +146,7 @@ function _extractAndVerifyCompilerResults(
 ): {
   builtFiles: Vinyl[];
   mainDist: string | null | undefined;
-  packageJson: Object | null | undefined;
+  packageJson: Record<string, any> | null | undefined;
 } {
   if (Array.isArray(compilerResults)) {
     return { builtFiles: compilerResults, mainDist: null, packageJson: null };
@@ -169,7 +172,7 @@ function _extractAndVerifyCompilerResults(
   throw new GeneralError(`fatal: compiler must return an array or object, instead, got ${typeof compilerResults}`);
 }
 
-function _verifyPackageJsonReturnedByCompiler(packageJson: Object) {
+function _verifyPackageJsonReturnedByCompiler(packageJson: Record<string, any>) {
   if (typeof packageJson !== 'object') {
     throw new GeneralError(`fatal: compiler must return packageJson as an object, got ${typeof packageJson}`);
   }
@@ -359,7 +362,7 @@ async function _runBuild({
     };
   };
 
-  const context: Object = {
+  const context: Record<string, any> = {
     componentObject: component.toObject(),
     rootDistDir,
     componentDir,

@@ -14,9 +14,9 @@ export async function installPackages(
   consumer: Consumer,
   dirs: string[],
   verbose: boolean, // true shows all messages, false shows only a successful message
-  installRootPackageJson: boolean = false,
-  silentPackageManagerResult: boolean = false, // don't shows packageManager results at all
-  installPeerDependencies: boolean = false // also install peer dependencies
+  installRootPackageJson = false,
+  silentPackageManagerResult = false, // don't shows packageManager results at all
+  installPeerDependencies = false // also install peer dependencies
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
   const packageManager = consumer.config.packageManager;

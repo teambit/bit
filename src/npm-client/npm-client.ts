@@ -69,7 +69,7 @@ type installArgs = {
   modules?: string[] | { [key: string]: number | string };
   packageManager: 'npm' | 'yarn';
   packageManagerArgs: string[];
-  packageManagerProcessOptions: Object;
+  packageManagerProcessOptions: Record<string, any>;
   useWorkspaces: boolean;
   dirs: string[];
   rootDir: string | null | undefined; // Used for yarn workspace
@@ -175,8 +175,8 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   return objectToArray(peerDepsObject);
 };
 
-async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Object> {
-  const parsePeers = (deps: Object): Object => {
+async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Record<string, any>> {
+  const parsePeers = (deps: Record<string, any>): Record<string, any> => {
     const result = {};
     R.forEachObjIndexed(dep => {
       if (dep.peerMissing) {
@@ -194,7 +194,7 @@ async function getPeerDepsFromNpmList(npmList: string, packageManager: string): 
 }
 
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
+async function parseNpmListJsonGracefully(str: string, packageManager: string): Record<string, any> {
   try {
     const json = JSON.parse(str);
     return json;

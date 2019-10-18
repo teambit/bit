@@ -19,7 +19,7 @@ type ConfigProps = {
   nodeColor?: string; // #c6c5fe Default node color to use in the graph
   noDependencyColor?: string; // #cfffac Color to use for nodes with no dependencies
   edgeColor?: string; // #757575 Edge color to use in the graph
-  graphVizOptions?: Object; // null Custom GraphViz options
+  graphVizOptions?: Record<string, any>; // null Custom GraphViz options
   graphVizPath?: string; // null Custom GraphViz path
   highlightColor?: string;
 };
@@ -113,7 +113,7 @@ export default class VisualDependencyGraph {
    * @return {Promise}
    */
   async image(imagePath: string): Promise<string> {
-    const options: Object = createGraphvizOptions(this.config);
+    const options: Record<string, any> = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options.type = type;
@@ -165,7 +165,7 @@ function setEdgeColor(edge, color) {
  * @return {Promise}
  */
 function checkGraphvizInstalled(graphVizPath?: string) {
-  const options: Object = {
+  const options: Record<string, any> = {
     shell: true
   };
   if (graphVizPath) {

@@ -20,7 +20,7 @@ export default (async function test(
   id?: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
-  includeUnmodified: boolean = false,
+  includeUnmodified = false,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined
 ): Promise<SpecsResultsWithMetaData> {
@@ -48,7 +48,7 @@ export default (async function test(
 
 export async function testInProcess(
   id?: string,
-  includeUnmodified: boolean = false,
+  includeUnmodified = false,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined
@@ -67,7 +67,7 @@ export async function testInProcess(
 async function _getComponentsAfterBuild(
   consumer: Consumer,
   id?: string,
-  includeUnmodified: boolean = false,
+  includeUnmodified = false,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   verbose: boolean | null | undefined,
   dontPrintEnvMsg: boolean | null | undefined

@@ -13,7 +13,7 @@ export type Iteratee = (val: any, key: any) => any;
  * console.log(newObj) //  { start: 10, end: 17 }
  * ```
  */
-export default function mapObject(obj: Object, iteratee: Iteratee) {
+export default function mapObject(obj: Record<string, any>, iteratee: Iteratee) {
   const keys = Object.keys(obj);
   const mappedObject = {};
 

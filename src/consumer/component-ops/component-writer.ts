@@ -113,7 +113,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(): Promise<Object> {
+  async populateComponentsFilesToWrite(): Promise<Record<string, any>> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -260,8 +260,8 @@ export default class ComponentWriter {
   /**
    * see https://github.com/teambit/bit/issues/1808 for more info why it's needed
    */
-  _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Object {
-    const packageJsonChangedProps: Object = this.component.packageJsonChangedProps;
+  _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Record<string, any> {
+    const packageJsonChangedProps: Record<string, any> = this.component.packageJsonChangedProps;
     const isReplaceNeeded = R.values(packageJsonChangedProps).some(val => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
     if (!isReplaceNeeded) {
       return packageJsonChangedProps;

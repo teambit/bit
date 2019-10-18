@@ -30,11 +30,11 @@ export type AllDependencies = {
 };
 
 export type AllPackagesDependencies = {
-  packageDependencies: Object | null | undefined;
-  devPackageDependencies: Object | null | undefined;
-  compilerPackageDependencies: Object | null | undefined;
-  testerPackageDependencies: Object | null | undefined;
-  peerPackageDependencies: Object | null | undefined;
+  packageDependencies: Record<string, any> | null | undefined;
+  devPackageDependencies: Record<string, any> | null | undefined;
+  compilerPackageDependencies: Record<string, any> | null | undefined;
+  testerPackageDependencies: Record<string, any> | null | undefined;
+  peerPackageDependencies: Record<string, any> | null | undefined;
 };
 
 export type FileType = {
@@ -117,8 +117,8 @@ export default class DependencyResolver {
    */
   async loadDependenciesForComponent(
     bitDir: string,
-    cacheResolvedDependencies: Object,
-    cacheProjectAst: Object | null | undefined
+    cacheResolvedDependencies: Record<string, any>,
+    cacheProjectAst: Record<string, any> | null | undefined
   ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
@@ -668,7 +668,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const getPackages = (): Object | null | undefined => {
+    const getPackages = (): Record<string, any> | null | undefined => {
       const packages = this.tree[originFile].packages;
       if (RA.isNilOrEmpty(packages)) return null;
       const shouldBeIncluded = (pkgVersion, pkgName) =>
@@ -883,7 +883,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   /**
    * given missing packages name, find whether they were dependencies with custom-resolve before.
    */
-  findOriginallyCustomModuleResolvedDependencies(packages: string[]): Object | null | undefined {
+  findOriginallyCustomModuleResolvedDependencies(packages: string[]): Record<string, any> | null | undefined {
     if (!packages) return undefined;
     if (!this.componentFromModel) return undefined; // not relevant, the component is not imported
     const dependencies: Dependencies = new Dependencies(this.componentFromModel.getAllDependencies());
@@ -961,7 +961,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     this.testerFiles = this.getRelativeEnvFiles(testerFiles);
   }
 
-  getRelativeEnvFiles(files: Object[]): PathLinux[] {
+  getRelativeEnvFiles(files: Record<string, any>[]): PathLinux[] {
     const getPathsRelativeToComponentRoot = () => {
       const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.getRootDir());
       return files.map(file => {
@@ -980,7 +980,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * the package.json in the component's directory.
    */
   populatePeerPackageDependencies(): void {
-    const getPeerDependencies = (): Object => {
+    const getPeerDependencies = (): Record<string, any> => {
       const packageJson = this._getPackageJson();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1010,7 +1010,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
    */
-  _getPackageJson(): Object | null | undefined {
+  _getPackageJson(): Record<string, any> | null | undefined {
     const componentMap = this.component.componentMap;
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     if (isAuthor) {
@@ -1038,7 +1038,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * and can't be done there because the `Tree` we get from bit-javascript doesn't have this
    * distinction.
    */
-  _addTypesPackagesForTypeScript(packages: Object, originFile: PathLinuxRelative): void {
+  _addTypesPackagesForTypeScript(packages: Record<string, any>, originFile: PathLinuxRelative): void {
     const isTypeScript = getExt(originFile) === 'ts' || getExt(originFile) === 'tsx';
     if (!isTypeScript) return;
     const packageJson = this._getPackageJson();

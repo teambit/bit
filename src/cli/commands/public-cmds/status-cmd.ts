@@ -36,7 +36,7 @@ export default class Status extends Command {
   json = false;
 
   // eslint-disable-next-line no-empty-pattern
-  action([], { json }: { json?: boolean }): Promise<Object> {
+  action([], { json }: { json?: boolean }): Promise<Record<string, any>> {
     this.json = json;
     return status();
   }
@@ -94,7 +94,7 @@ export default class Status extends Command {
       return `       ${missingStr}\n`;
     }
 
-    function format(component: string | Component, showVersions: boolean = false, message?: string): string {
+    function format(component: string | Component, showVersions = false, message?: string): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

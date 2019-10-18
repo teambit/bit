@@ -18,6 +18,7 @@ const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> =
     resolverFunction = hubResolver;
   } else {
     // use the default resolver
+    // eslint-disable-next-line import/no-dynamic-require, global-require
     resolverFunction = require(resolverPath);
   } // use the resolver described in the scopeJson
 

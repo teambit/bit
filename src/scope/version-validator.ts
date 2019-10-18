@@ -19,7 +19,7 @@ import GeneralError from '../error/general-error';
  */
 export default function validateVersionInstance(version: Version): void {
   const message = 'unable to save Version object';
-  const validateBitIdStr = (bitIdStr: string, field: string, validateVersion: boolean = true) => {
+  const validateBitIdStr = (bitIdStr: string, field: string, validateVersion = true) => {
     validateType(message, bitIdStr, field, 'string');
     let bitId;
     try {
@@ -91,7 +91,7 @@ export default function validateVersionInstance(version: Version): void {
       });
     });
   };
-  const validateFile = (file, isDist: boolean = false) => {
+  const validateFile = (file, isDist = false) => {
     const field = isDist ? 'dist-file' : 'file';
     validateType(message, file, field, 'object');
     if (!isValidPath(file.relativePath)) {
@@ -219,7 +219,7 @@ ${duplicationStr}`);
     if (!validateResult.length) return null;
     return validateResult.join(', ');
   };
-  const validateOverrides = (fieldValue: Object, fieldName: string) => {
+  const validateOverrides = (fieldValue: Record<string, any>, fieldName: string) => {
     const field = `overrides.${fieldName}`;
     if (DEPENDENCIES_FIELDS.includes(fieldName)) {
       validateType(message, fieldValue, field, 'object');

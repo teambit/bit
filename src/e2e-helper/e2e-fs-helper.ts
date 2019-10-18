@@ -12,7 +12,7 @@ export default class FsHelper {
     this.scopes = scopes;
   }
 
-  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true, includeNodeModules: boolean = true) {
+  getConsumerFiles(ext = '*.{js,ts}', includeDot = true, includeNodeModules = true) {
     const params = { cwd: this.scopes.localPath, dot: includeDot };
     if (!includeNodeModules) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -39,7 +39,7 @@ export default class FsHelper {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createFileOnRootLevel(name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
+  createFileOnRootLevel(name = 'foo.js', impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, name);
     fs.outputFileSync(filePath, impl);
   }
@@ -52,7 +52,7 @@ export default class FsHelper {
     return fs.readJsonSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
-  outputFile(filePathRelativeToLocalScope: string, data: string = ''): string {
+  outputFile(filePathRelativeToLocalScope: string, data = ''): string {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
 

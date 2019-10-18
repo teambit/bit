@@ -23,7 +23,7 @@ export default class DependencyGraph {
   graph: Graph;
   scopeName: string;
 
-  constructor(graph: Object) {
+  constructor(graph: Record<string, any>) {
     this.graph = graph;
   }
 
@@ -110,7 +110,7 @@ export default class DependencyGraph {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest: boolean = false): Promise<Graph> {
+  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
@@ -250,7 +250,7 @@ export default class DependencyGraph {
     return this.graph.node(id.toStringWithoutVersion());
   }
 
-  getImmediateDependentsPerId(id: BitId, returnNodeValue: boolean = false): Array<string | Component | BitId> {
+  getImmediateDependentsPerId(id: BitId, returnNodeValue = false): Array<string | Component | BitId> {
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map(node => node.v);
@@ -263,7 +263,7 @@ export default class DependencyGraph {
     return nodeEdges.map(node => node.v);
   }
 
-  serialize(graph: Object | null | undefined = this.graph) {
+  serialize(graph: Record<string, any> | null | undefined = this.graph) {
     return GraphLib.json.write(graph);
   }
 }

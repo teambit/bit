@@ -7,7 +7,7 @@ import BitId from '../../bit-id/bit-id';
 export default function getNodeModulesPathOfComponent(
   bindingPrefix: string | null | undefined,
   id: BitId,
-  allowNonScope: boolean = false
+  allowNonScope = false
 ): PathOsBasedRelative {
   if (!id.scope && !allowNonScope) {
     throw new GeneralError(

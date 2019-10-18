@@ -4,7 +4,7 @@ export default class ExtensionLoadError extends ExternalError {
   compName: string;
   printStack: boolean;
 
-  constructor(originalError: Error, compName: string, printStack: boolean = true) {
+  constructor(originalError: Error, compName: string, printStack = true) {
     super(originalError);
     this.compName = compName;
     this.printStack = printStack;

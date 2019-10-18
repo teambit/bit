@@ -60,16 +60,12 @@ export default class FixtureHelper {
     return path.join(__dirname, '../../e2e/fixtures');
   }
 
-  copyFixtureComponents(dir: string = '', cwd: string = this.scopes.localPath) {
+  copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
   }
 
-  copyFixtureFile(
-    pathToFile: string = '',
-    newName: string = path.basename(pathToFile),
-    cwd: string = this.scopes.localPath
-  ) {
+  copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
     const sourceFile = path.join(this.getFixturesDir(), pathToFile);
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line

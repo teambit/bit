@@ -49,7 +49,7 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     return data;
   }
 
-  function toJsonComponent(listScopeResult: ListScopeResult): Object {
+  function toJsonComponent(listScopeResult: ListScopeResult): Record<string, any> {
     const id = listScopeResult.id.toStringWithoutVersion();
     const version = listScopeResult.id.version;
     const data = {

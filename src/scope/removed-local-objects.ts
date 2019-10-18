@@ -8,7 +8,7 @@ export default class RemovedLocalObjects extends RemovedObjects {
     missingComponents?: BitIds,
     modifiedComponents?: BitIds,
     removedDependencies?: BitIds,
-    dependentBits?: Object
+    dependentBits?: Record<string, any>
   ) {
     super({ removedComponentIds, missingComponents, removedDependencies, dependentBits });
     this.modifiedComponents = modifiedComponents;

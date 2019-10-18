@@ -5,6 +5,7 @@ import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 
+// eslint-disable-next-line @typescript-eslint/class-name-casing
 export default class _Graph extends Command {
   name = '_graph <path> <args>';
   private = true;

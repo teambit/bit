@@ -15,8 +15,8 @@ import { BitId } from '../bit-id';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>;
-  globals: Object;
-  modules: Object;
+  globals: Record<string, any>;
+  modules: Record<string, any>;
 };
 
 export default (async function run({
@@ -94,7 +94,7 @@ async function runOnChildProcess({
   if (includeUnmodified) {
     args.push('--all');
   }
-  const baseEnv: Object = {
+  const baseEnv: Record<string, any> = {
     __verbose__: verbose,
     __includeUnmodified__: includeUnmodified
   };

@@ -39,11 +39,15 @@ import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 import GeneralError from '../error/general-error';
 
-export type EnvPackages = { dependencies?: Object; devDependencies?: Object; peerDependencies?: Object };
+export type EnvPackages = {
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
+};
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
-  dynamicPackageDependencies: Object | null | undefined;
+  dynamicPackageDependencies: Record<string, any> | null | undefined;
   files: ExtensionFile[];
   dataToPersist: DataToPersist;
 
@@ -91,7 +95,7 @@ export default class EnvExtension extends BaseExtension {
   async install(
     scope: Scope,
     opts: { verbose: boolean; dontPrintEnvMsg?: boolean },
-    context?: Object
+    context?: Record<string, any>
   ): Promise<ComponentWithDependencies[] | null | undefined> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
     logger.debug('env-extension - install env extension');
@@ -124,8 +128,8 @@ export default class EnvExtension extends BaseExtension {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  toObject(): Object {
-    const baseObject: Object = super.toObject();
+  toObject(): Record<string, any> {
+    const baseObject: Record<string, any> = super.toObject();
     const files = this.files;
     const object = { ...baseObject, files };
     return object;
@@ -220,7 +224,7 @@ export default class EnvExtension extends BaseExtension {
     return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
 
-  async reload(scopePath: string, context?: Object): Promise<void> {
+  async reload(scopePath: string, context?: Record<string, any>): Promise<void> {
     logger.debug('env-extension, reload');
     if (context) {
       this.context = context;
@@ -285,7 +289,7 @@ export default class EnvExtension extends BaseExtension {
     return dynamicPackageDependencies;
   }
 
-  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): Object | null | undefined {
+  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): Record<string, any> | null | undefined {
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
@@ -361,7 +365,7 @@ export default class EnvExtension extends BaseExtension {
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
     workspaceConfig: WorkspaceConfig;
     envType: EnvType;
-    context?: Object;
+    context?: Record<string, any>;
   }): Promise<EnvExtension | null | undefined> {
     logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;

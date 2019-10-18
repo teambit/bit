@@ -14,8 +14,8 @@ type AbstractVinylProps = {
 };
 // @ts-ignore
 export default class AbstractVinyl extends Vinyl {
-  override: boolean = true;
-  verbose: boolean = false;
+  override = true;
+  verbose = false;
 
   static fromVinyl(vinyl: Vinyl): AbstractVinyl {
     if (vinyl instanceof AbstractVinyl) return vinyl;
@@ -79,7 +79,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedStringArray(arr: Object[]): AbstractVinylProps[] | null | undefined {
+  static loadFromParsedStringArray(arr: Record<string, any>[]): AbstractVinylProps[] | null | undefined {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }

@@ -5,7 +5,7 @@ import { ConsumerNotFound } from './exceptions';
 export async function loadConsumer(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   currentPath?: string = process.cwd(),
-  newInstance?: boolean = false
+  newInstance? = false
 ): Promise<Consumer> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -24,7 +24,7 @@ export async function loadConsumer(
 export async function loadConsumerIfExist(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   currentPath?: string = process.cwd(),
-  newInstance?: boolean = false
+  newInstance? = false
 ): Promise<Consumer | null | undefined> {
   try {
     return await loadConsumer(currentPath, newInstance);

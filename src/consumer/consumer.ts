@@ -102,12 +102,12 @@ export default class Consumer {
   config: WorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
-  isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
+  isolated = false; // Mark that the consumer instance is of isolated env and not real
   addedGitHooks: string[] | null | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | null | undefined; // list of git hooks already exists during init process
   _driver: Driver;
   _dirStructure: DirStructure;
-  _componentsStatusCache: Object = {}; // cache loaded components
+  _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
 
@@ -169,13 +169,16 @@ export default class Consumer {
     return this.bitMap.getAllBitIds();
   }
 
-  async getEnv(envType: EnvType, context: Object | null | undefined): Promise<EnvExtension | null | undefined> {
+  async getEnv(
+    envType: EnvType,
+    context: Record<string, any> | null | undefined
+  ): Promise<EnvExtension | null | undefined> {
     const props = this._getEnvProps(envType, context);
     if (!props) return null;
     return makeEnv(envType, props);
   }
 
-  getTmpFolder(fullPath: boolean = false): PathOsBased {
+  getTmpFolder(fullPath = false): PathOsBased {
     if (!fullPath) {
       return BIT_WORKSPACE_TMP_DIRNAME;
     }
@@ -223,7 +226,7 @@ export default class Consumer {
    * @memberof Consumer
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async migrate(verbose): Object {
+  async migrate(verbose): Record<string, any> {
     // Check version of stores (bitmap / bitjson) to check if we need to run migrate
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
@@ -328,10 +331,7 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  async loadComponentWithDependenciesFromModel(
-    id: BitId,
-    throwIfNotExist: boolean = true
-  ): Promise<ComponentWithDependencies> {
+  async loadComponentWithDependenciesFromModel(id: BitId, throwIfNotExist = true): Promise<ComponentWithDependencies> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
@@ -365,7 +365,7 @@ export default class Consumer {
 
   async loadComponents(
     ids: BitIds,
-    throwOnFailure: boolean = true
+    throwOnFailure = true
   ): Promise<{ components: Component[]; invalidComponents: InvalidComponent[] }> {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
@@ -625,7 +625,7 @@ export default class Consumer {
     verbose: boolean | null | undefined,
     ignoreUnresolvedDependencies: boolean | null | undefined,
     ignoreNewestVersion: boolean,
-    skipTests: boolean = false
+    skipTests = false
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
@@ -745,7 +745,7 @@ export default class Consumer {
 
   static create(
     projectPath: PathOsBasedAbsolute,
-    noGit: boolean = false,
+    noGit = false,
     workspaceConfigProps: WorkspaceConfigProps
   ): Promise<Consumer> {
     return this.ensure(projectPath, noGit, workspaceConfigProps);
@@ -762,7 +762,7 @@ export default class Consumer {
 
   static async ensure(
     projectPath: PathOsBasedAbsolute,
-    standAlone: boolean = false,
+    standAlone = false,
     workspaceConfigProps: WorkspaceConfigProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
@@ -786,7 +786,7 @@ export default class Consumer {
    * if resetHard, delete consumer-files: bitMap and bit.json and also the local scope (.bit dir).
    * otherwise, delete the consumer-files only when they are corrupted
    */
-  static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit: boolean = false): Promise<void> {
+  static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
@@ -912,7 +912,7 @@ export default class Consumer {
     return component.injectConfig(this.getPath(), this.bitMap, force);
   }
 
-  _getEnvProps(envType: EnvType, context: Object | null | undefined) {
+  _getEnvProps(envType: EnvType, context: Record<string, any> | null | undefined) {
     const envs = this.config.getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];

@@ -36,7 +36,7 @@ export default class ExtensionFile extends AbstractVinyl {
     filePath: PathOsBased,
     consumerPath: PathOsBased,
     base: PathOsBased = consumerPath,
-    extendedProps?: Object
+    extendedProps?: Record<string, any>
   ): Promise<ExtensionFile> {
     try {
       const baseFile = await vinylFile.read(filePath, { base, cwd: consumerPath });
@@ -93,7 +93,7 @@ export default class ExtensionFile extends AbstractVinyl {
     return Promise.all(loadP);
   }
 
-  static loadFromParsedString(parsedString: Object): ExtensionFile | null | undefined {
+  static loadFromParsedString(parsedString: Record<string, any>): ExtensionFile | null | undefined {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -102,7 +102,7 @@ export default class ExtensionFile extends AbstractVinyl {
     return extensionFile;
   }
 
-  static loadFromParsedStringArray(arr: Object[]): Array<null | undefined | ExtensionFile> {
+  static loadFromParsedStringArray(arr: Record<string, any>[]): Array<null | undefined | ExtensionFile> {
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }

@@ -13,7 +13,7 @@ export default class BitJsonHelper {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-  write(bitJson: Object, bitJsonDir: string = this.scopes.localPath) {
+  write(bitJson: Record<string, any>, bitJsonDir: string = this.scopes.localPath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
@@ -22,12 +22,12 @@ export default class BitJsonHelper {
     bitJson[key] = val;
     this.write(bitJson, bitJsonDir);
   }
-  addOverrides(overrides: Object) {
+  addOverrides(overrides: Record<string, any>) {
     const bitJson = this.read();
     bitJson.overrides = overrides;
     this.write(bitJson);
   }
-  getEnvByType(bitJson: Object, envType: 'compiler' | 'tester') {
+  getEnvByType(bitJson: Record<string, any>, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];
     const env = R.path(basePath, bitJson);
     const envName = Object.keys(env)[0];
@@ -49,7 +49,7 @@ export default class BitJsonHelper {
   ) {
     this._addKeyValToEnvProp(bitJsonPath, 'rawConfig', key, val, envType);
   }
-  manageWorkspaces(withWorkspaces: boolean = true) {
+  manageWorkspaces(withWorkspaces = true) {
     const bitJson = this.read();
     bitJson.packageManager = 'yarn';
     bitJson.manageWorkspaces = withWorkspaces;
@@ -69,7 +69,7 @@ export default class BitJsonHelper {
     bitJson[key] = value;
     this.write(bitJson);
   }
-  _getEnvNameByType(bitJson: Object, envType: 'compiler' | 'tester') {
+  _getEnvNameByType(bitJson: Record<string, any>, envType: 'compiler' | 'tester') {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const env = bitJson.env[envType];
     const envName = typeof env === 'string' ? env : Object.keys(env)[0];

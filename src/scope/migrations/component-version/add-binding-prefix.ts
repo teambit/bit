@@ -4,7 +4,7 @@ import { DEFAULT_BINDINGS_PREFIX } from '../../../constants';
  * Add default binding prefix to version model
  * @param {*} versionModel - The parsed component model
  */
-function addBindingPrefix(versionModel: Object): Object {
+function addBindingPrefix(versionModel: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (!versionModel.bindingPrefix) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

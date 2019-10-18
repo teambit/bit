@@ -22,7 +22,7 @@ export default class GlobalRemotes {
     return true;
   }
 
-  toJson(readable: boolean = true) {
+  toJson(readable = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
   }

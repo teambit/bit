@@ -14,9 +14,9 @@ import { overridesBitInternalFields, nonPackageJsonFields, overridesForbiddenFie
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type ComponentOverridesData = {
-  dependencies?: Object;
-  devDependencies?: Object;
-  peerDependencies?: Object;
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
   [key: string]: any; // any package.json field should be valid here. can't be overridesSystemFields
 };
 
@@ -96,7 +96,7 @@ export default class ComponentOverrides {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
     return R.pickBy(isPackageJsonField, this.overrides);
   }
-  getComponentDependenciesWithVersion(): Object {
+  getComponentDependenciesWithVersion(): Record<string, any> {
     const allDeps = Object.assign(
       {},
       this.overrides.dependencies,
@@ -106,7 +106,7 @@ export default class ComponentOverrides {
     return this._filterForComponentWithValidVersion(allDeps);
   }
 
-  _filterForComponentWithValidVersion(deps: Object): Object {
+  _filterForComponentWithValidVersion(deps: Record<string, any>): Record<string, any> {
     return Object.keys(deps).reduce((acc, current) => {
       if (this._isValidVersion(deps[current]) && current.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
         const component = current.replace(OVERRIDE_COMPONENT_PREFIX, '');
@@ -191,7 +191,7 @@ export default class ComponentOverrides {
       });
     });
   }
-  static getAllFilesPaths(overrides: Object): string[] {
+  static getAllFilesPaths(overrides: Record<string, any>): string[] {
     if (!overrides) return [];
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -1,3 +1,5 @@
+/* eslint no-bitwise: 0 */
+
 // Taken from here:
 // https://gist.github.com/jonleighton/958841
 

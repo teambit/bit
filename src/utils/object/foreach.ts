@@ -9,7 +9,7 @@
  *  // => a 1 b 2 c 3
  * ```
  */
-export default function forEach(obj: Object, cb: (val: any, key: any) => void) {
+export default function forEach(obj: Record<string, any>, cb: (val: any, key: any) => void) {
   const keys = Object.keys(obj);
   keys.forEach(key => cb(obj[key], key));
 }

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-export default function outputJsonFile(file: string, data: Object): void {
+export default function outputJsonFile(file: string, data: Record<string, any>): void {
   try {
     fs.ensureFileSync(file);
     return fs.outputJsonSync(file, data);

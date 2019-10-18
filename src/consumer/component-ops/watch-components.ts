@@ -60,7 +60,7 @@ export default class WatchComponents {
     });
   }
 
-  async _handleChange(filePath: string, isNew: boolean = false) {
+  async _handleChange(filePath: string, isNew = false) {
     const componentId = await this._getBitIdByPathAndReloadConsumer(filePath, isNew);
     if (componentId) {
       const idStr = componentId.toString();

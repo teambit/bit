@@ -111,7 +111,7 @@ EOD`;
    * published and ready to be consumed later on when running 'npm install package-name'.
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
+  publishComponent(componentName: string, componentVersion? = '0.0.1') {
     const packDir = path.join(this.helper.scopes.localPath, 'pack');
     const result = this.helper.command.runCmd(
       `bit npm-pack ${this.helper.scopes.remote}/${componentName}@${componentVersion} -o -k -d ${packDir}`

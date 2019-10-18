@@ -4,7 +4,7 @@ import pathLib from 'path';
 import logger from '../logger/logger';
 import readDirIgnoreDsStore from './fs/read-dir-ignore-ds-store';
 
-export default (async function removeFile(path: string, propagateDirs: boolean = false): Promise<boolean> {
+export default (async function removeFile(path: string, propagateDirs = false): Promise<boolean> {
   try {
     await fs.unlink(path);
   } catch (err) {

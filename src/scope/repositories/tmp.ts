@@ -15,28 +15,28 @@ export default class Tmp extends Repository {
     return path.join(this.getPath(), p);
   }
 
-  async save(data: string, ext: string = '.js'): Promise<PathOsBased> {
+  async save(data: string, ext = '.js'): Promise<PathOsBased> {
     const fileName = v4();
     const filePath = this.composePath(`${fileName}${ext}`);
     await fs.outputFile(filePath, data);
     return filePath;
   }
 
-  saveSync(data: string, ext: string = '.js'): PathOsBased {
+  saveSync(data: string, ext = '.js'): PathOsBased {
     const fileName = v4();
     const filePath = this.composePath(`${fileName}${ext}`);
     fs.outputFileSync(filePath, data);
     return filePath;
   }
 
-  remove(fileNameOrPath: string, ext: string = '.js'): Promise<any> {
+  remove(fileNameOrPath: string, ext = '.js'): Promise<any> {
     const fileName = path.parse(fileNameOrPath).name;
     const filePath = this.composePath(`${fileName}${ext}`);
     logger.info(`tmp.remove, deleting ${filePath}`);
     return fs.remove(filePath);
   }
 
-  removeSync(fileNameOrPath: string, ext: string = '.js'): any {
+  removeSync(fileNameOrPath: string, ext = '.js'): any {
     const fileName = path.parse(fileNameOrPath).name;
     const filePath = this.composePath(`${fileName}${ext}`);
     logger.info(`tmp.removeSync, deleting ${filePath}`);

@@ -175,7 +175,7 @@ function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsTwoWay,
   mergeStrategy: MergeStrategy | null | undefined
-): Object {
+): Record<string, any> {
   const filesStatus = {};
   mergeResults.modifiedFiles.forEach(file => {
     const filePath: PathOsBased = path.normalize(file.filePath);

@@ -36,7 +36,7 @@ export type WorkspaceConfigProps = {
   extensions?: Extensions;
   packageManager?: 'npm' | 'yarn';
   packageManagerArgs?: string[];
-  packageManagerProcessOptions?: Object;
+  packageManagerProcessOptions?: Record<string, any>;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
   resolveModules?: ResolveModulesConfig;
@@ -55,12 +55,12 @@ export default class WorkspaceConfig extends AbstractConfig {
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'npm' | 'yarn'; // package manager client to use
   packageManagerArgs: string[] | null | undefined; // package manager client to use
-  packageManagerProcessOptions: Object | null | undefined; // package manager process options
+  packageManagerProcessOptions: Record<string, any> | null | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ResolveModulesConfig | null | undefined;
   overrides: ConsumerOverrides;
-  packageJsonObject: Object | null | undefined; // workspace package.json if exists (parsed)
+  packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | null | undefined; // default remote scope to export to
 
   constructor({
@@ -185,7 +185,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     if (resetHard) await deleteBitJsonFile();
   }
 
-  static fromPlainObject(object: Object) {
+  static fromPlainObject(object: Record<string, any>) {
     WorkspaceConfig.validate(object);
     const {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -270,7 +270,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     workspaceConfig.packageJsonObject = packageJsonFile;
     return workspaceConfig;
   }
-  static async loadBitJson(bitJsonPath: string): Promise<Object | null | undefined> {
+  static async loadBitJson(bitJsonPath: string): Promise<Record<string, any> | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
@@ -278,7 +278,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       throw new InvalidBitJson(bitJsonPath);
     }
   }
-  static async loadPackageJson(packageJsonPath: string): Promise<Object | null | undefined> {
+  static async loadPackageJson(packageJsonPath: string): Promise<Record<string, any> | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
@@ -287,7 +287,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     }
   }
 
-  static validate(object: Object) {
+  static validate(object: Record<string, any>) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

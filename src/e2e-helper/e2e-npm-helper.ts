@@ -34,7 +34,7 @@ export default class NpmHelper {
    * @param {*} name
    * @param {*} version
    */
-  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
+  addNpmPackage(name = 'lodash.get', version = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });
     this.fs.createFile(`node_modules/${name}`, 'index.js');
     this.fs.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);

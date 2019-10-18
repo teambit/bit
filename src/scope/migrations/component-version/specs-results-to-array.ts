@@ -2,7 +2,7 @@
  * Convert specsResults from object to array and add the spec file
  * @param {Object} versionModel
  */
-function specsResultstoArray(versionModel: Object): Object {
+function specsResultstoArray(versionModel: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (versionModel.specsResults && !Array.isArray(versionModel.specsResults)) {

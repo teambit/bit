@@ -21,7 +21,7 @@ export default class ExtensionsHelper {
     this.bitJson.write(bitJson);
   }
 
-  importNpmPackExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {
+  importNpmPackExtension(id = 'bit.extensions/npm/pack@2.0.1') {
     this.importAndConfigureExtension(id);
     // workaround to get the registry into the package.json file
     const extensionFilePath = path.join(

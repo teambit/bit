@@ -247,7 +247,7 @@ export function applyModifiedVersion(
   mergeResults: MergeResultsThreeWay,
   mergeStrategy: MergeStrategy | null | undefined,
   sharedDir?: string
-): Object {
+): Record<string, any> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   mergeResults.modifiedFiles.forEach(file => {

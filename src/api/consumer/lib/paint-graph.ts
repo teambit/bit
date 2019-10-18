@@ -7,7 +7,7 @@ import { BitId } from '../../../bit-id';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 
-export default (async function paintGraph(id: string, options: Object): Promise<string> {
+export default (async function paintGraph(id: string, options: Record<string, any>): Promise<string> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

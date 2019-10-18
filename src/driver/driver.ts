@@ -10,7 +10,7 @@ import {
 
 export default class Driver {
   lang: string;
-  driver: Object;
+  driver: Record<string, any>;
 
   constructor(lang: string = DEFAULT_LANGUAGE) {
     this.lang = lang;
@@ -20,13 +20,14 @@ export default class Driver {
     return this.lang.startsWith('bit-') ? this.lang : `bit-${this.lang}`;
   }
 
-  getDriver(silent: boolean = true): Object | null | undefined {
+  getDriver(silent = true): Record<string, any> | null | undefined {
     if (this.driver) return this.driver;
     const langDriver = this.driverName();
     if (langDriver === 'bit-javascript') {
       this.driver = bitJavascript;
     } else {
       try {
+        // eslint-disable-next-line import/no-dynamic-require, global-require
         this.driver = require(langDriver);
       } catch (err) {
         logger.error('failed to get the driver', err);
@@ -60,8 +61,8 @@ export default class Driver {
     filePaths: string[],
     bindingPrefix: string,
     resolveModulesConfig: ResolveModulesConfig,
-    cacheResolvedDependencies: Object,
-    cacheProjectAst: Object | null | undefined
+    cacheResolvedDependencies: Record<string, any>,
+    cacheProjectAst: Record<string, any> | null | undefined
   ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
@@ -81,7 +82,7 @@ export default class Driver {
   }
 
   // TODO: Improve flow object return type
-  npmLogin(token: string, npmrcPath: string, registryUrl: string): Object {
+  npmLogin(token: string, npmrcPath: string, registryUrl: string): Record<string, any> {
     const driver = this.getDriver(false);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return driver.npmLogin(token, npmrcPath, registryUrl);

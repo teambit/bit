@@ -249,7 +249,7 @@ export default class BitMap {
     return configDirResolved;
   }
 
-  loadComponents(componentsJson: Object) {
+  loadComponents(componentsJson: Record<string, any>) {
     Object.keys(componentsJson).forEach(componentId => {
       const componentFromJson = componentsJson[componentId];
       const idHasScope = (): boolean => {
@@ -498,7 +498,7 @@ export default class BitMap {
    * find ids that have the same name but different version
    * if compareWithoutScope is false, the scope should be identical in addition to the name
    */
-  findSimilarIds(id: BitId, compareWithoutScope: boolean = false): BitIds {
+  findSimilarIds(id: BitId, compareWithoutScope = false): BitIds {
     const allIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
     const similarIds = allIds.filter((existingId: BitId) => {
       const isSimilar = compareWithoutScope
@@ -528,7 +528,7 @@ export default class BitMap {
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
-  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): BitId | null | undefined {
+  getExistingBitId(id: BitIdStr, shouldThrow = true): BitId | null | undefined {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
@@ -679,7 +679,7 @@ export default class BitMap {
    * in the file-system only one instance with the same component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
-  updateComponentId(id: BitId, updateScopeOnly: boolean = false): BitId {
+  updateComponentId(id: BitId, updateScopeOnly = false): BitId {
     const newIdString = id.toString();
     const similarIds = this.findSimilarIds(id, true);
     if (!similarIds.length) {
@@ -728,7 +728,7 @@ export default class BitMap {
    * @returns {BitId} component id
    * @memberof BitMap
    */
-  getComponentIdByPath(componentPath: PathLinux, caseSensitive: boolean = true): BitId {
+  getComponentIdByPath(componentPath: PathLinux, caseSensitive = true): BitId {
     this._populateAllPaths();
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }
@@ -786,7 +786,7 @@ export default class BitMap {
   /**
    * remove the id property before saving the components to the file as they are redundant with the keys
    */
-  toObjects(): Object {
+  toObjects(): Record<string, any> {
     const components = {};
     Object.keys(this.components).forEach(id => {
       const componentMap = this.components[id].clone();
@@ -813,7 +813,7 @@ export default class BitMap {
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }
 
-  getContent(): Object {
+  getContent(): Record<string, any> {
     const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
     return bitMapContent;
   }

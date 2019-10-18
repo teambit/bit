@@ -164,7 +164,7 @@ export default class SSH implements Network {
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
   }
-  _composeTokenAuthObject(): Object | null | undefined {
+  _composeTokenAuthObject(): Record<string, any> | null | undefined {
     const token = getSync(CFG_USER_TOKEN_KEY);
     if (token) {
       this._sshUsername = 'token';
@@ -186,7 +186,11 @@ export default class SSH implements Network {
   _hasAgentSocket() {
     return !!process.env.SSH_AUTH_SOCK;
   }
-  async _connectWithConfig(sshConfig: Object, authenticationType: string, authFailedMsg: string): Promise<SSH> {
+  async _connectWithConfig(
+    sshConfig: Record<string, any>,
+    authenticationType: string,
+    authFailedMsg: string
+  ): Promise<SSH> {
     const connectWithConfigP = () => {
       const conn = new SSH2();
       return new Promise((resolve, reject) => {
@@ -233,7 +237,7 @@ export default class SSH implements Network {
     return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload, context))}`;
   }
 
-  exec(commandName: string, payload: any, context: Object | null | undefined): Promise<any> {
+  exec(commandName: string, payload: any, context: Record<string, any> | null | undefined): Promise<any> {
     logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
     // Add the entered username to context
     if (this._sshUsername) {
@@ -336,7 +340,7 @@ export default class SSH implements Network {
     }
   }
 
-  _unpack(data, base64: boolean = true) {
+  _unpack(data, base64 = true) {
     try {
       return unpackCommand(data, base64);
     } catch (err) {
@@ -345,7 +349,10 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[], context: Object | null | undefined): Promise<string[]> {
+  pushMany(
+    manyComponentObjects: ComponentObjects[],
+    context: Record<string, any> | null | undefined
+  ): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
     return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
@@ -355,7 +362,11 @@ export default class SSH implements Network {
     });
   }
 
-  deleteMany(ids: string[], force: boolean, context: Object | null | undefined): Promise<ComponentObjects[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any> | null | undefined
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.exec(
       '_delete',
@@ -369,7 +380,7 @@ export default class SSH implements Network {
       return RemovedObjects.fromObjects(payload);
     });
   }
-  deprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
+  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<ComponentObjects[]> {
     return this.exec(
       '_deprecate',
       {
@@ -381,7 +392,7 @@ export default class SSH implements Network {
       return payload;
     });
   }
-  undeprecateMany(ids: string[], context: Object | null | undefined): Promise<ComponentObjects[]> {
+  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<ComponentObjects[]> {
     return this.exec(
       '_undeprecate',
       {
@@ -462,7 +473,7 @@ export default class SSH implements Network {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  fetch(ids: BitIds, noDeps: boolean = false, context: Object | null | undefined): Promise<ComponentObjects[]> {
+  fetch(ids: BitIds, noDeps = false, context: Record<string, any> | null | undefined): Promise<ComponentObjects[]> {
     let options = '';
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';

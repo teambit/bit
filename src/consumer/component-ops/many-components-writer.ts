@@ -69,7 +69,7 @@ export default class ManyComponentsWriter {
   addToRootPackageJson: boolean;
   verbose: boolean; // prints npm results
   excludeRegistryPrefix: boolean;
-  dependenciesIdsCache: Object;
+  dependenciesIdsCache: Record<string, any>;
   writtenComponents: Component[];
   writtenDependencies: Component[];
   isolated: boolean; // a preparation for the capsule feature
@@ -203,7 +203,7 @@ export default class ManyComponentsWriter {
       ...getParams()
     };
   }
-  _getDefaultWriteParams(): Object {
+  _getDefaultWriteParams(): Record<string, any> {
     return {
       writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,

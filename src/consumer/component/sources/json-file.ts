@@ -4,7 +4,7 @@ import ValidationError from '../../../error/validation-error';
 import logger from '../../../logger/logger';
 
 export default class JSONFile extends AbstractVinyl {
-  override: boolean = false;
+  override = false;
 
   async write(): Promise<string> {
     const stat = await this._getStatIfFileExists();
@@ -37,7 +37,7 @@ export default class JSONFile extends AbstractVinyl {
   }: {
     base: string;
     path: string;
-    content: Object;
+    content: Record<string, any>;
     override?: boolean;
   }): JSONFile {
     const jsonStr = JSON.stringify(content, null, 4);

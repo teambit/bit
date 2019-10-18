@@ -9,10 +9,10 @@ import AbstractConfig from './abstract-config';
 import { DEPENDENCIES_FIELDS } from '../../constants';
 
 export type ConsumerOverridesOfComponent = {
-  dependencies?: Object;
-  devDependencies?: Object;
-  peerDependencies?: Object;
-  env?: Object;
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
+  env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
   [key: string]: any; // can be any package.json field
 };
@@ -28,7 +28,7 @@ export default class ConsumerOverrides {
   constructor(overrides: ConsumerOverridesConfig) {
     this.overrides = overrides;
   }
-  static load(overrides: Object = {}) {
+  static load(overrides: Record<string, any> = {}) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ConsumerOverrides(overrides);
   }
@@ -48,7 +48,10 @@ export default class ConsumerOverrides {
       return acc;
     }, {});
   }
-  _updateSpecificOverridesWithGeneralOverrides(generalOverrides: Object, specificOverrides: Object) {
+  _updateSpecificOverridesWithGeneralOverrides(
+    generalOverrides: Record<string, any>,
+    specificOverrides: Record<string, any>
+  ) {
     const isObjectAndNotArray = val => typeof val === 'object' && !Array.isArray(val);
     Object.keys(generalOverrides).forEach(field => {
       switch (field) {
@@ -89,7 +92,7 @@ export default class ConsumerOverrides {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
   }
-  _isExcluded(overridesValues: Object, bitId: BitId) {
+  _isExcluded(overridesValues: Record<string, any>, bitId: BitId) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!overridesValues.exclude || !overridesValues.exclude.length) {
@@ -180,7 +183,7 @@ export default class ConsumerOverrides {
     return true;
   }
 
-  static validate(overrides: Object): void {
+  static validate(overrides: Record<string, any>): void {
     if (typeof overrides === 'undefined') return;
     const message = 'consumer-config (either bit.json or package.json "bit")';
     validateUserInputType(message, overrides, 'overrides', 'object');
@@ -203,13 +206,13 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
       });
     }
 
-    function validateDependencyField(field: string, override: Object, id: string) {
+    function validateDependencyField(field: string, override: Record<string, any>, id: string) {
       validateUserInputType(message, override[field], `overrides.${id}.${field}`, 'object');
       Object.keys(override[field]).forEach(rule => {
         validateUserInputType(message, override[field][rule], `overrides.${id}.${field}.${rule}`, 'string');
       });
     }
-    function validateEnv(override: Object, id: string) {
+    function validateEnv(override: Record<string, any>, id: string) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       validateUserInputType(message, override.env, `overrides.${id}.env`, 'object');
     }

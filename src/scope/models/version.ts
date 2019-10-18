@@ -22,7 +22,7 @@ import { ComponentOverridesData } from '../../consumer/config/component-override
 import { EnvPackages } from '../../extensions/env-extension';
 
 type CiProps = {
-  error: Object;
+  error: Record<string, any>;
   startTime: string;
   endTime: string;
 };
@@ -76,7 +76,7 @@ export type VersionProps = {
   bindingPrefix?: string;
   customResolvedPaths?: customResolvedPath[];
   overrides: ComponentOverridesData;
-  packageJsonChangedProps?: Object;
+  packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
 };
 
@@ -116,7 +116,7 @@ export default class Version extends BitObject {
   bindingPrefix: string | null | undefined;
   customResolvedPaths: customResolvedPath[] | null | undefined;
   overrides: ComponentOverridesData;
-  packageJsonChangedProps: Object;
+  packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
 
   constructor(props: VersionProps) {

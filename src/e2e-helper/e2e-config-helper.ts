@@ -8,7 +8,7 @@ export default class ConfigHelper {
     this.command = command;
   }
 
-  setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
+  setHubDomain(domain = `hub.${BASE_WEB_DOMAIN}`) {
     this.command.setConfig('hub_domain', domain);
   }
 
@@ -16,7 +16,7 @@ export default class ConfigHelper {
     this.command.getConfig(CFG_GIT_EXECUTABLE_PATH);
   }
 
-  setGitPath(gitPath: string = 'git') {
+  setGitPath(gitPath = 'git') {
     this.command.setConfig(CFG_GIT_EXECUTABLE_PATH, gitPath);
   }
 
@@ -31,8 +31,8 @@ export default class ConfigHelper {
     return this.setGitPath(oldGitPath);
   }
 
-  backupConfigs(names: string[]): Object {
-    const backupObject: Object = {};
+  backupConfigs(names: string[]): Record<string, any> {
+    const backupObject: Record<string, any> = {};
     names.forEach(name => {
       backupObject[name] = this.command.getConfig(name);
     });

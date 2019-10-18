@@ -13,7 +13,7 @@ export default class EnvHelper {
   fixtures: FixtureHelper;
   scopes: ScopesData;
   scopeHelper: ScopeHelper;
-  compilerCreated: boolean = false;
+  compilerCreated = false;
   dummyCompilerCreated: boolean;
   dummyTesterCreated: boolean;
   constructor(
@@ -41,7 +41,7 @@ export default class EnvHelper {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importDummyCompiler(dummyType?: string = 'dummy') {
+  importDummyCompiler(dummyType? = 'dummy') {
     const id = `${this.scopes.env}/compilers/dummy`;
     this.createDummyCompiler(dummyType);
     return this.command.runCmd(`bit import ${id} --compiler`);
@@ -55,7 +55,7 @@ export default class EnvHelper {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importDummyTester(dummyType?: string = 'dummy') {
+  importDummyTester(dummyType? = 'dummy') {
     const id = `${this.scopes.env}/testers/dummy`;
     this.createDummyTester(dummyType);
     return this.command.runCmd(`bit import ${id} --tester`);
@@ -67,7 +67,7 @@ export default class EnvHelper {
     this.command.runCmd(`bit import ${id} --tester`);
   }
 
-  createDummyCompiler(dummyType: string = 'dummy') {
+  createDummyCompiler(dummyType = 'dummy') {
     // if (this.dummyCompilerCreated) return this.scope.addRemoteScope(this.scopes.envScopePath);
 
     // TODO: this is not really a scope but a workspace

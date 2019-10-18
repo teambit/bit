@@ -115,7 +115,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
-  modifyCIProps({ source, ciProps }: { source: ConsumerComponent; ciProps: Object }): Promise<any> {
+  modifyCIProps({ source, ciProps }: { source: ConsumerComponent; ciProps: Record<string, any> }): Promise<any> {
     const objectRepo = this.objects();
 
     return this.findOrAddComponent(source).then(component => {
@@ -179,10 +179,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumerComponent: $ReadOnly<ConsumerComponent>;
     consumer: Consumer;
     message?: string;
-    flattenedDependencies?: Object;
-    flattenedDevDependencies?: Object;
-    flattenedCompilerDependencies?: Object;
-    flattenedTesterDependencies?: Object;
+    flattenedDependencies?: Record<string, any>;
+    flattenedDevDependencies?: Record<string, any>;
+    flattenedCompilerDependencies?: Record<string, any>;
+    flattenedTesterDependencies?: Record<string, any>;
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
@@ -461,8 +461,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async merge(
     { component, objects }: ComponentTree,
-    inScope: boolean = false,
-    local: boolean = true
+    inScope = false,
+    local = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);

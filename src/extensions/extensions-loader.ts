@@ -36,7 +36,7 @@ const _getGlobalBitJson = async (throws: boolean) => {
  * @param {string} scopePath
  */
 const _loadExtension = (consumerPath: string | null | undefined, scopePath: string | null | undefined) => (
-  rawConfig: Object = {},
+  rawConfig: Record<string, any> = {},
   name: string
 ): Promise<Extension> => {
   const loadArgs: LoadArgsProps = {

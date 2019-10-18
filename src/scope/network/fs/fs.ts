@@ -57,7 +57,7 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds, noDependencies = false): Promise<ComponentObjects[]> {
     const idsStr = bitIds.serialize();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return fetch(this.scopePath, idsStr, noDependencies).then(bitsMatrix => {

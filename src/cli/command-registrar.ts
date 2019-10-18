@@ -200,6 +200,7 @@ export default class CommandRegistrar {
   }
 
   printHelp() {
+    // eslint-disable-next-line global-require
     const helpTemplateGenerator = require('./templates/help');
     console.log(helpTemplateGenerator(this.extensionsCommands)); // eslint-disable-line no-console
     return this;

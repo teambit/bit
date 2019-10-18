@@ -8,7 +8,7 @@ import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-res
 
 export type SerializedSpecsResultsWithComponentId = {
   type: 'error' | 'results';
-  error?: Object;
+  error?: Record<string, any>;
   results?: SpecsResultsWithComponentId[];
 };
 

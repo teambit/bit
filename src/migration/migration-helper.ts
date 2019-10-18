@@ -30,8 +30,8 @@ type AbstractVersionMigrations = {
 export default function getMigrationVersions(
   currentVersion: string,
   storeVersion: string,
-  migratonManifest: Object,
-  verbose: boolean = false
+  migratonManifest: Record<string, any>,
+  verbose = false
 ): AbstractVersionMigrations[] {
   if (currentVersion === storeVersion) return [];
   // Get all the versions which contain at least one migration

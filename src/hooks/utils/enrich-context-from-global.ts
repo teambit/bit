@@ -16,7 +16,7 @@ import logger from '../../logger/logger';
  * Add more keys to the context which will be passed to hooks
  * @param {Object} context
  */
-export default function enrichContextFromGlobal(context: Object = {}) {
+export default function enrichContextFromGlobal(context: Record<string, any> = {}) {
   logger.debug('enrich context from global config');
   const getContextToEnrich = () => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -40,7 +40,7 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   Object.assign(context, contextToEnrich);
 }
 
-function _getSshPubKey(pubSshKeyFile: string = `${DEFAULT_SSH_KEY_FILE}.pub`) {
+function _getSshPubKey(pubSshKeyFile = `${DEFAULT_SSH_KEY_FILE}.pub`) {
   logger.debug(`reading ssh public key from ${pubSshKeyFile}`);
   if (!fs.pathExistsSync(pubSshKeyFile)) {
     return null;

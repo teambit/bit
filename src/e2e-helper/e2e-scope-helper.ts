@@ -14,7 +14,7 @@ export default class ScopeHelper {
   e2eDir: string;
   command: CommandHelper;
   fs: FsHelper;
-  cache: Object;
+  cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
   constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
@@ -67,7 +67,7 @@ export default class ScopeHelper {
     return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 
-  initLocalScopeWithOptions(options: Object) {
+  initLocalScopeWithOptions(options: Record<string, any>) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -79,7 +79,7 @@ export default class ScopeHelper {
     this.addRemoteScope();
   }
 
-  initNewLocalScope(deleteCurrentScope: boolean = true) {
+  initNewLocalScope(deleteCurrentScope = true) {
     if (deleteCurrentScope) {
       fs.removeSync(this.scopes.localPath);
     }
@@ -90,7 +90,7 @@ export default class ScopeHelper {
   addRemoteScope(
     remoteScopePath: string = this.scopes.remotePath,
     localScopePath: string = this.scopes.localPath,
-    isGlobal: boolean = false
+    isGlobal = false
   ) {
     const globalArg = isGlobal ? '-g' : '';
     if (process.env.npm_config_with_ssh) {
@@ -102,16 +102,16 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, localScopePath);
   }
 
-  removeRemoteScope(remoteScope: string = this.scopes.remote, isGlobal: boolean = false) {
+  removeRemoteScope(remoteScope: string = this.scopes.remote, isGlobal = false) {
     const globalArg = isGlobal ? '-g' : '';
     return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`);
   }
 
-  addRemoteEnvironment(isGlobal: boolean = false) {
+  addRemoteEnvironment(isGlobal = false) {
     return this.addRemoteScope(this.scopes.envPath, this.scopes.localPath, isGlobal);
   }
 
-  removeRemoteEnvironment(isGlobal: boolean = false) {
+  removeRemoteEnvironment(isGlobal = false) {
     return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
 
@@ -138,7 +138,7 @@ export default class ScopeHelper {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  getNewBareScope(scopeNameSuffix?: string = '-remote2') {
+  getNewBareScope(scopeNameSuffix? = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
@@ -160,7 +160,7 @@ export default class ScopeHelper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope = true) {
     if (!fs.existsSync(clonedScopePath)) {
       throw new Error(`getClonedLocalScope was unable to find the clonedScopePath at ${clonedScopePath}`);
     }
@@ -182,7 +182,7 @@ export default class ScopeHelper {
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope = true) {
     if (deleteCurrentScope) {
       fs.removeSync(this.scopes.remotePath);
     } else {

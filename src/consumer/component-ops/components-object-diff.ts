@@ -9,7 +9,7 @@ import { FieldsDiff } from './components-diff';
 import { Consumer } from '..';
 import EnvExtension from '../../extensions/env-extension';
 
-export function componentToPrintableForDiff(component: Component): Object {
+export function componentToPrintableForDiff(component: Component): Record<string, any> {
   const obj = {};
   const parsePackages = packages => {
     return !R.isEmpty(packages) && !R.isNil(packages)
@@ -136,7 +136,10 @@ function comparator(a, b) {
   return a === b;
 }
 
-export function getDiffBetweenObjects(objectLeft: Object, objectRight: Object): Object {
+export function getDiffBetweenObjects(
+  objectLeft: Record<string, any>,
+  objectRight: Record<string, any>
+): Record<string, any> {
   return diff.custom(
     {
       equal: comparator
@@ -197,7 +200,7 @@ export function diffBetweenComponentsObjects(
       if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
       const fieldName = `Dependency ${idStr} relative-paths`;
       const title = titleLeft(fieldName) + chalk.bold(titleRight(fieldName));
-      const getValue = (fieldValue: Object, left: boolean) => {
+      const getValue = (fieldValue: Record<string, any>, left: boolean) => {
         if (R.isEmpty(fieldValue)) return '';
         const sign = left ? '-' : '+';
         const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
@@ -222,7 +225,7 @@ export function diffBetweenComponentsObjects(
       if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return null;
       const fieldName = `${env} configuration`;
       const title = titleLeft(fieldName) + chalk.bold(titleRight(fieldName));
-      const getValue = (fieldValue: Object, left: boolean) => {
+      const getValue = (fieldValue: Record<string, any>, left: boolean) => {
         if (R.isEmpty(fieldValue)) return '';
         const sign = left ? '-' : '+';
         const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);

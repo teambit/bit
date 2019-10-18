@@ -6,7 +6,7 @@ module.exports = {
   extends: [
     'airbnb-typescript/base',
     // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
-    // 'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     // 'plugin:eslint-comments/recommended',
     'plugin:promise/recommended',
     // 'plugin:unicorn/recommended',
@@ -22,62 +22,38 @@ module.exports = {
     // 'unicorn'
   ],
   rules: {
-    // Taken from here: https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
-    // Too restrictive, writing ugly code to defend against a very unlikely scenario: https://eslint.org/docs/rules/no-prototype-builtins
-    // 'no-prototype-builtins': 'off',
-    // https://basarat.gitbooks.io/typescript/docs/tips/defaultIsBad.html
-    // 'import/prefer-default-export': 'off',
-    // 'import/no-default-export': 'error',
-    // Use function hoisting to improve code readability
-    // 'no-use-before-define': ['error', { functions: false, classes: true, variables: true }],
-    // Makes no sense to allow type inferrence for expression parameters, but require typing the response
-    // '@typescript-eslint/explicit-function-return-type': [
-    //   'error',
-    //   { allowExpressions: true, allowTypedFunctionExpressions: true }
-    // ],
     '@typescript-eslint/no-use-before-define': [
       'error',
       { functions: false, classes: true, variables: true, typedefs: true }
     ],
-    // Common abbreviations are known and readable
-    // 'unicorn/prevent-abbreviations': 'off',
-    // END taken from https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
 
-    // TEMP RULES
-    // '@typescript-eslint/no-explicit-any': 'off',
-    // END OF TEMP RULES
-    'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
+    // ERRORS OF plugin:@typescript-eslint/recommended
+    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    // END ERRORS OF plugin:@typescript-eslint/recommended
+
+    // ERRORS OF 'plugin:promise/recommended'
     'promise/always-return': 'off',
     'promise/no-nesting': 'off',
+    // END ERRORS OF 'plugin:promise/recommended'
+
+    'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'prefer-object-spread': 'off',
     'import/no-duplicates': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
     'import/no-useless-path-segments': 'off',
     'lines-between-class-members': 'off',
-    'mocha/no-mocha-arrows': 'off',
-    'no-bitwise': 'off',
-    'arrow-body-style': [0, 'as-needed'],
-    camelcase: [0],
-    'no-trailing-spaces': [0],
-    'import/no-unresolved': [0],
-    radix: [0],
-    'no-underscore-dangle': [0],
-    'no-param-reassign': [0],
+    radix: 'off',
+    'no-underscore-dangle': 'off',
+    'no-param-reassign': 'off',
     'no-return-assign': [0, 'except-parens'],
-    'array-bracket-spacing': [0],
-    'class-methods-use-this': [0],
-    'import/no-dynamic-require': [0],
-    'global-require': [0],
-    'function-paren-newline': [0],
-    'object-curly-newline': [0],
-    'prefer-arrow-callback': [0],
-    'prefer-destructuring': [0],
-    'import/no-extraneous-dependencies': [0],
-    'comma-dangle': [0, 'never'],
-    'no-use-before-define': [0],
+    'class-methods-use-this': 'off',
+    'prefer-destructuring': 'off',
+    'import/no-extraneous-dependencies': 'off',
     'no-restricted-syntax': [2, 'ForInStatement', 'LabeledStatement', 'WithStatement'],
-    'no-unused-expressions': [0],
+    'no-unused-expressions': 'off',
     'max-len': [
       2,
       120,

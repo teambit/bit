@@ -81,7 +81,7 @@ export default class ComponentsList {
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise<string[]>}
    */
-  async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
+  async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
       this._modifiedComponents = await filterAsync(fileSystemComponents, component => {
@@ -140,7 +140,7 @@ export default class ComponentsList {
    * @return {Promise.<string[] | Component[]>}
    * @memberof ComponentsList
    */
-  async listNewComponents(load: boolean = false): Promise<BitIds | Component[]> {
+  async listNewComponents(load = false): Promise<BitIds | Component[]> {
     const idsFromBitMap = this.idsFromBitMap();
     const idsFromObjects = await this.idsFromObjects();
     const newComponents: BitId[] = [];
@@ -159,7 +159,7 @@ export default class ComponentsList {
 
   async listCommitPendingOfAllScope(
     version: string,
-    includeImported: boolean = false
+    includeImported = false
   ): Promise<{ tagPendingComponents: BitId[]; warnings: string[] }> {
     let tagPendingComponents;
     tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
@@ -276,7 +276,7 @@ export default class ComponentsList {
     return this.bitMap.getAllBitIds(originParam);
   }
 
-  getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute: boolean = false): string[] {
+  getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute = false): string[] {
     // TODO: maybe cache this as well
     const componentsFromBitMap = this.bitMap.getAllComponents(origin);
     const res = [];

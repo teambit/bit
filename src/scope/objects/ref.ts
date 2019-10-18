@@ -13,11 +13,11 @@ export default class Ref {
     return this.hash;
   }
 
-  load(repository: Repository, throws: boolean = false): Promise<BitObject> {
+  load(repository: Repository, throws = false): Promise<BitObject> {
     return repository.load(this, throws);
   }
 
-  loadSync(repo: Repository, throws: boolean = true): BitObject {
+  loadSync(repo: Repository, throws = true): BitObject {
     return repo.loadSync(this, throws);
   }
 

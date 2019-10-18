@@ -30,7 +30,7 @@ export default class Isolator {
   capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
   componentWithDependencies: ComponentWithDependencies;
   manyComponentsWriter: ManyComponentsWriter;
-  _npmVersionHasValidated: boolean = false;
+  _npmVersionHasValidated = false;
   componentRootDir: string;
   constructor(capsule: Capsule, scope: Scope, consumer?: Consumer | null | undefined) {
     this.capsule = capsule;
@@ -38,18 +38,13 @@ export default class Isolator {
     this.consumer = consumer;
   }
 
-  static async getInstance(
-    containerType: string = 'fs',
-    scope: Scope,
-    consumer?: Consumer | null | undefined,
-    dir?: string
-  ) {
+  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer | null | undefined, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
   }
 
-  async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
+  async isolate(componentId: BitId, opts: Record<string, any>): Promise<ComponentWithDependencies> {
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (opts.shouldBuildDependencies) {
@@ -235,7 +230,7 @@ export default class Isolator {
     this._npmVersionHasValidated = true;
   }
 
-  async capsuleExec(cmd: string, options?: Object | null | undefined): Promise<string> {
+  async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<string> {
     const execResults = await this.capsule.exec(cmd, options);
     let output = '';
     return new Promise((resolve, reject) => {
@@ -258,7 +253,7 @@ export default class Isolator {
    * again. The reason for adding the missing peer into devDependencies is to not get them deleted
    * once `npm install` is running along the road.
    */
-  async _installWithPeerOption(installPeerDependencies: boolean = true) {
+  async _installWithPeerOption(installPeerDependencies = true) {
     await this.installPackagesOnRoot();
     if (installPeerDependencies) {
       const peers = await this._getPeerDependencies();
@@ -275,7 +270,7 @@ export default class Isolator {
     }
   }
 
-  async _getPeerDependencies(): Promise<Object> {
+  async _getPeerDependencies(): Promise<Record<string, any>> {
     const packageManager = DEFAULT_PACKAGE_MANAGER;
     let npmList;
     try {

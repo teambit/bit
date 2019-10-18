@@ -18,7 +18,7 @@ import PackageJsonVinyl from './package-json-vinyl';
  * writing the package.json file
  */
 export default class PackageJsonFile {
-  packageJsonObject: Object;
+  packageJsonObject: Record<string, any>;
   fileExist: boolean;
   filePath: PathOsBasedRelative;
   workspaceDir: PathOsBasedAbsolute | null | undefined;
@@ -33,7 +33,7 @@ export default class PackageJsonFile {
     newline
   }: {
     filePath: PathOsBasedRelative;
-    packageJsonObject?: Object;
+    packageJsonObject?: Record<string, any>;
     fileExist: boolean;
     workspaceDir?: PathOsBasedAbsolute;
     indent?: string;
@@ -78,7 +78,7 @@ export default class PackageJsonFile {
     componentDir: PathRelative,
     component: Component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    excludeRegistryPrefix?: boolean = false
+    excludeRegistryPrefix? = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
     const name = excludeRegistryPrefix
@@ -125,19 +125,19 @@ export default class PackageJsonFile {
     });
   }
 
-  addDependencies(dependencies: Object) {
+  addDependencies(dependencies: Record<string, any>) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
-  addDevDependencies(dependencies: Object) {
+  addDevDependencies(dependencies: Record<string, any>) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 
-  replaceDependencies(dependencies: Object) {
+  replaceDependencies(dependencies: Record<string, any>) {
     Object.keys(dependencies).forEach(dependency => {
       DEPENDENCIES_FIELDS.forEach(dependencyField => {
         if (this.packageJsonObject[dependencyField] && this.packageJsonObject[dependencyField][dependency]) {
@@ -155,7 +155,7 @@ export default class PackageJsonFile {
     return this.packageJsonObject[propertyName];
   }
 
-  mergePackageJsonObject(packageJsonObject: Object | null | undefined): void {
+  mergePackageJsonObject(packageJsonObject: Record<string, any> | null | undefined): void {
     if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
     this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
   }

@@ -183,7 +183,7 @@ async function getFilesDiff(
   filesAVersion: string,
   filesBVersion: string,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  fileNameAttribute?: string = 'relative'
+  fileNameAttribute? = 'relative'
 ): Promise<FileDiff[]> {
   const filesAPaths = filesA.map(f => f[fileNameAttribute]);
   const filesBPaths = filesB.map(f => f[fileNameAttribute]);

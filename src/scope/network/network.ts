@@ -14,8 +14,8 @@ export interface Network {
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<Component | null | undefined>;
-  deprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]>;
-  undeprecateMany(ids: string[], context: Object | null | undefined): Promise<Object[]>;
+  deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
+  undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;
 }

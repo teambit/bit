@@ -32,9 +32,9 @@ const LEVEL = {
 class Breadcrumb {
   category: string;
   message: string;
-  data: Object;
+  data: Record<string, any>;
 
-  constructor(category: string, message: string, data: Object) {
+  constructor(category: string, message: string, data: Record<string, any>) {
     this.category = category;
     this.message = message;
     this.data = data;
@@ -45,14 +45,14 @@ class Analytics {
   static command: string;
   static release: string;
   static args: string[];
-  static flags: Object = {};
-  static success: boolean = true;
+  static flags: Record<string, any> = {};
+  static success = true;
   static nodeVersion: string;
   static os: string;
-  static extra: Object | null | undefined = {};
+  static extra: Record<string, any> | null | undefined = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static level: LEVEL;
-  static error: Error | string | Object;
+  static error: Error | string | Record<string, any>;
   static breadcrumbs: Array<Breadcrumb> = [];
   static analytics_usage: boolean;
   static error_usage: boolean;
@@ -115,7 +115,7 @@ class Analytics {
         return hashObj(value);
     }
   }
-  static _hashFlags(flags: Object) {
+  static _hashFlags(flags: Record<string, any>) {
     const hashedFlags = {};
     const definedFlags = R.filter(flag => typeof flag !== 'undefined', flags);
     if (this.anonymous && !R.isEmpty(definedFlags)) {
@@ -130,7 +130,7 @@ class Analytics {
     if (!this.anonymous) return args;
     return args.map(arg => this._hashLightly(arg));
   }
-  static init(command: string, flags: Object, args: string[], version) {
+  static init(command: string, flags: Record<string, any>, args: string[], version) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
@@ -194,7 +194,7 @@ class Analytics {
     }
     return data;
   }
-  static addBreadCrumb(category: string, message: string, data?: Object) {
+  static addBreadCrumb(category: string, message: string, data?: Record<string, any>) {
     this.breadcrumbs.push(new Breadcrumb(category, message, data));
   }
   static toObject() {

@@ -1,4 +1,4 @@
-function updateBindingPrefixToNewDefault(componentModel: Object): Object {
+function updateBindingPrefixToNewDefault(componentModel: Record<string, any>): Record<string, any> {
   const oldDefault = 'bit';
   const newDefault = '@bit';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
