@@ -332,6 +332,36 @@ describe('workspace config', function() {
             );
           });
         });
+        describe('when adding the component as devDependency without removing it', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.scopeHelper.reInitRemoteScope();
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+            helper.fs.createFile(
+              'bar-dir',
+              'bar.js',
+              `require('@bit/${helper.scopes.remote}.utils.foo.foo1'); require('@bit/${helper.scopes.remote}.utils.foo.foo2'); `
+            );
+            const overrides = {
+              bar: {
+                devDependencies: {
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+'
+                }
+              }
+            };
+            helper.bitJson.addOverrides(overrides);
+          });
+          // todo: make a decision about the desired behavior. see #2061
+          it.skip('should not show the component twice as dependency and as devDependencies', () => {
+            const showBar = helper.command.showComponentParsed('bar');
+            expect(showBar.dependencies).to.have.lengthOf(1);
+          });
+          it('should not allow tagging the component', () => {
+            const tagFunc = () => helper.command.tagAllComponents();
+            expect(tagFunc).to.throw('some dependencies are duplicated');
+          });
+        });
       });
       describe('ignoring a dependencies components by wildcards', () => {
         let showBar;
