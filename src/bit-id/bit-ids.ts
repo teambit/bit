@@ -105,6 +105,17 @@ export default class BitIds extends Array<BitId> {
     }, {});
   }
 
+  findDuplicationsIgnoreVersion(): { [id: string]: BitId[] } {
+    const duplications = {};
+    this.forEach(id => {
+      const sameIds = this.filterWithoutVersion(id);
+      if (sameIds.length > 1) {
+        duplications[id.toStringWithoutVersion()] = sameIds;
+      }
+    });
+    return duplications;
+  }
+
   static fromObject(dependencies: { [key: string]: string }) {
     const array = [];
 
