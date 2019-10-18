@@ -43,8 +43,8 @@ module.exports = {
     // 'unicorn/prevent-abbreviations': 'off',
     // END taken from https://github.com/iamturns/create-exposed-app/blob/master/.eslintrc.js
 
-
     // ERRORS OF plugin:@typescript-eslint/recommended
+    '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     // END ERRORS OF plugin:@typescript-eslint/recommended

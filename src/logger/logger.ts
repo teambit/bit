@@ -54,43 +54,7 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
   filename: path.join(GLOBAL_LOGS, 'exceptions.log')
 });
 
-// interface OneOrMoreArray<T> extends Array<T> {
-//   0: T
-// }
-type OneOrMoreArray<T> = {
-  0: T;
-} & Array<T>;
-
-interface BitLoggerInterface {
-  logger: Logger;
-  shouldWriteToConsole: boolean;
-  debugAndAddBreadCrumb(
-    category: string,
-    message: string,
-    data: Record<string, any>,
-    extraData?: Record<string, any>
-  ): void;
-  warnAndAddBreadCrumb(
-    category: string,
-    message: string,
-    data: Record<string, any>,
-    extraData?: Record<string, any>
-  ): void;
-  errorAndAddBreadCrumb(
-    category: string,
-    message: string,
-    data: Record<string, any>,
-    extraData?: Record<string, any>
-  ): void;
-  debugAndAddBreadCrumb(
-    category: string,
-    message: string,
-    data: Record<string, any>,
-    extraData?: Record<string, any>
-  ): void;
-}
-
-class BitLogger implements BitLoggerInterface {
+class BitLogger {
   logger: Logger;
   shouldWriteToConsole = true;
 
@@ -98,22 +62,22 @@ class BitLogger implements BitLoggerInterface {
     this.logger = logger;
   }
 
-  debug(...args: OneOrMoreArray<any>) {
+  debug(...args: any[]) {
     // @ts-ignore
     this.logger.debug(...args);
   }
 
-  warn(...args: OneOrMoreArray<any>) {
+  warn(...args: any[]) {
     // @ts-ignore
     this.logger.warn(...args);
   }
 
-  info(...args: OneOrMoreArray<any>) {
+  info(...args: any[]) {
     // @ts-ignore
     this.logger.info(...args);
   }
 
-  error(...args: OneOrMoreArray<any>) {
+  error(...args: any[]) {
     // @ts-ignore
     this.logger.error(...args);
   }
