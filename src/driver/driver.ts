@@ -27,6 +27,7 @@ export default class Driver {
       this.driver = bitJavascript;
     } else {
       try {
+        // eslint-disable-next-line import/no-dynamic-require, global-require
         this.driver = require(langDriver);
       } catch (err) {
         logger.error('failed to get the driver', err);
