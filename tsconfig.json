@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "target": "es2015",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "fixtures"
+  ]
+}
