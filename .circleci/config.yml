@@ -376,6 +376,56 @@ jobs:
       -
         store_artifacts:
           path: bit-javascript/junit
+  lint_bit_javascript:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'run ESLint'
+          command: 'cd bit-javascript && npm run lint-circle'
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
+  check_types_bit_javascript:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'run TSC'
+          command: 'cd bit-javascript && npm run check-types'
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
   lint:
     <<: *defaults
     resource_class: medium
@@ -609,6 +659,14 @@ workflows:
             - build
       -
         unit_test_bit_javascript:
+          requires:
+            - build_bit_javascript
+      -
+        lint_bit_javascript:
+          requires:
+            - build_bit_javascript
+      -
+        check_types_bit_javascript:
           requires:
             - build_bit_javascript
       -
