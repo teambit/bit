@@ -1970,19 +1970,19 @@ console.log(barFoo.default());`;
       helper.command.importComponent('comp/with-deps');
       helper.packageJson.addKeyValue({ customField: 'bit is awsome' });
     });
-    it('should install component dependencie as separate packages with yarn workspaces', () => {
+    it('should install component dependencies as separate packages with yarn workspaces', () => {
       expect(dependencies).to.be.a.directory('should not be empty').and.not.empty;
     });
     it('Should contain yarn lock file', () => {
       expect(path.join(helper.scopes.localPath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
-    it('should install  global/simple package dependencies with yarn', () => {
+    it('should install global/simple package dependencies with yarn', () => {
       expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory('should not be empty').and.not.empty;
       expect(path.join(helper.scopes.localPath, 'node_modules', 'lodash.isboolean')).to.be.a.directory(
         'should contain lodash.isboolean'
       ).and.not.empty;
     });
-    it('should contain  workspaces array in package.json  and private true', () => {
+    it('should contain workspaces array in package.json and private true', () => {
       const pkgJson = helper.packageJson.read(helper.scopes.localPath);
       expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.private).to.be.true;
@@ -2022,6 +2022,25 @@ console.log(barFoo.default());`;
       helper.command.importComponent('comp/with-deps -p test');
       const pkgJson = helper.packageJson.read();
       expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test');
+    });
+    // @see https://github.com/teambit/bit/issues/2079
+    describe('when Yarn workspaces is an object and not an array', () => {
+      before(() => {
+        const packageJson = helper.packageJson.read();
+        packageJson.workspaces = {
+          packages: [],
+          nohoist: []
+        };
+        helper.packageJson.write(packageJson);
+        helper.command.importComponent('comp/with-deps');
+      });
+      it('should save the same workspaces info and preserve the workspaces structure', () => {
+        const pkgJson = helper.packageJson.read();
+        expect(pkgJson.workspaces).to.have.property('packages');
+        expect(pkgJson.workspaces).to.have.property('nohoist');
+        expect(pkgJson.workspaces.packages).to.include('components/.dependencies/**/*', 'components/**/*');
+        expect(pkgJson.private).to.be.true;
+      });
     });
   });
   describe('importing a component when it has a local tag', () => {
