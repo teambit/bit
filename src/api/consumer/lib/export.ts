@@ -110,7 +110,7 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
 }
 
 async function getComponentsToExport(
-  ids: string[] | null | undefined,
+  ids: string[],
   consumer: Consumer,
   remote: string | null | undefined,
   includeNonStaged: boolean,
@@ -134,14 +134,13 @@ async function getComponentsToExport(
       throw new GeneralError('the operation has been canceled');
     }
   };
-  if (!ids || !ids.length || idsHaveWildcard) {
+  if (!ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds();
-    const componentsToExport = idsHaveWildcard // $FlowFixMe ids are set at this point
-      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
+    const componentsToExport = idsHaveWildcard
+      ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
       : exportPendingComponents;
     await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
