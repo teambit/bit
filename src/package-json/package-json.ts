@@ -10,7 +10,6 @@ function composePath(componentRootFolder: string) {
   return path.join(componentRootFolder, PACKAGE_JSON);
 }
 function convertComponentsIdToValidPackageName(registryPrefix: string, id: string): string {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return `${registryPrefix}/${id.replace(/\//g, '.')}`;
 }
 function convertComponentsToValidPackageNames(
@@ -21,7 +20,6 @@ function convertComponentsToValidPackageNames(
   if (R.isEmpty(bitDependencies) || R.isNil(bitDependencies)) return obj;
   Object.keys(bitDependencies).forEach(key => {
     const name = convertComponentsIdToValidPackageName(registryPrefix, key);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     obj[name] = bitDependencies[key];
   });
   return obj;
@@ -51,7 +49,7 @@ export type PackageJsonProps = {
   peerDependencies?: Record<string, any>;
   license?: string;
   scripts?: Record<string, any>;
-  workspaces: string[];
+  workspaces?: string[];
   private?: boolean;
 };
 
@@ -129,8 +127,7 @@ export default class PackageJson {
     );
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static hasExisting(componentRootFolder: string, throws? = false): boolean {
+  static hasExisting(componentRootFolder: string, throws = false): boolean {
     const packageJsonPath = composePath(componentRootFolder);
     const exists = fs.pathExistsSync(packageJsonPath);
     if (!exists && throws) {
@@ -148,7 +145,6 @@ export default class PackageJson {
   }
 
   static create(componentRootFolder: string): PackageJson {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new PackageJson(componentRootFolder, {});
   }
 
@@ -157,7 +153,6 @@ export default class PackageJson {
   }
 
   static fromPlainObject(componentRootFolder: string, object: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new PackageJson(componentRootFolder, object);
   }
 
@@ -242,8 +237,11 @@ export default class PackageJson {
    * Also, in case there is no package.json file in this project, it generates a new one with only the 'dependencies'
    * attribute. Nothing more, nothing less.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async addComponentsIntoExistingPackageJson(rootDir: string, components: Array, registryPrefix: string) {
+  static async addComponentsIntoExistingPackageJson(
+    rootDir: string,
+    components: Record<string, any>,
+    registryPrefix: string
+  ) {
     const packageJson = (await PackageJson.getPackageJson(rootDir)) || { dependencies: {} };
     packageJson.dependencies = Object.assign(
       {},
@@ -266,11 +264,12 @@ export default class PackageJson {
     customImportPath: string | null | undefined
   ) {
     const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
-    const workSpaces = pkg.workspaces || [];
+    const workSpaces = PackageJson.extractWorkspacesPackages(pkg) || [];
     workSpaces.push(dependenciesDirectory);
     workSpaces.push(componentsDefaultDirectory);
     if (customImportPath) workSpaces.push(customImportPath);
-    pkg.workspaces = R.uniq(workSpaces);
+    if (!pkg.workspaces) pkg.workspaces = [];
+    this.updateWorkspacesPackages(pkg, R.uniq(workSpaces));
     pkg.private = !!pkg.workspaces;
     await PackageJson.saveRawObject(rootDir, pkg);
   }
@@ -280,8 +279,10 @@ export default class PackageJson {
    */
   static async removeComponentsFromWorkspaces(rootDir: string, pathsTOoRemove: string[]) {
     const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
-    const workSpaces = pkg.workspaces || [];
-    pkg.workspaces = workSpaces.filter(folder => !pathsTOoRemove.includes(folder));
+    const workspaces = this.extractWorkspacesPackages(pkg);
+    if (!workspaces) return;
+    const updatedWorkspaces = workspaces.filter(folder => !pathsTOoRemove.includes(folder));
+    this.updateWorkspacesPackages(pkg, updatedWorkspaces);
     await PackageJson.saveRawObject(rootDir, pkg);
   }
 
@@ -295,6 +296,46 @@ export default class PackageJson {
         delete pkg.dependencies[convertComponentsIdToValidPackageName(registryPrefix, id)];
       });
       await PackageJson.saveRawObject(rootDir, pkg);
+    }
+  }
+
+  static extractWorkspacesPackages(packageJson: { [k: string]: any }): string[] | null {
+    if (!packageJson.workspaces) return null;
+    this.throwForInvalidWorkspacesConfig(packageJson);
+    if (Array.isArray(packageJson.workspaces)) {
+      return packageJson.workspaces;
+    }
+    if (Array.isArray(packageJson.workspaces.packages)) {
+      return packageJson.workspaces.packages;
+    }
+    return null;
+  }
+
+  static updateWorkspacesPackages(packageJson, workspacesPackages): void {
+    if (!packageJson.workspaces) return;
+    this.throwForInvalidWorkspacesConfig(packageJson);
+    if (Array.isArray(packageJson.workspaces)) {
+      packageJson.workspaces = workspacesPackages;
+    }
+    if (Array.isArray(packageJson.workspaces.packages)) {
+      packageJson.workspaces.packages = workspacesPackages;
+    }
+  }
+
+  /**
+   * according to Yarn Git repo, the workspaces type configured as the following
+   * `workspaces?: Array<string> | WorkspacesConfig`
+   * and `WorkspacesConfig` is:
+   * `export type WorkspacesConfig = { packages?: Array<string>, nohoist?: Array<string> };`
+   * see https://github.com/yarnpkg/yarn/blob/master/src/types.js
+   */
+  static throwForInvalidWorkspacesConfig(packageJson) {
+    if (!packageJson.workspaces) return;
+    if (
+      typeof packageJson.workspaces !== 'object' ||
+      (!Array.isArray(packageJson.workspaces) && !Array.isArray(packageJson.workspaces.packages))
+    ) {
+      throw new Error('workspaces property does not have the correct format, please refer to Yarn documentation');
     }
   }
 }
