@@ -22,7 +22,7 @@ semver_tags_only_filters: &semver_tags_only_filters
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
 
-version: 2
+version: 2.1
 jobs:
   checkout_code:
     <<: *defaults
@@ -661,6 +661,7 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - pack
+      -
         publish_to_jfrog:
           <<: *semver_tags_only_filters
           requires:
