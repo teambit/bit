@@ -147,6 +147,7 @@ export default function generateTree(files = [], config) {
       });
       Object.assign(depTree, dependencyTreeResult);
     } catch (err) {
+      // @ts-ignore FIXME
       errors[file] = err;
     }
   });

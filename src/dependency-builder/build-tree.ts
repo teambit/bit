@@ -82,10 +82,12 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Record
   // if you have 2 authored component which one dependet on the other
   // we will look for the package.json on the dependency but won't find it
   // if we propagate we will take the version from the root's package json which has nothing with the component version
+  // @ts-ignore FIXME
   const packageInfo = PackageJson.loadSync(packageDir, false);
 
   // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
   // or when using custom-module-resolution it may be empty or the name/version are empty
+  // @ts-ignore FIXME
   if (!packageInfo || !packageInfo.name || !packageInfo.version) return null;
   result[packageInfo.name] = packageInfo.version;
   return result;
@@ -129,6 +131,7 @@ function groupDependencyList(list, cwd, bindingPrefix) {
     groups.packages.forEach(packagePath => {
       const packageWithVersion = resolveNodePackage(cwd, path.join(cwd, packagePath));
       if (packageWithVersion) Object.assign(packages, packageWithVersion);
+      // @ts-ignore FIXME
       else unidentifiedPackages.push(packagePath);
     });
     groups.packages = packages;
@@ -259,6 +262,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
         if (R.contains(packageName, missingPackages)) return;
         const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
         if (!resolvedPath) {
+          // @ts-ignore FIXME
           missingPackages.push(packageName);
           return;
         }
@@ -413,6 +417,7 @@ export async function getDependencyTree({
     resolveConfig: resolveConfigAbsolute,
     cacheProjectAst
   };
+  // @ts-ignore FIXME
   const { madgeTree, skipped, pathMap, errors } = generateTree(filePaths, config);
   const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
   const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);

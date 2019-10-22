@@ -211,6 +211,7 @@ describe('filing-cabinet', () => {
         });
 
         assert.ok(
+          // @ts-ignore FIXME
           require.main.paths.some(function(p) {
             return p.indexOf(path.normalize(directory)) !== -1;
           })

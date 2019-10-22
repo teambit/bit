@@ -145,11 +145,16 @@ function getDependenciesFromLinkFileIfExists(
     return null;
   }
   const linkFiles = [];
+  // @ts-ignore FIXME
   dependencies.forEach((dep: { file: string; importSpecifier: ImportSpecifier }) => {
+    // @ts-ignore FIXME
     const existingFile = linkFiles.find(linkFile => linkFile.file === dep.file);
     if (existingFile) {
+      // @ts-ignore FIXME
       existingFile.importSpecifiers.push(dep.importSpecifier);
     } else {
+      // @ts-ignore FIXME
+      // @ts-ignore FIXME
       linkFiles.push({ file: dep.file, importSpecifiers: [dep.importSpecifier] });
     }
   });
