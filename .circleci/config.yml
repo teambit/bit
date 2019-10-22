@@ -210,7 +210,6 @@ workflows:
           requires:
             - build
       -
-      -
         lint:
           requires:
             - install_npm_deps
@@ -246,5 +245,3 @@ workflows:
       -
         github-release:
           <<: *semver_tags_only_filters
-          requires:
-            - pack
