@@ -1,0 +1,250 @@
+default_image: &default_image
+  docker:
+    - image: circleci/node:8.12.0
+
+default_resource_class: &default_resource_class
+  resource_class: small
+
+default_working_dir: &default_working_dir
+  working_directory: ~/bit-javascript
+
+defaults: &defaults
+  <<: *default_image
+  <<: *default_resource_class
+  <<: *default_working_dir
+
+semver_tags_only_filters: &semver_tags_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /^v[0-9]+(\.[0-9]+)*$/
+
+version: 2
+jobs:
+  checkout_code:
+    <<: *defaults
+    steps:
+      - checkout
+      -
+        persist_to_workspace:
+          root: /home/circleci
+          paths:
+            - bit-javascript
+  install_npm_deps:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'Install npm dependencies'
+          command: 'cd bit-javascript && npm install'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit-javascript/node_modules
+  validate-git-tag-and-version:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_JS_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      -
+        run:
+          name: 'installing semver tool'
+          command: 'sudo npm i -g semver'
+      -
+        run:
+          name: 'validate version in package.json does not contains pre release tags'
+          # This will return code 1 when the version contains pre release tags
+          command: 'semver $BIT_JS_VERSION -r x.x.x'
+      -
+        run:
+          name: 'validate tag match version in package.json'
+          command: 'cd bit && ./scripts/compare-versions.sh $CIRCLE_TAG v$BIT_JS_VERSION'
+  npm-publish:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npmToken" > ~/.npmrc
+      -
+        run:
+          name: Publish bit to the npm registry
+          command: 'cd bit && npm publish'
+  github-release:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      # - run:
+      #     name: set GitHub token
+      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      -
+        run: 'cd bit && npm run release:circle'
+  build:
+    <<: *defaults
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'Build bit javascript source code'
+          command: 'cd bit-javascript && npm run build'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit-javascript/dist
+  unit_test:
+    <<: *defaults
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'cd bit-javascript && mkdir junit'
+      -
+        run:
+          name: 'Run unit tests'
+          command: 'cd bit-javascript && npm run test-circle'
+          environment:
+            MOCHA_FILE: junit/unit-test-results.xml
+          when: always
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
+  lint:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'run ESLint'
+          command: 'cd bit-javascript && npm run lint-circle'
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
+  check_types:
+    <<: *defaults
+    resource_class: medium
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          keys:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'run TSC'
+          command: 'cd bit-javascript && npm run check-types'
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - checkout_code
+      -
+        install_npm_deps:
+          requires:
+            - checkout_code
+      -
+        build:
+          requires:
+            - install_npm_deps
+      -
+        unit_test:
+          requires:
+            - build
+      -
+      -
+        lint:
+          requires:
+            - install_npm_deps
+      -
+        check_types:
+          requires:
+            - install_npm_deps
+  deploy:
+    jobs:
+      - checkout_code:
+          <<: *semver_tags_only_filters
+      -
+        validate-git-tag-and-version:
+          <<: *semver_tags_only_filters
+          requires:
+            - checkout_code
+      -
+        install_npm_deps:
+          <<: *semver_tags_only_filters
+          requires:
+            - validate-git-tag-and-version
+            - checkout_code
+      -
+        build:
+          <<: *semver_tags_only_filters
+          requires:
+            - install_npm_deps
+      -
+        npm-publish:
+          <<: *semver_tags_only_filters
+          requires:
+            - build
+      -
+        github-release:
+          <<: *semver_tags_only_filters
+          requires:
+            - pack
