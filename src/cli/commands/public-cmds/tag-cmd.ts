@@ -30,7 +30,8 @@ export default class Tag extends Command {
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
-    ['', 'skip-tests', 'skip running component tests during tag process']
+    ['', 'skip-tests', 'skip running component tests during tag process'],
+    ['', 'skip-auto-tag', 'skip auto tagging dependents']
   ];
   loader = true;
   migration = true;
@@ -38,7 +39,7 @@ export default class Tag extends Command {
   action(
     [id, version]: string[],
     {
-      message,
+      message = '',
       all,
       patch,
       minor,
@@ -49,23 +50,25 @@ export default class Tag extends Command {
       ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
       skipTests = false,
+      skipAutoTag = false,
       scope
     }: {
-      message: string;
-      all: boolean | null | undefined;
-      patch: boolean | null | undefined;
-      minor: boolean | null | undefined;
-      major: boolean | null | undefined;
-      force: boolean | null | undefined;
-      verbose: boolean | null | undefined;
+      message?: string;
+      all?: boolean;
+      patch?: boolean;
+      minor?: boolean;
+      major?: boolean;
+      force?: boolean;
+      verbose?: boolean;
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
       ignoreNewestVersion?: boolean;
       skipTests?: boolean;
-      scope: string | null | undefined;
+      skipAutoTag?: boolean;
+      scope?: string;
     }
   ): Promise<any> {
-    function getVersion() {
+    function getVersion(): string | undefined {
       if (scope) return scope;
       if (all && isString(all)) return all;
       return version;
@@ -85,7 +88,6 @@ export default class Tag extends Command {
       throw new GeneralError('you can use only one of the following - patch, minor, major');
     }
 
-    // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
     let releaseType: ReleaseType = DEFAULT_BIT_RELEASE_TYPE;
     const includeImported = scope && all;
 
@@ -97,34 +99,29 @@ export default class Tag extends Command {
 
     const idHasWildcard = hasWildcard(id);
 
-    if (all || scope || idHasWildcard) {
-      return tagAllAction({
-        message: message || '',
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        exactVersion: getVersion(),
-        releaseType,
-        force,
-        verbose,
-        ignoreUnresolvedDependencies,
-        ignoreNewestVersion,
-        skipTests,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        scope,
-        includeImported,
-        idWithWildcard: id
-      });
-    }
-    return tagAction({
-      id,
+    const params = {
       message,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       exactVersion: getVersion(),
       releaseType,
       force,
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
-      skipTests
+      skipTests,
+      skipAutoTag
+    };
+
+    if (all || scope || idHasWildcard) {
+      return tagAllAction({
+        ...params,
+        scope,
+        includeImported,
+        idWithWildcard: id
+      });
+    }
+    return tagAction({
+      ...params,
+      id
     });
   }
 

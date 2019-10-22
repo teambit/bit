@@ -30,6 +30,7 @@ export async function tagAction(args: {
   ignoreUnresolvedDependencies?: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
+  skipAutoTag: boolean;
 }): Promise<TagResults> {
   const {
     id,
@@ -40,7 +41,8 @@ export async function tagAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
-    skipTests
+    skipTests,
+    skipAutoTag
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
@@ -61,7 +63,8 @@ export async function tagAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
-    skipTests
+    skipTests,
+    skipAutoTag
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
@@ -88,16 +91,17 @@ async function getCommitPendingComponents(
 
 export async function tagAllAction(args: {
   message: string;
-  exactVersion: string | null | undefined;
+  exactVersion?: string;
   releaseType: string;
-  force: boolean | null | undefined;
+  force?: boolean;
   verbose?: boolean;
   ignoreUnresolvedDependencies?: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
-  scope?: boolean;
+  scope?: string;
   includeImported?: boolean;
   idWithWildcard?: string;
+  skipAutoTag: boolean;
 }): Promise<TagResults> {
   const {
     message,
@@ -110,7 +114,8 @@ export async function tagAllAction(args: {
     skipTests,
     scope,
     includeImported,
-    idWithWildcard
+    idWithWildcard,
+    skipAutoTag
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
@@ -119,7 +124,7 @@ export async function tagAllAction(args: {
   const newComponents = await componentsList.listNewComponents();
   const { tagPendingComponents, warnings } = await getCommitPendingComponents(
     consumer,
-    scope,
+    Boolean(scope),
     exactVersion,
     includeImported
   );
@@ -138,7 +143,8 @@ export async function tagAllAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
-    skipTests
+    skipTests,
+    skipAutoTag
   );
   tagResults.warnings = warnings;
 
