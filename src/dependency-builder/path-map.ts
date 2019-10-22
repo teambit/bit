@@ -130,9 +130,8 @@ function getDependenciesFromLinkFileIfExists(
 
   const dependencies = dependency.importSpecifiers.map((specifier: Specifier) => {
     const realDep = findTheRealDependency(pathMap, dependencyPathMap, specifier);
-    // $FlowFixMe
     if (!realDep) return null;
-    // $FlowFixMe importSpecifiers do exist
+    // @ts-ignore
     const depImportSpecifier = realDep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
     const importSpecifier: ImportSpecifier = {
       mainFile: specifier,

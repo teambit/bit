@@ -13,6 +13,11 @@ function convertComponentsIdToValidPackageName(registryPrefix: string, id: strin
 }
 
 export default class PackageJson {
+  static hasExisting(componentRootFolder: string): boolean {
+    const packageJsonPath = composePath(componentRootFolder);
+    return fs.pathExistsSync(packageJsonPath);
+  }
+
   /**
    * Taken from this package (with some minor changes):
    * https://www.npmjs.com/package/find-package
@@ -41,11 +46,12 @@ export default class PackageJson {
    */
   static findPackage(dir, addPaths) {
     const pathToConfig = this.findPath(dir);
-    let configJSON = null;
+    let configJSON: any = null;
     // eslint-disable-next-line import/no-dynamic-require, global-require
     if (pathToConfig !== null) configJSON = require(path.resolve(pathToConfig));
     if (configJSON && addPaths) {
       configJSON.paths = {
+        // @ts-ignore
         relative: path.relative(dir, pathToConfig),
         absolute: pathToConfig
       };
