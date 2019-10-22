@@ -21,15 +21,15 @@ describe('buildTree', () => {
       expect(results).to.deep.equal({ tree: {} });
     });
     it('when unsupported files are passed should return them with no dependencies', async () => {
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.filePaths = [`${fixtures}/unsupported-file.pdf`];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
       expect(results.tree).to.deep.equal({ 'fixtures/unsupported-file.pdf': {} });
     });
     it('when supported and unsupported files are passed should return them all', async () => {
-      // @ts-ignore FIXME
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.filePaths = [`${fixtures}/unsupported-file.pdf`, `${precinctFixtures}/es6.js`];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -37,7 +37,7 @@ describe('buildTree', () => {
       expect(results.tree).to.have.property('fixtures/precinct/es6.js');
     });
     it('when a js file has parsing error it should add the file to the tree with the error instance', async () => {
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.filePaths = [`${precinctFixtures}/unparseable.js`];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -47,7 +47,7 @@ describe('buildTree', () => {
       expect(results.tree[unParsedFile].error).to.be.instanceof(Error);
     });
     it('when a js file has parsing error and it retrieved from the cache it should add the file to the tree with the error instance', async () => {
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.filePaths = [`${precinctFixtures}/unparseable.js`];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.visited = {};
@@ -66,7 +66,7 @@ describe('buildTree', () => {
       expect(resultsCached.tree[unParsedFile].error).to.be.instanceof(Error);
     });
     it.skip('when a css file has parsing error it should add the file to the tree with the error instance', async () => {
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyTreeParams.filePaths = [`${buildTreeFixtures}/unparsed.css`];
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -78,8 +78,8 @@ describe('buildTree', () => {
     describe('when a dependency of dependency has parsing error', () => {
       let results;
       before(async () => {
-        // @ts-ignore FIXME
-        // @ts-ignore FIXME
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyTreeParams.filePaths = [`${buildTreeFixtures}/a.js`, `${buildTreeFixtures}/b.js`];
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -102,7 +102,7 @@ describe('buildTree', () => {
       let results;
       const missingDepsFile = 'fixtures/missing-deps.js';
       before(async () => {
-        // @ts-ignore FIXME
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyTreeParams.filePaths = [`${fixtures}/missing-deps.js`];
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -122,7 +122,7 @@ describe('buildTree', () => {
       describe('when a file imports from itself', () => {
         let results;
         before(async () => {
-          // @ts-ignore FIXME
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           dependencyTreeParams.filePaths = [`${buildTreeFixtures}/tree-shaking-cycle/self-cycle.js`];
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -135,7 +135,7 @@ describe('buildTree', () => {
       describe('cycle with multiple files', () => {
         let results;
         before(async () => {
-          // @ts-ignore FIXME
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           dependencyTreeParams.filePaths = [`${buildTreeFixtures}/tree-shaking-cycle/foo.js`];
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           results = await buildTree.getDependencyTree(dependencyTreeParams);
@@ -155,7 +155,7 @@ describe('buildTree', () => {
     describe('fileA imports varX from fileB, fileB imports varX from fileC but not export it', () => {
       let results;
       before(async () => {
-        // @ts-ignore FIXME
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyTreeParams.filePaths = [`${buildTreeFixtures}/not-link-file/file-a.js`];
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         results = await buildTree.getDependencyTree(dependencyTreeParams);

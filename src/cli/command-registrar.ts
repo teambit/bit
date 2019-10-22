@@ -35,7 +35,7 @@ function logAndExit(str) {
 function start() {
   program.version(pkg.version).description('bit driver for javascript');
   commands.forEach(c => {
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentCommand = program.command(c.name).description(c.description);
 
     if (c.options && Array.isArray(c.options)) {
@@ -49,7 +49,7 @@ function start() {
       c.action(args, options)
         .then(c.report)
         .then(logAndExit)
-        // @ts-ignore FIXME
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .catch(c.handleError || errorHandler);
     });
   });

@@ -145,16 +145,16 @@ function getDependenciesFromLinkFileIfExists(
     return null;
   }
   const linkFiles = [];
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies.forEach((dep: { file: string; importSpecifier: ImportSpecifier }) => {
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const existingFile = linkFiles.find(linkFile => linkFile.file === dep.file);
     if (existingFile) {
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       existingFile.importSpecifiers.push(dep.importSpecifier);
     } else {
-      // @ts-ignore FIXME
-      // @ts-ignore FIXME
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       linkFiles.push({ file: dep.file, importSpecifiers: [dep.importSpecifier] });
     }
   });

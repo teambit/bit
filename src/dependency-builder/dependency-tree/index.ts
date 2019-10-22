@@ -147,10 +147,10 @@ module.exports._getDependencies = function(config) {
       pathMap.isCustomResolveUsed = true;
     }
 
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     pathMapDependencies.push(pathMap);
 
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     resolvedDependencies.push(result);
   }
   function addToNonExistent(dependency) {
@@ -197,7 +197,7 @@ function traverse(config) {
       debug(`number of dependencies after filtering: ${dependencies.length}`);
     }
     debug('cabinet-resolved all dependencies: ', dependencies);
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     const filePathMap = config.pathMap.find(pathMapEntry => pathMapEntry.file === dependency);
     if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
@@ -225,7 +225,7 @@ function traverse(config) {
     }
     debug(`found ${dependency} in the cache`);
     const dependencies = config.visited[dependency].pathMap.dependencies.map(d => d.resolvedDep);
-    // @ts-ignore FIXME
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     config.pathMap.push(config.visited[dependency].pathMap);
     if (config.visited[dependency].missing) {

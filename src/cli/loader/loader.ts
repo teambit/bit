@@ -46,15 +46,15 @@ const off = (): Loader | null | undefined => {
 
 const loader: Loader = {
   on,
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   off,
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   stop,
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   start,
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   setText,
-  // @ts-ignore FIXME
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get
 };
 
