@@ -105,11 +105,13 @@ export async function exportMany({
       componentAndObject.component.addScopeListItem(remoteObj);
 
       if (idsToChangeLocally.hasWithoutScopeAndVersion(componentAndObject.component.toBitId())) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentsAndObjects.push(componentAndObject);
       } else {
         // the component should not be changed locally. only add the new scope to the scope-list
         const componentAndObjectCloned = componentObject.toObjects(scope.objects);
         componentAndObjectCloned.component.addScopeListItem(remoteObj);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentsAndObjects.push(componentAndObjectCloned);
       }
       const componentBuffer = await componentAndObject.component.compress();
@@ -188,6 +190,7 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
     mergedVersions.map(version => mergedComponent.toBitId().changeVersion(version));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return BitIds.fromArray(R.flatten(mergedComponents.map(getMergedIds)));
 }
 

@@ -64,12 +64,17 @@ export type AbstractConfigProps = {
  * bit.json wins.
  */
 export default class AbstractConfig {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: { [key: string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: { [key: string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerDependencies: { [key: string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   testerDependencies: { [key: string]: string };
   lang: string;
   bindingPrefix: string;
@@ -212,11 +217,13 @@ export default class AbstractConfig {
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       JsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
       const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       JsonFiles.push(JSONFile.load(params));
     }
     return JsonFiles;

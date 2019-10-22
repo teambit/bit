@@ -7,6 +7,7 @@ export default class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
   componentId: BitId | null | undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forDistOutsideComponentsDir: boolean;
   constructor(src: string, dest: string, componentId?: BitId) {
     this.src = src;

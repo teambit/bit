@@ -65,6 +65,7 @@ export default class ImportComponents {
   consumer: Consumer;
   scope: Scope;
   options: ImportOptions;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
@@ -219,9 +220,11 @@ export default class ImportComponents {
       const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
       const envComponents = [];
       if (compiler) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         envComponents.push(await compiler.install(...envsArgs));
       }
       if (tester) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         envComponents.push(await tester.install(...envsArgs));
       }
       return {
@@ -341,16 +344,20 @@ export default class ImportComponents {
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
     const currentComponent: Version = await componentModel.loadVersion(
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.id.version,
       this.consumer.scope.objects
     );
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
       otherComponent: fsComponent,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherVersion: currentlyUsedVersion,
       currentComponent, // $FlowFixMe
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentVersion: component.id.version,
       baseComponent
     });
@@ -397,6 +404,7 @@ export default class ImportComponents {
       component.files,
       mergeResults,
       this.options.mergeStrategy,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       component.originallySharedDir
     );
   }

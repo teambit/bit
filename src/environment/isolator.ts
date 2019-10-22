@@ -26,11 +26,16 @@ export default class Isolator {
   capsule: Capsule;
   consumer: Consumer | null | undefined;
   scope: Scope;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   capsuleBitMap: BitMap;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentWithDependencies: ComponentWithDependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   manyComponentsWriter: ManyComponentsWriter;
   _npmVersionHasValidated = false;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
   constructor(capsule: Capsule, scope: Scope, consumer?: Consumer | null | undefined) {
     this.capsule = capsule;
@@ -111,7 +116,9 @@ export default class Isolator {
   }
 
   async installComponentPackages() {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');
@@ -183,6 +190,7 @@ export default class Isolator {
     const rootPathInCapsule = path.join(capsulePath, this.componentRootDir);
     const componentsToAdd = this.componentWithDependencies.allDependencies.reduce((acc, component) => {
       // $FlowFixMe - writtenPath is defined
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
       const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
       const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
@@ -231,6 +239,7 @@ export default class Isolator {
   }
 
   async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<string> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const execResults = await this.capsule.exec(cmd, options);
     let output = '';
     return new Promise((resolve, reject) => {

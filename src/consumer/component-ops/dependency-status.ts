@@ -29,6 +29,7 @@ function getComponentFiles(consumer: Consumer) {
     if (value && value.files && Array.isArray(value.files)) {
       const currentFiles = [];
       value.files.forEach(function(file) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (file && file.relativePath) currentFiles.push(file.relativePath);
       });
       componentFile = componentFile.concat(currentFiles);
@@ -45,7 +46,9 @@ export default (async function getDependencyStatus(
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];
   topLevelDependencies.forEach(function(dependency) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!componentFiles.includes(dependency)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       missingDependencyFiles.push(dependency);
     }
   });

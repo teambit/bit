@@ -375,10 +375,12 @@ describe('envs', function() {
             const alignedOuput = GeneralHelper.alignOutput(output);
             const tmpFolder = path.join(helper.scopes.localPath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
             const writingRegEx = new RegExp('writing config files to', 'g');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const writingCount = (alignedOuput.match(writingRegEx) || []).length;
             // There should be 0 occurrences - since it's not detached
             expect(writingCount).to.equal(0);
             const deletingRegEx = new RegExp('deleting tmp directory', 'g');
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
             expect(deletingCount).to.equal(0);
             const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);

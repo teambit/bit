@@ -32,6 +32,7 @@ export default (async function test(
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
     const ids = id ? [id] : undefined;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return specsRunner({ ids, forkLevel, includeUnmodified, verbose });
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
@@ -55,6 +56,8 @@ export async function testInProcess(
 ): Promise<SpecsResultsWithMetaData> {
   const consumer: Consumer = await loadConsumer();
   const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose, dontPrintEnvMsg);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose, dontPrintEnvMsg });
   loader.stop();
   await consumer.onDestroy();
@@ -87,6 +90,7 @@ async function _getComponentsAfterBuild(
     }
     loader.stop();
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await consumer.scope.buildMultiple(components, consumer, false, verbose, dontPrintEnvMsg);
   return components;
 }

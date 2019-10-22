@@ -104,12 +104,14 @@ export default class Tag extends Command {
         exactVersion: getVersion(),
         releaseType,
         force,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         verbose,
         ignoreUnresolvedDependencies,
         ignoreNewestVersion,
         skipTests,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         scope,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         includeImported,
         idWithWildcard: id
       });
@@ -121,6 +123,7 @@ export default class Tag extends Command {
       exactVersion: getVersion(),
       releaseType,
       force,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,

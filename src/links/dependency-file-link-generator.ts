@@ -44,9 +44,13 @@ export default class DependencyFileLinkGenerator {
   createNpmLinkFiles: boolean;
   targetDir: string | null | undefined;
   dependencyComponentMap: ComponentMap | null | undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   linkFiles: LinkFileType[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   relativePathInDependency: PathOsBased;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   hasDist: boolean;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   shouldDistsBeInsideTheComponent: boolean;
   constructor({
     consumer,
@@ -68,6 +72,7 @@ export default class DependencyFileLinkGenerator {
     this.consumer = consumer;
     this.bitMap = bitMap;
     this.component = component; // $FlowFixMe componentMap should be set here
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     this.relativePath = relativePath;
     this.dependencyComponent = dependencyComponent;
@@ -245,6 +250,7 @@ export default class DependencyFileLinkGenerator {
         distFileWithDependencyPrefix,
         'relative'
       );
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return this._getPackagePathToInternalFile(distFile);
     }
     return this._getPackageName();
@@ -279,6 +285,7 @@ export default class DependencyFileLinkGenerator {
   _getCustomResolveMapping() {
     if (!this.relativePath.isCustomResolveUsed) return null;
     // $FlowFixMe importSource is set for custom resolved
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return { [this.relativePath.importSource]: this._getPackagePath() };
   }
 
@@ -329,6 +336,7 @@ export default class DependencyFileLinkGenerator {
 
   _getImportSourcePathForCustomResolve(relativeDistExtInDependency: string): PathOsBased {
     // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const importSource: string = this.relativePath.importSource;
     const importSourceFileExt = relativeDistExtInDependency || path.extname(this.relativePath.sourceRelativePath);
     // e.g. for require('utils/is-string'), the link should be at node_modules/utils/is-string/index.js

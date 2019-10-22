@@ -66,6 +66,7 @@ describe('BitMap', function() {
       expect(res.dirs).to.contain('conf-dir');
     });
     it('should ignore nothing if there is no config dir', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const res = BitMap.resolveIgnoreFilesAndDirs(null, 'my-comp-dir', ['./.babelrc'], ['./mochaConf.js']);
       expect(res.dirs).to.be.empty;
       expect(res.files).to.be.empty;

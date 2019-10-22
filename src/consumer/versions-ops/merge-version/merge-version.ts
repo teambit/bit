@@ -94,6 +94,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
     otherComponent,
     otherVersion: version,
     currentComponent: component, // $FlowFixMe
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     currentVersion: currentlyUsedVersion
   });
   return { componentFromFS: component, id: component.id, mergeResults };

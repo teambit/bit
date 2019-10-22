@@ -208,6 +208,7 @@ export default class BitMap {
       const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
       allEnvFilesPaths.forEach(file => {
         const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         ignoreList.files.push(ignoreFile);
       });
       const configDirWithoutCompDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '{ENV_TYPE}' });
@@ -217,6 +218,7 @@ export default class BitMap {
         // There is nested folder which is not the env folders - ignore it completely
         if (configDirWithoutCompAndEnvsDir !== '' && configDirWithoutCompAndEnvsDir !== '/') {
           const resolvedDirWithoutEnvType = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           ignoreList.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
         } else {
           const resolvedCompilerConfigDir = format(configDir, {
@@ -224,12 +226,14 @@ export default class BitMap {
             ENV_TYPE: COMPILER_ENV_TYPE
           });
           const resolvedTesterConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           ignoreList.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
         }
       }
     } else {
       // Ignore the whole dir since this dir is only for config files
       const dirToIgnore = format(configDir, { ENV_TYPE: '' });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       ignoreList.dirs.push(dirToIgnore);
     }
     return ignoreList;
@@ -329,6 +333,7 @@ export default class BitMap {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
     const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
       const cacheKey = oneOrigin || 'all';
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
       const allComponents = R.values(this.components);
       const components = oneOrigin ? allComponents.filter(c => c.origin === oneOrigin) : allComponents;
@@ -754,6 +759,7 @@ export default class BitMap {
       Object.keys(this.components).forEach(componentId => {
         const component = this.components[componentId];
         if (!component.trackDir) return;
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.allTrackDirs[component.trackDir] = component.id;
       });
     }
@@ -770,6 +776,8 @@ export default class BitMap {
     Object.keys(this.components).forEach(componentId => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (changes && changes.length) allChanges.push({ id: componentMap.id.clone(), changes });
     });
     if (R.isEmpty(allChanges)) {

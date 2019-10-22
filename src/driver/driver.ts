@@ -10,6 +10,7 @@ import {
 
 export default class Driver {
   lang: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   driver: Record<string, any>;
 
   constructor(lang: string = DEFAULT_LANGUAGE) {

@@ -24,6 +24,7 @@ export default (async function remove({
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
   const removeResults = await removeComponents({
     consumer,

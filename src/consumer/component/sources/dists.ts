@@ -139,6 +139,7 @@ export default class Dists {
       // it's IMPORTED. We first check that rootDir starts with dist.entry, it happens mostly when a user imports into
       // a specific directory (e.g. bit import --path src/). Then, we make sure all dists files start with that
       // dist.entry. In a case when originallySharedDir is the same as dist.entry, this second check returns false.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
     };
     const distEntryShouldBeStripped = shouldDistEntryBeStripped();
@@ -238,6 +239,7 @@ export default class Dists {
         if (this._mainDistFile) return this._mainDistFile;
         // Take the only dist file if there is only one or search for one with the same name as the main source file
         if (this.dists && this.dists.length === 1) return this.dists[0].relative;
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
       };
       const mainFile = getMainFile();
@@ -258,6 +260,7 @@ export default class Dists {
       return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const fileToSearch = getFileToSearch();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const distFile: string =
       isMain && this._mainDistFile ? this._mainDistFile : searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
     if (!distFile) return componentFile;
@@ -279,7 +282,8 @@ export default class Dists {
     const addSharedDirAndDistEntry = pathStr => {
       const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
       const withDistEntry = this.distEntryShouldBeStripped // $FlowFixMe
-        ? path.join(consumer.config.distEntry, withSharedDir)
+        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          path.join(consumer.config.distEntry, withSharedDir)
         : withSharedDir;
       return pathNormalizeToLinux(withDistEntry);
     };

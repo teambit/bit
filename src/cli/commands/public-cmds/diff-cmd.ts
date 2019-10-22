@@ -28,6 +28,7 @@ export default class Diff extends Command {
           const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
           const titleSeparator = new Array(titleStr.length).fill('-').join('');
           const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const filesWithDiff = diffResult.filesDiff.filter(file => file.diffOutput);
           const files = filesWithDiff.map(fileDiff => fileDiff.diffOutput).join('\n');
           const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map(field => field.diffOutput).join('\n') : '';

@@ -47,6 +47,7 @@ export default class SourceFile extends AbstractVinyl {
 
   static loadFromParsedStringArray(arr: Record<string, any>[]): SourceFile[] | null | undefined {
     if (!arr) return null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return arr.map(this.loadFromParsedString);
   }
 

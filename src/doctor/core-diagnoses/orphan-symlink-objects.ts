@@ -36,6 +36,7 @@ export default class OrphanSymlinkObjects extends Diagnosis {
         const foundComponent = await consumer.scope.objects.load(realModelComponent.hash());
         if (!foundComponent) {
           orphanSymlinks.push(realComponentId);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           objectsToDelete.push(consumer.scope.objects.objectPath(symlink.hash()));
         }
       })

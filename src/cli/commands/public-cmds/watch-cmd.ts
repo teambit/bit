@@ -18,6 +18,7 @@ export default class Watch extends Command {
       verbose: boolean | null | undefined;
     }
   ): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return watchAll(verbose);
   }
 

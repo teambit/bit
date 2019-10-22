@@ -58,6 +58,7 @@ export default class Show extends Command {
 
     return show({
       id,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       json,
       versions,
       remote,
@@ -91,6 +92,7 @@ export default class Show extends Command {
     detailed: boolean;
   }): string {
     if (versions) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return JSON.stringify(components.map(c => c.toObject()), null, '  ');
     }
     if (component.componentFromModel) {

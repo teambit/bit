@@ -3,7 +3,9 @@ import { LICENSE_FILENAME } from '../../../constants';
 import { AbstractVinyl } from '.';
 
 export default class License extends AbstractVinyl {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   override: boolean | null | undefined = true;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   src: string;
 
   write(): Promise<any> {

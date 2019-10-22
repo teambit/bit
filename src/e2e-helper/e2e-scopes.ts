@@ -6,11 +6,17 @@ import { generateRandomStr } from './e2e-helper';
 
 export default class ScopesData {
   e2eDir: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   local: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   localPath: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   remote: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   remotePath: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   env: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   envPath: string;
   constructor() {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');

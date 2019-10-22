@@ -13,6 +13,7 @@ export default class InjectConf extends Command {
   migration = true;
 
   async action([id]: [string], { force }: { force?: boolean }): Promise<InjectConfResult> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const res = await injectConf(id, force);
     return res;
   }

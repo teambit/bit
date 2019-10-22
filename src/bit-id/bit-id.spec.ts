@@ -29,7 +29,9 @@ describe('Bit-id', () => {
       expect(invalidScope).to.not.throw();
     });
     it('should not accept an empty name', () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(() => new BitId({ scope: 'my-scope', name: null })).to.throw(InvalidName);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(() => new BitId({ scope: 'my-scope', name: undefined })).to.throw(InvalidName);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(() => new BitId({ scope: 'my-scope' })).to.throw(InvalidName);

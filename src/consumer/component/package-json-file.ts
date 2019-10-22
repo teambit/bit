@@ -161,6 +161,7 @@ export default class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = R.clone(this.packageJsonObject);
     return clone;

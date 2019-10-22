@@ -25,6 +25,7 @@ export default class Remotes extends Map<string, Remote> {
   resolve(scopeName: string, thisScope?: Scope | null | undefined): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return remoteResolver(scopeName, thisScope).then(scopeHost => {
       return new Remote(scopeHost, scopeName);
     });
@@ -47,6 +48,7 @@ export default class Remotes extends Map<string, Remote> {
     const promises = [];
     forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.resolve(scopeName, thisScope).then(remote =>
           remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context)
         )
@@ -63,6 +65,7 @@ export default class Remotes extends Map<string, Remote> {
     const groupedIds = this._groupByScopeName(ids);
     const promises = [];
     forEach(groupedIds, (scopeIds, scopeName) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       promises.push(this.resolve(scopeName, thisScope).then(remote => remote.latestVersions(scopeIds)));
     });
     const components = await Promise.all(promises);
@@ -123,6 +126,8 @@ export default class Remotes extends Map<string, Remote> {
 
     forEach(remotes, (name, host) => {
       const remote = Remote.load(name, host);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       models.push([remote.name, remote]);
     });
 

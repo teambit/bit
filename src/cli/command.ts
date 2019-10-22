@@ -2,9 +2,13 @@ export type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;
 
 export default class Cmd {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   description: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts: CommandOptions;
   commands: Cmd[] = [];
   private: boolean | null | undefined;

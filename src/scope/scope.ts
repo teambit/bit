@@ -83,6 +83,7 @@ export default class Scope {
   path: string;
   sources: SourcesRepository;
   objects: Repository;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
 
   constructor(scopeProps: ScopeProps) {
@@ -313,6 +314,7 @@ export default class Scope {
         const separator = process.env.NODE_PATH.endsWith(NODE_PATH_SEPARATOR) ? '' : NODE_PATH_SEPARATOR;
         return process.env.NODE_PATH + separator + nodePathDirDist;
       };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.env.NODE_PATH = getCurrentNodePathWithDirDist();
       require('module').Module._initPaths(); // eslint-disable-line
     }
@@ -449,8 +451,10 @@ export default class Scope {
         scopeComponents.flattenedDependencies.forEach(flattenedDependency => {
           if (flattenedDependency.isEqualWithoutVersion(bitId)) {
             returnResultsWithVersion
-              ? dependencies.push(scopeComponents.id)
-              : dependencies.push(scopeComponents.id.changeVersion(null));
+              ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+                dependencies.push(scopeComponents.id)
+              : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+                dependencies.push(scopeComponents.id.changeVersion(null));
           }
         });
       });
@@ -489,6 +493,7 @@ export default class Scope {
       const component = componentObject.component;
       if (!component) return null;
       const version = componentObject.id.hasVersion() ? componentObject.id.version : component.latest();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(version);
     });
     return removeNils(components);
@@ -497,6 +502,7 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   loadComponentLogs(id: BitId): Promise<{ [key: number]: { message: string; date: string; hash: string } }> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
     });
@@ -545,6 +551,7 @@ export default class Scope {
   async getConsumerComponent(id: BitId): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
@@ -554,6 +561,7 @@ export default class Scope {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe id.version is not null, was checked above
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return component.loadVersion(id.version, this.objects);
   }
 
@@ -576,6 +584,7 @@ export default class Scope {
    */
   createSymlink(id: BitId, remote: string) {
     const symlink = new Symlink({
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scope: id.scope,
       name: id.name,
       realScope: remote
@@ -633,8 +642,11 @@ export default class Scope {
     const component = await this.getConsumerComponent(bitId);
     return component.runSpecs({
       scope: this,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       save,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       isolated,
       directory,
@@ -665,11 +677,16 @@ export default class Scope {
     const component: Component = await this.getConsumerComponent(bitId);
     return component.build({
       scope: this,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       save,
       consumer,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       directory,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       keep,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       noCache
     });
   }

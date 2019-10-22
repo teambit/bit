@@ -23,6 +23,7 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
     workspacePath: consumer.getPath(),
     bitmapFileName: BIT_MAP
   };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }
@@ -46,12 +47,15 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
       ? component.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
       : [];
     const addComponents = new AddComponents(addContext, component);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     addComponentsArr.push(addComponents);
   });
   const addResults = [];
   await Promise.all(
     addComponentsArr.map(async function(addComponents) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const addResultsSingle = await addComponents.add();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       addResults.push(addResultsSingle);
     })
   );
@@ -60,6 +64,7 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
     workspacePath: consumer.getPath(),
     bitmapFileName: BIT_MAP
   };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults, null, hookContext);
   return addResults;
 }

@@ -23,6 +23,7 @@ export default class CatScope extends Command {
       jsonExtra
     }: { full: boolean | null | undefined; json: boolean | null | undefined; jsonExtra: boolean | null | undefined }
   ): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json, jsonExtra }));
   }
 

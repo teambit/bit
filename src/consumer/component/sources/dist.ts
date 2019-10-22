@@ -1,5 +1,6 @@
 import AbstractVinyl from './abstract-vinyl';
 
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class Dist extends AbstractVinyl {
   static loadFromParsedString(parsedString: Record<string, any>) {
     if (!parsedString) return null;

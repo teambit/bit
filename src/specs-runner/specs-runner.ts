@@ -61,10 +61,19 @@ export default (async function run({
   const finalResults = allRunnersResults.reduce(
     (acc, curr) => {
       // if (!curr || !curr[0]) return acc;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (curr.childOutput) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         acc.childOutput = `${acc.childOutput}\n${curr.childOutput}`;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (curr.results && curr.results[0]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         acc.results.push(curr.results[0]);
       }
       return acc;

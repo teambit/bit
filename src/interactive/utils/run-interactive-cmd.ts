@@ -84,6 +84,7 @@ export default (async function runInteractive({
       const timeout = input.waitInput || actualDefaultIntervalBetweenInputs;
       const inputValue = typeof input.value === 'string' ? input.value : input.value.value;
       currentInputTimeout = setTimeout(() => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         child.stdin.write(inputValue);
         resolve();
       }, timeout);
@@ -101,9 +102,11 @@ export default (async function runInteractive({
     return pSeries(writeInputsP);
   };
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   child.stderr.once('data', () => {
     console.log('got an error from child'); // eslint-disable-line no-console
     // If child errors out, stop all the pending inputs if any
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     child.stdin.end();
 
     if (currentInputTimeout) {
@@ -115,6 +118,7 @@ export default (async function runInteractive({
   // Kick off the process
   let pointer = 0;
   let leftInputsArrays = inputs.length;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   child.stdout.on('data', chunk => {
     const currString = chunk.toString();
     if (pointer < inputs.length) {
@@ -127,6 +131,7 @@ export default (async function runInteractive({
           leftInputsArrays -= 1;
           // Finished to write all - end stream
           if (leftInputsArrays === 0) {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             child.stdin.end();
           }
         });

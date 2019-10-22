@@ -17,6 +17,7 @@ const loader: Loader = {
   off,
   stop,
   start,
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   setText,
   get
 };

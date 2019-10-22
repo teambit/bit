@@ -172,6 +172,7 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     userDetails: _getUserDetails()
   };
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return env;
 }
 

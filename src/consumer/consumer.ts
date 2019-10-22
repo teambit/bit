@@ -105,7 +105,9 @@ export default class Consumer {
   isolated = false; // Mark that the consumer instance is of isolated env and not real
   addedGitHooks: string[] | null | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | null | undefined; // list of git hooks already exists during init process
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _driver: Driver;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
@@ -212,6 +214,7 @@ export default class Consumer {
         ? format(msg, err)
         : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
       if (err instanceof DriverNotFound) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
       throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
@@ -285,6 +288,7 @@ export default class Consumer {
 
   getParsedId(id: BitIdStr): BitId {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version || LATEST);
@@ -653,6 +657,7 @@ export default class Consumer {
       consumer: this,
       ignoreNewestVersion,
       skipTests,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose
     });
 
@@ -683,7 +688,8 @@ export default class Consumer {
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
-        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
+        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);
@@ -829,10 +835,12 @@ export default class Consumer {
       consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scope = await Scope.load(scopePath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerInfo.path,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config: consumerInfo.consumerConfig,
       scope
     });
@@ -862,6 +870,7 @@ export default class Consumer {
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // find the model version of the component and get the stored versions of the dependencies
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const mainComponentFromModel: Component = component.componentFromModel;
       if (mainComponentFromModel) {
         // otherwise, the component is probably on the file-system only and not on the model.

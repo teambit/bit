@@ -59,6 +59,7 @@ export default (async function migrate(
 const _runAllMigrationsForStore = (storeType: string, store: BitMap, migrations: VersionMigrations[]): BitMap => {
   // Make sure we got a store
   if (!store) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return null;
   }
   logger.debug(`start updating store ${storeType}`);

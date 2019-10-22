@@ -108,6 +108,7 @@ export default class AddComponents {
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
@@ -253,6 +254,7 @@ export default class AddComponents {
         (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
         (existingComponentOfFile && existingComponentOfFile.origin === COMPONENT_ORIGINS.IMPORTED);
       if (isImported) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const idFromBitMap = foundComponentFromBitMap ? foundComponentFromBitMap.id : existingComponentOfFile.id;
         // throw error in case user didn't add id to imported component or the id is incorrect
         if (!this.id) throw new MissingComponentIdForImportedComponent(idFromBitMap.toStringWithoutVersion());
@@ -261,7 +263,9 @@ export default class AddComponents {
           // $FlowFixMe $this.id is not null at this point
           throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
         }
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this._isOutsideOfWrapDir(file.relativePath, foundComponentFromBitMap)) {
           logger.warn(`add-components: ignoring ${file.relativePath} as it is located outside of the wrapDir`);
           return null;
@@ -269,6 +273,7 @@ export default class AddComponents {
         const isGeneratedForUnsupportedFiles = await this._isGeneratedForUnsupportedFiles(
           file.relativePath,
           component.componentId,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           foundComponentFromBitMap
         );
         if (isGeneratedForUnsupportedFiles) return null;
@@ -294,6 +299,7 @@ export default class AddComponents {
       return file;
     });
     // $FlowFixMe it can't be null due to the filter function
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter(file => file);
     if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     if (foundComponentFromBitMap) {
@@ -301,6 +307,7 @@ export default class AddComponents {
       if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
     }
     if (this.trackDirFeature) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
@@ -386,6 +393,7 @@ export default class AddComponents {
     const resolvedExcludedFiles = await this.getFilesAccordingToDsl(files, this.exclude);
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (resolvedExcludedFiles.includes(mainFile)) {
         componentWithFiles.files = [];
       } else {
@@ -404,6 +412,7 @@ export default class AddComponents {
   _getIdAccordingToExistingComponent(currentId: BitIdStr): BitId {
     const existingComponentId = this.bitMap.getExistingBitId(currentId, false);
     const componentExists = Boolean(existingComponentId);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
       throw new GeneralError(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
     If you're trying to add a new component, please choose a new namespace or name.
@@ -415,9 +424,11 @@ export default class AddComponents {
         !existingComponentId.hasVersion() || // this component is new, it shouldn't have a version
         // user shouldn't add files to a an existing component with different version
         // $FlowFixMe this function gets called only when this.id is set
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         existingComponentId.version !== BitId.getVersionOnlyFromString(this.id)
       ) {
         // $FlowFixMe this.id is defined here
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         throw new VersionShouldBeRemoved(this.id);
       }
     }
@@ -608,6 +619,7 @@ export default class AddComponents {
     // remove files that are excluded
     if (!R.isEmpty(this.exclude)) await this.removeExcludedFiles(componentsWithFiles);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentId = finalBitId;
     componentsWithFiles = componentsWithFiles.filter(componentWithFiles => componentWithFiles.files.length);
 
@@ -616,6 +628,7 @@ export default class AddComponents {
     if (componentsWithFiles.length === 1) return componentsWithFiles[0];
 
     const files = componentsWithFiles.reduce((a, b) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return a.concat(b.files);
     }, []);
     const groupedComponents = groupby(files, 'relativePath');
@@ -748,12 +761,14 @@ export default class AddComponents {
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
           } catch (err) {
             if (!(err instanceof MissingMainFile)) throw err;
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             missingMainFiles.push(err);
           }
         }
       })
     );
     if (missingMainFiles.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new MissingMainFileMultipleComponents(missingMainFiles.map(err => err.componentId).sort());
     }
   }
@@ -763,6 +778,7 @@ export default class AddComponents {
     addedComponents.forEach(addedComponent => {
       if (!addedComponent.idFromPath) return; // when the id was not generated from the path do nothing.
       const componentsWithSameName = addedComponents // $FlowFixMe
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .filter(a => a.idFromPath && a.idFromPath.name === addedComponent.idFromPath.name);
       const bitIdFromNameOnly = new BitId({ name: addedComponent.idFromPath.name });
       const existingComponentWithSameName = allIds.searchWithoutScopeAndVersion(bitIdFromNameOnly);

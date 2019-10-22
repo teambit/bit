@@ -21,6 +21,7 @@ export default (async function put(
     componentObjects = ComponentObjects.manyFromString(componentObjects);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
   const scope = await loadScope(path);
   // @todo: remove this once v15 is out.
@@ -37,6 +38,7 @@ export default (async function put(
       scopePath: path,
       scopeName: scope.scopeJson.name
     },
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     headers
   );
   return componentsIds;

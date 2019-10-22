@@ -60,6 +60,7 @@ export default class Remote {
   }
 
   graph(bitId?: BitId | null | undefined): Promise<DependencyGraph> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect().then(network => network.graph(bitId));
   }
 

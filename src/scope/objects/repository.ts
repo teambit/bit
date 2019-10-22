@@ -27,6 +27,7 @@ export default class Repository {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   types: { [key: string]: Function };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentsIndex: ComponentsIndex;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -75,6 +76,7 @@ export default class Repository {
   }
 
   getLicense(): Promise<string> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.scopeJson.getPopulatedLicense();
   }
 
@@ -170,6 +172,7 @@ export default class Repository {
         return bitObject;
       })
     );
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return bitObjects.filter(b => b); // remove nulls;
   }
 
@@ -210,6 +213,7 @@ export default class Repository {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return null;
     }
   }

@@ -59,6 +59,7 @@ export default class ComponentVersion {
   }
 
   toConsumer(repo: Repository, manipulateDirData: ManipulateDirItem[] | null | undefined): Promise<ConsumerComponent> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 

@@ -179,12 +179,16 @@ class Analytics {
    * eventually goes to the "ADDITIONAL DATA" section in Sentry
    */
   static setExtraData(key, value) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.extra[key] = value;
   }
   static incExtraDataKey(key, value) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.extra[key]) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.extra[key] += value || 1;
     } else {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.extra[key] = value || 1;
     }
   }
@@ -195,6 +199,7 @@ class Analytics {
     return data;
   }
   static addBreadCrumb(category: string, message: string, data?: Record<string, any>) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.breadcrumbs.push(new Breadcrumb(category, message, data));
   }
   static toObject() {

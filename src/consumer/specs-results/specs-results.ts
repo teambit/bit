@@ -127,6 +127,7 @@ export default class SpecsResults {
     });
 
     if (hasFailures) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       failures = rawResults.failures.map(failure => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;

@@ -43,6 +43,7 @@ export default class ExtensionFile extends AbstractVinyl {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new ExtensionFile(baseFile);
       file.name = name;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file.file = Source.from(file.contents);
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       R.forEachObjIndexed(addToFile, extendedProps);
@@ -98,11 +99,13 @@ export default class ExtensionFile extends AbstractVinyl {
     const opts = super.loadFromParsedString(parsedString);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile(opts);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     extensionFile.file = Source.from(extensionFile.contents);
     return extensionFile;
   }
 
   static loadFromParsedStringArray(arr: Record<string, any>[]): Array<null | undefined | ExtensionFile> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }
@@ -112,6 +115,7 @@ export default class ExtensionFile extends AbstractVinyl {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
     extensionFile.relativePath = file.relativePath;
@@ -128,6 +132,7 @@ export default class ExtensionFile extends AbstractVinyl {
     const contents = Buffer.from(file.file.contents);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath || '', contents });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
     extensionFile.relativePath = file.relativePath;

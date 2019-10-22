@@ -71,10 +71,13 @@ export default class ComponentOverrides {
       }
       if (
         isObjectAndNotArray(overridesFromComponent[field]) && // $FlowFixMe
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         isObjectAndNotArray(overridesFromConsumer[field])
       ) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         overridesFromComponent[field] = Object.assign(overridesFromConsumer[field], overridesFromComponent[field]);
       } else if (!overridesFromComponent[field]) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         overridesFromComponent[field] = overridesFromConsumer[field];
       }
       // when overridesFromComponent[field] is set and not an object, do not override it by overridesFromConsumer

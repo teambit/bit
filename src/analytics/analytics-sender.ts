@@ -10,6 +10,7 @@ const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_
 process.on('message', msg => {
   // needed for the parent to make sure the child got the message
   // without it, when the message is large, the parent exits before it totally sent
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   process.send('Got the message');
 
   return requestify

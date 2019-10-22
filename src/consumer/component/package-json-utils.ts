@@ -72,6 +72,7 @@ export async function changeDependenciesToRelativeSyntax(
     return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return packageJsonFiles.filter(file => file);
 
   function getPackages(deps: Dependencies, componentMap: ComponentMap) {
@@ -210,6 +211,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
 
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);
   // $FlowFixMe nulls were removed in the previous filter function
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(consumer.toAbsolutePath(componentPath))));
 }
 

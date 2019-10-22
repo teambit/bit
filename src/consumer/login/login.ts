@@ -55,6 +55,11 @@ export default function loginToBitSrc(
         reject(new LoginFailed());
       }
       try {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {

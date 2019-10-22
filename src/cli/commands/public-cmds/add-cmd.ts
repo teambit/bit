@@ -72,8 +72,10 @@ export default class Add extends Command {
 
     return add({
       componentPaths: normalizedPaths,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
       main: main ? path.normalize(main) : undefined,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
       tests: testsArray,
       exclude: excludedFiles,

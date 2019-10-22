@@ -67,10 +67,12 @@ export default class VersionDependencies {
 
     return Promise.all([compP, depsP]).then(([component, dependencies]) => {
       const flattened = dependencies.reduce((array, compObjects) => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         array.push(...compObjects.objects.concat([compObjects.component]));
         return array;
       }, []);
 
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return new ComponentObjects(component.component, flattened.concat(component.objects));
     });
   }

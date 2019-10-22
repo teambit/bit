@@ -30,6 +30,7 @@ export default class OverridesDependencies {
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer; // $FlowFixMe
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
@@ -154,6 +155,7 @@ export default class OverridesDependencies {
       idsFromModel.searchStrWithoutVersion(dependency) || idsFromModel.searchStrWithoutScopeAndVersion(dependency);
     if (!idFromBitMap && !idFromModel) return null;
     // $FlowFixMe one of them must be set (see one line above)
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const id: BitId = idFromModel || idFromBitMap;
     return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
   }

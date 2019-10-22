@@ -43,6 +43,9 @@ export async function getManipulateDirForExistingComponents(
   }
   const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
   const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach(dependency => {
@@ -52,6 +55,7 @@ export async function getManipulateDirForExistingComponents(
       originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
       wrapDir: depComponentMap ? depComponentMap.wrapDir : null
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     manipulateDirData.push(manipulateDirDep);
   });
   return manipulateDirData;

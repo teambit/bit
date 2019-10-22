@@ -176,7 +176,9 @@ export default class Component extends BitObject {
     let version = null;
     let versionStr = null;
     while (!version && versions && versions.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       versionStr = versions.pop();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = this.loadVersionSync(versionStr, repository, false);
     }
     return versionStr || VERSION_ZERO;
@@ -342,7 +344,9 @@ export default class Component extends BitObject {
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
@@ -366,6 +370,7 @@ export default class Component extends BitObject {
       scope: this.scope,
       lang: this.lang,
       bindingPrefix,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
       compiler,
       tester,
@@ -443,12 +448,17 @@ export default class Component extends BitObject {
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.state.versions[version]) this.state.versions[version] = {};
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.state.versions[version].local = true;
   }
 
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
   }
 

@@ -45,6 +45,7 @@ export default class BitObject {
     async function addRefs(object: BitObject) {
       const refs = object.refs();
       const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       refsCollection.push(...refs);
       await Promise.all(objs.map(obj => addRefs(obj)));
     }

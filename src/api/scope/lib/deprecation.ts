@@ -18,6 +18,7 @@ export async function deprecate(
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);
   const scope = await loadScope(path);
   const deprecationResult = await deprecateMany(scope, bitIds);
@@ -28,6 +29,7 @@ export async function deprecate(
     componentsIds: bitIds.serialize(),
     scopeName: scope.scopeJson.name
   };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_DEPRECATE_REMOTE, hookArgs, headers);
   return deprecationResult;
 }
@@ -38,6 +40,7 @@ export async function undeprecate(
 ): Promise<DeprecationResult> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   HooksManagerInstance.triggerHook(PRE_UNDEPRECATE_REMOTE, args, headers);
   const scope = await loadScope(path);
   const deprecationResult = await undeprecateMany(scope, bitIds);
@@ -48,6 +51,7 @@ export async function undeprecate(
     componentsIds: bitIds.serialize(),
     scopeName: scope.scopeJson.name
   };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(POST_UNDEPRECATE_REMOTE, hookArgs, headers);
   return deprecationResult;
 }

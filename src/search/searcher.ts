@@ -78,6 +78,7 @@ function search(queryStr: string, path: string): Promise<Doc[]> {
           pageSize: numOfResultsPerPage
         })
         .on('data', function(data) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           searchResults.push(data);
         })
         .on('end', function() {

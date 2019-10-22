@@ -11,13 +11,17 @@ const _checkName = name => (diagnosis: Diagnosis) => {
 };
 
 export default class DoctorRegistrar {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diagnoses: Diagnosis[];
 
   constructor() {
     if (!instance) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       instance = this;
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
@@ -39,6 +43,7 @@ export default class DoctorRegistrar {
     if (!instance) {
       DoctorRegistrar.init();
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 

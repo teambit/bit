@@ -37,6 +37,7 @@ export default class Status extends Command {
 
   // eslint-disable-next-line no-empty-pattern
   action([], { json }: { json?: boolean }): Promise<Record<string, any>> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.json = json;
     return status();
   }

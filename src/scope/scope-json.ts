@@ -22,6 +22,7 @@ export type ScopeJsonProps = {
 };
 
 export class ScopeJson {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _name: string;
   version: string | null | undefined;
   resolverPath: string | null | undefined;

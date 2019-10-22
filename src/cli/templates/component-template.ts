@@ -46,17 +46,20 @@ export default function paintComponent(
         const title = prettifyFieldName(field);
         if (!printableComponent[field]) return null;
 
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(c.cyan(title));
         if (!printableComponent[field]) return null;
 
         if (printableComponent[field]) {
           if (printableComponent[field] instanceof Array) {
             arr.push(
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               printableComponent[field]
                 .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
                 .join(' ')
                 .trim()
             );
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           } else arr.push(printableComponent[field]);
         }
         return arr;
@@ -90,25 +93,30 @@ export default function paintComponent(
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
         if (printableComponentToCompare[field] instanceof Array) {
           arr.push(
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableComponentToCompare[field]
               .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableComponentToCompare[field]);
         }
         if (printableOriginalComponent[field] instanceof Array) {
           arr.push(
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableOriginalComponent[field]
               .map(str => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableOriginalComponent[field]);
         }
         return arr;
@@ -157,8 +165,13 @@ export default function paintComponent(
 
     const dependencyHeader = [];
     if (showRemoteVersion) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyHeader.push(['Dependency ID', 'Current Version', 'Local Version', 'Remote Version']);
     } else {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependencyHeader.push(['Dependencies']);
     }
     const getDependenciesRows = (dependencies, title?: string) => {
@@ -181,6 +194,7 @@ export default function paintComponent(
           row.push(c[color](localVersion));
           row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
         }
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyRows.push(row);
       });
       return dependencyRows;
@@ -206,13 +220,18 @@ export default function paintComponent(
     }
     const dependentsHeader = [];
     dependentsHeader.push([
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Dependent ID'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Depth'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Immediate Dependency'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Dependent type')
     ]);
     const allDependenciesRows = getAllDependenciesRows(dependentsInfo);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
     return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
   }
@@ -224,13 +243,18 @@ export default function paintComponent(
 
     const dependenciesHeader = [];
     dependenciesHeader.push([
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Dependency ID'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Depth'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Immediate Dependent'),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Dependency type')
     ]);
     const allDependenciesRows = getAllDependenciesRows(dependenciesInfo);
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
     return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
   }
@@ -238,9 +262,13 @@ export default function paintComponent(
   function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[]): Array<string[]> {
     return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
       const row = [];
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       row.push(dependency.id.toString());
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       row.push(dependency.depth.toString());
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       row.push(dependency.parent === component.id.toString() ? '<self>' : dependency.parent);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       row.push(dependency.dependencyType);
       return row;
     });

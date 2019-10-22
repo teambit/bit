@@ -56,10 +56,14 @@ export default class SourceRepository {
     const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
@@ -118,6 +122,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   modifyCIProps({ source, ciProps }: { source: ConsumerComponent; ciProps: Record<string, any> }): Promise<any> {
     const objectRepo = this.objects();
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.findOrAddComponent(source).then(component => {
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -130,6 +135,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   modifySpecsResults({ source, specsResults }: { source: ConsumerComponent; specsResults?: any }): Promise<any> {
     const objectRepo = this.objects();
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.findOrAddComponent(source).then(component => {
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         version.setSpecsResults(specsResults);
@@ -142,6 +148,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   updateDist({ source }: { source: ConsumerComponent }): Promise<any> {
     const objectRepo = this.objects();
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.findOrAddComponent(source).then(component => {
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -249,6 +256,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       component: clonedComponent,
       files,
       dists,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainDistFile,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDependencies,
@@ -259,6 +267,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedTesterDependencies,
       specsResults,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       message,
       username,
       email
@@ -291,6 +300,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await this.findOrAddComponent(source);
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

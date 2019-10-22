@@ -70,7 +70,9 @@ export default class ManyComponentsWriter {
   verbose: boolean; // prints npm results
   excludeRegistryPrefix: boolean;
   dependenciesIdsCache: Record<string, any>;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   writtenComponents: Component[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   writtenDependencies: Component[];
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
@@ -142,6 +144,7 @@ export default class ManyComponentsWriter {
       const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
       dataToPersist.addManyFiles(jsonFiles);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addBasePath(this.basePath);
     await dataToPersist.persistAllToFS();
   }
@@ -274,6 +277,7 @@ export default class ManyComponentsWriter {
           component: dep,
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           existingComponentMap: componentMap
         });
         return componentWriter.populateComponentsFilesToWrite();
@@ -288,6 +292,7 @@ export default class ManyComponentsWriter {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach(componentWithDeps => {
         // $FlowFixMe componentWithDeps.component.componentMap is set
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
         if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {
           throw new GeneralError(`unable to use "--path" flag.
@@ -298,12 +303,16 @@ to move all component files to a different directory, run bit remove and then bi
           ? componentMap.trackDir
           : componentWithDeps.component.writtenPath;
         // $FlowFixMe relativeWrittenPath is set
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // $FlowFixMe this.writeToPath is set
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const absoluteWriteToPath = path.resolve(this.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           const component = componentWithDeps.component;
           // $FlowFixMe consumer is set here
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           moveExistingComponent(this.consumer, component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
@@ -313,10 +322,12 @@ to move all component files to a different directory, run bit remove and then bi
     if (!this.installNpmPackages) return;
     await installNpmPackagesForComponents({
       // $FlowFixMe consumer is set here
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer: this.consumer,
       basePath: this.basePath,
       componentsWithDependencies: this.componentsWithDependencies,
       verbose: this.verbose, // $FlowFixMe
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: this.silentPackageManagerResult,
       installPeerDependencies: this.installPeerDependencies
     });
@@ -346,6 +357,7 @@ to move all component files to a different directory, run bit remove and then bi
       return composeDependencyPathForIsolated(bitId, DEFAULT_DIR_DEPENDENCIES);
     }
     // $FlowFixMe consumer is set here
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.consumer.composeRelativeDependencyPath(bitId);
   }
   _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ComponentMap | null | undefined) {

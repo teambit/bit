@@ -33,8 +33,10 @@ export default class Untag extends Command {
 
     if (all) {
       version = id;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return unTagAction(version, force);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return unTagAction(version, force, id);
   }
 

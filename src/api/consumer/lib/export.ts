@@ -102,6 +102,7 @@ function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds
   const nonExistOnBitMap = new BitIds();
   componentsIds.forEach(componentsId => {
     const resultId = bitMap.updateComponentId(componentsId, true);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (resultId.hasVersion()) updatedIds.push(resultId);
     else nonExistOnBitMap.push(resultId);
   });
@@ -139,7 +140,8 @@ async function getComponentsToExport(
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds();
     const componentsToExport = idsHaveWildcard // $FlowFixMe ids are set at this point
-      ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
+      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
       : exportPendingComponents;
     await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;

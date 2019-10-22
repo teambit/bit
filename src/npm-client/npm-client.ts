@@ -243,6 +243,7 @@ const _installInOneDirectoryWithPeerOption = async ({
   if (installPeerDependencies) {
     const peers = await _getPeerDeps(dir);
     const peerResults = await _installInOneDirectory({
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules: peers,
       packageManager,
       packageManagerArgs,
@@ -275,6 +276,7 @@ const installAction = async ({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManagerArgs,
       packageManagerProcessOptions,
       dir: rootDir,
@@ -290,6 +292,7 @@ const installAction = async ({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManagerArgs,
       packageManagerProcessOptions,
       dir: rootDir,
@@ -297,8 +300,10 @@ const installAction = async ({
       verbose
     });
     if (Array.isArray(rootDirResults)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.concat(rootDirResults);
     } else {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.push(rootDirResults);
     }
   }
@@ -308,6 +313,7 @@ const installAction = async ({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       modules,
       packageManager,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManagerArgs,
       packageManagerProcessOptions,
       dir,

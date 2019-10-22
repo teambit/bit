@@ -40,14 +40,17 @@ export default class Untrack extends Command {
     }
     if (!R.isEmpty(untrackedComponents)) {
       const title = chalk.underline('untracked components:\n');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       msg.push(title + untrackedComponents.map(result => chalk.green(result)).join('\n'));
     }
     if (!R.isEmpty(unRemovableComponents)) {
       msg.push(
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         chalk.red(`error: unable to untrack ${unRemovableComponents.join(', ')}, please use the bit remove command.\n`)
       );
     }
     if (!R.isEmpty(missingComponents)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       msg.push(chalk.red(`fatal: component ${missingComponents.join(', ')} did not match any component.`));
     }
     return msg.join('\n');

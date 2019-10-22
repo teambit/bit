@@ -18,6 +18,7 @@ export default (async function unTagAction(version?: string, force: boolean, id?
     if (id) {
       const bitId = consumer.getParsedId(id);
       // a user might run the command `bit untag id@version` instead of `bit untag id version`
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (bitId.hasVersion() && !version) version = bitId.version;
       const result = await removeLocalVersion(consumer.scope, bitId, version, force);
       return [result];

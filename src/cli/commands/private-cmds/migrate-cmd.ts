@@ -13,6 +13,7 @@ export default class Migrate extends Command {
   opts = [['v', 'verbose', 'showing logs for the migration process']];
 
   action([scopePath]: [string], { verbose }: { verbose: boolean | null | undefined }): Promise<any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return migrate(scopePath, verbose).then(result => ({ result, verbose }));
   }
 

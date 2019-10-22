@@ -37,9 +37,12 @@ export default class HooksManager {
 
   constructor() {
     if (!instance) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       instance = this;
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
@@ -57,6 +60,7 @@ export default class HooksManager {
    *
    */
   static getInstance(): HooksManager {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
@@ -151,6 +155,7 @@ export default class HooksManager {
         })
         .catch(e => {
           logger.error(`running action ${action.name} on hook ${hookName} failed, err:`, e);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           resultErrors.push({ [action.name]: e });
         });
     });

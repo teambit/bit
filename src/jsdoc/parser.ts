@@ -95,6 +95,7 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
       case 'param':
       case 'arg':
       case 'argument':
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         args.push(formatTag(tag));
         break;
       case 'returns':
@@ -112,9 +113,11 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
         access = tag.access;
         break;
       case 'example':
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         examples.push(exampleTagParser(tag.description));
         break;
       case 'property':
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         properties.push(formatTag(tag));
         break;
       case 'render':
@@ -241,6 +244,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
       // this is a workaround to get the 'example' tag parsed when using react-docs
       // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
       // the @description tag.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extractDataRegex(formatted.description, doclets, filePath);
       formatted.description = doclets[0].description;
       formatted.examples = doclets[0].examples;
@@ -264,6 +268,8 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
     const jsdocRegex = /[ \t]*\/\*\*\s*\n([^*]|(\*(?!\/)))*\*\//g;
     const docs = data.match(jsdocRegex);
     // populate doclets array
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     docs.forEach(doc => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source

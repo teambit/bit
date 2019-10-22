@@ -34,7 +34,10 @@ async function runAndUpdateCI({
   try {
     // define options
     const save = true;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, noCache });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep });
     const dists = buildResults ? buildResults.dists : null;
     await addCIAttrsInTheModel({ startTime });

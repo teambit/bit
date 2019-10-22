@@ -44,14 +44,17 @@ export async function listScope({
     }
     loader.start(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(consumer);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentsList.listScope(showRemoteVersion, showAll, namespacesUsingWildcards);
   }
 
   async function _getRemote(): Promise<Remote> {
     if (consumer) {
       const remotes = await getScopeRemotes(consumer.scope);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return remotes.resolve(scopeName, consumer.scope);
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Remotes.getScopeRemote(scopeName);
   }
 }
