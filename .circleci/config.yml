@@ -661,6 +661,7 @@ workflows:
           <<: *semver_tags_only_filters
           requires:
             - pack
+      -
         publish_to_jfrog:
           <<: *semver_tags_only_filters
           requires:
