@@ -1,7 +1,7 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
-import { mapToObject, objectToTupleArray } from '../utils';
+import { mapToObject } from '../utils';
 
 function getPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
@@ -33,7 +33,7 @@ export default class Config extends Map<string, string> {
         return config;
       }
       const contents = fs.readFileSync(configPath);
-      return new Config(objectToTupleArray(JSON.parse(contents.toString())));
+      return new Config(Object.entries(JSON.parse(contents.toString())));
     } catch (err) {
       return err;
     }
@@ -49,7 +49,7 @@ export default class Config extends Map<string, string> {
         return config;
       }
       const contents = await fs.readFile(configPath);
-      return new Config(objectToTupleArray(JSON.parse(contents.toString())));
+      return new Config(Object.entries(JSON.parse(contents.toString())));
     } catch (err) {
       return err;
     }

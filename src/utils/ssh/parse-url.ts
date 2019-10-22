@@ -24,7 +24,7 @@ export type SSHUrl = {
 export default function parseSSHUrl(str: string): SSHUrl {
   let user = 'root';
   let port = 22;
-  let path = null;
+  let path;
   if (str.startsWith('ssh://')) str = str.replace('ssh://', '');
   if (str.startsWith('bit://')) str = str.replace('ssh://', '');
 

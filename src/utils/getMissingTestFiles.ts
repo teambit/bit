@@ -7,7 +7,7 @@ import { PathOsBased } from './path';
 const DSL = ['{PARENT}', '{FILE_NAME}'];
 
 export default function getMissingTestFiles(tests: PathOsBased[]): PathOsBased[] {
-  let missingTestFiles = [];
+  let missingTestFiles: PathOsBased[] = [];
   const realTestFiles = tests.filter(testFile => {
     const files = DSL.filter(pattern => testFile.indexOf(pattern) > -1);
     const glob = isGlob(pathNormalizeToLinux(testFile));

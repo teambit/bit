@@ -39,7 +39,7 @@ export default (async function mergeFiles({
   baseFile,
   otherFile
 }: MergeFileParams): Promise<MergeFileResult> {
-  const mergeResult = { filePath, output: null, conflict: null };
+  const mergeResult: MergeFileResult = { filePath, output: null, conflict: null };
   const gitExecutablePath = getGitExecutablePath();
   try {
     const result = await execa('git', [

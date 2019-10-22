@@ -30,12 +30,10 @@ import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './fs/current-dir-name';
 import allSettled from './promise-all-settled';
-import values from './object/values';
 import sortObject from './object/sort';
 import glob from './glob';
 import inflate from './zlib-inflate';
 import mapToObject from './map/to-object';
-import objectToTupleArray from './object/to-tuple-array';
 import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './encryption/sha1';
@@ -82,7 +80,6 @@ export {
   parseSSHUrl,
   splitBy,
   sha1,
-  objectToTupleArray,
   objectToStringifiedTupleArray,
   resolveGroupId,
   mapToObject,
@@ -97,7 +94,6 @@ export {
   sharedStartOfArray,
   filterAsync,
   deflate,
-  values,
   toBase64,
   toBase64ArrayBuffer,
   fromBase64,

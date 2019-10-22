@@ -84,7 +84,7 @@ async function runOnChildProcess({
   verbose: boolean | null | undefined;
 }): Promise<SpecsResultsWithMetaData | null | undefined> {
   // Check if we run from npm or from binary (pkg)
-  let args = [];
+  let args: string[] = [];
   if (ids) {
     args = args.concat(ids);
   }

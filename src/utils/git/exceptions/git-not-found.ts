@@ -6,6 +6,7 @@ export default class GitNotFound extends AbstractError {
   showDoctorMessage: boolean;
   constructor(gitExecutablePath: string, err: Error) {
     super();
+    this.gitExecutablePath = gitExecutablePath;
     this.err = err;
     this.showDoctorMessage = true;
   }

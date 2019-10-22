@@ -4,7 +4,7 @@ import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, values, filterObject, getStringifyArgs } from '../../utils';
+import { forEach, empty, mapObject, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import {
   DEFAULT_LANGUAGE,
@@ -91,7 +91,7 @@ export default class Component extends BitObject {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get versionArray(): Ref[] {
-    return values(this.versions);
+    return Object.values(this.versions);
   }
 
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
@@ -406,7 +406,7 @@ export default class Component extends BitObject {
   }
 
   refs(): Ref[] {
-    return values(this.versions);
+    return Object.values(this.versions);
   }
 
   replaceRef(oldRef: Ref, newRef: Ref) {
