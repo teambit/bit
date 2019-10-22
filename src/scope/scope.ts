@@ -426,7 +426,6 @@ export default class Scope {
    * foreach component in array find the componnet that uses that component
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion = false): Promise<{ [key: string]: BitId[] }> {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
@@ -450,11 +449,13 @@ export default class Scope {
       allScopeComponents.forEach(scopeComponents => {
         scopeComponents.flattenedDependencies.forEach(flattenedDependency => {
           if (flattenedDependency.isEqualWithoutVersion(bitId)) {
-            returnResultsWithVersion
-              ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-                dependencies.push(scopeComponents.id)
-              : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-                dependencies.push(scopeComponents.id.changeVersion(null));
+            if (returnResultsWithVersion) {
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+              dependencies.push(scopeComponents.id);
+            } else {
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+              dependencies.push(scopeComponents.id.changeVersion(null));
+            }
           }
         });
       });

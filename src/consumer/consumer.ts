@@ -208,6 +208,7 @@ export default class Consumer {
   warnForMissingDriver(msg?: string): boolean {
     try {
       this.driver.getDriver(false);
+
       return true;
     } catch (err) {
       msg = msg
@@ -687,9 +688,8 @@ export default class Consumer {
       this.bitMap.updateComponentId(id);
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
-      return packageJsonDir
-        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
+      return packageJsonDir // if it has package.json, it's imported, which must have a version
+        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);

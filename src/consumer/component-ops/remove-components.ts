@@ -53,8 +53,7 @@ export default async function removeComponents({
   }
   const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(consumer, remoteIds, force) : [];
   const localResult = !remote
-    ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      await removeLocal(consumer, bitIdsLatest, force, track, deleteFiles)
+    ? await removeLocal(consumer as Consumer, bitIdsLatest, force, track, deleteFiles)
     : new RemovedLocalObjects();
 
   return { localResult, remoteResult };

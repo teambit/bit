@@ -434,16 +434,12 @@ export default class Version extends BitObject {
         return relativePath;
       };
 
-      return deps.map(dependency => {
+      return deps.map((dependency: any) => {
         return {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           id: BitId.parseBackwardCompatible(dependency.id),
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           relativePaths: Array.isArray(dependency.relativePaths)
-            ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              dependency.relativePaths.map(getRelativePath)
-            : // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              dependency.relativePaths
+            ? dependency.relativePaths.map(getRelativePath)
+            : dependency.relativePaths
         };
       });
     };

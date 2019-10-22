@@ -281,9 +281,8 @@ export default class Dists {
     // back before saving to the model. this way, when the author updates the components, the paths will be correct.
     const addSharedDirAndDistEntry = pathStr => {
       const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
-      const withDistEntry = this.distEntryShouldBeStripped // $FlowFixMe
-        ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          path.join(consumer.config.distEntry, withSharedDir)
+      const withDistEntry = this.distEntryShouldBeStripped
+        ? path.join(consumer.config.distEntry as string, withSharedDir)
         : withSharedDir;
       return pathNormalizeToLinux(withDistEntry);
     };
