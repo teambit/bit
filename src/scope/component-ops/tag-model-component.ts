@@ -207,7 +207,8 @@ export default (async function tagModelComponent({
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
-  verbose = false
+  verbose = false,
+  skipAutoTag
 }: {
   consumerComponents: Component[];
   scope: Scope;
@@ -219,6 +220,7 @@ export default (async function tagModelComponent({
   ignoreNewestVersion: boolean;
   skipTests: boolean;
   verbose?: boolean;
+  skipAutoTag: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
@@ -232,9 +234,12 @@ export default (async function tagModelComponent({
   const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
-  // $FlowFixMe unclear error
-  const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
+  const autoTagCandidates = skipAutoTag
+    ? new BitIds()
+    : consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  const autoTagComponents = skipAutoTag
+    ? []
+    : await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));

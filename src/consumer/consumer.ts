@@ -625,7 +625,8 @@ export default class Consumer {
     verbose: boolean | null | undefined,
     ignoreUnresolvedDependencies: boolean | null | undefined,
     ignoreNewestVersion: boolean,
-    skipTests = false
+    skipTests = false,
+    skipAutoTag: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
@@ -653,7 +654,8 @@ export default class Consumer {
       consumer: this,
       ignoreNewestVersion,
       skipTests,
-      verbose
+      verbose,
+      skipAutoTag
     });
 
     const autoTaggedComponents = autoTaggedResults.map(r => r.component);
