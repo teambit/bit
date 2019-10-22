@@ -567,4 +567,28 @@ describe('auto tagging functionality', function() {
       });
     });
   });
+  describe('using --skip-auto-tag flag', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.tagAllComponents();
+      helper.fs.outputFile('utils/is-type.js', fixtures.isTypeV2);
+      // an intermediate step, make sure bit status shows components to be auto-tag.
+      const statusOutput = helper.command.runCmd('bit status');
+      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+
+      output = helper.command.tagAllComponents('--skip-auto-tag');
+    });
+    it('should not auto-tag the dependents', () => {
+      expect(output).to.have.string('1 component(s) tagged');
+      const scopeList = helper.command.listLocalScopeParsed();
+      const barFoo = scopeList.find(c => c.id === 'bar/foo');
+      expect(barFoo.localVersion).to.equal('0.0.1');
+      const isString = scopeList.find(c => c.id === 'utils/is-string');
+      expect(isString.localVersion).to.equal('0.0.1');
+      const isType = scopeList.find(c => c.id === 'utils/is-type');
+      expect(isType.localVersion).to.equal('0.0.2');
+    });
+  });
 });
