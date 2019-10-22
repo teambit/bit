@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
     "moduleResolution": "node",
-    "allowJs": true,
     "noEmit": true,
     "module": "commonjs",
     "target": "es2015",
