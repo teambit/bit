@@ -16,7 +16,8 @@
     "prepublishOnly": "npm run clean && npm run build",
     "build-debug": "babel src -d dist --source-maps",
     "pre-release": "gh-release --prerelease",
-    "release": "gh-release"
+    "release": "gh-release",
+    "release:circle": "gh-release -y"
   },
   "bin": {
     "bitjs": "bin/bitjs.js"
