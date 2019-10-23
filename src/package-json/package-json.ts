@@ -73,6 +73,16 @@ export default class PackageJson {
   }
 
   /*
+   * load package.json from path
+   */
+  static async getPackageJsonSync(pathStr: string) {
+    const getRawObject = () => fs.readJsonSync(composePath(pathStr));
+    const exist = PackageJson.hasExisting(pathStr);
+    if (exist) return getRawObject();
+    return null;
+  }
+
+  /*
    * save package.json in path
    */
   static saveRawObject(pathStr: string, obj: Record<string, any>) {
