@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.1.3-dev.4] - 2019-10-23
+
+- typescript strict mode
+
 ## [2.1.3-dev.3] - 2019-10-22
 
 - [#2079](https://github.com/teambit/bit/issues/2079) fix error when Yarn workspaces uses nohoist
