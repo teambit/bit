@@ -246,4 +246,4 @@ workflows:
         github-release:
           <<: *semver_tags_only_filters
           requires:
-            - checkout_code
+            - build
