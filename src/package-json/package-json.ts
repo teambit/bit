@@ -12,7 +12,68 @@ function convertComponentsIdToValidPackageName(registryPrefix: string, id: strin
   return `${registryPrefix}/${id.replace(/\//g, '.')}`;
 }
 
+export type PackageJsonProps = {
+  name?: string;
+  version?: string;
+  homepage?: string;
+  main?: string;
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
+  license?: string;
+  scripts?: Record<string, any>;
+  workspaces?: string[];
+  private?: boolean;
+};
+
 export default class PackageJson {
+  name?: string;
+  version?: string;
+  homepage?: string;
+  main?: string;
+  dependencies?: Record<string, any>;
+  devDependencies?: Record<string, any>;
+  peerDependencies?: Record<string, any>;
+  componentRootFolder?: string; // path where to write the package.json
+  license?: string;
+  scripts?: Record<string, any>;
+  workspaces?: string[];
+
+  constructor(
+    componentRootFolder: string,
+    {
+      name,
+      version,
+      homepage,
+      main,
+      dependencies,
+      devDependencies,
+      peerDependencies,
+      license,
+      scripts,
+      workspaces
+    }: PackageJsonProps
+  ) {
+    this.name = name;
+    this.version = version;
+    this.homepage = homepage;
+    this.main = main;
+    this.dependencies = dependencies;
+    this.devDependencies = devDependencies;
+    this.peerDependencies = peerDependencies;
+    this.componentRootFolder = componentRootFolder;
+    this.license = license;
+    this.scripts = scripts;
+    this.workspaces = workspaces;
+  }
+
+  static loadSync(componentRootFolder: string): PackageJson | null {
+    const composedPath = composePath(componentRootFolder);
+    if (!PackageJson.hasExisting(componentRootFolder)) return null;
+    const componentJsonObject = fs.readJsonSync(composedPath);
+    return new PackageJson(componentRootFolder, componentJsonObject);
+  }
+
   static hasExisting(componentRootFolder: string): boolean {
     const packageJsonPath = composePath(componentRootFolder);
     return fs.pathExistsSync(packageJsonPath);
@@ -67,16 +128,6 @@ export default class PackageJson {
    */
   static async getPackageJson(pathStr: string) {
     const getRawObject = () => fs.readJson(composePath(pathStr));
-    const exist = PackageJson.hasExisting(pathStr);
-    if (exist) return getRawObject();
-    return null;
-  }
-
-  /*
-   * load package.json from path
-   */
-  static async getPackageJsonSync(pathStr: string) {
-    const getRawObject = () => fs.readJsonSync(composePath(pathStr));
     const exist = PackageJson.hasExisting(pathStr);
     if (exist) return getRawObject();
     return null;

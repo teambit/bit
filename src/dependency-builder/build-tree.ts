@@ -83,7 +83,7 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Record
   // we will look for the package.json on the dependency but won't find it
   // if we propagate we will take the version from the root's package json which has nothing with the component version
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const packageInfo = PackageJson.getPackageJsonSync(packageDir);
+  const packageInfo = PackageJson.loadSync(packageDir);
 
   // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
   // or when using custom-module-resolution it may be empty or the name/version are empty
