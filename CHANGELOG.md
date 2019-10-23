@@ -7,15 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.4.2-dev.1] - 2019-10-23
+## [[14.4.2] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.2)
 
-- [#2066](https://github.com/teambit/bit/issues/2066) introduce `--skip-auto-tag` flag for `bit tag`
-- [#2079](https://github.com/teambit/bit/issues/2079) update bit-javascript to fix error when Yarn workspaces uses nohoist
-- [#2072](https://github.com/teambit/bit/issues/2072) upgrade bit-javascript to support React fragments
+### Bug fixes
+
 - [#2024](https://github.com/teambit/bit/issues/2024) rebuild components upon dependencies changes for compilers that build dependencies
 - [#2067](https://github.com/teambit/bit/issues/2067) fix `bit checkout` to not duplicate modified files when the shared dir has changed
+- [#2079](https://github.com/teambit/bit/issues/2079) update bit-javascript to fix error when Yarn workspaces uses nohoist
+- [#2072](https://github.com/teambit/bit/issues/2072) update bit-javascript to support React fragments
 
-## [14.4.1] - 2019-10-06
+### Experimental
+
+- [#2066](https://github.com/teambit/bit/issues/2066) introduce `--skip-auto-tag` flag for `bit tag`
+
+### Internal
+
+- move from flow to typescript
+
+## [[14.4.1] - 2019-10-06](https://github.com/teambit/bit/releases/tag/v14.4.1)
 
 ### Bug fixes
 
