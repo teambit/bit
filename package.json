@@ -62,7 +62,7 @@
     "object-assign": "^4.1.1",
     "ora": "^1.2.0",
     "parents": "^1.0.1",
-    "ramda": "^0.22.1",
+    "ramda": "^0.26.1",
     "regenerator-runtime": "^0.10.5",
     "resolve": "^1.5.0",
     "resolve-dependency-path": "^2.0.0",

@@ -130,9 +130,8 @@ function getDependenciesFromLinkFileIfExists(
 
   const dependencies = dependency.importSpecifiers.map((specifier: Specifier) => {
     const realDep = findTheRealDependency(pathMap, dependencyPathMap, specifier);
-    // $FlowFixMe
     if (!realDep) return null;
-    // $FlowFixMe importSpecifiers do exist
+    // @ts-ignore
     const depImportSpecifier = realDep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
     const importSpecifier: ImportSpecifier = {
       mainFile: specifier,
@@ -146,11 +145,16 @@ function getDependenciesFromLinkFileIfExists(
     return null;
   }
   const linkFiles = [];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies.forEach((dep: { file: string; importSpecifier: ImportSpecifier }) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const existingFile = linkFiles.find(linkFile => linkFile.file === dep.file);
     if (existingFile) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       existingFile.importSpecifiers.push(dep.importSpecifier);
     } else {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       linkFiles.push({ file: dep.file, importSpecifiers: [dep.importSpecifier] });
     }
   });

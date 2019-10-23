@@ -147,6 +147,7 @@ export default function generateTree(files = [], config) {
       });
       Object.assign(depTree, dependencyTreeResult);
     } catch (err) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       errors[file] = err;
     }
   });

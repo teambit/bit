@@ -963,8 +963,11 @@ describe('dependencyTree', function() {
         resolveConfig: { aliases: { something: 'anything' } }
       };
       dependencyTree(config);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(pathMapRecord.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependency = pathMapRecord.dependencies[0];
       expect(dependency).to.not.have.property('isCustomResolveUsed');
     });
@@ -988,8 +991,11 @@ describe('dependencyTree', function() {
         resolveConfig: { aliases: { something: 'anything' } }
       };
       dependencyTree(config);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(pathMapRecord.dependencies).to.have.lengthOf(1);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependency = pathMapRecord.dependencies[0];
       expect(dependency).to.not.have.property('isCustomResolveUsed');
     });
