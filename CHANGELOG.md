@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.4.2-dev.1] - 2019-10-23
+
 - [#2066](https://github.com/teambit/bit/issues/2066) introduce `--skip-auto-tag` flag for `bit tag`
 - [#2079](https://github.com/teambit/bit/issues/2079) update bit-javascript to fix error when Yarn workspaces uses nohoist
 - [#2072](https://github.com/teambit/bit/issues/2072) upgrade bit-javascript to support React fragments
