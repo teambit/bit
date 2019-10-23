@@ -31,6 +31,7 @@ export default function run(): Promise<void> {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then(results => {
         const serializedResults = serializeResults(results.results);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         process.send(serializedResults);
         // Make sure the child process will not hang
         process.exit();
@@ -38,6 +39,7 @@ export default function run(): Promise<void> {
       .catch(e => {
         loader.off();
         const serializedResults = serializeResults(e);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         process.send(serializedResults);
         // Make sure the child process will not hang
         process.exit();
@@ -47,6 +49,7 @@ export default function run(): Promise<void> {
   return Promise.all(testAllP)
     .then(results => {
       const serializedResults = serializeResults(results);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.send(serializedResults);
       // Make sure the child process will not hang
       process.exit();
@@ -54,6 +57,7 @@ export default function run(): Promise<void> {
     .catch(e => {
       loader.off();
       const serializedResults = serializeResults(e);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       process.send(serializedResults);
       // Make sure the child process will not hang
       process.exit();

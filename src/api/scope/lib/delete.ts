@@ -12,6 +12,7 @@ export default function remove(
 ): Promise<RemovedObjectSerialized> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds, force };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   HooksManagerInstance.triggerHook(PRE_REMOVE_REMOTE, args, headers);
   return loadScope(path).then(scope => {
     return scope.removeMany(bitIds, force).then(async res => {
@@ -24,6 +25,7 @@ export default function remove(
         componentsIds: bitIds.serialize(),
         scopeName: scope.scopeJson.name
       };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       await HooksManagerInstance.triggerHook(POST_REMOVE_REMOTE, hookArgs, headers);
       return res.serialize();
     });

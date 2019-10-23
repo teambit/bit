@@ -29,6 +29,7 @@ export default (async function deleteComponentsFiles(
       }
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // $FlowFixMe rootDir is set for non authored
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const rootDir: string = componentMap.rootDir;
         dataToPersist.removePath(new RemovePath(rootDir, true));
         if (!consumer.shouldDistsBeInsideTheComponent()) {

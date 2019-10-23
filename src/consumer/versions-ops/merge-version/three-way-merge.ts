@@ -88,23 +88,32 @@ export default (async function threeWayMergeVersions({
       // if !currentFile && !baseFile, the file was created after the last tag
       // if !currentFile && baseFile,  the file was created as part of the last tag
       // either way, no need to do any calculation, the file should be added
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.addFiles.push({ filePath, fsFile });
       return;
     }
     if (!baseFile) {
       // if currentFile && !baseFile, the file was deleted as part of the last tag
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.overrideFiles.push({ filePath, fsFile });
       return;
     }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFileHash = sha1(fsFile.contents);
     const baseFileHash = baseFile.file.hash;
     const currentFileHash = currentFile.file.hash;
     if (fsFileHash === currentFileHash) {
       // no need to check also for fsFileHash === baseFileHash, as long as fs == current, no need to take any action
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
     if (fsFileHash === baseFileHash) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.overrideFiles.push({ filePath, fsFile });
       return;
     }
@@ -115,6 +124,12 @@ export default (async function threeWayMergeVersions({
     baseFile.version = otherVersion;
     // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
     currentFile.version = currentVersion;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
@@ -129,9 +144,12 @@ export default (async function threeWayMergeVersions({
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     modifiedFile.output = conflictResult.output;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     modifiedFile.conflict = conflictResult.conflict;
     if (conflictResult.conflict) results.hasConflicts = true;
   });
@@ -145,6 +163,7 @@ async function getMergeResults(
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async modifiedFile => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
       const content = await file.file.load(consumer.scope.objects);

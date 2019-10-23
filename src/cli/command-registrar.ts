@@ -73,6 +73,7 @@ function execAction(command, concrete, args) {
   const migrateWrapper = (run: boolean) => {
     if (run) {
       logger.debug('Checking if a migration is needed');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return migrate(null, false);
     }
     return Promise.resolve();
@@ -192,6 +193,7 @@ export default class CommandRegistrar {
   }
 
   registerExtenstionsCommands() {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.extensionsCommands.forEach(cmd => register(cmd, commander));
   }
 
@@ -217,6 +219,7 @@ export default class CommandRegistrar {
 
     const subcommand = args[0];
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionsCmdList = this.extensionsCommands.map(cmd => first(cmd.name.split(' ')));
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 

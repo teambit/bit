@@ -167,6 +167,7 @@ export default class Version extends BitObject {
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
@@ -433,7 +434,7 @@ export default class Version extends BitObject {
         return relativePath;
       };
 
-      return deps.map(dependency => {
+      return deps.map((dependency: any) => {
         return {
           id: BitId.parseBackwardCompatible(dependency.id),
           relativePaths: Array.isArray(dependency.relativePaths)
@@ -562,6 +563,7 @@ export default class Version extends BitObject {
         date: Date.now().toString()
       },
       specsResults,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
@@ -584,6 +586,7 @@ export default class Version extends BitObject {
       flattenedTesterDependencies,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions
     });

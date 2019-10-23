@@ -27,12 +27,19 @@ function buildQuery(queryStr: string): Array<Object> {
     .join(' ');
   const tokenizedQuery = tokenizeStr(queryStr);
   const query = [];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('name', queryStr));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('tokenizedName', tokenizedQuery));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('stemmedName', stem(tokenizedQuery)));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('functionNames', queryStr));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('tokenizedFunctionNames', tokenizedQuery));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('minDescription', queryStrWithoutStopwords));
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   query.push(queryItem('stemmedMinDescription', stem(queryStrWithoutStopwords)));
   return query;
 }

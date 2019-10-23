@@ -34,8 +34,11 @@ export default class BitRawObject {
     this.content = content || contentFromBuffer;
     this.headers = headers ? headers.split(SPACE_DELIMITER) : undefined;
     const typeFromHeader = this.headers ? this.headers[0] : undefined;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.type = type || typeFromHeader;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this._ref = ref;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.types = types;
     this.parsedContent = parsedContent || this.getParsedContent();
   }
@@ -139,6 +142,7 @@ export default class BitRawObject {
     const types = this.types ? R.clone(this.types) : undefined;
     const parsedContent = this.parsedContent ? R.clone(this.parsedContent) : undefined;
     // TODO: Should also clone the buffers (content)
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitRawObject(undefined, this._ref, types, this.type, this.content, parsedContent);
   }
 }

@@ -14,7 +14,9 @@ export default class EnvHelper {
   scopes: ScopesData;
   scopeHelper: ScopeHelper;
   compilerCreated = false;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dummyCompilerCreated: boolean;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dummyTesterCreated: boolean;
   constructor(
     command: CommandHelper,

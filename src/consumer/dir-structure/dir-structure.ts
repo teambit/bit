@@ -9,6 +9,7 @@ import logger from '../../logger/logger';
 
 export default class BitStructure {
   _componentsDefaultDirectoryUnProcessed: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
@@ -42,8 +43,10 @@ export default class BitStructure {
           // this is a dynamic parameter
           const dirStripped = dir.replace(/[{}]/g, '');
           const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (componentPart) dirStructureParsed.push(`{${componentPart}}`);
         } else {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           dirStructureParsed.push(dir);
         }
       });

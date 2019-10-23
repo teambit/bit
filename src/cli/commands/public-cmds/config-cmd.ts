@@ -2,7 +2,6 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
 import Command from '../../command';
-import { objectToTupleArray } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
@@ -48,7 +47,7 @@ class ConfigList extends Command {
   }
 
   report(conf: { [key: string]: string }): string {
-    return objectToTupleArray(conf)
+    return Object.entries(conf)
       .map(tuple => {
         return tuple.join('     ');
       })
@@ -84,7 +83,7 @@ export default class Config extends Command {
   }
 
   report(conf: { [key: string]: string }): string {
-    return objectToTupleArray(conf)
+    return Object.entries(conf)
       .map(tuple => {
         tuple[0] = rightpad(tuple[0], 30, ' ');
         return tuple.join('');

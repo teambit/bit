@@ -52,6 +52,7 @@ export async function tagAction(args: {
   const bitId = consumer.getParsedId(id);
   if (!force) {
     const componentStatus = await consumer.getComponentStatusById(bitId);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (componentStatus.modified === false) return null;
   }
   const tagResults = await consumer.tag(
@@ -125,9 +126,11 @@ export async function tagAllAction(args: {
   const { tagPendingComponents, warnings } = await getCommitPendingComponents(
     consumer,
     Boolean(scope),
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     exactVersion,
     includeImported
   );
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (R.isEmpty(tagPendingComponents)) return null;
   const componentsToTag = idWithWildcard
     ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, idWithWildcard)
@@ -146,15 +149,19 @@ export async function tagAllAction(args: {
     skipTests,
     skipAutoTag
   );
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
   Analytics.setExtraData(
     'num_components',
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     R.concat(tagResults.taggedComponents, tagResults.autoTaggedResults, tagResults.newComponents).length
   );
   await consumer.onDestroy();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return tagResults;
 }
 

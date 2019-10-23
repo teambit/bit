@@ -10,6 +10,7 @@ const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
 
 export default class WatchRunner {
   helper: Helper;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   watchProcess: ChildProcess;
   constructor(helper: Helper) {
     this.helper = helper;
@@ -20,6 +21,7 @@ export default class WatchRunner {
     return new Promise((resolve, reject) => {
       // this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath, detached: true });
       this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stdout.on('data', data => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(STARTED_WATCHING_MSG)) {
@@ -27,6 +29,7 @@ export default class WatchRunner {
           resolve();
         }
       });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stderr.on('data', data => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
         reject(data);
@@ -45,6 +48,7 @@ export default class WatchRunner {
       const timer = setTimeout(() => {
         reject(new Error(`watcher exceed the limit of ${timeoutAfter} ms, the message "${msg}" was not received`));
       }, timeoutAfter);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stdout.on('data', data => {
         if (data.includes(msg)) {
           clearTimeout(timer);

@@ -9,11 +9,14 @@ import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 
 export default class ScopeHelper {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   debugMode: boolean;
   scopes: ScopesData;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   e2eDir: string;
   command: CommandHelper;
   fs: FsHelper;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];

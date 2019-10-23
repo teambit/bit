@@ -41,6 +41,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     dependencies.get().forEach(dependency => {
       const id = dependency.id;
       // $FlowFixMe component.componentFromModel is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
       const idFromPackageJson = getIdFromPackageJson(id);
       const idFromBitMap = getIdFromBitMap(id);
@@ -95,6 +96,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   function getIdFromPackageJson(componentId: BitId): BitId | null | undefined {
     if (!componentId.scope) return null;
     // $FlowFixMe component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const rootDir: PathLinux | null | undefined = component.componentMap.rootDir;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;

@@ -19,6 +19,7 @@ export default (async function fetch(
   const args = { path, bitIds, noDependencies };
   // This might be undefined in case of fork process like during bit test command
   if (HooksManagerInstance) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
   const scope: Scope = await loadScope(path);
@@ -42,6 +43,7 @@ export default (async function fetch(
         componentsIds: bitIds.serialize(),
         scopeName: scope.scopeJson.name
       },
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       headers
     );
   }

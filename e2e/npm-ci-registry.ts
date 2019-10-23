@@ -31,6 +31,7 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * time the registry is running. this solution makes sure the package-names are different.
  */
 export default class NpmCiRegistry {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;
   constructor(helper: Helper) {
@@ -52,6 +53,7 @@ export default class NpmCiRegistry {
   _establishRegistry(): Promise<void> {
     return new Promise(resolve => {
       this.registryServer = execa('verdaccio', { detached: true });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stdout.on('data', data => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes('4873')) {
@@ -59,6 +61,7 @@ export default class NpmCiRegistry {
           resolve();
         }
       });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stderr.on('data', data => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
       });

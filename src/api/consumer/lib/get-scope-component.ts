@@ -39,11 +39,14 @@ export default (async function getScopeComponent({
   let dependenciesInfo: DependenciesInfo[] = [];
   let dependentsInfo: DependenciesInfo[] = [];
   if (showDependents || showDependencies) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepGraph = await remote.graph(component.id);
     if (showDependents) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependentsInfo = componentDepGraph.getDependentsInfo(component.id);
     }
     if (showDependencies) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesInfo = componentDepGraph.getDependenciesInfo(component.id);
     }
   }
@@ -60,6 +63,7 @@ export default (async function getScopeComponent({
 
   async function getRemote(): Promise<Remote> {
     // $FlowFixMe scope must be set as it came from a remote
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeName: string = bitId.scope;
     if (consumer) {
       const remotes: Remotes = await getScopeRemotes(consumer.scope);

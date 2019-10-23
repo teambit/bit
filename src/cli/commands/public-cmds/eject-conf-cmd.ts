@@ -20,6 +20,7 @@ export default class EjectConf extends Command {
 
   async action([id]: [string], { path }: { path?: string }): Promise<EjectConfCliResult> {
     const cwd = process.cwd();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const res = await ejectConf(id, { ejectPath: path });
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     res.ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedFullPath);

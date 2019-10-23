@@ -108,6 +108,7 @@ export default function determineMainFile(
       a.relativePath.split(DEFAULT_SEPARATOR).length - b.relativePath.split(DEFAULT_SEPARATOR).length;
     potentialMainFiles.sort(sortByNumOfDirs);
     mainFileFromFiles = R.head(potentialMainFiles);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return mainFileFromFiles.relativePath;
   }
 }

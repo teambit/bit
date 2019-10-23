@@ -86,6 +86,7 @@ export type InitOptions = {
 export default class BaseExtension {
   name: string;
   loaded: boolean;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   initialized: boolean;
   disabled: boolean;
   filePath: string;
@@ -400,6 +401,7 @@ export default class BaseExtension {
         // the function may or may not be a promise
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         extensionProps.schema = await Promise.resolve(extensionProps.script.getSchema());
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const valid = ajv.validate(extensionProps.schema, rawConfig);
         if (!valid) {
           throw new ExtensionSchemaError(name, ajv.errorsText());

@@ -26,9 +26,12 @@ export default class GitHooksManager {
   constructor(basePath: string) {
     this.basePath = basePath;
     if (!instance) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       instance = this;
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return instance;
   }
 
@@ -55,8 +58,10 @@ export default class GitHooksManager {
     this.hooks.forEach((hook, hookName) => {
       const result = hook.writeSync();
       if (result) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         added.push(hookName);
       } else {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         alreadyExist.push(hookName);
       }
     });

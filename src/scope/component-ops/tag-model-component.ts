@@ -121,6 +121,7 @@ async function setFutureVersions(
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async componentToTag => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance
@@ -163,6 +164,7 @@ function validateDirManipulation(components: Component[]): void {
     const wrapDir = component.componentFromModel.wrapDir;
     const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
       // $FlowFixMe componentMap is set here
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         return pathJoinLinux(sharedDir, pathStr);
       }
@@ -286,6 +288,7 @@ export default (async function tagModelComponent({
       rejectOnFailure: !force
     });
     try {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       testsResults = await testsResultsP;
     } catch (err) {
       // if force is true, ignore the tests and continue
@@ -313,6 +316,7 @@ export default (async function tagModelComponent({
     let testResult;
     if (!skipTests) {
       testResult = testsResults.find(result => {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }

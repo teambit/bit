@@ -52,6 +52,7 @@ export type LoadArgsProps = BaseLoadArgsProps;
  * Load extension
  * Config
  */
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class Extension extends BaseExtension {
   registeredHooksActions: RegisteredHooksActions;
   newHooks: string[];
@@ -91,6 +92,7 @@ export default class Extension extends BaseExtension {
         logger.debug(`trying to trigger the hook ${hookName} which not registered by this extension`);
         return;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       HooksManagerInstance.triggerHook(hookName, args);
     },
     getLoader: () => loader,
@@ -133,6 +135,7 @@ export default class Extension extends BaseExtension {
       ...baseExtensionProps
     };
     const dynamicConfig = BaseExtension.loadDynamicConfig(extensionProps);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     extensionProps.dynamicConfig = dynamicConfig;
     const extension: Extension = new Extension(extensionProps);
     if (extension.loaded) {

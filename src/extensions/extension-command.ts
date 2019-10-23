@@ -26,6 +26,7 @@ export default class ExtensionCommand extends Command {
     this.description = props.description;
     this._action = props.action;
     this._report = props.report;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.opts = props.opts || [];
   }
 

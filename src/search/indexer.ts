@@ -66,6 +66,7 @@ function prepareDoc(docs: Object, component: Component): Doc {
 
 function addAllToLocalIndex(components: Array<Component>): Promise<string> {
   return new Promise(resolve => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const docs = components.map(component => prepareDoc(component.docs, component));
     const docStream = new Readable({ objectMode: true });
     // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true
@@ -82,6 +83,7 @@ function addAllToLocalIndex(components: Array<Component>): Promise<string> {
 
 function addToLocalIndex(component: Component): Promise<Component> {
   return new Promise(resolve => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const doc = prepareDoc(component.docs, component);
     const docStream = new Readable({ objectMode: true });
     // $FlowFixMe: a flow bug. Stream can be an object as well when objectMode is true

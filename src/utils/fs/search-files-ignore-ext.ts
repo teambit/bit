@@ -7,13 +7,17 @@ import logger from '../../logger/logger';
 const LOWER_PRIORITY_EXTENSIONS = ['d.ts'];
 const HIGHER_PRIORITY_EXTENSIONS = ['js'];
 
-export default function searchFilesIgnoreExt(files: Vinyl[], fileName: PathOsBased): Vinyl;
-export default function searchFilesIgnoreExt(files: Vinyl[], fileName: PathOsBased, returnProp: string): PathOsBased;
+export default function searchFilesIgnoreExt(files: Vinyl[], fileName: PathOsBased): Vinyl | null;
+export default function searchFilesIgnoreExt(
+  files: Vinyl[],
+  fileName: PathOsBased,
+  returnProp: string
+): PathOsBased | null;
 export default function searchFilesIgnoreExt(
   files: Vinyl[],
   fileName: PathOsBased,
   returnProp?: string
-): PathOsBased | Vinyl {
+): PathOsBased | Vinyl | null {
   const _byFileNoExt = file => getWithoutExt(file.relative) === getWithoutExt(fileName);
   const _byFileWithExt = file => file.relative === fileName;
 

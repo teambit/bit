@@ -55,6 +55,7 @@ export default class GeneralHelper {
   static alignOutput(str?: string | null | undefined): string | null | undefined {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
   }
 

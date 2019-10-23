@@ -23,7 +23,7 @@ import { Remotes } from '../../remotes';
  * @param {boolean} track - keep tracking local staged components in bitmap.
  * @param {boolean} deleteFiles - delete local added files from fs.
  */
-export default (async function removeComponents({
+export default async function removeComponents({
   consumer,
   ids,
   force,
@@ -53,11 +53,11 @@ export default (async function removeComponents({
   }
   const remoteResult = remote && !R.isEmpty(remoteIds) ? await removeRemote(consumer, remoteIds, force) : [];
   const localResult = !remote
-    ? await removeLocal(consumer, bitIdsLatest, force, track, deleteFiles)
+    ? await removeLocal(consumer as Consumer, bitIdsLatest, force, track, deleteFiles)
     : new RemovedLocalObjects();
 
   return { localResult, remoteResult };
-});
+}
 
 /**
  * Remove remote component from ssh server

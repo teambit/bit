@@ -91,6 +91,7 @@ export default class Checkout extends Command {
         if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
         const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
           // $FlowFixMe version is defined when !isReset
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           isLatest ? component.id.version : version
         )}\n`;
         return `${title} ${applyVersionReport(components, false)}`;
@@ -101,6 +102,7 @@ export default class Checkout extends Command {
         return title + body;
       }
       // $FlowFixMe version is defined when !isReset
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const versionOutput = isLatest ? 'their latest version' : `version ${chalk.bold(version)}`;
       const title = `successfully switched the following components to ${versionOutput}\n\n`;
       const showVersion = isLatest || isReset;

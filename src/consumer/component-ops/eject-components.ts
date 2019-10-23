@@ -40,8 +40,10 @@ export default class EjectComponents {
   componentsIds: BitId[];
   force: boolean;
   componentsToEject: BitIds;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   notEjectedDependents: Array<{ dependent: Component; ejectedDependencies: Component[] }>;
   failedComponents: FailedComponents;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
   constructor(consumer: Consumer, componentsIds: BitId[], force?: boolean) {
     this.consumer = consumer;
@@ -111,6 +113,7 @@ export default class EjectComponents {
     this.packageJsonFilesBeforeChanges = [rootPackageJson];
     this.notEjectedDependents.forEach(({ dependent }) => {
       // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.packageJsonFilesBeforeChanges.push(dependent.packageJsonFile.clone());
     });
   }
@@ -167,6 +170,7 @@ export default class EjectComponents {
         this.componentsToEject.map(async bitId => {
           const modelComponent = await this.consumer.scope.getModelComponent(bitId);
           // $FlowFixMe componentsToEject has scope and version, see @_validateIdsHaveScopesAndVersions
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           return new ComponentVersion(modelComponent, bitId.version);
         })
       );
@@ -178,9 +182,11 @@ export default class EjectComponents {
           return acc;
         }, {});
         // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependent.packageJsonFile.replaceDependencies(dependenciesToReplace);
       });
       // $FlowFixMe notEjectedDependents has only dependents with packageJsonFile
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       await Promise.all(this.notEjectedDependents.map(({ dependent }) => dependent.packageJsonFile.write()));
     } catch (err) {
       logger.error(`eject: failed ${action}, restoring package.json`, err);
@@ -193,7 +199,9 @@ export default class EjectComponents {
     const action = 'installing the components using the NPM client';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dirs: string[] = this.notEjectedDependents // $FlowFixMe componentMap must be set for authored and imported
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .map(({ dependent }) => dependent.componentMap.rootDir)
         .filter(x => x);
       await installPackages(this.consumer, dirs, true, true);

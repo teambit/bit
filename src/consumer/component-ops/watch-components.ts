@@ -15,6 +15,7 @@ export const STARTED_WATCHING_MSG = 'started watching for component changes to r
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
 
 export default class WatchComponents {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   consumer: Consumer;
   verbose: boolean;
   trackDirs: { [dir: string]: string } = {}; // dir => component-id

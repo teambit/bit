@@ -57,6 +57,7 @@ export default class ComponentLoader {
           'the component {idStr} has been already loaded, use the cached component',
           { idStr }
         );
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         alreadyLoadedComponents.push(this._componentsCache[idStr]);
       } else {
         idsToProcess.push(idWithVersion);
@@ -76,6 +77,7 @@ export default class ComponentLoader {
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
           id: component.id.toString()
         });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         allComponents.push(component);
       }
     });
@@ -136,6 +138,7 @@ export default class ComponentLoader {
   async _handleOutOfSyncScenarios(component: Component) {
     const { componentFromModel, componentMap } = component;
     // $FlowFixMe componentMap is set here
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const currentId: BitId = componentMap.id;
     let newId: BitId | null | undefined;
     if (componentFromModel && !currentId.hasVersion()) {
@@ -174,6 +177,7 @@ export default class ComponentLoader {
     if (currentId.hasScope()) {
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // $FlowFixMe version is set here
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
         throw new ComponentsPendingImport();
       }

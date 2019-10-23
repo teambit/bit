@@ -175,6 +175,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
       const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
 
       if (!compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInBoth)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.notInBoth.push(packageDep);
       }
 
@@ -183,6 +184,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
         compatibleWithNodeModules &&
         !R.contains(packageDep, warnings.notInPackageJson)
       ) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.notInPackageJson.push(packageDep);
       }
 
@@ -191,6 +193,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
         !compatibleWithNodeModules &&
         !R.contains(packageDep, warnings.notInNodeModules)
       ) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.notInNodeModules.push(packageDep);
       }
     }, dep.packageDependencies);

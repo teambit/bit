@@ -31,9 +31,11 @@ describe('ConsumerOverrides', () => {
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = new BitId({ name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env)
           .to.have.property('compiler')
           .that.equal('bit.envs/compiler/babel@0.0.20');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env)
           .to.have.property('tester')
           .that.equal('bit.envs/tester/jest@0.0.1');
@@ -51,9 +53,11 @@ describe('ConsumerOverrides', () => {
         const componentsOverrides = new ConsumerOverrides(overridesFixture);
         const id = new BitId({ name: 'src/utils/javascript/is-string' });
         const result = componentsOverrides.getOverrideComponentData(id);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env)
           .to.have.property('compiler')
           .that.equal('bit.envs/compiler/babel@0.0.20');
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(result.env)
           .to.have.property('tester')
           .that.equal('bit.envs/tester/jest@0.0.1');

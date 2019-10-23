@@ -106,6 +106,7 @@ export default class RemoveModelComponents {
     });
     let removedDependencies = await Promise.all(removedComponents);
     removedDependencies = removedDependencies.filter(x => !R.isNil(x));
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return BitIds.fromArray(removedDependencies);
   }
 

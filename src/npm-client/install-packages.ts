@@ -35,7 +35,9 @@ export async function installPackages(
   let results = await npmClient.install({
     modules: [],
     packageManager,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerArgs,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerProcessOptions,
     useWorkspaces,
     dirs: dirsWithPkgJson,

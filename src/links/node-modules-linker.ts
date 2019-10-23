@@ -89,6 +89,7 @@ export default class NodeModuleLinker {
     this.dataToPersist.symlinks.forEach((symlink: Symlink) => {
       addLinkResult(symlink.componentId, symlink.src, symlink.dest);
     });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dataToPersist.files.forEach((file: LinkFile) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       addLinkResult(file.componentId, file.srcPath, file.path);
@@ -108,6 +109,8 @@ export default class NodeModuleLinker {
     const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const srcTarget: PathOsBasedRelative = component.writtenPath || componentMap.rootDir;
     const shouldDistsBeInsideTheComponent = this.consumer ? this.consumer.shouldDistsBeInsideTheComponent() : true;
     if (
@@ -116,6 +119,7 @@ export default class NodeModuleLinker {
       component.dists.writeDistsFiles &&
       !shouldDistsBeInsideTheComponent
     ) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const distTarget = component.dists.getDistDir(this.consumer, componentMap.getRootDir());
       const packagesSymlinks = this._getSymlinkPackages(srcTarget, distTarget, component);
       this.dataToPersist.addManySymlinks(packagesSymlinks);
@@ -134,10 +138,14 @@ export default class NodeModuleLinker {
 
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach(file => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isMain = file === component.componentMap.mainFile;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true), file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
@@ -150,6 +158,7 @@ export default class NodeModuleLinker {
           componentId,
           override: true
         });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
@@ -176,6 +185,7 @@ export default class NodeModuleLinker {
    */
   async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
     // $FlowFixMe loaded from FS, componentMap must be set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentMap: ComponentMap = component.componentMap;
     if (
       component.issues &&

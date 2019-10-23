@@ -18,6 +18,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   };
   const parseEnvFiles = (envExtension: EnvExtension | null | undefined): string[] | null | undefined => {
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -64,6 +65,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
   const printableCompilerDependencies = compilerDependencies.toStringOfIds();
   const printableTesterDependencies = testerDependencies.toStringOfIds();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter(x => x);
   const overrides = component.overrides.componentOverridesData;
 
@@ -85,6 +87,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
   obj.dependencies = dependencies
     .toStringOfIds()
     .sort()
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .concat(parsePackages(allPackages))
     .filter(x => x);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -210,6 +213,8 @@ export function diffBetweenComponentsObjects(
         chalk.red(getValue(dependencyLeft.relativePaths, true)) +
         chalk.green(getValue(dependencyRight.relativePaths, false));
       const diffOutput = title + value;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       acc.push({ fieldName, diffOutput });
       return acc;
     }, []);
@@ -239,5 +244,6 @@ export function diffBetweenComponentsObjects(
     .filter(x => x);
 
   const allDiffs = [...fieldsDiffOutput, ...fieldsEnvsConfigOutput, ...dependenciesOutput()];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }

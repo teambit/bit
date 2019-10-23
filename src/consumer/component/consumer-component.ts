@@ -129,9 +129,13 @@ export default class Component {
   compiler: CompilerExtension | null | undefined;
   tester: TesterExtension | null | undefined;
   bitJson: ComponentConfig | null | undefined;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerDependencies: Dependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   testerDependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies: BitIds;
@@ -151,6 +155,7 @@ export default class Component {
   overrides: ComponentOverrides;
   docs: Doclet[] | null | undefined;
   files: SourceFile[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dists: Dists;
   specsResults: SpecsResults[] | null | undefined;
   license: License | null | undefined;
@@ -163,6 +168,7 @@ export default class Component {
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -170,12 +176,17 @@ export default class Component {
   deprecated: boolean;
   origin: ComponentOrigin;
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _driver: Driver;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | null | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | null | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _currentlyUsedVersion: BitId; // used by listScope functionality
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
   extensions: ExtensionData[] = [];
@@ -361,6 +372,7 @@ export default class Component {
 
     const context = { workspaceDir: consumer.getPath() };
     const fromConsumer = await consumer.getEnv(envType, context);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromComponent = this[envType] ? this[envType].toModelObject() : null;
     return EnvExtension.areEnvsDifferent(fromConsumer ? fromConsumer.toModelObject() : null, fromComponent);
   }
@@ -401,6 +413,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
@@ -523,9 +536,13 @@ export default class Component {
     });
     this.dists.stripOriginallySharedDir(originallySharedDir);
     this.mainFile = stripSharedDirFromPath(this.mainFile, originallySharedDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.customResolvedPaths.forEach(customPath => {
       customPath.destinationPath = pathNormalizeToLinux(
@@ -542,6 +559,7 @@ export default class Component {
     this.wrapDir = manipulateDirItem.wrapDir;
 
     const pathWithWrapDir = (pathStr: PathOsBased): PathOsBased => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return path.join(this.wrapDir, pathStr);
     };
     this.files.forEach(file => {
@@ -596,6 +614,7 @@ export default class Component {
       component: this,
       scope,
       save,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer,
       noCache,
       directory,
@@ -638,6 +657,7 @@ export default class Component {
       const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
       const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       await tester.install(scope, { verbose, dontPrintEnvMsg }, context);
       logger.debug('Environment components are installed');
     }
@@ -738,6 +758,7 @@ export default class Component {
                 isolate: isolateFunc
               };
 
+              // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
               const results = await tester.oldAction(testFilePath, context);
               results.specPath = testFile.relative;
               return results;
@@ -912,6 +933,7 @@ export default class Component {
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
     const getFlatten = (field: string): BitIds => {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
     const getDependenciesComponents = (ids: BitIds): Promise<Component[]> => {
@@ -1111,19 +1133,23 @@ export default class Component {
       componentMap.files.forEach(file => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           const sourceFile = SourceFile.load(filePath, workspaceConfig.distTarget, bitDir, consumerPath, {
             test: file.test
           });
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           sourceFiles.push(sourceFile);
         } catch (err) {
           if (!(err instanceof FileSourceNotFound)) throw err;
           logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           filesToDelete.push(file);
         }
       });
       if (filesToDelete.length) {
         if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
         filesToDelete.forEach(fileToDelete => {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (fileToDelete.relativePath === componentMap.mainFile) {
             throw new MainFileRemoved(componentMap.mainFile, id.toString());
           }
@@ -1235,7 +1261,9 @@ export default class Component {
       version: id.version,
       lang: bitJson.lang,
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester,
       bitJson: componentConfig,
       mainFile: componentMap.mainFile,
@@ -1254,6 +1282,7 @@ export default class Component {
       overrides,
       packageJsonFile,
       packageJsonChangedProps,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extensions
     });
   }

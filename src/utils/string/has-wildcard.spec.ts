@@ -24,6 +24,7 @@ describe('hasWildcard', () => {
       expect(hasWildcard(['first/id', 'second/id', 'third/id'])).to.be.false;
     });
     it('should return false when items are undefined or null', () => {
+      // @ts-ignore
       expect(hasWildcard([undefined, null])).to.be.false;
     });
   });

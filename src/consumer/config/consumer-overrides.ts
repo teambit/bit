@@ -24,6 +24,7 @@ export const nonPackageJsonFields = [...DEPENDENCIES_FIELDS, ...overridesBitInte
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   hasChanged: boolean; // whether the overrides has been changed (so then it should write them to fs)
   constructor(overrides: ConsumerOverridesConfig) {
     this.overrides = overrides;

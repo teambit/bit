@@ -20,6 +20,7 @@ loadExtensions().then(extensions => {
   });
   const extensionsCommands = extensions.reduce((acc, curr) => {
     if (curr.commands && curr.commands.length) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       acc = acc.concat(curr.commands);
     }
     return acc;

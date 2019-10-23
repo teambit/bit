@@ -29,10 +29,12 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     let version = listScopeResult.id.version;
     if (!json && showRemoteVersion) {
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version) ? 'red' : null;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
     const data: Row = {
       id: c.white(`${id}${listScopeResult.deprecated ? ' [Deprecated]' : ''}`),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       localVersion: version,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A'
     };

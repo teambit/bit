@@ -94,6 +94,7 @@ export default class List extends Command {
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
     return (
       decideHeaderSentence() +
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       (raw ? bareListTemplate(listScopeResults) : listTemplate(listScopeResults, json, outdated))
     );
   }

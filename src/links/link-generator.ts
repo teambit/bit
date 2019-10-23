@@ -94,12 +94,15 @@ function getComponentLinks({
   const { postInstallLinks, postInstallSymlinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
   const shouldGeneratePostInstallScript = postInstallLinks.length || postInstallSymlinks.length;
   if (shouldGeneratePostInstallScript) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const postInstallFile = generatePostInstallScript(component, postInstallLinks, postInstallSymlinks);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addFile(postInstallFile);
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
     // $FlowFixMe it has been verified above that component.packageJsonFile is not empty
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonFile = component.packageJsonFile.toVinylFile();
     dataToPersist.addFile(packageJsonFile);
   }
@@ -107,6 +110,7 @@ function getComponentLinks({
   if (symlinks.length) {
     dataToPersist.addManySymlinks(symlinks.map(symlink => Symlink.makeInstance(symlink.source, symlink.dest)));
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
   return dataToPersist;
 }
@@ -164,9 +168,13 @@ function groupLinks(
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
       if (firstGroupItem.postInstallSymlink) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         postInstallSymlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
         return;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;
     }
@@ -177,8 +185,10 @@ function groupLinks(
     content += groupedLinks[group].map(linkItem => linkItem.linkContent).join('\n');
     const linkFile: OutputFileParams = { filePath: group, content };
     if (firstGroupItem.postInstallLink) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       postInstallLinks.push(linkFile);
     } else {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       linksToWrite.push(linkFile);
     }
   });
@@ -224,6 +234,7 @@ function getComponentsDependenciesLinks(
         );
         return acc;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return acc.concat(componentWithDeps);
     }, []);
   }
@@ -351,13 +362,18 @@ function getInternalCustomResolvedLinks(
  */
 function generatePostInstallScript(component: Component, postInstallLinks = [], postInstallSymlinks = []): LinkFile {
   // $FlowFixMe todo: is it possible that writtenPath is empty here?
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentDir: string = component.writtenPath;
   // convert from array to object for easier parsing in the postinstall script
   const linkPathsObject = postInstallLinks.reduce((acc, val) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     acc[val.filePath] = val.content;
     return acc;
   }, {});
   const symlinkPathsObject = postInstallSymlinks.reduce((acc, val) => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     acc[val.dest] = val.source;
     return acc;
   }, {});
@@ -407,6 +423,7 @@ function getEntryPointsForComponent(
   const files = [];
   const indexName = getIndexFileName(mainFile);
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   const entryPointPath = path.join(componentRoot, indexName);
   if (
@@ -418,9 +435,11 @@ function getEntryPointsForComponent(
     const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     files.push(LinkFile.load({ filePath: entryPointDist, content: entryPointFileContent }));
   }
   logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   files.push(LinkFile.load({ filePath: entryPointPath, content: entryPointFileContent }));
   return files;
 }
@@ -432,6 +451,7 @@ function getEntryPointForAngularComponent(
 ): LinkFile | null | undefined {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
   const content = getLinkToFileContent(component.mainFile, []);

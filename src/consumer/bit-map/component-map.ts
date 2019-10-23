@@ -55,6 +55,7 @@ export default class ComponentMap {
   originallySharedDir: PathLinux | null | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   wrapDir: PathLinux | null | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   constructor({
@@ -125,6 +126,8 @@ export default class ComponentMap {
     const changes = [];
     files.forEach(file => {
       const newPath = this.getPathWithoutRootDir(existingRootDir, file.relativePath);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: file.relativePath, to: newPath });
       file.relativePath = newPath;
     });
@@ -152,6 +155,8 @@ export default class ComponentMap {
       const newLocation = rootDir ? ComponentMap.getPathWithoutRootDir(rootDir, fileTo) : fileTo;
       logger.debug(`updating file location from ${currentFile.relativePath} to ${newLocation}`);
       if (this.mainFile === currentFile.relativePath) this.mainFile = newLocation;
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: currentFile.relativePath, to: newLocation });
       currentFile.relativePath = newLocation;
       currentFile.name = path.basename(newLocation);
@@ -168,6 +173,8 @@ export default class ComponentMap {
       const rootDir = this.rootDir;
       const newRootDir = rootDir.replace(dirFrom, dirTo);
       const newRootDirNormalized = pathNormalizeToLinux(newRootDir);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       changes.push({ from: rootDir, to: newRootDirNormalized });
       logger.debug(`updating rootDir location from ${rootDir} to ${newRootDirNormalized}`);
       this.rootDir = newRootDirNormalized;
@@ -180,6 +187,8 @@ export default class ComponentMap {
         const newLocation = this.rootDir ? ComponentMap.getPathWithoutRootDir(this.rootDir, fileTo) : fileTo;
         logger.debug(`updating file location from ${file.relativePath} to ${newLocation}`);
         if (this.mainFile === file.relativePath) this.mainFile = newLocation;
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         changes.push({ from: file.relativePath, to: newLocation });
         file.relativePath = newLocation;
       }
@@ -206,8 +215,11 @@ export default class ComponentMap {
     const nonTestsFiles = [];
     const testsFiles = [];
     this.files.forEach((file: ComponentMapFile) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       allFiles.push(file.relativePath);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (file.test) testsFiles.push(file.relativePath);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       else nonTestsFiles.push(file.relativePath);
     });
     return { allFiles, nonTestsFiles, testsFiles };
@@ -338,6 +350,7 @@ export default class ComponentMap {
   removeFiles(files: ComponentMapFile[]): void {
     const relativePaths = files.map(file => file.relativePath);
     this.files = this.files.reduce((accumulator, file) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
     }, []);
     this.validate();

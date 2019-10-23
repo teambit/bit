@@ -11,6 +11,7 @@ export default class RemovedLocalObjects extends RemovedObjects {
     dependentBits?: Record<string, any>
   ) {
     super({ removedComponentIds, missingComponents, removedDependencies, dependentBits });
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.modifiedComponents = modifiedComponents;
   }
 }

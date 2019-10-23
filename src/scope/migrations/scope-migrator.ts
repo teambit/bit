@@ -135,6 +135,7 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
   // This object reference won't be update anywhere
   if (!index[oldRef]) {
     logger.warn(`the object ref: ${oldRef} has been updated to: ${newRef} but there is no reference to this object`);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return null;
   }
   const realObject = index[oldRef].toRealObject();

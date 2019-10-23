@@ -73,7 +73,9 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.config.extensions || {};
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumerPath = consumer.getPath();
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scopePath = consumer.scope.path;
     }
 

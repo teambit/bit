@@ -59,6 +59,7 @@ export default (async function buildComponent({
   if (!component.compiler) {
     if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
       logger.debug('compiler was not found, nothing to build');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return null;
     }
     logger.debugAndAddBreadCrumb(
@@ -74,6 +75,7 @@ export default (async function buildComponent({
   const componentMap = bitMap && bitMap.getComponentIfExist(component.id);
   let componentDir = consumerPath;
   if (componentMap) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
   }
   const needToRebuild = await _isNeededToReBuild(consumer, component, noCache);
@@ -216,6 +218,7 @@ async function _build({
     return _runBuild({ ...runBuildParams, componentRoot: consumer.getPath() });
   }
   if (component.isolatedEnvironment) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return _runBuild({ ...runBuildParams, componentRoot: component.writtenPath });
   }
 
@@ -252,6 +255,7 @@ async function _isNeededToReBuild(
   const componentStatus = await consumer.getComponentStatusById(component.id);
   if (componentStatus.modified) return true;
   const shouldBuildUponDependenciesChanges = component.getExtensionValue(
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.compiler.name,
     'shouldBuildUponDependenciesChanges'
   );
@@ -316,6 +320,7 @@ async function _runBuild({
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
       // $FlowFixMe result is not null here because the dists exist
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
         capsuleComponent,
         isolator.capsuleBitMap,
@@ -409,6 +414,7 @@ async function _runBuild({
         }
         return result;
       }
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return compiler.oldAction(files, rootDistDir, context);
     } catch (e) {
       if (tmpFolderFullPath) {
@@ -424,5 +430,6 @@ async function _runBuild({
     }
   };
   const buildResults = await getBuildResults();
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return { ..._extractAndVerifyCompilerResults(buildResults), shouldBuildUponDependenciesChanges };
 }

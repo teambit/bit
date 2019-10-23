@@ -21,6 +21,7 @@ export type DependenciesInfo = {
 export default class DependencyGraph {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graph: Graph;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeName: string;
 
   constructor(graph: Record<string, any>) {

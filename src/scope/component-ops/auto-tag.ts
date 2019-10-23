@@ -99,10 +99,13 @@ async function updateComponents(
           // in case round2 updates the same component it updated in round1 or updated during the
           // tag, we should use the same updated version, and not creating a new version.
           if (isTaggedComponent) {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             return taggedId.version;
           }
           const componentChangedInRound1 = changedComponents.searchWithoutVersion(bitId);
           if (componentChangedInRound1) {
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             return componentChangedInRound1.version;
           }
         }

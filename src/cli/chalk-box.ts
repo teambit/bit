@@ -27,6 +27,7 @@ export const formatPlainComponentItemWithVersions = (component: Component, impor
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .filter(file => importDetails.filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles.map(file => c.bold(file)).join(', ')}) `;
@@ -138,6 +139,7 @@ export const paintSpecsResults = (results?: SpecsResults[], verbose = false): st
 export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose = false): string => {
   const childOutput = results.childOutput ? `${results.childOutput}\n` : '';
   if (results.results && results.results.length === 0) return `${childOutput}${c.yellow('nothing to test')}`;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const resultsOutput = results.results
     .map(result => {
       const idStr = result.componentId.toString();
@@ -154,7 +156,13 @@ export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose 
 export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): string => {
   if (results.length <= 1) return ''; // it there are no results or only one result, no need for summary
   const summaryHeader = [];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   summaryHeader.push({ value: 'Component ID', width: 80, headerColor: 'cyan' });
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   summaryHeader.push({ value: 'Specs Results', width: 50, headerColor: 'cyan' });
   const specsSummary = specResults => {
     const specsPassed = specResults.map(specResult => specResult.pass);

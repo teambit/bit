@@ -66,12 +66,15 @@ export default (async function componentsDiff(
       throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
     }
     const repository = consumer.scope.objects;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
     const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
     const fsFiles = component.files;
     // $FlowFixMe version must be defined as the component.componentFromModel do exist
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionB: string = component.id.version;
     // $FlowFixMe this function gets called only when version is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
@@ -87,11 +90,14 @@ export default (async function componentsDiff(
       throw new GeneralError(`component ${id.toString()} doesn't have any version yet`);
     }
     const repository = consumer.scope.objects;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
     const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
     const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
     // $FlowFixMe version and toVersion are set when calling this function
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, version, toVersion);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
@@ -122,6 +128,7 @@ export default (async function componentsDiff(
   async function updateFieldsAndEnvsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
     const envsFilesDiff = await getEnvFilesDiff(tmp, consumer, componentA, componentB);
     // $FlowFixMe diffResult.filesDiff is populated at this point
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     diffResult.filesDiff = diffResult.filesDiff.concat(envsFilesDiff);
     diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose);
     diffResult.hasDiff = hasDiff(diffResult);

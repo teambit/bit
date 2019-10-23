@@ -30,9 +30,13 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _fromObjectsIds: BitId[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modelComponents: ModelComponent[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _invalidComponents: InvalidComponent[];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
@@ -171,6 +175,7 @@ export default class ComponentsList {
     const warnings = [];
     tagPendingComponentsLatest.forEach(componentId => {
       if (semver.gt(componentId.version, version)) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }
     });
@@ -224,6 +229,7 @@ export default class ComponentsList {
 
   async listExportPendingComponents(): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }
 
@@ -318,6 +324,7 @@ export default class ComponentsList {
         const listResult = listScopeResults.find(c => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
         // $FlowFixMe version must be set as it came from a remote
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         listResult.remoteVersion = componentId.version;
       });
     }

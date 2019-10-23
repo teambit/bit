@@ -76,6 +76,7 @@ export default class ScopeComponentsImporter {
       localDefs.map(def => {
         if (!def.component) throw new ComponentNotFound(def.id.toString());
         // $FlowFixMe it must have a version
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return def.component.toComponentVersion(def.id.version);
       })
     );
@@ -131,7 +132,9 @@ export default class ScopeComponentsImporter {
   }
 
   async componentToVersionDependencies(component: ModelComponent, id: BitId): Promise<VersionDependencies> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const source: string = id.scope;
     const version: Version = await versionComp.getVersion(this.scope.objects);
     if (!version) {
@@ -287,6 +290,7 @@ export default class ScopeComponentsImporter {
     return this.sources.get(id).then(component => {
       if (component && localFetch) {
         // $FlowFixMe scope component must have a version
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return component.toComponentVersion(id.version);
       }
       return remotes
@@ -322,6 +326,8 @@ export default class ScopeComponentsImporter {
           'scope.getExternalOnes',
           'no more ids left, all found locally, exiting the method'
         );
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return Promise.all(defs.map(def => def.component.toComponentVersion(def.id.version)));
       }
 
@@ -347,6 +353,7 @@ export default class ScopeComponentsImporter {
     return this.sources.get(id).then(component => {
       if (!component) throw new ComponentNotFound(id.toString());
       // $FlowFixMe version is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return component.toComponentVersion(id.version);
     });
   }

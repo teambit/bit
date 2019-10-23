@@ -60,6 +60,7 @@ export default class Remove extends Command {
     localResult: RemovedLocalObjects;
     remoteResult: RemovedObjects[];
   }): string {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {

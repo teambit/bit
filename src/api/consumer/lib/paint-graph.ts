@@ -18,6 +18,7 @@ export default (async function paintGraph(id: string, options: Record<string, an
   const getBitId = (): BitId | null | undefined => {
     if (!id) return null;
     if (remote) return BitId.parse(id, true); // user used --remote so we know it has a scope
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return consumer.getParsedId(id);
   };
   const bitId = getBitId();
@@ -36,6 +37,8 @@ export default (async function paintGraph(id: string, options: Record<string, an
     if (remote) {
       if (id) {
         // $FlowFixMe scope must be set as it came from a remote
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
         const remoteScope = await getRemote(scopeName);
         const componentDepGraph = await remoteScope.graph(bitId);
@@ -51,9 +54,11 @@ export default (async function paintGraph(id: string, options: Record<string, an
 
     const onlyLatest = !allVersions;
     // $FlowFixMe consumer must be set here
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, onlyLatest);
     const dependencyGraph = new DependencyGraph(workspaceGraph);
     if (id) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);
       const componentDepGraph = new DependencyGraph(componentGraph);
       return componentDepGraph.graph;

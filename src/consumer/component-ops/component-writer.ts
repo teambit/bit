@@ -187,6 +187,7 @@ export default class ComponentWriter {
       // $FlowFixMe this.component.license is set
       this.component.license.override = this.override;
       // $FlowFixMe this.component.license is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
     }
   }
@@ -208,6 +209,7 @@ export default class ComponentWriter {
       componentId: this.component.id,
       files: filesForBitMap,
       mainFile: pathNormalizeToLinux(this.component.mainFile), // $FlowFixMe
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       rootDir, // $FlowFixMe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       configDir: getConfigDir(),
@@ -261,6 +263,7 @@ export default class ComponentWriter {
    * see https://github.com/teambit/bit/issues/1808 for more info why it's needed
    */
   _replaceDistPathTemplateWithCalculatedDistPath(packageJson: PackageJsonFile): Record<string, any> {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonChangedProps: Record<string, any> = this.component.packageJsonChangedProps;
     const isReplaceNeeded = R.values(packageJsonChangedProps).some(val => val.includes(COMPONENT_DIST_PATH_TEMPLATE));
     if (!isReplaceNeeded) {
@@ -293,6 +296,7 @@ export default class ComponentWriter {
 
   _updateComponentRootPathAccordingToBitMap() {
     // $FlowFixMe this.component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.writeToPath = this.component.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
@@ -321,6 +325,7 @@ export default class ComponentWriter {
       this.bitMap.removeComponent(this.component.id);
     }
     // $FlowFixMe this.component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.component.componentMap = this.addComponentToBitMap(this.component.componentMap.rootDir);
   }
 
@@ -329,6 +334,7 @@ export default class ComponentWriter {
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
       // $FlowFixMe this.component.componentMap is set
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const context = { componentDir: this.component.componentMap.getRootDir() };
       const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
       const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
@@ -346,6 +352,7 @@ export default class ComponentWriter {
       );
     };
     // $FlowFixMe this.component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
@@ -353,6 +360,7 @@ export default class ComponentWriter {
 
   _determineWhetherToWriteConfig() {
     // $FlowFixMe this.component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       this.writeConfig = false;
     }
@@ -374,6 +382,7 @@ export default class ComponentWriter {
   async _handlePreviouslyNestedCurrentlyImportedCase() {
     if (!this.consumer) return;
     // $FlowFixMe this.component.componentMap is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.component.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       await this._cleanOldNestedComponent();
       this.component.componentMap = this.addComponentToBitMap(this.writeToPath);
@@ -403,6 +412,8 @@ export default class ComponentWriter {
   async _cleanOldNestedComponent() {
     if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const oldLocation = path.join(this.consumer.getPath(), this.component.componentMap.rootDir);
     logger.debugAndAddBreadCrumb(
       'component-writer._cleanOldNestedComponent',

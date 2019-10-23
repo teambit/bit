@@ -583,11 +583,11 @@ describe('auto tagging functionality', function() {
     it('should not auto-tag the dependents', () => {
       expect(output).to.have.string('1 component(s) tagged');
       const scopeList = helper.command.listLocalScopeParsed();
-      const barFoo = scopeList.find(c => c.id === 'bar/foo');
+      const barFoo: any = scopeList.find(c => c.id === 'bar/foo');
       expect(barFoo.localVersion).to.equal('0.0.1');
-      const isString = scopeList.find(c => c.id === 'utils/is-string');
+      const isString: any = scopeList.find(c => c.id === 'utils/is-string');
       expect(isString.localVersion).to.equal('0.0.1');
-      const isType = scopeList.find(c => c.id === 'utils/is-type');
+      const isType: any = scopeList.find(c => c.id === 'utils/is-type');
       expect(isType.localVersion).to.equal('0.0.2');
     });
   });

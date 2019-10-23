@@ -55,6 +55,7 @@ export default (async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
     .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
@@ -100,8 +101,10 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
   const getNewVersion = (): string => {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;
     // $FlowFixMe if !reset the version is defined
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return latestVersion ? componentModel.latest() : version;
   };
   const newVersion = getNewVersion();
@@ -119,6 +122,7 @@ async function getComponentStatus(
       `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
     );
   }
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const isModified = await consumer.isComponentModified(baseComponent, component);
   if (!isModified && reset) {
@@ -130,6 +134,7 @@ async function getComponentStatus(
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherVersion: currentlyUsedVersion,
       currentComponent,
       currentVersion: newVersion,
@@ -211,6 +216,7 @@ async function applyVersion(
       files,
       mergeResults,
       mergeStrategy,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentWithDependencies.component.originallySharedDir
     );
   }

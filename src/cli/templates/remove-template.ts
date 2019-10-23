@@ -47,6 +47,9 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
           'error: unable to remove modified components (please use --force to remove modified components)\n'
         ) +
           chalk(
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             `- ${modifiedComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}`
           )}`
       : '';

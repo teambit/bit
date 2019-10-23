@@ -13,6 +13,7 @@ import { componentOverridesForbiddenFields } from '../consumer/config/component-
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import GeneralError from '../error/general-error';
+import { PathLinux } from '../utils/path';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -113,7 +114,7 @@ export default function validateVersionInstance(version: Version): void {
   if (!version.files || !version.files.length) throw new VersionInvalid(`${message}, the files are missing`);
   let foundMainFile = false;
   validateType(message, version.files, 'files', 'array');
-  const filesPaths = [];
+  const filesPaths: PathLinux[] = [];
   version.files.forEach(file => {
     validateFile(file);
     filesPaths.push(file.relativePath);

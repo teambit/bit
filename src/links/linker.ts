@@ -44,6 +44,7 @@ export async function getLinksInDistToWrite(
     return dataToPersist;
   }
   const componentWithDeps: ComponentWithDependencies = // $FlowFixMe
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     componentWithDependencies || (await component.toComponentWithDependencies(consumer));
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     [componentWithDeps],
@@ -59,6 +60,7 @@ export async function getLinksInDistToWrite(
     dataToPersist.addFile(packageJsonFile.toVinylFile());
   }
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(entryPoints);
   return dataToPersist;
 }
@@ -168,6 +170,7 @@ export async function getAllComponentsLinks({
   const bitAngularEntryPoints = writtenComponents
     .map(component => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
     .filter(x => x); // remove nulls when components are not Angular
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(bitAngularEntryPoints);
 
   const allComponents = writtenDependencies
@@ -182,6 +185,7 @@ export async function getAllComponentsLinks({
     [component.compilerDependencies, component.testerDependencies].map(async deps => {
       const links = await linkGenerator.getLinksByDependencies(
         // $FlowFixMe writtenPath is set here
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.writtenPath,
         component,
         deps,

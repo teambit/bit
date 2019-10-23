@@ -12,6 +12,7 @@ export default (async function catComponent(id: string) {
   const component = await scope.sources.get(bitId);
   if (!component) throw new GeneralError('component was not found');
   if (bitId.hasVersion()) {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version: Version = await component.loadVersion(bitId.version, scope.objects);
     return version.toObject();
   }

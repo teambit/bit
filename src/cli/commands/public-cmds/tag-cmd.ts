@@ -115,6 +115,7 @@ export default class Tag extends Command {
       return tagAllAction({
         ...params,
         scope,
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         includeImported,
         idWithWildcard: id
       });

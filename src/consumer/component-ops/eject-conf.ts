@@ -36,6 +36,7 @@ export default (async function ejectConf(
   return {
     id,
     ejectedPath,
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ejectedFullPath
   };
 });
@@ -62,6 +63,7 @@ export async function getEjectConfDataToPersist(
   }
   if (!configDir.isUnderComponentDir) {
     const configDirToValidate = _getDirToValidateAgainstOtherComps(configDir);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -169,6 +171,7 @@ export async function writeEnvFiles({
     env,
     consumer,
     // $FlowFixMe todo: fix!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     bitMap: consumer.bitMap,
     component,
     deleteOldFiles,
@@ -207,6 +210,7 @@ export async function populateEnvFilesToWrite({
   const envType = env instanceof CompilerExtension ? COMPILER_ENV_TYPE : TESTER_ENV_TYPE;
   const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const links = await getLinksByDependencies(configDir, component, deps, consumer, bitMap);
   env.dataToPersist.addManyFiles(links);
   return ejectedDirectory;

@@ -31,6 +31,7 @@ const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 export default class Environment {
   path: PathOsBased;
   scope: Scope;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   consumer: Consumer;
 
   constructor(scope: Scope, dir: string | null | undefined) {
@@ -62,6 +63,7 @@ export default class Environment {
     const componentsWithDependencies = await this.consumer.importComponents(
       BitIds.fromArray([bitId]),
       false,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       saveDependenciesAsComponents
     );
     const componentWithDependencies = componentsWithDependencies[0];
@@ -85,6 +87,7 @@ export default class Environment {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter.writeAll();
     await Environment.markEnvironmentAsInstalled(writeToPath);
