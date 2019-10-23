@@ -31,7 +31,7 @@ export default class Tag extends Command {
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
-    ['', 'skip-auto-tag', 'skip auto tagging dependents']
+    ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents']
   ];
   loader = true;
   migration = true;
