@@ -25,6 +25,7 @@ import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import { getComponentsDependenciesLinks } from '../../links/link-generator';
 import Component from '../component/consumer-component';
+import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
 
 type BuildResults = {
   builtFiles: Vinyl[];
@@ -230,7 +231,6 @@ async function _build({
       installPackages: true,
       noPackageJson: false
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;
     const result = await _runBuild({ ...runBuildParams, componentRoot: isolatedComponent.writtenPath });
@@ -277,7 +277,7 @@ async function _runBuild({
   verbose
 }: {
   component: ConsumerComponent;
-  componentRoot: PathLinux;
+  componentRoot?: PathLinux;
   consumer: Consumer | null | undefined;
   scope: Scope;
   componentMap: ComponentMap | null | undefined;
@@ -288,7 +288,7 @@ async function _runBuild({
     throw new GeneralError('compiler was not found, nothing to build');
   }
 
-  let rootDistDir = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
+  let rootDistDir = componentRoot ? path.join(componentRoot, DEFAULT_DIST_DIRNAME) : undefined;
   const consumerPath = consumer ? consumer.getPath() : '';
   const files = component.files.map(file => file.clone());
   let tmpFolderFullPath;
@@ -313,58 +313,9 @@ async function _runBuild({
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
-      dist: false
+      writeDists: false
     });
-    const writeDists = async (builtFiles, mainDist): Promise<void> => {
-      const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
-      // $FlowFixMe result is not null here because the dists exist
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
-        capsuleComponent,
-        isolator.capsuleBitMap,
-        null,
-        true,
-        componentWithDependencies
-      );
-      distsToWrite.persistAllToCapsule(isolator.capsule);
-    };
-    const getDependenciesLinks = (): Vinyl[] => {
-      const links = getComponentsDependenciesLinks([componentWithDependencies], null, false, isolator.capsuleBitMap);
-      return links.files;
-    };
-    const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
-      const sharedDir = componentWithDependencies.component.originallySharedDir;
-      let updatedFiles = filesToAdd;
-      if (sharedDir) {
-        updatedFiles = filesToAdd.map(file => {
-          const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
-          fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
-          return fileAsAbstractVinyl;
-        });
-      }
-      return updatedFiles;
-    };
-    const installPackages = async (packages: string[] = []) => {
-      await isolator.installPackagesOnRoot(packages);
-      // after installing packages on capsule root, some links/symlinks from node_modules might
-      // be deleted. rewrite the links to recreate them.
-      await isolator.writeLinksOnNodeModules();
-    };
-    const capsuleFiles = componentWithDependencies.component.files;
-    return {
-      capsule: isolator.capsule,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      capsuleFiles,
-      componentWithDependencies,
-      writeDists,
-      getDependenciesLinks,
-      writeLinks: () => isolator.writeLinks(),
-      capsuleExec: (cmd, options) => isolator.capsuleExec(cmd, options),
-      installPackages,
-      addSharedDir
-    };
+    return new ExtensionIsolateResult(isolator, componentWithDependencies);
   };
 
   const context: Record<string, any> = {
@@ -376,7 +327,9 @@ async function _runBuild({
   const getBuildResults = async () => {
     try {
       // Change the cwd to make sure we found the needed files
-      process.chdir(componentRoot);
+      if (componentRoot) {
+        process.chdir(componentRoot);
+      }
       if (compiler.action) {
         const isCompilerDetached = await component.getDetachedCompiler(consumer);
         const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;

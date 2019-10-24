@@ -22,14 +22,15 @@ import BitMap from '../bit-map';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
 import { BitId } from '../../bit-id';
 
-type ManyComponentsWriterParams = {
-  consumer?: Consumer | null | undefined;
+export interface ManyComponentsWriterParams {
+  consumer?: Consumer;
   silentPackageManagerResult?: boolean;
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath?: string;
   override?: boolean;
   isolated?: boolean;
   writePackageJson?: boolean;
+  saveDependenciesAsComponents: boolean;
   writeConfig?: boolean;
   configDir?: string;
   writeBitDependencies?: boolean;
@@ -40,7 +41,7 @@ type ManyComponentsWriterParams = {
   addToRootPackageJson?: boolean;
   verbose?: boolean;
   excludeRegistryPrefix?: boolean;
-};
+}
 
 /**
  * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
@@ -53,14 +54,14 @@ type ManyComponentsWriterParams = {
  * write them only once.
  */
 export default class ManyComponentsWriter {
-  consumer: Consumer | null | undefined;
-  silentPackageManagerResult: boolean | null | undefined;
+  consumer?: Consumer;
+  silentPackageManagerResult?: boolean;
   componentsWithDependencies: ComponentWithDependencies[];
-  writeToPath: string | null | undefined;
+  writeToPath?: string;
   override: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
-  configDir: string | null | undefined;
+  configDir?: string;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
@@ -76,7 +77,7 @@ export default class ManyComponentsWriter {
   writtenDependencies: Component[];
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
-  basePath: string | null | undefined;
+  basePath?: string;
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
