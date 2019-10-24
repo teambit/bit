@@ -30,7 +30,7 @@ export interface ManyComponentsWriterParams {
   override?: boolean;
   isolated?: boolean;
   writePackageJson?: boolean;
-  saveDependenciesAsComponents: boolean;
+  saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
   configDir?: string;
   writeBitDependencies?: boolean;
