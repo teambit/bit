@@ -4,6 +4,7 @@ import remove from './lib/remove';
 import { deprecate, undeprecate } from './lib/deprecation';
 import { listScope } from './lib/list-scope';
 import { tagAction, tagAllAction } from './lib/tag';
+import { snapAction } from './lib/snap';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';
 import importAction from './lib/import';
@@ -47,6 +48,7 @@ export {
   listScope,
   tagAction,
   tagAllAction,
+  snapAction,
   status,
   build,
   importAction,

@@ -161,6 +161,9 @@ export default class ComponentsList {
     return components;
   }
 
+  // @todo: rename the method name. it's confusing. seems like it fetches all components
+  // regardless the "tag-pending" and warns about version greater than specified.
+  // I'd extract the warning part and put it in tag.ts file.
   async listCommitPendingOfAllScope(
     version: string,
     includeImported = false
