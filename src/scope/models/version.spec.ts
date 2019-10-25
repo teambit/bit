@@ -6,7 +6,7 @@ import versionWithDepsFixture from '../../../fixtures/version-model-extended.jso
 import GeneralError from '../../error/general-error';
 
 const getVersionWithDepsFixture = () => {
-  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
+  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '');
 };
 
 describe('Version', () => {
@@ -130,7 +130,7 @@ describe('Version', () => {
       expect(hash.toString()).to.equal(versionFixtureHash);
     });
     it('should have a the same hash string also when loading the version from contents', () => {
-      const versionFromContent = Version.parse(JSON.stringify(versionFixture));
+      const versionFromContent = Version.parse(JSON.stringify(versionFixture), '');
       expect(versionFromContent.hash().toString()).to.equal(versionFixtureHash);
     });
   });
