@@ -8,7 +8,7 @@ import ComponentObjects from '../../../scope/component-objects';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-export default (async function fetch(
+export default async function fetch(
   path: string,
   ids: string[],
   noDependencies = false,
@@ -48,4 +48,4 @@ export default (async function fetch(
     );
   }
   return componentObjects;
-});
+}

@@ -1,6 +1,7 @@
 import R from 'ramda';
 import { inflate, getStringifyArgs } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import { typesObj as types } from '../object-registrar';
 
 export default class BitRawObject {
   headers: string[];
@@ -8,17 +9,11 @@ export default class BitRawObject {
   content: Buffer;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   parsedContent: Any;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  types: { [key: string]: Function };
   _ref: string;
 
   constructor(
     buffer: Buffer,
     ref: string | null | undefined,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    types: { [key: string]: Function } | null | undefined,
     type: string | null | undefined,
     content: Buffer | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -38,8 +33,6 @@ export default class BitRawObject {
     this.type = type || typeFromHeader;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this._ref = ref;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.types = types;
     this.parsedContent = parsedContent || this.getParsedContent();
   }
 
@@ -118,14 +111,11 @@ export default class BitRawObject {
 
   static async fromDeflatedBuffer(
     fileContents: Buffer,
-    ref: string | null | undefined,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    types: { [key: string]: Function } | null | undefined
+    ref: string | null | undefined
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): Promise<BitObject> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return inflate(fileContents).then(buffer => new BitRawObject(buffer, ref, types));
+    return inflate(fileContents).then(buffer => new BitRawObject(buffer, ref));
   }
 
   /**
@@ -135,14 +125,13 @@ export default class BitRawObject {
    */
   toRealObject() {
     // @ts-ignore
-    return this.types[this.type].from(this.parsedContent || this.getParsedContent());
+    return types[this.type].from(this.parsedContent || this.getParsedContent());
   }
 
   clone() {
-    const types = this.types ? R.clone(this.types) : undefined;
     const parsedContent = this.parsedContent ? R.clone(this.parsedContent) : undefined;
     // TODO: Should also clone the buffers (content)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new BitRawObject(undefined, this._ref, types, this.type, this.content, parsedContent);
+    return new BitRawObject(undefined, this._ref, this.type, this.content, parsedContent);
   }
 }

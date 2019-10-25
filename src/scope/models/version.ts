@@ -63,12 +63,9 @@ export type VersionProps = {
   flattenedCompilerDependencies?: BitIds;
   flattenedTesterDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   compilerPackageDependencies?: EnvPackages;
@@ -78,6 +75,7 @@ export type VersionProps = {
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
+  hash: string;
 };
 
 /**
@@ -103,12 +101,9 @@ export default class Version extends BitObject {
   flattenedCompilerDependencies: BitIds;
   flattenedTesterDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
@@ -118,6 +113,7 @@ export default class Version extends BitObject {
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
+  _hash: string;
 
   constructor(props: VersionProps) {
     super();
@@ -149,6 +145,7 @@ export default class Version extends BitObject {
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.extensions = props.extensions || [];
+    this._hash = props.hash;
     this.validateVersion();
   }
 
@@ -226,6 +223,19 @@ export default class Version extends BitObject {
         filterFunction
       )
     );
+  }
+
+  calculateHash(): Ref {
+    return new Ref(BitObject.makeHash(this.id()));
+  }
+
+  hash(): Ref {
+    if (!this._hash) {
+      throw new Error(
+        'Hash is missing from a Version object. Please revert to version v14.4.2 and open a Github issue with the details'
+      );
+    }
+    return new Ref(this._hash);
   }
 
   getAllFlattenedDependencies(): BitIds {
@@ -359,7 +369,8 @@ export default class Version extends BitObject {
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions
+        extensions: this.extensions,
+        hash: this._hash
       },
       val => !!val
     );
@@ -367,7 +378,7 @@ export default class Version extends BitObject {
 
   validateBeforePersisting(versionStr: string): void {
     logger.debug(`validating version object, hash: ${this.hash().hash}`);
-    const version = Version.parse(versionStr);
+    const version = Version.parse(versionStr, this._hash);
     version.validate();
   }
 
@@ -382,7 +393,8 @@ export default class Version extends BitObject {
   /**
    * used by the super class BitObject
    */
-  static parse(contents: string): Version {
+  static parse(contents: string, hash: string): Version {
+    const contentParsed = JSON.parse(contents);
     const {
       mainFile,
       dists,
@@ -412,7 +424,8 @@ export default class Version extends BitObject {
       overrides,
       packageJsonChangedProps,
       extensions
-    } = JSON.parse(contents);
+    } = contentParsed;
+
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
@@ -490,7 +503,8 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions,
+      hash: hash || contentParsed.hash
     });
   }
 
@@ -498,7 +512,7 @@ export default class Version extends BitObject {
    * used by raw-object.toRealObject()
    */
   static from(versionProps: VersionProps): Version {
-    return Version.parse(JSON.stringify(versionProps));
+    return Version.parse(JSON.stringify(versionProps), versionProps.hash);
   }
 
   /**
@@ -548,7 +562,7 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
-    return new Version({
+    const version = new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
@@ -590,6 +604,9 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions
     });
+    version._hash = version.calculateHash().toString();
+
+    return version;
   }
 
   setSpecsResults(specsResults: Results | null | undefined) {

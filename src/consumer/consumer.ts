@@ -501,14 +501,14 @@ export default class Consumer {
       sortProperties(version);
 
       // prefix your command with "BIT_LOG=*" to see the actual id changes
-      if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {
+      if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
         console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
         console.log(componentFromModel.id()); // eslint-disable-line no-console
         console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
         console.log(version.id()); // eslint-disable-line no-console
         console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
       }
-      componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
+      componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
     }
     return componentFromFileSystem._isModified;
 

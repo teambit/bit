@@ -13,42 +13,34 @@ import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
 import { ScopeJson } from '../scope-json';
-import { typesObj } from '../object-registrar';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  types: { [key: string]: Function };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentsIndex: ComponentsIndex;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [key: string]: BitObject } = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(scopePath: string, scopeJson: ScopeJson, types: { [key: string]: Function } = typesObj) {
+  constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
-    this.types = types;
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
-    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const repository = new Repository(scopePath, scopeJson);
     const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
     repository.componentsIndex = componentsIndex;
     return repository;
   }
 
   static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
-    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const repository = new Repository(scopePath, scopeJson);
     const componentsIndex = ComponentsIndex.create(scopePath);
     repository.componentsIndex = componentsIndex;
     return repository;
@@ -94,7 +86,7 @@ export default class Repository {
     return fs
       .readFile(this.objectPath(ref))
       .then(fileContents => {
-        return BitObject.parseObject(fileContents, this.types);
+        return BitObject.parseObject(fileContents, ref.toString());
       })
       .then((parsedObject: BitObject) => {
         this.setCache(parsedObject);
@@ -132,7 +124,7 @@ export default class Repository {
       refs.map(async ref => {
         try {
           const buffer = await this.loadRaw(ref);
-          const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
+          const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
           return bitRawObject;
         } catch (err) {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
@@ -165,8 +157,7 @@ export default class Repository {
             );
             return null;
           }
-          // $FlowFixMe componentId must be set as it was retrieved from indexPath before
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore componentId must be set as it was retrieved from indexPath before
           throw new OutdatedIndexJson(componentId, indexJsonPath);
         }
         return bitObject;
@@ -198,7 +189,7 @@ export default class Repository {
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
     const buffer = await this.loadRaw(ref);
-    const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
+    const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
     return bitRawObject;
   }
 
@@ -208,7 +199,7 @@ export default class Repository {
   loadSync(ref: Ref, throws = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
-      return BitObject.parseSync(objectFile, this.types);
+      return BitObject.parseSync(objectFile, ref.toString());
     } catch (err) {
       if (throws) {
         throw new HashNotFound(ref.toString());

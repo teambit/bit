@@ -28,7 +28,7 @@ export async function exportManyBareScope(
   clientIsOld: boolean
 ): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
-  const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
+  const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects());
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
@@ -97,7 +97,7 @@ export async function exportMany({
     );
     const componentsAndObjects = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
-      const componentAndObject = componentObject.toObjects(scope.objects);
+      const componentAndObject = componentObject.toObjects();
       componentAndObject.component.clearStateData();
       await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
@@ -109,7 +109,7 @@ export async function exportMany({
         componentsAndObjects.push(componentAndObject);
       } else {
         // the component should not be changed locally. only add the new scope to the scope-list
-        const componentAndObjectCloned = componentObject.toObjects(scope.objects);
+        const componentAndObjectCloned = componentObject.toObjects();
         componentAndObjectCloned.component.addScopeListItem(remoteObj);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentsAndObjects.push(componentAndObjectCloned);

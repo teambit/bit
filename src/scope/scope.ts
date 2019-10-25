@@ -366,7 +366,7 @@ export default class Scope {
    * Writes a component as an object into the 'objects' directory
    */
   writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects(this.objects);
+    const objects = componentObjects.toObjects();
     logger.debugAndAddBreadCrumb(
       'writeComponentToModel',
       'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
