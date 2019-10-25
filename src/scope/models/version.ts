@@ -231,9 +231,9 @@ export default class Version extends BitObject {
 
   hash(): Ref {
     if (!this._hash) {
-      throw new Error(
-        'Hash is missing from a Version object. Please revert to version v14.4.2 and open a Github issue with the details'
-      );
+      // this should happen only when the remote-server has an older version
+      // @todo: once v15 is deployed in all hubs, remove the next line, and replace it with throw new Error('hash is missing'); or something similar.
+      return this.calculateHash();
     }
     return new Ref(this._hash);
   }
