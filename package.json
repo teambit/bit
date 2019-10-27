@@ -118,7 +118,7 @@
     "lodash.uniqby": "^4.7.0",
     "loud-rejection": "^1.6.0",
     "make-fetch-happen": "^4.0.1",
-    "memfs": "^2.15.4",
+    "memfs": "2.15.5",
     "minimatch": "^3.0.4",
     "mkdirp": "^0.5.1",
     "mockery": "^2.0.0",
