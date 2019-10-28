@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.4.3] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.3)
+
+### Bug fixes
+
+- lock memfs package version to v2.15.5 due to issues with the v2.16.0
+
 ## [[14.4.2] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.2)
 
 ### Bug fixes
