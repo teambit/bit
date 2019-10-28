@@ -62,7 +62,7 @@ export default class Isolate extends Command {
       writeConfig: opts.conf === true,
       writeBitDependencies: opts.writeBitDependencies === true,
       createNpmLinkFiles: opts.npmLinks === true,
-      saveDependenciesAsComponents: opts.saveDependenciesAsComponents === true,
+      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist === true,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       installPeerDependencies: !!opts.installPackages, // convert to boolean
