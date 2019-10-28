@@ -635,7 +635,7 @@ export default class Scope {
     isolated?: boolean;
     directory?: string;
     keep?: boolean;
-  }): Promise<SpecsResults | null | undefined> {
+  }): Promise<SpecsResults | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run specs on remote component');
     }

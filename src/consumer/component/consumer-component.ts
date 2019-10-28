@@ -110,7 +110,7 @@ export type ComponentProps = {
   docs?: Doclet[] | null | undefined;
   dists?: Dist[];
   mainDistFile?: PathLinux | null | undefined;
-  specsResults?: SpecsResults | null | undefined;
+  specsResults?: SpecsResults;
   license?: License | null | undefined;
   deprecated: boolean | null | undefined;
   origin: ComponentOrigin;
@@ -644,11 +644,10 @@ export default class Component {
     isolated?: boolean;
     directory?: string;
     keep?: boolean;
-  }): Promise<SpecsResults | null | undefined> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  }): Promise<SpecsResults | undefined> {
     const testFiles = this.files.filter(file => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
-    if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
+    if (!this.tester || !testFiles || R.isEmpty(testFiles)) return undefined;
 
     logger.debug('tester found, start running tests');
     Analytics.addBreadCrumb('runSpecs', 'tester found, start running tests');

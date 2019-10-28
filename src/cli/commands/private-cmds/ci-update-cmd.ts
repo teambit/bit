@@ -49,7 +49,7 @@ export default class CiUpdate extends Command {
     output,
     directory
   }: {
-    specsResults: SpecsResults | null | undefined;
+    specsResults: SpecsResults | undefined;
     dists: Dists;
     output: PathOsBased;
     directory: PathOsBased;

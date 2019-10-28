@@ -5,8 +5,8 @@ export default function CiUpdateAction(
   path: string,
   verbose: boolean,
   directory?: string,
-  keep: boolean = false,
-  noCache: boolean = false
+  keep = false,
+  noCache = false
 ) {
   return runAndUpdateCi({ id, scopePath: path, verbose, directory, keep, noCache });
 }

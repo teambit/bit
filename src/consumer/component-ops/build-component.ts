@@ -15,15 +15,13 @@ import Consumer from '../consumer';
 import { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
-import { Dist, AbstractVinyl } from '../component/sources';
+import { Dist } from '../component/sources';
 import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { CompilerResults } from '../../extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
-import DataToPersist from '../component/sources/data-to-persist';
-import { getComponentsDependenciesLinks } from '../../links/link-generator';
 import Component from '../component/consumer-component';
 import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
 
@@ -60,7 +58,7 @@ export default (async function buildComponent({
   if (!component.compiler) {
     if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
       logger.debug('compiler was not found, nothing to build');
-      return;
+      return undefined;
     }
     logger.debugAndAddBreadCrumb(
       'build-component.buildComponent',

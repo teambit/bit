@@ -44,7 +44,10 @@ export default class Environment {
     }
     const saveDependenciesAsComponents =
       opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;
-    const componentsWithDependencies = await this.consumer!.importComponents(
+    if (!this.consumer) {
+      throw new Error('trying to import component without define consumer');
+    }
+    const componentsWithDependencies = await this.consumer.importComponents(
       BitIds.fromArray([bitId]),
       false,
       saveDependenciesAsComponents
