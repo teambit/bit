@@ -31,8 +31,8 @@ export default class CiUpdate extends Command {
       noCache = false
     }: {
       // verbose: boolean | null | undefined,
-      directory: string | null | undefined;
-      output: string | null | undefined;
+      directory?: string;
+      output?: string;
       keep: boolean;
       noCache: boolean;
     }

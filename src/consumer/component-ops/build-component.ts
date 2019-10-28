@@ -273,7 +273,7 @@ async function _runBuild({
 }: {
   component: ConsumerComponent;
   componentRoot?: PathLinux;
-  consumer: Consumer | null | undefined;
+  consumer?: Consumer;
   scope: Scope;
   componentMap: ComponentMap | null | undefined;
   verbose: boolean;

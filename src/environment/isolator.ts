@@ -42,7 +42,7 @@ export interface IsolateOptions {
 
 export default class Isolator {
   capsule: Capsule;
-  consumer: Consumer | null | undefined;
+  consumer?: Consumer;
   scope: Scope;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   capsuleBitMap: BitMap;
@@ -55,18 +55,13 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer | null | undefined) {
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
   }
 
-  static async getInstance(
-    containerType = 'fs',
-    scope: Scope,
-    consumer?: Consumer | null | undefined,
-    dir?: string
-  ): Promise<Isolator> {
+  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);

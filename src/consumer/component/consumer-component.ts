@@ -1074,7 +1074,7 @@ export default class Component {
       files,
       docs,
       dists,
-      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
+      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : undefined,
       license: license ? License.deserialize(license) : null,
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false

@@ -15,7 +15,7 @@ export default function testInScope({
   id: string;
   save?: boolean;
   verbose?: boolean;
-  scopePath: string;
+  scopePath?: string;
   directory?: string;
   keep?: boolean;
 }): Promise<SpecsResults | undefined> {

@@ -16,7 +16,7 @@ export default function buildInScope({
   id: string;
   save?: boolean;
   verbose?: boolean;
-  scopePath: string;
+  scopePath?: string;
   directory?: string;
   keep: boolean;
   noCache: boolean;

@@ -10,11 +10,11 @@ export default async function runAndUpdateCI({
   noCache = false
 }: {
   id: string;
-  scopePath: string;
-  verbose: boolean;
+  scopePath?: string;
+  verbose?: boolean;
   directory?: string;
-  keep: boolean;
-  noCache: boolean;
+  keep?: boolean;
+  noCache?: boolean;
 }): Promise<any> {
   function addCIAttrsInTheModel({ error, startTime }: { error?: any; startTime: string }) {
     const endTime = Date.now().toString();
@@ -23,10 +23,10 @@ export default async function runAndUpdateCI({
     if (error) {
       const serializedError = serializeError(error);
       ciProps.error = serializedError;
-      return modifyCIProps(scopePath, id, ciProps);
+      return modifyCIProps(id, ciProps, scopePath);
     }
 
-    return modifyCIProps(scopePath, id, ciProps);
+    return modifyCIProps(id, ciProps, scopePath);
   }
 
   const startTime = Date.now().toString();
