@@ -6,15 +6,15 @@ async function runAndUpdateCI({
   scopePath,
   verbose,
   directory,
-  keep,
-  noCache
+  keep = false,
+  noCache = false
 }: {
   id: string;
   scopePath: string;
   verbose: boolean;
-  directory: string | null | undefined;
-  keep?: boolean;
-  noCache?: boolean;
+  directory?: string;
+  keep: boolean;
+  noCache: boolean;
 }): Promise<any> {
   function addCIAttrsInTheModel({ error, startTime }: { error?: any; startTime: string }) {
     const endTime = Date.now().toString();
@@ -34,10 +34,7 @@ async function runAndUpdateCI({
   try {
     // define options
     const save = true;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, noCache });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep });
     const dists = buildResults ? buildResults.dists : null;
     await addCIAttrsInTheModel({ startTime });
