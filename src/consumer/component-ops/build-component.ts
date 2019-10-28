@@ -54,14 +54,13 @@ export default (async function buildComponent({
   verbose?: boolean;
   dontPrintEnvMsg?: boolean;
   keep?: boolean;
-}): Promise<Dists> {
+}): Promise<Dists | undefined> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
   // @TODO - write SourceMap Type
   if (!component.compiler) {
     if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
       logger.debug('compiler was not found, nothing to build');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return null;
+      return;
     }
     logger.debugAndAddBreadCrumb(
       'build-component.buildComponent',
@@ -214,12 +213,10 @@ async function _build({
   }
 
   const runBuildParams = { component, consumer, scope, componentMap, verbose };
-
   if (consumer) {
     return _runBuild({ ...runBuildParams, componentRoot: consumer.getPath() });
   }
   if (component.isolatedEnvironment) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return _runBuild({ ...runBuildParams, componentRoot: component.writtenPath });
   }
 
@@ -228,8 +225,8 @@ async function _build({
     await isolatedEnvironment.create();
     const isolateOpts = {
       verbose,
-      installPackages: true,
-      noPackageJson: false
+      installNpmPackages: true,
+      writePackageJson: true
     };
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;

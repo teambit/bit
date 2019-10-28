@@ -1,7 +1,7 @@
 import { serializeError } from 'serialize-error';
 import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
 
-async function runAndUpdateCI({
+export default async function runAndUpdateCI({
   id,
   scopePath,
   verbose,
@@ -44,5 +44,3 @@ async function runAndUpdateCI({
     throw e;
   }
 }
-
-module.exports = runAndUpdateCI;

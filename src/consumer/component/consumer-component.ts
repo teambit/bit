@@ -604,18 +604,17 @@ export default class Component {
   }: {
     scope: Scope;
     save?: boolean;
-    consumer?: Consumer | null | undefined;
+    consumer?: Consumer;
     noCache?: boolean;
     directory?: string;
     verbose?: boolean;
     dontPrintEnvMsg?: boolean;
     keep?: boolean;
-  }): Promise<Dists | null | undefined> {
+  }): Promise<Dists | undefined> {
     return buildComponent({
       component: this,
       scope,
       save,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer,
       noCache,
       directory,
@@ -822,10 +821,10 @@ export default class Component {
       await isolatedEnvironment.create();
       const isolateOpts = {
         verbose,
-        dist: true,
-        installPackages: true,
+        writeDists: true,
+        installNpmPackages: true,
         installPeerDependencies: true,
-        noPackageJson: false
+        writePackageJson: true
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
 
