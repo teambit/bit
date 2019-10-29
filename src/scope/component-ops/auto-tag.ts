@@ -13,7 +13,7 @@ import { buildComponentsGraphForComponentsAndVersion } from '../graph/components
 
 const removeNils = R.reject(R.isNil);
 
-export type AutoTagResult = { component: ModelComponent; triggeredBy: BitIds; version: Version; versionToAdd: string };
+export type AutoTagResult = { component: ModelComponent; triggeredBy: BitIds; version: Version; versionStr: string };
 
 /**
  * bumping dependencies version, so-called "auto tagging" is needed when the currently tagged
@@ -83,14 +83,14 @@ async function rewriteFlattenedDependencies(
     const componentAndVersion = componentsAndVersions.find(c => c.component.toBitId().isEqualWithoutVersion(id));
     if (!componentAndVersion) throw new Error(`rewriteFlattenedDependencies failed finding id ${id.toString()}`);
     componentAndVersion.version = updatedComponent.version;
-    componentAndVersion.versionStr = updatedComponent.versionToAdd;
+    componentAndVersion.versionStr = updatedComponent.versionStr;
   });
 
   const allDependenciesGraphs = buildComponentsGraphForComponentsAndVersion(componentsAndVersions);
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const updateAll = updatedComponents.map(async updatedComponent => {
-    const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionToAdd);
+    const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionStr);
     const {
       flattenedDependencies,
       flattenedDevDependencies,
@@ -160,7 +160,7 @@ async function updateComponents(
         return component.getVersionToAdd();
       };
       const versionToAdd = getVersionToAdd();
-      autoTagResults.push({ component, triggeredBy, version, versionToAdd });
+      autoTagResults.push({ component, triggeredBy, version, versionStr: versionToAdd });
       return scope.sources.putAdditionalVersion(component, version, message, versionToAdd);
     }
     return null;
