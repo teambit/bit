@@ -62,19 +62,30 @@ export async function bumpDependenciesVersions(
   return updatedComponents;
 }
 
+/**
+ * by now we only bumped dependencies and flattened dependencies of the currently tagged components.
+ * however, in some cases, the currently tagged components, updated their dependencies and that
+ * update needs to be reflected in the flattenedDependencies of the auto-tagged components.
+ * @see auto-tagging.e2e file, case "then tagging the dependent of the skipped dependency" for a
+ * complete workflow of this use case.
+ *
+ * the process how to get the flattened dependencies here is similar to the one used when tagging
+ * components. (see tag-model-components file).
+ */
 async function rewriteFlattenedDependencies(
   updatedComponents: AutoTagResult[],
   componentsAndVersions: ComponentsAndVersions[],
   scope: Scope
 ) {
+  // get "componentsAndVersions" updated with the recently added versions
   updatedComponents.forEach(updatedComponent => {
-    const componentAndVersion = componentsAndVersions.find(c =>
-      c.component.toBitId().isEqualWithoutVersion(updatedComponent.component.toBitId())
-    );
-    if (!componentAndVersion) throw new Error('failed finding componentAndVersion');
+    const id = updatedComponent.component.toBitId();
+    const componentAndVersion = componentsAndVersions.find(c => c.component.toBitId().isEqualWithoutVersion(id));
+    if (!componentAndVersion) throw new Error(`rewriteFlattenedDependencies failed finding id ${id.toString()}`);
     componentAndVersion.version = updatedComponent.version;
     componentAndVersion.versionStr = updatedComponent.versionToAdd;
   });
+
   const allDependenciesGraphs = buildComponentsGraphForComponentsAndVersion(componentsAndVersions);
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
