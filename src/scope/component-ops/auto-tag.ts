@@ -8,7 +8,7 @@ import { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
 import Component from '../../consumer/component/consumer-component';
 import { Version } from '../models';
-import { getAllFlattenedDependencies } from './tag-model-component';
+import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { buildComponentsGraphForComponentsAndVersion } from '../graph/components-graph';
 
 const removeNils = R.reject(R.isNil);
