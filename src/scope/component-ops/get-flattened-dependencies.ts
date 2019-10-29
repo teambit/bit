@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { Graph } from 'graphlib';
+import graphlib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { Scope } from '..';
 import { DependencyNotFound } from '../exceptions';
@@ -10,6 +10,7 @@ import { AllDependenciesGraphs } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';
 import { BitIdStr } from '../../bit-id/bit-id';
 
+// eslint-disable-next-line
 export async function getAllFlattenedDependencies(
   scope: Scope,
   componentId: BitId,
