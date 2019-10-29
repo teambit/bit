@@ -24,17 +24,24 @@ import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { AutoTagResult } from './auto-tag';
 import { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
-import { buildComponentsGraph } from '../graph/components-graph';
+import { buildComponentsGraph, AllDependenciesGraphs } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 
-export async function getFlattenedDependencies(
-  scope: Scope,
-  componentId: BitId,
-  graph: Graph,
-  cache: Record<string, any>,
-  notFoundDependencies: BitIds,
-  prodGraph?: Graph
-): Promise<BitIds> {
+async function getFlattenedDependencies({
+  scope,
+  componentId,
+  graph,
+  cache,
+  notFoundDependencies,
+  prodGraph
+}: {
+  scope: Scope;
+  componentId: BitId;
+  graph: Graph;
+  cache: Record<string, any>;
+  notFoundDependencies: BitIds;
+  prodGraph?: Graph;
+}): Promise<BitIds> {
   const id = componentId.toString();
   const edges = getEdges(graph, id);
   if (!edges) return new BitIds();
@@ -66,6 +73,53 @@ export async function getFlattenedDependencies(
   const flattenedUnique = BitIds.uniqFromArray(R.flatten(flattened));
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(componentId);
+}
+
+export async function getAllFlattenedDependencies(
+  scope: Scope,
+  componentId: BitId,
+  allDependenciesGraphs: AllDependenciesGraphs,
+  cache: Record<string, any>,
+  notFoundDependencies: BitIds
+): Promise<{
+  flattenedDependencies: BitIds;
+  flattenedDevDependencies: BitIds;
+  flattenedCompilerDependencies: BitIds;
+  flattenedTesterDependencies: BitIds;
+}> {
+  const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = allDependenciesGraphs;
+  const params = {
+    scope,
+    componentId,
+    cache,
+    notFoundDependencies
+  };
+  const flattenedDependencies = await getFlattenedDependencies({
+    ...params,
+    graph: graphDeps
+  });
+  const flattenedDevDependencies = await getFlattenedDependencies({
+    ...params,
+    graph: graphDevDeps,
+    prodGraph: graphDeps
+  });
+  const flattenedCompilerDependencies = await getFlattenedDependencies({
+    ...params,
+    graph: graphCompilerDeps,
+    prodGraph: graphDeps
+  });
+  const flattenedTesterDependencies = await getFlattenedDependencies({
+    ...params,
+    graph: graphTesterDeps,
+    prodGraph: graphDeps
+  });
+
+  return {
+    flattenedDependencies,
+    flattenedDevDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies
+  };
 }
 
 function throwWhenDepNotIncluded(componentId: BitId, dependencyId: BitId) {
@@ -302,7 +356,7 @@ export default (async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
-  const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraph(componentsToTag);
+  const allDependenciesGraphs = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
@@ -314,37 +368,19 @@ export default (async function tagModelComponent({
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }
-    const flattenedDependencies = await getFlattenedDependencies(
+    const {
+      flattenedDependencies,
+      flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies
+    } = await getAllFlattenedDependencies(
       scope,
       consumerComponent.id,
-      graphDeps,
+      allDependenciesGraphs,
       dependenciesCache,
       notFoundDependencies
     );
-    const flattenedDevDependencies = await getFlattenedDependencies(
-      scope,
-      consumerComponent.id,
-      graphDevDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
-    const flattenedCompilerDependencies = await getFlattenedDependencies(
-      scope,
-      consumerComponent.id,
-      graphCompilerDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
-    const flattenedTesterDependencies = await getFlattenedDependencies(
-      scope,
-      consumerComponent.id,
-      graphTesterDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
+
     await scope.sources.addSource({
       source: consumerComponent,
       consumer,

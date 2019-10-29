@@ -1,4 +1,4 @@
-import graphLib from 'graphlib';
+import graphLib, { Graph } from 'graphlib';
 import R from 'ramda';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
@@ -7,57 +7,53 @@ import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
 import { BitId } from '../../bit-id';
 
-const Graph = graphLib.Graph;
+export type AllDependenciesGraphs = {
+  graphDeps: Graph;
+  graphDevDeps: Graph;
+  graphCompilerDeps: Graph;
+  graphTesterDeps: Graph;
+};
 
-export function buildComponentsGraph(components: Component[]) {
-  const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
-    const id = component.id.toString();
-    dependencies.get().forEach(dependency => {
-      const depId = dependency.id.toString();
-      // save the full BitId of a string id to be able to retrieve it later with no confusion
-      if (!graph.hasNode(id)) graph.setNode(id, component.id);
-      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-      graph.setEdge(id, depId);
-    });
-  };
-
+export function buildComponentsGraph(components: Component[]): AllDependenciesGraphs {
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
   const graphCompilerDeps = new Graph();
   const graphTesterDeps = new Graph();
   components.forEach(component => {
-    setGraphEdges(component, component.dependencies, graphDeps);
-    setGraphEdges(component, component.devDependencies, graphDevDeps);
-    setGraphEdges(component, component.compilerDependencies, graphCompilerDeps);
-    setGraphEdges(component, component.testerDependencies, graphTesterDeps);
+    _setGraphEdges(component.id, component.dependencies, graphDeps);
+    _setGraphEdges(component.id, component.devDependencies, graphDevDeps);
+    _setGraphEdges(component.id, component.compilerDependencies, graphCompilerDeps);
+    _setGraphEdges(component.id, component.testerDependencies, graphTesterDeps);
   });
   return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
 }
 
-export function buildComponentsGraphForComponentsAndVersion(components: ComponentsAndVersions[]) {
-  const setGraphEdges = (bitId: BitId, dependencies: Dependencies, graph) => {
-    const id = bitId.toString();
-    dependencies.get().forEach(dependency => {
-      const depId = dependency.id.toString();
-      // save the full BitId of a string id to be able to retrieve it later with no confusion
-      if (!graph.hasNode(id)) graph.setNode(id, bitId);
-      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-      graph.setEdge(id, depId);
-    });
-  };
-
+export function buildComponentsGraphForComponentsAndVersion(
+  components: ComponentsAndVersions[]
+): AllDependenciesGraphs {
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
   const graphCompilerDeps = new Graph();
   const graphTesterDeps = new Graph();
   components.forEach(({ component, version, versionStr }) => {
     const bitId = component.toBitId().changeVersion(versionStr);
-    setGraphEdges(bitId, version.dependencies, graphDeps);
-    setGraphEdges(bitId, version.devDependencies, graphDevDeps);
-    setGraphEdges(bitId, version.compilerDependencies, graphCompilerDeps);
-    setGraphEdges(bitId, version.testerDependencies, graphTesterDeps);
+    _setGraphEdges(bitId, version.dependencies, graphDeps);
+    _setGraphEdges(bitId, version.devDependencies, graphDevDeps);
+    _setGraphEdges(bitId, version.compilerDependencies, graphCompilerDeps);
+    _setGraphEdges(bitId, version.testerDependencies, graphTesterDeps);
   });
   return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
+}
+
+function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: Graph) {
+  const id = bitId.toString();
+  dependencies.get().forEach(dependency => {
+    const depId = dependency.id.toString();
+    // save the full BitId of a string id to be able to retrieve it later with no confusion
+    if (!graph.hasNode(id)) graph.setNode(id, bitId);
+    if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
+    graph.setEdge(id, depId);
+  });
 }
 
 /**

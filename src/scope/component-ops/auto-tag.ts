@@ -8,7 +8,7 @@ import { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
 import Component from '../../consumer/component/consumer-component';
 import { Version } from '../models';
-import { getFlattenedDependencies } from './tag-model-component';
+import { getAllFlattenedDependencies } from './tag-model-component';
 import { buildComponentsGraphForComponentsAndVersion } from '../graph/components-graph';
 
 const removeNils = R.reject(R.isNil);
@@ -75,44 +75,17 @@ async function rewriteFlattenedDependencies(
     componentAndVersion.version = updatedComponent.version;
     componentAndVersion.versionStr = updatedComponent.versionToAdd;
   });
-  const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraphForComponentsAndVersion(
-    componentsAndVersions
-  );
+  const allDependenciesGraphs = buildComponentsGraphForComponentsAndVersion(componentsAndVersions);
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const updateAll = updatedComponents.map(async updatedComponent => {
     const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionToAdd);
-    const flattenedDependencies = await getFlattenedDependencies(
-      scope,
-      id,
-      graphDeps,
-      dependenciesCache,
-      notFoundDependencies
-    );
-    const flattenedDevDependencies = await getFlattenedDependencies(
-      scope,
-      id,
-      graphDevDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
-    const flattenedCompilerDependencies = await getFlattenedDependencies(
-      scope,
-      id,
-      graphCompilerDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
-    const flattenedTesterDependencies = await getFlattenedDependencies(
-      scope,
-      id,
-      graphTesterDeps,
-      dependenciesCache,
-      notFoundDependencies,
-      graphDeps
-    );
+    const {
+      flattenedDependencies,
+      flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies
+    } = await getAllFlattenedDependencies(scope, id, allDependenciesGraphs, dependenciesCache, notFoundDependencies);
     updatedComponent.version.flattenedDependencies = flattenedDependencies;
     updatedComponent.version.flattenedDevDependencies = flattenedDevDependencies;
     updatedComponent.version.flattenedCompilerDependencies = flattenedCompilerDependencies;
