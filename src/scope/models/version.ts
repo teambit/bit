@@ -100,11 +100,8 @@ export default class Version extends BitObject {
   flattenedDevDependencies: BitIds;
   flattenedCompilerDependencies: BitIds;
   flattenedTesterDependencies: BitIds;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
