@@ -1,5 +1,6 @@
 import Command from '../../command';
 import { isolate } from '../../../api/consumer';
+import { WorkspaceIsolateOptions } from '../../../api/consumer/lib/isolate';
 
 export default class Isolate extends Command {
   name = 'isolate <id> [scopePath]';
@@ -35,26 +36,42 @@ export default class Isolate extends Command {
   action(
     [id, scopePath]: [string, string | null | undefined],
     opts: {
-      directory: string | null | undefined;
-      writeBitDependencies: boolean | null | undefined;
-      npmLinks: boolean | null | undefined;
-      installPackages: boolean | null | undefined;
-      installPeerDependencies: boolean | null | undefined;
-      dist: boolean | null | undefined;
-      conf: boolean | null | undefined;
-      noPackageJson: boolean | null | undefined;
-      override: boolean | null | undefined;
-      saveDependenciesAsComponents: boolean | null | undefined;
-      excludeRegistryPrefix: boolean | null | undefined;
-      verbose: boolean | null | undefined;
-      silentClientResult: boolean | null | undefined;
-      useCapsule: boolean | null | undefined;
+      directory?: string;
+      writeBitDependencies?: boolean;
+      npmLinks?: boolean;
+      installPackages?: boolean;
+      installPeerDependencies?: boolean;
+      dist?: boolean;
+      conf?: boolean;
+      noPackageJson?: boolean;
+      override?: boolean;
+      saveDependenciesAsComponents?: boolean;
+      excludeRegistryPrefix?: boolean;
+      verbose?: boolean;
+      silentClientResult?: boolean;
+      useCapsule?: boolean;
     }
   ): Promise<any> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    opts.writeToPath = opts.directory;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return isolate(id, scopePath || process.cwd(), opts);
+    // console.log('im here');
+    // console.log(opts);
+    // return '';
+    const concreteOpts: WorkspaceIsolateOptions = {
+      writeToPath: opts.directory,
+      override: opts.override === true,
+      writePackageJson: !opts.noPackageJson,
+      writeConfig: opts.conf === true,
+      writeBitDependencies: opts.writeBitDependencies === true,
+      createNpmLinkFiles: opts.npmLinks === true,
+      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
+      writeDists: opts.dist === true,
+      installNpmPackages: !!opts.installPackages, // convert to boolean
+      installPeerDependencies: !!opts.installPackages, // convert to boolean
+      verbose: opts.verbose === true,
+      excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
+      silentPackageManagerResult: false,
+      useCapsule: opts.useCapsule === true
+    };
+    return isolate(id, scopePath || process.cwd(), concreteOpts);
   }
 
   report(directory: string): string {

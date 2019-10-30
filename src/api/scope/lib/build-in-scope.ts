@@ -14,10 +14,10 @@ export default function buildInScope({
   noCache = false
 }: {
   id: string;
-  save: boolean | null | undefined;
-  verbose: boolean | null | undefined;
-  scopePath: string;
-  directory: string | null | undefined;
+  save?: boolean;
+  verbose?: boolean;
+  scopePath?: string;
+  directory?: string;
   keep: boolean;
   noCache: boolean;
 }) {

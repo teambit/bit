@@ -11,6 +11,7 @@ import componentResolver from '../../component-resolver';
 import { Analytics } from '../../analytics/analytics';
 import { Scope } from '..';
 import { fetchRemoteVersions } from '../scope-remotes';
+import { IsolateOptions } from '../../environment/isolator';
 
 const removeNils = R.reject(R.isNil);
 
@@ -30,12 +31,12 @@ export default function installExtensions({
   logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
   Analytics.addBreadCrumb('installEnvironment', `scope.installEnvironment, ids: ${Analytics.hashData(ids)}`);
   const componentsDir = scope.getComponentsPath();
-  const isolateOpts = {
+  const isolateOpts: IsolateOptions = {
     writeBitDependencies: false,
-    installPackages: true,
-    noPackageJson: false,
-    dist: true,
-    conf: false,
+    installNpmPackages: true,
+    writePackageJson: true,
+    writeDists: true,
+    writeConfig: false,
     override: false,
     verbose,
     silentPackageManagerResult: true
@@ -69,7 +70,6 @@ export default function installExtensions({
     await env.destroyIfExist();
     await env.create();
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
       if (!dontPrintEnvMsg) {
         // eslint-disable-next-line no-console

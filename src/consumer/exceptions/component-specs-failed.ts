@@ -2,10 +2,10 @@ import AbstractError from '../../error/abstract-error';
 import SpecsResults from '../specs-results';
 
 export default class ComponentSpecsFailed extends AbstractError {
-  id: string | null | undefined;
-  specsResults: SpecsResults | null | undefined;
+  id?: string;
+  specsResults?: SpecsResults;
 
-  constructor(id: string | null | undefined, specsResults: SpecsResults | null | undefined) {
+  constructor(id?: string, specsResults?: SpecsResults) {
     super();
     this.id = id;
     this.specsResults = specsResults;

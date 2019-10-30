@@ -629,13 +629,13 @@ export default class Scope {
     keep
   }: {
     bitId: BitId;
-    consumer?: Consumer | null | undefined;
-    save?: boolean | null | undefined;
-    verbose?: boolean | null | undefined;
+    consumer?: Consumer;
+    save?: boolean;
+    verbose?: boolean;
     isolated?: boolean;
     directory?: string;
     keep?: boolean;
-  }): Promise<SpecsResults | null | undefined> {
+  }): Promise<SpecsResults | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run specs on remote component');
     }
@@ -643,11 +643,8 @@ export default class Scope {
     const component = await this.getConsumerComponent(bitId);
     return component.runSpecs({
       scope: this,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       save,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       isolated,
       directory,
@@ -665,29 +662,24 @@ export default class Scope {
     noCache
   }: {
     bitId: BitId;
-    save?: boolean | null | undefined;
+    save?: boolean;
     consumer?: Consumer;
-    verbose?: boolean | null | undefined;
-    directory?: string | null | undefined;
-    keep?: boolean | null | undefined;
-    noCache?: boolean | null | undefined;
-  }): Promise<Dists | null | undefined> {
+    verbose?: boolean;
+    directory?: string;
+    keep?: boolean;
+    noCache?: boolean;
+  }): Promise<Dists | undefined> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
     }
     const component: Component = await this.getConsumerComponent(bitId);
     return component.build({
       scope: this,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       save,
       consumer,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       directory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       keep,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       noCache
     });
   }
