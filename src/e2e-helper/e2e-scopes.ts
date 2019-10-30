@@ -29,8 +29,8 @@ export default class ScopesData {
     this.localPath = path.join(this.e2eDir, this.local);
     fs.ensureDirSync(this.localPath);
   }
-  setRemoteScope() {
-    this.remote = `${generateRandomStr()}-remote`;
+  setRemoteScope(remoteScope?: string) {
+    this.remote = remoteScope || `${generateRandomStr()}-remote`;
     this.remotePath = path.join(this.e2eDir, this.remote);
   }
   setEnvScope() {

@@ -60,6 +60,11 @@ export default class FixtureHelper {
     return path.join(__dirname, '../../e2e/fixtures');
   }
 
+  copyFixtureDir(src: string, dest: string) {
+    const sourceDir = path.join(this.getFixturesDir(), src);
+    fs.copySync(sourceDir, dest);
+  }
+
   copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
