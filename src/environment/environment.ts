@@ -8,31 +8,15 @@ import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import { PathOsBased } from '../utils/path';
-import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
-
-export type IsolateOptions = {
-  writeToPath: string | null | undefined; // Path to write the component to (default to the isolatedEnv path)
-  writeBitDependencies: boolean | null | undefined; // Write bit dependencies as package dependencies in package.json
-  npmLinks: boolean | null | undefined; // Fix the links to dependencies to be links to the package
-  saveDependenciesAsComponents: boolean | null | undefined; // import the dependencies as bit components instead of as npm packages
-  installPackages: boolean | null | undefined; // Install the package dependencies
-  installPeerDependencies: boolean | null | undefined; // Install the peer package dependencies
-  noPackageJson: boolean | null | undefined; // Don't write the package.json
-  override: boolean | null | undefined; // Override existing files in the folder
-  excludeRegistryPrefix: boolean | null | undefined; // exclude the registry prefix from the component's name in the package.json
-  dist: boolean | null | undefined; // Write dist files
-  conf: boolean | null | undefined; // Write bit.json file
-  verbose: boolean; // Print more logs
-  silentClientResult: boolean | null | undefined; // Print environment install result
-};
+import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
+import { IsolateOptions } from './isolator';
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
 export default class Environment {
   path: PathOsBased;
   scope: Scope;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  consumer: Consumer;
+  consumer?: Consumer;
 
   constructor(scope: Scope, dir: string | null | undefined) {
     this.scope = scope;
@@ -54,40 +38,40 @@ export default class Environment {
    * @return {Promise.<Component>}
    */
   async isolateComponent(bitId: BitId | string, opts: IsolateOptions): Promise<ComponentWithDependencies> {
-    // add this if statement due to extentions calling this api directly with bitId as string with version
+    // add this if statement due to extensions calling this api directly with bitId as string with version
     if (typeof bitId === 'string') {
       bitId = BitId.parse(bitId, true);
     }
     const saveDependenciesAsComponents =
       opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;
+    if (!this.consumer) {
+      throw new Error('trying to import component without define consumer');
+    }
     const componentsWithDependencies = await this.consumer.importComponents(
       BitIds.fromArray([bitId]),
       false,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       saveDependenciesAsComponents
     );
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
-    const concreteOpts = {
+    const concreteOpts: ManyComponentsWriterParams = {
       consumer: this.consumer,
       componentsWithDependencies,
       writeToPath,
       override: opts.override,
-      writePackageJson: !opts.noPackageJson,
-      writeConfig: opts.conf,
+      writePackageJson: opts.writePackageJson,
+      writeConfig: opts.writeConfig,
       writeBitDependencies: opts.writeBitDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       createNpmLinkFiles: opts.createNpmLinkFiles,
-      writeDists: opts.dist,
-      installNpmPackages: !!opts.installPackages, // convert to boolean
-      installPeerDependencies: !!opts.installPackages, // convert to boolean
+      writeDists: opts.writeDists,
+      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
+      installNpmPackages: !!opts.installNpmPackages, // convert to boolean
+      installPeerDependencies: !!opts.installPeerDependencies, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter.writeAll();
     await Environment.markEnvironmentAsInstalled(writeToPath);

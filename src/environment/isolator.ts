@@ -7,7 +7,7 @@ import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
-import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
+import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependenciesForCapsule from '../consumer/component-ops/load-flattened-dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
@@ -21,10 +21,28 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import BitMap from '../consumer/bit-map';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 import GeneralError from '../error/general-error';
+import { PathOsBased } from '../utils/path';
+
+export interface IsolateOptions {
+  writeToPath?: PathOsBased; // Path to write the component to
+  override?: boolean; // Override existing files in the folder
+  writePackageJson?: boolean; // write the package.json
+  writeConfig?: boolean; // Write bit.json file
+  writeBitDependencies?: boolean; // Write bit dependencies as package dependencies in package.json
+  createNpmLinkFiles?: boolean; // Fix the links to dependencies to be links to the package
+  saveDependenciesAsComponents?: boolean; // import the dependencies as bit components instead of as npm packages
+  writeDists?: boolean; // Write dist files
+  shouldBuildDependencies?: boolean; // Build all depedencies before the isolation (used by tools like ts compiler)
+  installNpmPackages?: boolean; // Install the package dependencies
+  installPeerDependencies?: boolean; // Install the peer package dependencies
+  verbose?: boolean; // Print more logs
+  excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
+  silentPackageManagerResult?: boolean; // Print environment install result
+}
 
 export default class Isolator {
   capsule: Capsule;
-  consumer: Consumer | null | undefined;
+  consumer?: Consumer;
   scope: Scope;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   capsuleBitMap: BitMap;
@@ -37,21 +55,20 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer | null | undefined) {
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
   }
 
-  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer | null | undefined, dir?: string) {
+  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
   }
 
-  async isolate(componentId: BitId, opts: Record<string, any>): Promise<ComponentWithDependencies> {
+  async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
@@ -65,38 +82,24 @@ export default class Isolator {
         }
       });
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const writeToPath = opts.writeToPath;
-    const concreteOpts = {
+    const concreteOpts: ManyComponentsWriterParams = {
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       override: opts.override,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writePackageJson: !opts.noPackageJson,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writeConfig: opts.conf,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      writePackageJson: opts.writePackageJson,
+      writeConfig: opts.writeConfig,
       writeBitDependencies: opts.writeBitDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       createNpmLinkFiles: opts.createNpmLinkFiles,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writeDists: opts.dist,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      installNpmPackages: !!opts.installPackages, // convert to boolean
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      installPeerDependencies: !!opts.installPackages, // convert to boolean
+      writeDists: opts.writeDists,
+      installNpmPackages: !!opts.installNpmPackages, // convert to boolean
+      installPeerDependencies: !!opts.installPeerDependencies, // convert to boolean
       addToRootPackageJson: false,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose: opts.verbose,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      isolated: true,
-      capsule: this.capsule
+      isolated: true
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

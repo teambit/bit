@@ -13,14 +13,14 @@ export default function testInScope({
   keep
 }: {
   id: string;
-  save?: boolean | null | undefined;
-  verbose?: boolean | null | undefined;
-  scopePath: string;
+  save?: boolean;
+  verbose?: boolean;
+  scopePath?: string;
   directory?: string;
   keep?: boolean;
-}): Promise<SpecsResults | null | undefined> {
+}): Promise<SpecsResults | undefined> {
   logger.debugAndAddBreadCrumb('testInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
-  async function loadFromScope(initialError?: Error | null | undefined) {
+  async function loadFromScope(initialError?: Error | undefined) {
     const getScope = async () => {
       try {
         const scope = await loadScope(scopePath || process.cwd());

@@ -1,31 +1,23 @@
-import { loadScope, Scope } from '../../../scope';
+import { loadScope, Scope, ComponentWithDependencies } from '../../../scope';
 import { loadConsumer } from '../../../consumer';
 import logger from '../../../logger/logger';
 import BitId from '../../../bit-id/bit-id';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import Isolator from '../../../environment/isolator';
+import Isolator, { IsolateOptions } from '../../../environment/isolator';
 
-// TODO: merge this with other instances of the same options
-export type IsolateOptions = {
-  writeToPath: string | null | undefined;
-  writeBitDependencies: boolean | null | undefined;
-  npmLinks: boolean | null | undefined;
-  installPackages: boolean | null | undefined;
-  installPeerDependencies: boolean | null | undefined;
-  dist: boolean | null | undefined;
-  conf: boolean | null | undefined;
-  noPackageJson: boolean | null | undefined;
-  override: boolean | null | undefined;
-  useCapsule: boolean | null | undefined;
-};
+export interface WorkspaceIsolateOptions extends IsolateOptions {
+  useCapsule: boolean;
+}
 
-export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {
+export default (async function isolate(
+  componentId: string,
+  scopePath: string,
+  opts: WorkspaceIsolateOptions
+): Promise<ComponentWithDependencies | string> {
   if (opts.useCapsule) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return isolateUsingCapsule(componentId, opts);
   }
   logger.debugAndAddBreadCrumb('isolate', 'starting isolation process');
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (opts.verbose) console.log('starting isolation process'); // eslint-disable-line no-console
   let scope: Scope;
   // If a scope path provided we will take the component from that scope
@@ -44,8 +36,7 @@ export default (async function isolate(componentId: string, scopePath: string, o
 async function isolateUsingCapsule(componentId: string, opts: IsolateOptions) {
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(componentId);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const isolator: Isolator = await Isolator.getInstance('fs', consumer.scope, consumer, opts.directory);
+  const isolator: Isolator = await Isolator.getInstance('fs', consumer.scope, consumer, opts.writeToPath);
   return isolator.isolate(bitId, opts);
 }
 

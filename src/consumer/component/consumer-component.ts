@@ -19,7 +19,7 @@ import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
-import IsolatedEnvironment, { IsolateOptions } from '../../environment/environment';
+import IsolatedEnvironment from '../../environment/environment';
 import { Log } from '../../scope/models/version';
 import { ScopeListItem } from '../../scope/models/model-component';
 import BitMap from '../bit-map';
@@ -67,10 +67,11 @@ import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
 import PackageJsonFile from './package-json-file';
-import Isolator from '../../environment/isolator';
+import Isolator, { IsolateOptions } from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -109,7 +110,7 @@ export type ComponentProps = {
   docs?: Doclet[] | null | undefined;
   dists?: Dist[];
   mainDistFile?: PathLinux | null | undefined;
-  specsResults?: SpecsResults | null | undefined;
+  specsResults?: SpecsResults;
   license?: License | null | undefined;
   deprecated: boolean | null | undefined;
   origin: ComponentOrigin;
@@ -160,7 +161,7 @@ export default class Component {
   specsResults: SpecsResults[] | null | undefined;
   license: License | null | undefined;
   log: Log | null | undefined;
-  writtenPath: PathOsBasedRelative | null | undefined; // needed for generate links
+  writtenPath?: PathOsBasedRelative; // needed for generate links
   dependenciesSavedAsComponents: boolean | null | undefined = true; // otherwise they're saved as npm packages.
   originallySharedDir: PathLinux | null | undefined; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: boolean | null | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
@@ -603,18 +604,17 @@ export default class Component {
   }: {
     scope: Scope;
     save?: boolean;
-    consumer?: Consumer | null | undefined;
+    consumer?: Consumer;
     noCache?: boolean;
     directory?: string;
     verbose?: boolean;
     dontPrintEnvMsg?: boolean;
     keep?: boolean;
-  }): Promise<Dists | null | undefined> {
+  }): Promise<Dists | undefined> {
     return buildComponent({
       component: this,
       scope,
       save,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumer,
       noCache,
       directory,
@@ -644,11 +644,10 @@ export default class Component {
     isolated?: boolean;
     directory?: string;
     keep?: boolean;
-  }): Promise<SpecsResults | null | undefined> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  }): Promise<SpecsResults | undefined> {
     const testFiles = this.files.filter(file => file.test);
     const consumerPath = consumer ? consumer.getPath() : '';
-    if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
+    if (!this.tester || !testFiles || R.isEmpty(testFiles)) return undefined;
 
     logger.debug('tester found, start running tests');
     Analytics.addBreadCrumb('runSpecs', 'tester found, start running tests');
@@ -746,12 +745,7 @@ export default class Component {
               ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
                 const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
                 const componentWithDependencies = await isolator.isolate(component.id, {});
-                const testFileWithoutSharedDir = stripSharedDirFromPath(
-                  testFilePath,
-                  componentWithDependencies.component.originallySharedDir
-                );
-                // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-                return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
+                return new ExtensionIsolateResult(isolator, componentWithDependencies);
               };
               const context: Record<string, any> = {
                 componentDir: cwd,
@@ -826,10 +820,10 @@ export default class Component {
       await isolatedEnvironment.create();
       const isolateOpts = {
         verbose,
-        dist: true,
-        installPackages: true,
+        writeDists: true,
+        installNpmPackages: true,
         installPeerDependencies: true,
-        noPackageJson: false
+        writePackageJson: true
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
 
@@ -1080,7 +1074,7 @@ export default class Component {
       files,
       docs,
       dists,
-      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
+      specsResults: specsResults ? SpecsResults.deserialize(specsResults) : undefined,
       license: license ? License.deserialize(license) : null,
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false
