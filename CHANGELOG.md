@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag
 - consolidate isolation options
 - formalize isolate api result
 

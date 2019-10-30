@@ -7,10 +7,13 @@ import Scope from '../scope';
 import { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
 import Component from '../../consumer/component/consumer-component';
+import { Version } from '../models';
+import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { buildComponentsGraphForComponentsAndVersion } from '../graph/components-graph';
 
 const removeNils = R.reject(R.isNil);
 
-export type AutoTagResult = { component: ModelComponent; triggeredBy: BitIds };
+export type AutoTagResult = { component: ModelComponent; triggeredBy: BitIds; version: Version; versionStr: string };
 
 /**
  * bumping dependencies version, so-called "auto tagging" is needed when the currently tagged
@@ -55,7 +58,51 @@ export async function bumpDependenciesVersions(
     const ids = updatedComponents.map(({ component }) => component.toBitIdWithLatestVersion());
     await updateComponents(componentsAndVersions, scope, taggedComponentsIds, BitIds.fromArray(ids), true, graph);
   }
+  await rewriteFlattenedDependencies(updatedComponents, componentsAndVersions, scope);
   return updatedComponents;
+}
+
+/**
+ * by now we only bumped dependencies and flattened dependencies of the currently tagged components.
+ * however, in some cases, the currently tagged components, updated their dependencies and that
+ * update needs to be reflected in the flattenedDependencies of the auto-tagged components.
+ * @see auto-tagging.e2e file, case "then tagging the dependent of the skipped dependency" for a
+ * complete workflow of this use case.
+ *
+ * the process how to get the flattened dependencies here is similar to the one used when tagging
+ * components. (see tag-model-components file).
+ */
+async function rewriteFlattenedDependencies(
+  updatedComponents: AutoTagResult[],
+  componentsAndVersions: ComponentsAndVersions[],
+  scope: Scope
+) {
+  // get "componentsAndVersions" updated with the recently added versions
+  updatedComponents.forEach(updatedComponent => {
+    const id = updatedComponent.component.toBitId();
+    const componentAndVersion = componentsAndVersions.find(c => c.component.toBitId().isEqualWithoutVersion(id));
+    if (!componentAndVersion) throw new Error(`rewriteFlattenedDependencies failed finding id ${id.toString()}`);
+    componentAndVersion.version = updatedComponent.version;
+    componentAndVersion.versionStr = updatedComponent.versionStr;
+  });
+
+  const allDependenciesGraphs = buildComponentsGraphForComponentsAndVersion(componentsAndVersions);
+  const dependenciesCache = {};
+  const notFoundDependencies = new BitIds();
+  const updateAll = updatedComponents.map(async updatedComponent => {
+    const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionStr);
+    const {
+      flattenedDependencies,
+      flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies
+    } = await getAllFlattenedDependencies(scope, id, allDependenciesGraphs, dependenciesCache, notFoundDependencies);
+    updatedComponent.version.flattenedDependencies = flattenedDependencies;
+    updatedComponent.version.flattenedDevDependencies = flattenedDevDependencies;
+    updatedComponent.version.flattenedCompilerDependencies = flattenedCompilerDependencies;
+    updatedComponent.version.flattenedTesterDependencies = flattenedTesterDependencies;
+  });
+  await Promise.all(updateAll);
 }
 
 async function updateComponents(
@@ -64,14 +111,13 @@ async function updateComponents(
   taggedComponents: BitIds,
   changedComponents: BitIds,
   isRound2 = false,
-  graph: Record<string, any>
+  graph: Graph
 ): Promise<AutoTagResult[]> {
   const autoTagResults: AutoTagResult[] = [];
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {
     let pendingUpdate = false;
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!graph.hasNode(idStr)) return null;
     const taggedId = taggedComponents.searchWithoutVersion(bitId);
     const isTaggedComponent = Boolean(taggedId);
@@ -80,6 +126,7 @@ async function updateComponents(
       // cycle dependencies. in that case, it should be updated on the round2 only.
       return null;
     }
+    // @ts-ignore
     const allDependencies = graphlib.alg.preorder(graph, idStr); // same as flattenDependencies
     const triggeredBy = new BitIds();
     allDependencies.forEach((dependency: string) => {
@@ -100,7 +147,6 @@ async function updateComponents(
           // tag, we should use the same updated version, and not creating a new version.
           if (isTaggedComponent) {
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             return taggedId.version;
           }
           const componentChangedInRound1 = changedComponents.searchWithoutVersion(bitId);
@@ -114,16 +160,17 @@ async function updateComponents(
         return component.getVersionToAdd();
       };
       const versionToAdd = getVersionToAdd();
-      autoTagResults.push({ component, triggeredBy });
+      autoTagResults.push({ component, triggeredBy, version, versionStr: versionToAdd });
       return scope.sources.putAdditionalVersion(component, version, message, versionToAdd);
     }
     return null;
   });
   await Promise.all(componentsToUpdateP);
+
   return autoTagResults;
 }
 
-function updateDependencies(version, edgeId, changedComponentId) {
+function updateDependencies(version: Version, edgeId: BitId, changedComponentId: BitId) {
   version.updateFlattenedDependency(edgeId, edgeId.changeVersion(changedComponentId.version));
   const dependencyToUpdate = version
     .getAllDependencies()
@@ -134,7 +181,7 @@ function updateDependencies(version, edgeId, changedComponentId) {
   }
 }
 
-function buildGraph(componentsAndVersions: ComponentsAndVersions[]) {
+function buildGraph(componentsAndVersions: ComponentsAndVersions[]): Graph {
   const graph = new Graph();
   const componentsIds = BitIds.fromArray(componentsAndVersions.map(c => c.component.toBitId()));
   componentsAndVersions.forEach(({ component, version, versionStr }) => {
@@ -167,6 +214,7 @@ export async function getAutoTagPending(
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return null;
+    // @ts-ignore
     const edges = graphlib.alg.preorder(graph, idStr);
     const isAutoTagPending = edges.some(edge => {
       const edgeId: BitId = graph.node(edge);
