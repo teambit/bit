@@ -1,18 +1,18 @@
 import { serializeError } from 'serialize-error';
 import { buildInScope, testInScope, modifyCIProps } from '../../api/scope';
 
-async function runAndUpdateCI({
+export default async function runAndUpdateCI({
   id,
   scopePath,
   verbose,
   directory,
-  keep,
-  noCache
+  keep = false,
+  noCache = false
 }: {
   id: string;
-  scopePath: string;
-  verbose: boolean;
-  directory: string | null | undefined;
+  scopePath?: string;
+  verbose?: boolean;
+  directory?: string;
   keep?: boolean;
   noCache?: boolean;
 }): Promise<any> {
@@ -23,10 +23,10 @@ async function runAndUpdateCI({
     if (error) {
       const serializedError = serializeError(error);
       ciProps.error = serializedError;
-      return modifyCIProps(scopePath, id, ciProps);
+      return modifyCIProps(id, ciProps, scopePath);
     }
 
-    return modifyCIProps(scopePath, id, ciProps);
+    return modifyCIProps(id, ciProps, scopePath);
   }
 
   const startTime = Date.now().toString();
@@ -34,10 +34,7 @@ async function runAndUpdateCI({
   try {
     // define options
     const save = true;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, noCache });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep });
     const dists = buildResults ? buildResults.dists : null;
     await addCIAttrsInTheModel({ startTime });
@@ -47,5 +44,3 @@ async function runAndUpdateCI({
     throw e;
   }
 }
-
-module.exports = runAndUpdateCI;

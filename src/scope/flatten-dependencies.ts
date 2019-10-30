@@ -1,7 +1,7 @@
 import { flatten } from '../utils';
 import VersionDependencies from './version-dependencies';
 import Repository from './objects/repository';
-import { BitId } from '../bit-id';
+import { BitIds } from '../bit-id';
 import ComponentWithDependencies from './component-dependencies';
 
 export function flattenDependencies(dependencies: ComponentWithDependencies[]) {
@@ -13,19 +13,13 @@ export function flattenDependencies(dependencies: ComponentWithDependencies[]) {
   );
 }
 
-export function flattenDependencyIds(dependencies: VersionDependencies[], repo: Repository): Promise<BitId[]> {
-  return Promise.all(
+export async function flattenDependencyIds(dependencies: VersionDependencies[], repo: Repository): Promise<BitIds> {
+  const ids = await Promise.all(
     dependencies.map(dep => {
       const depCompId = dep.component.id.changeScope(dep.sourceScope);
       return dep.component.flattenedDependencies(repo).then(flattenedDeps => flattenedDeps.concat(depCompId));
     })
-  ).then(idMatrix => {
-    const ids = flatten(idMatrix);
-    return Object.values(
-      ids.reduce((components, id) => {
-        components[id.toString()] = id;
-        return components;
-      }, {})
-    );
-  });
+  );
+  const flattenedIds = flatten(ids);
+  return BitIds.uniqFromArray(flattenedIds);
 }
