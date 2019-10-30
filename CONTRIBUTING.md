@@ -22,6 +22,10 @@ if you want your command to be different then the default (bit-dev) just add you
 ```bash
   npm run dev-link my-bit-dev-cmd-name
 ```
+for example:
+```bash
+  npm run dev-link bit-dev
+```
 
 bit will install these commands in `/usr/local/bin/` directory, so in order to remove them just use the bash `rm` command.
 
@@ -29,17 +33,8 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
   rm /usr/local/bin/my-bit-dev-cmd-name
 ```
 
-### Flow
-- install [`flow`](https://flowtype.org/)
-and make sure you have [`flow-typed`](https://github.com/flowtype/flow-typed) installed.
-```bash
-npm install -g flow-bin flow-typed
-```
-
-- install type definitions using flow-typed
-```bash
-  flow-typed install
-```
+### Typescript
+- install TS 
 
 ### Build
 
