@@ -215,7 +215,13 @@ async function convertToCorrectScope(
       const hashBefore = objectVersion.calculateHash().toString();
       if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
       changeDependencyScope(objectVersion);
-      // const hashAfter = objectVersion.hash().toString();
+      // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
+      // this is currently needed because remote-servers with older code still saving Version
+      // objects into the calculated hash path and not into the originally created hash.
+      // in this scenario, the calculated hash is different than the original hash due to the scope
+      // changes. if we don't do this hash replacement, these remote servers will write the version
+      // objects into different paths and then throw an error of component-not-found due to failure
+      // finding the Version objects on the fs.
       const hashAfter = objectVersion.calculateHash().toString();
       if (hashBefore !== hashAfter) {
         objectVersion._hash = hashAfter;
@@ -231,6 +237,7 @@ async function convertToCorrectScope(
           }
         });
       }
+      // END DELETION OF BIT > v15.
     })
   );
   componentsObjects.component.scope = remoteScope;

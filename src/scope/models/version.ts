@@ -113,7 +113,7 @@ export default class Version extends BitObject {
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
-  _hash: string;
+  _hash: string; // reason for the underscore prefix is that we already have hash as a method
 
   constructor(props: VersionProps) {
     super();
