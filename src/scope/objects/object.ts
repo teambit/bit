@@ -5,11 +5,11 @@ import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
 import { typesObj as types } from '../object-registrar';
 
-function parse(buffer: Buffer, hash?: string): BitObject {
+function parse(buffer: Buffer): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
-  const [type] = headers.split(SPACE_DELIMITER);
+  const [type, hash] = headers.split(SPACE_DELIMITER);
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return types[type].parse(contents, hash);
@@ -99,16 +99,16 @@ export default class BitObject {
   /**
    * see `this.parseSync` for the sync version
    */
-  static parseObject(fileContents: Buffer, hash?: string): Promise<BitObject> {
-    return inflate(fileContents).then(buffer => parse(buffer, hash));
+  static parseObject(fileContents: Buffer): Promise<BitObject> {
+    return inflate(fileContents).then(buffer => parse(buffer));
   }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.
    */
-  static parseSync(fileContents: Buffer, hash?: string): BitObject {
+  static parseSync(fileContents: Buffer): BitObject {
     const buffer = inflateSync(fileContents);
-    return parse(buffer, hash);
+    return parse(buffer);
   }
 
   static makeHash(str: string | Buffer): string {

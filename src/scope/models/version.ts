@@ -231,9 +231,7 @@ export default class Version extends BitObject {
 
   hash(): Ref {
     if (!this._hash) {
-      // this should happen only when the remote-server has an older version
-      // @todo: once v15 is deployed in all hubs, remove the next line, and replace it with throw new Error('hash is missing'); or something similar.
-      return this.calculateHash();
+      throw new Error('hash is missing from a Version object');
     }
     return new Ref(this._hash);
   }
@@ -369,8 +367,7 @@ export default class Version extends BitObject {
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions,
-        hash: this._hash
+        extensions: this.extensions
       },
       val => !!val
     );
@@ -504,15 +501,15 @@ export default class Version extends BitObject {
       overrides,
       packageJsonChangedProps,
       extensions,
-      hash: hash || contentParsed.hash
+      hash
     });
   }
 
   /**
    * used by raw-object.toRealObject()
    */
-  static from(versionProps: VersionProps): Version {
-    return Version.parse(JSON.stringify(versionProps), versionProps.hash);
+  static from(versionProps: VersionProps, hash: string): Version {
+    return Version.parse(JSON.stringify(versionProps), hash);
   }
 
   /**
@@ -604,6 +601,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions
     });
+    // @todo: after v15 is deployed, this can be changed to generate a random uuid
     version._hash = version.calculateHash().toString();
 
     return version;

@@ -86,7 +86,7 @@ export default class Repository {
     return fs
       .readFile(this.objectPath(ref))
       .then(fileContents => {
-        return BitObject.parseObject(fileContents, ref.toString());
+        return BitObject.parseObject(fileContents);
       })
       .then((parsedObject: BitObject) => {
         this.setCache(parsedObject);
@@ -199,7 +199,7 @@ export default class Repository {
   loadSync(ref: Ref, throws = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));
-      return BitObject.parseSync(objectFile, ref.toString());
+      return BitObject.parseSync(objectFile);
     } catch (err) {
       if (throws) {
         throw new HashNotFound(ref.toString());

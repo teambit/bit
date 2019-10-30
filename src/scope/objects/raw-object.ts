@@ -125,7 +125,7 @@ export default class BitRawObject {
    */
   toRealObject() {
     // @ts-ignore
-    return types[this.type].from(this.parsedContent || this.getParsedContent());
+    return types[this.type].from(this.parsedContent || this.getParsedContent(), this.headers[1]);
   }
 
   clone() {
