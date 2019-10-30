@@ -212,11 +212,13 @@ async function convertToCorrectScope(
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
   await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
-      const hashBefore = objectVersion.hash().toString();
+      const hashBefore = objectVersion.calculateHash().toString();
       if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
       changeDependencyScope(objectVersion);
-      const hashAfter = objectVersion.hash().toString();
+      // const hashAfter = objectVersion.hash().toString();
+      const hashAfter = objectVersion.calculateHash().toString();
       if (hashBefore !== hashAfter) {
+        objectVersion._hash = hashAfter;
         logger.debugAndAddBreadCrumb(
           'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
