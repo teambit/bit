@@ -212,7 +212,7 @@ async function convertToCorrectScope(
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
   await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
-      const hashBefore = objectVersion.calculateHash().toString();
+      const hashBefore = objectVersion.hash().toString();
       if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
       changeDependencyScope(objectVersion);
       // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
