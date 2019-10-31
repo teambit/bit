@@ -33,9 +33,6 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
   rm /usr/local/bin/my-bit-dev-cmd-name
 ```
 
-### Typescript
-- install TS 
-
 ### Build
 
 - build distributions:
@@ -71,6 +68,7 @@ Use `--debug` flag to watch the running commands and the output. It might be a u
 Use `--with_ssh` flag to switch from exporting by using file-system to SSH approach. Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
 
 When adding end to end tests please make sure new test files are created in the following name convention: ```name.e2e.[number].js``` where number should be 1/2/3. This was made in order to batch work in appveyor.
+
 ### Lint
 
 - run eslint and Flow
