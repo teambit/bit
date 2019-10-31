@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag
 - consolidate isolation options
 - formalize isolate api result
+- add `--no-warnings` flag to bit test child process
 
 ## [[14.4.3] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.3)
 
