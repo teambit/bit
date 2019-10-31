@@ -341,6 +341,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       email,
       date: Date.now().toString()
     };
+    version.setNewHash();
     component.addVersion(version, versionToAdd);
     return this.put({ component, objects: [version] });
   }

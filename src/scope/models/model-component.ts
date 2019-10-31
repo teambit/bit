@@ -29,6 +29,7 @@ import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
+import findDuplications from '../../utils/array/find-duplications';
 
 type State = {
   versions?: {
@@ -506,6 +507,10 @@ export default class Component extends BitObject {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }
       });
+    }
+    const hashDuplications = findDuplications(this.versionArray.map(v => v.toString()));
+    if (hashDuplications.length) {
+      throw new ValidationError(`${message}, the following hash(es) are duplicated ${hashDuplications.join(', ')}`);
     }
   }
 }

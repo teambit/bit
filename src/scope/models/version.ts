@@ -598,10 +598,14 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions
     });
-    // @todo: after v15 is deployed, this can be changed to generate a random uuid
-    version._hash = version.calculateHash().toString();
+    version.setNewHash();
 
     return version;
+  }
+
+  setNewHash() {
+    // @todo: after v15 is deployed, this can be changed to generate a random uuid
+    this._hash = this.calculateHash().toString();
   }
 
   setSpecsResults(specsResults: Results | null | undefined) {
