@@ -3,16 +3,16 @@ import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
-// import logger from '../../logger/logger';
+import { typesObj as types } from '../object-registrar';
 
-function parse(buffer: Buffer, types: { [key: string]: Function }): BitObject {
+function parse(buffer: Buffer): BitObject {
   const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
-  const [type] = headers.split(SPACE_DELIMITER);
+  const [type, hash] = headers.split(SPACE_DELIMITER);
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return types[type].parse(contents);
+  return types[type].parse(contents, hash);
 }
 
 export default class BitObject {
@@ -27,7 +27,7 @@ export default class BitObject {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static parse(data: any) {
+  static parse(data: any, hash?: string) {
     throw new Error('parse() was not implemented...');
   }
 
@@ -99,16 +99,16 @@ export default class BitObject {
   /**
    * see `this.parseSync` for the sync version
    */
-  static parseObject(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
-    return inflate(fileContents).then(buffer => parse(buffer, types));
+  static parseObject(fileContents: Buffer): Promise<BitObject> {
+    return inflate(fileContents).then(buffer => parse(buffer));
   }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.
    */
-  static parseSync(fileContents: Buffer, types: { [key: string]: Function }): BitObject {
+  static parseSync(fileContents: Buffer): BitObject {
     const buffer = inflateSync(fileContents);
-    return parse(buffer, types);
+    return parse(buffer);
   }
 
   static makeHash(str: string | Buffer): string {

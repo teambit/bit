@@ -93,7 +93,7 @@ export default class Fs implements Network {
     const scope = this.getScope();
     const dependencyGraph = await DependencyGraph.loadLatest(scope);
     // get as string to mimic the exact steps of using ssh
-    const getGraphAsString = (): string => {
+    const getGraphAsString = (): object => {
       if (!bitId) {
         return dependencyGraph.serialize();
       }

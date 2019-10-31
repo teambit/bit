@@ -28,7 +28,7 @@ export async function exportManyBareScope(
   clientIsOld: boolean
 ): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
-  const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
+  const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects());
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
@@ -97,7 +97,7 @@ export async function exportMany({
     );
     const componentsAndObjects = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
-      const componentAndObject = componentObject.toObjects(scope.objects);
+      const componentAndObject = componentObject.toObjects();
       componentAndObject.component.clearStateData();
       await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
       await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
@@ -109,7 +109,7 @@ export async function exportMany({
         componentsAndObjects.push(componentAndObject);
       } else {
         // the component should not be changed locally. only add the new scope to the scope-list
-        const componentAndObjectCloned = componentObject.toObjects(scope.objects);
+        const componentAndObjectCloned = componentObject.toObjects();
         componentAndObjectCloned.component.addScopeListItem(remoteObj);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentsAndObjects.push(componentAndObjectCloned);
@@ -215,8 +215,16 @@ async function convertToCorrectScope(
       const hashBefore = objectVersion.hash().toString();
       if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
       changeDependencyScope(objectVersion);
-      const hashAfter = objectVersion.hash().toString();
+      // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
+      // this is currently needed because remote-servers with older code still saving Version
+      // objects into the calculated hash path and not into the originally created hash.
+      // in this scenario, the calculated hash is different than the original hash due to the scope
+      // changes. if we don't do this hash replacement, these remote servers will write the version
+      // objects into different paths and then throw an error of component-not-found due to failure
+      // finding the Version objects on the fs.
+      const hashAfter = objectVersion.calculateHash().toString();
       if (hashBefore !== hashAfter) {
+        objectVersion._hash = hashAfter;
         logger.debugAndAddBreadCrumb(
           'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
@@ -229,6 +237,7 @@ async function convertToCorrectScope(
           }
         });
       }
+      // END DELETION OF BIT > v15.
     })
   );
   componentsObjects.component.scope = remoteScope;

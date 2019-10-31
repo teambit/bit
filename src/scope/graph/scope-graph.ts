@@ -1,4 +1,4 @@
-import GraphLib from 'graphlib';
+import GraphLib, { Graph } from 'graphlib';
 import { BitId, BitIds } from '../../bit-id';
 import { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
@@ -9,8 +9,6 @@ import { getLatestVersionNumber } from '../../utils';
 import Consumer from '../../consumer/consumer';
 import ComponentsList from '../../consumer/component/components-list';
 
-const Graph = GraphLib.Graph;
-
 export type DependenciesInfo = {
   id: BitId;
   depth: number;
@@ -19,12 +17,11 @@ export type DependenciesInfo = {
 };
 
 export default class DependencyGraph {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   graph: Graph;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeName: string;
 
-  constructor(graph: Record<string, any>) {
+  constructor(graph: Graph) {
     this.graph = graph;
   }
 
@@ -42,7 +39,7 @@ export default class DependencyGraph {
     return new DependencyGraph(graph);
   }
 
-  static loadFromString(str: string): DependencyGraph {
+  static loadFromString(str: object): DependencyGraph {
     const graph = GraphLib.json.read(str);
     // when getting a graph from a remote scope, the class BitId is gone and only the object is received
     graph.nodes().forEach(node => {
@@ -213,6 +210,7 @@ export default class DependencyGraph {
   getDependentsInfo(id: BitId): DependenciesInfo[] {
     const idWithVersion = this._getIdWithLatestVersion(id);
     const edgeFunc = v => this.graph.inEdges(v);
+    // @ts-ignore (incorrect types in @types/graphlib)
     const dijkstraResults = GraphLib.alg.dijkstra(this.graph, idWithVersion.toString(), undefined, edgeFunc);
     const dependents: DependenciesInfo[] = [];
     Object.keys(dijkstraResults).forEach(idStr => {
@@ -264,7 +262,7 @@ export default class DependencyGraph {
     return nodeEdges.map(node => node.v);
   }
 
-  serialize(graph: Record<string, any> | null | undefined = this.graph) {
+  serialize(graph: Graph = this.graph) {
     return GraphLib.json.write(graph);
   }
 }

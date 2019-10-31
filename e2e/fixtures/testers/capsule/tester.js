@@ -1,5 +1,5 @@
 const path = require('path');
-const os = require('os')
+const os = require('os');
 const Mocha = require('mocha');
 const chai = require('chai');
 
@@ -48,18 +48,18 @@ function normalizeResults(mochaJsonResults) {
 
 const run = (specFile, context) => {
   const destDir = path.join(os.tmpdir(), generateRandomStr());
-  return context.isolate(destDir).then(({ capsule, componentWithDependencies, testFile }) => {
+  return context.isolate(destDir).then(({ capsule, componentWithDependencies }) => {
     return new Promise(resolve => {
       const componentRootDir = path.join(destDir, componentWithDependencies.component.writtenPath);
-      const relativeSpecFile = path.relative(context.componentDir, testFile);
+      const relativeSpecFile = path.relative(componentWithDependencies.component.originallySharedDir, specFile);
       const specFileInCapsule = path.join(componentRootDir, relativeSpecFile);
       const mocha = new Mocha({ reporter: JSONReporter });
       mocha.addFile(specFileInCapsule);
-      mocha.run().on('end', function () {
+      mocha.run().on('end', function() {
         // eslint-disable-line
         return resolve(normalizeResults(this.testResults));
       });
-    })
+    });
   });
 };
 
@@ -96,21 +96,21 @@ function Base(runner) {
 
   runner.stats = stats;
 
-  runner.on('start', function () {
+  runner.on('start', function() {
     stats.start = new Date();
   });
 
-  runner.on('suite', function (suite) {
+  runner.on('suite', function(suite) {
     stats.suites = stats.suites || 0;
     suite.root || stats.suites++;
   });
 
-  runner.on('test end', function () {
+  runner.on('test end', function() {
     stats.tests = stats.tests || 0;
     stats.tests++;
   });
 
-  runner.on('pass', function (test) {
+  runner.on('pass', function(test) {
     stats.passes = stats.passes || 0;
 
     if (test.duration > test.slow()) {
@@ -124,19 +124,19 @@ function Base(runner) {
     stats.passes++;
   });
 
-  runner.on('fail', function (test, err) {
+  runner.on('fail', function(test, err) {
     stats.failures = stats.failures || 0;
     stats.failures++;
     test.err = err;
     failures.push(test);
   });
 
-  runner.on('end', function () {
+  runner.on('end', function() {
     stats.end = new Date();
     stats.duration = new Date() - stats.start;
   });
 
-  runner.on('pending', function () {
+  runner.on('pending', function() {
     stats.pending++;
   });
 }
@@ -156,23 +156,23 @@ function JSONReporter(runner) {
   const failures = [];
   const passes = [];
 
-  runner.on('test end', function (test) {
+  runner.on('test end', function(test) {
     tests.push(test);
   });
 
-  runner.on('pass', function (test) {
+  runner.on('pass', function(test) {
     passes.push(test);
   });
 
-  runner.on('fail', function (test) {
+  runner.on('fail', function(test) {
     failures.push(test);
   });
 
-  runner.on('pending', function (test) {
+  runner.on('pending', function(test) {
     pending.push(test);
   });
 
-  runner.on('end', function () {
+  runner.on('end', function() {
     const obj = {
       stats: self.stats,
       tests: tests.map(clean),
@@ -212,7 +212,7 @@ function clean(test) {
  */
 function errorJSON(err) {
   const res = {};
-  Object.getOwnPropertyNames(err).forEach(function (key) {
+  Object.getOwnPropertyNames(err).forEach(function(key) {
     res[key] = err[key];
   }, err);
   return res;

@@ -590,5 +590,15 @@ describe('auto tagging functionality', function() {
       const isType: any = scopeList.find(c => c.id === 'utils/is-type');
       expect(isType.localVersion).to.equal('0.0.2');
     });
+    describe('then tagging the dependent of the skipped dependency', () => {
+      before(() => {
+        helper.command.tagComponent('utils/is-string -f');
+      });
+      it('should update the flattened-dependencies of the dependent of that dependent', () => {
+        const barFoo = helper.command.catComponent('bar/foo@latest');
+        const isTypeDep = barFoo.flattenedDependencies.find(d => d.name === 'utils/is-type');
+        expect(isTypeDep.version).to.equal('0.0.2');
+      });
+    });
   });
 });

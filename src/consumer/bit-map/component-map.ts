@@ -29,13 +29,13 @@ export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir?: PathLinux | null | undefined;
-  trackDir?: PathLinux | null | undefined;
-  configDir?: PathLinux | null | undefined | ConfigDir | string;
+  rootDir?: PathLinux;
+  trackDir?: PathLinux;
+  configDir?: PathLinux | ConfigDir | string;
   origin: ComponentOrigin;
-  originallySharedDir?: PathLinux | null | undefined;
-  wrapDir?: PathLinux | null | undefined;
-  exported?: boolean | null | undefined;
+  originallySharedDir?: PathLinux;
+  wrapDir?: PathLinux;
+  exported?: boolean;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -44,7 +44,7 @@ export default class ComponentMap {
   id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
-  rootDir: PathLinux | null | undefined; // always set for IMPORTED and NESTED.
+  rootDir?: PathLinux; // always set for IMPORTED and NESTED.
   // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
   // relative to rootDir for consistency, then, when saving into the model changing them back to
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
@@ -361,7 +361,7 @@ export default class ComponentMap {
   }
 
   clone() {
-    // $FlowFixMe - there is some issue with the config dir type
+    // @ts-ignore - there is some issue with the config dir type
     return new ComponentMap(this);
   }
 

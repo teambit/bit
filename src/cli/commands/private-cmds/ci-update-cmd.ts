@@ -31,8 +31,8 @@ export default class CiUpdate extends Command {
       noCache = false
     }: {
       // verbose: boolean | null | undefined,
-      directory: string | null | undefined;
-      output: string | null | undefined;
+      directory?: string;
+      output?: string;
       keep: boolean;
       noCache: boolean;
     }
@@ -49,7 +49,7 @@ export default class CiUpdate extends Command {
     output,
     directory
   }: {
-    specsResults: SpecsResults | null | undefined;
+    specsResults: SpecsResults | undefined;
     dists: Dists;
     output: PathOsBased;
     directory: PathOsBased;
