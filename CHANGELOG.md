@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - consolidate isolation options
 - formalize isolate api result
 - add `--no-warnings` flag to bit test child process
+- show a message about missing test files in the compiled files
 
 ## [[14.4.3] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.3)
 
