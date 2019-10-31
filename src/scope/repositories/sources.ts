@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { BitObject } from '../objects';
+import { BitObject, Ref } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, COMPONENT_ORIGINS } from '../../constants';
@@ -15,6 +15,7 @@ import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
+import { isHash } from '../../version/version-parser';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -55,9 +56,20 @@ export default class SourceRepository {
     const component = ModelComponent.fromBitId(bitId);
     const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
+      // @ts-ignore
+      const isSnap = isHash(bitId.version);
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (isSnap) {
+        // @ts-ignore
+        const snap = await this.objects().load(new Ref(bitId.version));
+        if (!snap) {
+          logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+          return null;
+        }
+      }
+      // @ts-ignore
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;

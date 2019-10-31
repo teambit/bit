@@ -89,6 +89,6 @@ export async function snapAction(args: {
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await consumer.updateComponentsVersions(allComponents);
 
-    return { taggedComponents, autoTaggedResults };
+    return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
   }
 }

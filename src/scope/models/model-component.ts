@@ -24,7 +24,7 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import versionParser from '../../version/version-parser';
+import versionParser, { isHash } from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -44,6 +44,8 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
+export type SnapModel = { head?: string };
+
 export type ComponentProps = {
   scope: string | null | undefined;
   name: string;
@@ -57,6 +59,7 @@ export type ComponentProps = {
   local?: boolean; // get deleted after export
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
+  snaps?: SnapModel;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -75,6 +78,7 @@ export default class Component extends BitObject {
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
+  snaps: SnapModel;
 
   constructor(props: ComponentProps) {
     super();
@@ -88,6 +92,7 @@ export default class Component extends BitObject {
     this.local = props.local;
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
+    this.snaps = props.snaps || {};
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -158,7 +163,11 @@ export default class Component extends BitObject {
   }
 
   latest(): string {
-    if (empty(this.versions)) return VERSION_ZERO;
+    if (empty(this.versions) && !this.snaps.head) return VERSION_ZERO;
+    if (this.snaps.head) {
+      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === this.snaps.head);
+      return version || this.snaps.head;
+    }
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
@@ -223,7 +232,11 @@ export default class Component extends BitObject {
   }
 
   addVersion(version: Version, versionToAdd: string): string {
-    this.versions[versionToAdd] = version.hash();
+    version.parent = this.snaps.head ? new Ref(this.snaps.head) : null;
+    this.snaps.head = version.hash().toString();
+    if (!isHash(versionToAdd)) {
+      this.versions[versionToAdd] = version.hash();
+    }
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
   }
@@ -267,7 +280,8 @@ export default class Component extends BitObject {
       lang: this.lang,
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
-      remotes: this.scopesList
+      remotes: this.scopesList,
+      snaps: this.snaps
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -412,7 +426,9 @@ export default class Component extends BitObject {
   }
 
   refs(): Ref[] {
-    return Object.values(this.versions);
+    const versions = Object.values(this.versions);
+    if (this.snaps.head) versions.push(new Ref(this.snaps.head));
+    return versions;
   }
 
   replaceRef(oldRef: Ref, newRef: Ref) {
@@ -450,7 +466,6 @@ export default class Component extends BitObject {
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.state.versions[version]) this.state.versions[version] = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.state.versions[version].local = true;
@@ -481,7 +496,8 @@ export default class Component extends BitObject {
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      scopesList: rawComponent.remotes
+      scopesList: rawComponent.remotes,
+      snaps: rawComponent.snaps
     });
   }
 
@@ -503,7 +519,7 @@ export default class Component extends BitObject {
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
       Object.keys(this.state.versions).forEach(version => {
-        if (!this.versions[version]) {
+        if (!this.versions[version] && !isHash(version)) {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }
       });

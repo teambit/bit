@@ -68,44 +68,43 @@ export default class Snap extends Command {
   }
 
   report(results: SnapResults): string {
-    console.log('TCL: Snap -> results', results);
-    //     if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
-    //     const { taggedComponents, autoTaggedResults, warnings, newComponents }: TagResults = results;
-    //     const changedComponents = taggedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
-    //     const addedComponents = taggedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
-    //     const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
+    if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
+    const { snappedComponents, autoSnappedResults, warnings, newComponents }: SnapResults = results;
+    const changedComponents = snappedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
+    const addedComponents = snappedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
+    const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
 
-    //     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    //     const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
-    // (use "bit untag" to unstage versions)\n`;
+    const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
+    const tagExplanation = `\n(use "bit export [collection]" to push these components to a remote")
+(use "bit untag" to unstage versions)\n`;
 
-    //     const outputComponents = comps => {
-    //       return comps
-    //         .map(component => {
-    //           let componentOutput = `     > ${component.id.toString()}`;
-    //           const autoTag = autoTaggedResults.filter(result =>
-    //             result.triggeredBy.searchWithoutScopeAndVersion(component.id)
-    //           );
-    //           if (autoTag.length) {
-    //             const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
-    //             componentOutput += `\n       ${AUTO_TAGGED_MSG}: ${autoTagComp.join(', ')}`;
-    //           }
-    //           return componentOutput;
-    //         })
-    //         .join('\n');
-    //     };
+    const outputComponents = comps => {
+      return comps
+        .map(component => {
+          let componentOutput = `     > ${component.id.toString()}`;
+          const autoTag = autoSnappedResults.filter(result =>
+            result.triggeredBy.searchWithoutScopeAndVersion(component.id)
+          );
+          if (autoTag.length) {
+            const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+            componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
+          }
+          return componentOutput;
+        })
+        .join('\n');
+    };
 
-    //     const outputIfExists = (label, explanation, components) => {
-    //       if (!components.length) return '';
-    //       return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-    //     };
+    const outputIfExists = (label, explanation, components) => {
+      if (!components.length) return '';
+      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+    };
 
-    //     return (
-    //       warningsOutput +
-    //       chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
-    //       tagExplanation +
-    //       outputIfExists('new components', 'first version for components', addedComponents) +
-    //       outputIfExists('changed components', 'components that got a version bump', changedComponents)
-    //     );
+    return (
+      warningsOutput +
+      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) tagged`) +
+      tagExplanation +
+      outputIfExists('new components', 'first version for components', addedComponents) +
+      outputIfExists('changed components', 'components that got a version bump', changedComponents)
+    );
   }
 }

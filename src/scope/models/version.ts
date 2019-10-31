@@ -20,6 +20,7 @@ import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { EnvPackages } from '../../extensions/env-extension';
+import { isHash } from '../../version/version-parser';
 
 type CiProps = {
   error: Record<string, any>;
@@ -76,6 +77,7 @@ export type VersionProps = {
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
   hash: string;
+  parent?: string | null | undefined;
 };
 
 /**
@@ -111,6 +113,7 @@ export default class Version extends BitObject {
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
+  parent: Ref | null | undefined;
 
   constructor(props: VersionProps) {
     super();
@@ -143,6 +146,7 @@ export default class Version extends BitObject {
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.extensions = props.extensions || [];
     this._hash = props.hash;
+    this.parent = props.parent ? new Ref(props.parent) : null;
     this.validateVersion();
   }
 
@@ -289,7 +293,7 @@ export default class Version extends BitObject {
     const dists = extractRefsFromFiles(this.dists);
     const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
     const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [this.parent, ...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
   }
 
   toObject() {
@@ -364,7 +368,8 @@ export default class Version extends BitObject {
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions
+        extensions: this.extensions,
+        parent: this.parent
       },
       val => !!val
     );
@@ -417,7 +422,8 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions,
+      parent
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -498,7 +504,8 @@ export default class Version extends BitObject {
       overrides,
       packageJsonChangedProps,
       extensions,
-      hash
+      hash,
+      parent
     });
   }
 
@@ -598,7 +605,11 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions
     });
-    version.setNewHash();
+    if (isHash(component.version)) {
+      version._hash = component.version;
+    } else {
+      version.setNewHash();
+    }
 
     return version;
   }

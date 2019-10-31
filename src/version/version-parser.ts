@@ -34,8 +34,16 @@ function returnLatest(): Version {
   return new Version(null, true);
 }
 
+function returnSnap(hash: string | number): Version {
+  return new Version(hash, false);
+}
+
 function convertToSemVer(versionStr: number) {
   return returnRegular(`0.0.${versionStr}`);
+}
+
+export function isHash(str: string | null | undefined): boolean {
+  return typeof str === 'string' && str.length === 40;
 }
 
 export default function versionParser(versionStr: string | number | null | undefined): Version {
@@ -44,6 +52,6 @@ export default function versionParser(versionStr: string | number | null | undef
   if (typeof versionStr === 'string' && isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (typeof versionStr === 'string' && isRegular(versionStr)) return returnRegular(versionStr);
   if (typeof versionStr !== 'string' && Number.isInteger(versionStr)) return convertToSemVer(versionStr);
-
+  if (isHash(versionStr)) return returnSnap(versionStr);
   throw new InvalidVersion(versionStr.toString());
 }
