@@ -44,7 +44,7 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type SnapModel = { head?: string };
+export type SnapModel = { head?: Ref };
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -241,8 +241,8 @@ export default class Component extends BitObject {
   }
 
   addVersion(version: Version, versionToAdd: string): string {
-    version.parent = this.snaps.head ? new Ref(this.snaps.head) : null;
-    this.snaps.head = version.hash().toString();
+    version.parent = this.snaps.head;
+    this.snaps.head = version.hash();
     if (!isHash(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
     }
@@ -282,6 +282,12 @@ export default class Component extends BitObject {
       return obj;
     }
 
+    function snaps(thisSnaps: SnapModel) {
+      const head = thisSnaps.head ? thisSnaps.head.toString() : null;
+      if (!head) return null;
+      return { head };
+    }
+
     const componentObject = {
       name: this.name,
       scope: this.scope,
@@ -290,7 +296,7 @@ export default class Component extends BitObject {
       deprecated: this.deprecated,
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
-      snaps: this.snaps
+      snaps: snaps(this.snaps)
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -436,7 +442,7 @@ export default class Component extends BitObject {
 
   refs(): Ref[] {
     const versions = Object.values(this.versions);
-    if (this.snaps.head) versions.push(new Ref(this.snaps.head));
+    if (this.snaps.head) versions.push(this.snaps.head);
     return versions;
   }
 
