@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HASH_SIZE } from '../../src/constants';
+import * as fixtures from '../fixtures/fixtures';
 
 describe('bit snap command', function() {
   this.timeout(0);
@@ -35,6 +36,35 @@ describe('bit snap command', function() {
     it('bit status should show the snap as staged', () => {
       const status = helper.command.status();
       expect(status).to.have.string('staged components');
+    });
+    describe('then tag', () => {
+      let tagOutput: string;
+      before(() => {
+        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+        tagOutput = helper.command.tagAllComponents();
+      });
+      it('should tag successfully', () => {
+        expect(tagOutput).to.have.string('1 component(s) tagged');
+      });
+      it('should change the snap head to the newly created version', () => {
+        const barFoo = helper.command.catComponent('bar/foo');
+        const hash = barFoo.versions['0.0.1'];
+        expect(barFoo.snaps.head).to.equal(hash);
+      });
+    });
+  });
+  describe('components with dependencies', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.snapAllComponents();
+    });
+    it('should save the dependencies successfully with their snaps as versions', () => {
+      const barFoo = helper.command.catComponent('bar/foo@latest');
+      expect(barFoo.dependencies).to.have.lengthOf(1);
+      expect(barFoo.dependencies[0].id.version)
+        .to.be.a('string')
+        .and.have.lengthOf(HASH_SIZE);
     });
   });
 });

@@ -60,7 +60,6 @@ export default class SourceRepository {
       const isSnap = isHash(bitId.version);
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (isSnap) {
         // @ts-ignore
         const snap = await this.objects().load(new Ref(bitId.version));
@@ -68,13 +67,13 @@ export default class SourceRepository {
           logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
           return null;
         }
+        return foundComponent;
       }
       // @ts-ignore
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
