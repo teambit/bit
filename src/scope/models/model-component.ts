@@ -103,7 +103,7 @@ export default class Component extends BitObject {
   getRef(versionOrHash: string): Ref | null {
     if (isHash(versionOrHash)) {
       if (!this.snaps.head) return null;
-      if (this.snaps.head === versionOrHash) return new Ref(versionOrHash);
+      if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
       throw new Error('todo: go through all parents and find the ref!');
     }
     return this.versions[versionOrHash];
@@ -174,8 +174,8 @@ export default class Component extends BitObject {
   latest(): string {
     if (empty(this.versions) && !this.snaps.head) return VERSION_ZERO;
     if (this.snaps.head) {
-      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === this.snaps.head);
-      return version || this.snaps.head;
+      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === this.snaps.head.toString());
+      return version || this.snaps.head.toString();
     }
     return semver.maxSatisfying(this.listVersions(), '*');
   }
@@ -501,6 +501,11 @@ export default class Component extends BitObject {
   }
 
   static parse(contents: string): Component {
+    function snaps(thisSnaps) {
+      if (!thisSnaps) return null;
+      thisSnaps.head = new Ref(thisSnaps.head);
+      return thisSnaps;
+    }
     const rawComponent = JSON.parse(contents);
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
@@ -512,7 +517,7 @@ export default class Component extends BitObject {
       local: rawComponent.local,
       state: rawComponent.state,
       scopesList: rawComponent.remotes,
-      snaps: rawComponent.snaps
+      snaps: snaps(rawComponent.snaps)
     });
   }
 

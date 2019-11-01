@@ -10,6 +10,7 @@ import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
+import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -109,7 +110,14 @@ export default class CommandHelper {
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }
-
+  snapComponent(id: string, tagMsg = 'snap-message', options = '') {
+    return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+  }
+  snapAllComponents(options = '', assertSnapped = true) {
+    const result = this.runCmd(`bit snap -a ${options} `);
+    if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
+    return result;
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }

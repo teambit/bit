@@ -397,3 +397,5 @@ export const WILDCARD_HELP = (command: string) =>
 export const CURRENT_UPSTREAM = 'current';
 
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
+
+export const HASH_SIZE = 40;

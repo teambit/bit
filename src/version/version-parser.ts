@@ -1,6 +1,6 @@
 import semver from 'semver';
 import Version from './version';
-import { LATEST, LATEST_TESTED_MARK } from '../constants';
+import { LATEST, LATEST_TESTED_MARK, HASH_SIZE } from '../constants';
 import { InvalidVersion } from './exceptions';
 
 function isLatest(versionStr: string): boolean {
@@ -43,7 +43,7 @@ function convertToSemVer(versionStr: number) {
 }
 
 export function isHash(str: string | null | undefined): boolean {
-  return typeof str === 'string' && str.length === 40;
+  return typeof str === 'string' && str.length === HASH_SIZE;
 }
 
 export default function versionParser(versionStr: string | number | null | undefined): Version {
@@ -52,6 +52,7 @@ export default function versionParser(versionStr: string | number | null | undef
   if (typeof versionStr === 'string' && isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (typeof versionStr === 'string' && isRegular(versionStr)) return returnRegular(versionStr);
   if (typeof versionStr !== 'string' && Number.isInteger(versionStr)) return convertToSemVer(versionStr);
+  // @ts-ignore
   if (isHash(versionStr)) return returnSnap(versionStr);
   throw new InvalidVersion(versionStr.toString());
 }

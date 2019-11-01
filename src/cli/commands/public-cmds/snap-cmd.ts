@@ -101,7 +101,7 @@ export default class Snap extends Command {
 
     return (
       warningsOutput +
-      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) tagged`) +
+      chalk.green(`${snappedComponents.length + autoTaggedCount} component(s) snapped`) +
       tagExplanation +
       outputIfExists('new components', 'first version for components', addedComponents) +
       outputIfExists('changed components', 'components that got a version bump', changedComponents)
