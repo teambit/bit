@@ -1,5 +1,5 @@
 import R from 'ramda';
-import graphlib from 'graphlib';
+import { v4 } from 'uuid';
 import pMapSeries from 'p-map-series';
 import { Scope } from '..';
 import Consumer from '../../consumer/consumer';
@@ -8,22 +8,16 @@ import Component from '../../consumer/component/consumer-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
-import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
+import { ComponentSpecsFailed } from '../../consumer/exceptions';
 import { pathJoinLinux } from '../../utils';
-import { DependencyNotFound } from '../exceptions';
-import { BitId, BitIds } from '../../bit-id';
-import { flattenDependencyIds } from '../flatten-dependencies';
+import { BitIds } from '../../bit-id';
 import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { PathLinux } from '../../utils/path';
-import GeneralError from '../../error/general-error';
 import { Dependency } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import { AutoTagResult } from './auto-tag';
-import { BitIdStr } from '../../bit-id/bit-id';
-import ScopeComponentsImporter from './scope-components-importer';
 import { buildComponentsGraph } from '../graph/components-graph';
-import { v4 } from 'uuid';
 import { sha1 } from '../../utils';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
@@ -40,7 +34,7 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
 }
 
 function setHashes(componentsToTag: Component[]): void {
-  componentsToTag.map(componentToTag => {
+  componentsToTag.forEach(componentToTag => {
     componentToTag.version = sha1(v4());
   });
 }
