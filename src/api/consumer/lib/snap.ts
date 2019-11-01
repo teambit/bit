@@ -26,12 +26,13 @@ export async function snapAction(args: {
   ignoreUnresolvedDependencies?: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
-}): Promise<SnapResults> {
+}): Promise<SnapResults | null> {
   const { id, message, force, verbose, ignoreUnresolvedDependencies, skipTests, skipAutoSnap } = args;
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   const ids = await getIdsToSnap();
+  if (!ids) return null;
   const tagResults = await snap();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;

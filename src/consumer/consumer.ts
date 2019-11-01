@@ -605,7 +605,7 @@ export default class Consumer {
       // TODO: instead of doing that like this we should use:
       // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);
       // it looks like it's exactly the same code but it's not working from some reason
-      const versionRef = componentFromModel.versions[versionFromFs];
+      const versionRef = componentFromModel.getRef(versionFromFs);
       if (!versionRef) throw new ShowDoctorError(`version ${versionFromFs} was not found in ${idStr}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       if (!versionFromModel) {

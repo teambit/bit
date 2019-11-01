@@ -100,6 +100,15 @@ export default class Component extends BitObject {
     return Object.values(this.versions);
   }
 
+  getRef(versionOrHash: string): Ref | null {
+    if (isHash(versionOrHash)) {
+      if (!this.snaps.head) return null;
+      if (this.snaps.head === versionOrHash) return new Ref(versionOrHash);
+      throw new Error('todo: go through all parents and find the ref!');
+    }
+    return this.versions[versionOrHash];
+  }
+
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
     const versions = Object.keys(this.versions);
     if (!sort) return versions;
@@ -243,7 +252,7 @@ export default class Component extends BitObject {
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
     const latest = this.latest();
-    if (latest) return semver.inc(latest, releaseType);
+    if (latest && !isHash(latest)) return semver.inc(latest, releaseType);
     return DEFAULT_BIT_VERSION;
   }
 
@@ -292,14 +301,14 @@ export default class Component extends BitObject {
   }
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
-    const versionRef: Ref = this.versions[version];
+    const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.load(repository);
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
-    const versionRef: Ref = this.versions[version];
+    const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
