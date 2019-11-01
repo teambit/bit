@@ -103,7 +103,7 @@ export default class ComponentsList {
       const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
       if (!modelComponent) return false;
       const latestVersion = modelComponent.latest();
-      if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version)) {
+      if (component.id.hasVersion() && modelComponent.isLatestGreaterThan(component.id.version)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.latestVersion = latestVersion;
         return true;

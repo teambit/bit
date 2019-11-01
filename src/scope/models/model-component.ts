@@ -174,10 +174,29 @@ export default class Component extends BitObject {
   latest(): string {
     if (empty(this.versions) && !this.snaps.head) return VERSION_ZERO;
     if (this.snaps.head) {
-      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === this.snaps.head.toString());
+      const headHash = this.snaps.head.toString();
+      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === headHash);
       return version || this.snaps.head.toString();
     }
     return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
+  // @todo: make it readable, it's a mess
+  isLatestGreaterThan(version: string | null | undefined): boolean {
+    if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
+    const latest = this.latest();
+    if (!isHash(latest) && !isHash(version)) {
+      return semver.gt(latest, version);
+    }
+    if (latest === version) return false;
+    const latestRef = this.getRef(latest);
+    if (!latestRef) throw new Error('isLatestGreaterThan, latestRef was not found');
+    const latestHash = latestRef.toString();
+    const versionRef = this.getRef(version);
+    if (!versionRef) return true; // probably a child
+    const versionHash = versionRef.toString();
+    if (latestHash === versionHash) return false;
+    return true;
   }
 
   /**
