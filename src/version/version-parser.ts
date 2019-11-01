@@ -34,7 +34,7 @@ function returnLatest(): Version {
   return new Version(null, true);
 }
 
-function returnSnap(hash: string | number): Version {
+function returnSnap(hash: string): Version {
   return new Version(hash, false);
 }
 

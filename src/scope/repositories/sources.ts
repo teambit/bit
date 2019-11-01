@@ -463,6 +463,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     Object.keys(incomingComponent.versions).forEach(incomingVersion => {
       if (!existingComponent.versions[incomingVersion]) {
         mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
+        if (incomingComponent.snaps.head) mergedComponent.snaps.head = incomingComponent.snaps.head;
         mergedVersions.push(incomingVersion);
       }
     });

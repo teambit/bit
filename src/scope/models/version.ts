@@ -77,7 +77,7 @@ export type VersionProps = {
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
   hash: string;
-  parent?: string | null | undefined;
+  parent?: Ref | null | undefined;
 };
 
 /**
@@ -146,7 +146,7 @@ export default class Version extends BitObject {
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.extensions = props.extensions || [];
     this._hash = props.hash;
-    this.parent = props.parent ? new Ref(props.parent) : null;
+    this.parent = props.parent;
     this.validateVersion();
   }
 
@@ -369,7 +369,7 @@ export default class Version extends BitObject {
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
         extensions: this.extensions,
-        parent: this.parent
+        parent: this.parent ? this.parent.toString() : null
       },
       val => !!val
     );
@@ -505,7 +505,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps,
       extensions,
       hash,
-      parent
+      parent: parent ? Ref.from(parent) : null
     });
   }
 
