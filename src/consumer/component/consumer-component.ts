@@ -670,9 +670,23 @@ export default class Component {
         process.chdir(cwd);
       }
       loader.start(BEFORE_RUNNING_SPECS);
-      const testFilesList = !component.dists.isEmpty()
-        ? component.dists.get().filter((dist: any) => dist.test)
-        : component.files.filter((file: any) => file.test);
+      const srcTestFilesList = component.files.filter((file: any) => file.test);
+      if (R.isEmpty(srcTestFilesList)) {
+        return undefined;
+      }
+      let distTestFilesList;
+      if (!component.dists.isEmpty()) {
+        distTestFilesList = component.dists.get().filter((dist: any) => dist.test);
+        if (R.isEmpty(distTestFilesList)) {
+          // We return here an empty array and not undefined to distinct between 2 cases:
+          // 1. there are no tests defined at all during the add command
+          // 2. there are test in the source files but not in the dist. this is usually a compiler bug that didn't return
+          // the test=true flag on the dist vinyl.
+          // It's a temp workaround, the real solution will be when running the build before and check it on a higher level
+          return [];
+        }
+      }
+      const testFilesList = distTestFilesList || srcTestFilesList;
 
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;

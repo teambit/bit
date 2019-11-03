@@ -357,7 +357,8 @@ export default class Scope {
       });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const pass = specs ? specs.every(spec => spec.pass) : true;
-      return { componentId: component.id, specs, pass };
+      const missingDistSpecs = specs && R.isEmpty(specs);
+      return { componentId: component.id, missingDistSpecs, specs, pass };
     };
     return pMapSeries(components, test);
   }
