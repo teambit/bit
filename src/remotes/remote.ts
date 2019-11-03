@@ -6,7 +6,7 @@ import { BitId, BitIds } from '../bit-id';
 import { Network } from '../scope/network/network';
 import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
-import { SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
+import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
 
 /**
@@ -21,7 +21,7 @@ export default class Remote {
   host: string;
   name: string;
 
-  constructor(host: string, name: string | null | undefined, primary = false) {
+  constructor(host: string, name?: string, primary = false) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;
@@ -47,7 +47,10 @@ export default class Remote {
     });
   }
 
-  list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]> {
+  list(
+    namespacesUsingWildcards?: string,
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
+  ): Promise<ListScopeResult[]> {
     return this.connect(strategiesNames).then(network => network.list(namespacesUsingWildcards));
   }
 
@@ -55,27 +58,37 @@ export default class Remote {
     return this.connect().then(network => network.search(query, reindex));
   }
 
-  show(bitId: BitId): Promise<Component | null | undefined> {
-    return this.connect().then(network => network.show(bitId));
+  show(
+    bitId: BitId,
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
+  ): Promise<Component | null | undefined> {
+    return this.connect(strategiesNames).then(network => network.show(bitId));
   }
 
-  graph(bitId?: BitId | null | undefined): Promise<DependencyGraph> {
+  graph(
+    bitId?: BitId,
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
+  ): Promise<DependencyGraph> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect().then(network => network.graph(bitId));
+    return this.connect(strategiesNames).then(network => network.graph(bitId));
   }
 
   fetch(
     bitIds: BitIds,
     withoutDeps: boolean,
-    context: Record<string, any> | null | undefined
+    context?: Record<string, any>,
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
   ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect().then(network => network.fetch(bitIds, withoutDeps, context));
+    return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, context));
   }
 
-  latestVersions(bitIds: BitId[]): Promise<ComponentObjects[]> {
+  latestVersions(
+    bitIds: BitId[],
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect().then(network => network.latestVersions(bitIds));
+    return this.connect(strategiesNames).then(network => network.latestVersions(bitIds));
   }
 
   validate() {
