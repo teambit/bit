@@ -3,6 +3,7 @@ import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
+import didYouMean from 'didyoumean';
 import Command from './command';
 import { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
@@ -232,9 +233,15 @@ export default class CommandRegistrar {
     ) {
       process.stdout.write(
         chalk.yellow(
-          `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
+          ` warning: '${chalk.bold(
+            subcommand
+          )}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
+      const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name));
+      if (suggestion) {
+        console.log(chalk.red(` Did you mean '${chalk.bold(suggestion)}'?`));
+      }
       return this;
     }
 
