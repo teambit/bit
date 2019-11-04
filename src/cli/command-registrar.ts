@@ -240,6 +240,7 @@ export default class CommandRegistrar {
       );
       const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name));
       if (suggestion) {
+        // @ts-ignore
         console.log(chalk.red(` Did you mean '${chalk.bold(suggestion)}'?`));
       }
       return this;
