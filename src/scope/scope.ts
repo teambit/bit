@@ -277,10 +277,13 @@ export default class Scope {
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_BUILD);
+      if (components.length > 1) loader.stopAndPersist();
     }
     const build = async (component: Component) => {
+      loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
       const buildResults = await component.dists.writeDists(component, consumer, false);
+      loader.succeed();
       return { component: component.id.toString(), buildResults };
     };
     const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);

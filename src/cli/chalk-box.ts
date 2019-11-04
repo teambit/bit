@@ -84,11 +84,11 @@ export const paintLog = ({
 };
 
 const successTest = test => {
-  return `✔   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}`;
+  return `${c.green(`✔`)} ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}`;
 };
 
 const failureTest = test => {
-  return `❌   ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}
+  return `${c.red(`✖`)} ${c.white(test.title)} - ${c.cyan(`${test.duration}ms`)}
     ${c.red(test.err.message)}`;
 };
 
@@ -108,7 +108,7 @@ const paintGeneralFailure = (failure, verbose) => {
   if (verbose && failure.err) {
     errStack = failure.err.stack;
   }
-  return `❌   ${c.white(failure.title)} ${duration}
+  return `${c.red(`✖`)} ${c.white(failure.title)} ${duration}
     ${c.red(failure.err.message)}
     ${c.red(errStack)}`;
 };
