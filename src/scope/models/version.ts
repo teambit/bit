@@ -423,7 +423,7 @@ export default class Version extends BitObject {
       overrides,
       packageJsonChangedProps,
       extensions,
-      parent
+      parents
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -505,7 +505,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps,
       extensions,
       hash,
-      parent: parent ? Ref.from(parent) : null
+      parents: parents ? parents.map(p => Ref.from(p)) : []
     });
   }
 
