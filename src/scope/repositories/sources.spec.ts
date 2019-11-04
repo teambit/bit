@@ -42,14 +42,16 @@ describe('SourceRepository', () => {
     });
     it('should add versions that exist in the incoming component but not locally', () => {
       const existingComponent = {
-        versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' }
+        versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+        snaps: {}
       };
       const incomingComponent = {
         versions: {
           '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
           '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
           '0.0.3': '56f2b008f43c20f6538ef27023759c3d9a44992c'
-        }
+        },
+        snaps: {}
       };
       const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
         existingComponent,
