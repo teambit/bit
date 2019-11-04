@@ -145,8 +145,12 @@ export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose 
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
       const componentId = c.bold(idStr);
+      if (result.missingDistSpecs) {
+        return c.yellow(`bit found test file tracked in ${componentId}, but none was found when running tests
+if you encounter this issue, please open a GitHub issue with the build and test environments.`);
+      }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (result.specs) return componentId + paintSpecsResults(result.specs, verbose);
+      if (result.specs && result.specs.length > 0) return componentId + paintSpecsResults(result.specs, verbose);
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
     .join('\n');
@@ -172,6 +176,9 @@ export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): 
   const summaryRows = results.map(result => {
     const componentId = c.bold(result.componentId.toString());
     if (result.missingTester) return [componentId, c.bold.red('tester is not defined')];
+    if (result.missingDistSpecs) {
+      return [componentId, c.yellow('bit found test file tracked, but none was found when running tests')];
+    }
     if (result.specs) return [componentId, specsSummary(result.specs)];
     return [componentId, c.yellow('tests are not defined')];
   });
