@@ -109,6 +109,10 @@ export default class Component extends BitObject {
     return this.versions[versionOrHash];
   }
 
+  getHeadHash(): string | null {
+    return this.snaps.head ? this.snaps.head.toString() : null;
+  }
+
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
     const versions = Object.keys(this.versions);
     if (!sort) return versions;

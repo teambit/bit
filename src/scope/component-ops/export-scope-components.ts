@@ -236,6 +236,14 @@ async function convertToCorrectScope(
             versions[version] = Ref.from(hashAfter);
           }
         });
+        if (componentsObjects.component.getHeadHash() === hashBefore) {
+          componentsObjects.component.snaps.head = Ref.from(hashAfter);
+        }
+        versionsObjects.forEach(versionObj => {
+          if (versionObj.parent && versionObj.parent.toString() === hashBefore) {
+            versionObj.parent = Ref.from(hashAfter);
+          }
+        });
       }
       // END DELETION OF BIT > v15.
     })
