@@ -240,9 +240,10 @@ async function convertToCorrectScope(
           componentsObjects.component.snaps.head = Ref.from(hashAfter);
         }
         versionsObjects.forEach(versionObj => {
-          if (versionObj.parent && versionObj.parent.toString() === hashBefore) {
-            versionObj.parent = Ref.from(hashAfter);
-          }
+          versionObj.parents = versionObj.parents.map(parent => {
+            if (parent.toString() === hashBefore) return Ref.from(hashAfter);
+            return parent;
+          });
         });
       }
       // END DELETION OF BIT > v15.

@@ -264,7 +264,7 @@ export default class Component extends BitObject {
   }
 
   addVersion(version: Version, versionToAdd: string): string {
-    version.parent = this.snaps.head;
+    if (this.snaps.head) version.parents.push(this.snaps.head);
     this.snaps.head = version.hash();
     if (!isHash(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();

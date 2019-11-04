@@ -77,7 +77,7 @@ export type VersionProps = {
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
   hash: string;
-  parent?: Ref | null | undefined;
+  parents?: Ref[];
 };
 
 /**
@@ -113,7 +113,7 @@ export default class Version extends BitObject {
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
-  parent: Ref | null | undefined;
+  parents: Ref[];
 
   constructor(props: VersionProps) {
     super();
@@ -146,7 +146,7 @@ export default class Version extends BitObject {
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.extensions = props.extensions || [];
     this._hash = props.hash;
-    this.parent = props.parent;
+    this.parents = props.parents || [];
     this.validateVersion();
   }
 
@@ -293,7 +293,7 @@ export default class Version extends BitObject {
     const dists = extractRefsFromFiles(this.dists);
     const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
     const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [this.parent, ...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [...this.parents, ...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
   }
 
   toObject() {
@@ -369,7 +369,7 @@ export default class Version extends BitObject {
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
         extensions: this.extensions,
-        parent: this.parent ? this.parent.toString() : null
+        parents: this.parents.forEach(p => p.toString())
       },
       val => !!val
     );
