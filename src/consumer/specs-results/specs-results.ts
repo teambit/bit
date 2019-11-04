@@ -58,6 +58,7 @@ export type SpecsResultsWithComponentId = Array<{
   componentId: BitId;
   specs: SpecsResults;
   missingTester?: boolean;
+  missingDistSpecs?: boolean;
   pass: boolean;
 }>;
 
