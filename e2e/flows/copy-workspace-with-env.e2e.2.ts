@@ -18,7 +18,7 @@ describe('copy workspace with env', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.env.importCompiler('bit.envs/compilers/react-typescript');
+      helper.env.importTypescriptCompiler();
 
       copiedPath = helper.scopeHelper.cloneLocalScope();
       // remove the original workspace so then symlinks get invalid
@@ -35,7 +35,7 @@ describe('copy workspace with env', function() {
       const results = parsedDoctor.examineResult.bareResult;
       expect(results.valid).to.be.false;
       expect(results.data.brokenSymlinks[0].pathToDelete).to.have.string(
-        path.normalize('.bit/components/compilers/react-typescript')
+        path.normalize('.bit/components/compilers/typescript')
       );
     });
   });
