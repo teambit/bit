@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve loader when building components
+
 ## [14.4.4-dev.1] - 2019-11-02
 
 - keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag

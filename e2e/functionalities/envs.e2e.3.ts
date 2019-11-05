@@ -339,7 +339,7 @@ describe('envs', function() {
           const output = helper.command.testComponent('comp/my-comp');
           expect(output).to.have.string('tests passed');
           expect(output).to.have.string('total duration');
-          expect(output).to.have.string('✔   group of passed tests');
+          expect(output).to.have.string('✔ group of passed tests');
         });
       });
       describe('with failing tests', () => {
@@ -359,8 +359,8 @@ describe('envs', function() {
             }
             expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
-            expect(output).to.have.string('✔   group of passed tests');
-            expect(output).to.have.string('❌   group of failed tests');
+            expect(output).to.have.string('✔ group of passed tests');
+            expect(output).to.have.string('✖ group of failed tests');
           });
           it('should write config files to tmp directory', () => {
             let output;
@@ -419,8 +419,8 @@ describe('envs', function() {
             }
             expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
-            expect(output).to.have.string('✔   group of passed tests');
-            expect(output).to.have.string('❌   group of failed tests');
+            expect(output).to.have.string('✔ group of passed tests');
+            expect(output).to.have.string('✖ group of failed tests');
           });
           it('should show results when there is exception on a test file', () => {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -453,8 +453,8 @@ describe('envs', function() {
             }
             expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
-            expect(output).to.have.string('✔   group of passed tests');
-            expect(output).to.have.string('❌   group of failed tests');
+            expect(output).to.have.string('✔ group of passed tests');
+            expect(output).to.have.string('✖ group of failed tests');
           });
           it('should show results when there is exception on a test file', () => {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -487,8 +487,8 @@ describe('envs', function() {
             }
             expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
-            expect(output).to.have.string('✔   group of passed tests');
-            expect(output).to.have.string('❌   group of failed tests');
+            expect(output).to.have.string('✔ group of passed tests');
+            expect(output).to.have.string('✖ group of failed tests');
           });
           it('should show results when there is exception on a test file', () => {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -651,7 +651,7 @@ describe('envs', function() {
           it('should show tests passed', () => {
             expect(output).to.have.string('tests passed');
             expect(output).to.have.string('total duration');
-            expect(output).to.have.string('✔   group of passed tests');
+            expect(output).to.have.string('✔ group of passed tests');
           });
           // This was skipped as part of the binary branch since we move the bit test to run inside bit
           // and we expect a valid json to return from the command.
@@ -692,8 +692,8 @@ describe('envs', function() {
               }
               expect(statusCode).to.not.equal(0);
               expect(output).to.have.string('tests failed');
-              expect(output).to.have.string('✔   group of passed tests');
-              expect(output).to.have.string('❌   group of failed tests');
+              expect(output).to.have.string('✔ group of passed tests');
+              expect(output).to.have.string('✖ group of failed tests');
             });
             it('should show results when there is exception on a test file', () => {
               helper.fs.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
@@ -1131,7 +1131,7 @@ describe('envs', function() {
               const output = helper.command.testComponent('comp/my-comp');
               expect(output).to.have.string('tests passed');
               expect(output).to.have.string('total duration');
-              expect(output).to.have.string('✔   group of passed tests');
+              expect(output).to.have.string('✔ group of passed tests');
             });
           });
           describe('with failing tests', () => {
@@ -1153,8 +1153,8 @@ describe('envs', function() {
                 }
                 expect(statusCode).to.not.equal(0);
                 expect(output).to.have.string('tests failed');
-                expect(output).to.have.string('✔   group of passed tests');
-                expect(output).to.have.string('❌   group of failed tests');
+                expect(output).to.have.string('✔ group of passed tests');
+                expect(output).to.have.string('✖ group of failed tests');
               });
               it('should show results when there is exception on a test file', () => {
                 helper.fs.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
