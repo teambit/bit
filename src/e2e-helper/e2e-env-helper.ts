@@ -42,6 +42,10 @@ export default class EnvHelper {
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
+  importTypescriptCompiler() {
+    return this.importCompiler('bit.envs/compilers/typescript@3.0.0');
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   importDummyCompiler(dummyType? = 'dummy') {
     const id = `${this.scopes.env}/compilers/dummy`;

@@ -7,6 +7,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import { VersionAlreadyExists } from '../../src/scope/exceptions';
 
 let logSpy;
 const assertArrays = require('chai-arrays');
@@ -145,9 +146,8 @@ describe('bit tag command', function() {
       it('Should throw error when the version already exists', () => {
         helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
         const tagWithExisting = () => helper.command.tagComponent('components/exact 5.5.5', 'message', '-f');
-        expect(tagWithExisting).to.throw(
-          'tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n'
-        );
+        const error = new VersionAlreadyExists('5.5.5', 'components/exact');
+        helper.general.expectToThrow(tagWithExisting, error);
       });
     });
     // TODO: fix all the tests in the following "describe" so they will not rely on the output of the previous test

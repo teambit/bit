@@ -68,7 +68,7 @@ describe('bit test command', function() {
         output = err.stdout.toString();
       }
       expect(statusCode).to.not.equal(0);
-      expect(output).to.have.string('❌   Jest failure');
+      expect(output).to.have.string('✖ Jest failure');
     });
   });
   describe('when tests are failed', () => {
@@ -212,7 +212,7 @@ describe('bit test command', function() {
       expect(outputVerbose).to.have.string('utils/is-type-before-fail.spec.js');
     });
     it('should indicate that testes from the same spec and not in the same describe are passed', () => {
-      expect(output).to.have.string('✔   isType before hook describe should pass test');
+      expect(output).to.have.string('✔ isType before hook describe should pass test');
     });
     it('should indicate that testes are failed if all other tests (except the before) are passed', () => {
       const testFailedLineIndex = outputLines.indexOf('tests failed');
@@ -223,7 +223,7 @@ describe('bit test command', function() {
       const testPassedLineIndex = outputLines.indexOf('tests passed');
       const testPassedFilePathLine = outputLines[testPassedLineIndex + 1];
       expect(testPassedFilePathLine).to.have.string('utils/is-type.spec.js');
-      expect(output).to.have.string('✔   isType should display "got is-type"');
+      expect(output).to.have.string('✔ isType should display "got is-type"');
     });
   });
   describe('after importing a component with tests', () => {
