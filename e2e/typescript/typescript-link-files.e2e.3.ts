@@ -49,7 +49,7 @@ describe('typescript components with link files', function() {
   describe('when importing a component that uses link file', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importCompiler('bit.envs/compilers/react-typescript');
+      helper.env.importCompiler('bit.envs/compilers/react-typescript@3.0.0');
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
       helper.command.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
