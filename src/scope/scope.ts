@@ -277,7 +277,7 @@ export default class Scope {
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_BUILD);
-      if (components.length > 1) loader.stopAndPersist();
+      if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
     const build = async (component: Component) => {
       loader.start(`building component - ${component.id}`);
