@@ -13,6 +13,8 @@ import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 
+didYouMean.returnFirstMatch = true;
+
 function logAndExit(msg: string, commandName, code = 0) {
   process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, commandName));
 }
