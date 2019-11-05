@@ -233,15 +233,13 @@ export default class CommandRegistrar {
     ) {
       process.stdout.write(
         chalk.yellow(
-          ` warning: '${chalk.bold(
-            subcommand
-          )}' is not a valid command.\nsee 'bit --help' for additional information.\n`
+          `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
       const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name));
       if (suggestion) {
         // @ts-ignore
-        console.log(chalk.red(` Did you mean '${chalk.bold(suggestion)}'?`));
+        console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
       }
       return this;
     }
