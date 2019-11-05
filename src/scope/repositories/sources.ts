@@ -388,17 +388,41 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * it doesn't persist anything to the filesystem.
    * (repository.persist() needs to be called at the end of the operation)
    */
-  removeComponentVersions(component: ModelComponent, versions: string[]): void {
+  removeComponentVersions(component: ModelComponent, versions: string[], allVersionsObjects: Version[]): void {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
     versions.forEach(version => {
       const ref = component.removeVersion(version);
+      const refStr = ref.toString();
+      const versionObject = allVersionsObjects.find(v => v.hash().toString() === refStr);
+      if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
+      // update the snap head if needed
+      if (component.getHeadHash() === refStr) {
+        if (versionObject.parents.length > 1)
+          throw new Error(
+            `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
+          );
+        if (versionObject.parents.length === 1) {
+          component.snaps.head = versionObject.parents[0];
+        } else {
+          component.snaps.head = undefined;
+        }
+      }
+      // update other versions parents if they point to the deleted version
+      allVersionsObjects.forEach(obj => {
+        if (obj.hasParent(ref)) {
+          obj.removeParent(ref);
+          objectRepo.add(obj);
+        }
+      });
+
       objectRepo.removeObject(ref);
     });
 
     if (component.versionArray.length) {
       objectRepo.add(component); // add the modified component object
     } else {
+      // @todo: make sure not to delete the component when it has snaps but not versions!
       // if all versions were deleted, delete also the component itself from the model
       objectRepo.removeObject(component.hash());
     }

@@ -369,7 +369,7 @@ export default class Version extends BitObject {
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
         extensions: this.extensions,
-        parents: this.parents.forEach(p => p.toString())
+        parents: this.parents.map(p => p.toString())
       },
       val => !!val
     );
@@ -635,6 +635,21 @@ export default class Version extends BitObject {
 
   setCIProps(ci: CiProps) {
     this.ci = ci;
+  }
+
+  hasParent(ref: Ref) {
+    return this.parents.find(p => p.toString() === ref.toString());
+  }
+
+  addParent(ref: Ref) {
+    if (this.hasParent(ref)) {
+      return; // make sure to not add twice
+    }
+    this.parents.push(ref);
+  }
+
+  removeParent(ref: Ref) {
+    this.parents = this.parents.filter(p => p.toString() !== ref.toString());
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {

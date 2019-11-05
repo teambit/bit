@@ -238,9 +238,6 @@ export default class Component extends BitObject {
     return indexedLogs;
   }
 
-  /**
-   * when bitMap is passed, it got called from the consumer and as such it strips the sharedDir
-   */
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map(versionNum => {
@@ -248,6 +245,28 @@ export default class Component extends BitObject {
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
+  }
+
+  async getAllVersionsObjects(repo: Repository): Promise<Version[]> {
+    // @ts-ignore
+    const versions: Version[] = await Promise.all(Object.values(this.versions).map(tagRef => tagRef.load(repo)));
+    const addParentsRecursively = async (version: Version) => {
+      await Promise.all(
+        version.parents.map(async parent => {
+          // @ts-ignore
+          const parentVersion: Version = await parent.load(repo);
+          versions.push(parentVersion);
+          await addParentsRecursively(parentVersion);
+        })
+      );
+    };
+    if (this.snaps.head) {
+      // @ts-ignore
+      const headVersion: Version = await this.snaps.head.load(repo);
+      versions.push(headVersion);
+      await addParentsRecursively(headVersion);
+    }
+    return versions;
   }
 
   /**
@@ -264,7 +283,7 @@ export default class Component extends BitObject {
   }
 
   addVersion(version: Version, versionToAdd: string): string {
-    if (this.snaps.head) version.parents.push(this.snaps.head);
+    if (this.snaps.head) version.addParent(this.snaps.head);
     this.snaps.head = version.hash();
     if (!isHash(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
@@ -463,6 +482,7 @@ export default class Component extends BitObject {
     return consumerComponent;
   }
 
+  // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head
   refs(): Ref[] {
     const versions = Object.values(this.versions);
     if (this.snaps.head) versions.push(this.snaps.head);
