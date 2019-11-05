@@ -121,7 +121,7 @@ async function runOnChildProcess({
   //   const entryPoint = process.argv[1];
   //   workerPath = path.join(entryPoint, '../../dist/specs-runner/worker.js');
   // }
-  const child = execa.node(workerPath, args, { env });
+  const child = execa.node(workerPath, args, { env, nodeOptions: ['--no-warnings'] });
   const result = await pEvent(child, 'message');
   const childResult = await child;
   if (!result) {

@@ -40,7 +40,7 @@ export default class Remotes extends Map<string, Remote> {
     ids: BitId[],
     thisScope: Scope,
     withoutDeps = false,
-    context: Record<string, any> | null | undefined
+    context?: Record<string, any>
   ): Promise<ComponentObjects[]> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
