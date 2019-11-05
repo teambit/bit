@@ -419,7 +419,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       objectRepo.removeObject(ref);
     });
 
-    if (component.versionArray.length) {
+    if (component.versionArray.length || component.snaps.head) {
       objectRepo.add(component); // add the modified component object
     } else {
       // @todo: make sure not to delete the component when it has snaps but not versions!

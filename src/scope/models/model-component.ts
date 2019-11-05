@@ -373,9 +373,10 @@ export default class Component extends BitObject {
    */
   removeVersion(version: string): Ref {
     const objectRef = this.versions[version];
-    delete this.versions[version];
+    if (!isHash(version) && !objectRef) throw new Error(`removeVersion failed finding version ${version}`);
+    if (objectRef) delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
-    return objectRef;
+    return objectRef || Ref.from(version);
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
