@@ -10,6 +10,7 @@ class ConfigSet extends Command {
   name = 'set <key> <val>';
   description = 'set a global configuration';
   alias = '';
+  skipWorkspace = true;
   opts = [];
 
   action([key, value]: [string, string]): Promise<any> {

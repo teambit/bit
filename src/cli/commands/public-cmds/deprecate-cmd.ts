@@ -4,10 +4,14 @@ import { deprecate } from '../../../api/consumer';
 import Command from '../../command';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
+const { BASE_DOCS_DOMAIN } = require('../../../constants');
+
 export default class Deprecate extends Command {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
+  skipWorkspace = true;
   alias = 'd';
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['r', 'remote [boolean]', 'deprecate a component from a remote scope']];
   loader = true;

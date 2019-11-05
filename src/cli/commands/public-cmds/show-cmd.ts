@@ -23,6 +23,7 @@ export default class Show extends Command {
   ];
   loader = true;
   migration = true;
+  skipWorkspace = true;
 
   action(
     [id]: [string],

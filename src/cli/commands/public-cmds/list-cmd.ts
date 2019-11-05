@@ -24,6 +24,7 @@ export default class List extends Command {
   ];
   loader = true;
   migration = true;
+  skipWorkspace = true;
 
   action(
     [scopeName]: string[],

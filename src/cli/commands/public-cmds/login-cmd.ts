@@ -7,6 +7,8 @@ export default class Login extends Command {
   name = 'login';
   description = 'log the CLI into Bit';
   alias = '';
+  skipWorkspace = true;
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],

@@ -12,6 +12,7 @@ export default class ClearCache extends Command {
   alias = 'cc';
   opts = [];
   loader = false;
+  skipWorkspace = true;
 
   action(): Promise<any> {
     const cacheDir = v8CompileCache.getCacheDir();
