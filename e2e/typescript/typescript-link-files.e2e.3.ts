@@ -49,7 +49,7 @@ describe('typescript components with link files', function() {
   describe('when importing a component that uses link file', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importCompiler('bit.envs/compilers/react-typescript@3.0.0');
+      helper.env.importTypescriptCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
       helper.command.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
@@ -86,7 +86,7 @@ describe('typescript components with link files', function() {
     } else {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.env.importCompiler('bit.envs/compilers/react-typescript');
+        helper.env.importTypescriptCompiler();
         const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
         helper.fs.createFile('utils', 'is-array.ts', isArrayFixture);
         helper.command.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
@@ -124,7 +124,7 @@ describe('typescript components with link files', function() {
         );
       });
       it('should be able to compile the main component with auto-generated .ts files without errors', () => {
-        helper.env.importCompiler('bit.envs/compilers/react-typescript');
+        helper.env.importTypescriptCompiler();
         const barFooFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
         const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
         const result = helper.command.runCmd(`tsc ${barFooFile}`, tscPath);

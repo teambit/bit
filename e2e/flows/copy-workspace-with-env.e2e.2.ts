@@ -18,7 +18,7 @@ describe('copy workspace with env', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.env.importCompiler('bit.envs/compilers/react-typescript');
+      helper.env.importTypescriptCompiler();
 
       copiedPath = helper.scopeHelper.cloneLocalScope();
       // remove the original workspace so then symlinks get invalid
