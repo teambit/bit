@@ -319,7 +319,7 @@ jobs:
           command: 'cd bit && npm run doc-gen'
       - run:
           name: Setup genereate doc build number environment variables
-          command: echo "export DOC_GEN_BUILD_NUM=$(CIRCLE_BUILD_NUM)" >> $BASH_ENV && source $BASH_ENV
+          command: echo "export DOC_GEN_BUILD_NUM=$CIRCLE_BUILD_NUM" >> $BASH_ENV && source $BASH_ENV
       - run: cat $BASH_ENV
       -
         store_artifacts:
