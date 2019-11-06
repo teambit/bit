@@ -320,7 +320,6 @@ jobs:
       - run:
           name: Setup genereate doc build number environment variables
           command: echo "$CIRCLE_BUILD_NUM" > DOC_GEN_BUILD_NUM.txt
-      - run: cat DOC_GEN_BUILD_NUM.txt
       -
         store_artifacts:
           path: bit/dist/cli.md
@@ -335,7 +334,6 @@ jobs:
       -
         attach_workspace:
           at: ./
-      - run: cat DOC_GEN_BUILD_NUM.txt
       - run:
           name: Setup genereate doc build number environment variable
           command: echo "export DOC_GEN_BUILD_NUM=$(cat DOC_GEN_BUILD_NUM.txt)" >> $BASH_ENV && source $BASH_ENV
