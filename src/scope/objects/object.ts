@@ -41,10 +41,22 @@ export default class BitObject {
 
   async collectRefs(repo: Repository): Promise<Ref[]> {
     const refsCollection = [];
+    const objectType = this.constructor.name;
+    const objectId = objectType === 'Component' ? `Component ${this.id()}` : objectType;
 
     async function addRefs(object: BitObject) {
       const refs = object.refs();
-      const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+      let objs;
+      try {
+        objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          throw new Error(`failed finding an object file required by ${object.constructor.name} object, originated from ${objectId}
+path: ${err.path}`);
+        }
+        throw err;
+      }
+
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       refsCollection.push(...refs);
       await Promise.all(objs.map(obj => addRefs(obj)));
