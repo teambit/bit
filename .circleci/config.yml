@@ -317,9 +317,13 @@ jobs:
         run:
           name: 'generate docs'
           command: 'cd bit && npm run doc-gen'
+      - run:
+          name: Setup genereate doc build number environment variables
+          command: echo "export DOC_GEN_BUILD_NUM=$(CIRCLE_BUILD_NUM)" >> $BASH_ENV && source $BASH_ENV
       -
         store_artifacts:
           path: bit/dist/cli.md
+
   slack_deploy_notification:
     <<: *defaults
     steps:
