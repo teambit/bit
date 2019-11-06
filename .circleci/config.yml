@@ -307,6 +307,40 @@ jobs:
         run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+  generate_docs:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'generate docs'
+          command: 'cd bit && npm run doc-gen'
+      - run:
+          name: Setup genereate doc build number environment variables
+          command: echo "$CIRCLE_BUILD_NUM" > DOC_GEN_BUILD_NUM.txt
+      -
+        store_artifacts:
+          path: bit/dist/cli.md
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - DOC_GEN_BUILD_NUM.txt
+  slack_deploy_notification:
+    <<: *defaults
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      - run:
+          name: Setup genereate doc build number environment variable
+          command: echo "export DOC_GEN_BUILD_NUM=$(cat DOC_GEN_BUILD_NUM.txt)" >> $BASH_ENV && source $BASH_ENV
+      -
+        run:
+          name: 'notify slack'
+          command: 'cd bit && node ./scripts/slack-deploy-notification.js'
   build_bit_javascript:
     <<: *defaults
     steps:
@@ -642,6 +676,10 @@ workflows:
           requires:
             - build
       -
+        generate_docs:
+          requires:
+            - build
+      -
         pack:
           <<: *semver_tags_only_filters
           requires:
@@ -667,6 +705,13 @@ workflows:
           requires:
             - build-debian
             - build-rpm
+      -
+        slack_deploy_notification:
+          requires:
+            - generate_docs
+            - publish_to_jfrog
+            - github-release
+            - npm-publish
   performance_tests:
     triggers:
       - schedule:
