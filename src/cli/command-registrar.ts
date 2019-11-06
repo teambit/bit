@@ -238,7 +238,7 @@ export default class CommandRegistrar {
           `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
-      const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name));
+      const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name).filter(c => !c.private));
       if (suggestion) {
         if (typeof suggestion === 'string') {
           console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
