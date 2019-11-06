@@ -285,6 +285,11 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
+    const withoutParents = this.refsWithoutParents();
+    return [...this.parents, ...withoutParents].filter(ref => ref);
+  }
+
+  refsWithoutParents(): Ref[] {
     const extractRefsFromFiles = files => {
       const refs = files ? files.map(file => file.file) : [];
       return refs;
@@ -293,7 +298,12 @@ export default class Version extends BitObject {
     const dists = extractRefsFromFiles(this.dists);
     const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
     const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [...this.parents, ...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+  }
+
+  async collectRawWithoutParents(repo: Repository): Promise<Buffer[]> {
+    const refs = this.refsWithoutParents();
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
   }
 
   toObject() {

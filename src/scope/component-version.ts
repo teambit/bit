@@ -75,7 +75,7 @@ Please upgrade your bit client to version >= v14.1.0`);
     try {
       const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
         this.component.asRaw(repo),
-        version.collectRaw(repo),
+        version.collectRawWithoutParents(repo),
         version.asRaw(repo),
         repo.getScopeMetaObject()
       ]);
