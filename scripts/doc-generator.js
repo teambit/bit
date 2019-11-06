@@ -6,7 +6,7 @@
 const fs = require('fs-extra');
 
 const cli = require('../dist/cli').default;
-const allCommands = require('../dist/cli/templates/all-help').allCommands;
+const allCommands = require('../dist/cli/templates/all-help').default;
 
 const generateCommand = c => {
   let result = `## ${c._name}  \n\n`;

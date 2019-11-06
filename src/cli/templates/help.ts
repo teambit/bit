@@ -1,4 +1,4 @@
-import { allCommands } from './all-help';
+import allCommands from './all-help';
 import { BASE_DOCS_DOMAIN } from '../../constants';
 
 const rightpad = require('pad-right');

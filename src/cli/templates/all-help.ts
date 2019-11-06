@@ -1,6 +1,6 @@
 import { BASE_WEB_DOMAIN } from '../../constants';
 
-export const allCommands = [
+const allCommands = [
   {
     title: 'start a working area',
     commands: [
@@ -170,3 +170,5 @@ export const allCommands = [
     ]
   }
 ];
+
+export default allCommands;
