@@ -336,6 +336,9 @@ jobs:
         attach_workspace:
           at: ./
       - run: cat DOC_GEN_BUILD_NUM.txt
+      - run:
+          name: Setup genereate doc build number environment variable
+          command: echo "export DOC_GEN_BUILD_NUM=$(cat DOC_GEN_BUILD_NUM.txt)" >> $BASH_ENV && source $BASH_ENV
       -
         run:
           name: 'notify slack'
