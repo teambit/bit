@@ -320,19 +320,17 @@ jobs:
       - run:
           name: Setup genereate doc build number environment variables
           command: echo "export DOC_GEN_BUILD_NUM=$(CIRCLE_BUILD_NUM)" >> $BASH_ENV && source $BASH_ENV
+      - run: cat $BASH_ENV
       -
         store_artifacts:
           path: bit/dist/cli.md
-
   slack_deploy_notification:
     <<: *defaults
     steps:
       -
         attach_workspace:
           at: ./
-      - run:
-          name: Setup bit version environment variables
-          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      - run: cat $BASH_ENV
       -
         run:
           name: 'notify slack'
