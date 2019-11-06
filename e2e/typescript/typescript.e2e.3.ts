@@ -21,7 +21,7 @@ describe('typescript', function() {
     let scopeWithTypescriptCompiler;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
-      helper.env.importCompiler('bit.envs/compilers/react-typescript');
+      helper.env.importTypescriptCompiler();
       scopeWithTypescriptCompiler = helper.scopeHelper.cloneLocalScope();
     });
     describe('components with auto-resolve dependencies - with ts compiler', () => {
@@ -201,7 +201,7 @@ describe('typescript', function() {
           expect(result.trim()).to.equal('got is-array and got is-string and got is-string2 and got foo');
         });
         it('should be able to compile the main component with auto-generated .ts files without errors', () => {
-          helper.env.importCompiler('bit.envs/compilers/react-typescript');
+          helper.env.importTypescriptCompiler();
           const barFooFile = path.join(helper.scopes.localPath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
           const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
           const result = helper.command.runCmd(`tsc ${barFooFile}`, tscPath);

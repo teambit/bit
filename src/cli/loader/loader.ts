@@ -1,5 +1,6 @@
 import ora from 'ora';
 import { SPINNER_TYPE } from '../../constants';
+import logger from '../../logger/logger';
 
 let _loader;
 
@@ -10,6 +11,11 @@ type Loader = {
   stop: () => Loader | null | undefined;
   setText: (text: string | null | undefined) => Loader | null | undefined;
   get: () => Loader | null | undefined;
+  succeed: (text?: string | null | undefined) => Loader | null | undefined;
+  fail: (text?: string | null | undefined) => Loader | null | undefined;
+  warn: (text?: string | null | undefined) => Loader | null | undefined;
+  info: (text?: string | null | undefined) => Loader | null | undefined;
+  stopAndPersist: (options?: object | null | undefined) => Loader | null | undefined;
 };
 
 const loader: Loader = {
@@ -19,7 +25,12 @@ const loader: Loader = {
   start,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   setText,
-  get
+  get,
+  succeed,
+  fail,
+  warn,
+  info,
+  stopAndPersist
 };
 
 function start(text: string | null | undefined): Loader {
@@ -52,6 +63,31 @@ function on(): Loader {
 function off(): Loader {
   stop();
   _loader = null;
+  return loader;
+}
+
+function succeed(text: string | null | undefined): Loader {
+  if (_loader) _loader.succeed(text);
+  return loader;
+}
+
+function fail(text: string | null | undefined): Loader {
+  if (_loader) _loader.fail(text);
+  return loader;
+}
+
+function warn(text: string | null | undefined): Loader {
+  if (_loader) _loader.warn(text);
+  return loader;
+}
+
+function info(text: string | null | undefined): Loader {
+  if (_loader) _loader.info(text);
+  return loader;
+}
+
+function stopAndPersist(options: object | null | undefined): Loader {
+  if (_loader) _loader.stopAndPersist(options);
   return loader;
 }
 
