@@ -13,6 +13,7 @@ export default class Remove extends Command {
   description = `remove a component (local/remote)
   https://${BASE_DOCS_DOMAIN}/docs/removing-components
   ${WILDCARD_HELP('remove')}`;
+  skipWorkspace = true;
   alias = 'rm';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [

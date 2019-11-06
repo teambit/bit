@@ -8,10 +8,11 @@ const { BASE_DOCS_DOMAIN } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#clear-cache`;
+  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
   alias = 'cc';
   opts = [];
   loader = false;
+  skipWorkspace = true;
 
   action(): Promise<any> {
     const cacheDir = v8CompileCache.getCacheDir();

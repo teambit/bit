@@ -6,7 +6,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Log extends Command {
   name = 'log <id>';
-  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#log`;
+  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/view#log`;
   alias = '';
   opts = [];
   migration = true;

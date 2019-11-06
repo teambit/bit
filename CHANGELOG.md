@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - improve loader when building components
+- [#2101](https://github.com/teambit/bit/issues/2101) suggest matching commands
 
 ## [14.4.4-dev.1] - 2019-11-02
 
