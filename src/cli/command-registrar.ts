@@ -3,6 +3,7 @@ import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import commander from 'commander';
 import chalk from 'chalk';
+import didYouMean from 'didyoumean';
 import Command from './command';
 import { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
@@ -11,6 +12,8 @@ import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } 
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
+
+didYouMean.returnFirstMatch = true;
 
 function logAndExit(msg: string, commandName, code = 0) {
   process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, commandName));
@@ -235,6 +238,11 @@ export default class CommandRegistrar {
           `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
+      const suggestion = didYouMean(subcommand, commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name));
+      if (suggestion) {
+        const match = typeof suggestion === 'string' ? suggestion : suggestion[0];
+        console.log(chalk.red(`Did you mean ${chalk.bold(match)}?`));
+      }
       return this;
     }
 
