@@ -310,6 +310,7 @@ jobs:
   generate_docs:
     <<: *defaults
     steps:
+      -
         attach_workspace:
           at: ./
       -
@@ -322,6 +323,7 @@ jobs:
   slack_deploy_notification:
     <<: *defaults
     steps:
+      -
         attach_workspace:
           at: ./
       - run:
