@@ -51,10 +51,14 @@ export default class OverridesDependencies {
   }
 
   shouldIgnorePackage(packageName: string, fileType: FileType): boolean {
+    const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
+    return this.shouldIgnorePackageByType(packageName, field);
+  }
+
+  shouldIgnorePackageByType(packageName: string, field: string): boolean {
     const shouldIgnorePackage = (packages: string[]) => {
       return packages.some(pkg => pkg === packageName);
     };
-    const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
     const ignoreField = this.component.overrides.getIgnoredPackages(field);
     const ignore = shouldIgnorePackage(ignoreField);
     if (ignore) {

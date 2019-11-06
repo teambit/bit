@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix overrides to respect dependencies received by a compiler/tester
 - improve loader when building components
 - [#2101](https://github.com/teambit/bit/issues/2101) suggest matching commands
 
