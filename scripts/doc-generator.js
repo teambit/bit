@@ -9,25 +9,24 @@ const cli = require('../dist/cli').default;
 const allCommands = require('../dist/cli/templates/all-help').allCommands;
 
 const generateCommand = c => {
-  let result = `\n`;
-  result += `## ${c._name}  \n`;
+  let result = `## ${c._name}  \n\n`;
   if (c.alias && c.alias.length > 0) {
     result += `**Alias**: \`${c.alias}\`  \n`;
   }
   result += `**Workspace only**: ${c.skipWorkspace ? 'no' : 'yes'}  \n`;
   result += `**Description**: ${c.description.split('\n').join('  \n')}  \n\n`;
-  result += `\`bit ${c.name}\`  \n  \n`;
+  result += `\`bit ${c.name}\`  \n\n`;
 
   if (c.opts && c.opts.length > 0) {
-    result += `| **Option** | **Alias** | **Description** \n`;
-    result += `|---|---|---|\n`;
+    result += `| **Option** | **Option alias** | **Description**|  \n`;
+    result += `|---|:-----:|---|\n`;
     c.opts.forEach(o => {
       let [alias, flag, description] = o;
-      alias = alias ? '`--' + alias + '`' : '';
-      flag = '`--' + flag + '`';
-      result += `|${flag}|${alias}|${description}|\n`;
+      alias = alias ? '--' + alias : '   ';
+      flag = '--' + flag;
+      result += `|\`${flag}\`|\`${alias}\`|${description}|\n`;
     });
-    result += '\n';
+    result += `\n`;
   }
 
   result += `---  \n`;
@@ -49,12 +48,11 @@ commands = commands.map(i => {
 });
 
 let output = `---
-id: cli  
-title: CLI Commands  
-sidebar_label: CLI Commands  
+id: cli-all  
+title: CLI Commands   
 ---
 
-Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.  \n
+Commands that are marked as workspace only must be executed inside a workspace. Commands that are marked as not workspace only, can be executed from anywhere and will run on a remote server.  
 `;
 output += commands.map(generateCommand).join('\n');
 fs.writeFileSync('dist/cli.md', output);
