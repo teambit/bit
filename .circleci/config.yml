@@ -596,10 +596,10 @@ workflows:
         install_npm_deps:
           requires:
             - checkout_code
-      -
-        install_bit_javascript_npm_deps:
-          requires:
-            - checkout_code
+      # -
+      #   install_bit_javascript_npm_deps:
+      #     requires:
+      #       - checkout_code
       -
         build:
           requires:
@@ -612,48 +612,48 @@ workflows:
         slack_deploy_notification:
           requires:
             - generate_docs
-      -
-        build_bit_javascript:
-          requires:
-            - install_bit_javascript_npm_deps
-      -
-        unit_test:
-          requires:
-            - build
-      -
-        lint:
-          requires:
-            - install_npm_deps
-      -
-        check_types:
-          requires:
-            - install_npm_deps
+      # -
+      #   build_bit_javascript:
+      #     requires:
+      #       - install_bit_javascript_npm_deps
+      # -
+      #   unit_test:
+      #     requires:
+      #       - build
+      # -
+      #   lint:
+      #     requires:
+      #       - install_npm_deps
+      # -
+      #   check_types:
+      #     requires:
+      #       - install_npm_deps
       # -
       #   pack:
       #     requires:
       #       - build
       #       - build_bit_javascript
-      -
-        e2e_test:
-          filters:
-            branches:
-              ignore:
-                - performance-tests
-          requires:
-            - set_ssh_key
-            - set_bitsrc_registry
-            - build
-            - build_bit_javascript
-            # - pack
-      -
-        performance_e2e_test:
-          filters:
-            branches:
-              only:
-                - performance-tests
-          requires:
-            - build
-            - build_bit_javascript
+      # -
+      #   e2e_test:
+      #     filters:
+      #       branches:
+      #         ignore:
+      #           - performance-tests
+      #     requires:
+      #       - set_ssh_key
+      #       - set_bitsrc_registry
+      #       - build
+      #       - build_bit_javascript
+      #       # - pack
+      # -
+      #   performance_e2e_test:
+      #     filters:
+      #       branches:
+      #         only:
+      #           - performance-tests
+      #     requires:
+      #       - build
+      #       - build_bit_javascript
   deploy:
     jobs:
       - checkout_code:
