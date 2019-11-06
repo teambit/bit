@@ -240,11 +240,8 @@ export default class CommandRegistrar {
       );
       const suggestion = didYouMean(subcommand, commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name));
       if (suggestion) {
-        if (typeof suggestion === 'string') {
-          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
-        } else {
-          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion[0])}'?`));
-        }
+        const match = typeof suggestion === 'string' ? suggestion : suggestion[0];
+        console.log(chalk.red(`Did you mean ${chalk.bold(match)}?`));
       }
       return this;
     }
