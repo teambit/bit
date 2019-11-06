@@ -238,16 +238,12 @@ export default class CommandRegistrar {
           `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
-      const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name).filter(c => !c.private));
+      const suggestion = didYouMean(subcommand, commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name));
       if (suggestion) {
         if (typeof suggestion === 'string') {
           console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
-          // This should never called since didYouMean.returnFirstMatch = true;
         } else {
-          // option 1
           console.log(chalk.red(`Did you mean '${chalk.bold(suggestion[0])}'?`));
-          // option 2 (in that case maybe don't use the didYouMean.returnFirstMatch)
-          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion.join(' or '))}'?`));
         }
       }
       return this;
