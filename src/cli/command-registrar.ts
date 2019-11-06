@@ -240,8 +240,15 @@ export default class CommandRegistrar {
       );
       const suggestion = didYouMean(subcommand, commander.commands.map(cmd => cmd._name));
       if (suggestion) {
-        // @ts-ignore
-        console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
+        if (typeof suggestion === 'string') {
+          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion)}'?`));
+          // This should never called since didYouMean.returnFirstMatch = true;
+        } else {
+          // option 1
+          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion[0])}'?`));
+          // option 2 (in that case maybe don't use the didYouMean.returnFirstMatch)
+          console.log(chalk.red(`Did you mean '${chalk.bold(suggestion.join(' or '))}'?`));
+        }
       }
       return this;
     }
