@@ -611,14 +611,6 @@ workflows:
           requires:
             - install_npm_deps
       -
-        generate_docs:
-          requires:
-            - build
-      -
-        slack_deploy_notification:
-          requires:
-            - generate_docs
-      -
         build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
@@ -686,6 +678,10 @@ workflows:
           requires:
             - build
       -
+        generate_docs:
+          requires:
+            - build
+      -
         pack:
           <<: *semver_tags_only_filters
           requires:
@@ -711,6 +707,13 @@ workflows:
           requires:
             - build-debian
             - build-rpm
+      -
+        slack_deploy_notification:
+          requires:
+            - generate_docs
+            - publish_to_jfrog
+            - github-release
+            - npm-publish
   performance_tests:
     triggers:
       - schedule:
