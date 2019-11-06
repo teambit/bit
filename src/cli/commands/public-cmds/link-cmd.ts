@@ -5,7 +5,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Create extends Command {
   name = 'link';
-  description = `generate symlinks for sourced components absolute path resolution.\n  https://${BASE_DOCS_DOMAIN}/docs/apis/cli-all#link`;
+  description = `generate symlinks for sourced components absolute path resolution.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
   opts = [];
   private = false;

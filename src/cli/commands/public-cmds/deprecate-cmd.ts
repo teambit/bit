@@ -7,7 +7,9 @@ import { DeprecationResult } from '../../../scope/component-ops/components-depre
 export default class Deprecate extends Command {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
+  skipWorkspace = true;
   alias = 'd';
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['r', 'remote [boolean]', 'deprecate a component from a remote scope']];
   loader = true;
