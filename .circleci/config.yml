@@ -307,6 +307,30 @@ jobs:
         run:
           name: Upload rpm file
           command: ./jfrog rt u "bit/releases/rpm/*.rpm" bit-yum/stable/bit/${BIT_VERSION}/bit-${BIT_VERSION}-${CIRCLE_BUILD_NUM}.x86_64.rpm --flat=false
+  generate_docs:
+    <<: *defaults
+    steps:
+        attach_workspace:
+          at: ./
+      -
+        run:
+          name: 'generate docs'
+          command: 'cd bit && npm run doc-gen'
+      -
+        store_artifacts:
+          path: bit/dist/cli.md
+  slack_deploy_notification:
+    <<: *defaults
+    steps:
+        attach_workspace:
+          at: ./
+      - run:
+          name: Setup bit version environment variables
+          command: cd bit && echo "export BIT_VERSION=$(cat ./package.json | jq .version -r)" >> $BASH_ENV && source $BASH_ENV
+      -
+        run:
+          name: 'notify slack'
+          command: 'cd bit && node ./scripts/slack-deploy-notification.js'
   build_bit_javascript:
     <<: *defaults
     steps:
@@ -574,6 +598,14 @@ workflows:
         build:
           requires:
             - install_npm_deps
+      -
+        generate_docs:
+          requires:
+            - build
+      -
+        slack_deploy_notification:
+          requires:
+            - generate_docs
       -
         build_bit_javascript:
           requires:
