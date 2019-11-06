@@ -648,6 +648,10 @@ export default class Version extends BitObject {
     this.parents.push(ref);
   }
 
+  addAsOnlyParent(ref: Ref) {
+    this.parents = [ref];
+  }
+
   removeParent(ref: Ref) {
     this.parents = this.parents.filter(p => p.toString() !== ref.toString());
   }
