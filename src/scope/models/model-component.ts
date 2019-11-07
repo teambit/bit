@@ -185,6 +185,11 @@ export default class Component extends BitObject {
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
+  latestVersion(): string {
+    if (empty(this.versions)) return VERSION_ZERO;
+    return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
   // @todo: make it readable, it's a mess
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
@@ -297,8 +302,8 @@ export default class Component extends BitObject {
   }
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
-    const latest = this.latest();
-    if (latest && !isHash(latest)) return semver.inc(latest, releaseType);
+    const latest = this.latestVersion();
+    if (latest) return semver.inc(latest, releaseType);
     return DEFAULT_BIT_VERSION;
   }
 

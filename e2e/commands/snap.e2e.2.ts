@@ -51,6 +51,21 @@ describe('bit snap command', function() {
         const hash = barFoo.versions['0.0.1'];
         expect(barFoo.snaps.head).to.equal(hash);
       });
+      describe('then snap and tag again', () => {
+        let secondTagOutput;
+        before(() => {
+          helper.command.snapComponent('bar/foo -f');
+          secondTagOutput = helper.command.tagComponent('bar/foo -f');
+        });
+        it('should tag the next version', () => {
+          expect(secondTagOutput).to.have.string('0.0.2');
+        });
+        it('should change the snap head to the newly created version', () => {
+          const barFoo = helper.command.catComponent('bar/foo');
+          const hash = barFoo.versions['0.0.2'];
+          expect(barFoo.snaps.head).to.equal(hash);
+        });
+      });
     });
   });
   describe('components with dependencies', () => {
