@@ -389,7 +389,8 @@ export default class Component extends BitObject {
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = versionParser(versionStr).resolve(this.listVersions());
+    const versionParsed = versionParser(versionStr);
+    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
 
     if (!isHash(versionNum) && !this.versions[versionNum]) {
       throw new ShowDoctorError(
