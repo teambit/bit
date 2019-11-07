@@ -37,6 +37,7 @@ describe('envs', function() {
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
   const testerId = 'testers/new-mocha';
+  let authorScopeBeforeExport;
   let authorScopeBeforeChanges;
   let remoteScopeBeforeChanges;
   before(() => {
@@ -83,6 +84,7 @@ describe('envs', function() {
     helper.npm.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.npm.installNpmPackage('babel-preset-env', '1.6.1');
     helper.npm.installNpmPackage('chai', '4.1.2');
+    authorScopeBeforeExport = helper.scopeHelper.cloneLocalScope();
     helper.command.tagAllComponents();
     helper.command.exportAllComponents();
     authorScopeBeforeChanges = helper.scopeHelper.cloneLocalScope();
@@ -1485,6 +1487,24 @@ describe('envs', function() {
           });
         });
       });
+    });
+  });
+  describe('overrides dynamic packages dependencies', () => {
+    before(() => {
+      helper.scopeHelper.getClonedLocalScope(authorScopeBeforeExport);
+      helper.bitJson.addOverrides({
+        '*': {
+          devDependencies: {
+            'babel-preset-env': '-'
+          }
+        }
+      });
+    });
+    it('overrides feature should consider the packages received from the compiler', () => {
+      const comp = helper.command.showComponentParsed('comp/my-comp');
+      expect(comp.devPackageDependencies).to.not.have.property('babel-preset-env');
+      expect(comp.compilerPackageDependencies.devDependencies).to.not.have.property('babel-preset-env');
+      expect(comp.manuallyRemovedDependencies.devDependencies).to.include('babel-preset-env');
     });
   });
 });

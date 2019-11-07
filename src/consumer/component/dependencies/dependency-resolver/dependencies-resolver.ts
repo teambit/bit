@@ -225,6 +225,7 @@ export default class DependencyResolver {
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
     this.manuallyAddDependencies();
+    this.applyOverridesOnEnvPackages();
   }
 
   throwForNonExistFile(file: string) {
@@ -247,6 +248,17 @@ export default class DependencyResolver {
       if (packages[depField] && !R.isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
       }
+    });
+  }
+
+  applyOverridesOnEnvPackages() {
+    [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach(packages => {
+      DEPENDENCIES_FIELDS.forEach(fieldType => {
+        if (!packages[fieldType]) return;
+        const shouldBeIncluded = (pkgVersion, pkgName) =>
+          !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType);
+        packages[fieldType] = R.pickBy(shouldBeIncluded, packages[fieldType]);
+      });
     });
   }
 
