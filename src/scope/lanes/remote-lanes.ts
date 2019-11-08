@@ -12,8 +12,9 @@ export default class RemoteLanes {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
     this.remotes = {};
   }
-  async addEntry(remoteName: string, componentName: string, head: Ref) {
+  async addEntry(remoteName: string, componentName: string, head?: Ref) {
     if (!remoteName) throw new TypeError('addEntry expect to get remoteName');
+    if (!head) return; // do nothing
     if (!this.remotes[remoteName]) {
       await this.loadRemote(remoteName);
     }

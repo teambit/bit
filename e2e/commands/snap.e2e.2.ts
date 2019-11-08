@@ -5,6 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import { HASH_SIZE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../../src/constants';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { MergeConflictOnRemote } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -213,8 +214,10 @@ describe('bit snap command', function() {
         helper.command.getSnapHead('bar/foo');
       });
       it('should prevent exporting the component', () => {
-        const exportOutput = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote}`);
-        expect(exportOutput).to.have.string('error: merge error occurred when exporting the component');
+        const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
+        const ids = [`${helper.scopes.remote}/bar/foo`];
+        const error = new MergeConflictOnRemote([], ids);
+        helper.general.expectToThrow(exportFunc, error);
       });
     });
   });

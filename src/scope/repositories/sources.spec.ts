@@ -27,7 +27,9 @@ describe('SourceRepository', () => {
       );
       const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
         existingComponent,
-        incomingComponent
+        incomingComponent,
+        [],
+        []
       );
       expect(mergedComponent.versions).to.have.property('0.0.2');
       expect(mergedComponent.versions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
@@ -48,7 +50,9 @@ describe('SourceRepository', () => {
       );
       const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
         existingComponent,
-        incomingComponent
+        incomingComponent,
+        [],
+        []
       );
       expect(mergedComponent.versions['0.0.1'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal(['0.0.1']);
@@ -72,7 +76,9 @@ describe('SourceRepository', () => {
       );
       const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
         existingComponent,
-        incomingComponent
+        incomingComponent,
+        [],
+        []
       );
       expect(mergedComponent.versions).to.have.property('0.0.1');
       expect(mergedComponent.versions).to.have.property('0.0.2');

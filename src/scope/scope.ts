@@ -392,7 +392,11 @@ export default class Scope {
         .toObjectsAsync()
         .then(objects => this.sources.merge(objects))
         .then(({ mergedComponent }) =>
-          this.objects.remoteLanes.addEntry(mergedComponent.scope, mergedComponent.name, mergedComponent.snaps.head)
+          this.objects.remoteLanes.addEntry(
+            mergedComponent.scope as string,
+            mergedComponent.name,
+            mergedComponent.snaps.head
+          )
         )
     );
     return persist ? this.objects.persist() : Promise.resolve();

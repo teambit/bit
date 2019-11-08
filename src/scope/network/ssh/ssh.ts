@@ -339,8 +339,12 @@ export default class SSH implements Network {
         return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
-      case 131:
-        return new MergeConflictOnRemote(parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : []);
+      case 131: {
+        const idsWithConflicts =
+          parsedError && parsedError.idsAndVersionsWithConflicts ? parsedError.idsAndVersionsWithConflicts : [];
+        const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
+        return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
+      }
       case 132:
         return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
       case 133:

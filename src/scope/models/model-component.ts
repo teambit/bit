@@ -1,5 +1,5 @@
 import * as semver from 'semver';
-import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 'ramda';
+import { equals, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
