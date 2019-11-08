@@ -90,3 +90,4 @@ describe('group of failed tests', () => {
 });`;
 export const fooFixture = "module.exports = function foo() { return 'got foo'; }";
 export const fooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; }";
+export const fooFixtureV3 = "module.exports = function foo() { return 'got foo v3'; }";

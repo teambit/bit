@@ -15,6 +15,7 @@ import Scope from '../scope';
 import { LATEST } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
+import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -170,7 +171,7 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
         const result = await scope.sources.merge(objects, true, false);
         return result;
       } catch (err) {
-        if (err instanceof MergeConflict) {
+        if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
           return err; // don't throw. instead, get all components with merge-conflicts
         }
         throw err;
@@ -178,13 +179,14 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
     })
   );
   const componentsWithConflicts = mergeResults.filter(result => result instanceof MergeConflict);
-  if (componentsWithConflicts.length) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const componentsNeedUpdate = mergeResults.filter(result => result instanceof ComponentNeedsUpdate);
+  if (componentsWithConflicts.length || componentsNeedUpdate.length) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
-    // sort to have a consistent error message
-    const idsAndVersionsSorted = R.sortBy(R.prop('id'), idsAndVersions);
-    throw new MergeConflictOnRemote(idsAndVersionsSorted);
+    const idsAndVersionsWithConflicts = R.sortBy(R.prop('id'), idsAndVersions);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const idsOfNeedUpdateComps = R.sortBy(R.prop('id'), componentsNeedUpdate.map(c => c.id));
+    throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
@@ -223,7 +225,8 @@ async function convertToCorrectScope(
       // objects into different paths and then throw an error of component-not-found due to failure
       // finding the Version objects on the fs.
       const hashAfter = objectVersion.calculateHash().toString();
-      if (hashBefore !== hashAfter) {
+      const isTag = componentsObjects.component.getTagOfRefIfExists(objectVersion.hash());
+      if (isTag && hashBefore !== hashAfter) {
         objectVersion._hash = hashAfter;
         logger.debugAndAddBreadCrumb(
           'scope._convertToCorrectScope',

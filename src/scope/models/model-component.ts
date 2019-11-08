@@ -30,6 +30,8 @@ import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
+import HeadNotFound from '../exceptions/head-not-found';
+import ParentNotFound from '../exceptions/parent-not-found';
 
 type State = {
   versions?: {
@@ -61,6 +63,8 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   snaps?: SnapModel;
 };
+
+type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
 
 const VERSION_ZERO = '0.0.0';
 
@@ -103,8 +107,10 @@ export default class Component extends BitObject {
   getRef(versionOrHash: string): Ref | null {
     if (isHash(versionOrHash)) {
       if (!this.snaps.head) return null;
-      if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
-      throw new Error('todo: go through all parents and find the ref!');
+      return new Ref(versionOrHash);
+      // @todo: should we check whether the ref really exists?
+      // if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
+      // throw new Error('todo: go through all parents and find the ref!');
     }
     return this.versions[versionOrHash];
   }
@@ -233,14 +239,13 @@ export default class Component extends BitObject {
 
   async collectLogs(
     repo: Repository
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  ): Promise<{ [key: number]: { message: string; date: string; hash: string } | null | undefined }> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versions: Version[] = await repo.findMany(this.versionArray);
-    const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));
-    const indexedLogs = fromPairs(zip(keys(this.versions), logValues));
-    return indexedLogs;
+  ): Promise<{ [key: string]: { message: string; date: string; hash: string } | null | undefined }> {
+    const versionsInfo = await this.getAllVersionsInfo(repo, false);
+    return versionsInfo.reduce((acc, current: VersionInfo) => {
+      const log = current.version ? current.version.log : { message: '<no-data-available>' };
+      acc[current.tag || current.ref.toString()] = log;
+      return acc;
+    }, {});
   }
 
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
@@ -252,26 +257,99 @@ export default class Component extends BitObject {
     );
   }
 
-  async getAllVersionsObjects(repo: Repository): Promise<Version[]> {
-    // @ts-ignore
-    const versions: Version[] = await Promise.all(Object.values(this.versions).map(tagRef => tagRef.load(repo)));
-    const addParentsRecursively = async (version: Version) => {
-      await Promise.all(
-        version.parents.map(async parent => {
-          // @ts-ignore
-          const parentVersion: Version = await parent.load(repo);
-          versions.push(parentVersion);
-          await addParentsRecursively(parentVersion);
-        })
+  getTagOfRefIfExists(ref: Ref): string | undefined {
+    return Object.keys(this.versions).find(versionRef => this.versions[versionRef].isEqual(ref));
+  }
+
+  async getAllVersionsInfo(repo: Repository, throws = true): Promise<VersionInfo[]> {
+    const results: VersionInfo[] = [];
+    if (this.snaps.head) {
+      const head = (await this.snaps.head.load(repo)) as Version;
+      if (!head) {
+        throw new HeadNotFound(this.id(), this.snaps.head.toString());
+      }
+      results.push({ ref: this.snaps.head, tag: this.getTagOfRefIfExists(this.snaps.head), version: head });
+
+      const addParentsRecursively = async (version: Version) => {
+        await Promise.all(
+          version.parents.map(async parent => {
+            const parentVersion = (await parent.load(repo)) as Version;
+            const versionInfo: VersionInfo = { ref: parent, tag: this.getTagOfRefIfExists(parent) };
+            if (parentVersion) {
+              versionInfo.version = parentVersion;
+              await addParentsRecursively(parentVersion);
+            } else {
+              versionInfo.error = versionInfo.tag
+                ? new VersionNotFound(versionInfo.tag)
+                : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
+              if (throws) throw versionInfo.error;
+            }
+            results.push(versionInfo);
+          })
+        );
+      };
+      await addParentsRecursively(head);
+    }
+    // backward compatibility.
+    // components created before v15, might not have snaps.head.
+    // even if they do have snaps.head (as a result of tag/snap after v15), they
+    // have old versions without parents and new versions with parents
+    await Promise.all(
+      Object.keys(this.versions).map(async version => {
+        if (!results.find(r => r.tag === version)) {
+          const ref = this.versions[version];
+          const versionObj = (await ref.load(repo)) as Version;
+          const versionInfo: VersionInfo = { ref, tag: version };
+          if (versionObj) versionInfo.version = versionObj;
+          else {
+            versionInfo.error = new VersionNotFound(version);
+            if (throws) throw versionInfo.error;
+          }
+          results.push(versionInfo);
+        }
+      })
+    );
+
+    return results;
+  }
+
+  async getAllVersionsObjects(repo: Repository, throws = true): Promise<Version[]> {
+    const allVersionsInfo = await this.getAllVersionsInfo(repo, throws);
+    return allVersionsInfo.map(a => a.version).filter(a => a) as Version[];
+  }
+
+  getAllVersionHashes(versionObjects: Version[], throws = true): Ref[] {
+    const tagHashes = Object.values(this.versions);
+    if (!this.snaps.head) return tagHashes;
+    const refs: Ref[] = [];
+    const throwSnapNotFound = (hash: Ref, isParent: boolean) => {
+      if (!throws) return;
+      throw new Error(
+        `getAllVersionHashes failed finding a ${isParent ? 'parent' : 'head'} hash ${hash.toString()} for ${this.id()}`
       );
     };
-    if (this.snaps.head) {
-      // @ts-ignore
-      const headVersion: Version = await this.snaps.head.load(repo);
-      versions.push(headVersion);
-      await addParentsRecursively(headVersion);
-    }
-    return versions;
+    const versionObj = versionObjects.find(v => v.hash().toString() === this.getHeadHash());
+    if (!versionObj) throwSnapNotFound(this.snaps.head, false);
+    refs.push(this.snaps.head);
+    const addParentsRecursively = (version: Version) => {
+      version.parents.forEach(parent => {
+        refs.push(parent);
+        const parentVersion = versionObjects.find(v => v.hash().toString() === parent.toString());
+        if (!parentVersion) throwSnapNotFound(parent, true);
+      });
+    };
+    // @ts-ignore
+    addParentsRecursively(versionObj);
+    // backward compatibility. component that were created before adding the new "parents" prop
+    // have old versions without parents and new versions with parents, make sure to include all
+    tagHashes.forEach(tagHash => {
+      if (!refs.find(r => r.toString() === tagHashes.toString())) refs.push(tagHash);
+    });
+    return refs;
+  }
+
+  switchHashesWithTagsIfExist(refs: Ref[]): string[] {
+    return refs.map(ref => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**

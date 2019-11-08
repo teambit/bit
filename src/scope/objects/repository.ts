@@ -13,6 +13,7 @@ import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
 import { ScopeJson } from '../scope-json';
+import RemoteLanes from '../lanes/remote-lanes';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -27,6 +28,7 @@ export default class Repository {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [key: string]: BitObject } = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  remoteLanes: RemoteLanes;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
@@ -36,6 +38,7 @@ export default class Repository {
     const repository = new Repository(scopePath, scopeJson);
     const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
     repository.componentsIndex = componentsIndex;
+    repository.remoteLanes = new RemoteLanes(scopePath);
     return repository;
   }
 
@@ -268,6 +271,7 @@ export default class Repository {
     await this._deleteMany();
     this._validateObjects(validate);
     await this._writeMany();
+    await this.remoteLanes.write();
   }
 
   /**

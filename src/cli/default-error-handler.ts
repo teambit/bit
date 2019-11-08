@@ -222,15 +222,26 @@ once your changes are merged with the new remote version, you can tag and export
   ],
   [
     MergeConflictOnRemote,
-    err =>
-      `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-        .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
-        .join(', ')} to the remote scope.
-to resolve this conflict and merge your remote and local changes, please do the following:
-1) bit untag [id] [version]
-2) bit import
-3) bit checkout [version] [id]
-once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
+    err => {
+      let output = '';
+      if (err.idsAndVersionsWithConflicts.length) {
+        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersionsWithConflicts
+          .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
+          .join(', ')} to the remote scope.
+  to resolve this conflict and merge your remote and local changes, please do the following:
+  1) bit untag [id] [version]
+  2) bit import
+  3) bit checkout [version] [id]
+  once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
+      }
+      if (err.idsNeedUpdate) {
+        output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
+          .map(i => `${chalk.bold(i)}`)
+          .join(', ')} to the remote scope.
+to resolve this error, please re-import the above components`;
+      }
+      return output;
+    }
   ],
   [
     OutdatedIndexJson,

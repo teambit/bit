@@ -118,6 +118,10 @@ export default class CommandHelper {
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
+  getSnapHead(id: string) {
+    const comp = this.catComponent(id);
+    return comp.snaps.head;
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }

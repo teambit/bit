@@ -1,12 +1,16 @@
 import AbstractError from '../../error/abstract-error';
 
+type IdAndVersions = { id: string; versions: string[] };
+
 export default class MergeConflictOnRemote extends AbstractError {
   code: number;
-  idsAndVersions: Array<{ id: string; versions: string[] }>;
+  idsAndVersionsWithConflicts: IdAndVersions[];
+  idsNeedUpdate: Array<{ id: string }>;
 
-  constructor(idsAndVersions: Array<{ id: string; versions: string[] }>) {
+  constructor(idsAndVersionsWithConflicts: IdAndVersions[], idsNeedUpdate: Array<{ id: string }>) {
     super();
     this.code = 131;
-    this.idsAndVersions = idsAndVersions;
+    this.idsAndVersionsWithConflicts = idsAndVersionsWithConflicts;
+    this.idsNeedUpdate = idsNeedUpdate;
   }
 }

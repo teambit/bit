@@ -16,6 +16,7 @@ import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import { isHash } from '../../version/version-parser';
+import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -464,7 +465,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   mergeTwoComponentsObjects(
     existingComponent: ModelComponent,
-    incomingComponent: ModelComponent
+    incomingComponent: ModelComponent,
+    existingComponentTagsAndSnaps: string[],
+    incomingComponentTagsAndSnaps: string[]
   ): { mergedComponent: ModelComponent; mergedVersions: string[] } {
     // the base component to save is the existingComponent because it might contain local data that
     // is not available in the remote component, such as the "state" property.
@@ -486,10 +489,17 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     Object.keys(incomingComponent.versions).forEach(incomingVersion => {
       if (!existingComponent.versions[incomingVersion]) {
         mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
-        if (incomingComponent.snaps.head) mergedComponent.snaps.head = incomingComponent.snaps.head;
         mergedVersions.push(incomingVersion);
       }
     });
+    if (incomingComponent.snaps.head) {
+      mergedComponent.snaps.head = incomingComponent.snaps.head;
+      const mergedSnaps = incomingComponentTagsAndSnaps.filter(
+        tagOrSnap => !existingComponentTagsAndSnaps.includes(tagOrSnap) && !mergedVersions.includes(tagOrSnap)
+      );
+      mergedVersions.push(...mergedSnaps);
+    }
+
     return { mergedComponent, mergedVersions };
   }
 
@@ -513,14 +523,38 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
+    // @ts-ignore
+    const versionObjects: Version[] = objects.filter(o => o instanceof Version);
+    // don't throw if not found because on export not all objects are sent to the remote
+    const allHashes = component.getAllVersionHashes(versionObjects, false);
+    const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.put({ component, objects });
-      return { mergedComponent: component, mergedVersions: component.listVersions() };
+      return { mergedComponent: component, mergedVersions: tagsAndSnaps };
+    }
+    const existingComponentHead = existingComponent.snaps.head;
+    if (
+      !local &&
+      component.snaps.head &&
+      existingComponentHead &&
+      !component.snaps.head.isEqual(existingComponentHead) &&
+      !allHashes.find(ref => ref.isEqual(existingComponentHead))
+    ) {
+      throw new ComponentNeedsUpdate(component.id(), existingComponentHead.toString());
     }
     const locallyChanged = existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
-      const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(existingComponent, component);
+      const repo: Repository = this.objects();
+      const existingComponentVersionObjects: Version[] = await existingComponent.getAllVersionsObjects(repo);
+      const existingComponentHashes = existingComponent.getAllVersionHashes(existingComponentVersionObjects);
+      const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
+      const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
+        existingComponent,
+        component,
+        existingComponentTagsAndSnaps,
+        tagsAndSnaps
+      );
       this.put({ component: mergedComponent, objects });
       return { mergedComponent, mergedVersions };
     }

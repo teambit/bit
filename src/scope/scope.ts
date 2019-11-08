@@ -387,8 +387,13 @@ export default class Scope {
       'scope.writeManyComponentsToModel',
       `total componentsObjects ${componentsObjects.length}`
     );
-    await pMapSeries(componentsObjects, componentObjects =>
-      componentObjects.toObjectsAsync(this.objects).then(objects => this.sources.merge(objects))
+    await pMapSeries(componentsObjects, (componentObjects: ComponentObjects) =>
+      componentObjects
+        .toObjectsAsync()
+        .then(objects => this.sources.merge(objects))
+        .then(({ mergedComponent }) =>
+          this.objects.remoteLanes.addEntry(mergedComponent.scope, mergedComponent.name, mergedComponent.snaps.head)
+        )
     );
     return persist ? this.objects.persist() : Promise.resolve();
   }

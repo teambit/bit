@@ -1,7 +1,12 @@
-import { expect } from 'chai';
+import path from 'path';
+import fs from 'fs-extra';
+import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { HASH_SIZE } from '../../src/constants';
+import { HASH_SIZE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../../src/constants';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+
+chai.use(require('chai-fs'));
 
 describe('bit snap command', function() {
   this.timeout(0);
@@ -133,6 +138,83 @@ describe('bit snap command', function() {
       it('should remove the first snap from the parents of the second snap', () => {
         const barFoo = helper.command.catComponent('bar/foo@latest');
         expect(barFoo.parents).to.have.lengthOf(0);
+      });
+    });
+  });
+  describe('local and remote do not have the same head', () => {
+    let scopeAfterFirstSnap: string;
+    let firstSnap: string;
+    let secondSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.snapComponent('bar/foo');
+      firstSnap = helper.command.getSnapHead('bar/foo');
+      helper.command.exportAllComponents();
+      scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+      helper.command.snapComponent('bar/foo');
+      secondSnap = helper.command.getSnapHead('bar/foo');
+      helper.command.exportAllComponents();
+    });
+    describe('when the local is behind the remote', () => {
+      describe('import only objects', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+          helper.command.importComponent('bar/foo --objects');
+        });
+        it('should write the head of the remote component', () => {
+          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          expect(remoteRefs).to.be.a.file();
+          const remoteRefContent = fs.readJsonSync(remoteRefs);
+          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+        });
+        it('should not change the version/snap in .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${firstSnap}`);
+          expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@${secondSnap}`);
+        });
+        it('bit status should show pending updates', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string('pending updates');
+          expect(status).to.have.string(firstSnap);
+          expect(status).to.have.string(secondSnap);
+        });
+      });
+      describe('import (and merge)', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+          helper.command.importComponent('bar/foo');
+        });
+        it('should write the head of the remote component', () => {
+          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          expect(remoteRefs).to.be.a.file();
+          const remoteRefContent = fs.readJsonSync(remoteRefs);
+          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+        });
+        it('should change the version/snap in .bitmap', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/bar/foo@${firstSnap}`);
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${secondSnap}`);
+        });
+        it('bit status should be clean', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+      });
+    });
+    describe('when the local is diverged from the remote', () => {
+      // local has snapA => snapB. remote has snapA => snapC.
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
+        helper.command.snapComponent('bar/foo');
+        helper.command.getSnapHead('bar/foo');
+      });
+      it('should prevent exporting the component', () => {
+        const exportOutput = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote}`);
+        expect(exportOutput).to.have.string('error: merge error occurred when exporting the component');
       });
     });
   });
