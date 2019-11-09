@@ -1,6 +1,6 @@
 import http from 'http';
 import uuid from 'uuid';
-import opn from 'opn';
+import open from 'open';
 import os from 'os';
 import chalk from 'chalk';
 import url from 'url';
@@ -122,7 +122,7 @@ export default function loginToBitSrc(
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
-        opn(encoded);
+        open(encoded);
       } else {
         console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`)); // eslint-disable-line no-console
       }
