@@ -227,9 +227,9 @@ export default class CommandRegistrar {
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (
-      cmdList.indexOf(subcommand) === -1 &&
-      extensionsCmdList.indexOf(subcommand) === -1 &&
-      aliasList.indexOf(subcommand) === -1 &&
+      cmdList.includes(subcommand) &&
+      extensionsCmdList.includes(subcommand) &&
+      aliasList.includes(subcommand) &&
       subcommand !== '-V' &&
       subcommand !== '--version'
     ) {
@@ -251,7 +251,7 @@ export default class CommandRegistrar {
 
   run() {
     const args = process.argv.slice(2);
-    if (args[0] && (args[0] === '--help' || args[0] === '-h')) {
+    if (args[0] && ['-h', '--help'].includes(args[0])) {
       this.printHelp();
       return this;
     }
