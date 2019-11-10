@@ -61,6 +61,7 @@ export default class Import extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true;
 
   action(
     [ids]: [string[]],

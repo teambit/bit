@@ -13,6 +13,7 @@ export default class Undeprecate extends Command {
   loader = true;
   migration = true;
   skipWorkspace = true;
+  remoteOp = true;
 
   action([ids]: [string], { remote = false }: { remote: boolean }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

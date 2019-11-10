@@ -9,6 +9,7 @@ export default class Watch extends Command {
   opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
   loader = true;
   migration = true;
+  remoteOp = true; // In case the compiler is not installed yet
 
   action(
     args: string[],

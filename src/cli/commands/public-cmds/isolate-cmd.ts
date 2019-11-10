@@ -32,6 +32,7 @@ export default class Isolate extends Command {
     ['', 'use-capsule [boolean]', 'use capsule with fs-container']
   ];
   loader = true;
+  remoteOp = true;
 
   action(
     [id, scopePath]: [string, string | null | undefined],

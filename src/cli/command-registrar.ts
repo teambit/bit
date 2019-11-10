@@ -12,6 +12,8 @@ import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } 
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
+import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
+import globalFlags from './global-flags';
 
 didYouMean.returnFirstMatch = true;
 
@@ -68,6 +70,10 @@ function execAction(command, concrete, args) {
   if (command.loader) {
     loader.on();
   }
+  if (flags[TOKEN_FLAG_NAME]) {
+    globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (flags.json) {
     loader.off();
@@ -149,12 +155,16 @@ function register(command: Command, commanderCmd) {
     .description(command.description)
     .alias(command.alias);
 
+  if (command.remoteOp) {
+    command.opts.push(['', TOKEN_FLAG, 'authentication token']);
+  }
+
   command.opts.forEach(([alias, name, description]) => {
     concrete.option(createOptStr(alias, name), description);
   });
 
   // attach skip-update to all commands
-  concrete.option('--skip-update', 'Skips auto updates');
+  concrete.option(SKIP_UPDATE_FLAG, 'Skips auto updates');
 
   if (command.commands) {
     command.commands.forEach(nestedCmd => {
@@ -176,7 +186,7 @@ export default class CommandRegistrar {
     commander
       .version(this.version)
       .usage(this.usage)
-      .option('--skip-update', 'Skips auto updates for a command')
+      .option(SKIP_UPDATE_FLAG, 'Skips auto updates for a command')
       .description(this.description);
   }
 
