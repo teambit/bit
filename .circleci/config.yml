@@ -215,7 +215,7 @@ jobs:
       # -
       #   run:
       #     name: 'copy unsuported files'
-      #     command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+      #     command: 'cd bit && cp ./node_modules/open/xdg-open ./releases/xdg-open'
       -
         persist_to_workspace:
           root: .
