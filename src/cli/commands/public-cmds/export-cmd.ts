@@ -40,6 +40,7 @@ export default class Export extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true;
 
   action(
     [remote, ids]: [string, string[]],

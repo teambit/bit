@@ -33,6 +33,7 @@ export default class Remove extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true;
 
   async action(
     [ids]: [string],

@@ -23,6 +23,7 @@ export default class Test extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true; // In case the compiler is not installed yet
 
   async action(
     [id]: [string],

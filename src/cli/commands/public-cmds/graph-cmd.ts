@@ -21,6 +21,7 @@ export default class Graph extends Command {
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]'
     ]
   ];
+  remoteOp = true;
 
   action(
     [id]: [string],

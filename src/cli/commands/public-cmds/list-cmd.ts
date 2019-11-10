@@ -25,6 +25,7 @@ export default class List extends Command {
   loader = true;
   migration = true;
   skipWorkspace = true;
+  remoteOp = true;
 
   action(
     [scopeName]: string[],
