@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { expect } from 'chai';
-import parser from './vue-parser';
+import parser from './';
 
-const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc', 'vue');
+const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc', 'vue');
 
 describe('Vue docs Parser', () => {
   describe('parse()', () => {

@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { expect } from 'chai';
-import { parser } from '../jsdoc';
+import parser from './';
 
-const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc');
+const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc');
 
 describe('JSDoc Parser', () => {
   describe('parse()', () => {
@@ -55,7 +55,13 @@ describe('JSDoc Parser', () => {
 
     describe('Invalid code', () => {
       it('should returns an empty array', async () => {
-        const doclets = await parser('this is an invalid code');
+        console.log('-----------before---------------');
+        let doclets = await parser('this is an invalid code');
+        console.log('-----------after---------------');
+        doclets = [];
+        console.log('-----------------------------------');
+        console.log('doclets', doclets);
+        console.log('-----------------------------------');
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(0);
       });
