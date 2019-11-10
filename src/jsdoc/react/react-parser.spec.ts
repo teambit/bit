@@ -55,13 +55,7 @@ describe('JSDoc Parser', () => {
 
     describe('Invalid code', () => {
       it('should returns an empty array', async () => {
-        console.log('-----------before---------------');
-        let doclets = await parser('this is an invalid code');
-        console.log('-----------after---------------');
-        doclets = [];
-        console.log('-----------------------------------');
-        console.log('doclets', doclets);
-        console.log('-----------------------------------');
+        const doclets = await parser('this is an invalid code');
         expect(doclets).to.be.a('array');
         expect(doclets).to.have.lengthOf(0);
       });

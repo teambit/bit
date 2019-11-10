@@ -4,7 +4,7 @@ import { PathLinux, PathOsBased } from '../../utils/path';
 import { pathNormalizeToLinux } from '../../utils';
 import logger from '../../logger/logger';
 
-const docgen = require('react-docgen');
+const reactDocs = require('react-docgen');
 
 export type Method = {
   name: string;
@@ -231,12 +231,11 @@ function stringifyType(prop: { name: string; value?: any }): string {
 }
 
 export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
-  console.log('-----------inside parse----------');
   const doclets: Array<Doclet> = [];
   try {
-    const reactDocs = docgen.parse(data);
-    if (reactDocs) {
-      const formatted = fromReactDocs(reactDocs, filePath);
+    const componentInfo = reactDocs.parse(data, undefined, undefined, { configFile: false });
+    if (componentInfo) {
+      const formatted = fromReactDocs(componentInfo, filePath);
       formatted.args = [];
       // this is a workaround to get the 'example' tag parsed when using react-docs
       // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
