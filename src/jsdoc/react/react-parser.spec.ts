@@ -10,8 +10,7 @@ describe('React docs Parser', () => {
     describe('Invalid code', () => {
       it('should returns an empty array', async () => {
         const doclets = await parser('this is an invalid code');
-        expect(doclets).to.be.a('array');
-        expect(doclets).to.have.lengthOf(0);
+        expect(doclets).to.be.undefined;
       });
     });
 
