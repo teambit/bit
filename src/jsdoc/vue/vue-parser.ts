@@ -1,9 +1,9 @@
 import * as domain from 'domain';
 import vuedoc from '@vuedoc/parser';
-import { PathOsBased } from '../utils/path';
-import { Doclet } from './parser';
-import { pathNormalizeToLinux } from '../utils';
-import logger from '../logger/logger';
+import { PathOsBased } from '../../utils/path';
+import { Doclet } from '../types';
+import { pathNormalizeToLinux } from '../../utils';
+import logger from '../../logger/logger';
 
 function formatProperty(prop) {
   const { name, description, type, required } = prop;
@@ -66,7 +66,7 @@ function fromVueDocs({ name, description, props, methods, computed }, filePath):
   };
 }
 
-export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet | []> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
   const options = {
     filecontent: data
   };

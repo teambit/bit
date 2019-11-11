@@ -11,7 +11,7 @@ import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
-import { Doclet } from '../../jsdoc/parser';
+import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
 import { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
