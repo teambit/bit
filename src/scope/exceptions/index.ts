@@ -16,6 +16,7 @@ import CyclicDependencies from './cyclic-dependencie';
 import HashMismatch from './hash-mismatch';
 import InvalidIndexJson from './invalid-index-json';
 import OutdatedIndexJson from './outdated-index-json';
+import HeadNotFound from './head-not-found';
 
 export {
   ScopeNotFound,
@@ -35,5 +36,6 @@ export {
   CorruptedComponent,
   CyclicDependencies,
   InvalidIndexJson,
-  OutdatedIndexJson
+  OutdatedIndexJson,
+  HeadNotFound
 };

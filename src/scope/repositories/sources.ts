@@ -526,7 +526,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore
     const versionObjects: Version[] = objects.filter(o => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
-    const allHashes = component.getAllVersionHashes(versionObjects, false);
+    const allHashes = await component.getAllVersionHashes(versionObjects, false);
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.put({ component, objects });
@@ -547,7 +547,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       logger.debug(`sources.merge component ${component.id()}`);
       const repo: Repository = this.objects();
       const existingComponentVersionObjects: Version[] = await existingComponent.getAllVersionsObjects(repo);
-      const existingComponentHashes = existingComponent.getAllVersionHashes(existingComponentVersionObjects);
+      const existingComponentHashes = await existingComponent.getAllVersionHashes(existingComponentVersionObjects);
       const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
       const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
         existingComponent,

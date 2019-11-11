@@ -240,7 +240,7 @@ export default class Component extends BitObject {
   async collectLogs(
     repo: Repository
   ): Promise<{ [key: string]: { message: string; date: string; hash: string } | null | undefined }> {
-    const versionsInfo = await this.getAllVersionsInfo(repo, false);
+    const versionsInfo = await this.getAllVersionsInfo({ repo, throws: false });
     return versionsInfo.reduce((acc, current: VersionInfo) => {
       const log = current.version ? current.version.log : { message: '<no-data-available>' };
       acc[current.tag || current.ref.toString()] = log;
@@ -261,10 +261,36 @@ export default class Component extends BitObject {
     return Object.keys(this.versions).find(versionRef => this.versions[versionRef].isEqual(ref));
   }
 
-  async getAllVersionsInfo(repo: Repository, throws = true): Promise<VersionInfo[]> {
+  /**
+   * if versionObjects passed, use it instead of loading from the repo.
+   */
+  /* eslint-disable no-dupe-class-members */
+  async getAllVersionsInfo({ repo, throws }: { repo?: Repository; throws?: boolean }): Promise<VersionInfo[]>;
+  async getAllVersionsInfo({
+    throws,
+    versionObjects
+  }: {
+    throws?: boolean;
+    versionObjects?: Version[];
+  }): Promise<VersionInfo[]>;
+  async getAllVersionsInfo({
+    repo,
+    throws = true,
+    versionObjects
+  }: {
+    repo?: Repository;
+    throws?: boolean;
+    versionObjects?: Version[];
+  }): Promise<VersionInfo[]> {
+    /* eslint-enable no-dupe-class-members */
     const results: VersionInfo[] = [];
+    const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
+      if (versionObjects) return versionObjects.find(v => v.hash().isEqual(ref));
+      if (repo) return (await ref.load(repo)) as Version;
+      throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
+    };
     if (this.snaps.head) {
-      const head = (await this.snaps.head.load(repo)) as Version;
+      const head = await getVersionObj(this.snaps.head);
       if (!head) {
         throw new HeadNotFound(this.id(), this.snaps.head.toString());
       }
@@ -273,7 +299,7 @@ export default class Component extends BitObject {
       const addParentsRecursively = async (version: Version) => {
         await Promise.all(
           version.parents.map(async parent => {
-            const parentVersion = (await parent.load(repo)) as Version;
+            const parentVersion = await getVersionObj(parent);
             const versionInfo: VersionInfo = { ref: parent, tag: this.getTagOfRefIfExists(parent) };
             if (parentVersion) {
               versionInfo.version = parentVersion;
@@ -298,7 +324,7 @@ export default class Component extends BitObject {
       Object.keys(this.versions).map(async version => {
         if (!results.find(r => r.tag === version)) {
           const ref = this.versions[version];
-          const versionObj = (await ref.load(repo)) as Version;
+          const versionObj = await getVersionObj(ref);
           const versionInfo: VersionInfo = { ref, tag: version };
           if (versionObj) versionInfo.version = versionObj;
           else {
@@ -314,38 +340,13 @@ export default class Component extends BitObject {
   }
 
   async getAllVersionsObjects(repo: Repository, throws = true): Promise<Version[]> {
-    const allVersionsInfo = await this.getAllVersionsInfo(repo, throws);
+    const allVersionsInfo = await this.getAllVersionsInfo({ repo, throws });
     return allVersionsInfo.map(a => a.version).filter(a => a) as Version[];
   }
 
-  getAllVersionHashes(versionObjects: Version[], throws = true): Ref[] {
-    const tagHashes = Object.values(this.versions);
-    if (!this.snaps.head) return tagHashes;
-    const refs: Ref[] = [];
-    const throwSnapNotFound = (hash: Ref, isParent: boolean) => {
-      if (!throws) return;
-      throw new Error(
-        `getAllVersionHashes failed finding a ${isParent ? 'parent' : 'head'} hash ${hash.toString()} for ${this.id()}`
-      );
-    };
-    const versionObj = versionObjects.find(v => v.hash().toString() === this.getHeadHash());
-    if (!versionObj) throwSnapNotFound(this.snaps.head, false);
-    refs.push(this.snaps.head);
-    const addParentsRecursively = (version: Version) => {
-      version.parents.forEach(parent => {
-        refs.push(parent);
-        const parentVersion = versionObjects.find(v => v.hash().toString() === parent.toString());
-        if (!parentVersion) throwSnapNotFound(parent, true);
-      });
-    };
-    // @ts-ignore
-    addParentsRecursively(versionObj);
-    // backward compatibility. component that were created before adding the new "parents" prop
-    // have old versions without parents and new versions with parents, make sure to include all
-    tagHashes.forEach(tagHash => {
-      if (!refs.find(r => r.toString() === tagHashes.toString())) refs.push(tagHash);
-    });
-    return refs;
+  async getAllVersionHashes(versionObjects: Version[], throws = true): Promise<Ref[]> {
+    const allVersionsInfo = await this.getAllVersionsInfo({ throws, versionObjects });
+    return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {

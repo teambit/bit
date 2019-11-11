@@ -42,7 +42,8 @@ import {
   OutdatedIndexJson,
   VersionNotFound,
   CyclicDependencies,
-  HashNotFound
+  HashNotFound,
+  HeadNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
 import InvalidPackageManager from '../consumer/config/exceptions/invalid-package-manager';
@@ -208,6 +209,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   this usually happens when a component is old and the migration script was not running or interrupted`
   ],
   [HashNotFound, err => `hash ${chalk.bold(err.hash)} not found`],
+  [HeadNotFound, err => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
     MergeConflict,
     err =>
