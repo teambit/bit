@@ -29,7 +29,7 @@ function formatTag(tag: Record<string, any>): Record<string, any> {
   return tag;
 }
 
-export default function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsBased) {
+export default function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath?: PathOsBased) {
   const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true, sloppy: true });
   if (!commentsAst) return;
 
