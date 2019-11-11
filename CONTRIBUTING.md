@@ -12,7 +12,7 @@ please read the [code of conduct](CODE_OF_CONDUCT.md).
   $ npm i
 ```
 
-- install command globally and link (in order to use the "bit-dev" command globaly and always use the
+- install command globally and link (in order to use the "bit-dev" command globally and always use the
   latest development build)
 ```bash
   npm run dev-link
@@ -69,16 +69,21 @@ Use `--with_ssh` flag to switch from exporting by using file-system to SSH appro
 
 When adding end to end tests please make sure new test files are created in the following name convention: ```name.e2e.[number].js``` where number should be 1/2/3. This was made in order to batch work in appveyor.
 
+Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
+
+### Debugging
+
+The code is heavy on promises, as such, some errors don't have a useful stack trace. To enable the long stack trace of Bluebird, please prefix your command with `BLUEBIRD_DEBUG=1`.
+
+In some cases, you might get very helpful info by prefixing Bit command with `BIT_LOG=*`. For now, this helps to get more info about why a component is shown as modified and it also shows the events for `bit watch`.
+
+To print the log messages on the console, prefix your command with `BIT_LOG=<debug-level>`, e.g. `BIT_LOG=error`.
+
 ### Lint
 
-- run eslint and Flow
+Run eslint and tsc (for type checking)
 ```bash
   npm run lint
-```
-
-- the project has lint issues with some of the files, the following lint command is including all the passed files
-```base
-  npm run lint-circle
 ```
 
 ## Pull Requests
