@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- update `react-docgen` version from `2.21.0` to `4.1.1`, and update all docs parser structure
+
 ## [14.4.4-dev.2] - 2019-11-10
 
 - fix overrides to respect dependencies received by a compiler/tester
