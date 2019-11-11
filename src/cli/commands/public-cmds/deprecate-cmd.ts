@@ -14,6 +14,7 @@ export default class Deprecate extends Command {
   opts = [['r', 'remote [boolean]', 'deprecate a component from a remote scope']];
   loader = true;
   migration = true;
+  remoteOp = true;
 
   action([ids]: [string], { remote = false }: { remote: boolean }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

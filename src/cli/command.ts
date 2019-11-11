@@ -11,8 +11,10 @@ export default class Cmd {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts: CommandOptions;
   commands: Cmd[] = [];
-  private: boolean | null | undefined;
-  loader: boolean | null | undefined;
+  private?: boolean;
+  loader?: boolean;
+  skipWorkspace?: boolean;
+  remoteOp?: boolean; // Used for adding the token option globally
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {

@@ -15,6 +15,7 @@ export default class Build extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true; // In case the compiler is not installed yet
 
   action(
     [id]: string[],

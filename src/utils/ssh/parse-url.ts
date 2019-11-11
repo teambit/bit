@@ -28,11 +28,11 @@ export default function parseSSHUrl(str: string): SSHUrl {
   if (str.startsWith('ssh://')) str = str.replace('ssh://', '');
   if (str.startsWith('bit://')) str = str.replace('ssh://', '');
 
-  if (str.indexOf('@') !== -1) {
+  if (str.includes('@')) {
     user = str.slice(0, str.indexOf('@'));
     str = str.slice(str.indexOf('@') + 1);
   }
-  if (str.indexOf(':') !== -1) {
+  if (str.includes(':')) {
     const [potentialPort, potentialPath] = str.slice(str.indexOf(':') + 1).split(':');
 
     const maybePort = parseInt(potentialPort);

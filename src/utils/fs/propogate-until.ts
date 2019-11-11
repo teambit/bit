@@ -49,7 +49,7 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
  * @returns {string|null} first path to pass the test.
  * @example
  * ```js
- *  propogateUntil('/usr/local/var', (path) => path.indexOf('/usr') !== -1);
+ *  propogateUntil('/usr/local/var', (path) => path.includes('/usr'));
  *  // => '/usr/local/var'
  * ```
  */
