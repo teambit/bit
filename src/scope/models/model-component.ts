@@ -290,11 +290,15 @@ export default class Component extends BitObject {
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     };
     if (this.snaps.head) {
+      const headInfo: VersionInfo = { ref: this.snaps.head, tag: this.getTagOfRefIfExists(this.snaps.head) };
       const head = await getVersionObj(this.snaps.head);
-      if (!head) {
-        throw new HeadNotFound(this.id(), this.snaps.head.toString());
+      if (head) {
+        headInfo.version = head;
+      } else {
+        headInfo.error = new HeadNotFound(this.id(), this.snaps.head.toString());
+        if (throws) throw headInfo.error;
       }
-      results.push({ ref: this.snaps.head, tag: this.getTagOfRefIfExists(this.snaps.head), version: head });
+      results.push(headInfo);
 
       const addParentsRecursively = async (version: Version) => {
         await Promise.all(
@@ -314,7 +318,7 @@ export default class Component extends BitObject {
           })
         );
       };
-      await addParentsRecursively(head);
+      if (head) await addParentsRecursively(head);
     }
     // backward compatibility.
     // components created before v15, might not have snaps.head.

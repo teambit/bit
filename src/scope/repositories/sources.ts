@@ -546,8 +546,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const repo: Repository = this.objects();
-      const existingComponentVersionObjects: Version[] = await existingComponent.getAllVersionsObjects(repo);
-      const existingComponentHashes = await existingComponent.getAllVersionHashes(existingComponentVersionObjects);
+      const existingComponentVersionObjects: Version[] = await existingComponent.getAllVersionsObjects(repo, false);
+      const existingComponentHashes = await existingComponent.getAllVersionHashes(
+        existingComponentVersionObjects,
+        false
+      );
       const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
       const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
         existingComponent,
