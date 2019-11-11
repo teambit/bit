@@ -3,7 +3,7 @@ import { getExt } from '../utils';
 import { Doclet } from './types';
 import reactParse from './react';
 import vueParse from './vue';
-import jsDoc from './jsdoc';
+import jsDocParse from './jsdoc';
 
 export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
   if (filePath && getExt(filePath) === 'vue') {
@@ -13,5 +13,5 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
   if (Object.keys(reactDocs).length > 0) {
     return reactDocs;
   }
-  return jsDoc(data, filePath);
+  return jsDocParse(data, filePath);
 }
