@@ -94,7 +94,7 @@ function stringifyType(prop: { name: string; value?: any }): string {
   return transformed;
 }
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | undefined> {
   const doclets: Array<Doclet> = [];
   try {
     const componentInfo = reactDocs.parse(data, undefined, undefined, { configFile: false });
@@ -112,5 +112,5 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
   } catch (err) {
     logger.debug(`failed parsing docs using docgen on path ${filePath} with error`, err);
   }
-  return [];
+  return undefined;
 }

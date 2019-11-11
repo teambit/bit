@@ -9,8 +9,8 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
   if (filePath && getExt(filePath) === 'vue') {
     return vueParse(data, filePath);
   }
-  const reactDocs: Doclet | [] = await reactParse(data, filePath);
-  if (Object.keys(reactDocs).length > 0) {
+  const reactDocs: Doclet | undefined = await reactParse(data, filePath);
+  if (reactDocs && Object.keys(reactDocs).length > 0) {
     return reactDocs;
   }
   return jsDocParse(data, filePath);
