@@ -1,7 +1,7 @@
 import * as domain from 'domain';
 import vuedoc from '@vuedoc/parser';
 import { PathOsBased } from '../../utils/path';
-import { Doclet } from '../parser';
+import { Doclet } from '../types';
 import { pathNormalizeToLinux } from '../../utils';
 import logger from '../../logger/logger';
 
