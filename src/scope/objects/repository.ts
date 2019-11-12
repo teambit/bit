@@ -115,8 +115,7 @@ export default class Repository {
     const refs = await this.listRefs();
     return Promise.all(refs.map(ref => this.load(ref)));
   }
-  // type any
-  async listRefs(): Promise<Array<any>> {
+  async listRefs(): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
     const refs = matches.map(str => {
       const hash = str.replace(path.sep, '');
