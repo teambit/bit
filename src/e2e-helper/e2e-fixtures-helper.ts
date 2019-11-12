@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import chalk from 'chalk';
 import FsHelper from './e2e-fs-helper';
 import CommandHelper from './e2e-command-helper';
-import * as fixtures from '../../e2e/fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import NpmHelper from './e2e-npm-helper';
 import ScopesData from './e2e-scopes';
 

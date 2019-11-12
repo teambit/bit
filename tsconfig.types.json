@@ -5,5 +5,8 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "noEmit": false
-  }
+  },
+  "exclude": [
+    "e2e"
+  ]
 }
