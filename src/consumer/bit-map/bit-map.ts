@@ -96,7 +96,7 @@ export default class BitMap {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  setComponentProp(id: BitId, propName: keyof ComponentMap, val: any) {
+  setComponentProp(id: BitId, propName: $Keys<ComponentMap>, val: any) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     componentMap[propName] = val;
     this.markAsChanged();

@@ -22,7 +22,7 @@ import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ComponentVersion from './component-version';
-import { Repository, Ref, BitObject, BitRawObject } from './objects';
+import { Repository, Ref, BitObject } from './objects';
 import SourcesRepository from './repositories/sources';
 import Consumer from '../consumer/consumer';
 import loader from '../cli/loader';
@@ -397,6 +397,7 @@ export default class Scope {
     return new Ref(hash).load(this.objects);
   }
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   getRawObject(hash: string): Promise<BitRawObject> {
     return this.objects.loadRawObject(new Ref(hash));
   }
