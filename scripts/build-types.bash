@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-tsc --project tsconfig.types.json
+node_modules/.bin/tsc --project tsconfig.types.json
 cd types/src
 mv * ../
 cd ../
