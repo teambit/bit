@@ -8,7 +8,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe.only('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
+describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
