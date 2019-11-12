@@ -27,8 +27,9 @@
     "e2e-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/**/*.e2e*.ts",
     "performance-test": "mocha --require ./babel-register ./e2e/performance/*.performance*.js",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist && rm -rf types",
     "build": "babel src -d dist --verbose --extensions \".ts\"",
+    "build:types": "./scripts/build-types.bash",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -39,7 +40,7 @@
     "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings --config package.json",
     "watch": "babel --watch bin src -d dist --source-maps --verbose --extensions \".ts\"",
     "build-debug": "babel src -d dist --source-maps --extensions \".ts\"",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prepublishOnly": "npm run clean && npm run build && npm run build:types",
     "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
     "release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos",
     "release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y",
@@ -215,7 +216,8 @@
   "files": [
     "/bin",
     "/components",
-    "/dist"
+    "/dist",
+    "/types"
   ],
   "lint-staged": {
     "*.{ts,js,css}": [
