@@ -269,6 +269,7 @@ describe('typescript', function() {
             before(async () => {
               npmCiRegistry = new NpmCiRegistry(helper);
               helper.scopeHelper.getClonedLocalScope(localScope);
+              helper.scopeHelper.reInitRemoteScope();
               npmCiRegistry.setCiScopeInBitJson();
               helper.command.tagAllComponents();
               helper.command.exportAllComponents();
