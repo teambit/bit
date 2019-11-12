@@ -46,7 +46,7 @@ describe('bit ci-update', function() {
   describe('component with compiler, tester and nested dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
+      helper.env.importCompiler();
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.fixtures.addComponentUtilsIsType();

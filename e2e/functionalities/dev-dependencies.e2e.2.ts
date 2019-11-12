@@ -17,7 +17,7 @@ describe('dev-dependencies functionality', function() {
     let clonedScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
+      helper.env.importCompiler();
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       clonedScope = helper.scopeHelper.cloneLocalScope();
     });
@@ -85,7 +85,7 @@ const foo = require('../utils/is-string.js');
 
 describe('foo', () => {
   it('should display "got is-type and got is-string"', () => {
-    expect(foo()).to.equal('got is-type and got is-string');
+    expect(foo.default()).to.equal('got is-type and got is-string');
   });
 });`
         );

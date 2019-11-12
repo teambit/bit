@@ -37,8 +37,6 @@ export default class EnvHelper {
       id = `${this.scopes.env}/compilers/babel`;
       this.createCompiler();
     }
-    // Temporary - for checking new serialization against the stage env
-    // this.helper.config.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
@@ -46,8 +44,7 @@ export default class EnvHelper {
     return this.importCompiler('bit.envs/compilers/typescript@3.0.0');
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importDummyCompiler(dummyType? = 'dummy') {
+  importDummyCompiler(dummyType = 'dummy') {
     const id = `${this.scopes.env}/compilers/dummy`;
     this.createDummyCompiler(dummyType);
     return this.command.runCmd(`bit import ${id} --compiler`);
@@ -60,16 +57,13 @@ export default class EnvHelper {
     this.fs.outputFile(compilerPath, changedCompiler);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  importDummyTester(dummyType? = 'dummy') {
+  importDummyTester(dummyType = 'dummy') {
     const id = `${this.scopes.env}/testers/dummy`;
     this.createDummyTester(dummyType);
     return this.command.runCmd(`bit import ${id} --tester`);
   }
 
   importTester(id: string) {
-    // Temporary - for checking new serialization against the stage env
-    // this.helper.config.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     this.command.runCmd(`bit import ${id} --tester`);
   }
 
