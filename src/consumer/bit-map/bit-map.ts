@@ -108,7 +108,7 @@ export default class BitMap {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
+  removeComponentProp(id: BitId, propName: keyof ComponentMap) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     delete componentMap[propName];
     this.markAsChanged();
