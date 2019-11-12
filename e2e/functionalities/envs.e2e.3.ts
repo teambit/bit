@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { eol } from '../../src/utils';
 import EjectToWorkspace from '../../src/consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject-bound-to-workspace';

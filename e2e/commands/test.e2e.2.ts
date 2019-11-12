@@ -3,7 +3,7 @@
 import * as path from 'path';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 const isTypeBeforeFailSpecFixture = `const expect = require('chai').expect;
 const isType = require('./is-type.js');
