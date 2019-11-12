@@ -2,21 +2,21 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
-import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
 describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
   this.timeout(0);
   const helper = new Helper();
-  const bitsrcTester = new BitsrcTester();
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('when originallySharedDir is the same as dist.entry (src)', () => {
     let originalScope;
+    let scopeBeforeTag;
     let scopeBeforeExport;
     let scopeBeforeImport;
     let scopeAfterImport;
@@ -37,6 +37,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.runCmd('npm init -y');
       helper.command.runCmd('npm install chai -D');
+      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
       helper.command.tagAllComponents();
       scopeBeforeExport = helper.scopeHelper.cloneLocalScope();
       helper.command.exportAllComponents();
@@ -108,43 +109,48 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      (supportTestingOnBitsrc ? describe : describe.skip)('exporting with --eject option', () => {
-        let scopeName;
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('eject components to a registry', () => {
         let exportOutput;
-        let isStringId;
-        let padLeftId;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeExport);
-          return bitsrcTester
-            .loginToBitSrc()
-            .then(() => bitsrcTester.createScope())
-            .then(scope => {
-              scopeName = scope;
-              isStringId = `${username}.${scopeName}.string.is-string`;
-              padLeftId = `${username}.${scopeName}.string.pad-left`;
-              helper.command.exportAllComponents(`${username}.${scopeName}`);
-              helper.scopeHelper.reInitLocalScope();
-              helper.command.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
-              helper.command.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
+        let ejectOutput;
+        let npmCiRegistry: NpmCiRegistry;
+        before(async () => {
+          npmCiRegistry = new NpmCiRegistry(helper);
+          await npmCiRegistry.init();
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.scopeHelper.reInitRemoteScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
 
-              helper.command.runCmd('bit tag -a -s 2.0.0');
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          helper.command.importComponent('string/is-string');
+          helper.command.importComponent('string/pad-left');
+          helper.command.runCmd('bit tag -a -s 2.0.0');
 
-              // as an intermediate step, make sure bit status doesn't show them as modified
-              // it's a very important step which covers a few bugs
-              const output = helper.command.runCmd('bit status');
-              expect(output).to.not.have.a.string('modified');
+          // as an intermediate step, make sure bit status doesn't show them as modified
+          // it's a very important step which covers a few bugs
+          const output = helper.command.runCmd('bit status');
+          expect(output).to.not.have.a.string('modified');
 
-              exportOutput = helper.command.exportAllComponents(`${username}.${scopeName} --eject`);
-            });
+          exportOutput = helper.command.exportAllComponents();
+
+          helper.extensions.importNpmPackExtension();
+          helper.scopeHelper.removeRemoteScope();
+          npmCiRegistry.publishComponent('string/is-string', '2.0.0');
+          npmCiRegistry.publishComponent('string/pad-left', '2.0.0');
+
+          ejectOutput = helper.command.ejectComponents('string/is-string string/pad-left');
         });
         after(() => {
-          return bitsrcTester.deleteScope(scopeName);
+          npmCiRegistry.destroy();
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
         });
         it('should eject them successfully', () => {
-          expect(exportOutput).to.not.have.a.string(failureEjectMessage);
+          expect(ejectOutput).to.not.have.a.string(failureEjectMessage);
         });
         it('should delete the original component files from the file-system', () => {
           expect(path.join(helper.scopes.localPath, 'components/string/is-string')).not.to.be.a.path();
@@ -152,13 +158,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         it('should update the package.json with the components as packages', () => {
           const packageJson = helper.packageJson.read();
-          expect(packageJson.dependencies[`@bit/${isStringId}`]).to.equal('2.0.0');
-          expect(packageJson.dependencies[`@bit/${padLeftId}`]).to.equal('2.0.0');
+          expect(packageJson.dependencies[`@ci/${helper.scopes.remote}.string.is-string`]).to.equal('2.0.0');
+          expect(packageJson.dependencies[`@ci/${helper.scopes.remote}.string.pad-left`]).to.equal('2.0.0');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
-          expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
-          expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
+          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@ci');
+          expect(path.join(nodeModulesDir, `${helper.scopes.remote}.string.is-string`)).to.be.a.path();
+          expect(path.join(nodeModulesDir, `${helper.scopes.remote}.string.pad-left`)).to.be.a.path();
         });
         it('should delete the component from bit.map', () => {
           const bitMap = helper.bitMap.read();
@@ -171,7 +177,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     });
     describe('changing to custom module resolutions', () => {
       let originalScopeWithCustomResolve;
-      let originalScopeWithCustomResolveBeforeExport;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeExport);
         helper.scopeHelper.reInitRemoteScope();
@@ -189,7 +194,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
         helper.command.tagAllComponents();
-        originalScopeWithCustomResolveBeforeExport = helper.scopeHelper.cloneLocalScope();
         helper.command.exportAllComponents();
         originalScopeWithCustomResolve = helper.scopeHelper.cloneLocalScope();
       });
@@ -256,47 +260,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               expect(output).to.have.string('tests passed');
             });
           });
-        });
-      });
-      // @todo, this is an important test. however, for some reason, when it runs 'npm install' on
-      // the component, it shows an error about missing package.json. it might be related to the
-      // fact that the generated scope on bitsrc is private.
-      // in any case, when running this test locally, and manually exporting to bitsrc and
-      // then running npm install, it does work.
-      describe.skip('exporting to bitsrc', () => {
-        let scopeName;
-        let isStringId;
-        let padLeftId;
-        let npmOutput;
-        before(() => {
-          helper.scopeHelper.getClonedLocalScope(originalScopeWithCustomResolveBeforeExport);
-          return bitsrcTester
-            .loginToBitSrc()
-            .then(() => bitsrcTester.createScope())
-            .then(scope => {
-              scopeName = scope;
-              isStringId = `${username}.${scopeName}.string.is-string`;
-              padLeftId = `${username}.${scopeName}.string.pad-left`;
-              helper.command.exportAllComponents(`${username}.${scopeName}`);
-              helper.scopeHelper.reInitLocalScope();
-              helper.npm.initNpm();
-              helper.command.runCmd(`npm i @bit/${username}.${scopeName}/string/pad-left`);
-            });
-        });
-        after(() => {
-          return bitsrcTester.deleteScope(scopeName);
-        });
-        it('should have the component files as a package (in node_modules)', () => {
-          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
-          expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
-          expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
-        });
-        it('should indicate that postinstall script was installed', () => {
-          expect(npmOutput).to.have.string('node .bit.postinstall.js');
-        });
-        it('should generate .bit.postinstall.js file', () => {
-          const nodeModulesDir = path.join(helper.scopes.localPath, 'node_modules', '@bit');
-          expect(path.join(nodeModulesDir, padLeftId, '.bit.postinstall.js')).to.be.a.file();
         });
       });
     });
