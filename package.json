@@ -216,8 +216,7 @@
   "files": [
     "/bin",
     "/components",
-    "/dist",
-    "/types"
+    "/dist"
   ],
   "lint-staged": {
     "*.{ts,js,css}": [

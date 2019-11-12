@@ -6,3 +6,5 @@ mv * ../
 cd ../
 rm -r src
 cd ..
+cp -rl types/* dist
+rm -rf types

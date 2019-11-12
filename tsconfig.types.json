@@ -4,9 +4,9 @@
     "outDir": "types",
     "declaration": true,
     "emitDeclarationOnly": true,
-    "noEmit": false
+    "noEmit": false,
   },
-  "exclude": [
-    "e2e"
+  "include": [
+    "src"
   ]
 }
