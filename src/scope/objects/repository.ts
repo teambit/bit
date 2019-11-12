@@ -115,9 +115,8 @@ export default class Repository {
     const refs = await this.listRefs();
     return Promise.all(refs.map(ref => this.load(ref)));
   }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async listRefs(): Promise<Refs[]> {
+  // type any
+  async listRefs(): Promise<Array<any>> {
     const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
     const refs = matches.map(str => {
       const hash = str.replace(path.sep, '');
@@ -126,7 +125,7 @@ export default class Repository {
     return refs;
   }
 
-  async listRawObjects(): Promise<BitRawObject[]> {
+  async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
     return Promise.all(
       refs.map(async ref => {
@@ -199,7 +198,7 @@ export default class Repository {
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
     const buffer = await this.loadRaw(ref);
     const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash, this.types);
-    return bitRawObject;
+    return (bitRawObject as any) as BitRawObject;
   }
 
   /**

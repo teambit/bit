@@ -180,6 +180,7 @@
     "@types/graphlib": "^2.1.5",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.9",
+    "@types/open": "^6.2.1",
     "@types/vinyl": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^2.3.2",
     "@typescript-eslint/parser": "^2.3.2",
