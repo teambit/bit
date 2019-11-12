@@ -8,7 +8,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
+describe.only('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -31,7 +31,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.command.addComponent('src/is-string -t src/is-string/is-string.spec.js -i string/is-string');
       helper.command.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
 
-      helper.env.importCompiler('bit.envs/compilers/flow@0.0.6');
+      helper.env.importCompiler();
       helper.env.importTester('bit.envs/testers/mocha@0.0.12');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
@@ -47,6 +47,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteEnvironment();
       scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
@@ -79,7 +80,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         // an intermediate step, make sure, bit-diff is not throwing an error
         const diffOutput = helper.command.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
-
+        helper.scopeHelper.addRemoteEnvironment();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
       });
@@ -91,6 +92,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should not add the dist.entry if it was not removed before', () => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addRemoteEnvironment();
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'any' });
         helper.command.importComponent('string/pad-left -p src/pad-left');
@@ -124,6 +126,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteEnvironment();
           npmCiRegistry.setCiScopeInBitJson();
           helper.command.importComponent('string/is-string');
           helper.command.importComponent('string/pad-left');
@@ -192,7 +195,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         // an intermediate step, make sure, bit-diff is not throwing an error
         const diffOutput = helper.command.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
-
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         originalScopeWithCustomResolve = helper.scopeHelper.cloneLocalScope();
@@ -214,6 +216,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteEnvironment();
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           helper.command.importComponent('string/pad-left -p src/pad-left');
@@ -452,6 +455,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           authorAfterExport = helper.scopeHelper.cloneLocalScope();
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addRemoteEnvironment();
           helper.command.importComponent('string/pad-left');
         });
         it('should not show the component as modified', () => {
@@ -469,6 +473,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.getClonedLocalScope(authorAfterExport);
             helper.scopeHelper.addRemoteScope();
+            helper.scopeHelper.addRemoteEnvironment();
             helper.command.importComponent('string/pad-left');
           });
           it('should write the updated overrides into consumer bit.json', () => {
@@ -477,12 +482,16 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             expect(bitJson.overrides).to.have.property(padLeftComp);
             expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
             expect(bitJson.overrides[padLeftComp]).to.have.property('env');
-            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal(
+              `${helper.scopes.env}/compilers/babel@0.0.1`
+            );
           });
           it('should write the compiler and the tester as strings because they dont have special configuration', () => {
             const bitJson = helper.bitJson.read();
             const padLeftComp = `${helper.scopes.remote}/string/pad-left`;
-            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal(
+              `${helper.scopes.env}/compilers/babel@0.0.1`
+            );
             expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
           });
         });
