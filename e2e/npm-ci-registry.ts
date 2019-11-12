@@ -113,11 +113,13 @@ EOD`;
    * this method does the last two. the end result is that Verdaccio registry has this component
    * published and ready to be consumed later on when running 'npm install package-name'.
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  publishComponent(componentName: string, componentVersion? = '0.0.1') {
+  publishComponent(componentName: string, componentVersion = '0.0.1') {
     const packDir = path.join(this.helper.scopes.localPath, 'pack');
+    const componentFullName = componentName.startsWith(this.helper.scopes.remote)
+      ? componentName
+      : `${this.helper.scopes.remote}/${componentName}`;
     const result = this.helper.command.runCmd(
-      `bit npm-pack ${this.helper.scopes.remote}/${componentName}@${componentVersion} -o -k -d ${packDir}`
+      `bit npm-pack ${componentFullName}@${componentVersion} -o -k -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
     const resultParsed = JSON.parse(result);
@@ -129,6 +131,17 @@ EOD`;
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
+  }
+
+  publishEntireScope() {
+    this.helper.scopeHelper.reInitLocalScope();
+    this.helper.scopeHelper.addRemoteScope();
+    this.helper.command.importComponent('* --objects');
+    this.helper.extensions.importNpmPackExtension();
+    const remoteComponents = this.helper.command.listRemoteScopeParsed();
+    const remoteIds = remoteComponents.map(c => c.id);
+    this.helper.scopeHelper.removeRemoteScope();
+    remoteIds.forEach(id => this.publishComponent(id));
   }
 
   /**

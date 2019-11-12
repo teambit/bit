@@ -56,7 +56,7 @@ describe('es6 components with link files', function() {
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
   describe('multiple link files', () => {
     let output;
-    let npmCiRegistry;
+    let npmCiRegistry: NpmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();

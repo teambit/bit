@@ -8,6 +8,7 @@ import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/st
 import * as fixtures from '../fixtures/fixtures';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -53,30 +54,30 @@ describe('bit eject command', function() {
     });
   });
 
-  (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc with one component', function() {
-    let scopeName;
-    before(() => {
-      return bitsrcTester
-        .loginToBitSrc()
-        .then(() => bitsrcTester.createScope())
-        .then(scope => {
-          scopeName = scope;
-        });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('using a registry with one component', function() {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
     });
     after(() => {
-      return bitsrcTester.deleteScope(scopeName);
+      npmCiRegistry.destroy();
     });
     describe('as author', () => {
       let ejectOutput;
       let scopeBeforeEject;
-      let remoteScopeName;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.command.tagAllComponents();
-        remoteScopeName = `${username}.${scopeName}`;
-        helper.command.exportAllComponents(remoteScopeName);
+        helper.command.exportAllComponents();
+
+        helper.extensions.importNpmPackExtension();
+        helper.scopeHelper.removeRemoteScope();
+        npmCiRegistry.publishComponent('bar/foo');
+
         scopeBeforeEject = helper.scopeHelper.cloneLocalScope();
       });
       describe('eject from consumer root', () => {
@@ -89,12 +90,12 @@ describe('bit eject command', function() {
         it('should save the component in package.json', () => {
           const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
-          const packageName = `@bit/${username}.${scopeName}.bar.foo`;
+          const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -114,13 +115,14 @@ describe('bit eject command', function() {
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          expect(listScope[0].id).to.have.string('foo');
+          const ids = listScope.map(l => l.id);
+          expect(ids).to.include(`${helper.scopes.remote}/bar/foo`);
         });
         describe('importing the component after ejecting it', () => {
           let importOutput;
           before(() => {
-            importOutput = helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('bar/foo');
           });
           it('should import the component successfully', () => {
             expect(importOutput).to.have.string('successfully imported');
@@ -138,12 +140,12 @@ describe('bit eject command', function() {
         it('should save the component in package.json', () => {
           const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
-          const packageName = `@bit/${username}.${scopeName}.bar.foo`;
+          const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@bit', `${username}.${scopeName}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -176,7 +178,10 @@ describe('bit eject command', function() {
           helper.fs.createFile('bar', 'foo2.js');
           helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents(`${username}.${scopeName}`);
+          helper.scopeHelper.addRemoteScope();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.removeRemoteScope();
+          npmCiRegistry.publishComponent('bar/foo2');
           helper.fs.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2
           scopeAfterModification = helper.scopeHelper.cloneLocalScope();
         });
@@ -217,6 +222,7 @@ describe('bit eject command', function() {
       });
     });
   });
+
   (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc, creating component with dependencies', function() {
     let scopeName;
     before(() => {

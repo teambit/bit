@@ -4,7 +4,6 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../fixtures/fixtures';
 
@@ -262,30 +261,28 @@ describe('typescript', function() {
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
         });
-        (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc', () => {
-          let scopeName;
-          let fullScopeName;
-          const bitsrcTester = new BitsrcTester();
-          before(() => {
-            helper.scopeHelper.getClonedLocalScope(localScope);
-            return bitsrcTester
-              .loginToBitSrc()
-              .then(() => bitsrcTester.createScope())
-              .then(scope => {
-                scopeName = scope;
-                fullScopeName = `${username}.${scopeName}`;
-              });
-          });
-          after(() => {
-            return bitsrcTester.deleteScope(scopeName);
-          });
-          describe('exporting to bitsrc and importing locally', () => {
-            before(() => {
+
+        (supportNpmCiRegistryTesting ? describe : describe.skip)(
+          'installing dependencies as packages (not as components)',
+          () => {
+            let npmCiRegistry: NpmCiRegistry;
+            before(async () => {
+              npmCiRegistry = new NpmCiRegistry(helper);
+              helper.scopeHelper.getClonedLocalScope(localScope);
+              npmCiRegistry.setCiScopeInBitJson();
               helper.command.tagAllComponents();
-              helper.command.exportAllComponents(fullScopeName);
+              helper.command.exportAllComponents();
+
+              await npmCiRegistry.init();
+              npmCiRegistry.publishEntireScope();
+
               helper.scopeHelper.reInitLocalScope();
-              helper.scopeHelper.addRemoteScope();
-              helper.command.runCmd(`bit import ${fullScopeName}/utils/is-string`);
+              npmCiRegistry.setCiScopeInBitJson();
+              npmCiRegistry.setResolver();
+              helper.command.importComponent('utils/is-string');
+            });
+            after(() => {
+              npmCiRegistry.destroy();
             });
             it('should be able to require its direct dependency and print results from all dependencies', () => {
               // this makes sure that when generating npm links with custom-resolved-modules
@@ -296,8 +293,8 @@ describe('typescript', function() {
               const result = helper.command.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-type and got is-string');
             });
-          });
-        });
+          }
+        );
       });
       describe('using aliases', () => {
         let scopeAfterAdding;
