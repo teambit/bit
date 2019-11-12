@@ -4,8 +4,10 @@ import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 
+// removing this, default to longStackTraces also when env is `development`, which impacts the
+// performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
 Promise.config({
-  longStackTraces: false // change it to true for easy debugging. by default, leave it as false for better performance
+  longStackTraces: process.env.BLUEBIRD_DEBUG
 });
 
 loudRejection();
