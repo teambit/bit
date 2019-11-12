@@ -182,7 +182,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies,
     specsResults
   }: {
-    consumerComponent: ConsumerComponent;
+    readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
     message?: string;
     flattenedDependencies?: Record<string, any>;
