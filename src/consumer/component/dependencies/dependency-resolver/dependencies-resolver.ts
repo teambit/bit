@@ -55,7 +55,7 @@ export default class DependencyResolver {
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: $PropertyType<Component, 'issues'>;
+  issues: any; //$PropertyType<Component, 'issues'>;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
