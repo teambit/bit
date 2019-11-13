@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 const fileSpecFixture = testShouldPass => `const expect = require('chai').expect;
 const comp = require('./file');

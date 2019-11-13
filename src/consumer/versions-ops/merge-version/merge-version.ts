@@ -16,7 +16,7 @@ import { Tmp } from '../../../scope/repositories';
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-export type MergeStrategy = $Keys<typeof MergeOptions>;
+export type MergeStrategy = keyof typeof MergeOptions;
 export const FileStatus = {
   merged: chalk.green('auto-merged'),
   manual: chalk.red('CONFLICT'),
@@ -27,7 +27,7 @@ export const FileStatus = {
 };
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
+export type FilesStatus = { [fileName: PathLinux]: keyof typeof FileStatus };
 export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
 export type FailedComponents = { id: BitId; failureMessage: string };
 export type ApplyVersionResults = {
@@ -226,8 +226,8 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
     throw new GeneralError('please choose only one of the following: ours, theirs or manual');
   }
-  if (ours) return MergeOptions.ours;
-  if (theirs) return MergeOptions.theirs;
-  if (manual) return MergeOptions.manual;
+  if (ours) return MergeOptions.ours as any;
+  if (theirs) return MergeOptions.theirs as any;
+  if (manual) return MergeOptions.manual as any;
   return null;
 }

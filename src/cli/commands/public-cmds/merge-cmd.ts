@@ -50,7 +50,7 @@ export default class Merge extends Command {
     }
   ): Promise<ApplyVersionResults> {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    return merge(version, ids, mergeStrategy);
+    return merge(version, ids, mergeStrategy as any);
   }
 
   report({ components, version }: ApplyVersionResults): string {
