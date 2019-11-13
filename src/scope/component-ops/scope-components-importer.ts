@@ -112,8 +112,12 @@ export default class ScopeComponentsImporter {
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
     });
     if (allDepsVersions) {
-      const versionDependenciesOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache);
-      versionDependenciesArr.push(...versionDependenciesOfOlderVersions);
+      const verDepsOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache);
+      versionDependenciesArr.push(...verDepsOfOlderVersions);
+      const allFlattenDepsIds = versionDependenciesArr.map(v => v.allDependencies.map(d => d.id));
+      const dependenciesOnly = R.flatten(allFlattenDepsIds).filter((id: BitId) => !ids.hasWithoutVersion(id));
+      const verDepsOfAllFlattenDeps = await this.importManyWithAllVersions(BitIds.uniqFromArray(dependenciesOnly));
+      versionDependenciesArr.push(...verDepsOfAllFlattenDeps);
     } else {
       await this.importManyWithoutDependencies(allIdsWithAllVersions);
     }
