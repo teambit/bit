@@ -619,6 +619,10 @@ workflows:
         check_types:
           requires:
             - install_npm_deps
+      -
+        generate_types:
+          requires:
+            - install_npm_deps   
       # -
       #   pack:
       #     requires:
