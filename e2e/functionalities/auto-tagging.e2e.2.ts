@@ -119,7 +119,7 @@ describe('auto tagging functionality', function() {
       let tagOutput;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+        helper.env.importTester();
         helper.npm.installNpmPackage('chai', '4.1.2');
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
@@ -132,6 +132,7 @@ describe('auto tagging functionality', function() {
 
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addGlobalRemoteScope();
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 

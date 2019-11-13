@@ -18,7 +18,7 @@ describe('dev-dependencies functionality', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       clonedScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
@@ -129,6 +129,7 @@ describe('foo', () => {
           helper.command.exportAllComponents();
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addGlobalRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('tests should pass', () => {

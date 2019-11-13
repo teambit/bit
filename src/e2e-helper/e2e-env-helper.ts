@@ -41,7 +41,9 @@ export default class EnvHelper {
   }
 
   importTypescriptCompiler() {
-    return this.importCompiler('bit.envs/compilers/typescript@3.0.0');
+    this.fixtures.ensureGlobalRemoteScope();
+    this.scopeHelper.addGlobalRemoteScope();
+    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@3.0.0`);
   }
 
   importDummyCompiler(dummyType = 'dummy') {

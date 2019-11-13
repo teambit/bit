@@ -58,18 +58,6 @@ describe('bit test command', function() {
       const output = helper.command.testComponent('utils/is-type');
       expect(output).to.have.string('tests passed');
     });
-    it('Should not be able to run tests with wrong tester env', () => {
-      helper.env.importTester('bit.envs/testers/jest@0.0.18');
-      let output;
-      let statusCode;
-      try {
-        helper.command.testComponent('utils/is-type');
-      } catch (err) {
-        output = err.stdout.toString();
-      }
-      expect(statusCode).to.not.equal(0);
-      expect(output).to.have.string('✖ Jest failure');
-    });
   });
   describe('when tests are failed', () => {
     let statusCode;

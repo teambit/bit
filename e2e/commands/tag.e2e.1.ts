@@ -253,7 +253,6 @@ describe('bit tag command', function() {
   describe('tag one component with failing tests', () => {
     let scopeBeforeTagging;
     before(() => {
-      helper.scopeHelper.addGlobalRemoteScope();
       helper.env.importTester();
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');

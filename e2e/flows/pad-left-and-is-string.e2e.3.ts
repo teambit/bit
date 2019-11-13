@@ -32,7 +32,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.command.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
 
       helper.env.importCompiler();
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       helper.command.runCmd('npm init -y');
@@ -48,6 +48,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteEnvironment();
+      helper.scopeHelper.addGlobalRemoteScope();
       scopeBeforeImport = helper.scopeHelper.cloneLocalScope();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
@@ -80,7 +81,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         // an intermediate step, make sure, bit-diff is not throwing an error
         const diffOutput = helper.command.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
-        helper.scopeHelper.addRemoteEnvironment();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
       });
@@ -93,6 +93,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.scopeHelper.addRemoteEnvironment();
+        helper.scopeHelper.addGlobalRemoteScope();
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'any' });
         helper.command.importComponent('string/pad-left -p src/pad-left');
@@ -127,6 +128,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
+          helper.scopeHelper.addGlobalRemoteScope();
           npmCiRegistry.setCiScopeInBitJson();
           helper.command.importComponent('string/is-string');
           helper.command.importComponent('string/pad-left');
@@ -217,6 +219,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
+          helper.scopeHelper.addGlobalRemoteScope();
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
           helper.command.importComponent('string/pad-left -p src/pad-left');
@@ -456,6 +459,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
+          helper.scopeHelper.addGlobalRemoteScope();
           helper.command.importComponent('string/pad-left');
         });
         it('should not show the component as modified', () => {
@@ -474,6 +478,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             helper.scopeHelper.getClonedLocalScope(authorAfterExport);
             helper.scopeHelper.addRemoteScope();
             helper.scopeHelper.addRemoteEnvironment();
+            helper.scopeHelper.addGlobalRemoteScope();
             helper.command.importComponent('string/pad-left');
           });
           it('should write the updated overrides into consumer bit.json', () => {
@@ -492,7 +497,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal(
               `${helper.scopes.env}/compilers/babel@0.0.1`
             );
-            expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
+            expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('global-remote/testers/mocha@0.0.12');
           });
         });
       });
