@@ -622,7 +622,7 @@ workflows:
       -
         generate_types:
           requires:
-            - install_npm_deps   
+            - build   
       # -
       #   pack:
       #     requires:
