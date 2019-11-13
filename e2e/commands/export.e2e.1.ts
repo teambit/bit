@@ -783,6 +783,7 @@ describe('bit export command', function() {
         describe('when an older version has dependencies that are not exist in the new version and those dependencies have more versions', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope();
             helper.scopeHelper.reInitRemoteScope(forkScopePath);
             helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
             helper.fs.createFile('utils', 'is-type.js', ''); // add another version for is-type
