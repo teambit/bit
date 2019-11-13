@@ -236,9 +236,9 @@ describe('bit eject command', function() {
 
         helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
-        helper.command.runCmd(`npm unpublish @ci/${helper.scopes.remote}.bar.foo --force`);
-        helper.command.runCmd(`npm unpublish @ci/${helper.scopes.remote}.utils.is-string --force`);
-        helper.command.runCmd(`npm unpublish @ci/${helper.scopes.remote}.utils.is-type --force`);
+        npmCiRegistry.unpublishComponent('bar.foo');
+        npmCiRegistry.unpublishComponent('utils.is-string');
+        npmCiRegistry.unpublishComponent('utils.is-type');
         npmCiRegistry.publishComponent('bar/foo');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('utils/is-type');

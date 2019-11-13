@@ -383,7 +383,7 @@ describe('typescript', function() {
       });
     });
     describe('when dist is outside the components dir', () => {
-      let npmCiRegistry;
+      let npmCiRegistry: NpmCiRegistry;
       before(() => {
         npmCiRegistry = new NpmCiRegistry(helper);
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -418,6 +418,9 @@ describe('typescript', function() {
           await npmCiRegistry.init();
           helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
+          npmCiRegistry.unpublishComponent('bar.foo');
+          npmCiRegistry.unpublishComponent('utils.is-string');
+          npmCiRegistry.unpublishComponent('utils.is-type');
           npmCiRegistry.publishComponent('utils/is-type');
           npmCiRegistry.publishComponent('utils/is-string');
           npmCiRegistry.publishComponent('bar/foo');

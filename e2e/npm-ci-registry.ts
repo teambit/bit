@@ -29,6 +29,9 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * so then it'll create new local and remote scope. otherwise, the tests might publish the same packages.
  * keep in mind that even when the registry is destroyed, the data is still there and is loaded the next
  * time the registry is running. this solution makes sure the package-names are different.
+ *
+ * an alternative, it's possible to run `npm unpublish package-name --force` to delete the packages.
+ * (or just use `this.unpublishComponent()` method)
  */
 export default class NpmCiRegistry {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -131,6 +134,10 @@ EOD`;
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
+  }
+
+  unpublishComponent(packageName: string) {
+    this.helper.command.runCmd(`npm unpublish @ci/${this.helper.scopes.remote}.${packageName} --force`);
   }
 
   publishEntireScope() {
