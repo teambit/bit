@@ -51,7 +51,7 @@ class Analytics {
   static os: string;
   static extra: Record<string, any> | null | undefined = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static level: LEVEL;
+  static level: keyof typeof LEVEL;
   static error: Error | string | Record<string, any>;
   static breadcrumbs: Array<Breadcrumb> = [];
   static analytics_usage: boolean;
@@ -138,7 +138,7 @@ class Analytics {
     this.args = this._hashArgs(args);
     this.nodeVersion = process.version;
     this.os = process.platform;
-    this.level = LEVEL.INFO;
+    (this.level as any) = LEVEL.INFO;
     this.username = !this.anonymous
       ? getSync(CFG_USER_EMAIL_KEY) || getSync(CFG_USER_NAME_KEY) || os.hostname() || this.getID()
       : this.getID();
@@ -170,7 +170,7 @@ class Analytics {
   }
 
   static setError(level: string = LEVEL.ERROR, err: Error): void {
-    this.level = level;
+    (this.level as string) = level;
     this.error = serializeError(err);
     this.success = false;
   }

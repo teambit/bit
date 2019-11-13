@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';

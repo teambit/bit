@@ -1,13 +1,14 @@
 import R from 'ramda';
 import { inflate, getStringifyArgs } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import { BitObject } from '.';
 
 export default class BitRawObject {
   headers: string[];
   type: string;
   content: Buffer;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  parsedContent: Any;
+  parsedContent: any;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   types: { [key: string]: Function };
@@ -22,7 +23,7 @@ export default class BitRawObject {
     type: string | null | undefined,
     content: Buffer | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    parsedContent: Any | null | undefined
+    parsedContent: any | null | undefined
   ) {
     let headers;
     let contentFromBuffer;
@@ -122,7 +123,6 @@ export default class BitRawObject {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     types: { [key: string]: Function } | null | undefined
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ): Promise<BitObject> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return inflate(fileContents).then(buffer => new BitRawObject(buffer, ref, types));

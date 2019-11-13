@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixtureA = `const b = require('./b');

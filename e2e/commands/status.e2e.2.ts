@@ -10,7 +10,7 @@ import {
   statusFailureMsg,
   importPendingMsg
 } from '../../src/cli/commands/public-cmds/status-cmd';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 const assertArrays = require('chai-arrays');
 

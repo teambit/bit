@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 

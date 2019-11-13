@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { MergeConflict, MergeConflictOnRemote } from '../../src/scope/exceptions';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 describe('merge functionality', function() {
   this.timeout(0);
