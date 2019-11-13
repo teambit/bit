@@ -3,7 +3,7 @@ import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
-import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
+import { VersionNotFound, VersionAlreadyExists, HashNotFound } from '../exceptions';
 import { forEach, empty, mapObject, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import {
@@ -291,9 +291,16 @@ export default class Component extends BitObject {
   }
 
   collectObjects(repo: Repository): Promise<ComponentObjects> {
-    return Promise.all([this.asRaw(repo), this.collectRaw(repo)]).then(
-      ([rawComponent, objects]) => new ComponentObjects(rawComponent, objects)
-    );
+    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
+      .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
+      .catch(err => {
+        if (err.code === 'ENOENT') {
+          throw new Error(
+            `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the component`
+          );
+        }
+        throw err;
+      });
   }
 
   /**
