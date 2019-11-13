@@ -757,6 +757,25 @@ describe('bit export command', function() {
           expect(show.scopesList[0].name).to.equal(helper.scopes.remote);
           expect(show.scopesList[1].name).to.equal(forkScope);
         });
+        describe('when an older version has dependencies that are not exist in the new version', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+
+            helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
+            const forkScopeList = helper.command.listScopeParsed(forkScope);
+            forkScopeIds = forkScopeList.map(c => c.id);
+          });
+          it('should fork the component', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
+          });
+          it('should fork the dependencies of the older version', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-type`);
+          });
+        });
       });
       describe('export staged component without --set-current-scope', () => {
         let output;
