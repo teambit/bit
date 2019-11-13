@@ -18,11 +18,15 @@ export default class ScopesData {
   env: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   envPath: string;
+  globalRemote: string;
+  globalRemotePath: string;
   constructor() {
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
     this.setRemoteScope();
     this.setEnvScope();
+    this.globalRemote = 'global-remote';
+    this.globalRemotePath = path.join(this.e2eDir, this.globalRemote);
   }
   setLocalScope(localScope?: string) {
     this.local = localScope || `${generateRandomStr()}-local`;

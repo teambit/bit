@@ -29,7 +29,7 @@ describe('bit test command', function() {
   before(() => {
     helper.scopeHelper.reInitLocalScope();
     // do not upgrade to v0.0.12 of mocha tester, there is a problem with this version.
-    helper.env.importTester('bit.envs/testers/mocha@0.0.4');
+    helper.env.importTester(`${helper.scopes.globalRemote}/testers/mocha@0.0.4`);
     clonedScopePath = helper.scopeHelper.cloneLocalScope();
   });
   after(() => {
@@ -242,6 +242,7 @@ describe('bit test command', function() {
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addGlobalRemoteScope();
       helper.command.importComponent('utils/is-type');
       localScope = helper.scopeHelper.cloneLocalScope();
     });
@@ -254,7 +255,7 @@ describe('bit test command', function() {
         expect(output).to.have.string('tests passed');
       });
       it('should show success message of installing the environment', () => {
-        expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
+        expect(output).to.have.string('successfully installed the global-remote/testers/mocha');
       });
       it('should not show any npm output', () => {
         expect(output).to.not.have.string('npm');
@@ -270,7 +271,7 @@ describe('bit test command', function() {
         expect(output).to.have.string('tests passed');
       });
       it('should show success message of installing the environment', () => {
-        expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
+        expect(output).to.have.string('successfully installed the global-remote/testers/mocha');
       });
       it('should show success message of installing npm-packages', () => {
         expect(output).to.have.string('successfully ran npm install at');
@@ -282,6 +283,7 @@ describe('bit test command', function() {
     describe('when running bit ci-update', () => {
       let output;
       before(() => {
+        helper.scopeHelper.addRemoteScope(helper.scopes.globalRemotePath, helper.scopes.remotePath);
         output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/utils/is-type`, helper.scopes.remotePath);
       });
       it('should be able to run the tests on an isolated environment', () => {

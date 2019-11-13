@@ -63,7 +63,9 @@ export default class EnvHelper {
     return this.command.runCmd(`bit import ${id} --tester`);
   }
 
-  importTester(id: string) {
+  importTester(id = `${this.scopes.globalRemote}/testers/mocha@0.0.12`) {
+    this.fixtures.ensureGlobalRemoteScope();
+    this.scopeHelper.addGlobalRemoteScope();
     this.command.runCmd(`bit import ${id} --tester`);
   }
 

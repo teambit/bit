@@ -1,5 +1,6 @@
 import * as path from 'path';
 import fs from 'fs-extra';
+import tar from 'tar';
 import chalk from 'chalk';
 import FsHelper from './e2e-fs-helper';
 import CommandHelper from './e2e-command-helper';
@@ -103,5 +104,15 @@ export default class FixtureHelper {
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
+  }
+
+  ensureGlobalRemoteScope() {
+    if (fs.existsSync(this.scopes.globalRemotePath)) return;
+    const scopeFile = path.join(this.getFixturesDir(), 'scopes', 'global-remote.tgz');
+    tar.extract({
+      sync: true,
+      file: scopeFile,
+      cwd: this.scopes.e2eDir
+    });
   }
 }

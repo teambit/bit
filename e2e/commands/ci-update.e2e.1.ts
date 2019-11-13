@@ -17,11 +17,10 @@ describe('bit ci-update', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-
   describe('component with tester and nested dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.fs.createFile('', 'level1.js', level1Fixture);
       const level0Fixture =
@@ -39,6 +38,7 @@ describe('bit ci-update', function() {
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
+      helper.scopeHelper.addRemoteScope(helper.scopes.globalRemotePath, helper.scopes.remotePath);
       const output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/comp/comp`, helper.scopes.remotePath);
       expect(output).to.have.string('tests passed');
     });
@@ -47,7 +47,7 @@ describe('bit ci-update', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.fixtures.addComponentUtilsIsType();
       helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
@@ -63,6 +63,7 @@ describe('bit ci-update', function() {
       helper.command.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
+      helper.scopeHelper.addRemoteScope(helper.scopes.globalRemotePath, helper.scopes.remotePath);
       const output = helper.command.runCmd(`bit ci-update ${helper.scopes.remote}/bar/foo`, helper.scopes.remotePath);
       expect(output).to.have.string('tests passed');
     });
