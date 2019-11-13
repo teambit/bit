@@ -412,16 +412,7 @@ jobs:
           path: bit/junit
   check_types:
     <<: *defaults
-    resource_class: medium
     steps:
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        restore_cache:
-          keys:
-            - 'repo-{{ checksum ".circle-sha" }}'
       -
         attach_workspace:
           at: ./
@@ -429,12 +420,16 @@ jobs:
         run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+  generate_types:
+    <<: *defaults
+    steps:
       -
-        store_test_results:
-          path: bit/junit
+        attach_workspace:
+          at: ./
       -
-        store_artifacts:
-          path: bit/junit
+        run:
+          name: 'generate types'
+          command: 'cd bit && npm run build:types'
   e2e_test:
     <<: *defaults
     environment:
