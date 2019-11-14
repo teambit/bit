@@ -23,7 +23,7 @@ export default class CommandHelper {
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'ignore'): string {
+  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
