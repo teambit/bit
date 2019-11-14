@@ -702,6 +702,8 @@ workflows:
                 - bit-hub-tests
           requires:
             - build
+            - set_ssh_key
+            - set_bitsrc_registry
   deploy:
     jobs:
       - checkout_code:
@@ -786,7 +788,6 @@ workflows:
         performance_e2e_test:
           requires:
             - build
-
   bit_hub_tests:
     triggers:
       - schedule:
@@ -810,4 +811,6 @@ workflows:
       -
         bit_hub_e2e_test:
           requires:
+            - set_ssh_key
+            - set_bitsrc_registry
             - build
