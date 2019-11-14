@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HASH_SIZE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../../src/constants';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';
 
