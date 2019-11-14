@@ -92,9 +92,8 @@ export default class ScopeComponentsImporter {
    */
   async importManyWithAllVersions(
     ids: BitIds,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    cache? = true,
-    allDepsVersions = false
+    cache = true,
+    allDepsVersions = false // by default, only dependencies of the latest version are imported
   ): Promise<VersionDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
@@ -112,9 +111,16 @@ export default class ScopeComponentsImporter {
       });
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
     });
-    allDepsVersions
-      ? await this.importMany(allIdsWithAllVersions, cache)
-      : await this.importManyWithoutDependencies(allIdsWithAllVersions);
+    if (allDepsVersions) {
+      const verDepsOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache);
+      versionDependenciesArr.push(...verDepsOfOlderVersions);
+      const allFlattenDepsIds = versionDependenciesArr.map(v => v.allDependencies.map(d => d.id));
+      const dependenciesOnly = R.flatten(allFlattenDepsIds).filter((id: BitId) => !ids.hasWithoutVersion(id));
+      const verDepsOfAllFlattenDeps = await this.importManyWithAllVersions(BitIds.uniqFromArray(dependenciesOnly));
+      versionDependenciesArr.push(...verDepsOfAllFlattenDeps);
+    } else {
+      await this.importManyWithoutDependencies(allIdsWithAllVersions);
+    }
 
     return versionDependenciesArr;
   }
