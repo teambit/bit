@@ -786,7 +786,6 @@ workflows:
         performance_e2e_test:
           requires:
             - build
-            - build_bit_javascript
 
   bit_hub_tests:
     triggers:
