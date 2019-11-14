@@ -32,6 +32,7 @@ import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import DependencyGraph from '../../graph/scope-graph';
+import globalFlags from '../../../cli/global-flags';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -179,7 +180,8 @@ export default class SSH implements Network {
     };
   }
   _composeTokenAuthObject(): Record<string, any> | null | undefined {
-    const token = getSync(CFG_USER_TOKEN_KEY);
+    const processToken = globalFlags.token;
+    const token = processToken || getSync(CFG_USER_TOKEN_KEY);
     if (token) {
       this._sshUsername = 'token';
       return merge(this._composeBaseObject(), { username: 'token', password: token });

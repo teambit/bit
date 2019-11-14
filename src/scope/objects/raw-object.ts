@@ -2,13 +2,14 @@ import R from 'ramda';
 import { inflate, getStringifyArgs } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import { typesObj as types } from '../object-registrar';
+import { BitObject } from '.';
 
 export default class BitRawObject {
   headers: string[];
   type: string;
   content: Buffer;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  parsedContent: Any;
+  parsedContent: any;
   _ref: string;
 
   constructor(
@@ -17,7 +18,7 @@ export default class BitRawObject {
     type: string | null | undefined,
     content: Buffer | null | undefined,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    parsedContent: Any | null | undefined
+    parsedContent: any | null | undefined
   ) {
     let headers;
     let contentFromBuffer;

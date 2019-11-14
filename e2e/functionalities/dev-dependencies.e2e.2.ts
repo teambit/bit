@@ -1,9 +1,9 @@
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -17,8 +17,8 @@ describe('dev-dependencies functionality', function() {
     let clonedScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importCompiler();
+      helper.env.importTester();
       clonedScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
@@ -85,15 +85,15 @@ const foo = require('../utils/is-string.js');
 
 describe('foo', () => {
   it('should display "got is-type and got is-string"', () => {
-    expect(foo()).to.equal('got is-type and got is-string');
+    expect(foo.default()).to.equal('got is-type and got is-string');
   });
 });`
         );
         helper.npm.installNpmPackage('chai', '4.1.2');
         helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
-        helper.command.tagAllComponents();
         localScope = helper.scopeHelper.cloneLocalScope();
+        helper.command.tagAllComponents();
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
       });
       it('should save the dev-dependencies', () => {
@@ -129,6 +129,7 @@ describe('foo', () => {
           helper.command.exportAllComponents();
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
+          helper.scopeHelper.addGlobalRemoteScope();
           helper.command.importComponent('bar/foo');
         });
         it('tests should pass', () => {
@@ -136,30 +137,32 @@ describe('foo', () => {
           expect(output).to.have.string('tests passed');
         });
       });
-      (supportTestingOnBitsrc ? describe : describe.skip)('export and import dependencies as packages', () => {
-        let scopeName;
-        let scopeId;
-        let bitsrcTester;
-        before(() => {
-          bitsrcTester = new BitsrcTester();
+
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('export and import dependencies as packages', () => {
+        let npmCiRegistry: NpmCiRegistry;
+        before(async () => {
+          npmCiRegistry = new NpmCiRegistry(helper);
           helper.scopeHelper.getClonedLocalScope(localScope);
-          return bitsrcTester
-            .loginToBitSrc()
-            .then(() => bitsrcTester.createScope())
-            .then(scope => {
-              scopeName = scope;
-              scopeId = `${username}.${scopeName}`;
-              helper.command.exportAllComponents(scopeId);
-              helper.scopeHelper.reInitLocalScope();
-              helper.command.runCmd(`bit import ${scopeId}/bar/foo`);
-            });
+          helper.scopeHelper.reInitRemoteScope();
+          npmCiRegistry.setCiScopeInBitJson();
+
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+
+          await npmCiRegistry.init();
+          npmCiRegistry.publishEntireScope();
+
+          helper.scopeHelper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('bar/foo');
         });
         after(() => {
-          return bitsrcTester.deleteScope(scopeName);
+          npmCiRegistry.destroy();
         });
         it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
           const packageJson = helper.packageJson.read(path.join(helper.scopes.localPath, 'components/bar/foo'));
-          const id = `@bit/${scopeId}.utils.is-string`;
+          const id = `@ci/${helper.scopes.remote}.utils.is-string`;
           expect(packageJson.dependencies).to.not.have.property(id);
           expect(packageJson.devDependencies).to.have.property(id);
         });

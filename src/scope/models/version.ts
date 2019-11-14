@@ -5,7 +5,7 @@ import { filterObject, first, getStringifyArgs } from '../../utils';
 import { customResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
-import { Doclet } from '../../jsdoc/parser';
+import { Doclet } from '../../jsdoc/types';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS } from '../../constants';
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';

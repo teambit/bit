@@ -11,7 +11,7 @@ import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
-import { Doclet } from '../../jsdoc/parser';
+import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
 import { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
@@ -173,7 +173,7 @@ export default class Component {
   isolatedEnvironment: IsolatedEnvironment;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
+  issues: { [label: keyof typeof componentIssuesLabels]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
   origin: ComponentOrigin;
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve

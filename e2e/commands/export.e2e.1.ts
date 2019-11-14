@@ -2,7 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { CURRENT_UPSTREAM } from '../../src/constants';
 
 chai.use(require('chai-fs'));
@@ -756,6 +756,55 @@ describe('bit export command', function() {
             .with.lengthOf(2);
           expect(show.scopesList[0].name).to.equal(helper.scopes.remote);
           expect(show.scopesList[1].name).to.equal(forkScope);
+        });
+        describe('when an older version has dependencies that are not exist in the new version', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+
+            helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
+            const forkScopeList = helper.command.listScopeParsed(forkScope);
+            forkScopeIds = forkScopeList.map(c => c.id);
+          });
+          it('should fork the component', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
+          });
+          it('should fork the dependencies of the older version', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-type`);
+          });
+        });
+        // in this case, is-string@0.0.1 has a dependency is-type@0.0.1.
+        // the last version, 0.0.2, of is-string, doesn't have the dependency.
+        // also, is-type has an additional version, 0.0.2, which is not required by any version of
+        // is-string, which caused an error ENOENT of the is-type@0.0.2 object.
+        describe('when an older version has dependencies that are not exist in the new version and those dependencies have more versions', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope();
+            helper.scopeHelper.reInitRemoteScope(forkScopePath);
+            helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
+            helper.fs.createFile('utils', 'is-type.js', ''); // add another version for is-type
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+
+            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.addRemoteScope();
+            helper.scopeHelper.addRemoteScope(forkScopePath);
+            helper.command.importComponent('utils/is-string');
+
+            helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
+            const forkScopeList = helper.command.listScopeParsed(forkScope);
+            forkScopeIds = forkScopeList.map(c => c.id);
+          });
+          it('should fork the component', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-string`);
+          });
+          it('should fork the dependencies of the older version', () => {
+            expect(forkScopeIds).to.deep.include(`${forkScope}/utils/is-type`);
+          });
         });
       });
       describe('export staged component without --set-current-scope', () => {

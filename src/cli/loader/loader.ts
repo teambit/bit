@@ -1,6 +1,5 @@
 import ora from 'ora';
 import { SPINNER_TYPE } from '../../constants';
-import logger from '../../logger/logger';
 
 let _loader;
 

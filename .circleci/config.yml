@@ -215,7 +215,7 @@ jobs:
       # -
       #   run:
       #     name: 'copy unsuported files'
-      #     command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+      #     command: 'cd bit && cp ./node_modules/open/xdg-open ./releases/xdg-open'
       -
         persist_to_workspace:
           root: .
@@ -412,16 +412,7 @@ jobs:
           path: bit/junit
   check_types:
     <<: *defaults
-    resource_class: medium
     steps:
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        restore_cache:
-          keys:
-            - 'repo-{{ checksum ".circle-sha" }}'
       -
         attach_workspace:
           at: ./
@@ -429,12 +420,16 @@ jobs:
         run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
+  generate_types:
+    <<: *defaults
+    steps:
       -
-        store_test_results:
-          path: bit/junit
+        attach_workspace:
+          at: ./
       -
-        store_artifacts:
-          path: bit/junit
+        run:
+          name: 'generate types'
+          command: 'cd bit && npm run build:types'
   e2e_test:
     <<: *defaults
     environment:
@@ -589,6 +584,51 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
+  bit_hub_e2e_test:
+    <<: *defaults
+    resource_class: medium
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+      # NPM_CONFIG_DEBUG: true
+    parallelism: 1
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run: 'cd bit && mkdir junit'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: 'cd bit && npm link'
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        # uncomment to configure circle to run against stg enviorment
+        run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run:
+          name: 'Run bit-hub tests'
+          command: 'cd bit && npm run bit-hub-test-circle'
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      -
+        store_test_results:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: bit/junit
 workflows:
   version: 2
   build_and_test:
@@ -624,6 +664,10 @@ workflows:
         check_types:
           requires:
             - install_npm_deps
+      -
+        generate_types:
+          requires:
+            - build   
       # -
       #   pack:
       #     requires:
@@ -647,6 +691,15 @@ workflows:
             branches:
               only:
                 - performance-tests
+          requires:
+            - build
+            - build_bit_javascript
+      -
+        bit_hub_e2e_test:
+          filters:
+            branches:
+              only:
+                - bit-hub-tests
           requires:
             - build
             - build_bit_javascript
@@ -740,6 +793,11 @@ workflows:
             - install_bit_javascript_npm_deps
       -
         performance_e2e_test:
+          requires:
+            - build
+            - build_bit_javascript
+      -
+        bit_hub_e2e_test:
           requires:
             - build
             - build_bit_javascript

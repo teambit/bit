@@ -1,11 +1,26 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { expect } from 'chai';
-import parser from './vue-parser';
+import parser from './';
 
-const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc', 'vue');
+const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc', 'vue');
 
 describe('Vue docs Parser', () => {
+  describe('Invalid code', () => {
+    it('should returns an empty object', async () => {
+      const doclets = await parser('this is an invalid code');
+      expect(doclets).to.be.a('object');
+      expect(doclets)
+        .to.have.property('methods')
+        .to.be.a('array')
+        .to.have.lengthOf(0);
+      expect(doclets)
+        .to.have.property('properties')
+        .to.be.a('array')
+        .to.have.lengthOf(0);
+    });
+  });
+
   describe('parse()', () => {
     let doclet;
     before(async () => {

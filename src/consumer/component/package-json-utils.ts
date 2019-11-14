@@ -186,8 +186,8 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
   }
   await PackageJson.removeComponentsFromDependencies(
-    rootDir,
-    npmRegistryName(),
+    rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.
+    consumer.config.bindingPrefix || npmRegistryName(),
     componentIds.map(id => id.toStringWithoutVersion())
   );
   await removeComponentsFromNodeModules(consumer, componentIds);
@@ -201,7 +201,8 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
   logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
-  const registryPrefix = npmRegistryName();
+  // @todo: fix. the registryPrefix should be retrieved from the component.
+  const registryPrefix = consumer.config.bindingPrefix || npmRegistryName();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map(id => {

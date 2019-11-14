@@ -194,8 +194,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies,
     specsResults
   }: {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    consumerComponent: $ReadOnly<ConsumerComponent>;
+    readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
     message?: string;
     flattenedDependencies?: Record<string, any>;
@@ -266,7 +265,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
-      files,
+      files: files as any,
       dists,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainDistFile,
@@ -285,7 +284,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       email
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
-    consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
+    consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
     return { version, files, dists, compilerFiles, testerFiles };
   }

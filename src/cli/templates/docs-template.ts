@@ -2,7 +2,7 @@ import R from 'ramda';
 import c from 'chalk';
 import Table from 'tty-table';
 import { paintHeader } from '../chalk-box';
-import { Doclet } from '../../jsdoc/parser';
+import { Doclet } from '../../jsdoc/types';
 
 const paintExample = example => {
   return example.raw;

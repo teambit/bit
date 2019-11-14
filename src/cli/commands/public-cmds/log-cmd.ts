@@ -10,6 +10,7 @@ export default class Log extends Command {
   alias = '';
   opts = [];
   migration = true;
+  remoteOp = true; // should support log against remote
 
   action([id]: [string]): Promise<any> {
     return getComponentLogs(id).then(logs => {

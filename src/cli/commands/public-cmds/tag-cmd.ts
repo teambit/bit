@@ -35,6 +35,7 @@ export default class Tag extends Command {
   ];
   loader = true;
   migration = true;
+  remoteOp = true; // In case a compiler / tester is not installed
 
   action(
     [id, version]: string[],

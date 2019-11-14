@@ -1,15 +1,15 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import execa from 'execa';
-import graphviz from 'graphviz';
-import GraphLib from 'graphlib';
+import graphviz, { Digraph } from 'graphviz';
+import { Graph } from 'graphlib';
 import logger from '../../logger/logger';
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
 import { getLatestVersionNumber } from '../../utils';
 
-const Graph = GraphLib.Graph;
-const Digraph = graphviz.digraph;
+// const Graph = GraphLib.Graph;
+// const Digraph = graphviz.digraph;
 
 type ConfigProps = {
   layout?: string; // dot Layout to use in the graph

@@ -56,7 +56,7 @@ describe('es6 components with link files', function() {
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
   describe('multiple link files', () => {
     let output;
-    let npmCiRegistry;
+    let npmCiRegistry: NpmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -166,7 +166,7 @@ export { isString };`
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.env.importCompiler('bit.envs/compilers/babel@0.0.20');
+        helper.env.importCompiler();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
@@ -174,7 +174,7 @@ export { isString };`
         helper.command.importComponent('bar/foo');
       });
       it('should rewrite the relevant part of the link file', () => {
-        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-string and got foo');

@@ -52,7 +52,7 @@ function verifyCompatibility() {
 
 function bitVersion() {
   if (process.argv[2]) {
-    if (process.argv[2] === '-V' || process.argv[2] === '-v' || process.argv[2] === '--version') {
+    if (['-V', '-v', '--version'].includes(process.argv[2])) {
       console.log(constants.BIT_VERSION); // eslint-disable-line no-console
       process.exit();
     }

@@ -24,6 +24,7 @@ export default class Show extends Command {
   loader = true;
   migration = true;
   skipWorkspace = true;
+  remoteOp = true;
 
   action(
     [id]: [string],

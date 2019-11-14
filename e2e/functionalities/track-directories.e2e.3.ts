@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 //  track directories functionality = add/rename files to rootDir or trackDir
 describe('track directories functionality', function() {

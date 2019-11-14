@@ -3,7 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { BASE_WEB_DOMAIN } from '../../src/constants';
 
 chai.use(require('chai-fs'));

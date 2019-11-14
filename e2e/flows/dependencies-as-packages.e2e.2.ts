@@ -2,7 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';

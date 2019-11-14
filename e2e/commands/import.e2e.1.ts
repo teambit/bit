@@ -4,7 +4,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';

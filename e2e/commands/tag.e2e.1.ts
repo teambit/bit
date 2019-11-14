@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../fixtures/fixtures';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
@@ -253,7 +253,7 @@ describe('bit tag command', function() {
   describe('tag one component with failing tests', () => {
     let scopeBeforeTagging;
     before(() => {
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {
