@@ -667,7 +667,7 @@ workflows:
       -
         generate_types:
           requires:
-            - build   
+            - build
       # -
       #   pack:
       #     requires:
@@ -679,6 +679,7 @@ workflows:
             branches:
               ignore:
                 - performance-tests
+                - bit-hub-tests
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -693,7 +694,6 @@ workflows:
                 - performance-tests
           requires:
             - build
-            - build_bit_javascript
       -
         bit_hub_e2e_test:
           filters:
@@ -702,7 +702,6 @@ workflows:
                 - bit-hub-tests
           requires:
             - build
-            - build_bit_javascript
   deploy:
     jobs:
       - checkout_code:
@@ -780,7 +779,29 @@ workflows:
           requires:
             - checkout_code
       -
-        install_bit_javascript_npm_deps:
+        build:
+          requires:
+            - install_npm_deps
+      -
+        performance_e2e_test:
+          requires:
+            - build
+            - build_bit_javascript
+
+  bit_hub_tests:
+    triggers:
+      - schedule:
+          cron: "0 10 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_bitsrc_registry
+      -
+        install_npm_deps:
           requires:
             - checkout_code
       -
@@ -788,16 +809,6 @@ workflows:
           requires:
             - install_npm_deps
       -
-        build_bit_javascript:
-          requires:
-            - install_bit_javascript_npm_deps
-      -
-        performance_e2e_test:
-          requires:
-            - build
-            - build_bit_javascript
-      -
         bit_hub_e2e_test:
           requires:
             - build
-            - build_bit_javascript
