@@ -15,7 +15,7 @@ const cache = ['', ' ', '  ', '   ', '    ', '     ', '      ', '       ', '    
  *  leftPad('foobar', 6) // => "foobar"
  *  leftPad(1, 2, '0') // => "01"
  */
-export default function leftPad(str: string, len: number, ch: string): string {
+export default function leftPad(str, len, ch) {
   if (!isString(str)) throw new Error('`str` must be a string');
 
   str += '';

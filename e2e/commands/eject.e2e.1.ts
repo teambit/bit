@@ -3,18 +3,17 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
 describe('bit eject command', function() {
   this.timeout(0);
   const helper = new Helper();
-  const bitsrcTester = new BitsrcTester();
   describe('local component', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
@@ -53,30 +52,30 @@ describe('bit eject command', function() {
     });
   });
 
-  (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc with one component', function() {
-    let scopeName;
-    before(() => {
-      return bitsrcTester
-        .loginToBitSrc()
-        .then(() => bitsrcTester.createScope())
-        .then(scope => {
-          scopeName = scope;
-        });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('using a registry', function() {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
     });
     after(() => {
-      return bitsrcTester.deleteScope(scopeName);
+      npmCiRegistry.destroy();
     });
-    describe('as author', () => {
+    describe('as author with one component', () => {
       let ejectOutput;
       let scopeBeforeEject;
-      let remoteScopeName;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.command.tagAllComponents();
-        remoteScopeName = `${username}.${scopeName}`;
-        helper.command.exportAllComponents(remoteScopeName);
+        helper.command.exportAllComponents();
+
+        helper.extensions.importNpmPackExtension();
+        helper.scopeHelper.removeRemoteScope();
+        npmCiRegistry.publishComponent('bar/foo');
+
         scopeBeforeEject = helper.scopeHelper.cloneLocalScope();
       });
       describe('eject from consumer root', () => {
@@ -89,12 +88,12 @@ describe('bit eject command', function() {
         it('should save the component in package.json', () => {
           const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
-          const packageName = `@bit/${username}.${scopeName}.bar.foo`;
+          const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -114,13 +113,14 @@ describe('bit eject command', function() {
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          expect(listScope[0].id).to.have.string('foo');
+          const ids = listScope.map(l => l.id);
+          expect(ids).to.include(`${helper.scopes.remote}/bar/foo`);
         });
         describe('importing the component after ejecting it', () => {
           let importOutput;
           before(() => {
-            importOutput = helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
+            helper.scopeHelper.addRemoteScope();
+            importOutput = helper.command.importComponent('bar/foo');
           });
           it('should import the component successfully', () => {
             expect(importOutput).to.have.string('successfully imported');
@@ -138,12 +138,12 @@ describe('bit eject command', function() {
         it('should save the component in package.json', () => {
           const packageJson = helper.packageJson.read();
           expect(packageJson).to.have.property('dependencies');
-          const packageName = `@bit/${username}.${scopeName}.bar.foo`;
+          const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
           expect(packageJson.dependencies).to.have.property(packageName);
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@bit', `${username}.${scopeName}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -176,7 +176,10 @@ describe('bit eject command', function() {
           helper.fs.createFile('bar', 'foo2.js');
           helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents(`${username}.${scopeName}`);
+          helper.scopeHelper.addRemoteScope();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.removeRemoteScope();
+          npmCiRegistry.publishComponent('bar/foo2');
           helper.fs.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2
           scopeAfterModification = helper.scopeHelper.cloneLocalScope();
         });
@@ -216,36 +219,33 @@ describe('bit eject command', function() {
         });
       });
     });
-  });
-  (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc, creating component with dependencies', function() {
-    let scopeName;
-    before(() => {
-      return bitsrcTester
-        .loginToBitSrc()
-        .then(() => bitsrcTester.createScope())
-        .then(scope => {
-          scopeName = scope;
-        });
-    });
-    after(() => {
-      return bitsrcTester.deleteScope(scopeName);
-    });
     describe('export components with dependencies', () => {
-      let remoteScopeName;
+      let remoteScope;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
         helper.fixtures.addComponentUtilsIsType();
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
         helper.fixtures.addComponentUtilsIsString();
         helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
         helper.fixtures.addComponentBarFoo();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.command.tagAllComponents();
-        remoteScopeName = `${username}.${scopeName}`;
-        helper.command.exportAllComponents(remoteScopeName);
+        helper.command.exportAllComponents();
+        remoteScope = helper.scopeHelper.cloneRemoteScope();
+
+        helper.extensions.importNpmPackExtension();
+        helper.scopeHelper.removeRemoteScope();
+        npmCiRegistry.unpublishComponent('bar.foo');
+        npmCiRegistry.unpublishComponent('utils.is-string');
+        npmCiRegistry.unpublishComponent('utils.is-type');
+        npmCiRegistry.publishComponent('bar/foo');
+        npmCiRegistry.publishComponent('utils/is-string');
+        npmCiRegistry.publishComponent('utils/is-type');
+
         helper.fs.createFileOnRootLevel(
           'app.js',
-          `const barFoo = require('@bit/${remoteScopeName}.bar.foo'); console.log(barFoo());`
+          `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`
         );
       });
       it('an intermediate step, make sure the app.js is working', () => {
@@ -272,12 +272,12 @@ describe('bit eject command', function() {
             const packageJson = helper.packageJson.read();
             expect(packageJson).to.have.property('dependencies');
             expect(Object.keys(packageJson.dependencies)).to.have.lengthOf(1);
-            const packageName = `@bit/${username}.${scopeName}.bar.foo`;
+            const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
             expect(packageJson.dependencies).to.have.property(packageName);
             expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
           });
           it('should have the component files as a package (in node_modules)', () => {
-            const fileInPackage = path.join('node_modules/@bit', `${remoteScopeName}.bar.foo`, 'bar/foo.js');
+            const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'bar/foo.js');
             expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
             const fileContent = helper.fs.readFile(fileInPackage);
             expect(fileContent).to.equal(fixtures.barFooFixture);
@@ -305,23 +305,29 @@ describe('bit eject command', function() {
         describe('importing and ejecting the dependent', () => {
           before(() => {
             helper.scopeHelper.reInitLocalScope();
-            helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
+            helper.scopeHelper.addRemoteScope();
+            npmCiRegistry.setCiScopeInBitJson();
+            helper.command.importComponent('bar/foo');
             // an intermediate step, make sure the workspace is clean
             const statusOutput = helper.command.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             helper.fs.createFile('components/bar/foo/bar/', 'foo.js', fixtures.barFooFixtureV2);
             helper.command.tagAllComponents();
-            helper.command.exportAllComponents(remoteScopeName);
+            helper.command.exportAllComponents();
+            helper.extensions.importNpmPackExtension();
+            helper.scopeHelper.removeRemoteScope();
+            npmCiRegistry.publishComponent('bar/foo', '0.0.2');
+
             helper.command.ejectComponents('bar/foo');
             helper.fs.createFileOnRootLevel(
               'app.js',
-              `const barFoo = require('@bit/${remoteScopeName}.bar.foo'); console.log(barFoo());`
+              `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`
             );
           });
           it('should bring the modified version (v2) as a package', () => {
             const packageJson = helper.packageJson.read();
             expect(packageJson).to.have.property('dependencies');
-            const packageName = `@bit/${remoteScopeName}.bar.foo`;
+            const packageName = `@ci/${helper.scopes.remote}.bar.foo`;
             expect(packageJson.dependencies).to.have.property(packageName);
             expect(packageJson.dependencies[packageName]).to.equal('0.0.2');
           });
@@ -344,25 +350,34 @@ describe('bit eject command', function() {
           });
           it('should not delete the objects from the scope', () => {
             const listScope = helper.command.listLocalScopeParsed('--scope');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            expect(listScope[0].id).to.have.string('foo');
+            const ids = listScope.map(l => l.id);
+            expect(ids).to.include(`${helper.scopes.remote}/bar/foo`);
           });
         });
         describe('importing the dependency directly', () => {
           let scopeBeforeEjecting;
           before(() => {
+            helper.scopeHelper.getClonedRemoteScope(remoteScope);
             helper.scopeHelper.reInitLocalScope();
-            helper.command.runCmd(`bit import ${remoteScopeName}/bar/foo`);
-            helper.command.runCmd(`bit import ${remoteScopeName}/utils/is-string`);
+            helper.scopeHelper.addRemoteScope();
+            helper.command.importComponent('bar/foo');
+            helper.command.importComponent('utils/is-string');
             // an intermediate step, make sure the workspace is clean
             const statusOutput = helper.command.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             helper.fs.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
-            helper.command.tagAllComponents();
-            helper.command.exportAllComponents(remoteScopeName);
+
+            npmCiRegistry.setCiScopeInBitJson();
+            helper.command.tagScope('2.0.0', 'msg', '-a');
+            helper.command.exportAllComponents();
+            helper.extensions.importNpmPackExtension();
+            helper.scopeHelper.removeRemoteScope();
+            npmCiRegistry.publishComponent('bar/foo', '2.0.0');
+            npmCiRegistry.publishComponent('utils/is-string', '2.0.0');
+
             helper.fs.createFileOnRootLevel(
               'app.js',
-              `const barFoo = require('@bit/${remoteScopeName}.bar.foo'); console.log(barFoo());`
+              `const barFoo = require('@ci/${helper.scopes.remote}.bar.foo'); console.log(barFoo());`
             );
             scopeBeforeEjecting = helper.scopeHelper.cloneLocalScope();
           });
@@ -374,9 +389,9 @@ describe('bit eject command', function() {
             it('should bring the modified version (v2) as a package', () => {
               const packageJson = helper.packageJson.read();
               expect(packageJson).to.have.property('dependencies');
-              const packageName = `@bit/${remoteScopeName}.utils.is-string`;
+              const packageName = `@ci/${helper.scopes.remote}.utils.is-string`;
               expect(packageJson.dependencies).to.have.property(packageName);
-              expect(packageJson.dependencies[packageName]).to.equal('0.0.2');
+              expect(packageJson.dependencies[packageName]).to.equal('2.0.0');
             });
             it('should be able to require and print the results from v2', () => {
               const result = helper.command.runCmd('node app.js');
@@ -403,8 +418,8 @@ describe('bit eject command', function() {
             });
             it('should change the dependents package.json to have the dependency with version', () => {
               const packageJson = helper.packageJson.readComponentPackageJson('bar/foo');
-              expect(packageJson.dependencies).to.have.property(`@bit/${remoteScopeName}.utils.is-string`);
-              expect(packageJson.dependencies[`@bit/${remoteScopeName}.utils.is-string`]).to.equal('0.0.2');
+              expect(packageJson.dependencies).to.have.property(`@ci/${helper.scopes.remote}.utils.is-string`);
+              expect(packageJson.dependencies[`@ci/${helper.scopes.remote}.utils.is-string`]).to.equal('2.0.0');
             });
             it('should run npm install from the dependent dir', () => {
               expect(ejectOutput).to.have.string('successfully ran npm install at components/bar/foo');
@@ -458,7 +473,7 @@ describe('bit eject command', function() {
                 helper.scopeHelper.getClonedLocalScope(scopeBeforeEjecting);
                 packageJsonWithChanges = R.clone(packageJsonBefore);
                 const addNonExistVersionToPackageJson = () => {
-                  packageJsonWithChanges.dependencies[`@bit/${scopeName}.bar.foo`] = '1.1.1';
+                  packageJsonWithChanges.dependencies[`@ci/${helper.scopes.remote}.bar.foo`] = '1.1.1';
                   helper.packageJson.write(packageJsonWithChanges);
                 };
                 addNonExistVersionToPackageJson();

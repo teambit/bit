@@ -253,7 +253,7 @@ describe('bit tag command', function() {
   describe('tag one component with failing tests', () => {
     let scopeBeforeTagging;
     before(() => {
-      helper.env.importTester('bit.envs/testers/mocha@0.0.12');
+      helper.env.importTester();
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {

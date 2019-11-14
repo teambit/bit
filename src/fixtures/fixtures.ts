@@ -48,7 +48,7 @@ const foo = require('./foo.js');
 
 describe('foo', () => {
   it('should display "got is-type and got is-string and got foo"', () => {
-    expect(foo())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
+    expect(foo.default())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
   });
 });`;
 export const barFooModulePath = remoteScope =>

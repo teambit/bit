@@ -114,6 +114,10 @@ export default class ScopeHelper {
     return this.addRemoteScope(this.scopes.envPath, this.scopes.localPath, isGlobal);
   }
 
+  addGlobalRemoteScope() {
+    return this.addRemoteScope(this.scopes.globalRemotePath, this.scopes.localPath);
+  }
+
   removeRemoteEnvironment(isGlobal = false) {
     return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
