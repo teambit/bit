@@ -28,7 +28,7 @@ export default class CommandHelper {
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    const cmdOutput = childProcess.execSync(cmd, { cwd, stdio: stdio as any });
+    const cmdOutput = childProcess.execSync(cmd, { cwd, stdio: stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
