@@ -598,7 +598,35 @@ jobs:
         attach_workspace:
           at: ./
       -
+        run: 'sudo npm i -g yarn'
+      -
+        run:
+          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+          name: 'update npm to latest version'
+          command: 'npm i -g npm@latest'
+      -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
+          key: bitsrc-ssh-key3
+      -
+        restore_cache:
+          # key: bitsrc-registry2
+          key: bitsrc-registry-stg-v2
+      -
+        restore_cache:
+          keys:
+            - 'builded-{{ checksum ".circle-sha" }}'
+      -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+
       -
         run: 'cd bit && mkdir junit'
       -
@@ -667,7 +695,7 @@ workflows:
       -
         generate_types:
           requires:
-            - build   
+            - build
       # -
       #   pack:
       #     requires:
@@ -679,6 +707,7 @@ workflows:
             branches:
               ignore:
                 - performance-tests
+                - bit-hub-tests
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -693,7 +722,6 @@ workflows:
                 - performance-tests
           requires:
             - build
-            - build_bit_javascript
       -
         bit_hub_e2e_test:
           filters:
@@ -702,7 +730,8 @@ workflows:
                 - bit-hub-tests
           requires:
             - build
-            - build_bit_javascript
+            - set_ssh_key
+            - set_bitsrc_registry
   deploy:
     jobs:
       - checkout_code:
@@ -780,7 +809,27 @@ workflows:
           requires:
             - checkout_code
       -
-        install_bit_javascript_npm_deps:
+        build:
+          requires:
+            - install_npm_deps
+      -
+        performance_e2e_test:
+          requires:
+            - build
+  bit_hub_tests:
+    triggers:
+      - schedule:
+          cron: "0 10 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_bitsrc_registry
+      -
+        install_npm_deps:
           requires:
             - checkout_code
       -
@@ -788,16 +837,8 @@ workflows:
           requires:
             - install_npm_deps
       -
-        build_bit_javascript:
-          requires:
-            - install_bit_javascript_npm_deps
-      -
-        performance_e2e_test:
-          requires:
-            - build
-            - build_bit_javascript
-      -
         bit_hub_e2e_test:
           requires:
+            - set_ssh_key
+            - set_bitsrc_registry
             - build
-            - build_bit_javascript
