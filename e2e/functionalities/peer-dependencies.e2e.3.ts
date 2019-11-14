@@ -99,4 +99,23 @@ describe('peer-dependencies functionality', function() {
       expect(output.peerPackageDependencies).to.not.have.property('chai');
     });
   });
+  describe('when a component has a package dependency that has peerDependency and installed as a compiler', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.npm.addNpmPackage('@babel/plugin-proposal-class-properties', '7.7.0');
+      helper.fixtures.createComponentBarFoo('require ("@babel/plugin-proposal-class-properties");');
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar/foo --compiler');
+    });
+    it('should install the peer dependencies of that package', () => {
+      // in this case, @babel/core is a peer-dependency of @babel/plugin-proposal-class-properties
+      const dir = path.join(helper.scopes.localPath, '.bit/components/bar/foo', helper.scopes.remote, '0.0.1');
+      const packageJson = helper.packageJson.read(dir);
+      expect(packageJson.dependencies).to.have.property('@babel/core');
+    });
+  });
 });
