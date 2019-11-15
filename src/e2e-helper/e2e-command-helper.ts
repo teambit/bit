@@ -2,7 +2,7 @@ import rightpad from 'pad-right';
 import chalk from 'chalk';
 import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import childProcess from 'child_process';
+import childProcess, { StdioOptions } from 'child_process';
 import { expect } from 'chai';
 import { NOTHING_TO_TAG_MSG } from '../cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../utils';
@@ -23,12 +23,12 @@ export default class CommandHelper {
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localPath): string {
+  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
-    const cmdOutput = childProcess.execSync(cmd, { cwd });
+    const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
