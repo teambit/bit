@@ -83,6 +83,7 @@ export default class Component extends BitObject {
   state: State;
   scopesList: ScopeListItem[];
   snaps: SnapModel;
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
 
   constructor(props: ComponentProps) {
     super();
@@ -189,6 +190,19 @@ export default class Component extends BitObject {
       return version || this.snaps.head.toString();
     }
     return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
+  async latestIncludeRemote(repo: Repository): Promise<string> {
+    const latest = this.latest();
+    const remoteHead = this.remoteHead;
+    if (!remoteHead || !this.snaps.head || remoteHead.isEqual(this.snaps.head)) {
+      return latest;
+    }
+    const allVersions = await this.getAllVersionsInfo({ repo });
+    const allLocalHashes = allVersions.map(v => v.ref);
+    const isRemoteHeadExistsLocally = allLocalHashes.find(localHash => localHash.isEqual(remoteHead));
+    if (isRemoteHeadExistsLocally) return latest;
+    return remoteHead.toString();
   }
 
   latestVersion(): string {

@@ -207,17 +207,39 @@ describe('bit snap command', function() {
     });
     describe('when the local is diverged from the remote', () => {
       // local has snapA => snapB. remote has snapA => snapC.
+      let localHead;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
         helper.command.snapComponent('bar/foo');
-        helper.command.getSnapHead('bar/foo');
+        localHead = helper.command.getSnapHead('bar/foo');
       });
       it('should prevent exporting the component', () => {
         const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
         const ids = [`${helper.scopes.remote}/bar/foo`];
         const error = new MergeConflictOnRemote([], ids);
         helper.general.expectToThrow(exportFunc, error);
+      });
+      describe('importing with --object flag', () => {
+        before(() => {
+          helper.command.importComponent('bar/foo --objects');
+        });
+        it('should not change the head in the Component object', () => {
+          const currentHead = helper.command.getSnapHead('bar/foo');
+          expect(localHead).to.equal(currentHead);
+        });
+        it('should write the head of the remote component', () => {
+          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          expect(remoteRefs).to.be.a.file();
+          const remoteRefContent = fs.readJsonSync(remoteRefs);
+          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+        });
+        it('bit status should show the component as pending update', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string('pending updates');
+          expect(status).to.have.string(localHead);
+          expect(status).to.have.string(secondSnap);
+        });
       });
     });
   });

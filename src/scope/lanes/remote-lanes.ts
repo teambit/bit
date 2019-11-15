@@ -13,7 +13,7 @@ export default class RemoteLanes {
     this.remotes = {};
   }
   async addEntry(remoteName: string, componentName: string, head?: Ref) {
-    if (!remoteName) throw new TypeError('addEntry expect to get remoteName');
+    if (!remoteName) throw new TypeError('addEntry expects to get remoteName');
     if (!head) return; // do nothing
     if (!this.remotes[remoteName]) {
       await this.loadRemote(remoteName);
@@ -26,11 +26,21 @@ export default class RemoteLanes {
     }
   }
 
+  async getRef(remoteName: string, componentName: string): Promise<Ref | null> {
+    if (!remoteName) throw new TypeError('getEntry expects to get remoteName');
+    if (!this.remotes[remoteName]) {
+      await this.loadRemote(remoteName);
+    }
+    const existingComponent = this.remotes[remoteName].find(n => n.name === componentName);
+    if (!existingComponent) return null;
+    return existingComponent.head;
+  }
+
   async loadRemote(remoteName: string) {
     const remotePath = this.composeRemotePath(remoteName);
     try {
       const remoteFile = await fs.readJson(remotePath);
-      this.remotes[remoteName] = remoteFile;
+      this.remotes[remoteName] = remoteFile.map(({ name, head }) => ({ name, head: new Ref(head) }));
     } catch (err) {
       if (err.code === 'ENOENT') {
         this.remotes[remoteName] = [];

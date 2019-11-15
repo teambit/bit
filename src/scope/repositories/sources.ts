@@ -492,7 +492,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       }
     });
     if (incomingComponent.snaps.head) {
-      mergedComponent.snaps.head = incomingComponent.snaps.head;
       const mergedSnaps = incomingComponentTagsAndSnaps.filter(
         tagOrSnap => !existingComponentTagsAndSnaps.includes(tagOrSnap) && !mergedVersions.includes(tagOrSnap)
       );
@@ -558,6 +557,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         existingComponentTagsAndSnaps,
         tagsAndSnaps
       );
+      if (component.snaps.head) {
+        // when importing (local), do not override the head
+        if (!local) mergedComponent.snaps.head = component.snaps.head;
+        else mergedComponent.remoteHead = component.snaps.head;
+      }
+
       this.put({ component: mergedComponent, objects });
       return { mergedComponent, mergedVersions };
     }

@@ -46,7 +46,7 @@ export default class ComponentsList {
 
   async getModelComponents(): Promise<ModelComponent[]> {
     if (!this._modelComponents) {
-      this._modelComponents = await this.scope.list();
+      this._modelComponents = await this.scope.listIncludeRemoteHead();
     }
     return this._modelComponents;
   }
@@ -99,17 +99,24 @@ export default class ComponentsList {
   async listOutdatedComponents(): Promise<Component[]> {
     const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
-    return fileSystemComponents.filter(component => {
-      const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
-      if (!modelComponent) return false;
-      const latestVersion = modelComponent.latest();
-      if (component.id.hasVersion() && modelComponent.isLatestGreaterThan(component.id.version)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        component.latestVersion = latestVersion;
-        return true;
-      }
-      return false;
-    });
+    await Promise.all(
+      fileSystemComponents.map(async component => {
+        const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
+        if (!modelComponent || !component.id.hasVersion()) return;
+        const latestVersionLocally = modelComponent.latest();
+        const latestIncludeRemoteHead = await modelComponent.latestIncludeRemote(this.scope.objects);
+        const isOutdated = (): boolean => {
+          if (latestIncludeRemoteHead !== latestVersionLocally) return true;
+          return modelComponent.isLatestGreaterThan(component.id.version);
+        };
+        if (isOutdated()) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          component.latestVersion = latestIncludeRemoteHead;
+        }
+      })
+    );
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return fileSystemComponents.filter(f => f.latestVersion);
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {

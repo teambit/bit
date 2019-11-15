@@ -231,6 +231,18 @@ export default class Scope {
     return this.objects.listComponentsIncludeSymlinks();
   }
 
+  async listIncludeRemoteHead(): Promise<ModelComponent[]> {
+    const components = await this.list();
+    await Promise.all(
+      components.map(async component => {
+        if (component.scope) {
+          component.remoteHead = await this.objects.remoteLanes.getRef(component.scope, component.name);
+        }
+      })
+    );
+    return components;
+  }
+
   async listLocal(): Promise<ModelComponent[]> {
     const listResults = await this.list();
     return listResults.filter(result => !result.scope || result.scope === this.name);
@@ -395,7 +407,7 @@ export default class Scope {
           this.objects.remoteLanes.addEntry(
             mergedComponent.scope as string,
             mergedComponent.name,
-            mergedComponent.snaps.head
+            mergedComponent.remoteHead || mergedComponent.snaps.head
           )
         )
     );
