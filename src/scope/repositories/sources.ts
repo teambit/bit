@@ -537,7 +537,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       component.snaps.head &&
       existingComponentHead &&
       !component.snaps.head.isEqual(existingComponentHead) &&
-      !allHashes.find(ref => ref.isEqual(existingComponentHead))
+      !allHashes.find(ref => ref.isEqual(existingComponentHead)) &&
+      component.compatibleWith(existingComponent, local) // otherwise, it should throw MergeConflict below
     ) {
       throw new ComponentNeedsUpdate(component.id(), existingComponentHead.toString());
     }
