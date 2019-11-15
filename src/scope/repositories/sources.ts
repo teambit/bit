@@ -531,14 +531,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
     const existingComponentHead = existingComponent.snaps.head;
+    const existingHeadIsMissingInIncomingComponent =
+      component.snaps.head && existingComponentHead && !allHashes.find(ref => ref.isEqual(existingComponentHead));
     if (
       !local &&
-      component.snaps.head &&
-      existingComponentHead &&
-      !component.snaps.head.isEqual(existingComponentHead) &&
-      !allHashes.find(ref => ref.isEqual(existingComponentHead)) &&
+      existingHeadIsMissingInIncomingComponent &&
       component.compatibleWith(existingComponent, local) // otherwise, it should throw MergeConflict below
     ) {
+      // @ts-ignore
       throw new ComponentNeedsUpdate(component.id(), existingComponentHead.toString());
     }
     const locallyChanged = existingComponent.isLocallyChanged();
@@ -559,7 +559,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       );
       if (component.snaps.head) {
         // when importing (local), do not override the head
-        if (!local) mergedComponent.snaps.head = component.snaps.head;
+        if (!local || !existingHeadIsMissingInIncomingComponent) mergedComponent.snaps.head = component.snaps.head;
         else mergedComponent.remoteHead = component.snaps.head;
       }
 
