@@ -82,7 +82,7 @@ describe('extensions transformation', () => {
     });
   });
   describe('transform all raw extensions to extensions', () => {
-    let rawExtensions = {
+    const rawExtensions = {
       ext1: rawExtension1,
       ext2: rawExtension2
     };
@@ -126,14 +126,13 @@ describe('extensions transformation', () => {
     });
   });
   describe('transform all extensions to raw extensions', () => {
-    let rawExtensions = {
+    const rawExtensions = {
       ext1: rawExtension1,
       ext2: rawExtension2
     };
     let rawExtensionsCalculated;
     before(() => {
-      let extensions;
-      extensions = AbstractConfig.transformAllRawExtensionsToExtensions(rawExtensions);
+      const extensions = AbstractConfig.transformAllRawExtensionsToExtensions(rawExtensions);
       rawExtensionsCalculated = AbstractConfig.transformAllExtensionsToRawExtensions(extensions);
     });
     it('should transform correct', () => {

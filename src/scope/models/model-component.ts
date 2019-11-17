@@ -3,7 +3,7 @@ import { equals, zip, fromPairs, keys, forEachObjIndexed, isEmpty, clone } from 
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
-import { VersionNotFound, VersionAlreadyExists, HashNotFound } from '../exceptions';
+import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import {
