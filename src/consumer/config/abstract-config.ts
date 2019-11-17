@@ -84,7 +84,6 @@ export default class AbstractConfig {
   testerDependencies: { [key: string]: string };
   lang: string;
   bindingPrefix: string;
-  extensions: Extensions;
   writeToPackageJson = false;
   writeToBitJson = false;
 
@@ -124,10 +123,8 @@ export default class AbstractConfig {
     this._tester = AbstractConfig.transformEnvToObject(tester);
   }
 
-  get extensions(): Extensions {
-    const testerObj = AbstractConfig.transformEnvToObject(this._tester);
-    if (R.isEmpty(testerObj)) return undefined;
-    return testerObj;
+  get extensions(): Extensions | undefined {
+    return AbstractConfig.transformAllRawExtensionsToExtensions(this._rawExtensions);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -315,5 +312,16 @@ export default class AbstractConfig {
       }
     }, rawExtension);
     return extension;
+  }
+
+  static transformAllRawExtensionsToExtensions(rawExtensions: RawExtensions): Extensions {
+    let extensions;
+    if (rawExtensions) {
+      extensions = {};
+      R.forEachObjIndexed((value, key) => {
+        extensions[key] = AbstractConfig.transformRawExtensionToExtension(value);
+      }, rawExtensions);
+    }
+    return extensions;
   }
 }
