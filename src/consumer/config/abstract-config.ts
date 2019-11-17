@@ -2,6 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
+import set from 'lodash.set';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import { ExtensionOptions } from '../../extensions/extension';
@@ -14,12 +15,15 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS,
-  PACKAGE_JSON
+  PACKAGE_JSON,
+  EXTENSION_BIT_CONFIG_PREFIX
 } from '../../constants';
 import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+
+export type RawExtensionObject = Object;
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -41,6 +45,7 @@ export type TesterExtensionObject = EnvExtensionObject;
 export type CompilerExtensionObject = EnvExtensionObject;
 
 export type Extensions = { [extensionName: string]: RegularExtensionObject };
+export type RawExtensions = { [extensionName: string]: RawExtensionObject };
 export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
@@ -54,7 +59,7 @@ export type AbstractConfigProps = {
   testerDependencies?: Record<string, any>;
   lang?: string;
   bindingPrefix?: string;
-  extensions?: Extensions;
+  extensions?: RawExtensions;
 };
 
 /**
@@ -68,6 +73,7 @@ export default class AbstractConfig {
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
+  _rawExtensions: RawExtensions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -87,7 +93,7 @@ export default class AbstractConfig {
     this._tester = props.tester || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.extensions = props.extensions || DEFAULT_EXTENSIONS;
+    this._rawExtensions = props.extensions || DEFAULT_EXTENSIONS;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -116,6 +122,12 @@ export default class AbstractConfig {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set tester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
+  }
+
+  get extensions(): Extensions {
+    const testerObj = AbstractConfig.transformEnvToObject(this._tester);
+    if (R.isEmpty(testerObj)) return undefined;
+    return testerObj;
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -272,5 +284,36 @@ export default class AbstractConfig {
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
+  }
+
+  static transformExtensionToRawExtension(extension: RegularExtensionObject): RawExtensionObject {
+    const rawExtension = {};
+    if (extension.options) {
+      R.forEachObjIndexed((value, key) => {
+        rawExtension[`${EXTENSION_BIT_CONFIG_PREFIX}${key}`] = value;
+      }, extension.options);
+    }
+    if (extension.rawConfig) {
+      R.forEachObjIndexed((value, key) => {
+        rawExtension[key] = value;
+      }, extension.rawConfig);
+    }
+    return rawExtension;
+  }
+
+  static transformRawExtensionToExtension(rawExtension: RawExtensionObject): RegularExtensionObject {
+    const extension: RegularExtensionObject = {
+      options: {},
+      rawConfig: {}
+    };
+    R.forEachObjIndexed((value, key) => {
+      if (R.startsWith(EXTENSION_BIT_CONFIG_PREFIX, key)) {
+        const optionKey = key.replace(EXTENSION_BIT_CONFIG_PREFIX, '');
+        set(extension, ['options', optionKey], value);
+      } else {
+        set(extension, ['rawConfig', key], value);
+      }
+    }, rawExtension);
+    return extension;
   }
 }

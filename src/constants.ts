@@ -68,12 +68,11 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
+export const EXTENSION_BIT_CONFIG_PREFIX = '_bit_';
+
 export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
-    rawConfig: {},
-    options: {
-      core: true
-    }
+    [`${EXTENSION_BIT_CONFIG_PREFIX}_core`]: true
   }
 };
 
