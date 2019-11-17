@@ -5,13 +5,19 @@ import { EXTENSION_BIT_CONFIG_PREFIX } from '../../constants';
 const rawExtension1 = {
   myKey: 'myVal',
   _bit_pathToLoadFrom: '/myExtensionPath',
-  _bit_disabled: false
+  _bit_disabled: false,
+  _bit_files: {
+    myFile: 'myFilePath'
+  }
 };
 
 const rawExtension2 = {
   myKey2: 'myVal2',
   _bit_pathToLoadFrom: '/myExtensionPath2',
-  _bit_disabled: false
+  _bit_disabled: false,
+  _bit_files: {
+    myFile2: 'myFilePath2'
+  }
 };
 
 describe('extensions transformation', () => {
@@ -25,6 +31,9 @@ describe('extensions transformation', () => {
         options: {
           pathToLoadFrom: '/myExtensionPath',
           disabled: false
+        },
+        files: {
+          myFile: 'myFilePath'
         }
       };
       rawExtension = AbstractConfig.transformExtensionToRawExtension(extension);
@@ -36,9 +45,15 @@ describe('extensions transformation', () => {
     it('should have the raw config', () => {
       expect(rawExtension).to.have.property('myKey', 'myVal');
     });
+    it('should have the files', () => {
+      const filesKeyName = `${EXTENSION_BIT_CONFIG_PREFIX}files`;
+      expect(rawExtension).to.have.property(filesKeyName);
+      expect(rawExtension[filesKeyName]).to.have.property('myFile', 'myFilePath');
+    });
     it('should not have the extension keys (rawConfig / options)', () => {
       expect(rawExtension).to.not.have.property('rawConfig');
       expect(rawExtension).to.not.have.property('options');
+      expect(rawExtension).to.not.have.property('files');
     });
   });
   describe('from raw extension to extension', () => {
@@ -55,10 +70,15 @@ describe('extensions transformation', () => {
       expect(extension).to.have.property('rawConfig');
       expect(extension.rawConfig).to.have.property('myKey', 'myVal');
     });
+    it('should have the config files', () => {
+      expect(extension).to.have.property('files');
+      expect(extension.files).to.have.property('myFile', 'myFilePath');
+    });
     it('should not have the original raw extension keys', () => {
       expect(extension).to.not.have.property('myKey');
       expect(extension).to.not.have.property('_bit_pathToLoadFrom');
       expect(extension).to.not.have.property('_bit_disabled');
+      expect(extension).to.not.have.property('_bit_files');
     });
   });
   describe('transform all raw extensions to extensions', () => {
@@ -88,13 +108,21 @@ describe('extensions transformation', () => {
       expect(extensions.ext2).to.have.property('rawConfig');
       expect(extensions.ext2.rawConfig).to.have.property('myKey2', 'myVal2');
     });
+    it('should have the config files', () => {
+      expect(extensions.ext1).to.have.property('files');
+      expect(extensions.ext2).to.have.property('files');
+      expect(extensions.ext1.files).to.have.property('myFile', 'myFilePath');
+      expect(extensions.ext2.files).to.have.property('myFile2', 'myFilePath2');
+    });
     it('should not have the original raw extension keys', () => {
       expect(extensions.ext1).to.not.have.property('myKey');
       expect(extensions.ext1).to.not.have.property('_bit_pathToLoadFrom');
       expect(extensions.ext1).to.not.have.property('_bit_disabled');
+      expect(extensions.ext1).to.not.have.property('_bit_files');
       expect(extensions.ext2).to.not.have.property('myKey');
       expect(extensions.ext2).to.not.have.property('_bit_pathToLoadFrom');
       expect(extensions.ext2).to.not.have.property('_bit_disabled');
+      expect(extensions.ext2).to.not.have.property('_bit_files');
     });
   });
   describe('transform all extensions to raw extensions', () => {

@@ -3,6 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import set from 'lodash.set';
 import ScopesData from './e2e-scopes';
+import { EXTENSION_BIT_CONFIG_PREFIX } from '../constants';
 
 export default class BitJsonHelper {
   scopes: ScopesData;
@@ -39,7 +40,7 @@ export default class BitJsonHelper {
     filePath: string,
     envType: 'compiler' | 'tester'
   ) {
-    this._addKeyValToEnvProp(bitJsonPath, 'files', fileName, filePath, envType);
+    this._addKeyValToEnvProp(bitJsonPath, `${EXTENSION_BIT_CONFIG_PREFIX}files`, fileName, filePath, envType);
   }
   addToRawConfigOfEnv(
     bitJsonPath: string = this.scopes.localPath,
@@ -47,7 +48,7 @@ export default class BitJsonHelper {
     val: string,
     envType: 'compiler' | 'tester'
   ) {
-    this._addKeyValToEnvProp(bitJsonPath, 'rawConfig', key, val, envType);
+    this._addKeyValToEnvProp(bitJsonPath, '', key, val, envType);
   }
   manageWorkspaces(withWorkspaces = true) {
     const bitJson = this.read();
@@ -84,7 +85,10 @@ export default class BitJsonHelper {
   ) {
     const bitJson = this.read(bitJsonDir);
     const envName = this._getEnvNameByType(bitJson, envType);
-    const propPath = ['env', envType, envName, propName];
+    const propPath = ['env', envType, envName];
+    if (propName) {
+      propPath.push(propName);
+    }
     const prop = R.pathOr({}, propPath, bitJson);
     prop[key] = val;
     set(bitJson, propPath, prop);

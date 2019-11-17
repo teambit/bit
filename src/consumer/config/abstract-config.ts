@@ -285,13 +285,16 @@ export default class AbstractConfig {
   static transformExtensionToRawExtension(extension: RegularExtensionObject | RawExtensionObject): RawExtensionObject {
     const rawExtension = {};
     // Support case when got a raw extension instead of extension
-    if (!extension.options && !extension.rawConfig) {
+    if (!extension.options && !extension.rawConfig && !extension.files) {
       return extension;
     }
     if (extension.options) {
       R.forEachObjIndexed((value, key) => {
         rawExtension[`${EXTENSION_BIT_CONFIG_PREFIX}${key}`] = value;
       }, extension.options);
+    }
+    if (extension.files) {
+      rawExtension[`${EXTENSION_BIT_CONFIG_PREFIX}files`] = extension.files;
     }
     if (extension.rawConfig) {
       R.forEachObjIndexed((value, key) => {
@@ -320,7 +323,11 @@ export default class AbstractConfig {
     R.forEachObjIndexed((value, key) => {
       if (R.startsWith(EXTENSION_BIT_CONFIG_PREFIX, key)) {
         const optionKey = key.replace(EXTENSION_BIT_CONFIG_PREFIX, '');
-        set(extension, ['options', optionKey], value);
+        if (optionKey === 'files') {
+          extension.files = value;
+        } else {
+          set(extension, ['options', optionKey], value);
+        }
       } else {
         set(extension, ['rawConfig', key], value);
       }
