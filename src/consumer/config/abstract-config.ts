@@ -28,6 +28,7 @@ export type RawExtensionObject = any;
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
   options: ExtensionOptions;
+  files: Record<string, any>;
 };
 
 export type EnvFile = {
@@ -309,6 +310,7 @@ export default class AbstractConfig {
   ): RegularExtensionObject {
     const extension: RegularExtensionObject = {
       options: {},
+      files: {},
       rawConfig: {}
     };
     // Backward compatibility support
