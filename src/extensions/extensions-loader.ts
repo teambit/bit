@@ -41,9 +41,7 @@ const _loadExtension = (consumerPath: string | null | undefined, scopePath: stri
 ): Promise<Extension> => {
   const loadArgs: LoadArgsProps = {
     name,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     rawConfig: rawConfig.config,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     options: rawConfig.options,
     consumerPath,
     scopePath
@@ -67,15 +65,13 @@ export default (async function loadExtensions(): Promise<Extension[]> {
       }
     };
     const consumer: Consumer | null | undefined = await getConsumer();
-    let consumerPath = null;
-    let scopePath = null;
+    let consumerPath;
+    let scopePath;
 
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.config.extensions || {};
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumerPath = consumer.getPath();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       scopePath = consumer.scope.path;
     }
 

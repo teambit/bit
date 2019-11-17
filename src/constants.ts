@@ -72,7 +72,7 @@ export const EXTENSION_BIT_CONFIG_PREFIX = '_bit_';
 
 export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
-    [`${EXTENSION_BIT_CONFIG_PREFIX}_core`]: true
+    [`${EXTENSION_BIT_CONFIG_PREFIX}core`]: true
   }
 };
 

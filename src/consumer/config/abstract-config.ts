@@ -23,7 +23,7 @@ import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 
-export type RawExtensionObject = Object;
+export type RawExtensionObject = any;
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -73,7 +73,7 @@ export default class AbstractConfig {
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
-  _rawExtensions: RawExtensions;
+  rawExtensions: RawExtensions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -92,39 +92,40 @@ export default class AbstractConfig {
     this._tester = props.tester || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this._rawExtensions = props.extensions || DEFAULT_EXTENSIONS;
+    this.rawExtensions = props.extensions
+      ? AbstractConfig.transformAllExtensionsToRawExtensions(props.extensions)
+      : DEFAULT_EXTENSIONS;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get compiler(): Compilers | null | undefined {
+  get compiler(): Compilers | undefined {
     const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set compiler(compiler: string | Compilers) {
     this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get tester(): Testers | null | undefined {
+  get tester(): Testers | undefined {
     const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set tester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
   }
 
-  get extensions(): Extensions | undefined {
-    return AbstractConfig.transformAllRawExtensionsToExtensions(this._rawExtensions);
+  get extensions(): Extensions {
+    if (!this.rawExtensions) {
+      return {};
+    }
+    return AbstractConfig.transformAllRawExtensionsToExtensions(this.rawExtensions);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -157,7 +158,7 @@ export default class AbstractConfig {
    * if there is only one env (compiler/tester) and it doesn't have any special configuration, only
    * the name, convert it to a string.
    */
-  static convertEnvToStringIfPossible(envObj: Envs | null | undefined): string | null | undefined | Envs {
+  static convertEnvToStringIfPossible(envObj?: Envs): string | undefined | Envs {
     if (!envObj) return undefined;
     if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id
     const envId = Object.keys(envObj)[0];
@@ -180,7 +181,8 @@ export default class AbstractConfig {
       if (!val) return false;
       if (key === 'lang') return val !== DEFAULT_LANGUAGE;
       if (key === 'bindingPrefix') return val !== DEFAULT_BINDINGS_PREFIX;
-      if (key === 'extensions') return !R.equals(val, DEFAULT_EXTENSIONS);
+      if (key === 'extensions')
+        return !R.equals(AbstractConfig.transformAllExtensionsToRawExtensions(val), DEFAULT_EXTENSIONS);
       return true;
     };
 
@@ -193,7 +195,7 @@ export default class AbstractConfig {
           tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
-        extensions: this.extensions
+        extensions: AbstractConfig.transformAllExtensionsToRawExtensions(this.rawExtensions)
       },
       isPropDefaultOrNull
     );
@@ -205,12 +207,11 @@ export default class AbstractConfig {
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
-  }): Promise<string[]> {
+  }): Promise<void> {
     const jsonFiles = await this.prepareToWrite({ workspaceDir, componentDir });
     const dataToPersist = new DataToPersist();
     dataToPersist.addManyFiles(jsonFiles);
     dataToPersist.addBasePath(workspaceDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return dataToPersist.persistAllToFS();
   }
 
@@ -222,17 +223,15 @@ export default class AbstractConfig {
     componentDir?: PathOsBasedRelative;
   }): Promise<JSONFile[]> {
     const plainObject = this.toPlainObject();
-    const JsonFiles = [];
+    const JsonFiles: Array<JSONFile> = [];
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       JsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
       const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       JsonFiles.push(JSONFile.load(params));
     }
     return JsonFiles;
@@ -280,11 +279,15 @@ export default class AbstractConfig {
       };
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return env;
+    return AbstractConfig.transformAllRawExtensionsToExtensions(env);
   }
 
-  static transformExtensionToRawExtension(extension: RegularExtensionObject): RawExtensionObject {
+  static transformExtensionToRawExtension(extension: RegularExtensionObject | RawExtensionObject): RawExtensionObject {
     const rawExtension = {};
+    // Support case when got a raw extension instead of extension
+    if (!extension.options && !extension.rawConfig) {
+      return extension;
+    }
     if (extension.options) {
       R.forEachObjIndexed((value, key) => {
         rawExtension[`${EXTENSION_BIT_CONFIG_PREFIX}${key}`] = value;
@@ -298,11 +301,22 @@ export default class AbstractConfig {
     return rawExtension;
   }
 
-  static transformRawExtensionToExtension(rawExtension: RawExtensionObject): RegularExtensionObject {
+  static transformRawExtensionToExtension(
+    rawExtension: RawExtensionObject | RegularExtensionObject
+  ): RegularExtensionObject {
     const extension: RegularExtensionObject = {
       options: {},
       rawConfig: {}
     };
+    // Backward compatibility support
+    // Support extensions which defined as extension rather than raw extensions (nested object rather than flat)
+    // Also support using the options.file instead of pathToLoadFrom
+    if (rawExtension.options || rawExtension.rawConfig) {
+      if (rawExtension.options && rawExtension.options.file) {
+        rawExtension.options.pathToLoadFrom = rawExtension.options.file;
+      }
+      return rawExtension;
+    }
     R.forEachObjIndexed((value, key) => {
       if (R.startsWith(EXTENSION_BIT_CONFIG_PREFIX, key)) {
         const optionKey = key.replace(EXTENSION_BIT_CONFIG_PREFIX, '');
@@ -323,5 +337,16 @@ export default class AbstractConfig {
       }, rawExtensions);
     }
     return extensions;
+  }
+
+  static transformAllExtensionsToRawExtensions(extensions: RawExtensions): RawExtensions {
+    let rawExtensions;
+    if (extensions) {
+      rawExtensions = {};
+      R.forEachObjIndexed((value, key) => {
+        rawExtensions[key] = AbstractConfig.transformExtensionToRawExtension(value);
+      }, extensions);
+    }
+    return rawExtensions;
   }
 }

@@ -22,7 +22,7 @@ const ajv = new Ajv();
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
 export type BaseExtensionOptions = {
-  file?: string | null | undefined;
+  pathToLoadFrom?: string;
 };
 
 type BaseArgs = {
@@ -240,7 +240,6 @@ export default class BaseExtension {
   }
 
   setExtensionPathInScope(scopePath: string): void {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
     this.filePath = resolvedPath;
     this.rootDir = componentPath;
@@ -275,10 +274,10 @@ export default class BaseExtension {
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
-    if (options.file) {
-      let absPath = options.file;
-      const file = options.file || '';
-      if (!path.isAbsolute(options.file) && consumerPath) {
+    if (options.pathToLoadFrom) {
+      let absPath = options.pathToLoadFrom;
+      const file = options.pathToLoadFrom || '';
+      if (!path.isAbsolute(options.pathToLoadFrom) && consumerPath) {
         absPath = path.resolve(consumerPath, file);
       }
       const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile({
@@ -381,7 +380,7 @@ export default class BaseExtension {
     if (!isFileExist) {
       // Do not throw an error if the file not exist since we will install it later
       // unless you specify the options.file which means you want a specific file which won't be installed automatically later
-      if (throws && options.file) {
+      if (throws && options.pathToLoadFrom) {
         const err = new Error(`the file ${filePath} not found`);
         throw new ExtensionLoadError(err, extensionProps.name);
       }

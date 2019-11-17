@@ -61,7 +61,7 @@ describe('extensions transformation', () => {
       expect(extension).to.not.have.property('_bit_disabled');
     });
   });
-  describe.only('transform all raw extensions to extensions', () => {
+  describe('transform all raw extensions to extensions', () => {
     let rawExtensions = {
       ext1: rawExtension1,
       ext2: rawExtension2
@@ -95,6 +95,21 @@ describe('extensions transformation', () => {
       expect(extensions.ext2).to.not.have.property('myKey');
       expect(extensions.ext2).to.not.have.property('_bit_pathToLoadFrom');
       expect(extensions.ext2).to.not.have.property('_bit_disabled');
+    });
+  });
+  describe('transform all extensions to raw extensions', () => {
+    let rawExtensions = {
+      ext1: rawExtension1,
+      ext2: rawExtension2
+    };
+    let rawExtensionsCalculated;
+    before(() => {
+      let extensions;
+      extensions = AbstractConfig.transformAllRawExtensionsToExtensions(rawExtensions);
+      rawExtensionsCalculated = AbstractConfig.transformAllExtensionsToRawExtensions(extensions);
+    });
+    it('should transform correct', () => {
+      expect(rawExtensionsCalculated).to.deep.equal(rawExtensions);
     });
   });
 });
