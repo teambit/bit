@@ -26,8 +26,7 @@ export type InteractiveKey = {
 
 export type InteractiveKeyName = 'up' | 'down' | 'enter' | 'space';
 
-// @ts-ignore
-type InteractiveKeys = { [key: InteractiveKeyName]: InteractiveKey };
+type InteractiveKeys = { [key in InteractiveKeyName]: InteractiveKey };
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 100;
 
