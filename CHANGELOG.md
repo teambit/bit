@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix fork of a component when a dependency exists in an older version only
+- change the extension / envs input config to be flat
 
 ## [14.4.4-dev.3] - 2019-11-13
 
