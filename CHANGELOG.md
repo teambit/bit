@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2140](https://github.com/teambit/bit/issues/2140) update bit-javascript to support `import { x as y }` syntax
+
 ## [14.4.4-dev.4] - 2019-11-18
 
 - [#2132](https://github.com/teambit/bit/issues/2132) fix compiler import to install peer dependencies

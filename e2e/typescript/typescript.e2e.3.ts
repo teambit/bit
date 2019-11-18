@@ -509,6 +509,32 @@ describe('typescript', function() {
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
+    // tests https://github.com/teambit/bit/issues/2140
+    describe('using syntax of "import { x as y }', () => {
+      let tscResult;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('foo.ts', 'export function foo(){}');
+        helper.fs.outputFile('bar.ts', 'import { foo as foo1 } from "./foo"; console.log(foo1);');
+        helper.command.addComponent('foo.ts');
+        helper.command.addComponent('bar.ts');
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addGlobalRemoteScope();
+        helper.command.importComponent('bar');
+        const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
+        const barFile = path.join(helper.scopes.localPath, 'components/bar/bar.ts');
+        tscResult = helper.general.runWithTryCatch(`tsc ${barFile}`, tscPath);
+      });
+      it('should not throw an error when running tsc on the imported files with the generated links', () => {
+        // in case of compilation error it throws an exception
+        expect(tscResult.trim()).to.equal('');
+      });
+    });
   });
   describe('react style => .tsx extension', () => {
     if (process.env.APPVEYOR === 'True') {
