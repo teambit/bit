@@ -1,7 +1,11 @@
 /**
  * this file had been forked from https://github.com/pahen/detective-typescript
  */
-import { getDependenciesFromMemberExpression, getDependenciesFromCallExpression } from '../parser-helper';
+import {
+  getDependenciesFromMemberExpression,
+  getDependenciesFromCallExpression,
+  getSpecifierValueForImportDeclaration
+} from '../parser-helper';
 import { isRelativeImport } from '../../../utils';
 
 const Parser = require('@typescript-eslint/typescript-estree');
@@ -60,10 +64,7 @@ module.exports = function(src, options = {}) {
           addDependency(dependency);
 
           node.specifiers.forEach(specifier => {
-            const specifierValue = {
-              isDefault: specifier.type === 'ImportDefaultSpecifier',
-              name: specifier.local.name
-            };
+            const specifierValue = getSpecifierValueForImportDeclaration(specifier);
             addImportSpecifier(dependency, specifierValue);
           });
         }

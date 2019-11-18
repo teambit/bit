@@ -1,4 +1,8 @@
-import { getDependenciesFromMemberExpression, getDependenciesFromCallExpression } from '../parser-helper';
+import {
+  getDependenciesFromMemberExpression,
+  getDependenciesFromCallExpression,
+  getSpecifierValueForImportDeclaration
+} from '../parser-helper';
 /**
  * this file had been forked (and changed since then) from https://github.com/dependents/node-detective-es6
  */
@@ -50,10 +54,7 @@ module.exports = function(src) {
           const dependency = node.source.value;
           addDependency(dependency);
           node.specifiers.forEach(specifier => {
-            const specifierValue = {
-              isDefault: specifier.type === 'ImportDefaultSpecifier',
-              name: specifier.local.name
-            };
+            const specifierValue = getSpecifierValueForImportDeclaration(specifier);
             addImportSpecifier(dependency, specifierValue);
           });
         }
