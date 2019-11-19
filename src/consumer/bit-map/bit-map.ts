@@ -40,6 +40,8 @@ export type BitMapComponents = { [componentId: string]: ComponentMap };
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 
+const LANE_KEY = '_bit_lane';
+
 export type ResolvedConfigDir = {
   compiler: string;
   tester: string;
@@ -51,6 +53,7 @@ export default class BitMap {
   components: BitMapComponents;
   hasChanged: boolean;
   version: string;
+  lane?: string; // if not specified, it's the default - master
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
@@ -58,12 +61,13 @@ export default class BitMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
 
-  constructor(projectRoot: string, mapPath: string, version: string) {
+  constructor(projectRoot: string, mapPath: string, version: string, lane?: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = {};
     this.hasChanged = false;
     this.version = version;
+    this.lane = lane;
     this.paths = {};
     this.pathsLowerCase = {};
     this._cacheIds = {};
@@ -129,10 +133,12 @@ export default class BitMap {
       throw new InvalidBitMap(currentLocation, e.message);
     }
     const version = componentsJson.version;
+    const lane = componentsJson[LANE_KEY];
     // Don't treat version like component
     delete componentsJson.version;
+    delete componentsJson[LANE_KEY];
 
-    const bitMap = new BitMap(dirPath, currentLocation, version);
+    const bitMap = new BitMap(dirPath, currentLocation, version, lane);
     bitMap.loadComponents(componentsJson);
     return bitMap;
   }
@@ -791,6 +797,11 @@ export default class BitMap {
     return allChanges;
   }
 
+  addLane(laneName: string) {
+    this.lane = laneName;
+    this.hasChanged = true;
+  }
+
   /**
    * remove the id property before saving the components to the file as they are redundant with the keys
    */
@@ -822,7 +833,10 @@ export default class BitMap {
   }
 
   getContent(): Record<string, any> {
-    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
+    const bitMapContent = { ...this.toObjects(), version: this.version };
+    if (this.lane) {
+      bitMapContent[LANE_KEY] = this.lane;
+    }
     return bitMapContent;
   }
 }

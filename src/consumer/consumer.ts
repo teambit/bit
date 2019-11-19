@@ -187,6 +187,10 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
+  getCurrentLane(): string | undefined {
+    return this.bitMap.lane;
+  }
+
   async cleanTmpFolder() {
     const tmpPath = this.getTmpFolder(true);
     const exists = await fs.exists(tmpPath);

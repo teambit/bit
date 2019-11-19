@@ -405,3 +405,7 @@ export const CURRENT_UPSTREAM = 'current';
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
 
 export const HASH_SIZE = 40;
+
+export const LANE_SEPARATOR = ':';
+
+export const DEFAULT_LANE = 'master';

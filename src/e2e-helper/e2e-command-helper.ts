@@ -118,6 +118,12 @@ export default class CommandHelper {
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
+  createLane(laneName = 'dev') {
+    return this.runCmd(`bit lane ${laneName}`);
+  }
+  showLanes(options = '') {
+    return this.runCmd(`bit lane ${options}`);
+  }
   getSnapHead(id: string) {
     const comp = this.catComponent(id);
     return comp.snaps.head;

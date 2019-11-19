@@ -1,27 +1,31 @@
 import BitObject from '../objects/object';
 import { getStringifyArgs } from '../../utils';
 import { BitId } from '../../bit-id';
+import { LANE_SEPARATOR } from '../../constants';
 
 export type SymlinkProp = {
   scope: string;
   name: string;
   realScope: string;
+  lane?: string;
 };
 
 export default class Symlink extends BitObject {
   scope: string;
   name: string;
   realScope: string;
+  lane?: string;
 
   constructor(props: SymlinkProp) {
     super();
     this.scope = props.scope;
     this.name = props.name;
     this.realScope = props.realScope;
+    this.lane = props.lane;
   }
 
   id(): string {
-    return this.name;
+    return this.lane ? this.lane + LANE_SEPARATOR + this.name : this.name;
   }
 
   getRealComponentId(): BitId {
