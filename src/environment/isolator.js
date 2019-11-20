@@ -24,6 +24,8 @@ import BitMap from '../consumer/bit-map';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 import GeneralError from '../error/general-error';
 
+import loader from '../cli/loader';
+
 export default class Isolator {
   capsule: Capsule;
   consumer: ?Consumer;
@@ -34,24 +36,30 @@ export default class Isolator {
   manyComponentsWriter: ManyComponentsWriter;
   _npmVersionHasValidated: boolean = false;
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
+  dir: string;
+  constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer, dir: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
+    this.dir = dir;
   }
 
   static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
-    capsule.execNode = async (executable, args) => {
-      // TODO: better
-      const { patchFileSystem } = librarian.api();
-      await patchFileSystem(executable, { args, cwd: dir });
-    };
-    return new Isolator(capsule, scope, consumer);
+    return new Isolator(capsule, scope, consumer, dir);
   }
 
   async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
+    const loaderPrefix = `isolating ${componentId.name}`;
+    loader.setText(loaderPrefix);
+    const log = message => loader.setText(`${loaderPrefix}: ${message}`);
+    this.capsule.execNode = async (executable, args) => {
+      // TODO: better
+      const { patchFileSystem } = librarian.api();
+      const onScriptRun = () => loader.setText(`running build for ${componentId.name} in an isolated environment`); // TODO: do this from the compiler/tester so we can customize the message
+      await patchFileSystem(executable, { args, cwd: this.dir, log, onScriptRun });
+    };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
