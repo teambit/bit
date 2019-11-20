@@ -103,7 +103,7 @@ export default class Environment {
   }
 
   async destroyIfExist(): Promise<any> {
-    const isExist = await fs.exists(this.path);
+    const isExist = await fs.pathExists(this.path);
     if (isExist) {
       logger.debug(`destroying existing environment in path ${this.path}`);
       return this.destroy();

@@ -42,7 +42,7 @@ export default class Config extends Map<string, string> {
   static async load(): Promise<Config> {
     try {
       const configPath = getPath();
-      const exists = await fs.exists(configPath);
+      const exists = await fs.pathExists(configPath);
       if (!exists) {
         const config = new Config([]);
         await config.write();

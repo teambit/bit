@@ -25,7 +25,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();
     const bitJsonPath = AbstractConfig.composeBitJsonPath(consumerPath);
-    const exist = await fs.exists(bitJsonPath);
+    const exist = await fs.pathExists(bitJsonPath);
     if (!exist) {
       return {
         valid: true

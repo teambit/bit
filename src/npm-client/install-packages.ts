@@ -97,5 +97,5 @@ export function getAllRootDirectoriesFor(
 }
 
 async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {
-  return filterAsync(dirs, dir => fs.exists(path.join(dir, PACKAGE_JSON)));
+  return filterAsync(dirs, dir => fs.pathExists(path.join(dir, PACKAGE_JSON)));
 }

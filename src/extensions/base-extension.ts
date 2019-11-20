@@ -377,7 +377,7 @@ export default class BaseExtension {
     }
     extensionProps.filePath = filePath;
     extensionProps.rootDir = rootDir;
-    const isFileExist = await fs.exists(filePath);
+    const isFileExist = await fs.pathExists(filePath);
     if (!isFileExist) {
       // Do not throw an error if the file not exist since we will install it later
       // unless you specify the options.file which means you want a specific file which won't be installed automatically later

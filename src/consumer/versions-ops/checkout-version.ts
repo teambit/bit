@@ -195,7 +195,7 @@ async function applyVersion(
   const shouldWritePackageJson = async (): Promise<boolean> => {
     if (!rootDir) return false;
     const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
-    return fs.exists(packageJsonPath);
+    return fs.pathExists(packageJsonPath);
   };
   const shouldInstallNpmPackages = (): boolean => {
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;

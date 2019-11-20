@@ -219,7 +219,7 @@ async function reImportComponent(consumer: Consumer, id: BitId) {
   const shouldWritePackageJson = async (): Promise<boolean> => {
     if (!rootDir) return false;
     const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
-    return fs.exists(packageJsonPath);
+    return fs.pathExists(packageJsonPath);
   };
   const shouldInstallNpmPackages = (): boolean => {
     return componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;

@@ -183,7 +183,7 @@ function _getUserDetails(): string {
 }
 
 async function _getDebugLogAsStream(): Promise<Buffer | null | undefined> {
-  const exists = fs.exists(DEBUG_LOG);
+  const exists = await fs.pathExists(DEBUG_LOG);
   if (exists) {
     return fs.readFile(DEBUG_LOG);
   }
