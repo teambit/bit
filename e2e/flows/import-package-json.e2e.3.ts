@@ -54,7 +54,7 @@ describe('component with package.json as a file of the component', function() {
     });
     it('bit status should not show the component as modified', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
     });
     describe('having files in the rootDir outside the wrapDir', () => {
       before(() => {
@@ -62,7 +62,7 @@ describe('component with package.json as a file of the component', function() {
       });
       it('should not automatically add them to the component', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('should prevent users from deliberately adding them', () => {
         const output = helper.command.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
@@ -109,7 +109,7 @@ describe('component with package.json as a file of the component', function() {
     });
     it('bit status should not show the component as modified', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
     });
     describe('importing the component using isolated environment', () => {
       let isolatePath;
@@ -187,7 +187,7 @@ describe('component with package.json as a file of the component', function() {
 
         // an intermediate step, make sure the components are not modified
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
 
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         helper.fs.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
@@ -240,7 +240,7 @@ describe('component with package.json as a file of the component', function() {
         });
         it('should not show the component as modified', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
         describe('running bit link', () => {
           before(() => {
@@ -252,7 +252,7 @@ describe('component with package.json as a file of the component', function() {
           });
           it('should not show the component as modified', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
       });

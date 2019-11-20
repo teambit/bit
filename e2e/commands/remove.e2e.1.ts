@@ -39,8 +39,8 @@ describe('bit remove command', function() {
       output = helper.command.removeComponent('bar/foo -s');
     });
     it('should remove component', () => {
-      expect(output).to.contain.string('removed components');
-      expect(output).to.contain.string('bar/foo');
+      expect(output).to.have.string('removed components');
+      expect(output).to.have.string('bar/foo');
     });
     it('should not show in bitmap', () => {
       const bitMap = helper.bitMap.read();
@@ -48,7 +48,7 @@ describe('bit remove command', function() {
     });
     it('removed component should not be in new component when checking status', () => {
       const listOutput = helper.command.listLocalScope();
-      expect(listOutput).to.not.contain.string('bar/foo');
+      expect(listOutput).to.not.have.string('bar/foo');
       const status = helper.command.runCmd('bit status');
       expect(status.includes('bar/foo')).to.be.false;
     });
@@ -73,8 +73,8 @@ describe('bit remove command', function() {
         output = helper.command.removeComponent('utils/is-string', '--delete-files --silent');
       });
       it('should remove local component', () => {
-        expect(output).to.contain.string('removed components');
-        expect(output).to.contain.string('utils/is-string');
+        expect(output).to.have.string('removed components');
+        expect(output).to.have.string('utils/is-string');
       });
       it('should remove local component files from fs', () => {
         assert.notPathExists(path.join(helper.scopes.localPath, 'utils', 'is-string.js'), 'file should not exist');
@@ -92,8 +92,8 @@ describe('bit remove command', function() {
         );
       });
       it('should remove local component', () => {
-        expect(output).to.contain.string('removed components');
-        expect(output).to.contain.string('utils/is-string');
+        expect(output).to.have.string('removed components');
+        expect(output).to.have.string('utils/is-string');
       });
       it('should remove local component files from fs', () => {
         assert.notPathExists(path.join(helper.scopes.localPath, 'utils', 'is-string.js'), 'file should not exist');
@@ -117,7 +117,7 @@ describe('bit remove command', function() {
     });
     it('removed component should  be in new component', () => {
       const listOutput = helper.command.listLocalScope();
-      expect(listOutput).to.not.contain.string('bar/foo');
+      expect(listOutput).to.not.have.string('bar/foo');
       const status = helper.command.runCmd('bit status');
       expect(status.includes('new components')).to.be.true;
       expect(status.includes('bar/foo')).to.be.true;
@@ -137,8 +137,8 @@ describe('bit remove command', function() {
         output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo -s`);
       });
       it('should show a successful message', () => {
-        expect(output).to.contain.string('removed components');
-        expect(output).to.contain.string(`${helper.scopes.remote}/bar/foo`);
+        expect(output).to.have.string('removed components');
+        expect(output).to.have.string(`${helper.scopes.remote}/bar/foo`);
       });
       it('should remove the component from the local scope', () => {
         const lsScope = helper.command.listLocalScope();
@@ -155,7 +155,7 @@ describe('bit remove command', function() {
         output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo --remote -s`);
       });
       it('should show a successful message', () => {
-        expect(output).to.contain.string(`removed components from the remote scope: ${helper.scopes.remote}/bar/foo`);
+        expect(output).to.have.string(`removed components from the remote scope: ${helper.scopes.remote}/bar/foo`);
       });
       it('should remove the component from the remote scope', () => {
         const lsScope = helper.command.listRemoteScope();
@@ -179,14 +179,14 @@ describe('bit remove command', function() {
     });
     it('should not remove component with dependencies when -f flag is false', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName} -s`);
-      expect(output).to.contain.string(
+      expect(output).to.have.string(
         `error: unable to delete ${helper.scopes.remote}/${componentName}, because the following components depend on it:`
       );
     });
     it('should  remove component with dependencies when -f flag is true', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/${componentName}`, '-f -s');
-      expect(output).to.contain.string('removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/${componentName}`);
+      expect(output).to.have.string('removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/${componentName}`);
     });
   });
   describe('with imported components, no dependencies', () => {
@@ -204,8 +204,8 @@ describe('bit remove command', function() {
     });
     it('should remove components with no dependencies when -f flag is false', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/global/simple -s`);
-      expect(output).to.contain.string('removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/global/simple`);
+      expect(output).to.have.string('removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/global/simple`);
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property(`${helper.scopes.remote}/global/simple`);
     });
@@ -225,8 +225,8 @@ describe('bit remove command', function() {
     });
     it('should not remove modified component ', () => {
       const output = helper.command.removeComponent('utils/is-type@0.0.1 -s');
-      expect(output).to.contain.string('error: unable to remove modified components');
-      expect(output).to.contain.string('utils/is-type');
+      expect(output).to.have.string('error: unable to remove modified components');
+      expect(output).to.have.string('utils/is-type');
     });
   });
   describe('with imported components, no dependencies and yarn workspace', () => {
@@ -272,28 +272,28 @@ describe('bit remove command', function() {
         "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
       );
       const output = helper.command.removeComponent('utils/is-string@0.0.1 -s');
-      expect(output).to.contain.string('error: unable to remove modified components');
-      expect(output).to.contain.string('utils/is-string@0.0.1');
+      expect(output).to.have.string('error: unable to remove modified components');
+      expect(output).to.have.string('utils/is-string@0.0.1');
     });
     it('should not remove component when component is modified', () => {
       const output = helper.command.removeComponent('utils/is-string -s');
-      expect(output).to.contain.string('error: unable to remove modified components');
-      expect(output).to.contain.string('utils/is-string');
+      expect(output).to.have.string('error: unable to remove modified components');
+      expect(output).to.have.string('utils/is-string');
     });
     it('should print error msg when trying to remove missing component', () => {
       helper.command.tagAllComponents();
       const output = helper.command.removeComponent('utils/is-string@0.0.10 -s');
-      expect(output).to.contain.string('missing components: utils/is-string@0.0.10');
+      expect(output).to.have.string('missing components: utils/is-string@0.0.10');
       helper.command.tagAllComponents();
     });
     it('should remove component version only', () => {
       const output = helper.command.removeComponent('utils/is-string@0.0.2 -s');
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string('utils/is-string@0.0.2');
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string('utils/is-string@0.0.2');
     });
     it('should display version 0.0.1 for component', () => {
       const output = helper.command.listLocalScopeParsed();
-      expect(output).to.deep.includes({ id: 'utils/is-string', localVersion: '0.0.1' });
+      expect(output).to.deep.include({ id: 'utils/is-string', localVersion: '0.0.1' });
     });
     it('should still be in bitmap', () => {
       const bitMap = helper.bitMap.read();
@@ -301,8 +301,8 @@ describe('bit remove command', function() {
     });
     it('should remove entire component if specified version is the only one', () => {
       const output = helper.command.removeComponent('utils/is-string@0.0.1', '-f -s');
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string('utils/is-string');
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string('utils/is-string');
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('utils/is-string');
     });
@@ -332,20 +332,20 @@ describe('bit remove command', function() {
     });
     it('should remove component version only', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/utils/is-string@0.0.2 -s`);
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/utils/is-string@0.0.2`);
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.2`);
     });
     it('should display version 0.0.1 for component', () => {
       const output = helper.command.listRemoteScope(true);
-      expect(output).to.contain.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
     });
     it('should remove entire component if specified version is the only one', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/utils/is-string@0.0.1 -s`);
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/utils/is-string`);
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string`);
       const listOutput = helper.command.listRemoteScope(true);
-      expect(listOutput).to.not.contain.string(`${helper.scopes.remote}/utils/is-string`);
-      expect(listOutput).to.contain.string(`${helper.scopes.remote}/utils/is-type`);
+      expect(listOutput).to.not.have.string(`${helper.scopes.remote}/utils/is-string`);
+      expect(listOutput).to.have.string(`${helper.scopes.remote}/utils/is-type`);
     });
     it('should import component with same hash of component that was deleted', () => {
       const output = helper.command.importComponent('copy/is-type');
@@ -354,10 +354,10 @@ describe('bit remove command', function() {
     });
     it('2 components with same file hash should still work if one component is deleted', () => {
       const output = helper.command.removeComponent(`${helper.scopes.remote}/copy/is-type -s`);
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/copy/is-type`);
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/copy/is-type`);
       const listOutput = helper.command.listRemoteScope(true);
-      expect(listOutput).to.contain.string(`${helper.scopes.remote}/utils/is-type`);
+      expect(listOutput).to.have.string(`${helper.scopes.remote}/utils/is-type`);
     });
   });
   describe('delete components with same file hash', () => {
@@ -414,8 +414,8 @@ describe('bit remove command', function() {
       );
 
       const output = helper.command.removeComponent('utils/is-string2 -s');
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string(`${helper.scopes.remote}/utils/is-string2`);
+      expect(output).to.have.string('successfully removed components');
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string2`);
       expect(importedComponentDir).to.not.be.a.path();
       expect(importedDependeceDir).to.not.be.a.path();
     });
