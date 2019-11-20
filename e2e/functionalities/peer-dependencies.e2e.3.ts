@@ -51,7 +51,7 @@ describe('peer-dependencies functionality', function() {
       });
       it('should not be shown as modified', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       describe('and the package.json of the component was changed to remove the peerDependencies', () => {
         before(() => {
@@ -62,7 +62,7 @@ describe('peer-dependencies functionality', function() {
         });
         it('should be shown as modified', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.not.have.a.string('no modified components');
+          expect(output).to.not.have.string('no modified components');
         });
       });
       describe('and the package.json of the component does not exist', () => {
@@ -71,7 +71,7 @@ describe('peer-dependencies functionality', function() {
         });
         it('should not be shown as modified', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
       });
     });

@@ -41,14 +41,14 @@ describe('bit deprecate and undeprecate commands', function() {
     });
     it('should list components with deprecated components', () => {
       const listOutput = helper.command.listLocalScope();
-      expect(listOutput).to.contain.string('bar/foo [Deprecated]');
+      expect(listOutput).to.have.string('bar/foo [Deprecated]');
     });
     it('should export component as deprecated ', () => {
       helper.command.deprecateComponent('bar/foo');
       helper.command.exportAllComponents();
       output = helper.command.listRemoteScope(false);
-      expect(output).to.contain.string('bar/foo');
-      expect(output).to.contain.string('[Deprecated]');
+      expect(output).to.have.string('bar/foo');
+      expect(output).to.have.string('[Deprecated]');
     });
     describe('undeprecate local component', () => {
       before(() => {
@@ -60,8 +60,8 @@ describe('bit deprecate and undeprecate commands', function() {
       });
       it('bit list should not show the component as deprecated', () => {
         const listOutput = helper.command.listLocalScope();
-        expect(listOutput).to.contain.string('bar/foo');
-        expect(listOutput).to.not.contain.string('Deprecated');
+        expect(listOutput).to.have.string('bar/foo');
+        expect(listOutput).to.not.have.string('Deprecated');
       });
     });
   });
@@ -76,16 +76,16 @@ describe('bit deprecate and undeprecate commands', function() {
       output = helper.command.deprecateComponent(`${helper.scopes.remote}/bar/foo`, '-r');
     });
     it('should deprecate remote component ', () => {
-      expect(output).to.contain.string(`deprecated components: ${helper.scopes.remote}/bar/foo`);
+      expect(output).to.have.string(`deprecated components: ${helper.scopes.remote}/bar/foo`);
     });
     it('should list components all components including deprecated from remote scope', () => {
       const listOutput = helper.command.listRemoteScope(false);
-      expect(listOutput).to.contain.string('bar/foo');
-      expect(listOutput).to.contain.string('[Deprecated]');
+      expect(listOutput).to.have.string('bar/foo');
+      expect(listOutput).to.have.string('[Deprecated]');
     });
     it('should not deprecate remote component if not found ', () => {
       const depOutput = helper.command.deprecateComponent(`${helper.scopes.remote}/bar/foo111`, '-r');
-      expect(depOutput).to.contain.string(`missing components: ${helper.scopes.remote}/bar/foo`);
+      expect(depOutput).to.have.string(`missing components: ${helper.scopes.remote}/bar/foo`);
     });
     describe('undeprecate remote component', () => {
       before(() => {
@@ -96,8 +96,8 @@ describe('bit deprecate and undeprecate commands', function() {
       });
       it('bit list should not show the component as deprecated', () => {
         const listOutput = helper.command.listLocalScope();
-        expect(listOutput).to.contain.string('bar/foo');
-        expect(listOutput).to.not.contain.string('Deprecated');
+        expect(listOutput).to.have.string('bar/foo');
+        expect(listOutput).to.not.have.string('Deprecated');
       });
     });
   });
@@ -113,7 +113,7 @@ describe('bit deprecate and undeprecate commands', function() {
     });
     it('should deprecate component that is being used by other components', () => {
       const output = helper.command.deprecateComponent(`${helper.scopes.remote}/utils/is-type`, '-r');
-      expect(output).to.contain.string(`deprecated components: ${helper.scopes.remote}/utils/is-type`);
+      expect(output).to.have.string(`deprecated components: ${helper.scopes.remote}/utils/is-type`);
     });
   });
 });

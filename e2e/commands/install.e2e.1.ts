@@ -82,8 +82,8 @@ describe('run bit install', function() {
             expect(path.join(helper.scopes.localPath, 'components', 'components')).to.not.be.a.path();
           });
           it('should install npm packages with absolute paths', () => {
-            expect(output).to.not.have.a.string('successfully ran npm install at components/bar/foo');
-            expect(output).to.have.a.string(path.join(helper.scopes.localPath, 'components/bar/foo'));
+            expect(output).to.not.have.string('successfully ran npm install at components/bar/foo');
+            expect(output).to.have.string(path.join(helper.scopes.localPath, 'components/bar/foo'));
           });
         });
       });

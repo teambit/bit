@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusWorkspaceIsCleanMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
@@ -914,7 +914,7 @@ describe('bit import', function() {
           });
           it('bit status should not show issues', () => {
             const status = helper.command.status();
-            expect(status).to.not.have.string(componentIssuesLabels);
+            expect(status).to.not.have.string(statusFailureMsg);
           });
           it('should not override the current files', () => {
             // as opposed to running import with '--merge', the files should remain intact
@@ -1540,9 +1540,9 @@ console.log(barFoo.default());`;
       });
       it('should not show any component in bit status', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.not.have.a.string('utils/is-string');
-        expect(output).to.not.have.a.string('utils/is-type');
-        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(output).to.not.have.string('utils/is-string');
+        expect(output).to.not.have.string('utils/is-type');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -1628,7 +1628,7 @@ console.log(barFoo.default());`;
       });
       it('should show the component as modified', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string('modified');
+        expect(output).to.have.string('modified');
       });
       it('bit diff should show that the modification is about version bump of is-type', () => {
         const diff = helper.command.diff();
@@ -1863,7 +1863,7 @@ console.log(barFoo.default());`;
     });
     it('should not show any of the components as new or modified or deleted or staged', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {
@@ -1935,7 +1935,7 @@ console.log(barFoo.default());`;
       });
       it('bit status should show a clean state', () => {
         const statusOutput = helper.command.runCmd('bit status');
-        expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
   });
@@ -1984,7 +1984,7 @@ console.log(barFoo.default());`;
     });
     it('should contain workspaces array in package.json and private true', () => {
       const pkgJson = helper.packageJson.read(helper.scopes.localPath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
+      expect(pkgJson.workspaces).to.have.members(['components/.dependencies/**/*', 'components/{name}/**/*']);
       expect(pkgJson.private).to.be.true;
     });
     it('component dep should be install as npm package', () => {
@@ -1999,7 +1999,7 @@ console.log(barFoo.default());`;
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
       helper.command.importComponent('comp/with-deps --override');
       const pkgJson = helper.packageJson.read(helper.scopes.localPath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
+      expect(pkgJson.workspaces).to.have.members(['components/.dependencies/**/*', 'components/{name}/**/*']);
       expect(pkgJson.workspaces).to.be.ofSize(2);
       expect(path.join(helper.scopes.localPath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
@@ -2013,7 +2013,7 @@ console.log(barFoo.default());`;
       helper.packageJson.addKeyValue({ workspaces: ['comp'] });
       helper.command.importComponent('comp/with-deps --override');
       const pkgJson = helper.packageJson.read();
-      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test/comp/with-deps');
+      expect(pkgJson.workspaces).to.have.members(['comp', 'components/.dependencies/**/*', 'components/{name}/**/*']);
     });
     it('Should save workspaces with custom import path ', () => {
       helper.scopeHelper.reInitLocalScope();
@@ -2021,7 +2021,7 @@ console.log(barFoo.default());`;
       helper.bitJson.manageWorkspaces();
       helper.command.importComponent('comp/with-deps -p test');
       const pkgJson = helper.packageJson.read();
-      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test');
+      expect(pkgJson.workspaces).to.have.members(['components/.dependencies/**/*', 'components/{name}/**/*', 'test']);
     });
     // @see https://github.com/teambit/bit/issues/2079
     describe('when Yarn workspaces is an object and not an array', () => {

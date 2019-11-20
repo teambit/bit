@@ -52,7 +52,7 @@ describe('bit list command', function() {
     it('should list deprecated component', () => {
       helper.command.deprecateComponent('bar/foo');
       const output = helper.command.listLocalScope();
-      expect(output).to.contain.string('bar/foo [Deprecated]');
+      expect(output).to.have.string('bar/foo [Deprecated]');
     });
   });
   describe('with --outdated flag', () => {

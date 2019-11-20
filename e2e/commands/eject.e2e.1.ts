@@ -109,7 +109,7 @@ describe('bit eject command', function() {
         });
         it('bit status should show a clean state', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should not delete the objects from the scope', () => {
           const listScope = helper.command.listLocalScopeParsed('--scope');
@@ -153,7 +153,7 @@ describe('bit eject command', function() {
         });
         it('bit status should show a clean state', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
       });
       describe('eject two components, the additional one has not been exported yet', () => {
@@ -297,7 +297,7 @@ describe('bit eject command', function() {
           });
           it('bit status should show a clean state', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
       });
@@ -346,7 +346,7 @@ describe('bit eject command', function() {
           });
           it('bit status should show a clean state', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
           it('should not delete the objects from the scope', () => {
             const listScope = helper.command.listLocalScopeParsed('--scope');
@@ -408,7 +408,7 @@ describe('bit eject command', function() {
             });
             it('bit status should show a clean state', () => {
               const output = helper.command.runCmd('bit status');
-              expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+              expect(output).to.have.string(statusWorkspaceIsCleanMsg);
             });
             it('should not delete any objects from the scope', () => {
               const listScope = helper.command.listLocalScope('--scope');

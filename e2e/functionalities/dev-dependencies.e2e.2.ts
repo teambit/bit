@@ -122,7 +122,7 @@ describe('foo', () => {
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string('staged components');
+        expect(output).to.have.string('staged components');
       });
       describe('export and import to a new scope', () => {
         before(() => {
@@ -196,7 +196,7 @@ describe('foo', () => {
     });
     it('bit status should show a clean state', () => {
       const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
     });
   });
   describe('dev-dependency that requires prod-dependency', () => {

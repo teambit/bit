@@ -59,7 +59,7 @@ describe('bit untag command', function() {
       });
       it('bit status should show the component as staged', () => {
         const output = helper.command.runCmd('bit status');
-        expect(output).to.have.a.string('staged components');
+        expect(output).to.have.string('staged components');
       });
     });
     describe('with multiple versions when specifying the version as part of the id', () => {
@@ -355,9 +355,9 @@ describe('bit untag command', function() {
         });
         it('should show the component as modified', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.not.have.a.string('no modified components');
-          expect(output).to.have.a.string('modified components');
-          expect(output).to.have.a.string('utils/is-string');
+          expect(output).to.not.have.string('no modified components');
+          expect(output).to.have.string('modified components');
+          expect(output).to.have.string('utils/is-string');
         });
       });
     });
