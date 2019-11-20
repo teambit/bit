@@ -47,7 +47,7 @@ export function getLinkToFileContent(filePath: PathOsBased, importSpecifiers?: I
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
   const filePathWithoutExt = getWithoutExt(filePath);
-  const template = getTemplateForFile(fileExt, filePath, importSpecifiers);
+  const template = getTemplateForFileOrPackage(fileExt, importSpecifiers, false);
 
   if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
@@ -59,7 +59,7 @@ export function getLinkToPackageContent(
   importSpecifiers?: ImportSpecifier[]
 ): string {
   const fileExt = getExt(filePath);
-  const template = getTemplateForPackage(fileExt, importSpecifiers);
+  const template = getTemplateForFileOrPackage(fileExt, importSpecifiers);
   if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, bitPackageName);
 }
@@ -81,30 +81,21 @@ function getSupportedExtensions(): string[] {
  * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
  * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
  */
-function getTemplateForFile(fileExt: string, filePath: PathOsBased, importSpecifiers?: ImportSpecifier[]) {
+function getTemplateForFileOrPackage(
+  fileExt: string,
+  importSpecifiers?: ImportSpecifier[],
+  isForPackage: boolean = true
+) {
   if (importSpecifiers && importSpecifiers.length) {
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
       return es6TemplateWithImportSpecifiers(importSpecifiers);
     }
-    if (fileExt === 'ts' || fileExt === 'tsx') {
+    if (fileExt === 'ts' || fileExt === 'd.ts' || fileExt === 'tsx') {
       return tsTemplateWithImportSpecifiers(importSpecifiers);
     }
   }
-  return _getTemplate(fileExt, importSpecifiers);
-}
-
-function getTemplateForPackage(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
-  if (importSpecifiers && importSpecifiers.length) {
-    if (fileExt === 'js' || fileExt === 'jsx') {
-      // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
-      return es6TemplateWithImportSpecifiers(importSpecifiers);
-    }
-    if (fileExt === 'ts' || fileExt === 'tsx') {
-      return tsTemplateWithImportSpecifiers(importSpecifiers);
-    }
-  }
-  if (!fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
+  if (isForPackage && !fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
     return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
   }
   return _getTemplate(fileExt, importSpecifiers);
