@@ -81,11 +81,7 @@ function getSupportedExtensions(): string[] {
  * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
  * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
  */
-function getTemplateForFileOrPackage(
-  fileExt: string,
-  importSpecifiers?: ImportSpecifier[],
-  isForPackage: boolean = true
-) {
+function getTemplateForFileOrPackage(fileExt: string, importSpecifiers?: ImportSpecifier[], isForPackage = true) {
   if (importSpecifiers && importSpecifiers.length) {
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
