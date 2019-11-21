@@ -7,8 +7,69 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.4.1-dev.1] - 2019-09-27
+## [14.4.4-dev.6] - 2019-11-21
 
+- fix symlink errors when generating links to `d.ts` files
+- expose buildOne and buildAll for programmatic api (Experimental)
+
+## [14.4.4-dev.5] - 2019-11-19
+
+- [#2140](https://github.com/teambit/bit/issues/2140) update bit-javascript to support `import { x as y }` syntax
+
+## [14.4.4-dev.4] - 2019-11-18
+
+- [#2132](https://github.com/teambit/bit/issues/2132) fix compiler import to install peer dependencies
+- fix fork of a component when a dependency exists in an older version only
+
+## [14.4.4-dev.3] - 2019-11-13
+
+- update `react-docgen` version from `2.21.0` to `4.1.1`, and update all docs parser structure
+
+## [14.4.4-dev.2] - 2019-11-10
+
+- fix overrides to respect dependencies received by a compiler/tester
+- improve loader when building components
+- [#2101](https://github.com/teambit/bit/issues/2101) suggest matching commands
+- support `--token` flag for commands that runs against a remote server
+
+## [14.4.4-dev.1] - 2019-11-02
+
+- keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag
+- consolidate isolation options
+- formalize isolate api result
+- add `--no-warnings` flag to bit test child process
+- show a message about missing test files in the compiled files
+- support anonymous authentication for remote read operations
+
+## [[14.4.3] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.3)
+
+### Bug fixes
+
+- lock memfs package version to v2.15.5 due to issues with the v2.16.0
+
+## [[14.4.2] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.2)
+
+### Bug fixes
+
+- [#2024](https://github.com/teambit/bit/issues/2024) rebuild components upon dependencies changes for compilers that build dependencies
+- [#2067](https://github.com/teambit/bit/issues/2067) fix `bit checkout` to not duplicate modified files when the shared dir has changed
+- [#2079](https://github.com/teambit/bit/issues/2079) update bit-javascript to fix error when Yarn workspaces uses nohoist
+- [#2072](https://github.com/teambit/bit/issues/2072) update bit-javascript to support React fragments
+
+### Experimental
+
+- [#2066](https://github.com/teambit/bit/issues/2066) introduce `--skip-auto-tag` flag for `bit tag`
+
+### Internal
+
+- move from flow to typescript
+
+## [[14.4.1] - 2019-10-06](https://github.com/teambit/bit/releases/tag/v14.4.1)
+
+### Bug fixes
+
+- [#2019](https://github.com/teambit/bit/issues/2019) fix `bit import --merge` to not override changed dependencies
+- [#2023](https://github.com/teambit/bit/issues/2023) better handle external errors from compilers
 - [#2013](https://github.com/teambit/bit/issues/2013) fix bit import when one module resolution alias is a directory of another alias for extensions other than `.js`
 - [#2033](https://github.com/teambit/bit/issues/2033) improve bit link to build unrecognized missing links
 - [#2035](https://github.com/teambit/bit/issues/2035) fix "unable to manually add the dependency" error when package.json of an imported component is missing

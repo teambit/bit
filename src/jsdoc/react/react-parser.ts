@@ -1,0 +1,116 @@
+import doctrine from 'doctrine';
+import { PathOsBased } from '../../utils/path';
+import { pathNormalizeToLinux } from '../../utils';
+import logger from '../../logger/logger';
+import { Doclet } from '../types';
+import extractDataRegex from '../extract-data-regex';
+
+const reactDocs = require('react-docgen');
+
+function formatProperties(props) {
+  const parseDescription = description => {
+    // an extra step is needed to parse the properties description correctly. without this step
+    // it'd show the entire tag, e.g. `@property {propTypes.string} text - Button text.`
+    // instead of just `text - Button text.`.
+    try {
+      const descriptionAST = doctrine.parse(description, { unwrap: true, recoverable: true, sloppy: true });
+      if (descriptionAST && descriptionAST.tags[0]) return descriptionAST.tags[0].description;
+    } catch (err) {
+      // failed to parse the react property, that's fine, it'll return the original description
+    }
+    return description;
+  };
+  return Object.keys(props).map(name => {
+    const { type, description, required, defaultValue, flowType } = props[name];
+
+    return {
+      name,
+      description: parseDescription(description),
+      required,
+      type: stringifyType(type || flowType),
+      defaultValue
+    };
+  });
+}
+
+function formatMethods(methods) {
+  return Object.keys(methods).map(key => {
+    const { returns, modifiers, params, docblock, name } = methods[key];
+    return {
+      name,
+      description: docblock,
+      returns,
+      modifiers,
+      params
+    };
+  });
+}
+
+function fromReactDocs({ description, displayName, props, methods }, filePath): Doclet {
+  return {
+    filePath: pathNormalizeToLinux(filePath),
+    name: displayName,
+    description,
+    properties: formatProperties(props),
+    access: 'public',
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    methods: formatMethods(methods)
+  };
+}
+
+function stringifyType(prop: { name: string; value?: any }): string {
+  const { name } = prop;
+  let transformed;
+
+  switch (name) {
+    default:
+      transformed = name;
+      break;
+    case 'func':
+      transformed = 'function';
+      break;
+    case 'shape':
+      transformed = JSON.stringify(
+        Object.keys(prop.value).reduce((acc = {}, current) => {
+          acc[current] = stringifyType(prop.value[current]);
+          return acc;
+        }, {})
+      );
+      break;
+    case 'enum':
+      transformed = prop.value.map(enumProp => enumProp.value).join(' | ');
+      break;
+    case 'instanceOf':
+      transformed = prop.value;
+      break;
+    case 'union':
+      transformed = prop.value.map(p => stringifyType(p)).join(' | ');
+      break;
+    case 'arrayOf':
+      transformed = `${stringifyType(prop.value)}[]`;
+      break;
+  }
+
+  return transformed;
+}
+
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | undefined> {
+  const doclets: Array<Doclet> = [];
+  try {
+    const componentInfo = reactDocs.parse(data, undefined, undefined, { configFile: false });
+    if (componentInfo) {
+      const formatted = fromReactDocs(componentInfo, filePath);
+      formatted.args = [];
+      // this is a workaround to get the 'example' tag parsed when using react-docs
+      // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
+      // the @description tag.
+      extractDataRegex(formatted.description, doclets, filePath);
+      formatted.description = doclets[0].description;
+      formatted.examples = doclets[0].examples;
+      return formatted;
+    }
+  } catch (err) {
+    logger.debug(`failed parsing docs using docgen on path ${filePath} with error`, err);
+  }
+  return undefined;
+}

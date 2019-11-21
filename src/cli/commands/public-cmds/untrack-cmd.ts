@@ -1,0 +1,58 @@
+import chalk from 'chalk';
+import R from 'ramda';
+import Command from '../../command';
+import { untrack } from '../../../api/consumer';
+import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
+
+export default class Untrack extends Command {
+  name = 'untrack [ids...]';
+  description = `untrack a new component(s)
+  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#untracking-components
+  ${WILDCARD_HELP('untrack')}`;
+  alias = 'u';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  opts = [['a', 'all', 'revert add for all tracked components']];
+  loader = true;
+  migration = true;
+
+  action([components]: [string[]], { all }: { all: boolean | null | undefined }): Promise<any> {
+    if ((!R.isEmpty(components) && all) || (R.isEmpty(components) && !all)) {
+      throw new GeneralError(
+        'you can use either a specific component [id] to untrack a particular component or --all flag to untrack them all'
+      );
+    }
+    return untrack(components || [], all);
+  }
+
+  report({
+    untrackedComponents,
+    unRemovableComponents,
+    missingComponents
+  }: {
+    untrackedComponents: Array<string>;
+    unRemovableComponents: Array<string>;
+    missingComponents: Array<string>;
+  }): string {
+    const msg = [];
+    if (R.isEmpty(untrackedComponents) && R.isEmpty(unRemovableComponents) && R.isEmpty(missingComponents)) {
+      return chalk.underline.red('no components untracked');
+    }
+    if (!R.isEmpty(untrackedComponents)) {
+      const title = chalk.underline('untracked components:\n');
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      msg.push(title + untrackedComponents.map(result => chalk.green(result)).join('\n'));
+    }
+    if (!R.isEmpty(unRemovableComponents)) {
+      msg.push(
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        chalk.red(`error: unable to untrack ${unRemovableComponents.join(', ')}, please use the bit remove command.\n`)
+      );
+    }
+    if (!R.isEmpty(missingComponents)) {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      msg.push(chalk.red(`fatal: component ${missingComponents.join(', ')} did not match any component.`));
+    }
+    return msg.join('\n');
+  }
+}

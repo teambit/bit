@@ -41,7 +41,7 @@ function verifyCompatibility() {
     console.log(
       // eslint-disable-line
       require('chalk').red(
-        `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
+        `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation`
       )
     );
     return process.exit();
@@ -52,7 +52,7 @@ function verifyCompatibility() {
 
 function bitVersion() {
   if (process.argv[2]) {
-    if (process.argv[2] === '-V' || process.argv[2] === '-v' || process.argv[2] === '--version') {
+    if (['-V', '-v', '--version'].includes(process.argv[2])) {
       console.log(constants.BIT_VERSION); // eslint-disable-line no-console
       process.exit();
     }

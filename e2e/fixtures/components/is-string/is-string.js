@@ -1,5 +1,3 @@
-/** @flow */
-
 /**
  * detemines whether `str` is a string.
  * @name isString
@@ -9,6 +7,6 @@
  *  isString(3) // => false
  *  isString('') // => true
  */
-export default function isString(val: string): boolean {
+export default function isString(val) {
   return typeof val === 'string';
 }

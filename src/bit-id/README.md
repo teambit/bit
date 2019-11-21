@@ -9,7 +9,7 @@ That's the preferable representation of BitId. Wherever possible, use this forma
 A string representation of BitId. `BitId.toString()` generates this string.
 For example: `my-scope/my-name@0.0.1`.
 When an ID is entered by the end user it's always a string.
-The problem with the string representation is that since the dynamic-namespace introduced, it's not clear from the string whether an ID has a scope or not. In the previous example, `my-scope/my-name` could be interpreted as a scope+name or only a name.
+The problem with the string representation is that since the dynamic-namespace introduced, it's not clear from the string whether an ID has a scope or not. In the previous example, `my-scope/my-name` could be interpreted as a scopereadonly name or only a name.
 See the next section how to safely parse the string.
 
 ## How to transform a Bit ID string to a BitId instance
@@ -24,7 +24,7 @@ Use `BitId.parse(id: BitIdStr, hasScope: boolean = true): BitId`
 #### You have a Consumer instance
 
 Use `Consumer.getParsedId(id: BitIdStr): BitId` when you know the ID should be there and to throw an exception when it's not.
-Or, use `Consumer.getParsedIdIfExist(id: BitIdStr): ?BitId` when you're not sure whether the component is there.
+Or, use `Consumer.getParsedIdIfExist(id: BitIdStr): BitId | null | undefined` when you're not sure whether the component is there.
 
 #### You have a Scope instance
 

@@ -2,6 +2,7 @@ module.exports = function (api) {
   api.cache(true);
 
   const presets = [
+    '@babel/typescript',
     [
       '@babel/preset-env',
       {
@@ -9,11 +10,9 @@ module.exports = function (api) {
           node: 8
         }
       }
-    ],
-    '@babel/preset-flow'
+    ]
   ];
   const plugins = [
-    ['@babel/plugin-transform-flow-strip-types'],
     [
       '@babel/plugin-transform-modules-commonjs',
       {
@@ -35,7 +34,7 @@ module.exports = function (api) {
   return {
     presets,
     plugins,
-    only: ['**/*.js'],
+    only: ['**/*.ts'],
     ignore: ['components/*']
   };
 };
