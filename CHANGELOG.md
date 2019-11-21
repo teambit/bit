@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix symlink errors when generating links to `d.ts` files
+- expose buildOne and buildAll for programmatic api (Experimental)
 
 ## [14.4.4-dev.5] - 2019-11-19
 
