@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix symlink errors when generating links to `d.ts` files
+
 ## [14.4.4-dev.5] - 2019-11-19
 
 - [#2140](https://github.com/teambit/bit/issues/2140) update bit-javascript to support `import { x as y }` syntax
