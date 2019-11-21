@@ -6,6 +6,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -508,6 +509,88 @@ describe('typescript', function() {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
+    });
+    // tests https://github.com/teambit/bit/issues/2140
+    describe('using syntax of "import { x as y }', () => {
+      let tscResult;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('foo.ts', 'export function foo(){}');
+        helper.fs.outputFile('bar.ts', 'import { foo as foo1 } from "./foo"; console.log(foo1);');
+        helper.command.addComponent('foo.ts');
+        helper.command.addComponent('bar.ts');
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.scopeHelper.addGlobalRemoteScope();
+        helper.command.importComponent('bar');
+        const tscPath = helper.general.installAndGetTypeScriptCompilerDir();
+        const barFile = path.join(helper.scopes.localPath, 'components/bar/bar.ts');
+        tscResult = helper.general.runWithTryCatch(`tsc ${barFile}`, tscPath);
+      });
+      it('should not throw an error when running tsc on the imported files with the generated links', () => {
+        // in case of compilation error it throws an exception
+        expect(tscResult.trim()).to.equal('');
+      });
+    });
+    describe('a component of d.ts file required by another component', () => {
+      let localScope;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('types.d.ts', 'export interface Api {};');
+        helper.fs.outputFile('foo.ts', 'import {Api} from "./types"; console.log(Api);');
+        helper.command.addComponent('types.d.ts');
+        helper.command.addComponent('foo.ts');
+        localScope = helper.scopeHelper.cloneLocalScope();
+      });
+      describe('installing dependencies as components', () => {
+        before(() => {
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('foo');
+        });
+        it('should create a link to the d.ts file', () => {
+          const fileContent = helper.fs.readFile('components/foo/types.d.ts');
+          expect(fileContent).to.have.string(AUTO_GENERATED_STAMP);
+        });
+      });
+      (supportNpmCiRegistryTesting ? describe : describe.skip)(
+        'installing dependencies as packages (not as components)',
+        () => {
+          let npmCiRegistry: NpmCiRegistry;
+          before(async () => {
+            npmCiRegistry = new NpmCiRegistry(helper);
+            helper.scopeHelper.getClonedLocalScope(localScope);
+            helper.scopeHelper.reInitRemoteScope();
+            npmCiRegistry.setCiScopeInBitJson();
+            helper.command.tagAllComponents();
+            helper.command.exportAllComponents();
+
+            await npmCiRegistry.init();
+            npmCiRegistry.publishEntireScope();
+
+            helper.scopeHelper.reInitLocalScope();
+            npmCiRegistry.setCiScopeInBitJson();
+            npmCiRegistry.setResolver();
+            helper.command.importComponent('foo');
+          });
+          after(() => {
+            npmCiRegistry.destroy();
+          });
+          it('should create a link to the d.ts file', () => {
+            // a previous bug threw an error here of "failed to generate a symlink".
+            const fileContent = helper.fs.readFile('components/foo/types.d.ts');
+            expect(fileContent).to.have.string(AUTO_GENERATED_STAMP);
+          });
+        }
+      );
     });
   });
   describe('react style => .tsx extension', () => {

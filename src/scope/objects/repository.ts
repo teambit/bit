@@ -86,6 +86,7 @@ export default class Repository {
 
   load(ref: Ref, throws = false): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
+    // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
       .readFile(this.objectPath(ref))
       .then(fileContents => {

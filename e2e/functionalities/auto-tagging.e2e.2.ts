@@ -71,7 +71,7 @@ describe('auto tagging functionality', function() {
         });
         it('the dependent should not be shown as modified after the tag', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.not.have.a.string('modified components');
+          expect(output).to.not.have.string('modified components');
         });
       });
     });
@@ -542,7 +542,7 @@ describe('auto tagging functionality', function() {
 
       // as an intermediate step, make sure the re-link done by import C, didn't break anything
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
 
       helper.fs.createFile('components/bar/c', 'c.js', 'console.log("I am C v2")');
     });

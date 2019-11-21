@@ -68,7 +68,7 @@ export default class GeneralHelper {
     }
 
     const errorString = defaultErrorHandler(error);
-    expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString));
+    expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString) as string);
   }
 
   getRequireBitPath(box: string, name: string) {

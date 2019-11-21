@@ -68,7 +68,7 @@ describe('cyclic dependencies', function() {
         });
         it('should not show a clean workspace', () => {
           const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         });
       });
     });
@@ -263,7 +263,7 @@ describe('cyclic dependencies', function() {
         });
         it('should not show a clean workspace', () => {
           const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         });
       });
     });

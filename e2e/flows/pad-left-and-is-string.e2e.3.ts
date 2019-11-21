@@ -137,7 +137,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           // as an intermediate step, make sure bit status doesn't show them as modified
           // it's a very important step which covers a few bugs
           const output = helper.command.runCmd('bit status');
-          expect(output).to.not.have.a.string('modified');
+          expect(output).to.not.have.string('modified');
 
           exportOutput = helper.command.exportAllComponents();
 
@@ -152,10 +152,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           npmCiRegistry.destroy();
         });
         it('should export them successfully', () => {
-          expect(exportOutput).to.have.a.string('exported 2 components to scope');
+          expect(exportOutput).to.have.string('exported 2 components to scope');
         });
         it('should eject them successfully', () => {
-          expect(ejectOutput).to.not.have.a.string(failureEjectMessage);
+          expect(ejectOutput).to.not.have.string(failureEjectMessage);
         });
         it('should delete the original component files from the file-system', () => {
           expect(path.join(helper.scopes.localPath, 'components/string/is-string')).not.to.be.a.path();

@@ -647,7 +647,7 @@ describe('bit add command', function() {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' });
-      expect(files).to.deep.not.include({ relativePath: 'bar/a.example.js', test: true, name: 'a.example.js' });
+      expect(files).to.not.deep.include({ relativePath: 'bar/a.example.js', test: true, name: 'a.example.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
   });

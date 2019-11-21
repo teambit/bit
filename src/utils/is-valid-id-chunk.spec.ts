@@ -4,7 +4,7 @@ import isValidIdChunk from './is-valid-id-chunk';
 describe('isValidIdChunk', () => {
   it('should disallow non string inputs', () => {
     expect(isValidIdChunk(123)).to.be.false;
-    expect(isValidIdChunk(123), true).to.be.false;
+    expect(isValidIdChunk(123, true)).to.be.false;
   });
   it('should allow a string that consist of small letters', () => {
     expect(isValidIdChunk('abc')).to.be.true;

@@ -40,7 +40,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     const results = potentialSymlinksAbs.map(async potentialSymlink => {
       const link = await this._getLinkIfExist(potentialSymlink);
       if (!link) return;
-      const exists = await fs.exists(link);
+      const exists = await fs.pathExists(link);
       if (exists) return;
       const brokenSymlink = {
         symlinkPath: potentialSymlink,

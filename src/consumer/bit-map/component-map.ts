@@ -292,7 +292,7 @@ export default class ComponentMap {
   async deleteConfigDirIfNotExists() {
     const resolvedDir = this.getBaseConfigDir();
     if (resolvedDir) {
-      const isExist = await fs.exists(resolvedDir);
+      const isExist = await fs.pathExists(resolvedDir);
       if (!isExist) {
         this.setConfigDir(null);
       }

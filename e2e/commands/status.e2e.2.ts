@@ -37,7 +37,7 @@ describe('bit status command', function() {
     });
     it('should indicate that there are no components', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
     });
   });
 
@@ -49,7 +49,7 @@ describe('bit status command', function() {
     });
     it('should indicate that there are no components and should not throw an error', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
     });
   });
   describe('when a component is created and added but not tagged', () => {
@@ -597,7 +597,7 @@ describe('bit status command', function() {
     });
     it('status should not show the component as missing packages', () => {
       const output = helper.command.runCmd('bit status');
-      expect(output).to.not.have.a.string(statusFailureMsg);
+      expect(output).to.not.have.string(statusFailureMsg);
     });
   });
 });

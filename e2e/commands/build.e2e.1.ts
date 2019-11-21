@@ -79,8 +79,8 @@ describe('bit build', function() {
           helper.command.tagAllComponents();
           const output = helper.command.status();
           // Make sure there is no modified components
-          expect(output).to.not.contain.string('modified');
-          expect(output).to.contain.string('staged');
+          expect(output).to.not.have.string('modified');
+          expect(output).to.have.string('staged');
         });
         beforeEach(() => {
           helper.fs.deletePath(distFolder);

@@ -123,7 +123,7 @@ describe('bit diff command', function() {
         expect(output).to.have.string(fixtures.isTypeV2);
       });
       it('should not show non modified components', () => {
-        expect(output).to.not.have.a.string('utils/is-string');
+        expect(output).to.not.have.string('utils/is-string');
       });
     });
     describe('running bit diff with multiple ids', () => {

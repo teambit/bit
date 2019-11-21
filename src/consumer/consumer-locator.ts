@@ -79,11 +79,11 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | n
   }
 
   async function pathHasBitMap(path: string): Promise<boolean> {
-    return (await fs.exists(pathlib.join(path, BIT_MAP))) || fs.exists(pathlib.join(path, OLD_BIT_MAP));
+    return (await fs.pathExists(pathlib.join(path, BIT_MAP))) || fs.pathExists(pathlib.join(path, OLD_BIT_MAP));
   }
 
   async function pathHasScopeDir(path: string): Promise<boolean> {
-    return (await fs.exists(composeBitHiddenDirPath(path))) || fs.exists(composeBitGitHiddenDirPath(path));
+    return (await fs.pathExists(composeBitHiddenDirPath(path))) || fs.pathExists(composeBitGitHiddenDirPath(path));
   }
 
   async function getConsumerConfigIfExists(path: string): Promise<WorkspaceConfig | null | undefined> {

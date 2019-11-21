@@ -52,7 +52,7 @@ export default class FsHelper {
     return fs.readJsonSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
-  outputFile(filePathRelativeToLocalScope: string, data = ''): string {
+  outputFile(filePathRelativeToLocalScope: string, data = ''): void {
     return fs.outputFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
   }
 
