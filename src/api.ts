@@ -24,9 +24,9 @@ export async function buildOne(
   id: string,
   noCache: boolean = false,
   verbose: boolean = false,
-  directory?: string
+  workspaceDir?: string
 ): Promise<string[] | undefined> {
-  return build(id, noCache, verbose, directory);
+  return build(id, noCache, verbose, workspaceDir);
 }
 
 export async function buildAll(
