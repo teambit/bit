@@ -100,7 +100,7 @@
     "execa": "^2.0.3",
     "find-up": "^2.1.0",
     "firstline": "^2.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^6.0.0",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
     "graphviz": "0.0.9",
