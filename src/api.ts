@@ -22,16 +22,17 @@ export function list(scopePath: string) {
 
 export async function buildOne(
   id: string,
-  noCache: boolean = false,
-  verbose: boolean = false
+  noCache = false,
+  verbose = false,
+  workspaceDir?: string
 ): Promise<string[] | undefined> {
-  return build(id, noCache, verbose);
+  return build(id, noCache, verbose, workspaceDir);
 }
 
 export async function buildAll(
   id: string,
-  noCache: boolean = false,
-  verbose: boolean = false
+  noCache = false,
+  verbose = false,
 ): Promise<Record<string, any>> {
   return buildAllApi(noCache, verbose);
 }
