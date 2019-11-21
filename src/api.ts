@@ -23,15 +23,16 @@ export function list(scopePath: string) {
 export async function buildOne(
   id: string,
   noCache: boolean = false,
-  verbose: boolean = false
+  verbose: boolean = false,
+  directory?: string
 ): Promise<string[] | undefined> {
-  return build(id, noCache, verbose);
+  return build(id, noCache, verbose, directory);
 }
 
 export async function buildAll(
   id: string,
   noCache: boolean = false,
-  verbose: boolean = false
+  verbose: boolean = false,
 ): Promise<Record<string, any>> {
   return buildAllApi(noCache, verbose);
 }
