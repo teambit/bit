@@ -3,7 +3,6 @@ import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import librarian from 'librarian';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -43,11 +42,6 @@ export default class Isolator {
   static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
-    capsule.execNode = async (executable, args) => {
-      // TODO: better
-      const { patchFileSystem } = librarian.api();
-      await patchFileSystem(executable, { args, cwd: dir });
-    };
     return new Isolator(capsule, scope, consumer);
   }
 
@@ -110,7 +104,7 @@ export default class Isolator {
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    // await this._installWithPeerOption(); // TODO: make this step optional to support all flows (with or without patching fs)
+    await this._installWithPeerOption();
   }
 
   async writeLinks() {
@@ -164,7 +158,7 @@ export default class Isolator {
     const dataToPersist = new DataToPersist();
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
-    await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: true });
+    await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
   async _addComponentsToRoot(): Promise<void> {

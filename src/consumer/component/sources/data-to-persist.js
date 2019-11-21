@@ -69,12 +69,10 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
+  async persistAllToCapsule(capsule: Capsule) {
     this._log();
     this._validateRelative();
-    if (!opts.keepExistingCapsule) {
-      await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
-    }
+    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     await Promise.all(this.files.map(file => this._writeFileToCapsule(capsule, file)));
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
@@ -226,7 +224,9 @@ export default class DataToPersist {
       f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
     );
     if (directoryCollision) {
-      throw new Error(`unable to add the file "${file.path}", because another file "${directoryCollision.path}" is going to be written.
+      throw new Error(`unable to add the file "${file.path}", because another file "${
+        directoryCollision.path
+      }" is going to be written.
 one of them is a directory of the other one, and is not possible to have them both`);
     }
   }
