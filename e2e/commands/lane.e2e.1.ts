@@ -22,7 +22,6 @@ describe('bit lane command', function() {
     });
   });
   describe('create a snap on master then on a new lane', () => {
-    let output: string;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
@@ -31,9 +30,15 @@ describe('bit lane command', function() {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponents();
-      output = helper.command.showLanes('--components');
+    });
+    it('bit status should show the component only once as staged', () => {
+      const status = helper.command.statusJson();
     });
     describe('bit lane with --components flag', () => {
+      let output: string;
+      before(() => {
+        output = helper.command.showLanes('--components');
+      });
       it('should show all lanes and mark the current one', () => {
         expect(output).to.have.string('master');
         expect(output).to.have.string('* dev');

@@ -13,6 +13,7 @@ export default class Checkout extends Command {
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
+  bit checkout <lane> => switch to the specified lane and checkout components to the head of this lane
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

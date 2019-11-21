@@ -60,7 +60,9 @@ export default class Lane extends Command {
         .map(laneName => {
           const laneStr = laneName === results.currentLane ? `* ${laneName}` : laneName;
           // @ts-ignore
-          const components = results.lanesWithComponents[lane].map(c => `${c.id.toString()}\t${c.head}`).join('\t\n');
+          const components = results.lanesWithComponents[laneName]
+            .map(c => `${c.id.toString()}\t${c.head}`)
+            .join('\t\n');
           return `${chalk.bold(laneStr)}\n\t${components}`;
         })
         .join('\n');
