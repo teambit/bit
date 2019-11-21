@@ -183,6 +183,7 @@
     "@types/chai-fs": "^2.0.2",
     "@types/chai-string": "^1.4.2",
     "@types/didyoumean": "^1.2.0",
+    "@types/fs-extra": "^8.0.1",
     "@types/graphlib": "^2.1.5",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.9",

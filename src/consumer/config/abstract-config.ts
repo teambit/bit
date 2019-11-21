@@ -237,10 +237,10 @@ export default class AbstractConfig {
   }
 
   static async pathHasBitJson(bitPath: string): Promise<boolean> {
-    return fs.exists(this.composeBitJsonPath(bitPath));
+    return fs.pathExists(this.composeBitJsonPath(bitPath));
   }
   static async pathHasPackageJson(bitPath: string): Promise<boolean> {
-    return fs.exists(this.composePackageJsonPath(bitPath));
+    return fs.pathExists(this.composePackageJsonPath(bitPath));
   }
 
   static async loadJsonFileIfExist(jsonFilePath: string): Promise<Record<string, any> | null | undefined> {
@@ -255,9 +255,11 @@ export default class AbstractConfig {
 
   static async removeIfExist(bitPath: string): Promise<boolean> {
     const dirToRemove = this.composeBitJsonPath(bitPath);
-    if (fs.exists(dirToRemove)) {
+    const exists = await fs.pathExists(dirToRemove);
+    if (exists) {
       logger.info(`abstract-config, deleting ${dirToRemove}`);
-      return fs.remove(dirToRemove);
+      await fs.remove(dirToRemove);
+      return true;
     }
     return false;
   }
