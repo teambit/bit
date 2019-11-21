@@ -1507,6 +1507,33 @@ describe('envs', function() {
       expect(comp.manuallyRemovedDependencies.devDependencies).to.include('babel-preset-env');
     });
   });
+  describe('overrides dynamic component dependencies', () => {
+    before(() => {
+      helper.scopeHelper.getClonedLocalScope(authorScopeBeforeExport);
+      const compilerPath = `.bit/components/compilers/new-babel/${helper.scopes.env}/0.0.1/compiler.js`;
+      const compilerFile = helper.fs.readFile(compilerPath);
+      helper.fs.outputFile(
+        compilerPath,
+        compilerFile.replace(
+          'return { devDependencies: dynamicPackageDependencies };',
+          "return { devDependencies: dynamicPackageDependencies, dependencies: {'@bit/comp/my-comp2': '2.0.0'} };"
+        )
+      );
+      helper.bitJson.addOverrides({
+        '*': {
+          dependencies: {
+            '@bit/comp/my-comp2': '-'
+          }
+        }
+      });
+    });
+    it('overrides feature should consider the packages received from the compiler', () => {
+      const comp = helper.command.showComponentParsed('comp/my-comp');
+      expect(comp.dependencies).to.have.lengthOf(0);
+      expect(comp.compilerPackageDependencies.dependencies).to.not.have.property('@bit/comp/my-comp2');
+      expect(comp.manuallyRemovedDependencies.dependencies).to.include('comp/my-comp2');
+    });
+  });
 });
 
 describe('envs with relative paths', function() {

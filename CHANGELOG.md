@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2147](https://github.com/teambit/bit/issues/2147) fix overrides to respect component dependencies received by an extension
+
 ## [14.4.4-dev.6] - 2019-11-21
 
 - fix symlink errors when generating links to `d.ts` files
