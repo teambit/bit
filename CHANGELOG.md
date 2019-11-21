@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.4.4-dev.7] - 2019-11-21
+## [14.4.4-dev.8] - 2019-11-21
 
 - refactor buildOne to include workingDir
 
