@@ -13,7 +13,6 @@ const COMPONENTS_INDEX_FILENAME = 'index.json';
 type IndexItem = {
   id: { scope: string | null | undefined; name: string };
   isSymlink: boolean;
-  lane?: string;
   hash: string;
 };
 
@@ -69,14 +68,14 @@ export default class ComponentsIndex {
     // $FlowFixMe box is not needed
     return new BitId(indexItem.id);
   }
-  getComponentsGroupedByLanes(): { [lane: string]: string[] } {
-    return this.index.reduce((acc, current) => {
-      const laneName = current.lane || DEFAULT_LANE;
-      if (acc[laneName]) acc[laneName].push(current.hash);
-      else acc[laneName] = [current.hash];
-      return acc;
-    }, {});
-  }
+  // getComponentsGroupedByLanes(): { [lane: string]: string[] } {
+  //   return this.index.reduce((acc, current) => {
+  //     const laneName = current.lane || DEFAULT_LANE;
+  //     if (acc[laneName]) acc[laneName].push(current.hash);
+  //     else acc[laneName] = [current.hash];
+  //     return acc;
+  //   }, {});
+  // }
   addMany(bitObjects: BitObject[]): boolean {
     const added = bitObjects.map(bitObject => this.addOne(bitObject));
     return added.some(oneAdded => oneAdded); // return true if one of the objects was added
@@ -90,7 +89,6 @@ export default class ComponentsIndex {
       isSymlink: bitObject instanceof Symlink,
       hash
     };
-    if (bitObject.lane) indexItem.lane = bitObject.lane;
     this.index.push(indexItem);
     return true;
   }

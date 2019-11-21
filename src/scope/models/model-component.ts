@@ -63,7 +63,6 @@ export type ComponentProps = {
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
   snaps?: SnapModel;
-  lane?: string;
 };
 
 type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
@@ -86,7 +85,6 @@ export default class Component extends BitObject {
   scopesList: ScopeListItem[];
   snaps: SnapModel;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
-  lane: string | null;
 
   constructor(props: ComponentProps) {
     super();
@@ -101,7 +99,6 @@ export default class Component extends BitObject {
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
     this.snaps = props.snaps || {};
-    this.lane = props.lane || null;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -409,8 +406,7 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    const withScope = this.scope ? [this.scope, this.name].join('/') : this.name;
-    return this.lane ? `${this.lane}${LANE_SEPARATOR}${withScope}` : withScope;
+    return this.scope ? [this.scope, this.name].join('/') : this.name;
   }
 
   toBitId(): BitId {
@@ -455,8 +451,6 @@ export default class Component extends BitObject {
     if (this.local) componentObject.local = this.local;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
-    // @ts-ignore
-    if (this.lane) componentObject.lane = this.lane;
 
     return componentObject;
   }
@@ -681,7 +675,6 @@ export default class Component extends BitObject {
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      lane: rawComponent.lane,
       scopesList: rawComponent.remotes,
       snaps: snaps(rawComponent.snaps)
     });

@@ -309,8 +309,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     specsResults?: any;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
-    // @ts-ignore
-    source.lane = consumer.getCurrentLane();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await this.findOrAddComponent(source);
