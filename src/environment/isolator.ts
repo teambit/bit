@@ -2,6 +2,7 @@ import R from 'ramda';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
+import librarian from 'librarian';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -22,6 +23,7 @@ import BitMap from '../consumer/bit-map';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
+import loader from '../cli/loader';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -55,19 +57,30 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer) {
+  dir?: string;
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
+    this.dir = dir;
   }
 
   static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
-    return new Isolator(capsule, scope, consumer);
+    return new Isolator(capsule, scope, consumer, dir);
   }
 
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+    const loaderPrefix = `isolating component - ${componentId.name}`;
+    loader.setText(loaderPrefix);
+    const log = message => loader.setText(`${loaderPrefix}: ${message}`);
+    // @ts-ignore TODO: this should be part of the capsule interface
+    this.capsule.execNode = async (executable, args) => {
+      const { patchFileSystem } = librarian.api();
+      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`); // TODO: do this from the compiler/tester so we can customize the message
+      await patchFileSystem(executable, { args, cwd: this.dir, log, onScriptRun });
+    };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
@@ -125,7 +138,7 @@ export default class Isolator {
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    await this._installWithPeerOption();
+    // await this._installWithPeerOption(); // TODO: bring this back and allow overriding it with a config option if we want to use librarian
   }
 
   async writeLinks() {
@@ -179,7 +192,7 @@ export default class Isolator {
     const dataToPersist = new DataToPersist();
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
-    await dataToPersist.persistAllToCapsule(this.capsule);
+    await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: true });
   }
 
   async _addComponentsToRoot(): Promise<void> {

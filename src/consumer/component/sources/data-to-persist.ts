@@ -71,10 +71,12 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule) {
+  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
     this._log();
     this._validateRelative();
-    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    if (!opts.keepExistingCapsule) {
+      await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    }
     await Promise.all(this.files.map(file => this._writeFileToCapsule(capsule, file)));
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
