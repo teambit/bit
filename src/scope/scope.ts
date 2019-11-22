@@ -43,6 +43,9 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
+import { IndexType, ComponentItem, LaneItem } from './objects/components-index';
+import Lane from './models/lane';
+import LaneId from '../lane-id/lane-id';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -222,21 +225,30 @@ export default class Scope {
   }
 
   async list(): Promise<ModelComponent[]> {
+    const filter = (comp: ComponentItem) => !comp.isSymlink;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listComponents();
+    return this.objects.listObjectsFromIndex(IndexType.components, filter);
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listComponentsIncludeSymlinks();
+    return this.objects.listObjectsFromIndex(IndexType.components);
   }
 
-  async listIncludeRemoteHead(): Promise<ModelComponent[]> {
+  async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
+    const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
     await Promise.all(
       components.map(async component => {
         if (component.scope) {
           component.remoteHead = await this.objects.remoteLanes.getRef(component.scope, component.name);
+          const remoteLane = laneId.isDefault() ? null : await this.loadLane(laneId);
+          if (remoteLane) {
+            component.laneHeadRemote = remoteLane.getComponentHead(component.toBitId());
+          }
+        }
+        if (lane) {
+          component.laneHeadLocal = lane.getComponentHead(component.toBitId());
         }
       })
     );
@@ -248,9 +260,21 @@ export default class Scope {
     return listResults.filter(result => !result.scope || result.scope === this.name);
   }
 
+  async listLanes(): Promise<Lane[]> {
+    return (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
+  }
+
+  async loadLane(id: LaneId): Promise<Lane | null> {
+    if (id.isDefault()) return null; // master lane is not saved
+    const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
+    const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
+    if (!hash) return null;
+    return (await this.objects.load(new Ref(hash))) as Lane;
+  }
+
   // async listGroupedByLanes(): Promise<{ [lane: string]: ModelComponent[] }> {
   //   const results: { [lane: string]: ModelComponent[] } = {};
-  //   const componentsGrouped = this.objects.componentsIndex.getComponentsGroupedByLanes();
+  //   const componentsGrouped = this.objects.scopeIndex.getComponentsGroupedByLanes();
   //   await Promise.all(
   //     Object.keys(componentsGrouped).map(async lane => {
   //       // @ts-ignore
@@ -258,10 +282,6 @@ export default class Scope {
   //     })
   //   );
   //   return results;
-  // }
-
-  // listLanes() {
-  //   return Object.keys(this.objects.componentsIndex.getComponentsGroupedByLanes());
   // }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {

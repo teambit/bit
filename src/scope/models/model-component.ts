@@ -85,6 +85,8 @@ export default class Component extends BitObject {
   scopesList: ScopeListItem[];
   snaps: SnapModel;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  laneHeadLocal?: Ref | null;
+  laneHeadRemote?: Ref | null;
 
   constructor(props: ComponentProps) {
     super();
@@ -108,7 +110,7 @@ export default class Component extends BitObject {
 
   getRef(versionOrHash: string): Ref | null {
     if (isHash(versionOrHash)) {
-      if (!this.snaps.head) return null;
+      // if (!this.snaps.head) return null; // in case the component is on another lane, the head is empty!
       return new Ref(versionOrHash);
       // @todo: should we check whether the ref really exists?
       // if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
@@ -183,6 +185,10 @@ export default class Component extends BitObject {
     );
   }
 
+  isEmpty() {
+    return empty(this.versions) && !this.snaps.head;
+  }
+
   latest(): string {
     if (empty(this.versions) && !this.snaps.head) return VERSION_ZERO;
     if (this.snaps.head) {
@@ -215,6 +221,7 @@ export default class Component extends BitObject {
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.latest();
+    if (this.isEmpty()) return false; // in case a snap was created on another lane
     if (!isHash(latest) && !isHash(version)) {
       return semver.gt(latest, version);
     }
@@ -654,9 +661,11 @@ export default class Component extends BitObject {
 
   isLocallyChanged(): boolean {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
-    if (isEmpty(this.state) || isEmpty(this.state.versions)) return false;
     const localVersions = this.getLocalVersions();
-    return localVersions.length > 0;
+    if (localVersions.length) return true;
+    if (this.laneHeadLocal && !this.laneHeadRemote) return true;
+    // todo: travel the parents to check whether local changes were done.
+    return false;
   }
 
   static parse(contents: string): Component {

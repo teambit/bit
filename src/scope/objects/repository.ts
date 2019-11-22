@@ -11,7 +11,7 @@ import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
-import ComponentsIndex from './components-index';
+import ScopeIndex, { IndexType } from './components-index';
 import { ScopeJson } from '../scope-json';
 import RemoteLanes from '../lanes/remote-lanes';
 
@@ -24,7 +24,7 @@ export default class Repository {
   scopeJson: ScopeJson;
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  componentsIndex: ComponentsIndex;
+  scopeIndex: ScopeIndex;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [key: string]: BitObject } = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -36,21 +36,21 @@ export default class Repository {
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
     const repository = new Repository(scopePath, scopeJson);
-    const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
-    repository.componentsIndex = componentsIndex;
+    const scopeIndex = await repository.loadOptionallyCreateScopeIndex();
+    repository.scopeIndex = scopeIndex;
     repository.remoteLanes = new RemoteLanes(scopePath);
     return repository;
   }
 
   static create({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Repository {
     const repository = new Repository(scopePath, scopeJson);
-    const componentsIndex = ComponentsIndex.create(scopePath);
-    repository.componentsIndex = componentsIndex;
+    const scopeIndex = ScopeIndex.create(scopePath);
+    repository.scopeIndex = scopeIndex;
     return repository;
   }
 
   static reset(scopePath: string): Promise<void> {
-    return ComponentsIndex.reset(scopePath);
+    return ScopeIndex.reset(scopePath);
   }
 
   static getPathByScopePath(scopePath: string) {
@@ -136,14 +136,15 @@ export default class Repository {
     );
   }
 
-  async listComponentsIncludeSymlinks(): Promise<BitObject[]> {
-    const hashes = this.componentsIndex.getHashesIncludeSymlinks();
+  async listObjectsFromIndex(indexType: IndexType, filter?: Function): Promise<BitObject[]> {
+    const hashes = filter ? this.scopeIndex.getHashesByQuery(indexType, filter) : this.scopeIndex.getHashes(indexType);
     return this._getBitObjectsByHashes(hashes);
   }
 
-  async listComponents(): Promise<BitObject[]> {
-    const hashes = this.componentsIndex.getHashes();
-    return this._getBitObjectsByHashes(hashes);
+  getHashFromIndex(indexType: IndexType, filter: Function): string | null {
+    const hashes = this.scopeIndex.getHashesByQuery(indexType, filter);
+    if (hashes.length > 2) throw new Error('getHashFromIndex expect to get zero or one result');
+    return hashes.length ? hashes[0] : null;
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
@@ -151,16 +152,17 @@ export default class Repository {
       hashes.map(async hash => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
-          const componentId = this.componentsIndex.getIdByHash(hash);
-          const indexJsonPath = this.componentsIndex.getPath();
-          if (this.componentsIndex.isFileOnBitHub()) {
+          const indexJsonPath = this.scopeIndex.getPath();
+          if (this.scopeIndex.isFileOnBitHub()) {
             logger.error(
               `repository._getBitObjectsByHashes, indexJson at "${indexJsonPath}" is outdated and needs to be deleted`
             );
             return null;
           }
+          const indexItem = this.scopeIndex.find(hash);
+          if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
           // @ts-ignore componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(componentId, indexJsonPath);
+          throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
         }
         return bitObject;
       })
@@ -169,17 +171,17 @@ export default class Repository {
     return bitObjects.filter(b => b); // remove nulls;
   }
 
-  async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {
+  async loadOptionallyCreateScopeIndex(): Promise<ScopeIndex> {
     try {
-      const componentsIndex = await ComponentsIndex.load(this.scopePath);
-      return componentsIndex;
+      const scopeIndex = await ScopeIndex.load(this.scopePath);
+      return scopeIndex;
     } catch (err) {
       if (err.code === 'ENOENT') {
         const bitObjects: BitObject[] = await this.list();
-        const componentsIndex = ComponentsIndex.create(this.scopePath);
-        componentsIndex.addMany(bitObjects);
-        await componentsIndex.write();
-        return componentsIndex;
+        const scopeIndex = ScopeIndex.create(this.scopePath);
+        scopeIndex.addMany(bitObjects);
+        await scopeIndex.write();
+        return scopeIndex;
       }
       throw err;
     }
@@ -304,8 +306,8 @@ export default class Repository {
     const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     await Promise.all(uniqRefs.map(ref => this._deleteOne(ref)));
-    const removed = this.componentsIndex.removeMany(uniqRefs);
-    if (removed) await this.componentsIndex.write();
+    const removed = this.scopeIndex.removeMany(uniqRefs);
+    if (removed) await this.scopeIndex.write();
   }
 
   async _writeMany(): Promise<void> {
@@ -313,8 +315,8 @@ export default class Repository {
     logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
     await Promise.all(Object.keys(this.objects).map(hash => this._writeOne(this.objects[hash])));
-    const added = this.componentsIndex.addMany(R.values(this.objects));
-    if (added) await this.componentsIndex.write();
+    const added = this.scopeIndex.addMany(R.values(this.objects));
+    if (added) await this.scopeIndex.write();
   }
 
   /**
@@ -330,7 +332,7 @@ export default class Repository {
 
   /**
    * always prefer this.persist().
-   * this method doesn't write to componentsIndex. so using this method for ModelComponent or
+   * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
   async _writeOne(object: BitObject): Promise<boolean> {

@@ -247,9 +247,7 @@ to resolve this error, please re-import the above components`;
   ],
   [
     OutdatedIndexJson,
-    err => `error: component ${chalk.bold(
-      err.componentId
-    )} found in the index.json file, however, is missing from the scope.
+    err => `error: component ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
 to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIssueToGithubMsg}
 `
   ],

@@ -46,7 +46,7 @@ export default class ComponentsList {
 
   async getModelComponents(): Promise<ModelComponent[]> {
     if (!this._modelComponents) {
-      this._modelComponents = await this.scope.listIncludeRemoteHead();
+      this._modelComponents = await this.scope.listIncludeRemoteHead(this.consumer.getCurrentLane());
     }
     return this._modelComponents;
   }

@@ -23,7 +23,8 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS
+  DEPENDENCIES_FIELDS,
+  DEFAULT_LANE
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -71,6 +72,7 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
+import LaneId from '../lane-id/lane-id';
 
 type ConsumerProps = {
   projectPath: string;
@@ -187,8 +189,8 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
-  getCurrentLane(): string | undefined {
-    return this.bitMap.lane;
+  getCurrentLane(): LaneId {
+    return new LaneId({ name: this.bitMap.lane || DEFAULT_LANE });
   }
 
   async cleanTmpFolder() {

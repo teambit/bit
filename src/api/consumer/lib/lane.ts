@@ -28,22 +28,24 @@ export default async function lane({
     consumer.bitMap.addLane(name);
     results = { added: name };
   } else {
-    const currentLane = consumer.getCurrentLane() || DEFAULT_LANE;
+    const currentLane = consumer.getCurrentLane();
+    const currentLaneStr = currentLane.toString();
     if (components) {
       const componentsGrouped = await consumer.scope.listGroupedByLanes();
       const lanesWithComponents = Object.keys(componentsGrouped).reduce((acc, current) => {
         acc[current] = componentsGrouped[current].map(c => ({ id: c.toBitId(), head: c.latest() }));
         return acc;
       }, {});
-      if (!lanesWithComponents[currentLane]) lanesWithComponents[currentLane] = [];
+      if (!lanesWithComponents[currentLaneStr]) lanesWithComponents[currentLaneStr] = [];
       results = { lanesWithComponents };
     } else {
       // show lanes
-      const lanes = consumer.scope.listLanes();
-      if (!lanes.includes(currentLane)) lanes.push(currentLane);
+      const lanesObjects = await consumer.scope.listLanes();
+      const lanes = lanesObjects.map(l => l.id());
+      if (!lanes.includes(currentLaneStr)) lanes.push(currentLaneStr);
       results = { lanes };
     }
-    results.currentLane = currentLane;
+    results.currentLane = currentLaneStr;
   }
   await consumer.onDestroy();
   return results;

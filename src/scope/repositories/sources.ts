@@ -17,6 +17,7 @@ import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import { isHash } from '../../version/version-parser';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
+import Lane from '../models/lane';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -324,8 +325,16 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedTesterDependencies,
       specsResults
     });
-    component.addVersion(version, source.version);
-    objectRepo.add(version).add(component);
+    const currentLane = consumer.getCurrentLane();
+    objectRepo.add(version);
+    if (currentLane.isDefault()) {
+      component.addVersion(version, source.version);
+    } else {
+      const lane = (await this.scope.loadLane(currentLane)) || Lane.create(currentLane);
+      lane.addComponent({ id: component.toBitId(), head: version.hash() });
+      objectRepo.add(lane);
+    }
+    objectRepo.add(component);
 
     files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
