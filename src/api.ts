@@ -29,11 +29,7 @@ export async function buildOne(
   return build(id, noCache, verbose, workspaceDir);
 }
 
-export async function buildAll(
-  id: string,
-  noCache = false,
-  verbose = false,
-): Promise<Record<string, any>> {
+export async function buildAll(id: string, noCache = false, verbose = false): Promise<Record<string, any>> {
   return buildAllApi(noCache, verbose);
 }
 
