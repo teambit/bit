@@ -759,6 +759,7 @@ workflows:
             - build
       -
         generate_docs:
+          <<: *semver_tags_only_filters
           requires:
             - build
       -
@@ -789,6 +790,7 @@ workflows:
             - build-rpm
       -
         slack_deploy_notification:
+          <<: *semver_tags_only_filters
           requires:
             - generate_docs
             - publish_to_jfrog
