@@ -33,7 +33,7 @@ export default class Init extends Command {
     ['c', 'compiler <compiler>', 'set up compiler'],
     ['t', 'tester <tester>', 'set up tester'],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
-    ['p', 'package-manager <package-manager>', 'set up package manager (npm | yarn)'],
+    ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
   ];
