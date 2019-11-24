@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.4.4-dev.9] - 2019-11-24
+
 - [#2147](https://github.com/teambit/bit/issues/2147) fix overrides to respect component dependencies received by an extension
 
 ## [14.4.4-dev.8] - 2019-11-21
