@@ -283,7 +283,11 @@ export default class Scope {
       loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
       const buildResults = await component.dists.writeDists(component, consumer, false);
-      loader.succeed();
+      if (buildResults) {
+        loader.succeed();
+      } else {
+        loader.fail();
+      }
       return { component: component.id.toString(), buildResults };
     };
     const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
