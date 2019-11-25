@@ -25,7 +25,7 @@ export default class GeneralHelper {
   getIndexJson() {
     return fs.readJsonSync(this.indexJsonPath());
   }
-  writeIndexJson(indexJson: Record<string, any>) {
+  writeIndexJson(indexJson: object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
   installAndGetTypeScriptCompilerDir(): string {

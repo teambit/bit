@@ -1,4 +1,3 @@
-import R from 'ramda';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/orphan-symlink-objects';
@@ -34,8 +33,8 @@ describe('scope with a symlink object reference to a non-exist component', funct
     expect(scopeAfterDelete).to.have.lengthOf(1);
 
     const indexJson = helper.general.getIndexJson();
-    const componentIndex = indexJson.filter(i => i.isSymlink === false);
-    helper.general.writeIndexJson(R.without(componentIndex, indexJson));
+    const componentIndex = indexJson.components.filter(i => i.isSymlink === true);
+    helper.general.writeIndexJson({ components: componentIndex, lanes: [] });
   });
   it('bit import should throw a descriptive error', () => {
     const output = helper.general.runWithTryCatch('bit import bar/foo');
