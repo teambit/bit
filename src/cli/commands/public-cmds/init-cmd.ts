@@ -112,7 +112,7 @@ export default class Init extends Command {
   }
 }
 
-function _isAnyNotInteractiveFlagUsed(flags: Object) {
+function _isAnyNotInteractiveFlagUsed(flags: Record<string, any>) {
   const withoutInteractive = R.omit(['interactive'], flags);
   const cleaned = clean(withoutInteractive);
   return !R.isEmpty(cleaned);
