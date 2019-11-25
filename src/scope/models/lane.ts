@@ -3,6 +3,8 @@ import { BitObject, Ref } from '../objects';
 import { getStringifyArgs, filterObject, sha1 } from '../../utils';
 import LaneId from '../../lane-id/lane-id';
 import { BitId } from '../../bit-id';
+import logger from '../../logger/logger';
+import ValidationError from '../../error/validation-error';
 
 export type LaneProps = {
   scope?: string;
@@ -39,14 +41,19 @@ export default class Lane extends BitObject {
     return this.components.map(c => c.head);
   }
   validateBeforePersisting(str: string) {
-    // @todo: implement
+    logger.debug(`validating lane object: ${this.hash().toString()} ${this.id()}`);
+    const lane = Lane.parse(str);
+    lane.validate();
   }
   toObject() {
     return filterObject(
       {
         scope: this.scope,
         name: this.name,
-        components: this.components.map(component => ({ id: component.id, head: component.head.toString() }))
+        components: this.components.map(component => ({
+          id: { scope: component.id.scope, name: component.id.name },
+          head: component.head.toString()
+        }))
       },
       val => !!val
     );
@@ -77,7 +84,16 @@ export default class Lane extends BitObject {
     return Buffer.from(str);
   }
   addComponent(component: Component) {
-    this.components.push(component);
+    const existsComponent = this.getComponentByName(component.id);
+    if (existsComponent) {
+      existsComponent.id = component.id;
+      existsComponent.head = component.head;
+    } else {
+      this.components.push(component);
+    }
+  }
+  getComponentByName(bitId: BitId): Component | undefined {
+    return this.components.find(c => c.id.isEqualWithoutScopeAndVersion(bitId));
   }
   getComponentHead(bitId: BitId): Ref | null {
     const found = this.components.find(c => c.id.isEqual(bitId));
@@ -86,5 +102,13 @@ export default class Lane extends BitObject {
   }
   toLaneId() {
     return new LaneId({ name: this.name, scope: this.scope });
+  }
+  validate() {
+    const message = `unable to save Lane object "${this.id()}"`;
+    this.components.forEach(component => {
+      if (this.components.filter(c => c.id.name === component.id.name).length > 1) {
+        throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
+      }
+    });
   }
 }

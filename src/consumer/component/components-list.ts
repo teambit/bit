@@ -103,7 +103,7 @@ export default class ComponentsList {
       fileSystemComponents.map(async component => {
         const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
         if (!modelComponent || !component.id.hasVersion()) return;
-        const latestVersionLocally = modelComponent.latest();
+        const latestVersionLocally = modelComponent.latestOnLane();
         const latestIncludeRemoteHead = await modelComponent.latestIncludeRemote(this.scope.objects);
         const isOutdated = (): boolean => {
           if (latestIncludeRemoteHead !== latestVersionLocally) return true;

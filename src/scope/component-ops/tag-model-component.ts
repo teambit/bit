@@ -175,6 +175,7 @@ export default (async function tagModelComponent({
         // otherwise it's a new component, so this check is irrelevant
         const modelComponent = await scope.getModelComponentIfExist(component.id);
         if (!modelComponent) throw new ShowDoctorError(`component ${component.id} was not found in the model`);
+        if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
         const latest = modelComponent.latest();
         if (latest !== component.version) {
           return {

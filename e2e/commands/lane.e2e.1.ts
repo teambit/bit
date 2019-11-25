@@ -33,6 +33,12 @@ describe('bit lane command', function() {
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(1);
+      expect(status.importPendingComponents).to.have.lengthOf(0);
+      expect(status.invalidComponents).to.have.lengthOf(0);
+      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.newComponents).to.have.lengthOf(0);
+      expect(status.outdatedComponents).to.have.lengthOf(0);
     });
     describe('bit lane with --components flag', () => {
       let output: string;
@@ -43,6 +49,29 @@ describe('bit lane command', function() {
         expect(output).to.have.string('master');
         expect(output).to.have.string('* dev');
       });
+    });
+  });
+  describe('create a snap on a new lane then tagged', () => {
+    let lanes;
+    let firstSnap;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.createLane();
+      helper.command.snapAllComponents();
+      firstSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
+      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+      helper.command.tagAllComponents();
+      lanes = helper.command.showLanesParsed();
+    });
+    it('the new tag should not change the head of the lane', () => {
+      expect(lanes.dev[0].id.name).to.equal('bar/foo');
+      expect(lanes.dev[0].head).to.equal(firstSnap);
+    });
+    it('the tag should be saved globally, as master', () => {
+      expect(lanes.master[0].id.name).to.equal('bar/foo');
+      expect(lanes.master[0].head).to.equal('0.0.1');
     });
   });
 });

@@ -69,6 +69,10 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id}`, cwd);
     return JSON.parse(result);
   }
+  catLane(id: string, cwd?: string): Record<string, any> {
+    const result = this.runCmd(`bit cat-lane ${id}`, cwd);
+    return JSON.parse(result);
+  }
   addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
@@ -124,9 +128,18 @@ export default class CommandHelper {
   showLanes(options = '') {
     return this.runCmd(`bit lane ${options}`);
   }
+  showLanesParsed(options = '') {
+    const results = this.runCmd(`bit lane ${options} --json --components`);
+    return JSON.parse(results);
+  }
   getSnapHead(id: string) {
     const comp = this.catComponent(id);
     return comp.snaps.head;
+  }
+  getHeadOfLane(laneName: string, componentName: string) {
+    const lane = this.catLane(laneName);
+    const component = lane.components.find(c => c.id.name === componentName);
+    return component.head;
   }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);

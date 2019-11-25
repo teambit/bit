@@ -14,6 +14,7 @@ export default class Lane extends Command {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['c', 'components', 'show more details on the state of each component in each lane'],
+    ['j', 'json', 'show lanes details in json format'],
     ['r', 'remove', 'delete a merged lane'],
     ['', 'merged', 'show merged lanes'],
     ['', 'not-merged', 'show not merged lanes']
@@ -44,7 +45,7 @@ export default class Lane extends Command {
     });
   }
 
-  report(results: LaneResults): string {
+  report(results: LaneResults, ...args): string {
     if (results.added) {
       return chalk.green(`successfully added a new lane ${chalk.bold(results.added)}`);
     }
@@ -56,6 +57,7 @@ export default class Lane extends Command {
         .join('\n');
     }
     if (results.lanesWithComponents) {
+      if (args[1].json) return JSON.stringify(results.lanesWithComponents, null, 2);
       return Object.keys(results.lanesWithComponents)
         .map(laneName => {
           const laneStr = laneName === results.currentLane ? `* ${laneName}` : laneName;

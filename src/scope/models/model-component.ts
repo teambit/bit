@@ -84,9 +84,8 @@ export default class Component extends BitObject {
   state: State;
   scopesList: ScopeListItem[];
   snaps: SnapModel;
-  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
-  laneHeadLocal?: Ref | null;
-  laneHeadRemote?: Ref | null;
+  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
 
   constructor(props: ComponentProps) {
     super();
@@ -192,24 +191,42 @@ export default class Component extends BitObject {
   latest(): string {
     if (this.isEmpty()) return VERSION_ZERO;
     if (this.snaps.head) {
-      const headHash = this.snaps.head.toString();
-      const version = Object.keys(this.versions).find(v => this.versions[v].toString() === headHash);
+      const version = this.getTagOfRefIfExists(this.snaps.head);
       return version || this.snaps.head.toString();
     }
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
-  async latestIncludeRemote(repo: Repository): Promise<string> {
-    const latest = this.latest();
-    const remoteHead = this.remoteHead;
-    if (!remoteHead || !this.snaps.head || remoteHead.isEqual(this.snaps.head)) {
-      return latest;
+  latestOnLane(): string {
+    if (this.isEmpty()) return VERSION_ZERO;
+    const head = this.laneHeadLocal || this.snaps.head;
+    if (head) {
+      return this.getTagOfRefIfExists(head) || head.toString();
     }
+    return semver.maxSatisfying(this.listVersions(), '*');
+  }
+
+  /**
+   * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
+   * may be populated.
+   * `this.snaps.head` may not be populated, e.g. when a component was created on
+   * this lane and never got snapped on master.
+   * it's impossible that `this.snaps.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
+   * on master, which goes to this.snaps.head OR on a lane, which goes to this.laneHeadLocal.
+   */
+  async latestIncludeRemote(repo: Repository): Promise<string> {
+    const latestLocally = this.latestOnLane();
+    const remoteHead = this.laneHeadRemote;
+    if (!remoteHead) return latestLocally;
+    if (!this.laneHeadLocal && !this.snaps.head) {
+      return remoteHead.toString(); // user never merged the remote version, so remote is the latest
+    }
+    // either a user is on master or a lane, check whether the remote is ahead of the local
     const allVersions = await this.getAllVersionsInfo({ repo });
     const allLocalHashes = allVersions.map(v => v.ref);
     const isRemoteHeadExistsLocally = allLocalHashes.find(localHash => localHash.isEqual(remoteHead));
-    if (isRemoteHeadExistsLocally) return latest;
-    return remoteHead.toString();
+    if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
+    return remoteHead.toString(); // remote is ahead
   }
 
   latestVersion(): string {
@@ -220,7 +237,7 @@ export default class Component extends BitObject {
   // @todo: make it readable, it's a mess
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
-    const latest = this.latest();
+    const latest = this.latestOnLane();
     if (this.isEmpty()) return false; // in case a snap was created on another lane
     if (!isHash(latest) && !isHash(version)) {
       return semver.gt(latest, version);
@@ -311,13 +328,14 @@ export default class Component extends BitObject {
       if (repo) return (await ref.load(repo)) as Version;
       throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
     };
-    if (this.snaps.head) {
-      const headInfo: VersionInfo = { ref: this.snaps.head, tag: this.getTagOfRefIfExists(this.snaps.head) };
-      const head = await getVersionObj(this.snaps.head);
+    const laneHead = this.laneHeadLocal || this.snaps.head;
+    if (laneHead) {
+      const headInfo: VersionInfo = { ref: laneHead, tag: this.getTagOfRefIfExists(laneHead) };
+      const head = await getVersionObj(laneHead);
       if (head) {
         headInfo.version = head;
       } else {
-        headInfo.error = new HeadNotFound(this.id(), this.snaps.head.toString());
+        headInfo.error = new HeadNotFound(this.id(), laneHead.toString());
         if (throws) throw headInfo.error;
       }
       results.push(headInfo);

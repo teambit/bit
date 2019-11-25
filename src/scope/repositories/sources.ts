@@ -327,7 +327,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
     const currentLane = consumer.getCurrentLane();
     objectRepo.add(version);
-    if (currentLane.isDefault()) {
+    if (currentLane.isDefault() || !isHash(source.version)) {
       component.addVersion(version, source.version);
     } else {
       const lane = (await this.scope.loadLane(currentLane)) || Lane.create(currentLane);
@@ -568,7 +568,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (component.snaps.head) {
         // when importing (local), do not override the head
         if (!local || !existingHeadIsMissingInIncomingComponent) mergedComponent.snaps.head = component.snaps.head;
-        else mergedComponent.remoteHead = component.snaps.head;
+        else mergedComponent.laneHeadRemote = component.snaps.head;
       }
 
       this.put({ component: mergedComponent, objects });

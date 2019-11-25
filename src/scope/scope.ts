@@ -15,7 +15,8 @@ import {
   SCOPE_JSON,
   COMPONENT_ORIGINS,
   NODE_PATH_SEPARATOR,
-  CURRENT_UPSTREAM
+  CURRENT_UPSTREAM,
+  DEFAULT_LANE
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -241,11 +242,7 @@ export default class Scope {
     await Promise.all(
       components.map(async component => {
         if (component.scope) {
-          component.remoteHead = await this.objects.remoteLanes.getRef(component.scope, component.name);
-          const remoteLane = laneId.isDefault() ? null : await this.loadLane(laneId);
-          if (remoteLane) {
-            component.laneHeadRemote = remoteLane.getComponentHead(component.toBitId());
-          }
+          component.laneHeadRemote = await this.objects.remoteLanes.getRef(component.scope, laneId, component.name);
         }
         if (lane) {
           component.laneHeadLocal = lane.getComponentHead(component.toBitId());
@@ -430,8 +427,9 @@ export default class Scope {
         .then(({ mergedComponent }) =>
           this.objects.remoteLanes.addEntry(
             mergedComponent.scope as string,
+            new LaneId({ name: DEFAULT_LANE }),
             mergedComponent.name,
-            mergedComponent.remoteHead || mergedComponent.snaps.head
+            mergedComponent.laneHeadRemote || mergedComponent.snaps.head
           )
         )
     );

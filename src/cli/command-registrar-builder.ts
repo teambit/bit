@@ -23,6 +23,7 @@ import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
 import CatComponent from './commands/private-cmds/cat-component-cmd';
+import CatLane from './commands/private-cmds/cat-lane-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
@@ -89,6 +90,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatObject(),
       new CatComponent(),
+      new CatLane(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
       new Log(),
