@@ -35,11 +35,12 @@ export default class Init extends Command {
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
-    ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
+    ['N', 'skip-interactive', 'do not start the interactive process']
   ];
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
     if (!_isAnyNotInteractiveFlagUsed(flags) && (flags.interactive || shouldShowInteractive(CFG_INIT_INTERACTIVE))) {
       return initInteractive();
     }
@@ -111,7 +112,7 @@ export default class Init extends Command {
   }
 }
 
-function _isAnyNotInteractiveFlagUsed(flags: Record<string, any>) {
+function _isAnyNotInteractiveFlagUsed(flags: Object) {
   const withoutInteractive = R.omit(['interactive'], flags);
   const cleaned = clean(withoutInteractive);
   return !R.isEmpty(cleaned);

@@ -131,7 +131,7 @@ async function _fetchComps(scopeName: string, namespaces: string[] = []) {
   // Filter the namespace on the remote
   const namespacesUsingWildcards = namespaces.length ? `${namespaces.join('|')}/*` : undefined;
   // Not using user/pass strategy since it will interrupt the flow
-  const strategiesNames = ['token', 'ssh-agent', 'ssh-key'];
+  const strategiesNames = ['token', 'ssh-agent', 'ssh-key', 'anonymous'];
 
   const listScopeResults = await listScope({
     scopeName,
