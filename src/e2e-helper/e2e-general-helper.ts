@@ -25,8 +25,12 @@ export default class GeneralHelper {
   getIndexJson() {
     return fs.readJsonSync(this.indexJsonPath());
   }
-  writeIndexJson(indexJson: object) {
-    return ensureAndWriteJson(this.indexJsonPath(), indexJson);
+  getComponentsFromIndexJson(): any[] {
+    const indexJson = this.getIndexJson();
+    return indexJson.components;
+  }
+  writeIndexJson(components: any[] = [], lanes: any[] = []) {
+    return ensureAndWriteJson(this.indexJsonPath(), { components, lanes });
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

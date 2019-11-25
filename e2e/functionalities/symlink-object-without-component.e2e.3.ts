@@ -34,7 +34,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
 
     const indexJson = helper.general.getIndexJson();
     const componentIndex = indexJson.components.filter(i => i.isSymlink === true);
-    helper.general.writeIndexJson({ components: componentIndex, lanes: [] });
+    helper.general.writeIndexJson(componentIndex);
   });
   it('bit import should throw a descriptive error', () => {
     const output = helper.general.runWithTryCatch('bit import bar/foo');

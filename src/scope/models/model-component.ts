@@ -190,7 +190,7 @@ export default class Component extends BitObject {
   }
 
   latest(): string {
-    if (empty(this.versions) && !this.snaps.head) return VERSION_ZERO;
+    if (this.isEmpty()) return VERSION_ZERO;
     if (this.snaps.head) {
       const headHash = this.snaps.head.toString();
       const version = Object.keys(this.versions).find(v => this.versions[v].toString() === headHash);

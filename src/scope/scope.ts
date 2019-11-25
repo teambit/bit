@@ -272,18 +272,6 @@ export default class Scope {
     return (await this.objects.load(new Ref(hash))) as Lane;
   }
 
-  // async listGroupedByLanes(): Promise<{ [lane: string]: ModelComponent[] }> {
-  //   const results: { [lane: string]: ModelComponent[] } = {};
-  //   const componentsGrouped = this.objects.scopeIndex.getComponentsGroupedByLanes();
-  //   await Promise.all(
-  //     Object.keys(componentsGrouped).map(async lane => {
-  //       // @ts-ignore
-  //       results[lane] = await Promise.all(componentsGrouped[lane].map(hash => this.objects.load(new Ref(hash))));
-  //     })
-  //   );
-  //   return results;
-  // }
-
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
