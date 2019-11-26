@@ -283,6 +283,11 @@ export default class BitId {
   }
 
   static isValidVersion(version: string): boolean {
+    // a version can be a tag (semver) or a snap (hash)
+    return BitId.isValidSemver(version) || isHash(version);
+  }
+
+  static isValidSemver(version: string): boolean {
     return Boolean(semver.valid(version));
   }
 }

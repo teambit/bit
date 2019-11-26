@@ -242,4 +242,28 @@ describe('bit snap command', function() {
       });
     });
   });
+  describe('bit checkout and bit diff for snaps', () => {
+    describe('snap, change and then snap', () => {
+      let firstSnap: string;
+      let secondSnap: string;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFoo();
+        helper.command.snapAllComponents();
+        firstSnap = helper.command.getSnapHead('bar/foo');
+        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+        helper.command.snapAllComponents();
+        secondSnap = helper.command.getSnapHead('bar/foo');
+      });
+      it('bit diff should show the differences', () => {
+        const diff = helper.command.diff(` bar/foo ${firstSnap}`);
+        expect(diff).to.have.string(`--- bar/foo.js (${firstSnap})`);
+        expect(diff).to.have.string(`+++ bar/foo.js (${secondSnap})`);
+
+        expect(diff).to.have.string("-module.exports = function foo() { return 'got foo'; }");
+        expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v2'; }");
+      });
+    });
+  });
 });
