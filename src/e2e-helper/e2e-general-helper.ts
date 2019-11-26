@@ -1,7 +1,7 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
-import { BIT_VERSION } from '../constants';
+import { BIT_VERSION, DEFAULT_LANE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../constants';
 import defaultErrorHandler from '../cli/default-error-handler';
 import { removeChalkCharacters } from '../utils';
 import { ensureAndWriteJson, generateRandomStr } from './e2e-helper';
@@ -31,6 +31,9 @@ export default class GeneralHelper {
   }
   writeIndexJson(components: any[] = [], lanes: any[] = []) {
     return ensureAndWriteJson(this.indexJsonPath(), { components, lanes });
+  }
+  getRemoteRefPath(lane = DEFAULT_LANE, remote = this.scopes.remote) {
+    return path.join(this.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, remote, lane);
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

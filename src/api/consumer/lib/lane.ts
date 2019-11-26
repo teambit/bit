@@ -6,7 +6,7 @@ import { Lane } from '../../../scope/models';
 export type LaneResults = {
   added?: string;
   lanes?: string[];
-  lanesWithComponents?: { [lane: string]: { id: BitId; head: string } };
+  lanesWithComponents?: { [lane: string]: Array<{ id: BitId; head: string }> };
   currentLane?: string;
 };
 

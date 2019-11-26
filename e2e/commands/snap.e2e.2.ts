@@ -1,8 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { HASH_SIZE, BIT_HIDDEN_DIR, REMOTE_REFS_DIR } from '../../src/constants';
+import { HASH_SIZE } from '../../src/constants';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';
@@ -166,7 +165,7 @@ describe('bit snap command', function() {
           helper.command.importComponent('bar/foo --objects');
         });
         it('should write the head of the remote component', () => {
-          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
@@ -189,7 +188,7 @@ describe('bit snap command', function() {
           helper.command.importComponent('bar/foo');
         });
         it('should write the head of the remote component', () => {
-          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
@@ -229,7 +228,7 @@ describe('bit snap command', function() {
           expect(localHead).to.equal(currentHead);
         });
         it('should write the head of the remote component', () => {
-          const remoteRefs = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, helper.scopes.remote);
+          const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });

@@ -7,7 +7,6 @@ import logger from '../../logger/logger';
 import ValidationError from '../../error/validation-error';
 
 export type LaneProps = {
-  scope?: string;
   name: string;
   components?: Component[];
   hash: string;
@@ -16,20 +15,18 @@ export type LaneProps = {
 type Component = { id: BitId; head: Ref };
 
 export default class Lane extends BitObject {
-  scope: string | null;
   name: string;
   components: Component[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
-    this.scope = props.scope || null;
     this.name = props.name;
     this.components = props.components || [];
     this._hash = props.hash;
   }
   id(): string {
-    return this.scope ? [this.scope, this.name].join('/') : this.name;
+    return this.name;
   }
   hash(): Ref {
     if (!this._hash) {
@@ -42,13 +39,12 @@ export default class Lane extends BitObject {
   }
   validateBeforePersisting(str: string) {
     logger.debug(`validating lane object: ${this.hash().toString()} ${this.id()}`);
-    const lane = Lane.parse(str);
+    const lane = Lane.parse(str, this.hash().toString());
     lane.validate();
   }
   toObject() {
     return filterObject(
       {
-        scope: this.scope,
         name: this.name,
         components: this.components.map(component => ({
           id: { scope: component.id.scope, name: component.id.name },
@@ -62,13 +58,12 @@ export default class Lane extends BitObject {
     return new Lane(props);
   }
   static create(id: LaneId) {
-    return new Lane({ name: id.name, scope: id.scope, hash: sha1(v4()) });
+    return new Lane({ name: id.name, hash: sha1(v4()) });
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
     return Lane.from({
       name: laneObject.name,
-      scope: laneObject.scope,
       components: laneObject.components.map(component => ({
         id: new BitId({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head)
@@ -101,7 +96,7 @@ export default class Lane extends BitObject {
     return null;
   }
   toLaneId() {
-    return new LaneId({ name: this.name, scope: this.scope });
+    return new LaneId({ name: this.name });
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
