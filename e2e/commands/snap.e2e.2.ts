@@ -246,6 +246,7 @@ describe('bit snap command', function() {
     describe('snap, change and then snap', () => {
       let firstSnap: string;
       let secondSnap: string;
+      let localScope;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
@@ -255,6 +256,7 @@ describe('bit snap command', function() {
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
         secondSnap = helper.command.getSnapHead('bar/foo');
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('bit diff should show the differences', () => {
         const diff = helper.command.diff(` bar/foo ${firstSnap}`);
@@ -264,12 +266,45 @@ describe('bit snap command', function() {
         expect(diff).to.have.string("-module.exports = function foo() { return 'got foo'; }");
         expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v2'; }");
       });
-      it('bit checkout should checkout to the first snap', () => {
-        const output = helper.command.checkout(`${firstSnap} bar/foo`);
-        expect(output).to.have.string('successfully');
-        expect(output).to.have.string(firstSnap);
-        const content = helper.fs.readFile('bar/foo.js');
-        expect(content).to.equal(fixtures.fooFixture);
+      describe('bit checkout', () => {
+        let output;
+        before(() => {
+          output = helper.command.checkout(`${firstSnap} bar/foo`);
+        });
+        it('should checkout to the first snap', () => {
+          expect(output).to.have.string('successfully');
+          expect(output).to.have.string(firstSnap);
+          const content = helper.fs.readFile('bar/foo.js');
+          expect(content).to.equal(fixtures.fooFixture);
+        });
+        describe('bit checkout latest', () => {
+          it('should checkout to the latest (second) snap', () => {
+            output = helper.command.checkout('latest bar/foo');
+            expect(output).to.have.string('successfully');
+            expect(output).to.have.string(secondSnap);
+            const content = helper.fs.readFile('bar/foo.js');
+            expect(content).to.equal(fixtures.fooFixtureV2);
+          });
+        });
+      });
+      describe('bit merge', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+          output = helper.command.mergeVersion(firstSnap, 'bar/foo', '--manual');
+        });
+        it('should merge successfully and leave the file in a conflict state', () => {
+          expect(output).to.have.string('successfully');
+          expect(output).to.have.string(firstSnap);
+          expect(output).to.have.string('CONFLICT');
+
+          const content = helper.fs.readFile('bar/foo.js');
+          expect(content).to.have.string(`<<<<<<< ${secondSnap}`);
+          expect(content).to.have.string(fixtures.fooFixtureV2);
+          expect(content).to.have.string('=======');
+          expect(content).to.have.string(fixtures.fooFixture);
+          expect(content).to.have.string(`>>>>>>> ${firstSnap}`);
+        });
       });
     });
   });
