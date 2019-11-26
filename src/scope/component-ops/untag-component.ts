@@ -22,8 +22,11 @@ export async function removeLocalVersion(
   const localVersions = component.getLocalVersions();
   const idStr = id.toString();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
-  if (version && !isHash(version) && !component.hasVersion(version)) {
-    throw new GeneralError(`unable to untag ${idStr}, the version ${version} does not exist`);
+  if (version) {
+    const hasVersion = await component.hasVersion(version, scope.objects);
+    if (!hasVersion) {
+      throw new GeneralError(`unable to untag ${idStr}, the version ${version} does not exist`);
+    }
   }
   if (version && !localVersions.includes(version)) {
     throw new GeneralError(`unable to untag ${idStr}, the version ${version} was exported already`);

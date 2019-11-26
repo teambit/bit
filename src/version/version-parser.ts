@@ -46,6 +46,20 @@ export function isHash(str: string | null | undefined): boolean {
   return typeof str === 'string' && str.length === HASH_SIZE;
 }
 
+/**
+ * a component version can be a tag (semver) or a snap (hash)
+ */
+export function isTag(str: string | null | undefined): boolean {
+  return !isHash(str);
+}
+
+/**
+ * a component version can be a tag (semver) or a snap (hash)
+ */
+export function isSnap(str: string | null | undefined): boolean {
+  return isHash(str);
+}
+
 export default function versionParser(versionStr: string | number | null | undefined): Version {
   if (!versionStr) return returnLatest();
   if (typeof versionStr === 'string' && isLatest(versionStr)) return returnLatest();

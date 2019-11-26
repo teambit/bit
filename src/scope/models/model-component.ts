@@ -12,8 +12,7 @@ import {
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  LANE_SEPARATOR
+  TESTER_ENV_TYPE
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
@@ -25,7 +24,7 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import versionParser, { isHash } from '../../version/version-parser';
+import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -107,15 +106,15 @@ export default class Component extends BitObject {
     return Object.values(this.versions);
   }
 
-  getRef(versionOrHash: string): Ref | null {
-    if (isHash(versionOrHash)) {
+  getRef(version: string): Ref | null {
+    if (isHash(version)) {
       // if (!this.snaps.head) return null; // in case the component is on another lane, the head is empty!
-      return new Ref(versionOrHash);
+      return new Ref(version);
       // @todo: should we check whether the ref really exists?
       // if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
       // throw new Error('todo: go through all parents and find the ref!');
     }
-    return this.versions[versionOrHash];
+    return this.versions[version];
   }
 
   getHeadHash(): string | null {
@@ -132,7 +131,13 @@ export default class Component extends BitObject {
     return versions.sort(semver.compare).reverse();
   }
 
-  hasVersion(version: string): boolean {
+  async hasVersion(version: string, repo: Repository): Promise<boolean> {
+    if (isTag(version)) return this.hasTag(version);
+    const allHashes = await this.getAllVersionHashes(repo, false);
+    return allHashes.some(hash => hash.toString() === version);
+  }
+
+  hasTag(version: string): boolean {
     return Boolean(this.versions[version]);
   }
 
@@ -239,7 +244,7 @@ export default class Component extends BitObject {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
     const latest = this.latestOnLane();
     if (this.isEmpty()) return false; // in case a snap was created on another lane
-    if (!isHash(latest) && !isHash(version)) {
+    if (isTag(latest) && isTag(version)) {
       return semver.gt(latest, version);
     }
     if (latest === version) return false;
@@ -388,8 +393,13 @@ export default class Component extends BitObject {
     return allVersionsInfo.map(a => a.version).filter(a => a) as Version[];
   }
 
-  async getAllVersionHashes(versionObjects: Version[], throws = true): Promise<Ref[]> {
+  async getAllVersionHashesByVersionsObjects(versionObjects: Version[], throws = true): Promise<Ref[]> {
     const allVersionsInfo = await this.getAllVersionsInfo({ throws, versionObjects });
+    return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
+  }
+
+  async getAllVersionHashes(repo: Repository, throws = true): Promise<Ref[]> {
+    const allVersionsInfo = await this.getAllVersionsInfo({ repo, throws });
     return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
   }
 
@@ -411,13 +421,13 @@ export default class Component extends BitObject {
   }
 
   addVersion(version: Version, versionToAdd: string): string {
-    if (this.snaps.head && !this.versions[versionToAdd]) {
-      // if this.versions[versionToAdd], the same version was added before with a different hash.
+    if (this.snaps.head && !this.hasTag(versionToAdd)) {
+      // if this tag exists, the same version was added before with a different hash.
       // adding the current head into the parent will result in a non-exist hash in the parent.
       version.addAsOnlyParent(this.snaps.head);
     }
     this.snaps.head = version.hash();
-    if (!isHash(versionToAdd)) {
+    if (isTag(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
     }
     this.markVersionAsLocal(versionToAdd);
@@ -511,8 +521,8 @@ export default class Component extends BitObject {
    * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
    */
   removeVersion(version: string): Ref {
-    const objectRef = this.versions[version];
-    if (!isHash(version) && !objectRef) throw new Error(`removeVersion failed finding version ${version}`);
+    const objectRef = this.getRef(version);
+    if (!objectRef) throw new Error(`removeVersion failed finding version ${version}`);
     if (objectRef) delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
     return objectRef || Ref.from(version);
@@ -522,7 +532,7 @@ export default class Component extends BitObject {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
 
-    if (!isHash(versionNum) && !this.versions[versionNum]) {
+    if (isTag(versionNum) && !this.hasTag(versionNum)) {
       throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
@@ -725,7 +735,7 @@ export default class Component extends BitObject {
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
     if (this.state && this.state.versions) {
       Object.keys(this.state.versions).forEach(version => {
-        if (!this.versions[version] && !isHash(version)) {
+        if (isTag(version) && !this.hasTag(version)) {
           throw new ValidationError(`${message}, the version ${version} is marked as staged but is not available`);
         }
       });

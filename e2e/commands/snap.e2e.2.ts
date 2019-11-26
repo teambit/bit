@@ -264,6 +264,13 @@ describe('bit snap command', function() {
         expect(diff).to.have.string("-module.exports = function foo() { return 'got foo'; }");
         expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v2'; }");
       });
+      it('bit checkout should checkout to the first snap', () => {
+        const output = helper.command.checkout(`${firstSnap} bar/foo`);
+        expect(output).to.have.string('successfully');
+        expect(output).to.have.string(firstSnap);
+        const content = helper.fs.readFile('bar/foo.js');
+        expect(content).to.equal(fixtures.fooFixture);
+      });
     });
   });
 });

@@ -80,7 +80,8 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   if (!componentModel) {
     throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  if (!componentModel.hasVersion(version)) {
+  const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+  if (!hasVersion) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });

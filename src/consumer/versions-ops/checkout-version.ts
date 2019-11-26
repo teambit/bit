@@ -108,8 +108,10 @@ async function getComponentStatus(
     return latestVersion ? componentModel.latest() : version;
   };
   const newVersion = getNewVersion();
-  if (version && !latestVersion && !componentModel.hasVersion(version)) {
-    return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
+  if (version && !latestVersion) {
+    const hasVersion = await componentModel.hasVersion(version, consumer.scope.objects);
+    if (!hasVersion)
+      return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
@@ -141,7 +143,8 @@ async function getComponentStatus(
       baseComponent
     });
   }
-  const versionRef = componentModel.versions[newVersion];
+  const versionRef = componentModel.getRef(newVersion);
+  // @ts-ignore
   const componentVersion = await consumer.scope.getObject(versionRef.hash);
   const newId = component.id.changeVersion(newVersion);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

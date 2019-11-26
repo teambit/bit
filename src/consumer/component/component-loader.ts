@@ -176,9 +176,10 @@ export default class ComponentLoader {
   async _throwPendingImportIfNeeded(currentId: BitId) {
     if (currentId.hasScope()) {
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
-      // $FlowFixMe version is set here
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
+      // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
+      // whether one of the hashes exist.
+      // @ts-ignore version is set here
+      if (remoteComponent && remoteComponent.hasTag(currentId.version)) {
         throw new ComponentsPendingImport();
       }
     }

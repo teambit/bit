@@ -72,7 +72,7 @@ export default class SourceRepository {
         return foundComponent;
       }
       // @ts-ignore
-      if (!foundComponent.versions[bitId.version]) {
+      if (!foundComponent.hasTag(bitId.version)) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
@@ -532,7 +532,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore
     const versionObjects: Version[] = objects.filter(o => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
-    const allHashes = await component.getAllVersionHashes(versionObjects, false);
+    const allHashes = await component.getAllVersionHashesByVersionsObjects(versionObjects, false);
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.put({ component, objects });
@@ -553,11 +553,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const repo: Repository = this.objects();
-      const existingComponentVersionObjects: Version[] = await existingComponent.getAllVersionsObjects(repo, false);
-      const existingComponentHashes = await existingComponent.getAllVersionHashes(
-        existingComponentVersionObjects,
-        false
-      );
+      const existingComponentHashes = await existingComponent.getAllVersionHashes(repo, false);
       const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
       const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
         existingComponent,
