@@ -36,6 +36,7 @@ export interface IsolateOptions {
   writeDists?: boolean; // Write dist files
   shouldBuildDependencies?: boolean; // Build all depedencies before the isolation (used by tools like ts compiler)
   installNpmPackages?: boolean; // Install the package dependencies
+  skipNodeModules?: boolean; // Provide a capsule without a node_modules folder (good when using capsule.nodeExec)
   installPeerDependencies?: boolean; // Install the peer package dependencies
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
@@ -78,7 +79,8 @@ export default class Isolator {
     // @ts-ignore TODO: this should be part of the capsule interface
     this.capsule.execNode = async (executable, args) => {
       const { patchFileSystem } = librarian.api();
-      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`); // TODO: do this from the compiler/tester so we can customize the message
+      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`);
+      // TODO: do this from the compiler/tester so that the isolator doesn't need to know if it's a builder/tester/*...
       await patchFileSystem(executable, { args, cwd: this.dir, log, onScriptRun });
     };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
@@ -117,7 +119,7 @@ export default class Isolator {
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies();
-    await this.installComponentPackages();
+    await this.installComponentPackages({ skipNodeModules: !!opts.skipNodeModules });
     await this.writeLinks();
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
@@ -131,14 +133,16 @@ export default class Isolator {
     await this._persistComponentsDataToCapsule();
   }
 
-  async installComponentPackages() {
+  async installComponentPackages(opts = { skipNodeModules: false }) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot();
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    // await this._installWithPeerOption(); // TODO: bring this back and allow overriding it with a config option if we want to use librarian
+    if (!opts.skipNodeModules) {
+      await this._installWithPeerOption();
+    }
   }
 
   async writeLinks() {

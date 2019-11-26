@@ -299,16 +299,19 @@ async function _runBuild({
   let shouldBuildUponDependenciesChanges;
   const isolateFunc = async ({
     targetDir,
-    shouldBuildDependencies
+    shouldBuildDependencies,
+    skipNodeModules
   }: {
     targetDir?: string;
     shouldBuildDependencies?: boolean;
+    skipNodeModules: boolean;
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
-      writeDists: false
+      writeDists: false,
+      skipNodeModules
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
   };
