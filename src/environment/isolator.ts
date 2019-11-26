@@ -37,6 +37,7 @@ export interface IsolateOptions {
   shouldBuildDependencies?: boolean; // Build all depedencies before the isolation (used by tools like ts compiler)
   installNpmPackages?: boolean; // Install the package dependencies
   skipNodeModules?: boolean; // Provide a capsule without a node_modules folder (good when using capsule.nodeExec)
+  keepExistingCapsule?: boolean; // Do not delete the capsule after using it (useful for incremental builds)
   installPeerDependencies?: boolean; // Install the peer package dependencies
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
@@ -118,19 +119,19 @@ export default class Isolator {
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
-    await this.writeComponentsAndDependencies();
+    await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
     await this.installComponentPackages({ skipNodeModules: !!opts.skipNodeModules });
     await this.writeLinks();
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
 
-  async writeComponentsAndDependencies() {
+  async writeComponentsAndDependencies(opts = { keepExistingCapsule: false }) {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
     await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
-    await this._persistComponentsDataToCapsule();
+    await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   async installComponentPackages(opts = { skipNodeModules: false }) {
@@ -192,11 +193,11 @@ export default class Isolator {
     return loadFlattenedDependenciesForCapsule(consumer, component);
   }
 
-  async _persistComponentsDataToCapsule() {
+  async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
-    await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: true });
+    await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   async _addComponentsToRoot(): Promise<void> {

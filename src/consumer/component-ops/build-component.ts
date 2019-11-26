@@ -300,18 +300,21 @@ async function _runBuild({
   const isolateFunc = async ({
     targetDir,
     shouldBuildDependencies,
-    skipNodeModules
+    skipNodeModules,
+    keepExistingCapsule
   }: {
     targetDir?: string;
     shouldBuildDependencies?: boolean;
-    skipNodeModules: boolean;
+    skipNodeModules?: boolean;
+    keepExistingCapsule?: boolean;
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
       writeDists: false,
-      skipNodeModules
+      skipNodeModules,
+      keepExistingCapsule
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
   };
