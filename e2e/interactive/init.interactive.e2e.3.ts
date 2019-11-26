@@ -176,10 +176,14 @@ describe('run bit init - interactive', function() {
         // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
         expect(output).to.have.string('successfully initialized');
       });
-      it('should should show interactive when interactive config set to true', async () => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        helper.command.setConfig(CFG_INTERACTIVE, true);
-        const output = helper.scopeHelper.initWorkspace();
+      it('should not show interactive when interactive config set to false', async () => {
+        helper.command.setConfig(CFG_INTERACTIVE, 'false');
+        const output = await helper.scopeHelper.initInteractive([]);
+        // We didn't enter anything to the interactive but we don't expect to have it so the workspace should be initialized
+        expect(output).to.have.string('successfully initialized');
+      });
+      it('should show interactive by default', async () => {
+        const output = await helper.scopeHelper.initInteractive(inputsWithDefaultsNoCompiler);
         // We don't enter anything we just want to see that any question has been asked
         expect(output).to.have.string(PACKAGE_MANAGER_MSG_Q);
       });
