@@ -4,7 +4,6 @@ import logger from '../../logger/logger';
 import { Scope } from '..';
 import GeneralError from '../../error/general-error';
 import ComponentsList from '../../consumer/component/components-list';
-import { isHash } from '../../version/version-parser';
 
 export type untagResult = { id: BitId; versions: string[]; component: ModelComponent };
 

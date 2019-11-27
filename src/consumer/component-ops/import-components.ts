@@ -123,7 +123,7 @@ export default class ImportComponents {
   }
 
   _throwForDivergedHistory() {
-    if (this.options.merge) return;
+    if (this.options.merge || this.options.objectsOnly) return;
     const divergedComponents = this.divergeData.filter(
       d => d.diverge && ModelComponent.isTrueMergePending(d.diverge)
     ) as Array<{ id: BitId; diverge: DivergeResult }>;

@@ -168,26 +168,34 @@ export default class Component extends BitObject {
     if (!remoteHead || !localHead || remoteHead.isEqual(localHead)) return null;
     const snapsOnLocal: Ref[] = [];
     const snapsOnRemote: Ref[] = [];
-    const addParentsRecursively = async (version: Version, snaps: Ref[], stopsIfEqual: Ref) => {
-      if (version.hash().isEqual(stopsIfEqual)) return true;
+    let remoteHeadExistsLocally = false;
+    let localHeadExistsRemotely = false;
+    const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
+      if (isLocal && version.hash().isEqual(remoteHead)) {
+        remoteHeadExistsLocally = true;
+        return;
+      }
+      if (!isLocal && version.hash().isEqual(localHead)) {
+        localHeadExistsRemotely = true;
+        return;
+      }
       snaps.push(version.hash());
       await Promise.all(
         version.parents.map(async parent => {
           const parentVersion = (await parent.load(repo)) as Version;
           if (parentVersion) {
-            await addParentsRecursively(parentVersion, snaps, stopsIfEqual);
+            await addParentsRecursively(parentVersion, snaps, isLocal);
           } else if (throws) {
             throw new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
           }
         })
       );
-      return false;
     };
     const localVersion = (await repo.load(localHead)) as Version;
-    const remoteHeadExistsLocally = await addParentsRecursively(localVersion, snapsOnLocal, remoteHead);
+    await addParentsRecursively(localVersion, snapsOnLocal, true);
     if (remoteHeadExistsLocally) return { snapsOnRemoteOnly: [], snapsOnLocalOnly: snapsOnLocal };
     const remoteVersion = (await repo.load(remoteHead)) as Version;
-    const localHeadExistsRemotely = await addParentsRecursively(remoteVersion, snapsOnRemote, localHead);
+    await addParentsRecursively(remoteVersion, snapsOnRemote, false);
     if (localHeadExistsRemotely) return { snapsOnRemoteOnly: snapsOnRemote, snapsOnLocalOnly: [] };
     return {
       snapsOnRemoteOnly: difference(snapsOnRemote, snapsOnLocal),

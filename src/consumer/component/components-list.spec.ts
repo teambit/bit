@@ -48,7 +48,7 @@ describe('ComponentList', function() {
     const scope = {};
     before(() => {
       const bitMap = { getAuthoredAndImportedBitIds: () => new BitIds() };
-      const consumer = { scope, bitMap };
+      const consumer = { scope, bitMap, getCurrentLane: () => {} };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentList = new ComponentsList(consumer);
     });
