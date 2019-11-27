@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- make bit status recursively show untracked files dependencies
+
 ## [[14.5.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.5.0)
 
 ### New

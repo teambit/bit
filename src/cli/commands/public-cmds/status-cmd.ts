@@ -9,7 +9,8 @@ import { formatBitString, formatNewBit } from '../../chalk-box';
 import {
   componentIssuesLabels,
   getInvalidComponentLabel,
-  componentIssueToString
+  componentIssueToString,
+  untrackedFilesComponentIssueToString
 } from '../../templates/component-issues-template';
 import { Analytics } from '../../../analytics/analytics';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -73,13 +74,21 @@ export default class Status extends Command {
     let showTroubleshootingLink = false;
 
     function formatMissing(missingComponent: Component) {
-      function formatMissingStr(key, value, label) {
+      function formatMissingStr(key, value, label, formatIssueFunc = componentIssueToString) {
         if (!value || R.isEmpty(value)) return '';
+        let indentNestedSpaces = '';
+
         return (
           chalk.yellow(`\n       ${label}: \n`) +
           chalk.white(
             Object.keys(value)
-              .map(k => `          ${k} -> ${componentIssueToString(value[k])}`)
+              .map(k => {
+                let space = '          ';
+                if (value[k].nested) {
+                  space += '  ';
+                }
+                return `${space}${k} -> ${formatIssueFunc(value[k])}`;
+              })
               .join('\n')
           )
         );
@@ -89,6 +98,15 @@ export default class Status extends Command {
         .map(key => {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
+          if (key === 'untrackedDependencies') {
+            // @ts-ignore
+            return formatMissingStr(
+              key,
+              missingComponent.issues[key],
+              componentIssuesLabels[key],
+              untrackedFilesComponentIssueToString
+            );
+          }
           return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
         })
         .join('');

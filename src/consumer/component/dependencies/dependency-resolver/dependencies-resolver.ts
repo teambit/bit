@@ -21,6 +21,8 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
+import { brotliCompressSync } from 'zlib';
+import { stringify } from 'querystring';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -43,6 +45,31 @@ export type FileType = {
   isTesterFile: boolean;
 };
 
+interface UntrackedFileEntry {
+  relativePath: string;
+  existing: boolean;
+}
+
+export interface UntrackedFileDependencyEntry {
+  nested: boolean;
+  untrackedFiles: Array<UntrackedFileEntry>;
+}
+
+type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+
+interface issues {
+  missingPackagesDependenciesOnFs: {};
+  missingComponents: {};
+  untrackedDependencies: UntrackedDependenciesIssues;
+  missingDependenciesOnFs: {};
+  missingLinks: {};
+  missingCustomModuleResolutionLinks: {};
+  relativeComponents: {};
+  parseErrors: {};
+  resolveErrors: {};
+  missingBits: {};
+}
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -55,7 +82,7 @@ export default class DependencyResolver {
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: any; // $PropertyType<Component, 'issues'>;
+  issues: issues; // $PropertyType<Component, 'issues'>;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -450,14 +477,39 @@ export default class DependencyResolver {
     return depFile;
   }
 
-  processDepFiles(originFile: PathLinuxRelative, fileType: FileType) {
+  processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested: boolean = false) {
+    // We don't just return because different files of the component might import different things from the depFile
+    // See more info here: https://github.com/teambit/bit/issues/1796
+    if (!this.processedFiles.includes(originFile)) {
+      this.processedFiles.push(originFile);
+      // We don't want to calculate nested files again after they calculated as direct files
+      // We don't want to calculate nested files again after they calculated as direct files
+    } else if (nested) {
+      return;
+    }
     const allDepsFiles = this.tree[originFile].files;
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
-      if (this.overridesDependencies.shouldIgnoreFile(depFile.file, fileType)) return;
+      if (!nested && this.overridesDependencies.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
-        this.processOneDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, fileType, depFile);
+        this.processOneDepFile(
+          originFile,
+          depFile.file,
+          depFile.importSpecifiers,
+          undefined,
+          fileType,
+          depFile,
+          nested
+        );
+        // Recursively check for untracked files (to show them all in bit status)
+        // for nested files we don't really care about the file types since we won't do all the checking
+        const dummyFileType: FileType = {
+          isTestFile: false,
+          isCompilerFile: false,
+          isTesterFile: false
+        };
+        this.processDepFiles(depFile.file, dummyFileType, true);
       }
     });
   }
@@ -469,14 +521,9 @@ export default class DependencyResolver {
     linkFile?: string,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     fileType: FileType,
-    depFileObject: FileObject
+    depFileObject: FileObject,
+    nested: boolean = false
   ) {
-    // We don't just return because different files of the component might import different things from the depFile
-    // See more info here: https://github.com/teambit/bit/issues/1796
-    if (!this.processedFiles.includes(depFile)) {
-      this.processedFiles.push(depFile);
-    }
-
     // if the dependency of an envFile is already included in the env files of the component, we're good
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
     if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return;
@@ -491,7 +538,7 @@ export default class DependencyResolver {
         this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
         return;
       }
-      this._pushToUntrackDependenciesIssues(originFile, depFileRelative);
+      this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return;
     }
     if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
@@ -1110,11 +1157,31 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  _pushToUntrackDependenciesIssues(originFile, depFileRelative) {
-    if (this.issues.untrackedDependencies[originFile]) {
-      this.issues.untrackedDependencies[originFile].push(depFileRelative);
+  _pushToUntrackDependenciesIssues(originFile, depFileRelative, nested: boolean = false) {
+    const untracked = this.issues.untrackedDependencies[originFile];
+    const findExisting = () => {
+      let result;
+      R.forEachObjIndexed((untracked, key) => {
+        const found = untracked.untrackedFiles.find(file => {
+          return file.relativePath === depFileRelative;
+        });
+        if (found) {
+          result = found;
+        }
+      }, this.issues.untrackedDependencies);
+      return result;
+    };
+    const existing = findExisting();
+    const newUntrackedFile = { relativePath: depFileRelative, existing: false };
+    // If it's already found mark them both as existing
+    if (existing) {
+      newUntrackedFile.existing = true;
+      existing.existing = true;
+    }
+    if (untracked) {
+      untracked.untrackedFiles.push(newUntrackedFile);
     } else {
-      this.issues.untrackedDependencies[originFile] = [depFileRelative];
+      this.issues.untrackedDependencies[originFile] = { nested, untrackedFiles: [newUntrackedFile] };
     }
   }
   _pushToRelativeComponentsIssues(originFile, componentId) {

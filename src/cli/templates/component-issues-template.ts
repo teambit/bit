@@ -1,5 +1,7 @@
 import chalk from 'chalk';
+import R from 'ramda';
 import ConsumerComponent from '../../consumer/component/consumer-component';
+import { UntrackedFileDependencyEntry } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
@@ -36,6 +38,16 @@ export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
 }
 
+export function untrackedFilesComponentIssueToString(value: UntrackedFileDependencyEntry) {
+  const colorizedMap = value.untrackedFiles.map(curr => {
+    if (curr.existing) {
+      return `${chalk.yellow(curr.relativePath)}`;
+    }
+    return curr.relativePath;
+  });
+  return colorizedMap.join(', ');
+}
+
 export default function componentIssuesTemplate(components: ConsumerComponent[]) {
   function format(missingComponent) {
     return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatMissing(missingComponent)}`;
@@ -45,6 +57,7 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
   return result;
 }
 
+// TODO: check if this function is really in use, there is same one on status-cmd.ts
 function formatMissing(missingComponent: Record<string, any>) {
   function formatMissingStr(value, label) {
     if (!value || value.length === 0) return '';
