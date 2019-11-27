@@ -38,6 +38,7 @@ export default class ComponentsList {
   _invalidComponents: InvalidComponent[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
+  // @ts-ignore
   private _mergePendingComponents: ModelComponent[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
