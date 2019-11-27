@@ -50,7 +50,8 @@ export default class Status extends Command {
     importPendingComponents,
     autoTagPendingComponents,
     invalidComponents,
-    outdatedComponents
+    outdatedComponents,
+    mergePendingComponents
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -62,7 +63,8 @@ export default class Status extends Command {
           importPendingComponents: importPendingComponents.map(id => id.toString()),
           autoTagPendingComponents,
           invalidComponents,
-          outdatedComponents: outdatedComponents.map(c => c.id.toString())
+          outdatedComponents: outdatedComponents.map(c => c.id.toString()),
+          mergePendingComponents: mergePendingComponents.map(c => c.id())
         },
         null,
         2
@@ -139,6 +141,18 @@ export default class Status extends Command {
 
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
+    const pendingMergeTitle = chalk.underline.white('pending merge');
+    const pendingMergeDesc = '(use "bit merge [component_id]" to merge changes)\n';
+    const pendingMergeComps = mergePendingComponents
+      .map(component => {
+        return `    > ${chalk.cyan(component.id())}\n`;
+      })
+      .join('');
+
+    const pendingMergeStr = pendingMergeComps.length
+      ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
+      : '';
+
     const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
@@ -180,6 +194,7 @@ export default class Status extends Command {
       importPendingWarning +
         [
           outdatedStr,
+          pendingMergeStr,
           newComponentsOutput,
           modifiedComponentOutput,
           stagedComponentsOutput,

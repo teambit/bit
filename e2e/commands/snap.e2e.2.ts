@@ -5,6 +5,7 @@ import { HASH_SIZE } from '../../src/constants';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';
+import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
 
 chai.use(require('chai-fs'));
 
@@ -207,11 +208,13 @@ describe('bit snap command', function() {
     describe('when the local is diverged from the remote', () => {
       // local has snapA => snapB. remote has snapA => snapC.
       let localHead;
+      let localScope;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
         helper.command.snapComponent('bar/foo');
         localHead = helper.command.getSnapHead('bar/foo');
+        localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should prevent exporting the component', () => {
         const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
@@ -233,11 +236,25 @@ describe('bit snap command', function() {
           const remoteRefContent = fs.readJsonSync(remoteRefs);
           expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
         });
-        it('bit status should show the component as pending update', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string('pending updates');
-          expect(status).to.have.string(localHead);
-          expect(status).to.have.string(secondSnap);
+        it('bit status should show the component as pending merge', () => {
+          const status = helper.command.statusJson();
+          expect(status.mergePendingComponents).to.have.lengthOf(1);
+          expect(status.outdatedComponents).to.have.lengthOf(0);
+          expect(status.newComponents).to.have.lengthOf(0);
+          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.invalidComponents).to.have.lengthOf(0);
+        });
+      });
+      describe('import without any flag', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScope);
+        });
+        it('should stop the process and throw a descriptive error suggesting to use --merge flag', () => {
+          const func = () => helper.command.importComponent('bar/foo');
+          const error = new ComponentsPendingMerge([
+            { id: `${helper.scopes.remote}/bar/foo`, snapsLocal: 1, snapsRemote: 1 }
+          ]);
+          helper.general.expectToThrow(func, error);
         });
       });
     });

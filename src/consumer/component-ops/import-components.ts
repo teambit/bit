@@ -23,7 +23,9 @@ import { getScopeRemotes } from '../../scope/scope-remotes';
 import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { Version } from '../../scope/models';
+import { Version, ModelComponent } from '../../scope/models';
+import { DivergeResult } from '../../scope/models/model-component';
+import ComponentsPendingMerge from './exceptions/components-pending-merge';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -67,6 +69,7 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
+  private divergeData: Array<{ id: BitId; diverge: DivergeResult | null }> = [];
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -100,9 +103,38 @@ export default class ImportComponents {
     );
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
+    await this._fetchDivergeData(componentsWithDependenciesFiltered);
+    this._throwForDivergedHistory();
     await this._writeToFileSystem(componentsWithDependenciesFiltered);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependenciesFiltered, importDetails };
+  }
+
+  async _fetchDivergeData(componentsWithDependencies: ComponentWithDependencies[]) {
+    await Promise.all(
+      componentsWithDependencies.map(async ({ component }) => {
+        const modelComponent = await this.scope.getModelComponent(component.id);
+        this.divergeData.push({
+          id: modelComponent.toBitId(),
+          diverge: await modelComponent.getDivergeData(this.scope.objects)
+        });
+      })
+    );
+  }
+
+  _throwForDivergedHistory() {
+    if (this.options.merge) return;
+    const divergedComponents = this.divergeData.filter(
+      d => d.diverge && ModelComponent.isTrueMergePending(d.diverge)
+    ) as Array<{ id: BitId; diverge: DivergeResult }>;
+    if (divergedComponents.length) {
+      const divergeData = divergedComponents.map(d => ({
+        id: d.id.toString(),
+        snapsLocal: d.diverge.snapsOnLocalOnly.length,
+        snapsRemote: d.diverge.snapsOnRemoteOnly.length
+      }));
+      throw new ComponentsPendingMerge(divergeData);
+    }
   }
 
   /**

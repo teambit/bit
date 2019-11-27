@@ -104,6 +104,7 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
+import ComponentsPendingMerge from '../consumer/component-ops/exceptions/components-pending-merge';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -159,6 +160,20 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => importPendingMsg],
+  [
+    ComponentsPendingMerge,
+    err => {
+      const componentsStr = err.divergeData
+        .map(
+          d =>
+            `${chalk.bold(d.id)} has ${chalk.bold(d.snapsLocal)} snaps locally only and ${chalk.bold(
+              d.snapsRemote
+            )} snaps remotely only`
+        )
+        .join('\n');
+      return `the local and remote history of the following component(s) have diverged\n${componentsStr}\nPlease use --merge to merge them`;
+    }
+  ],
   [
     EjectNoDir,
     err =>

@@ -1,5 +1,5 @@
 import * as semver from 'semver';
-import { equals, forEachObjIndexed, isEmpty, clone } from 'ramda';
+import { equals, forEachObjIndexed, isEmpty, clone, difference } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
@@ -47,6 +47,8 @@ type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
 export type SnapModel = { head?: Ref };
+
+export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[] };
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -153,6 +155,53 @@ export default class Component extends BitObject {
     if (!this.scopesList.find(r => r.url === scopeListItem.url)) {
       this.scopesList.push(scopeListItem);
     }
+  }
+
+  /**
+   * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
+   * traverse by the local head, if it finds the remote head, no need to traverse by the remote
+   * head. (it also means that we can do do fast-forward and no need for snap-merge).
+   */
+  async getDivergeData(repo: Repository, throws = true): Promise<DivergeResult | null> {
+    const remoteHead = this.laneHeadRemote;
+    const localHead = this.laneHeadLocal || this.snaps.head;
+    if (!remoteHead || !localHead || remoteHead.isEqual(localHead)) return null;
+    const snapsOnLocal: Ref[] = [];
+    const snapsOnRemote: Ref[] = [];
+    const addParentsRecursively = async (version: Version, snaps: Ref[], stopsIfEqual: Ref) => {
+      if (version.hash().isEqual(stopsIfEqual)) return true;
+      snaps.push(version.hash());
+      await Promise.all(
+        version.parents.map(async parent => {
+          const parentVersion = (await parent.load(repo)) as Version;
+          if (parentVersion) {
+            await addParentsRecursively(parentVersion, snaps, stopsIfEqual);
+          } else if (throws) {
+            throw new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
+          }
+        })
+      );
+      return false;
+    };
+    const localVersion = (await repo.load(localHead)) as Version;
+    const remoteHeadExistsLocally = await addParentsRecursively(localVersion, snapsOnLocal, remoteHead);
+    if (remoteHeadExistsLocally) return { snapsOnRemoteOnly: [], snapsOnLocalOnly: snapsOnLocal };
+    const remoteVersion = (await repo.load(remoteHead)) as Version;
+    const localHeadExistsRemotely = await addParentsRecursively(remoteVersion, snapsOnRemote, localHead);
+    if (localHeadExistsRemotely) return { snapsOnRemoteOnly: snapsOnRemote, snapsOnLocalOnly: [] };
+    return {
+      snapsOnRemoteOnly: difference(snapsOnRemote, snapsOnLocal),
+      snapsOnLocalOnly: difference(snapsOnLocal, snapsOnRemote)
+    };
+  }
+
+  /**
+   * when a local and remote history have diverged, a true merge is needed.
+   * when a remote is ahead of the local, but local has no new commits, a fast-forward merge is possible.
+   * when a local is ahead of the remote, no merge is needed.
+   */
+  static isTrueMergePending(divergeResult: DivergeResult): boolean {
+    return Boolean(divergeResult.snapsOnLocalOnly.length && divergeResult.snapsOnRemoteOnly.length);
   }
 
   /**

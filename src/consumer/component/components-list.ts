@@ -38,6 +38,7 @@ export default class ComponentsList {
   _invalidComponents: InvalidComponent[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
+  private _mergePendingComponents: ModelComponent[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -99,10 +100,17 @@ export default class ComponentsList {
   async listOutdatedComponents(): Promise<Component[]> {
     const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
+    const mergePendingComponents = await this.listMergePendingComponents();
+    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.toBitId()));
     await Promise.all(
       fileSystemComponents.map(async component => {
         const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
         if (!modelComponent || !component.id.hasVersion()) return;
+        if (mergePendingComponentsIds.hasWithoutVersion(component.id)) {
+          // by default, outdated include merge-pending since the remote-head and local-head are
+          // different, however we want them both to be separated as they need different treatment
+          return;
+        }
         const latestVersionLocally = modelComponent.latestOnLane();
         const latestIncludeRemoteHead = await modelComponent.latestIncludeRemote(this.scope.objects);
         const isOutdated = (): boolean => {
@@ -117,6 +125,17 @@ export default class ComponentsList {
     );
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return fileSystemComponents.filter(f => f.latestVersion);
+  }
+
+  async listMergePendingComponents(): Promise<ModelComponent[]> {
+    if (!this._mergePendingComponents) {
+      const componentsFromModel = await this.getModelComponents();
+      this._mergePendingComponents = await filterAsync(componentsFromModel, async (component: ModelComponent) => {
+        const divergedData = await component.getDivergeData(this.scope.objects);
+        return divergedData && ModelComponent.isTrueMergePending(divergedData);
+      });
+    }
+    return this._mergePendingComponents;
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {

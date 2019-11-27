@@ -18,6 +18,7 @@ export type StatusResult = {
   autoTagPendingComponents: string[];
   invalidComponents: InvalidComponent[];
   outdatedComponents: Component[];
+  mergePendingComponents: ModelComponent[];
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -39,6 +40,7 @@ export default (async function status(): Promise<StatusResult> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const invalidComponents = allInvalidComponents.filter(c => !(c.error instanceof ComponentsPendingImport));
   const outdatedComponents = await componentsList.listOutdatedComponents();
+  const mergePendingComponents = await componentsList.listMergePendingComponents();
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't tag anything
@@ -64,6 +66,7 @@ export default (async function status(): Promise<StatusResult> {
     autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     invalidComponents,
-    outdatedComponents
+    outdatedComponents,
+    mergePendingComponents
   };
 });
