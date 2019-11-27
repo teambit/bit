@@ -255,8 +255,12 @@ export default class DependencyResolver {
     [this.component.compilerPackageDependencies, this.component.testerPackageDependencies].forEach(packages => {
       DEPENDENCIES_FIELDS.forEach(fieldType => {
         if (!packages[fieldType]) return;
-        const shouldBeIncluded = (pkgVersion, pkgName) =>
-          !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType);
+        const shouldBeIncluded = (pkgVersion, pkgName) => {
+          return (
+            !this.overridesDependencies.shouldIgnoreComponentByStr(pkgName, fieldType) &&
+            !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType)
+          );
+        };
         packages[fieldType] = R.pickBy(shouldBeIncluded, packages[fieldType]);
       });
     });
