@@ -126,6 +126,11 @@ export default class Show extends Command {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           componentObj.tester.files = makeEnvFilesReadable(comp.tester);
         }
+
+        if (comp.componentMap && comp.componentMap.rootDir) {
+          componentObj.rootDir = comp.componentMap.rootDir;
+        }
+
         return componentObj;
       };
       const componentFromFileSystem = makeComponentReadable(component);
