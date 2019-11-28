@@ -1,12 +1,11 @@
 import { expect } from 'chai';
 import ScopeIndex from './components-index';
-import { BitId } from '../../bit-id';
-import { ModelComponent, Symlink } from '../models';
+import { ModelComponent } from '../models';
 import BitObject from './object';
 
 describe('ComponentsIndex', () => {
   describe('addOne', () => {
-    let scopeIndex;
+    let scopeIndex: ScopeIndex;
     beforeEach(() => {
       scopeIndex = new ScopeIndex('scope-path');
     });
@@ -14,9 +13,9 @@ describe('ComponentsIndex', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       scopeIndex.addOne(modelComponent);
-      const allIds = scopeIndex.getIds();
-      const id = new BitId({ scope: 'my-scope', name: 'is-string' });
-      expect(allIds[0]).to.deep.equal(id);
+      const allItems = scopeIndex.getAll();
+      // @ts-ignore
+      expect(allItems[0].id).to.deep.equal({ scope: 'my-scope', name: 'is-string' });
     });
     it('should not add the same component multiple times', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -24,18 +23,18 @@ describe('ComponentsIndex', () => {
       scopeIndex.addOne(modelComponent);
       scopeIndex.addOne(modelComponent);
       scopeIndex.addOne(modelComponent);
-      expect(scopeIndex.getIds()).to.have.lengthOf(1);
+      expect(scopeIndex.getAll()).to.have.lengthOf(1);
     });
     it('should not add BitObjects that are not Symlink nor ModelComponent', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const bitObject = new BitObject({ scope: 'my-scope', name: 'is-string' });
       const result = scopeIndex.addOne(bitObject);
-      expect(scopeIndex.getIds()).to.have.lengthOf(0);
+      expect(scopeIndex.getAll()).to.have.lengthOf(0);
       expect(result).to.be.false;
     });
   });
   describe('remove', () => {
-    let scopeIndex;
+    let scopeIndex: ScopeIndex;
     beforeEach(() => {
       scopeIndex = new ScopeIndex('scope-path');
     });
@@ -43,9 +42,9 @@ describe('ComponentsIndex', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       scopeIndex.addOne(modelComponent);
-      expect(scopeIndex.getIds()).to.have.lengthOf(1);
+      expect(scopeIndex.getAll()).to.have.lengthOf(1);
       scopeIndex.removeOne(modelComponent.hash().toString());
-      expect(scopeIndex.getIds()).to.have.lengthOf(0);
+      expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
     it('should remove the correct one when there are multiple', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -54,16 +53,16 @@ describe('ComponentsIndex', () => {
       const isTypeComponent = new ModelComponent({ scope: 'my-scope', name: 'is-type' });
       scopeIndex.addOne(isStringComponent);
       scopeIndex.addOne(isTypeComponent);
-      expect(scopeIndex.getIds()).to.have.lengthOf(2);
+      expect(scopeIndex.getAll()).to.have.lengthOf(2);
       scopeIndex.removeOne(isStringComponent.hash().toString());
-      const allIds = scopeIndex.getIds();
+      const allIds = scopeIndex.getAll();
       expect(allIds).to.have.lengthOf(1);
-      const id = new BitId({ scope: 'my-scope', name: 'is-type' });
-      expect(allIds[0]).to.deep.equal(id);
+      // @ts-ignore
+      expect(allIds[0].id).to.deep.equal({ scope: 'my-scope', name: 'is-type' });
     });
   });
   describe('removeMany', () => {
-    let scopeIndex;
+    let scopeIndex: ScopeIndex;
     let isStringComponent;
     let isTypeComponent;
     beforeEach(() => {
@@ -73,23 +72,23 @@ describe('ComponentsIndex', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isTypeComponent = new ModelComponent({ name: 'is-type' });
       scopeIndex.addMany([isStringComponent, isTypeComponent]);
-      expect(scopeIndex.getIds()).to.have.lengthOf(2);
+      expect(scopeIndex.getAll()).to.have.lengthOf(2);
     });
     it('should remove multiple when removing them at the same removeMany call', () => {
-      expect(scopeIndex.getIds()).to.have.lengthOf(2);
+      expect(scopeIndex.getAll()).to.have.lengthOf(2);
       scopeIndex.removeMany([isStringComponent.hash().toString(), isTypeComponent.hash().toString()]);
-      expect(scopeIndex.getIds()).to.have.lengthOf(0);
+      expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
     it('should remove multiple when removing them with separate removeMany calls', () => {
-      expect(scopeIndex.getIds()).to.have.lengthOf(2);
+      expect(scopeIndex.getAll()).to.have.lengthOf(2);
       scopeIndex.removeMany([isStringComponent.hash().toString()]);
       scopeIndex.removeMany([isTypeComponent.hash().toString()]);
-      expect(scopeIndex.getIds()).to.have.lengthOf(0);
+      expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
     it('should remove multiple when calling them with separate removeMany calls using array.map', () => {
-      expect(scopeIndex.getIds()).to.have.lengthOf(2);
+      expect(scopeIndex.getAll()).to.have.lengthOf(2);
       [isStringComponent.hash().toString(), isTypeComponent.hash().toString()].map(h => scopeIndex.removeMany([h]));
-      expect(scopeIndex.getIds()).to.have.lengthOf(0);
+      expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
   });
 });
