@@ -26,6 +26,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { Version, ModelComponent } from '../../scope/models';
 import { DivergeResult } from '../../scope/models/model-component';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
+import { DivergedComponent } from '../component/components-list';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -126,7 +127,7 @@ export default class ImportComponents {
     if (this.options.merge || this.options.objectsOnly) return;
     const divergedComponents = this.divergeData.filter(
       d => d.diverge && ModelComponent.isTrueMergePending(d.diverge)
-    ) as Array<{ id: BitId; diverge: DivergeResult }>;
+    ) as DivergedComponent[];
     if (divergedComponents.length) {
       const divergeData = divergedComponents.map(d => ({
         id: d.id.toString(),

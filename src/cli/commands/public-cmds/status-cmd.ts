@@ -64,7 +64,7 @@ export default class Status extends Command {
           autoTagPendingComponents,
           invalidComponents,
           outdatedComponents: outdatedComponents.map(c => c.id.toString()),
-          mergePendingComponents: mergePendingComponents.map(c => c.id())
+          mergePendingComponents: mergePendingComponents.map(c => c.id.toString())
         },
         null,
         2
@@ -145,7 +145,9 @@ export default class Status extends Command {
     const pendingMergeDesc = '(use "bit merge [component_id]" to merge changes)\n';
     const pendingMergeComps = mergePendingComponents
       .map(component => {
-        return `    > ${chalk.cyan(component.id())}\n`;
+        return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${
+          component.diverge.snapsOnLocalOnly.length
+        } and ${component.diverge.snapsOnRemoteOnly.length} different snaps each, respectively\n`;
       })
       .join('');
 

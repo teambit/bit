@@ -1,5 +1,5 @@
 import { loadConsumer } from '../../../consumer';
-import ComponentsList from '../../../consumer/component/components-list';
+import ComponentsList, { DivergedComponent } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
 import { InvalidComponent } from '../../../consumer/component/consumer-component';
 import { ModelComponent } from '../../../scope/models';
@@ -18,7 +18,7 @@ export type StatusResult = {
   autoTagPendingComponents: string[];
   invalidComponents: InvalidComponent[];
   outdatedComponents: Component[];
-  mergePendingComponents: ModelComponent[];
+  mergePendingComponents: DivergedComponent[];
 };
 
 export default (async function status(): Promise<StatusResult> {

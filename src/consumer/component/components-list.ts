@@ -2,7 +2,7 @@ import * as path from 'path';
 import semver from 'semver';
 import R from 'ramda';
 import Version from '../../scope/models/version';
-import ModelComponent from '../../scope/models/model-component';
+import ModelComponent, { DivergeResult } from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
@@ -25,6 +25,8 @@ export type ListScopeResult = {
   deprecated?: boolean;
 };
 
+export type DivergedComponent = { id: BitId; diverge: DivergeResult };
+
 export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
@@ -39,7 +41,7 @@ export default class ComponentsList {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _modifiedComponents: Component[];
   // @ts-ignore
-  private _mergePendingComponents: ModelComponent[];
+  private _mergePendingComponents: DivergedComponent[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -102,7 +104,7 @@ export default class ComponentsList {
     const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
-    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.toBitId()));
+    const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.id));
     await Promise.all(
       fileSystemComponents.map(async component => {
         const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
@@ -128,13 +130,19 @@ export default class ComponentsList {
     return fileSystemComponents.filter(f => f.latestVersion);
   }
 
-  async listMergePendingComponents(): Promise<ModelComponent[]> {
+  async listMergePendingComponents(): Promise<DivergedComponent[]> {
     if (!this._mergePendingComponents) {
+      const componentsFromFs = await this.getAuthoredAndImportedFromFS();
       const componentsFromModel = await this.getModelComponents();
-      this._mergePendingComponents = await filterAsync(componentsFromModel, async (component: ModelComponent) => {
-        const divergedData = await component.getDivergeData(this.scope.objects);
-        return divergedData && ModelComponent.isTrueMergePending(divergedData);
-      });
+      this._mergePendingComponents = (await Promise.all(
+        componentsFromFs.map(async (component: Component) => {
+          const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
+          if (!modelComponent) return null;
+          const divergedData = await modelComponent.getDivergeData(this.scope.objects);
+          if (!divergedData || !ModelComponent.isTrueMergePending(divergedData)) return null;
+          return { id: modelComponent.toBitId(), diverge: divergedData };
+        })
+      )).filter(x => x) as DivergedComponent[];
     }
     return this._mergePendingComponents;
   }
@@ -299,11 +307,10 @@ export default class ComponentsList {
   /**
    * components that are on bit.map but not on the file-system
    */
-  async listInvalidComponents(): Promise<BitId[]> {
+  async listInvalidComponents(): Promise<InvalidComponent[]> {
     if (!this._invalidComponents) {
       await this.getFromFileSystem();
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this._invalidComponents;
   }
 
