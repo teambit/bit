@@ -48,7 +48,7 @@ export type ScopeListItem = { url: string; name: string; date: string };
 
 export type SnapModel = { head?: Ref };
 
-export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[] };
+export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[]; commonSnapBeforeDiverge: Ref };
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -170,6 +170,7 @@ export default class Component extends BitObject {
     const snapsOnRemote: Ref[] = [];
     let remoteHeadExistsLocally = false;
     let localHeadExistsRemotely = false;
+    let commonSnapBeforeDiverge: Ref;
     const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
       if (isLocal && version.hash().isEqual(remoteHead)) {
         remoteHeadExistsLocally = true;
@@ -178,6 +179,10 @@ export default class Component extends BitObject {
       if (!isLocal && version.hash().isEqual(localHead)) {
         localHeadExistsRemotely = true;
         return;
+      }
+      if (!isLocal && !commonSnapBeforeDiverge) {
+        const snapExistLocally = snapsOnLocal.find(snap => snap.isEqual(version.hash()));
+        if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
       }
       snaps.push(version.hash());
       await Promise.all(
@@ -193,13 +198,21 @@ export default class Component extends BitObject {
     };
     const localVersion = (await repo.load(localHead)) as Version;
     await addParentsRecursively(localVersion, snapsOnLocal, true);
-    if (remoteHeadExistsLocally) return { snapsOnRemoteOnly: [], snapsOnLocalOnly: snapsOnLocal };
+    if (remoteHeadExistsLocally)
+      return { snapsOnRemoteOnly: [], snapsOnLocalOnly: snapsOnLocal, commonSnapBeforeDiverge: remoteHead };
     const remoteVersion = (await repo.load(remoteHead)) as Version;
     await addParentsRecursively(remoteVersion, snapsOnRemote, false);
-    if (localHeadExistsRemotely) return { snapsOnRemoteOnly: snapsOnRemote, snapsOnLocalOnly: [] };
+    if (localHeadExistsRemotely)
+      return { snapsOnRemoteOnly: snapsOnRemote, snapsOnLocalOnly: [], commonSnapBeforeDiverge: localHead };
+    // @ts-ignore
+    if (!commonSnapBeforeDiverge)
+      throw new Error(
+        `fatal: local and remote of ${this.id()} could not possibly diverged as they don't have any snap in common`
+      );
     return {
       snapsOnRemoteOnly: difference(snapsOnRemote, snapsOnLocal),
-      snapsOnLocalOnly: difference(snapsOnLocal, snapsOnRemote)
+      snapsOnLocalOnly: difference(snapsOnLocal, snapsOnRemote),
+      commonSnapBeforeDiverge
     };
   }
 
