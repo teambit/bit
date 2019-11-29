@@ -300,7 +300,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies,
     message,
     specsResults,
-    resolveUnmerged
+    resolveUnmerged = false
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
@@ -310,7 +310,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies: BitIds;
     message: string;
     specsResults?: any;
-    resolveUnmerged: boolean;
+    resolveUnmerged?: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model

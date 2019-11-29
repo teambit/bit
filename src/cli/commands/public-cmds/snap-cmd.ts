@@ -31,9 +31,9 @@ export default class Snap extends Command {
     [id]: string[],
     {
       message = '',
-      all,
-      force,
-      verbose,
+      all = false,
+      force = false,
+      verbose = false,
       ignoreUnresolvedDependencies = false,
       skipTests = false,
       skipAutoSnap = false
