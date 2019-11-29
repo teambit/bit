@@ -1,6 +1,7 @@
 import { loadConsumer, Consumer } from '../../../consumer';
 import { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { mergeVersion } from '../../../consumer/versions-ops/merge-version';
+import snapMerge from '../../../consumer/versions-ops/merge-version/snap-merge';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
@@ -12,7 +13,13 @@ export default (async function merge(
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
   const bitIds = getComponentsToMerge(consumer, ids);
-  const mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
+  let mergeResults;
+  if (!BitId.isValidVersion(version)) {
+    // @todo: version could be the lane only or remote/lane
+    mergeResults = await snapMerge(consumer, bitIds, mergeStrategy);
+  } else {
+    mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
+  }
   await consumer.onDestroy();
   return mergeResults;
 });

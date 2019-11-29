@@ -239,16 +239,7 @@ export default class Scope {
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
     const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
-    await Promise.all(
-      components.map(async component => {
-        if (component.scope) {
-          component.laneHeadRemote = await this.objects.remoteLanes.getRef(component.scope, laneId, component.name);
-        }
-        if (lane) {
-          component.laneHeadLocal = lane.getComponentHead(component.toBitId());
-        }
-      })
-    );
+    await Promise.all(components.map(component => component.populateLocalAndRemoteHeads(this.objects, laneId, lane)));
     return components;
   }
 

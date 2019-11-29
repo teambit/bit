@@ -5,11 +5,6 @@ import { BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
-import logger from '../../../logger/logger';
-import { Analytics } from '../../../analytics/analytics';
-import { MissingDependencies } from '../../../consumer/exceptions';
-import ComponentsPendingImport from '../../../consumer/component-ops/exceptions/components-pending-import';
-import snapModelComponent from '../../../scope/component-ops/snap-model-component';
 
 export type SnapResults = {
   snappedComponents: Component[];
@@ -21,9 +16,9 @@ export type SnapResults = {
 export async function snapAction(args: {
   id: string;
   message: string;
-  force?: boolean;
-  verbose?: boolean;
-  ignoreUnresolvedDependencies?: boolean;
+  force: boolean;
+  verbose: boolean;
+  ignoreUnresolvedDependencies: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
 }): Promise<SnapResults | null> {
@@ -33,7 +28,15 @@ export async function snapAction(args: {
   const newComponents = await componentsList.listNewComponents();
   const ids = await getIdsToSnap();
   if (!ids) return null;
-  const tagResults = await snap();
+  const tagResults = await consumer.snap({
+    ids,
+    ignoreUnresolvedDependencies,
+    message,
+    force,
+    skipTests,
+    verbose,
+    skipAutoSnap
+  });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
   await consumer.onDestroy();
@@ -55,41 +58,5 @@ export async function snapAction(args: {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (R.isEmpty(tagPendingComponents)) return null;
     return idHasWildcard ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, id) : tagPendingComponents;
-  }
-
-  async function snap() {
-    logger.debug(`snapping the following components: ${ids.toString()}`);
-    Analytics.addBreadCrumb('snap', `snapping the following components: ${Analytics.hashData(ids)}`);
-    const { components } = await consumer.loadComponents(ids);
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't snap anything
-    if (!ignoreUnresolvedDependencies) {
-      const componentsWithMissingDeps = components.filter(component => {
-        return Boolean(component.issues);
-      });
-      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
-    }
-    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
-
-    const { taggedComponents, autoTaggedResults } = await snapModelComponent({
-      consumerComponents: components,
-      scope: consumer.scope,
-      message,
-      force,
-      consumer,
-      skipTests,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      verbose,
-      skipAutoSnap
-    });
-
-    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
-    const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    await consumer.updateComponentsVersions(allComponents);
-
-    return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
   }
 }

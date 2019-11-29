@@ -56,7 +56,7 @@ export default class Merge extends Command {
   report({ components, version }: ApplyVersionResults): string {
     // $FlowFixMe version is set in case of merge command
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const title = `successfully merged components from version ${chalk.bold(version)}\n`;
+    const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
     // $FlowFixMe components is set in case of merge command
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentsStr = applyVersionReport(components);

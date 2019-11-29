@@ -32,6 +32,8 @@ import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
 import HeadNotFound from '../exceptions/head-not-found';
 import ParentNotFound from '../exceptions/parent-not-found';
+import { Lane } from '.';
+import LaneId from '../../lane-id/lane-id';
 
 type State = {
   versions?: {
@@ -223,6 +225,15 @@ export default class Component extends BitObject {
    */
   static isTrueMergePending(divergeResult: DivergeResult): boolean {
     return Boolean(divergeResult.snapsOnLocalOnly.length && divergeResult.snapsOnRemoteOnly.length);
+  }
+
+  async populateLocalAndRemoteHeads(repo: Repository, laneId: LaneId, lane: Lane | null) {
+    if (this.scope) {
+      this.laneHeadRemote = await repo.remoteLanes.getRef(this.scope, laneId, this.name);
+    }
+    if (lane) {
+      this.laneHeadLocal = lane.getComponentHead(this.toBitId());
+    }
   }
 
   /**

@@ -73,6 +73,7 @@ import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import LaneId from '../lane-id/lane-id';
+import snapModelComponents from '../scope/component-ops/snap-model-component';
 
 type ConsumerProps = {
   projectPath: string;
@@ -675,6 +676,61 @@ export default class Consumer {
     await this.updateComponentsVersions(allComponents);
 
     return { taggedComponents, autoTaggedResults };
+  }
+
+  async snap({
+    ids,
+    message = '',
+    ignoreUnresolvedDependencies = false,
+    force = false,
+    skipTests = false,
+    verbose = false,
+    skipAutoSnap = false,
+    resolveUnmerged = false
+  }: {
+    ids: BitIds;
+    message?: string;
+    ignoreUnresolvedDependencies?: boolean;
+    force?: boolean;
+    skipTests?: boolean;
+    verbose?: boolean;
+    skipAutoSnap?: boolean;
+    resolveUnmerged?: boolean;
+  }) {
+    logger.debug(`snapping the following components: ${ids.toString()}`);
+    Analytics.addBreadCrumb('snap', `snapping the following components: ${Analytics.hashData(ids)}`);
+    const { components } = await this.loadComponents(ids);
+    // go through the components list to check if there are missing dependencies
+    // if there is at least one we won't snap anything
+    if (!ignoreUnresolvedDependencies) {
+      const componentsWithMissingDeps = components.filter(component => {
+        return Boolean(component.issues);
+      });
+      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
+    }
+
+    const { taggedComponents, autoTaggedResults } = await snapModelComponents({
+      consumerComponents: components,
+      scope: this.scope,
+      message,
+      force,
+      consumer: this,
+      skipTests,
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      verbose,
+      skipAutoSnap,
+      resolveUnmerged
+    });
+
+    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
+    const allComponents = [...taggedComponents, ...autoTaggedComponents];
+    await this.updateComponentsVersions(allComponents);
+
+    return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {

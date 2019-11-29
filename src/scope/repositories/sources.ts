@@ -18,6 +18,7 @@ import { revertDirManipulationForPath } from '../../consumer/component-ops/manip
 import { isHash } from '../../version/version-parser';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import Lane from '../models/lane';
+import UnmergedComponents from '../lanes/unmerged-components';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -298,7 +299,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedCompilerDependencies,
     flattenedTesterDependencies,
     message,
-    specsResults
+    specsResults,
+    resolveUnmerged
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
@@ -308,12 +310,16 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedTesterDependencies: BitIds;
     message: string;
     specsResults?: any;
+    resolveUnmerged: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = await this.findOrAddComponent(source);
-
+    const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+    if (unmergedComponent && !unmergedComponent.resolved && !resolveUnmerged) {
+      throw new Error(`unable to snap/tag ${component.name}, it is unmerged with conflicts`);
+    }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
@@ -333,6 +339,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const lane = (await this.scope.loadLane(currentLane)) || Lane.create(currentLane);
       lane.addComponent({ id: component.toBitId(), head: version.hash() });
       objectRepo.add(lane);
+    }
+    if (unmergedComponent) {
+      version.addParent(unmergedComponent.head);
+      version.log.message = version.log.message
+        ? version.log.message
+        : UnmergedComponents.buildSnapMessage(unmergedComponent);
     }
     objectRepo.add(component);
 

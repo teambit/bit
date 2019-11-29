@@ -136,10 +136,9 @@ async function getComponentStatus(
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherVersion: currentlyUsedVersion,
+      otherLabel: `${currentlyUsedVersion} modified`,
       currentComponent,
-      currentVersion: newVersion,
+      currentLabel: newVersion,
       baseComponent
     });
   }

@@ -142,7 +142,7 @@ export default class Status extends Command {
     const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const pendingMergeTitle = chalk.underline.white('pending merge');
-    const pendingMergeDesc = '(use "bit merge [component_id]" to merge changes)\n';
+    const pendingMergeDesc = '(use "bit merge <remote-name>/<lane-name> [component-id]" to merge changes)\n';
     const pendingMergeComps = mergePendingComponents
       .map(component => {
         return `    > ${chalk.cyan(component.id.toString())} local and remote have diverged and have ${

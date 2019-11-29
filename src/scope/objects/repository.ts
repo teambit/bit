@@ -14,6 +14,7 @@ import logger from '../../logger/logger';
 import ScopeIndex, { IndexType } from './components-index';
 import { ScopeJson } from '../scope-json';
 import RemoteLanes from '../lanes/remote-lanes';
+import UnmergedComponents from '../lanes/unmerged-components';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -27,8 +28,8 @@ export default class Repository {
   scopeIndex: ScopeIndex;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [key: string]: BitObject } = {};
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  remoteLanes: RemoteLanes;
+  remoteLanes!: RemoteLanes;
+  unmergedComponents!: UnmergedComponents;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
@@ -39,6 +40,7 @@ export default class Repository {
     const scopeIndex = await repository.loadOptionallyCreateScopeIndex();
     repository.scopeIndex = scopeIndex;
     repository.remoteLanes = new RemoteLanes(scopePath);
+    repository.unmergedComponents = await UnmergedComponents.load(scopePath);
     return repository;
   }
 

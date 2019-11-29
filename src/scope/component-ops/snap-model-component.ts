@@ -106,7 +106,7 @@ function validateDirManipulation(components: Component[]): void {
   components.forEach(component => validateComponent(component));
 }
 
-export default async function snapModelComponent({
+export default async function snapModelComponents({
   consumerComponents,
   scope,
   message,
@@ -114,7 +114,8 @@ export default async function snapModelComponent({
   consumer,
   skipTests = false,
   verbose = false,
-  skipAutoSnap
+  skipAutoSnap,
+  resolveUnmerged
 }: {
   consumerComponents: Component[];
   scope: Scope;
@@ -124,6 +125,7 @@ export default async function snapModelComponent({
   skipTests: boolean;
   verbose?: boolean;
   skipAutoSnap: boolean;
+  resolveUnmerged: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
@@ -214,7 +216,8 @@ export default async function snapModelComponent({
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       message,
-      specsResults: testResult ? testResult.specs : undefined
+      specsResults: testResult ? testResult.specs : undefined,
+      resolveUnmerged
     });
     return consumerComponent;
   };

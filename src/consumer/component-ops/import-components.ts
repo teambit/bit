@@ -388,10 +388,10 @@ export default class ImportComponents {
       consumer: this.consumer,
       otherComponent: fsComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherVersion: currentlyUsedVersion,
+      otherLabel: currentlyUsedVersion,
       currentComponent, // $FlowFixMe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      currentVersion: component.id.version,
+      currentLabel: component.id.version,
       baseComponent
     });
     mergeStatus.mergeResults = mergeResults;
