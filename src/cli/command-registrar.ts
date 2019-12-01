@@ -237,9 +237,9 @@ export default class CommandRegistrar {
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (
-      cmdList.includes(subcommand) &&
-      extensionsCmdList.includes(subcommand) &&
-      aliasList.includes(subcommand) &&
+      !cmdList.includes(subcommand) &&
+      !extensionsCmdList.includes(subcommand) &&
+      !aliasList.includes(subcommand) &&
       subcommand !== '-V' &&
       subcommand !== '--version'
     ) {
