@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.0-dev.4] - 2019-12-01
+
+- backward compatibility for all remote ssh commands
+
 ## [14.6.0-dev.3] - 2019-12-01
 
 - fix did you mean suggestions
