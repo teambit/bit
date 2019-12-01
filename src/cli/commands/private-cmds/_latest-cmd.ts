@@ -4,7 +4,9 @@ import { latestVersions } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
 
+let compressResponse;
 export default class Latest extends Command {
   name = '_latest <path> <args>';
   private = true;
@@ -14,6 +16,7 @@ export default class Latest extends Command {
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
@@ -23,6 +26,6 @@ export default class Latest extends Command {
   }
 
   report(str: string): string {
-    return packCommand(buildCommandMessage(str));
+    return packCommand(buildCommandMessage(str, undefined, compressResponse), true, compressResponse);
   }
 }

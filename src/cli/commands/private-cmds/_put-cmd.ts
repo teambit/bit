@@ -4,7 +4,9 @@ import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
 
+let compressResponse;
 export default class Put extends Command {
   name = '_put <path> <args>';
   private = true;
@@ -15,6 +17,7 @@ export default class Put extends Command {
   action([path, args]: [string, string]): Promise<any> {
     let data = '';
     const { headers } = unpackCommand(args);
+    compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     return new Promise((resolve, reject) => {
       process.stdin
@@ -35,6 +38,6 @@ export default class Put extends Command {
   }
 
   report(ids: string[]): string {
-    return packCommand(buildCommandMessage({ ids }));
+    return packCommand(buildCommandMessage({ ids }, undefined, compressResponse), true, compressResponse);
   }
 }

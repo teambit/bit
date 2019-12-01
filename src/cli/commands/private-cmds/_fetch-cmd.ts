@@ -5,7 +5,9 @@ import ComponentObjects from '../../../scope/component-objects';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
 
+let compressResponse;
 export default class Fetch extends Command {
   name = '_fetch <path> <args>';
   private = true;
@@ -16,6 +18,7 @@ export default class Fetch extends Command {
 
   action([path, args]: [string, string], { noDependencies }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
@@ -27,6 +30,6 @@ export default class Fetch extends Command {
   report(componentObjects: ComponentObjects[]): string {
     const components = ComponentObjects.manyToString(componentObjects);
     // No need to use packCommand because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
-    return JSON.stringify(buildCommandMessage(components));
+    return JSON.stringify(buildCommandMessage(components, undefined, compressResponse));
   }
 }
