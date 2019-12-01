@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.0-dev.2] - 2019-12-01
+
+- add new global config `ssh_no_compress`
+
 ## [14.6.0-dev.1] - 2019-12-01
 
 - change init interactive to be true by default
