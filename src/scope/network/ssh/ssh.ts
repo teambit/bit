@@ -358,7 +358,8 @@ export default class SSH implements Network {
 
   _unpack(data, base64 = true) {
     try {
-      return unpackCommand(data, base64);
+      const unpacked = unpackCommand(data, base64);
+      return unpacked;
     } catch (err) {
       logger.error(`unpackCommand found on error "${err}", while parsing the following string: ${data}`);
       throw new SSHInvalidResponse(data);
