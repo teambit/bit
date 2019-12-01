@@ -1,8 +1,5 @@
 import toBase64 from './string/to-base64';
-import logger from '../logger/logger';
-import snappy from 'snappy';
 import zlib from 'zlib';
-import fromBase64 from './string/from-base64';
 
 module.exports = function packCmd(obj, base64 = true, compress = true) {
   if (compress) {

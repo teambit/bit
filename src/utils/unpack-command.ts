@@ -1,6 +1,5 @@
 import fromBase64 from './string/from-base64';
 import zlib from 'zlib';
-import logger from '../logger/logger';
 
 module.exports = function unpackCmd(str, base64 = true) {
   let parsed;

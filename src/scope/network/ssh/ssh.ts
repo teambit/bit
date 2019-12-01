@@ -252,7 +252,7 @@ export default class SSH implements Network {
   }
 
   buildCmd(commandName: string, path: string, payload: any, context: any): string {
-    const compress = globalConfig.getSync(CFG_SSH_NO_COMPRESS) === 'true' ? false : true;
+    const compress = globalConfig.getSync(CFG_SSH_NO_COMPRESS) === 'true';
     return `bit ${commandName} ${toBase64(path)} ${packCommand(
       buildCommandMessage(payload, context, compress),
       true,
