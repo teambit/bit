@@ -4,7 +4,9 @@ import { scopeShow } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
+let compressResponse;
 // eslint-disable-next-line @typescript-eslint/class-name-casing
 export default class _Show extends Command {
   name = '_show <path> <args>';
@@ -15,6 +17,7 @@ export default class _Show extends Command {
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     // validateVersion(headers)
     logger.info('Checking if a migration is needed');
@@ -25,6 +28,6 @@ export default class _Show extends Command {
   }
 
   report(str: string): string {
-    return packCommand(buildCommandMessage(str));
+    return packCommand(buildCommandMessage(str, undefined, compressResponse), true, compressResponse);
   }
 }

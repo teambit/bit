@@ -119,7 +119,7 @@ function execAction(command, concrete, args) {
 }
 
 function serializeErrAndExit(err, commandName) {
-  process.stderr.write(packCommand(buildCommandMessage(serializeError(err)), false));
+  process.stderr.write(packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false));
   const code = err.code && isNumeric(err.code) ? err.code : 1;
   return logger.exitAfterFlush(code, commandName);
 }

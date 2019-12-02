@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.0-dev.6] - 2019-12-02
+
+- change init interactive to be true by default
+- fix no compress config
+
+## [14.6.0-dev.5] - 2019-12-02
+
+- minor fixes for ssh compress
+
+
+## [14.6.0-dev.4] - 2019-12-01
+
+- backward compatibility for all remote ssh commands
+
+## [14.6.0-dev.3] - 2019-12-01
+
+- fix did you mean suggestions
+
+## [14.6.0-dev.2] - 2019-12-01
+
+- add new global config `ssh_no_compress`
+
+## [14.6.0-dev.1] - 2019-12-01
+
+- change init interactive to be true by default
+- compress ssh args before sending
+
 ## [[14.5.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.5.0)
 
 ### New
