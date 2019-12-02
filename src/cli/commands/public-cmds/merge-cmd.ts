@@ -64,10 +64,15 @@ export default class Merge extends Command {
     return merge(values, mergeStrategy as any, abort, resolve);
   }
 
-  report({ components, version, snappedComponents }: ApplyVersionResults): string {
+  report({ components, version, snappedComponents, abortedComponents }: ApplyVersionResults): string {
     if (snappedComponents) {
-      const title = 'successfully resolved components\n';
-      const componentsStr = snappedComponents.map(c => c.id.toString()).join('\n');
+      const title = 'successfully resolved component(s)\n';
+      const componentsStr = snappedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
+      return chalk.underline(title) + chalk.green(componentsStr);
+    }
+    if (abortedComponents) {
+      const title = 'successfully aborted the merge of the following component(s)\n';
+      const componentsStr = abortedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
     // @ts-ignore version is set in case of merge command

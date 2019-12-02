@@ -383,6 +383,32 @@ describe('bit snap command', function() {
             expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
           });
         });
+        describe('aborting the merge', () => {
+          let abortOutput;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            abortOutput = helper.command.merge('bar/foo --abort');
+          });
+          it('should abort the merge successfully', () => {
+            expect(abortOutput).to.have.string('successfully aborted the merge');
+          });
+          it('bit status should show the same state as before the merge', () => {
+            const status = helper.command.statusJson();
+            expect(status.mergePendingComponents).to.have.lengthOf(1);
+            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.outdatedComponents).to.have.lengthOf(0);
+            expect(status.stagedComponents).to.have.lengthOf(1);
+          });
+          it('should not change the version in .bitmap', () => {
+            const bitMap = helper.bitMap.read();
+            expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${localHead}`);
+          });
+          it('should reset the changes the merge done on the filesystem', () => {
+            const content = helper.fs.readFile('bar/foo.js');
+            expect(content).to.equal(fixtures.fooFixtureV3);
+          });
+        });
       });
     });
   });

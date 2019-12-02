@@ -34,7 +34,8 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
-  snappedComponents?: Component[];
+  snappedComponents?: Component[]; // relevant for bit merge --resolve
+  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
 };
 type ComponentStatus = {
   componentFromFS: Component;

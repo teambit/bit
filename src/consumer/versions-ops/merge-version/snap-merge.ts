@@ -22,7 +22,7 @@ import GeneralError from '../../../error/general-error';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import ManyComponentsWriter from '../../component-ops/many-components-writer';
 import { UnmergedComponent } from '../../../scope/lanes/unmerged-components';
-import { applyModifiedVersion } from '../checkout-version';
+import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
 
 type ComponentStatus = {
   componentFromFS?: Component;
@@ -40,8 +40,11 @@ export default async function snapMerge(
   abort: boolean,
   resolve: boolean
 ): Promise<ApplyVersionResults> {
+  if (resolve || abort) {
+    const ids = getIdsForUnresolved(consumer, bitIds);
+    return resolve ? resolveMerge(consumer, ids) : abortMerge(consumer, ids);
+  }
   const lane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
-  if (resolve) return resolveMerge(consumer, bitIds);
   const { components } = await consumer.loadComponents(BitIds.fromArray(bitIds));
   // if (abort) return abortMerge(consumer, components);
   const allComponentsStatus = await getAllComponentsStatus();
@@ -247,27 +250,33 @@ async function snapResolvedComponents(consumer: Consumer) {
   });
 }
 
-async function abortMerge(consumer: Consumer, components: Component[]) {}
+async function abortMerge(consumer: Consumer, ids: BitId[]): Promise<ApplyVersionResults> {
+  // @ts-ignore not clear yet what to do with other flags
+  const results = await checkoutVersion(consumer, { ids, reset: true });
+  ids.forEach(id => consumer.scope.objects.unmergedComponents.removeComponent(id.name));
+  await consumer.scope.objects.unmergedComponents.write();
+  return { abortedComponents: results.components };
+}
 
-async function resolveMerge(consumer: Consumer, bitIds?: BitId[]): Promise<ApplyVersionResults> {
-  const getIds = (): BitId[] => {
-    if (bitIds) {
-      bitIds.forEach(id => {
-        const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-        if (!entry || entry.resolved) {
-          throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
-        }
-      });
-      return bitIds;
-    }
-    const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
-    if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
-    return unresolvedComponents.map(u => new BitId(u.id));
-  };
-  const ids = BitIds.fromArray(getIds());
+async function resolveMerge(consumer: Consumer, ids: BitId[]): Promise<ApplyVersionResults> {
   const { snappedComponents } = await consumer.snap({
-    ids,
+    ids: BitIds.fromArray(ids),
     resolveUnmerged: true
   });
   return { snappedComponents };
+}
+
+function getIdsForUnresolved(consumer: Consumer, bitIds?: BitId[]): BitId[] {
+  if (bitIds) {
+    bitIds.forEach(id => {
+      const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
+      if (!entry || entry.resolved) {
+        throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
+      }
+    });
+    return bitIds;
+  }
+  const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
+  if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
+  return unresolvedComponents.map(u => new BitId(u.id));
 }
