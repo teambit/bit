@@ -1,7 +1,7 @@
 import Command from '../../command';
 import { describeScope } from '../../../api/scope';
 import { fromBase64, empty, buildCommandMessage, packCommand, unpackCommand } from '../../../utils';
-import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
 export default class Prepare extends Command {

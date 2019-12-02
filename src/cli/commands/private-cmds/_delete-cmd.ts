@@ -4,7 +4,7 @@ import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
-import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
 

@@ -1,5 +1,5 @@
-import toBase64 from './string/to-base64';
 import zlib from 'zlib';
+import toBase64 from './string/to-base64';
 
 module.exports = function packCmd(obj, base64 = true, compress = true) {
   if (compress) {
@@ -12,7 +12,6 @@ module.exports = function packCmd(obj, base64 = true, compress = true) {
     }
   }
 
-  const compressed = JSON.stringify(obj);
   if (base64) {
     const res = toBase64(JSON.stringify(obj));
     return res;

@@ -5,7 +5,7 @@ import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
-import { clientSupportCompressedCommand } from '../../../utils/ssh/client-support-compressed-command';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
 let compressResponse;
 
