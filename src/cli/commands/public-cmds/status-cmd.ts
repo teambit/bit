@@ -51,7 +51,8 @@ export default class Status extends Command {
     autoTagPendingComponents,
     invalidComponents,
     outdatedComponents,
-    mergePendingComponents
+    mergePendingComponents,
+    componentsWithUnresolvedConflicts
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -64,7 +65,8 @@ export default class Status extends Command {
           autoTagPendingComponents,
           invalidComponents,
           outdatedComponents: outdatedComponents.map(c => c.id.toString()),
-          mergePendingComponents: mergePendingComponents.map(c => c.id.toString())
+          mergePendingComponents: mergePendingComponents.map(c => c.id.toString()),
+          componentsWithUnresolvedConflicts: componentsWithUnresolvedConflicts.map(id => id.toString())
         },
         null,
         2
@@ -155,6 +157,19 @@ export default class Status extends Command {
       ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
       : '';
 
+    const compWithConflictsTitle = chalk.underline.white('components with unresolved conflicts');
+    const compWithConflictsDesc =
+      '(use "bit merge [component-id] --resolve" to mark them as resolved and snap the changes)\n';
+    const compWithConflictsComps = componentsWithUnresolvedConflicts
+      .map(id => {
+        return `    > ${chalk.cyan(id.toString())}`;
+      })
+      .join('');
+
+    const compWithConflictsStr = compWithConflictsComps.length
+      ? [compWithConflictsTitle, compWithConflictsDesc, compWithConflictsComps].join('\n')
+      : '';
+
     const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
@@ -197,6 +212,7 @@ export default class Status extends Command {
         [
           outdatedStr,
           pendingMergeStr,
+          compWithConflictsStr,
           newComponentsOutput,
           modifiedComponentOutput,
           stagedComponentsOutput,

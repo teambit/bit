@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { mergeVersion } from '../../../consumer/versions-ops/merge-version';
@@ -7,17 +8,22 @@ import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
 
 export default (async function merge(
-  version: string,
-  ids: string[],
-  mergeStrategy: MergeStrategy
+  values: string[],
+  mergeStrategy: MergeStrategy,
+  abort: boolean,
+  resolve: boolean
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  const bitIds = getComponentsToMerge(consumer, ids);
   let mergeResults;
-  if (!BitId.isValidVersion(version)) {
+  const firstValue = R.head(values);
+  if (!BitId.isValidVersion(firstValue)) {
+    const bitIds = getComponentsToMerge(consumer, values);
     // @todo: version could be the lane only or remote/lane
-    mergeResults = await snapMerge(consumer, bitIds, mergeStrategy);
+    mergeResults = await snapMerge(consumer, bitIds, mergeStrategy, consumer.getCurrentLane(), abort, resolve);
   } else {
+    const version = firstValue;
+    const ids = R.tail(values);
+    const bitIds = getComponentsToMerge(consumer, ids);
     mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
   }
   await consumer.onDestroy();

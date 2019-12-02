@@ -273,6 +273,10 @@ export default class CommandHelper {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
+  merge(values: string) {
+    return this.runCmd(`bit merge ${values}`);
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diff(id? = '') {
     const output = this.runCmd(`bit diff ${id}`);

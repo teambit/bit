@@ -12,7 +12,8 @@ import {
   getMergeStrategyInteractive,
   ApplyVersionResult,
   MergeOptions,
-  FileStatus
+  FileStatus,
+  ApplyVersionResults
 } from './merge-version';
 import Component from '../../component/consumer-component';
 import { Tmp } from '../../../scope/repositories';
@@ -35,11 +36,14 @@ export default async function snapMerge(
   consumer: Consumer,
   bitIds: BitId[],
   mergeStrategy: MergeStrategy,
-  laneId?: LaneId
-) {
-  if (!laneId) laneId = consumer.getCurrentLane();
+  laneId: LaneId,
+  abort: boolean,
+  resolve: boolean
+): Promise<ApplyVersionResults> {
   const lane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
+  if (resolve) return resolveMerge(consumer, bitIds);
   const { components } = await consumer.loadComponents(BitIds.fromArray(bitIds));
+  // if (abort) return abortMerge(consumer, components);
   const allComponentsStatus = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     component => component.mergeResults && component.mergeResults.hasConflicts
@@ -241,4 +245,29 @@ async function snapResolvedComponents(consumer: Consumer) {
   await consumer.snap({
     ids
   });
+}
+
+async function abortMerge(consumer: Consumer, components: Component[]) {}
+
+async function resolveMerge(consumer: Consumer, bitIds?: BitId[]): Promise<ApplyVersionResults> {
+  const getIds = (): BitId[] => {
+    if (bitIds) {
+      bitIds.forEach(id => {
+        const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
+        if (!entry || entry.resolved) {
+          throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
+        }
+      });
+      return bitIds;
+    }
+    const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
+    if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
+    return unresolvedComponents.map(u => new BitId(u.id));
+  };
+  const ids = BitIds.fromArray(getIds());
+  const { snappedComponents } = await consumer.snap({
+    ids,
+    resolveUnmerged: true
+  });
+  return { snappedComponents };
 }

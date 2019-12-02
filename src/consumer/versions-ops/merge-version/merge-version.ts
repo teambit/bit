@@ -34,6 +34,7 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
+  snappedComponents?: Component[];
 };
 type ComponentStatus = {
   componentFromFS: Component;

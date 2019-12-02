@@ -262,7 +262,7 @@ describe('bit snap command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.mergeVersion('master', 'bar/foo', '--ours');
+          mergeOutput = helper.command.merge('bar/foo --ours');
         });
         it('should succeed and indicate that the files were not changed', () => {
           expect(mergeOutput).to.have.string('unchanged');
@@ -293,7 +293,7 @@ describe('bit snap command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.mergeVersion('master', 'bar/foo', '--theirs');
+          mergeOutput = helper.command.merge('bar/foo --theirs');
         });
         it('should succeed and indicate that the files were updated', () => {
           expect(mergeOutput).to.have.string('updated');
@@ -321,10 +321,12 @@ describe('bit snap command', function() {
       });
       describe('merge with merge=manual flag', () => {
         let mergeOutput;
+        let scopeWithConflicts;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.mergeVersion('master', 'bar/foo', '--manual');
+          mergeOutput = helper.command.merge('bar/foo --manual');
+          scopeWithConflicts = helper.scopeHelper.cloneLocalScope();
         });
         it('should succeed and indicate that the files were left in a conflict state', () => {
           expect(mergeOutput).to.have.string('CONFLICT');
@@ -344,6 +346,42 @@ describe('bit snap command', function() {
         it('should not generate a new merge-snap', () => {
           const head = helper.command.getSnapHead('bar/foo');
           expect(head).to.equal(localHead);
+        });
+        it('bit status should show it as component with conflict and not as pending update or modified', () => {
+          const status = helper.command.statusJson();
+          expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(1);
+          expect(status.modifiedComponent).to.have.lengthOf(0);
+          expect(status.outdatedComponents).to.have.lengthOf(0);
+          expect(status.mergePendingComponents).to.have.lengthOf(0);
+        });
+        describe('resolving the merge', () => {
+          let resolveOutput;
+          before(() => {
+            helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
+            resolveOutput = helper.command.merge('bar/foo --resolve');
+          });
+          it('should resolve the conflicts successfully', () => {
+            expect(resolveOutput).to.have.string('successfully resolved components');
+          });
+          it('bit status should not show the component as if it has conflicts', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.modifiedComponent).to.have.lengthOf(0);
+            expect(status.outdatedComponents).to.have.lengthOf(0);
+            expect(status.mergePendingComponents).to.have.lengthOf(0);
+            expect(status.stagedComponents).to.have.lengthOf(1);
+          });
+          it('should generate a snap-merge snap with two parents, the local and the remote', () => {
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(2);
+            expect(lastVersion.parents).to.include(secondSnap); // the remote head
+            expect(lastVersion.parents).to.include(localHead);
+          });
+          it('should update bitmap snap', () => {
+            const bitMap = helper.bitMap.read();
+            const head = helper.command.getSnapHead('bar/foo');
+            expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+          });
         });
       });
     });

@@ -345,6 +345,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       version.log.message = version.log.message
         ? version.log.message
         : UnmergedComponents.buildSnapMessage(unmergedComponent);
+      consumer.scope.objects.unmergedComponents.removeComponent(component.name);
     }
     objectRepo.add(component);
 

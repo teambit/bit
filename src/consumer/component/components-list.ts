@@ -92,9 +92,10 @@ export default class ComponentsList {
   async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
-      this._modifiedComponents = await filterAsync(fileSystemComponents, component => {
+      const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
+      this._modifiedComponents = (await filterAsync(fileSystemComponents, (component: Component) => {
         return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
-      });
+      })).filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
     }
     if (load) return this._modifiedComponents;
     return this._modifiedComponents.map(component => component.id);
@@ -103,12 +104,18 @@ export default class ComponentsList {
   async listOutdatedComponents(): Promise<Component[]> {
     const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
+    const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.id));
     await Promise.all(
       fileSystemComponents.map(async component => {
         const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
-        if (!modelComponent || !component.id.hasVersion()) return;
+        if (
+          !modelComponent ||
+          !component.id.hasVersion() ||
+          componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)
+        )
+          return;
         if (mergePendingComponentsIds.hasWithoutVersion(component.id)) {
           // by default, outdated include merge-pending since the remote-head and local-head are
           // different, however we want them both to be separated as they need different treatment
@@ -134,10 +141,11 @@ export default class ComponentsList {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getAuthoredAndImportedFromFS();
       const componentsFromModel = await this.getModelComponents();
+      const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
       this._mergePendingComponents = (await Promise.all(
         componentsFromFs.map(async (component: Component) => {
           const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
-          if (!modelComponent) return null;
+          if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)) return null;
           const divergedData = await modelComponent.getDivergeData(this.scope.objects);
           if (!divergedData || !ModelComponent.isTrueMergePending(divergedData)) return null;
           return { id: modelComponent.toBitId(), diverge: divergedData };
@@ -145,6 +153,11 @@ export default class ComponentsList {
       )).filter(x => x) as DivergedComponent[];
     }
     return this._mergePendingComponents;
+  }
+
+  listComponentsWithUnresolvedConflicts(): BitIds {
+    const unresolvedComponents = this.scope.objects.unmergedComponents.getUnresolvedComponents();
+    return BitIds.fromArray(unresolvedComponents.map(u => new BitId(u.id)));
   }
 
   async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {

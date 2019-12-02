@@ -6,7 +6,7 @@ import { ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import ComponentsPendingImport from '../../../consumer/component-ops/exceptions/components-pending-import';
 
 export type StatusResult = {
@@ -19,6 +19,7 @@ export type StatusResult = {
   invalidComponents: InvalidComponent[];
   outdatedComponents: Component[];
   mergePendingComponents: DivergedComponent[];
+  componentsWithUnresolvedConflicts: BitIds;
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -50,6 +51,7 @@ export default (async function status(): Promise<StatusResult> {
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return Boolean(component.issues);
   });
+  const componentsWithUnresolvedConflicts = componentsList.listComponentsWithUnresolvedConflicts();
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
@@ -67,6 +69,7 @@ export default (async function status(): Promise<StatusResult> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     invalidComponents,
     outdatedComponents,
-    mergePendingComponents
+    mergePendingComponents,
+    componentsWithUnresolvedConflicts
   };
 });

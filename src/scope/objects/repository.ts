@@ -275,6 +275,7 @@ export default class Repository {
     this._validateObjects(validate);
     await this._writeMany();
     await this.remoteLanes.write();
+    await this.unmergedComponents.write();
   }
 
   /**
