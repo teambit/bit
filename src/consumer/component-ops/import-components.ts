@@ -388,7 +388,7 @@ export default class ImportComponents {
       consumer: this.consumer,
       otherComponent: fsComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      otherLabel: currentlyUsedVersion,
+      otherLabel: `${currentlyUsedVersion} modified`,
       currentComponent, // $FlowFixMe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentLabel: component.id.version,
