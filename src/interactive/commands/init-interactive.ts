@@ -9,14 +9,10 @@ inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 type ENVS_TYPE = 'compiler' | 'tester';
 
 export const TOP_MESSAGE = `This utility initialize an empty Bit workspace and walks you through creating a bit configuration.
-
 You can later edit your configuration in your package.json or bit.json.
+Press ^C at any time to quit.
 
-After setting up the workspace, use 'bit add' to track components and modules.
-
-To disable interactive mode run 'bit config set interactive.init false' or use 'bit init -N'.
-
-Press ^C at any time to quit.`;
+After setting up the workspace, use 'bit add' to track components and modules.`;
 
 export const PACKAGE_MANAGER_MSG_Q = 'Which package manager would you like to use for installing components?';
 export const DEFAULT_DIR_MSG_Q = 'Where would you like to store imported components?';
@@ -131,7 +127,7 @@ async function _fetchComps(scopeName: string, namespaces: string[] = []) {
   // Filter the namespace on the remote
   const namespacesUsingWildcards = namespaces.length ? `${namespaces.join('|')}/*` : undefined;
   // Not using user/pass strategy since it will interrupt the flow
-  const strategiesNames = ['token', 'ssh-agent', 'ssh-key', 'anonymous'];
+  const strategiesNames = ['token', 'ssh-agent', 'ssh-key'];
 
   const listScopeResults = await listScope({
     scopeName,
