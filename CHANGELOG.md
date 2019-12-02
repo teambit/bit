@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.0-dev.5] - 2019-12-02
+
+- minor fixes for ssh compress
+
+
 ## [14.6.0-dev.4] - 2019-12-01
 
 - backward compatibility for all remote ssh commands
