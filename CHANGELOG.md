@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - make bit status recursively show untracked files dependencies
 
+## [[14.6.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.6.0)
+
+- compress ssh args before sending
+- add new global config `ssh_no_compress`
+
 ## [[14.5.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.5.0)
 
 ### New
