@@ -77,24 +77,31 @@ export default class DataToPersist {
     if (!opts.keepExistingCapsule) {
       await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     }
-    await Promise.all(this.files.map(file => this._writeFileToCapsule(capsule, file)));
+    await Promise.all(
+      this.files.map(file => this._writeFileToCapsule(capsule, file, { overwriteExisting: !!opts.keepExistingCapsule }))
+    );
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
-  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl) {
-    if (file.override === false) {
+  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExisting: false }) {
+    if (file.override === false || opts.overwriteExisting) {
       // @todo, capsule hack. use capsule.fs once you get it as a component.
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const absPath = path.join(capsulePath, file.relative);
-      try {
-        await fs.lstat(absPath); // if no errors have been thrown, the file exists
-        logger.debug(`skip file ${absPath}, it already exists`);
-        return null;
-      } catch (err) {
-        if (err.code !== 'ENOENT') {
-          throw err;
+      if (opts.overwriteExisting) {
+        await capsule.removePath(file.path);
+        return capsule.outputFile(file.path, file.contents, {});
+      } else {
+        try {
+          await fs.lstat(absPath); // if no errors have been thrown, the file exists
+          logger.debug(`skip file ${absPath}, it already exists`);
+          return null;
+        } catch (err) {
+          if (err.code !== 'ENOENT') {
+            throw err;
+          }
         }
       }
     }

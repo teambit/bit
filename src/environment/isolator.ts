@@ -120,8 +120,11 @@ export default class Isolator {
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
-    await this.installComponentPackages({ skipNodeModules: !!opts.skipNodeModules });
-    await this.writeLinks();
+    await this.installComponentPackages({
+      skipNodeModules: !!opts.skipNodeModules,
+      keepExistingCapsule: !!opts.keepExistingCapsule
+    });
+    await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
@@ -134,21 +137,22 @@ export default class Isolator {
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async installComponentPackages(opts = { skipNodeModules: false }) {
+  async installComponentPackages(opts = { skipNodeModules: false, keepExistingCapsule: false }) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
-    await this._addComponentsToRoot();
+    await this._addComponentsToRoot({ keepExistingCapsule: !!opts.keepExistingCapsule });
     logger.debug('ManyComponentsWriter, install packages on capsule');
     if (!opts.skipNodeModules) {
       await this._installWithPeerOption();
     }
   }
 
-  async writeLinks() {
+  async writeLinks(opts = { keepExistingCapsule: false }) {
     const links = await this.manyComponentsWriter._getAllLinks();
-    await links.persistAllToCapsule(this.capsule);
+    // links is a DataToPersist instance
+    await links.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   /**
@@ -200,7 +204,7 @@ export default class Isolator {
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async _addComponentsToRoot(): Promise<void> {
+  async _addComponentsToRoot(opts = { keepExistingCapsule: false }): Promise<void> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const capsulePath = this.capsule.container.getPath();
@@ -221,13 +225,13 @@ export default class Isolator {
     }, {});
     if (R.isEmpty(componentsToAdd)) return;
     this.capsulePackageJson.addDependencies(componentsToAdd);
-    await this._writeCapsulePackageJson();
+    await this._writeCapsulePackageJson({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async _writeCapsulePackageJson() {
+  async _writeCapsulePackageJson(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
     dataToPersist.addFile(this.capsulePackageJson.toVinylFile());
-    dataToPersist.persistAllToCapsule(this.capsule);
+    return dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   async _getNpmVersion() {
