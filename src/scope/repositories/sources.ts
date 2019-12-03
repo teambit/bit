@@ -19,6 +19,7 @@ import { isHash } from '../../version/version-parser';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import Lane from '../models/lane';
 import UnmergedComponents from '../lanes/unmerged-components';
+import GeneralError from '../../error/general-error';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -318,7 +319,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const component = await this.findOrAddComponent(source);
     const unmergedComponent = consumer.scope.objects.unmergedComponents.getEntry(component.name);
     if (unmergedComponent && !unmergedComponent.resolved && !resolveUnmerged) {
-      throw new Error(`unable to snap/tag ${component.name}, it is unmerged with conflicts`);
+      throw new GeneralError(
+        `unable to snap/tag "${component.name}", it is unmerged with conflicts. please run "bit merge <id> --resolve"`
+      );
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
@@ -447,6 +450,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // if all versions were deleted, delete also the component itself from the model
       objectRepo.removeObject(component.hash());
     }
+    objectRepo.unmergedComponents.removeComponent(component.name);
   }
 
   /**
@@ -476,6 +480,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRefs = component.versionArray;
     objectRefs.push(component.hash());
     repo.removeManyObjects(objectRefs);
+    repo.unmergedComponents.removeComponent(component.name);
   }
 
   /**

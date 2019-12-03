@@ -158,8 +158,8 @@ export default class Status extends Command {
       : '';
 
     const compWithConflictsTitle = chalk.underline.white('components with unresolved conflicts');
-    const compWithConflictsDesc =
-      '(use "bit merge [component-id] --resolve" to mark them as resolved and snap the changes)\n';
+    const compWithConflictsDesc = `(use "bit merge [component-id] --resolve" to mark them as resolved and snap the changes
+or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
     const compWithConflictsComps = componentsWithUnresolvedConflicts
       .map(id => {
         return `    > ${chalk.cyan(id.toString())}`;

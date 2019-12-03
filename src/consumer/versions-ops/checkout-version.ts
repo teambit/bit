@@ -100,6 +100,12 @@ async function getComponentStatus(
   if (!componentModel) {
     return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
+  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  if (!reset && unmerged && unmerged.resolved === false) {
+    return returnFailure(
+      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+    );
+  }
   const getNewVersion = (): string => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (reset) return component.id.version;

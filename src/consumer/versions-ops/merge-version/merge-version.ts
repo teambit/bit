@@ -91,6 +91,12 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   if (currentlyUsedVersion === version) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
+  const unmerged = consumer.scope.objects.unmergedComponents.getEntry(component.name);
+  if (unmerged && unmerged.resolved === false) {
+    throw new GeneralError(
+      `component ${component.id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
+    );
+  }
   const otherComponent: Component = await consumer.loadComponentFromModel(component.id.changeVersion(version));
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
     consumer,

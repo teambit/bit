@@ -354,14 +354,69 @@ describe('bit snap command', function() {
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.mergePendingComponents).to.have.lengthOf(0);
         });
+        it('should block checking out the component', () => {
+          const output = helper.command.checkoutVersion(firstSnap, 'bar/foo', '--manual');
+          expect(output).to.have.string('has conflicts that need to be resolved first');
+        });
+        it('should block merging a different version into current version', () => {
+          const output = helper.general.runWithTryCatch(`bit merge ${firstSnap} bar/foo --manual`);
+          expect(output).to.have.string('has conflicts that need to be resolved first');
+        });
+        describe('tagging or snapping the component', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            // change the component to be valid, otherwise it has the conflicts marks and fail with
+            // different errors
+            helper.fixtures.createComponentBarFoo('');
+          });
+          it('should block tagging the component', () => {
+            const output = helper.general.runWithTryCatch('bit tag bar/foo');
+            expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
+          });
+          it('should not include the component when running bit tag --all', () => {
+            const output = helper.general.runWithTryCatch('bit tag -a -f');
+            expect(output).to.have.string('nothing to tag');
+          });
+          it('should block snapping the component', () => {
+            const output = helper.general.runWithTryCatch('bit snap bar/foo');
+            expect(output).to.have.string('unable to snap/tag "bar/foo", it is unmerged with conflicts');
+          });
+        });
+        describe('removing the component', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.command.removeComponent('bar/foo --silent -f');
+          });
+          it('bit status should not show the component', () => {
+            const status = helper.command.status();
+            expect(status).to.not.have.string('bar/foo');
+          });
+        });
+        describe('un-tagging the component', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            // change it so the file would be valid without conflicts marks
+            helper.fixtures.createComponentBarFoo('');
+            helper.command.untag('bar/foo');
+          });
+          it('bit status should not show the component as a component with conflicts but as outdated', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.modifiedComponent).to.have.lengthOf(1);
+            expect(status.outdatedComponents).to.have.lengthOf(1);
+            expect(status.mergePendingComponents).to.have.lengthOf(0);
+            expect(status.stagedComponents).to.have.lengthOf(0);
+          });
+        });
         describe('resolving the merge', () => {
           let resolveOutput;
           before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
             helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
             resolveOutput = helper.command.merge('bar/foo --resolve');
           });
           it('should resolve the conflicts successfully', () => {
-            expect(resolveOutput).to.have.string('successfully resolved components');
+            expect(resolveOutput).to.have.string('successfully resolved component');
           });
           it('bit status should not show the component as if it has conflicts', () => {
             const status = helper.command.statusJson();
