@@ -97,13 +97,12 @@ describe('bit status command', function() {
       expect(output).to.have.string('comp1.js -> comp2.js, comp3.js, comp4.js, comp6.js');
       expect(output).to.have.string('comp2.js -> comp4.js');
       expect(output).to.have.string('comp5.js -> comp6.js');
-      // Make sure comp5->comp6 appear both under comp1 and under comp5
-      expect(countComp5Deps).to.equal(2);
+      // Make sure comp5->comp6 appear only under comp5
+      expect(countComp5Deps).to.equal(1);
       expect(output).to.have.string('comp5 ...  issues found');
       // Validate indentations is correct, nested deps should be indent 2 more
       expect(output).to.have.string(`${MISSING_DEPS_SPACE}comp1.js`);
       expect(output).to.have.string(`${MISSING_NESTED_DEPS_SPACE}comp2.js`);
-      expect(output).to.have.string(`${MISSING_NESTED_DEPS_SPACE}comp5.js`);
       expect(output).to.have.string(`${MISSING_DEPS_SPACE}comp5.js`);
     });
   });

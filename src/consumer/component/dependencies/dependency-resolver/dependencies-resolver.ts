@@ -481,7 +481,6 @@ export default class DependencyResolver {
     if (!this.processedFiles.includes(originFile)) {
       this.processedFiles.push(originFile);
       // We don't want to calculate nested files again after they calculated as direct files
-      // We don't want to calculate nested files again after they calculated as direct files
     } else if (nested) {
       return;
     }
@@ -491,7 +490,7 @@ export default class DependencyResolver {
       if (!nested && this.overridesDependencies.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
-        this.processOneDepFile(
+        const isDepFileUntracked = this.processOneDepFile(
           originFile,
           depFile.file,
           depFile.importSpecifiers,
@@ -500,18 +499,23 @@ export default class DependencyResolver {
           depFile,
           nested
         );
-        // Recursively check for untracked files (to show them all in bit status)
-        // for nested files we don't really care about the file types since we won't do all the checking
-        const dummyFileType: FileType = {
-          isTestFile: false,
-          isCompilerFile: false,
-          isTesterFile: false
-        };
-        this.processDepFiles(depFile.file, dummyFileType, true);
+        // Only continue recursively if the dep file is untracked
+        // for tracked deps if they have untracked deps they will be shown under their own components
+        if (isDepFileUntracked) {
+          // Recursively check for untracked files (to show them all in bit status)
+          // for nested files we don't really care about the file types since we won't do all the checking
+          const dummyFileType: FileType = {
+            isTestFile: false,
+            isCompilerFile: false,
+            isTesterFile: false
+          };
+          this.processDepFiles(depFile.file, dummyFileType, true);
+        }
       }
     });
   }
 
+  // return true if the dep file is untracked
   processOneDepFile(
     originFile: PathLinuxRelative,
     depFile: string,
@@ -521,7 +525,7 @@ export default class DependencyResolver {
     fileType: FileType,
     depFileObject: FileObject,
     nested = false
-  ) {
+  ): boolean | undefined {
     // if the dependency of an envFile is already included in the env files of the component, we're good
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
     if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return;
@@ -537,7 +541,7 @@ export default class DependencyResolver {
         return;
       }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
-      return;
+      return true;
     }
     if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
       // we can't support it because on the imported side, we don't know to convert the relative path
