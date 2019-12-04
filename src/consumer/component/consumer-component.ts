@@ -705,6 +705,13 @@ export default class Component {
         contextPaths.componentDir = component.writtenPath;
       }
       try {
+        const isolateFunc = async (
+          destDir?: string
+        ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
+          const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
+          const componentWithDependencies = await isolator.isolate(component.id, {});
+          return new ExtensionIsolateResult(isolator, componentWithDependencies);
+        };
         if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
@@ -726,7 +733,8 @@ export default class Component {
           }
 
           const context: Record<string, any> = {
-            componentObject: component.toObject()
+            componentObject: component.toObject(),
+            isolate: isolateFunc
           };
 
           contextPaths && Object.assign(context, contextPaths);
@@ -754,13 +762,6 @@ export default class Component {
           const oneFileSpecResult = async testFile => {
             const testFilePath = testFile.path;
             try {
-              const isolateFunc = async (
-                destDir?: string
-              ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
-                const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
-                const componentWithDependencies = await isolator.isolate(component.id, {});
-                return new ExtensionIsolateResult(isolator, componentWithDependencies);
-              };
               const context: Record<string, any> = {
                 componentDir: cwd,
                 isolate: isolateFunc
