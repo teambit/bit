@@ -91,7 +91,7 @@ describe('bit status command', function() {
     });
     it('Should show missing dependencies', () => {
       output = helper.command.runCmd('bit status');
-      var countComp5Deps = (output.match(/comp5.js -> comp6.js/g) || []).length;
+      const countComp5Deps = (output.match(/comp5.js -> comp6.js/g) || []).length;
       expect(output).to.have.string('untracked file dependencies');
       expect(output).to.have.string('comp1 ...  issues found');
       expect(output).to.have.string('comp1.js -> comp2.js, comp3.js, comp4.js, comp6.js');

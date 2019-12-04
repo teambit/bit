@@ -21,8 +21,6 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
-import { brotliCompressSync } from 'zlib';
-import { stringify } from 'querystring';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -57,7 +55,7 @@ export interface UntrackedFileDependencyEntry {
 
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 
-interface issues {
+interface Issues {
   missingPackagesDependenciesOnFs: {};
   missingComponents: {};
   untrackedDependencies: UntrackedDependenciesIssues;
@@ -82,7 +80,7 @@ export default class DependencyResolver {
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: issues; // $PropertyType<Component, 'issues'>;
+  issues: Issues; // $PropertyType<Component, 'issues'>;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -477,7 +475,7 @@ export default class DependencyResolver {
     return depFile;
   }
 
-  processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested: boolean = false) {
+  processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested = false) {
     // We don't just return because different files of the component might import different things from the depFile
     // See more info here: https://github.com/teambit/bit/issues/1796
     if (!this.processedFiles.includes(originFile)) {
@@ -522,7 +520,7 @@ export default class DependencyResolver {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     fileType: FileType,
     depFileObject: FileObject,
-    nested: boolean = false
+    nested = false
   ) {
     // if the dependency of an envFile is already included in the env files of the component, we're good
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
@@ -1157,12 +1155,12 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  _pushToUntrackDependenciesIssues(originFile, depFileRelative, nested: boolean = false) {
+  _pushToUntrackDependenciesIssues(originFile, depFileRelative, nested = false) {
     const untracked = this.issues.untrackedDependencies[originFile];
     const findExisting = () => {
       let result;
-      R.forEachObjIndexed((untracked, key) => {
-        const found = untracked.untrackedFiles.find(file => {
+      R.forEachObjIndexed(currentUntracked => {
+        const found = currentUntracked.untrackedFiles.find(file => {
           return file.relativePath === depFileRelative;
         });
         if (found) {

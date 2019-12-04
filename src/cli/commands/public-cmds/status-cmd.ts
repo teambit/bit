@@ -74,9 +74,8 @@ export default class Status extends Command {
     let showTroubleshootingLink = false;
 
     function formatMissing(missingComponent: Component) {
-      function formatMissingStr(key, value, label, formatIssueFunc = componentIssueToString) {
+      function formatMissingStr(key: string, value, label, formatIssueFunc: (any) => string = componentIssueToString) {
         if (!value || R.isEmpty(value)) return '';
-        let indentNestedSpaces = '';
 
         return (
           chalk.yellow(`\n       ${label}: \n`) +

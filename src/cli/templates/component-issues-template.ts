@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import R from 'ramda';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import { UntrackedFileDependencyEntry } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 
