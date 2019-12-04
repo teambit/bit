@@ -280,10 +280,10 @@ export default class Scope {
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
     const build = async (component: Component) => {
-      loader.start(`building component - ${component.id}`);
+      if (component.compiler) loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
       const buildResults = await component.dists.writeDists(component, consumer, false);
-      loader.succeed();
+      if (component.compiler) loader.succeed();
       return { component: component.id.toString(), buildResults };
     };
     const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);

@@ -7,39 +7,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.4.4-dev.6] - 2019-11-21
+## [14.6.1-dev.1] - 2019-12-04
 
+- add isolate function to testers new API
+
+## [[14.6.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.6.0)
+
+- compress ssh args before sending
+- add new global config `ssh_no_compress`
+
+## [[14.5.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.5.0)
+
+### New
+
+- support anonymous authentication for remote read operations
+- add `--token` flag for commands that runs against a remote server
+- [#2101](https://github.com/teambit/bit/issues/2101) suggest matching commands
+
+### Changes
+
+- improve loader when building components
+- add `--no-warnings` flag to bit test child process
+
+### Bug fixes
+
+- [#2147](https://github.com/teambit/bit/issues/2147) fix overrides to respect dependencies received by a compiler/tester/extension
 - fix symlink errors when generating links to `d.ts` files
+- [#2140](https://github.com/teambit/bit/issues/2140) update bit-javascript to support `import { x as y }` syntax
+- fix fork of a component when a dependency exists in an older version only
+- update `react-docgen` version from `2.21.0` to `4.1.1`
+- keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag
+- show a message about missing test files in the compiled files
+
+### Experimental
+
 - expose buildOne and buildAll for programmatic api (Experimental)
 
-## [14.4.4-dev.5] - 2019-11-19
+### Internal
 
-- [#2140](https://github.com/teambit/bit/issues/2140) update bit-javascript to support `import { x as y }` syntax
-
-## [14.4.4-dev.4] - 2019-11-18
-
-- [#2132](https://github.com/teambit/bit/issues/2132) fix compiler import to install peer dependencies
-- fix fork of a component when a dependency exists in an older version only
-
-## [14.4.4-dev.3] - 2019-11-13
-
-- update `react-docgen` version from `2.21.0` to `4.1.1`, and update all docs parser structure
-
-## [14.4.4-dev.2] - 2019-11-10
-
-- fix overrides to respect dependencies received by a compiler/tester
-- improve loader when building components
-- [#2101](https://github.com/teambit/bit/issues/2101) suggest matching commands
-- support `--token` flag for commands that runs against a remote server
-
-## [14.4.4-dev.1] - 2019-11-02
-
-- keep flattened dependencies saved by auto-tag up to date, although they're not part of the current tag
 - consolidate isolation options
 - formalize isolate api result
-- add `--no-warnings` flag to bit test child process
-- show a message about missing test files in the compiled files
-- support anonymous authentication for remote read operations
 
 ## [[14.4.3] - 2019-10-23](https://github.com/teambit/bit/releases/tag/v14.4.3)
 

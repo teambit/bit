@@ -102,6 +102,29 @@ export default class OverridesDependencies {
     return ignore;
   }
 
+  /**
+   * this is relevant for extensions that add packages to package.json (such as typescript compiler).
+   * we get the list of the packages to add as strings, a package-name can be a bit component
+   * (e.g. @bit/user.env.types), in this case, we don't have the component-id as BitId, only as a
+   * string. since it comes from the compiler as strings, we don't have a good way to translate it
+   * to BitId as we can't compare the id to the objects in the scope nor to the ids in bitmap.
+   * the only strategy left is to use the string as is and compare it to what user added in the
+   * overrides settings. @see envs.e2e, use-case 'overrides dynamic component dependencies'.
+   */
+  shouldIgnoreComponentByStr(componentIdStr: string, field: string): boolean {
+    if (!componentIdStr.startsWith(OVERRIDE_COMPONENT_PREFIX)) return false;
+    componentIdStr = componentIdStr.replace(OVERRIDE_COMPONENT_PREFIX, '');
+    const shouldIgnore = (ids: string[]) => {
+      return ids.some(idStr => componentIdStr === idStr);
+    };
+    const ignoreField = this.component.overrides.getIgnoredComponents(field);
+    const ignore = shouldIgnore(ignoreField);
+    if (ignore) {
+      this._addManuallyRemovedDep(field, componentIdStr);
+    }
+    return ignore;
+  }
+
   getDependenciesToAddManually(
     packageJson: Record<string, any> | null | undefined,
     existingDependencies: AllDependencies

@@ -5,7 +5,9 @@ import { Doc } from '../../../search/indexer';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
+import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 
+let compressResponse;
 export default class Search extends Command {
   name = '_search <path> <args>';
   private = true;
@@ -15,6 +17,7 @@ export default class Search extends Command {
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
@@ -24,6 +27,6 @@ export default class Search extends Command {
   }
 
   report(searchResults: Array<Doc>): string {
-    return packCommand(buildCommandMessage(searchResults));
+    return packCommand(buildCommandMessage(searchResults, undefined, compressResponse), true, compressResponse);
   }
 }
