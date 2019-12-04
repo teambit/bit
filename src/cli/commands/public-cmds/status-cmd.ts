@@ -13,7 +13,7 @@ import {
   untrackedFilesComponentIssueToString
 } from '../../templates/component-issues-template';
 import { Analytics } from '../../../analytics/analytics';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -83,9 +83,9 @@ export default class Status extends Command {
           chalk.white(
             Object.keys(value)
               .map(k => {
-                let space = '          ';
+                let space = MISSING_DEPS_SPACE;
                 if (value[k].nested) {
-                  space += '  ';
+                  space = MISSING_NESTED_DEPS_SPACE;
                 }
                 return `${space}${k} -> ${formatIssueFunc(value[k])}`;
               })

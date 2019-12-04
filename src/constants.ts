@@ -403,3 +403,7 @@ export const WILDCARD_HELP = (command: string) =>
 export const CURRENT_UPSTREAM = 'current';
 
 export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'];
+
+const MISSING_DEPS_SPACE_COUNT = 10;
+export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
+export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
