@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.1-dev.2] - 2019-12-04
+
 - make bit status recursively show untracked files dependencies
 
 ## [14.6.1-dev.1] - 2019-12-04
