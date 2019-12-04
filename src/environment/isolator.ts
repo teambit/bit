@@ -98,6 +98,8 @@ export default class Isolator {
       });
     }
     const writeToPath = opts.writeToPath;
+    const installNpmPackages = typeof opts.installNpmPackages === 'undefined' ? true : opts.installNpmPackages;
+    // default should be true
     const concreteOpts: ManyComponentsWriterParams = {
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
@@ -108,7 +110,7 @@ export default class Isolator {
       createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.writeDists,
-      installNpmPackages: !!opts.installNpmPackages, // convert to boolean
+      installNpmPackages,
       installPeerDependencies: !!opts.installPeerDependencies, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
@@ -120,7 +122,7 @@ export default class Isolator {
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
     await this.installComponentPackages({
-      installNpmPackages: !!opts.installNpmPackages,
+      installNpmPackages,
       keepExistingCapsule: !!opts.keepExistingCapsule
     });
     await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });

@@ -53,9 +53,8 @@ export default class Isolate extends Command {
       useCapsule?: boolean;
     }
   ): Promise<any> {
-    // console.log('im here');
-    // console.log(opts);
-    // return '';
+    const installNpmPackages = typeof opts.installPackages === 'undefined' ? true : opts.installPackages;
+    // default should be true
     const concreteOpts: WorkspaceIsolateOptions = {
       writeToPath: opts.directory,
       override: opts.override === true,
@@ -65,7 +64,7 @@ export default class Isolate extends Command {
       createNpmLinkFiles: opts.npmLinks === true,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist === true,
-      installNpmPackages: !!opts.installPackages, // convert to boolean
+      installNpmPackages,
       installPeerDependencies: !!opts.installPackages, // convert to boolean
       verbose: opts.verbose === true,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,

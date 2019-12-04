@@ -310,11 +310,10 @@ async function _runBuild({
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
-    const shouldInstallNpmPackages = typeof installNpmPackages === 'undefined' ? true : installNpmPackages;
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
       writeDists: false,
-      installNpmPackages: shouldInstallNpmPackages,
+      installNpmPackages,
       keepExistingCapsule
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
