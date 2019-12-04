@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.1-dev.1] - 2019-12-04
+
 - add isolate function to testers new API
 
 ## [[14.6.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.6.0)
