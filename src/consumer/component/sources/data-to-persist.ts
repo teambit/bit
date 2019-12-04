@@ -93,15 +93,14 @@ export default class DataToPersist {
       if (opts.overwriteExisting) {
         await capsule.removePath(file.path);
         return capsule.outputFile(file.path, file.contents, {});
-      } else {
-        try {
-          await fs.lstat(absPath); // if no errors have been thrown, the file exists
-          logger.debug(`skip file ${absPath}, it already exists`);
-          return null;
-        } catch (err) {
-          if (err.code !== 'ENOENT') {
-            throw err;
-          }
+      }
+      try {
+        await fs.lstat(absPath); // if no errors have been thrown, the file exists
+        logger.debug(`skip file ${absPath}, it already exists`);
+        return null;
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw err;
         }
       }
     }
