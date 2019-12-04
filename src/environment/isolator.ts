@@ -36,7 +36,6 @@ export interface IsolateOptions {
   writeDists?: boolean; // Write dist files
   shouldBuildDependencies?: boolean; // Build all depedencies before the isolation (used by tools like ts compiler)
   installNpmPackages?: boolean; // Install the package dependencies
-  skipNodeModules?: boolean; // Provide a capsule without a node_modules folder (good when using capsule.nodeExec)
   keepExistingCapsule?: boolean; // Do not delete the capsule after using it (useful for incremental builds)
   installPeerDependencies?: boolean; // Install the peer package dependencies
   verbose?: boolean; // Print more logs
@@ -121,7 +120,7 @@ export default class Isolator {
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
     await this.installComponentPackages({
-      skipNodeModules: !!opts.skipNodeModules,
+      installNpmPackages: !!opts.installNpmPackages,
       keepExistingCapsule: !!opts.keepExistingCapsule
     });
     await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
@@ -137,14 +136,14 @@ export default class Isolator {
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async installComponentPackages(opts = { skipNodeModules: false, keepExistingCapsule: false }) {
+  async installComponentPackages(opts = { installNpmPackages: true, keepExistingCapsule: false }) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
     await this._addComponentsToRoot({ keepExistingCapsule: !!opts.keepExistingCapsule });
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    if (!opts.skipNodeModules) {
+    if (opts.installNpmPackages) {
       await this._installWithPeerOption();
     }
   }

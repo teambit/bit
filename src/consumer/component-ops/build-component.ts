@@ -300,12 +300,12 @@ async function _runBuild({
   const isolateFunc = async ({
     targetDir,
     shouldBuildDependencies,
-    skipNodeModules,
+    installNpmPackages,
     keepExistingCapsule
   }: {
     targetDir?: string;
     shouldBuildDependencies?: boolean;
-    skipNodeModules?: boolean;
+    installNpmPackages?: boolean;
     keepExistingCapsule?: boolean;
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
@@ -313,7 +313,7 @@ async function _runBuild({
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
       writeDists: false,
-      skipNodeModules,
+      installNpmPackages,
       keepExistingCapsule
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
