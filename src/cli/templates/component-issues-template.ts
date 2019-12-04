@@ -1,5 +1,10 @@
 import chalk from 'chalk';
+import R from 'ramda';
 import ConsumerComponent from '../../consumer/component/consumer-component';
+import { UntrackedFileDependencyEntry } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
+import Component from '../../consumer/component/consumer-component';
+import { Analytics } from '../../analytics/analytics';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
@@ -36,6 +41,16 @@ export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
 }
 
+export function untrackedFilesComponentIssueToString(value: UntrackedFileDependencyEntry) {
+  const colorizedMap = value.untrackedFiles.map(curr => {
+    if (curr.existing) {
+      return `${chalk.yellow(curr.relativePath)}`;
+    }
+    return curr.relativePath;
+  });
+  return colorizedMap.join(', ');
+}
+
 export default function componentIssuesTemplate(components: ConsumerComponent[]) {
   function format(missingComponent) {
     return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatMissing(missingComponent)}`;
@@ -45,23 +60,41 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
   return result;
 }
 
-function formatMissing(missingComponent: Record<string, any>) {
-  function formatMissingStr(value, label) {
-    if (!value || value.length === 0) return '';
+export function formatMissing(missingComponent: Component) {
+  function formatMissingStr(key: string, value, label, formatIssueFunc: (any) => string = componentIssueToString) {
+    if (!value || R.isEmpty(value)) return '';
+
     return (
-      chalk.yellow(`${label}: \n`) +
+      chalk.yellow(`\n       ${label}: \n`) +
       chalk.white(
         Object.keys(value)
-          .map(key => `     ${key} -> ${componentIssueToString(value[key])}`)
+          .map(k => {
+            let space = MISSING_DEPS_SPACE;
+            if (value[k].nested) {
+              space = MISSING_NESTED_DEPS_SPACE;
+            }
+            return `${space}${k} -> ${formatIssueFunc(value[k])}`;
+          })
           .join('\n')
       )
     );
   }
 
   const missingStr = Object.keys(componentIssuesLabels)
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    .map(key => formatMissingStr(missingComponent.issues[key], componentIssuesLabels[key]))
+    .map(key => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
+      if (key === 'untrackedDependencies') {
+        // @ts-ignore
+        return formatMissingStr(
+          key,
+          missingComponent.issues[key],
+          componentIssuesLabels[key],
+          untrackedFilesComponentIssueToString
+        );
+      }
+      return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
+    })
     .join('');
-
-  return `${missingStr}\n`;
+  return `       ${missingStr}\n`;
 }
