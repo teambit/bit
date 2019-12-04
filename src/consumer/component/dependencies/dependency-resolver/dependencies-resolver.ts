@@ -525,10 +525,10 @@ export default class DependencyResolver {
     fileType: FileType,
     depFileObject: FileObject,
     nested = false
-  ): boolean | undefined {
+  ): boolean {
     // if the dependency of an envFile is already included in the env files of the component, we're good
-    if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
-    if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return;
+    if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return false;
+    if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return false;
 
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
@@ -538,7 +538,7 @@ export default class DependencyResolver {
         // this depFile is a dependency link and this dependency is missing
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
-        return;
+        return false;
       }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
       return true;
@@ -558,7 +558,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           importSource: depFileObject.importSource
         });
       }
-      return;
+      return false;
     }
 
     const depComponentMap = this.consumer.bitMap.getComponentIfExist(componentId);
@@ -610,7 +610,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
       // outside the component directory, which might override user files.
       this._pushToRelativeComponentsIssues(originFile, componentId);
-      return;
+      return false;
     }
 
     const allDependencies: Dependency[] = [
@@ -625,7 +625,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (!existingDepRelativePaths) {
         // it is another file of an already existing component. Just add the new path
         existingDependency.relativePaths.push(depsPaths);
-        return;
+        return false;
       }
       // The dep path already exists but maybe this dep-file has more importSpecifiers
       if (depsPaths.importSpecifiers) {
@@ -651,6 +651,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     } else {
       this.pushToDependenciesArray(currentComponentsDeps, fileType);
     }
+    return false;
   }
 
   processLinkFile(originFile: PathLinuxRelative, linkFile: FileObject, fileType: FileType) {
