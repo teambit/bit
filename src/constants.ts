@@ -4,7 +4,6 @@ import * as path from 'path';
 import format from 'string-format';
 import { PathOsBased } from './utils/path';
 import { ComponentOrigin } from './consumer/bit-map/component-map';
-process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
 const userHome = require('user-home');
 const packageFile = require('../package.json');
