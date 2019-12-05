@@ -83,17 +83,17 @@ export default class DataToPersist {
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
   async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExisting: false }) {
-    if (file.override === false || opts.overwriteExisting) {
+    if (opts.overwriteExisting) {
+      await capsule.removePath(file.path);
+      return capsule.outputFile(file.path, file.contents, {});
+    }
+    if (file.override === false) {
       // @todo, capsule hack. use capsule.fs once you get it as a component.
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const absPath = path.join(capsulePath, file.relative);
-      if (opts.overwriteExisting) {
-        await capsule.removePath(file.path);
-        return capsule.outputFile(file.path, file.contents, {});
-      }
       try {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
         logger.debug(`skip file ${absPath}, it already exists`);

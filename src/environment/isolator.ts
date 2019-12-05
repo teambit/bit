@@ -98,8 +98,8 @@ export default class Isolator {
       });
     }
     const writeToPath = opts.writeToPath;
-    const installNpmPackages = typeof opts.installNpmPackages === 'undefined' ? true : opts.installNpmPackages;
     // default should be true
+    const installNpmPackages = typeof opts.installNpmPackages === 'undefined' ? true : opts.installNpmPackages;
     const concreteOpts: ManyComponentsWriterParams = {
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
