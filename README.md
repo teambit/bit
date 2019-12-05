@@ -14,7 +14,7 @@
 
 ### What is Bit? 
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of separate package for each component, and automate packages. Use Bit to turn a component inside an application into a standalone reusable package.  
+Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of separate package for each component. Use Bit to turn a component inside an application into a standalone reusable package.  
 You can setup your own server for sharing components or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing with advanced features such as components CI and showcase.
 
 ![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
