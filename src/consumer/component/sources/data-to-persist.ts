@@ -78,12 +78,15 @@ export default class DataToPersist {
       await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     }
     await Promise.all(
-      this.files.map(file => this._writeFileToCapsule(capsule, file, { overwriteExisting: !!opts.keepExistingCapsule }))
+      this.files.map(file =>
+        this._writeFileToCapsule(capsule, file, { overwriteExistingFile: !!opts.keepExistingCapsule })
+      )
     );
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
-  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExisting: false }) {
-    if (opts.overwriteExisting) {
+  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
+    // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
+    if (opts.overwriteExistingFile) {
       await capsule.removePath(file.path);
       return capsule.outputFile(file.path, file.contents, {});
     }
