@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2171](https://github.com/teambit/bit/issues/2171) fix component-not-found when exporting to multiple scopes and there are dependencies between them
+
 ## [14.6.1-dev.2] - 2019-12-04
 
 - make bit status recursively show untracked files dependencies
