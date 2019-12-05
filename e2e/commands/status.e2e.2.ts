@@ -12,6 +12,7 @@ import {
 } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 
 const assertArrays = require('chai-arrays');
 
@@ -108,15 +109,46 @@ describe('bit status command', function() {
   });
   describe('when a component is created and added without its package dependencies', () => {
     let output;
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fs.createFile('bar', 'foo.js', 'var React = require("react")');
-      helper.fixtures.addComponentBarFoo();
+    describe('when a component has missing packages from both overrides and code', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.createFile('bar', 'foo.js', 'var React = require("react")');
+        helper.fixtures.addComponentBarFoo();
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '+'
+            }
+          }
+        };
+        helper.bitJson.addOverrides(overrides);
+      });
+      it('Should show missing package dependencies', () => {
+        output = helper.command.runCmd('bit status');
+        expect(output).to.have.string('missing packages dependencies');
+        expect(output).to.have.string('bar/foo.js -> react');
+        expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
+      });
     });
-    it('Should show missing package dependencies', () => {
-      output = helper.command.runCmd('bit status');
-      expect(output).to.have.string('missing packages dependencies');
-      expect(output).to.have.string('bar/foo.js -> react');
+    describe('when a component has missing packages only from overrides', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.createFile('bar', 'foo.js', '');
+        helper.fixtures.addComponentBarFoo();
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '+'
+            }
+          }
+        };
+        helper.bitJson.addOverrides(overrides);
+      });
+      it('Should show missing package dependencies', () => {
+        output = helper.command.runCmd('bit status');
+        expect(output).to.have.string('missing packages dependencies');
+        expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
+      });
     });
   });
   describe('when a component is created, added and tagged', () => {

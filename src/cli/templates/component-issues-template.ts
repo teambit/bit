@@ -20,6 +20,8 @@ export const componentIssuesLabels = {
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
 
+export const MISSING_PACKAGES_FROM_OVERRIDES_LABEL = 'from overrides configuration';
+
 export function getInvalidComponentLabel(error: Error) {
   switch (error.name) {
     case 'MainFileRemoved':
@@ -92,6 +94,19 @@ export function formatMissing(missingComponent: Component) {
           componentIssuesLabels[key],
           untrackedFilesComponentIssueToString
         );
+      }
+      if (key === 'missingPackagesDependenciesOnFs') {
+        // Combine missing from files and missing from packages (for output only)
+        const missingPackagesDependenciesOnFs = missingComponent.issues[key] || {};
+        const missingPackagesDependenciesFromOverrides =
+          missingComponent.issues['missingPackagesDependenciesFromOverrides'] || [];
+        if (!R.isEmpty(missingPackagesDependenciesFromOverrides)) {
+          missingPackagesDependenciesOnFs[
+            MISSING_PACKAGES_FROM_OVERRIDES_LABEL
+          ] = missingPackagesDependenciesFromOverrides;
+        }
+
+        return formatMissingStr(key, missingPackagesDependenciesOnFs, componentIssuesLabels[key]);
       }
       return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
     })

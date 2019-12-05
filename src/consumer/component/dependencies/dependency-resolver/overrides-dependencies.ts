@@ -13,6 +13,7 @@ import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import { FileType, AllDependencies } from './dependencies-resolver';
+import logger from '../../../../logger/logger';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[];
@@ -27,6 +28,7 @@ export default class OverridesDependencies {
   componentFromModel: Component | null | undefined;
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
+  missingPackageDependencies: string[];
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer; // $FlowFixMe
@@ -35,6 +37,7 @@ export default class OverridesDependencies {
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};
+    this.missingPackageDependencies = [];
   }
 
   shouldIgnoreFile(file: string, fileType: FileType): boolean {
@@ -192,7 +195,7 @@ export default class OverridesDependencies {
     dependency: string,
     dependencyValue: string,
     packageJson: Record<string, any> | null | undefined
-  ): Record<string, any> | null | undefined {
+  ): Record<string, any> | null | upndefined {
     const packageVersionToAdd = (): string | null | undefined => {
       if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
         return dependencyValue;
@@ -208,8 +211,10 @@ export default class OverridesDependencies {
     };
     const versionToAdd = packageVersionToAdd();
     if (!versionToAdd) {
-      throw new GeneralError(`unable to manually add the dependency "${dependency}" into "${this.component.id.toString()}".
-it's not an existing component, nor existing package`);
+      logger.debug(`unable to manually add the dependency "${dependency}" into "${this.component.id.toString()}".
+it's not an existing component, nor existing package (in a package.json)`);
+      this.missingPackageDependencies.push(dependency);
+      return;
     }
     const packageStr = `${dependency}@${versionToAdd}`;
     this._addManuallyAddedDep(field, packageStr);
