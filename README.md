@@ -45,7 +45,7 @@ Bit is working with Javascript and Javascript frameworks:
 
 
 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/512px-React-icon.svg.png" height="128" align="left"> <img src="https://angular.io/assets/images/logos/angular/angular.svg" height="128" align="left">
-<img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Vue.png" height="90" align="left" margin-top="15px"/>  <img src="http://pluspng.com/img-png/nodejs-logo-png-javascript-node-js-nodejs-icon-download-png-512.png" height="128">
+<img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Vue.png" height="90" align="left" padding-top="15px"/>  <img src="http://pluspng.com/img-png/nodejs-logo-png-javascript-node-js-nodejs-icon-download-png-512.png" height="128">
 
 ### bit.dev cloud
 Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your compoentns.
