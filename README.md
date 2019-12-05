@@ -43,7 +43,7 @@ This allows teams to:
 
 Bit is working with Javascript and Javascript frameworks: 
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/512px-React-icon.svg.png" height="128"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Vue.js_Logo_2.svg/512px-Vue.js_Logo_2.svg.png" height="100"/> <img src="https://angular.io/assets/images/logos/angular/angular.svg" height="128"> <img src="http://pluspng.com/img-png/nodejs-logo-png-javascript-node-js-nodejs-icon-download-png-512.png" height="128">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/React-icon.svg/512px-React-icon.svg.png" height="128" align="left" hspace="20"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Vue.js_Logo_2.svg/512px-Vue.js_Logo_2.svg.png" height="100" align="left" hspace="20"/> <img src="https://angular.io/assets/images/logos/angular/angular.svg" height="128" align="left" hspace="20"> <img src="http://pluspng.com/img-png/nodejs-logo-png-javascript-node-js-nodejs-icon-download-png-512.png" height="128">
 
 ### bit.dev cloud
 Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your compoentns.
