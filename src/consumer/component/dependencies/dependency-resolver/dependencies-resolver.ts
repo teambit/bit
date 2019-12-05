@@ -201,7 +201,9 @@ export default class DependencyResolver {
     }
 
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
-    this.issues.missingPackagesDependenciesFromOverrides = this.overridesDependencies.missingPackageDependencies;
+    if (!R.isEmpty(this.overridesDependencies.missingPackageDependencies)) {
+      this.issues.missingPackagesDependenciesFromOverrides = this.overridesDependencies.missingPackageDependencies;
+    }
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
