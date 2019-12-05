@@ -10,16 +10,16 @@
 [Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start)
 • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Gitter](https://gitter.im/bit-src/Bit) • [Twitter](https://twitter.com/bitdev_)
 
-<p style="font-size: 1.5em">Bit is the shortest way to reuse atomic components between projects</p>
+# Bit is the shortest way to reuse atomic components between projects
 
-### What is Bit? 
+## What is Bit? 
 
 Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of separate package for each component. Use Bit to turn a component inside an application into a standalone reusable package.  
 You can setup your own server for sharing components or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing with advanced features such as components CI and showcase.
 
 ![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
-### Why Bit? 
+## Why Bit? 
 
 Bit simplifies the process of collaborating on UI components. Team members can share, maintain, and synchronize components from different projects.
 This allows teams to:
@@ -29,7 +29,7 @@ This allows teams to:
 - Retain UI and UX consistency
 - A stepping stone for establishing a [micro frontends architecture](https://martinfowler.com/articles/micro-frontends.html)
 
-### Key Features
+## Key Features
 
 - Extract a component for sharing directly from an existing project.
 - Build and test each component separately from the rest of the application.
@@ -45,7 +45,7 @@ Bit is working with Javascript and Javascript frameworks:
 
 <img src="https://storage.googleapis.com/static.bit.dev/docs/images/js_logos.png">
 
-### bit.dev cloud
+## bit.dev cloud
 Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your compoentns.
 <p align="center">
   <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
