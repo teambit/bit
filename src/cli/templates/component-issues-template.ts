@@ -99,7 +99,8 @@ export function formatMissing(missingComponent: Component) {
         // Combine missing from files and missing from packages (for output only)
         const missingPackagesDependenciesOnFs = missingComponent.issues[key] || {};
         const missingPackagesDependenciesFromOverrides =
-          missingComponent.issues['missingPackagesDependenciesFromOverrides'] || [];
+          // @ts-ignore
+          missingComponent.issues.missingPackagesDependenciesFromOverrides || [];
         if (!R.isEmpty(missingPackagesDependenciesFromOverrides)) {
           missingPackagesDependenciesOnFs[
             MISSING_PACKAGES_FROM_OVERRIDES_LABEL
