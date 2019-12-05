@@ -2,7 +2,7 @@ import R from 'ramda';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
-import librarian from 'librarian';
+import { runModule } from 'librarian';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -78,10 +78,9 @@ export default class Isolator {
     const log = message => loader.setText(`${loaderPrefix}: ${message}`);
     // @ts-ignore TODO: this should be part of the capsule interface
     this.capsule.execNode = async (executable, args) => {
-      const { patchFileSystem } = librarian.api();
       const onScriptRun = () => loader.setText(`building component - ${componentId.name}`);
       // TODO: do this from the compiler/tester so that the isolator doesn't need to know if it's a builder/tester/*...
-      await patchFileSystem(executable, { args, cwd: this.dir, log, onScriptRun });
+      await runModule(executable, { args, cwd: this.dir, log, onScriptRun });
     };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
