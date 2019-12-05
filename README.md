@@ -12,14 +12,14 @@
 
 # Bit is the shortest way to reuse atomic components between projects
 
-## What is Bit? 
+## What is Bit? 🤔
 
 Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of a separate package for each component. Use Bit to turn a component inside an application into a standalone reusable package. 
 You can set up your server for sharing components, or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing with advanced features such as components CI and showcase.
 
 ![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
-## Why Bit? 
+## Why Bit? 🎖️
 
 Bit simplifies the process of collaborating on UI components. Team members can share, maintain, and synchronize components from different projects.
 This allows teams to:
@@ -29,7 +29,7 @@ This allows teams to:
 - Retain UI and UX consistency
 - A stepping stone for establishing a [micro frontends architecture](https://martinfowler.com/articles/micro-frontends.html)
 
-## Key Features
+## Key Features 🔑
 
 - Extract a component for sharing directly from an existing project.
 - Build and test each component separately from the rest of the application.
@@ -45,13 +45,15 @@ Bit is working with Javascript and Javascript frameworks:
 
 <img src="https://storage.googleapis.com/static.bit.dev/docs/images/js_logos.png">
 
-## bit.dev cloud
+## bit.dev cloud 🌩️
+
 Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your compoentns.
 <p align="center">
  <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
 
-## Installation
+## Installation 🚪
+
 > Requires node 8.12 and above.
 
 ```bash
@@ -62,13 +64,13 @@ yarn global add bit-bin
 
 Or check other [installation](https://docs.bit.dev/docs/installation) methods.
 
-## Contributing
+## Contributing 🎗️
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 See [Contributing](CONTRIBUTING.md).
 
-## License
+## License 💮
 
 Apache License, Version 2.0
 
