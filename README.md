@@ -9,9 +9,9 @@
 
 # Bit is the shortest way to reuse atomic components between projects
 
-[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Gitter](https://gitter.im/bit-src/Bit) • [Twitter](https://twitter.com/bitdev_)
-
 ![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
+
+[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Gitter](https://gitter.im/bit-src/Bit) • [Twitter](https://twitter.com/bitdev_)
 
 ## What is Bit? 🤔
 
