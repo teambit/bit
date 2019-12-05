@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2162](https://github.com/teambit/bit/pull/2162) - added integration with [librarian](https://github.com/teambit/librarian)
+
 ## [14.6.1-dev.1] - 2019-12-04
 
 - add isolate function to testers new API
