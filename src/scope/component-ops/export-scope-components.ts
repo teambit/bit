@@ -177,8 +177,10 @@ export async function exportMany({
     const addToGroupedSorted = (id: BitId) => {
       if (groupedArraySorted.length) {
         const lastItem = groupedArraySorted[groupedArraySorted.length - 1];
-        if (lastItem.scopeName === id.scope) lastItem.ids.push(id);
-        return;
+        if (lastItem.scopeName === id.scope) {
+          lastItem.ids.push(id);
+          return;
+        }
       }
       groupedArraySorted.push({ scopeName: id.scope || (defaultScope as string), ids: new BitIds(id) });
     };
