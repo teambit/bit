@@ -7,17 +7,16 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bitdev_&url=https://bit.dev&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start) 
-• [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Gitter](https://gitter.im/bit-src/Bit) • [Twitter](https://twitter.com/bitdev_)
-
 # Bit is the shortest way to reuse atomic components between projects
+
+[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Gitter](https://gitter.im/bit-src/Bit) • [Twitter](https://twitter.com/bitdev_)
+
+![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
 ## What is Bit? 🤔
 
 Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of a separate package for each component. Use Bit to turn a component inside an application into a standalone reusable package. 
 You can set up your server for sharing components, or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing with advanced features such as components CI and showcase.
-
-![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
 ## Why Bit? 🎖️
 
@@ -54,15 +53,13 @@ Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and pla
 
 ## Installation 🚪
 
-> Requires node 8.12 and above.
-
 ```bash
 npm install bit-bin --global
     or
 yarn global add bit-bin  
 ```
 
-Or check other [installation](https://docs.bit.dev/docs/installation) methods.
+Bit installation requires node 8.12 and above. Check other [installation](https://docs.bit.dev/docs/installation) methods.
 
 ## Contributing 🎗️
 
