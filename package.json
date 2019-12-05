@@ -112,7 +112,7 @@
     "is-glob": "^4.0.0",
     "isbinaryfile": "^4.0.2",
     "jfs": "^0.2.6",
-    "librarian": "github:teambit/librarian#runtime-mode",
+    "librarian": "github:teambit/librarian#release",
     "lodash.assignwith": "^4.2.0",
     "lodash.groupby": "^4.6.0",
     "lodash.merge": "^4.6.2",
