@@ -6,7 +6,6 @@ import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
 import { BitId } from '../../bit-id';
-import { Dependency } from '../../consumer/component/dependencies';
 
 export type AllDependenciesGraphs = {
   graphDeps: Graph;

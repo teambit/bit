@@ -81,7 +81,7 @@ export async function exportMany({
     return exportIntoRemote(remoteName, ids);
   }
   const groupedByScope = await sortAndGroupByScope();
-  const results = await pMapSeries(groupedByScope, ({ scopeName, ids }) => exportIntoRemote(scopeName, ids));
+  const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
   return {
     exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
@@ -175,20 +175,18 @@ export async function exportMany({
     const cycles = graphLib.alg.findCycles(graph);
     const groupedArraySorted: { scopeName: string; ids: BitIds }[] = [];
     const addToGroupedSorted = (id: BitId) => {
-      const pushAsNew = () =>
-        groupedArraySorted.push({ scopeName: id.scope || (defaultScope as string), ids: new BitIds(id) });
-      if (!groupedArraySorted.length) {
-        return pushAsNew();
+      if (groupedArraySorted.length) {
+        const lastItem = groupedArraySorted[groupedArraySorted.length - 1];
+        if (lastItem.scopeName === id.scope) lastItem.ids.push(id);
+        return;
       }
-      const lastItem = groupedArraySorted[groupedArraySorted.length - 1];
-      if (lastItem.scopeName === id.scope) lastItem.ids.push(id);
-      else pushAsNew();
+      groupedArraySorted.push({ scopeName: id.scope || (defaultScope as string), ids: new BitIds(id) });
     };
     if (cycles.length) {
       const cyclesWithMultipleScopes = cycles.filter(cycle => {
-        const ids = cycle.map(s => graph.node(s));
-        const firstScope = ids[0].scope;
-        return ids.some(id => id.scope !== firstScope);
+        const bitIds = cycle.map(s => graph.node(s));
+        const firstScope = bitIds[0].scope;
+        return bitIds.some(id => id.scope !== firstScope);
       });
       if (cyclesWithMultipleScopes.length) {
         throw new GeneralError(`fatal: unable to export. the following components have circular dependencies between two or more scopes
