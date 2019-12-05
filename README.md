@@ -15,8 +15,8 @@
 
 ## What is Bit? 🤔
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit removes the burden by automating the creation of a separate package for each component. Use Bit to turn a component inside an application into a standalone reusable package. 
-You can set up your server for sharing components, or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing with advanced features such as components CI and showcase.
+Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit enables exporting components directly from your projects without the burden of manually packaging each component. Use Bit to turn a component inside an application into a standalone reusable module. 
+You can set up your server for sharing components, or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing, with advanced features such as components CI and showcase.
 
 ## Why Bit? 🎖️
 
@@ -46,7 +46,7 @@ Bit is working with Javascript and Javascript frameworks:
 
 ## bit.dev cloud 🌩️
 
-Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your compoentns.
+Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your components.
 <p align="center">
  <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
