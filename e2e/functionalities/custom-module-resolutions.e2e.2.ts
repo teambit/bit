@@ -91,7 +91,7 @@ describe('custom module resolutions', function() {
       describe('importing the component using isolated environment', () => {
         let isolatePath;
         before(() => {
-          isolatePath = helper.command.isolateComponent('bar/foo', '-olw');
+          isolatePath = helper.command.isolateComponent('bar/foo', '-olws');
         });
         it('should be able to generate the links correctly and require the dependencies', () => {
           const appJsFixture = `const barFoo = require('./');

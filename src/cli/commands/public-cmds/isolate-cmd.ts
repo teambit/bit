@@ -11,7 +11,7 @@ export default class Isolate extends Command {
     ['d', 'directory [directory] ', 'path to store isolated component'],
     ['w', 'write-bit-dependencies [boolean] ', 'write bit components dependencies to package.json file'],
     ['l', 'npm-links [boolean]', 'point dependencies link files to npm package'],
-    ['i', 'install-packages [boolean]', 'install npm package dependencies'],
+    ['s', 'skip-npm-install [boolean]', 'do not install npm package dependencies'],
     ['', 'install-peer-dependencies [boolean]', 'install peer npm package dependencies'],
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
@@ -40,7 +40,7 @@ export default class Isolate extends Command {
       directory?: string;
       writeBitDependencies?: boolean;
       npmLinks?: boolean;
-      installPackages?: boolean;
+      skipNpmInstall?: boolean;
       installPeerDependencies?: boolean;
       dist?: boolean;
       conf?: boolean;
@@ -53,9 +53,6 @@ export default class Isolate extends Command {
       useCapsule?: boolean;
     }
   ): Promise<any> {
-    // console.log('im here');
-    // console.log(opts);
-    // return '';
     const concreteOpts: WorkspaceIsolateOptions = {
       writeToPath: opts.directory,
       override: opts.override === true,
@@ -65,8 +62,8 @@ export default class Isolate extends Command {
       createNpmLinkFiles: opts.npmLinks === true,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist === true,
-      installNpmPackages: !!opts.installPackages, // convert to boolean
-      installPeerDependencies: !!opts.installPackages, // convert to boolean
+      installNpmPackages: !opts.skipNpmInstall,
+      installPeerDependencies: !opts.skipNpmInstall,
       verbose: opts.verbose === true,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: false,

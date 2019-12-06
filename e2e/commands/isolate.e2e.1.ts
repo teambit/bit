@@ -40,7 +40,7 @@ describe('run bit isolate', function() {
     describe('with the same parameters as pack is using', () => {
       let isolatePath;
       before(() => {
-        isolatePath = helper.command.isolateComponent('bar/foo', '-olw');
+        isolatePath = helper.command.isolateComponent('bar/foo', '-owls');
       });
       it('should be able to generate the links correctly and require the dependencies', () => {
         const appJsFixture = `const barFoo = require('./');
