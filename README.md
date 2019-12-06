@@ -44,22 +44,27 @@ Bit is working with Javascript and Javascript frameworks:
 
 <img src="https://storage.googleapis.com/static.bit.dev/docs/images/js_logos.png">
 
+## Installation 🚪
+
+Using npm: 
+
+```bash
+npm install bit-bin --global
+```
+
+Using yarn: 
+```bash
+yarn global add bit-bin  
+```
+
+Bit cli requires node 8.12 and above. Check other [installation](https://docs.bit.dev/docs/installation) methods.
+
 ## bit.dev cloud 🌩️
 
 Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your components.
 <p align="center">
  <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
-
-## Installation 🚪
-
-```bash
-npm install bit-bin --global
-    or
-yarn global add bit-bin  
-```
-
-Bit installation requires node 8.12 and above. Check other [installation](https://docs.bit.dev/docs/installation) methods.
 
 ## Contributing 🎗️
 
@@ -70,5 +75,3 @@ See [Contributing](CONTRIBUTING.md).
 ## License 💮
 
 Apache License, Version 2.0
-
-![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
