@@ -244,6 +244,7 @@ export default class DependencyResolver {
       this.processDepFiles(file, fileType);
       this.processUnidentifiedPackages(file, fileType);
     });
+    this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
@@ -251,6 +252,30 @@ export default class DependencyResolver {
     this.populatePeerPackageDependencies();
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
+  }
+
+  removeIgnoredPackagesByOverrides() {
+    const shouldBeIncluded = (pkgVersion, pkgName) =>
+      !this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'dependencies');
+    const shouldBeIncludedDev = (pkgVersion, pkgName) =>
+      !this.overridesDependencies.shouldIgnorePackageByType(pkgName, 'devDependencies');
+
+    this.allPackagesDependencies.packageDependencies = R.pickBy(
+      shouldBeIncluded,
+      this.allPackagesDependencies.packageDependencies
+    );
+    this.allPackagesDependencies.devPackageDependencies = R.pickBy(
+      shouldBeIncludedDev,
+      this.allPackagesDependencies.devPackageDependencies
+    );
+    this.allPackagesDependencies.compilerPackageDependencies = R.pickBy(
+      shouldBeIncludedDev,
+      this.allPackagesDependencies.compilerPackageDependencies
+    );
+    this.allPackagesDependencies.testerPackageDependencies = R.pickBy(
+      shouldBeIncludedDev,
+      this.allPackagesDependencies.testerPackageDependencies
+    );
   }
 
   throwForNonExistFile(file: string) {
@@ -749,26 +774,18 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const getPackages = (): Record<string, any> | null | undefined => {
-      const packages = this.tree[originFile].packages;
-      if (RA.isNilOrEmpty(packages)) return null;
-      const shouldBeIncluded = (pkgVersion, pkgName) =>
-        !this.overridesDependencies.shouldIgnorePackage(pkgName, fileType);
-      return R.pickBy(shouldBeIncluded, packages);
-    };
-    const packages = getPackages();
-    if (packages && !R.isEmpty(packages)) {
-      if (fileType.isTestFile) {
-        Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
-      } else if (fileType.isCompilerFile) {
-        Object.assign(this.allPackagesDependencies.compilerPackageDependencies, packages);
-      } else if (fileType.isTesterFile) {
-        Object.assign(this.allPackagesDependencies.testerPackageDependencies, packages);
-      } else {
-        Object.assign(this.allPackagesDependencies.packageDependencies, packages);
-      }
-      this._addTypesPackagesForTypeScript(packages, originFile);
+    const packages = this.tree[originFile].packages;
+    if (!packages || R.isEmpty(packages)) return;
+    if (fileType.isTestFile) {
+      Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
+    } else if (fileType.isCompilerFile) {
+      Object.assign(this.allPackagesDependencies.compilerPackageDependencies, packages);
+    } else if (fileType.isTesterFile) {
+      Object.assign(this.allPackagesDependencies.testerPackageDependencies, packages);
+    } else {
+      Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
+    this._addTypesPackagesForTypeScript(packages, originFile);
   }
 
   processMissing(originFile: PathLinuxRelative, fileType: FileType) {

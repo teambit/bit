@@ -1466,7 +1466,8 @@ describe('workspace config', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fs.outputFile('baz.js');
+        helper.command.addComponent('baz.js');
         overrides = {
           '*': {
             scripts: {
@@ -1530,6 +1531,18 @@ describe('workspace config', function() {
           expect(output.overrides.scripts).to.have.property('test');
           expect(output.overrides.scripts).to.have.property('watch');
           expect(output.overrides.scripts).to.not.have.property('lint');
+        });
+      });
+      describe('tagging the components and then changing the propagate of one component', () => {
+        before(() => {
+          helper.command.tagAllComponents();
+          const bitJson = helper.bitJson.read();
+          bitJson.overrides['bar/foo'].propagate = false;
+          helper.bitJson.write(bitJson);
+        });
+        it('should not affect other components that do not match any overrides criteria', () => {
+          const status = helper.command.statusJson();
+          expect(status.modifiedComponent).to.not.include('baz@0.0.1');
         });
       });
     });
