@@ -38,7 +38,7 @@ export default class ConsumerOverrides {
     if (!matches.length) {
       return null;
     }
-    const overrideValues = matches.map(match => this.overrides[match]);
+    const overrideValues = matches.map(match => R.clone(this.overrides[match]));
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
       if (stopPropagation) return acc;
@@ -73,7 +73,7 @@ export default class ConsumerOverrides {
           break;
         default:
           if (isObjectAndNotArray(specificOverrides[field]) && isObjectAndNotArray(generalOverrides[field])) {
-            specificOverrides[field] = Object.assign(generalOverrides[field], specificOverrides[field]);
+            specificOverrides[field] = Object.assign({}, generalOverrides[field], specificOverrides[field]);
           } else if (!specificOverrides[field]) {
             specificOverrides[field] = generalOverrides[field];
           }
