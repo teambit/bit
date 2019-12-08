@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.6.1-dev.3] - 2019-12-08
+
 - [#2162](https://github.com/teambit/bit/pull/2162) - add integration with [librarian](https://github.com/teambit/librarian)
 - [#2178](https://github.com/teambit/bit/issues/2178) fix adding ts types packages to respect overrides settings
 - [#2176](https://github.com/teambit/bit/issues/2176) fix workspace overrides to not leak rules to unrelated component
