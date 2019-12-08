@@ -582,6 +582,23 @@ export default class Scope {
     return removeNils(componentsAndVersions);
   }
 
+  async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
+    const componentsObjects = await this.sources.getMany(ids);
+    const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
+      if (!componentObjects.component) return null;
+      const component: ModelComponent = componentObjects.component;
+      const localVersions = component.getLocalVersions();
+      return Promise.all(
+        localVersions.map(async versionStr => {
+          const version: Version = await component.loadVersion(versionStr, this.objects);
+          return { component, version, versionStr };
+        })
+      );
+    });
+    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
+    return removeNils(R.flatten(componentsAndVersions));
+  }
+
   /**
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
