@@ -57,6 +57,7 @@ type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 
 interface Issues {
   missingPackagesDependenciesOnFs: {};
+  missingPackagesDependenciesFromOverrides: string[];
   missingComponents: {};
   untrackedDependencies: UntrackedDependenciesIssues;
   missingDependenciesOnFs: {};
@@ -112,6 +113,7 @@ export default class DependencyResolver {
     this.processedFiles = [];
     this.issues = {
       missingPackagesDependenciesOnFs: {},
+      missingPackagesDependenciesFromOverrides: [],
       missingComponents: {},
       untrackedDependencies: {},
       missingDependenciesOnFs: {},
@@ -199,6 +201,9 @@ export default class DependencyResolver {
     }
 
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
+    if (!R.isEmpty(this.overridesDependencies.missingPackageDependencies)) {
+      this.issues.missingPackagesDependenciesFromOverrides = this.overridesDependencies.missingPackageDependencies;
+    }
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;

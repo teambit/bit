@@ -7,7 +7,7 @@ import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
-import { BASE_DOCS_DOMAIN, MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../../constants';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`

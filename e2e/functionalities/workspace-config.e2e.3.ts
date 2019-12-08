@@ -3,6 +3,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -988,9 +989,17 @@ describe('workspace config', function() {
           };
           helper.bitJson.addOverrides(overrides);
         });
-        it('should throw an error', () => {
-          const output = helper.general.runWithTryCatch('bit show bar/foo');
-          expect(output).to.have.string('unable to manually add the dependency "chai" into "bar/foo"');
+        // See similar test in show.e2e - component with overrides data
+        it('should not show the package in dependencies', () => {
+          const output = helper.command.showComponent('bar/foo');
+          expect(output).to.not.have.string('chai"');
+        });
+        // See similar test in status.e2e - when a component is created and added without its package dependencies
+        it('should show a missing package in status', () => {
+          const output = helper.command.status();
+          expect(output).to.have.string('missing packages dependencies');
+          expect(output).to.have.string('bar/foo.js -> chai');
+          expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
       });
       describe('adding a component with a version', () => {
