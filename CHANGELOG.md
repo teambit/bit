@@ -7,21 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.6.1-dev.3] - 2019-12-08
+## [[14.7.0] - 2019-12-08](https://github.com/teambit/bit/releases/tag/v14.7.0)
 
-- [#2162](https://github.com/teambit/bit/pull/2162) - add integration with [librarian](https://github.com/teambit/librarian)
-- [#2178](https://github.com/teambit/bit/issues/2178) fix adding ts types packages to respect overrides settings
-- [#2176](https://github.com/teambit/bit/issues/2176) fix workspace overrides to not leak rules to unrelated component
+### New
+​
+- Tester's API can use the `isolate` function.
+- `bit status` shows untracked file dependencies recursively.
+​
+### Bug fixes
+​
 - [#2171](https://github.com/teambit/bit/issues/2171) fix component-not-found when exporting to multiple scopes and there are dependencies between them
-- [#2175](https://github.com/teambit/bit/issues/2175) show missing packages from overrides configuration
-
-## [14.6.1-dev.2] - 2019-12-04
-
-- make bit status recursively show untracked files dependencies
-
-## [14.6.1-dev.1] - 2019-12-04
-
-- add isolate function to testers new API
+- [#2175](https://github.com/teambit/bit/issues/2175) add missing packages from overrides to `bit status`
+- [#2176](https://github.com/teambit/bit/issues/2176) fix workspace overrides to not leak rules to unrelated component
+- [#2178](https://github.com/teambit/bit/issues/2178) fix adding ts types packages to respect overrides settings
+​
+### Experimental
+​
+- [#2162](https://github.com/teambit/bit/pull/2162) add integration with [librarian](https://github.com/teambit/librarian)
 
 ## [[14.6.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.6.0)
 
