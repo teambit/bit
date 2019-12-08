@@ -66,7 +66,7 @@ module.exports = {
         ignoreTemplateLiterals: true
       }
     ],
-    'max-lines': [2, 1700],
+    'max-lines': [2, 1800],
     'func-names': [0]
   },
   env: {
