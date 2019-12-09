@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support write dists from testers isolate API
+
 ## [14.7.1-dev.1] - 2019-12-08
 
 - improve isolate function for testers API
