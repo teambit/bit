@@ -15,21 +15,20 @@
 
 ## What is Bit? 🤔
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. 
-Use Bit to turn a component inside an application into a standalone reusable package.  
-Increase the project's resilience by consuming only the components the application needs.
-You can set up your own server for sharing components or you can use the [bit.dev](https://bit.dev) cloud hosting for private and public components sharing with advanced features such as components CI and components showcase.
+Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories.  
+Use Bit to turn a component inside an application into a standalone reusable package and share it with other projects.  
+You can set up your own server for components collaboration, or use the [bit.dev cloud](#bitdev-cloud-%f0%9f%8c%a9%ef%b8%8f) hosting for private and public components sharing.
 
 ## Why Bit? 🎖️
 
-Bit simplifies the process of collaborating on UI components. Team members can share, maintain, and synchronize components from different projects.
+Bit simplifies the process of collaborating on UI components. Team members can share, maintain, and synchronize small atomic components from different projects.  
+
 This allows teams to:
 
 - Increase code reusability
 - Increase design and development efficiency
-- Increase project's resilience to changes
 - Retain UI and UX consistency
-- A stepping stone for establishing a [micro frontends architecture](https://martinfowler.com/articles/micro-frontends.html)
+- Increase project's stability
 
 ## Key Features 🔑
 
@@ -65,7 +64,7 @@ Bit cli requires node 8.12 and above. Check other [installation](https://docs.bi
 
 ## bit.dev cloud 🌩️
 
-Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and playground for your components.
+Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and showcase for your components. 
 <p align="center">
  <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
