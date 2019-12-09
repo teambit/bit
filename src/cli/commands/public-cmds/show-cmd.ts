@@ -127,8 +127,8 @@ export default class Show extends Command {
           componentObj.tester.files = makeEnvFilesReadable(comp.tester);
         }
 
-        if (comp.componentMap && comp.componentMap.rootDir) {
-          componentObj.rootDir = comp.componentMap.rootDir;
+        if (comp.componentMap) {
+          componentObj.componentDir = comp.componentMap.getComponentDir();
         }
 
         return componentObj;
