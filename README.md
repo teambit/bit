@@ -15,8 +15,10 @@
 
 ## What is Bit? 🤔
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. Bit enables exporting components directly from your projects without the burden of manually packaging each component. Use Bit to turn a component inside an application into a standalone reusable module. 
-You can set up your server for sharing components, or you can use the [bit.dev](https://bit.dev) cloud hosting solution for private and public components sharing, with advanced features such as components CI and showcase.
+Bit is an [open-source](https://github.com/teambit/bit) cli tool for sharing components across projects and repositories. 
+Use Bit to turn a component inside an application into a standalone reusable package.  
+Increase the project's resilience by consuming only the components the application needs.
+You can set up your own server for sharing components or you can use the [bit.dev](https://bit.dev) cloud hosting for private and public components sharing with advanced features such as components CI and components showcase.
 
 ## Why Bit? 🎖️
 
@@ -25,20 +27,22 @@ This allows teams to:
 
 - Increase code reusability
 - Increase design and development efficiency
+- Increase project's resilience to changes
 - Retain UI and UX consistency
 - A stepping stone for establishing a [micro frontends architecture](https://martinfowler.com/articles/micro-frontends.html)
 
 ## Key Features 🔑
 
 - Extract a component for sharing directly from an existing project.
-- Build and test each component separately from the rest of the application.
-- Change the source code of shared components from any consuming project. 
-- Get changes in components on top of local adjustments.
+- Validate the component's independence by building and testing each component separately from the rest of the application.
+- Change the source code of shared components from any project that utilizes it.
+- Get published changes in components on top of local modifications.
 - Contribute back changes made to components directly from your project.
-- Let Bit auto-generate package.json for each component
-- Version each component individually.
-- Automated component versioning according to changes in the dependency graph chain.
-- Works alongside with Git, NPM, and Yarn.
+- Let Bit auto-generate npm package for each component.
+- Distribute small atomic components instead of a bloated package.
+- Automate component versioning according to changes in its dependencies.
+- Use with leading frameworks and tools: React, Vue, Angular, Mocha, Jest.  
+- Works alongside Git, NPM, and Yarn.
 
 Bit is working with Javascript and Javascript frameworks: 
 
