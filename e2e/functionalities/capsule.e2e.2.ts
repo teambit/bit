@@ -285,7 +285,7 @@ describe('capsule', function() {
           expect(buildResult).to.have.string('generated a capsule for utils/is-string');
         });
         describe('remove the compiler from the dependency', () => {
-          let capsuleDir;
+          let isStringCapsuleDir;
           before(() => {
             const overrides = {
               'utils/is-type': {
@@ -297,14 +297,14 @@ describe('capsule', function() {
             helper.bitJson.addOverrides(overrides);
             const buildResult = helper.command.tagComponent('utils/is-type');
             expect(buildResult).to.have.string('generated a capsule for utils/is-string');
-            capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildResult, 'utils/is-string');
+            isStringCapsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildResult, 'utils/is-string');
           });
           // tests https://github.com/teambit/bit/issues/2182
           it('should not save the dists of the dependency in the capsule of the dependent', () => {
-            const distPath = path.join(capsuleDir, '.dependencies/utils/is-type/dist');
+            const distPath = path.join(isStringCapsuleDir, '.dependencies/utils/is-type/dist');
             expect(distPath).to.not.be.a.path();
             // just to make sure the original path of the component is there
-            expect(path.join(capsuleDir, '.dependencies/utils/is-type')).to.be.a.path();
+            expect(path.join(isStringCapsuleDir, '.dependencies/utils/is-type')).to.be.a.path();
           });
         });
       });
