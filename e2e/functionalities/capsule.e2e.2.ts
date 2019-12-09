@@ -273,6 +273,41 @@ describe('capsule', function() {
           expect(buildResult).to.have.string('generated a capsule for utils/is-string');
         });
       });
+      describe('tag, change a dependency then tag the dependency (test the auto-tag)', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
+          helper.command.tagAllComponents();
+          const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
+          helper.fs.createFile('utils', 'is-type.js', strToAdd + fixtures.isTypeV2);
+        });
+        it('should rebuild the dependent that tagged as a result of auto-tag', () => {
+          const buildResult = helper.command.tagComponent('utils/is-type');
+          expect(buildResult).to.have.string('generated a capsule for utils/is-string');
+        });
+        describe('remove the compiler from the dependency', () => {
+          let capsuleDir;
+          before(() => {
+            const overrides = {
+              'utils/is-type': {
+                env: {
+                  compiler: '-'
+                }
+              }
+            };
+            helper.bitJson.addOverrides(overrides);
+            const buildResult = helper.command.tagComponent('utils/is-type');
+            expect(buildResult).to.have.string('generated a capsule for utils/is-string');
+            capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildResult, 'utils/is-string');
+          });
+          // tests https://github.com/teambit/bit/issues/2182
+          it('should not save the dists of the dependency in the capsule of the dependent', () => {
+            const distPath = path.join(capsuleDir, '.dependencies/utils/is-type/dist');
+            expect(distPath).to.not.be.a.path();
+            // just to make sure the original path of the component is there
+            expect(path.join(capsuleDir, '.dependencies/utils/is-type')).to.be.a.path();
+          });
+        });
+      });
       describe('tag, then build a component', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(afterChangingCompiler);
