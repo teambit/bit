@@ -296,6 +296,7 @@ async function _runBuild({
       componentDir = componentMap.getComponentDir() || '';
     }
   }
+  // TODO: merge with the same function in consumer-component file
   let shouldBuildUponDependenciesChanges;
   const isolateFunc = async ({
     targetDir,

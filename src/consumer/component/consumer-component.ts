@@ -705,11 +705,26 @@ export default class Component {
         contextPaths.componentDir = component.writtenPath;
       }
       try {
-        const isolateFunc = async (
-          destDir?: string
-        ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
-          const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
-          const componentWithDependencies = await isolator.isolate(component.id, {});
+        // TODO: merge with the same function in build component file
+        const isolateFunc = async ({
+          targetDir,
+          shouldBuildDependencies,
+          installNpmPackages,
+          keepExistingCapsule
+        }: {
+          targetDir?: string;
+          shouldBuildDependencies?: boolean;
+          installNpmPackages?: boolean;
+          keepExistingCapsule?: boolean;
+        }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
+          shouldBuildDependencies;
+          const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
+          const componentWithDependencies = await isolator.isolate(component.id, {
+            shouldBuildDependencies,
+            writeDists: false,
+            installNpmPackages,
+            keepExistingCapsule
+          });
           return new ExtensionIsolateResult(isolator, componentWithDependencies);
         };
         if (tester && tester.action) {
