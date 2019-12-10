@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix write dists from testers isolate API 
+
 ## [14.7.1-dev.2] - 2019-12-10
 
 - [#2182](https://github.com/teambit/bit/issues/2182) fix package-name replacement of dists when a package has a tilda prefix
