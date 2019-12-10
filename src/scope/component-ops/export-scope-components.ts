@@ -18,6 +18,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import Source from '../models/source';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';
+import replacePackageName from '../../utils/string/replace-package-name';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -370,20 +371,9 @@ async function convertToCorrectScope(
       const idWithNewScope = id.changeScope(remoteScope);
       const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
       const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
-      const singleQuote = "'";
-      const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach(quoteType => {
-        // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
-        newFileString = newFileString.replace(
-          new RegExp(quoteType + pkgNameWithOldScope + quoteType, 'g'),
-          quoteType + pkgNameWithNewScope + quoteType
-        );
-        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
-        newFileString = newFileString.replace(
-          new RegExp(`${quoteType}${pkgNameWithOldScope}/`, 'g'),
-          `${quoteType}${pkgNameWithNewScope}/`
-        );
-      });
+      // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
+      // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+      newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
     });
     if (newFileString !== fileString) {
       return Source.from(Buffer.from(newFileString));
@@ -442,20 +432,9 @@ async function changePartialNamesToFullNamesInDists(
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-      const singleQuote = "'";
-      const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach(quoteType => {
-        // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
-        newDistString = newDistString.replace(
-          new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),
-          quoteType + pkgNameWithScope + quoteType
-        );
-        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
-        newDistString = newDistString.replace(
-          new RegExp(`${quoteType}${pkgNameWithoutScope}/`, 'g'),
-          `${quoteType}${pkgNameWithScope}/`
-        );
-      });
+      // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
+      // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+      newDistString = replacePackageName(newDistString, pkgNameWithoutScope, pkgNameWithScope);
     });
     if (newDistString !== distString) {
       return Source.from(Buffer.from(newDistString));
