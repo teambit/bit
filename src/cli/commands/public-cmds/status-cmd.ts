@@ -6,12 +6,7 @@ import { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import {
-  componentIssuesLabels,
-  getInvalidComponentLabel,
-  componentIssueToString
-} from '../../templates/component-issues-template';
-import { Analytics } from '../../../analytics/analytics';
+import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
@@ -71,29 +66,6 @@ export default class Status extends Command {
     // If there is problem with at least one component we want to show a link to the
     // troubleshooting doc
     let showTroubleshootingLink = false;
-
-    function formatMissing(missingComponent: Component) {
-      function formatMissingStr(key, value, label) {
-        if (!value || R.isEmpty(value)) return '';
-        return (
-          chalk.yellow(`\n       ${label}: \n`) +
-          chalk.white(
-            Object.keys(value)
-              .map(k => `          ${k} -> ${componentIssueToString(value[k])}`)
-              .join('\n')
-          )
-        );
-      }
-
-      const missingStr = Object.keys(componentIssuesLabels)
-        .map(key => {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
-          return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
-        })
-        .join('');
-      return `       ${missingStr}\n`;
-    }
 
     function format(component: string | Component, showVersions = false, message?: string): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {

@@ -61,14 +61,13 @@ export default class ScopeHelper {
   }
 
   initWorkspace(workspacePath?: string) {
-    return this.command.runCmd('bit init -N', workspacePath);
-    // return this.command.runCmd('bit init', workspacePath);
+    // return this.command.runCmd('bit init -N', workspacePath);
+    return this.command.runCmd('bit init', workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
-    return this.command.runInteractiveCmd({ args: ['init'], inputs });
+    return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
   }
 
   initLocalScopeWithOptions(options: Record<string, any>) {

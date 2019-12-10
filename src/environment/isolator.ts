@@ -2,6 +2,7 @@ import R from 'ramda';
 import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
+import { runModule } from 'librarian';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -22,6 +23,7 @@ import BitMap from '../consumer/bit-map';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
+import loader from '../cli/loader';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -34,6 +36,7 @@ export interface IsolateOptions {
   writeDists?: boolean; // Write dist files
   shouldBuildDependencies?: boolean; // Build all depedencies before the isolation (used by tools like ts compiler)
   installNpmPackages?: boolean; // Install the package dependencies
+  keepExistingCapsule?: boolean; // Do not delete the capsule after using it (useful for incremental builds)
   installPeerDependencies?: boolean; // Install the peer package dependencies
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
@@ -55,19 +58,30 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer) {
+  dir?: string;
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
+    this.dir = dir;
   }
 
   static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
-    return new Isolator(capsule, scope, consumer);
+    return new Isolator(capsule, scope, consumer, dir);
   }
 
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+    const loaderPrefix = `isolating component - ${componentId.name}`;
+    loader.setText(loaderPrefix);
+    const log = message => loader.setText(`${loaderPrefix}: ${message}`);
+    // @ts-ignore TODO: this should be part of the capsule interface
+    this.capsule.execNode = async (executable, args) => {
+      const onScriptRun = () => loader.setText(`building component - ${componentId.name}`);
+      // TODO: do this from the compiler/tester so that the isolator doesn't need to know if it's a builder/tester/*...
+      await runModule(executable, { args, cwd: this.dir, log, onScriptRun });
+    };
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
@@ -83,6 +97,8 @@ export default class Isolator {
       });
     }
     const writeToPath = opts.writeToPath;
+    // default should be true
+    const installNpmPackages = typeof opts.installNpmPackages === 'undefined' ? true : opts.installNpmPackages;
     const concreteOpts: ManyComponentsWriterParams = {
       componentsWithDependencies: [componentWithDependencies],
       writeToPath,
@@ -93,7 +109,7 @@ export default class Isolator {
       createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.writeDists,
-      installNpmPackages: !!opts.installNpmPackages, // convert to boolean
+      installNpmPackages,
       installPeerDependencies: !!opts.installPeerDependencies, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
@@ -103,34 +119,40 @@ export default class Isolator {
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
-    await this.writeComponentsAndDependencies();
-    await this.installComponentPackages();
-    await this.writeLinks();
+    await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
+    await this.installComponentPackages({
+      installNpmPackages,
+      keepExistingCapsule: !!opts.keepExistingCapsule
+    });
+    await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
 
-  async writeComponentsAndDependencies() {
+  async writeComponentsAndDependencies(opts = { keepExistingCapsule: false }) {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
     await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
-    await this._persistComponentsDataToCapsule();
+    await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async installComponentPackages() {
+  async installComponentPackages(opts = { installNpmPackages: true, keepExistingCapsule: false }) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.capsulePackageJson = this.componentWithDependencies.component.packageJsonFile;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentRootDir = this.componentWithDependencies.component.writtenPath;
-    await this._addComponentsToRoot();
+    await this._addComponentsToRoot({ keepExistingCapsule: !!opts.keepExistingCapsule });
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    await this._installWithPeerOption();
+    if (opts.installNpmPackages) {
+      await this._installWithPeerOption();
+    }
   }
 
-  async writeLinks() {
+  async writeLinks(opts = { keepExistingCapsule: false }) {
     const links = await this.manyComponentsWriter._getAllLinks();
-    await links.persistAllToCapsule(this.capsule);
+    // links is a DataToPersist instance
+    await links.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   /**
@@ -175,14 +197,14 @@ export default class Isolator {
     return loadFlattenedDependenciesForCapsule(consumer, component);
   }
 
-  async _persistComponentsDataToCapsule() {
+  async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
     const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
-    await dataToPersist.persistAllToCapsule(this.capsule);
+    await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async _addComponentsToRoot(): Promise<void> {
+  async _addComponentsToRoot(opts = { keepExistingCapsule: false }): Promise<void> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const capsulePath = this.capsule.container.getPath();
@@ -203,13 +225,13 @@ export default class Isolator {
     }, {});
     if (R.isEmpty(componentsToAdd)) return;
     this.capsulePackageJson.addDependencies(componentsToAdd);
-    await this._writeCapsulePackageJson();
+    await this._writeCapsulePackageJson({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
-  async _writeCapsulePackageJson() {
+  async _writeCapsulePackageJson(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
     dataToPersist.addFile(this.capsulePackageJson.toVinylFile());
-    dataToPersist.persistAllToCapsule(this.capsule);
+    return dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
   async _getNpmVersion() {

@@ -1,3 +1,4 @@
+import graphLib, { Graph } from 'graphlib';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
@@ -15,6 +16,9 @@ import Scope from '../scope';
 import { LATEST } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
+import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
+import GeneralError from '../../error/general-error';
+import replacePackageName from '../../utils/string/replace-package-name';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -77,10 +81,8 @@ export async function exportMany({
   if (remoteName) {
     return exportIntoRemote(remoteName, ids);
   }
-  const groupedByScope = ids.toGroupByScopeName(defaultScope);
-  const results = await pMapSeries(Object.keys(groupedByScope), scopeName =>
-    exportIntoRemote(scopeName, groupedByScope[scopeName])
-  );
+  const groupedByScope = await sortAndGroupByScope();
+  const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
   return {
     exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map(r => r.updatedLocally)))
@@ -144,6 +146,81 @@ export async function exportMany({
         idsWithRemoteScopeUniq.filter(id => idsToChangeLocally.hasWithoutScopeAndVersion(id))
       )
     };
+  }
+
+  /**
+   * the topological sort is needed in case components have dependencies in other scopes.
+   * without sorting, in case remoteA/compA depends on remoteB/compB and remoteA/compA was exported
+   * first, remoteA will throw an error that remoteB/compB was not found.
+   * sorting the components topologically, ensure we export remoteB/compB first.
+   *
+   * there are a few cases to consider:
+   * 1) in case there are cycle dependencies between the scopes, it's impossible to toposort.
+   * 2) the cycle dependencies can be between different versions. e.g. remoteA/compA@0.0.1 requires
+   * remoteB/compB@0.0.1 and remoteB/compB@0.0.2 requires remoteA/compA@0.0.2.
+   * that's why when building the graph we take all versions into account and build the graph
+   * without the version number, so then we could let the graph's algorithm finding the cycle.
+   * 3) it's possible to have circle dependencies inside the same scope, and non-circle
+   * dependencies between the different scopes. in this case, the toposort should be done after
+   * removing the ids participated in the circular.
+   */
+  async function sortAndGroupByScope(): Promise<{ scopeName: string; ids: BitIds }[]> {
+    const grouped = ids.toGroupByScopeName(defaultScope);
+    const groupedArrayFormat = Object.keys(grouped).map(scopeName => ({ scopeName, ids: grouped[scopeName] }));
+    if (Object.keys(grouped).length <= 1) {
+      return groupedArrayFormat;
+    }
+    // when exporting to multiple scopes, there is a chance of dependencies between the different scopes
+    const componentsAndVersions = await scope.getComponentsAndAllLocalUnexportedVersions(ids);
+    const graph: Graph = buildOneGraphForComponentsAndMultipleVersions(componentsAndVersions);
+    const cycles = graphLib.alg.findCycles(graph);
+    const groupedArraySorted: { scopeName: string; ids: BitIds }[] = [];
+    const addToGroupedSorted = (id: BitId) => {
+      if (groupedArraySorted.length) {
+        const lastItem = groupedArraySorted[groupedArraySorted.length - 1];
+        if (lastItem.scopeName === id.scope) {
+          lastItem.ids.push(id);
+          return;
+        }
+      }
+      groupedArraySorted.push({ scopeName: id.scope || (defaultScope as string), ids: new BitIds(id) });
+    };
+    if (cycles.length) {
+      const cyclesWithMultipleScopes = cycles.filter(cycle => {
+        const bitIds = cycle.map(s => graph.node(s));
+        const firstScope = bitIds[0].scope;
+        return bitIds.some(id => id.scope !== firstScope);
+      });
+      if (cyclesWithMultipleScopes.length) {
+        throw new GeneralError(`fatal: unable to export. the following components have circular dependencies between two or more scopes
+${cyclesWithMultipleScopes.map(c => c.join(', ')).join('\n')}
+please untag the problematic components and eliminate the circle between the scopes.
+tip: use "bit graph [--all-versions]" to get a visual look of the circular dependencies`);
+      }
+      // there are circles but they are all from the same scope, add them to groupedArraySorted
+      // first, then, remove from the graph, so it will be possible to execute topsort
+      cycles.forEach(cycle => {
+        cycle.forEach(node => {
+          const id = graph.node(node);
+          addToGroupedSorted(id);
+          graph.removeNode(node);
+        });
+      });
+    }
+    // @todo: optimize in case each one of the ids has all its dependencies from the same scope,
+    // return groupedArrayFormat
+    let sortedComponents;
+    try {
+      sortedComponents = graphLib.alg.topsort(graph);
+    } catch (err) {
+      // should never arrive here, it's just a precaution, as topsort doesn't fail nicely
+      logger.error(err);
+      throw new Error(`fatal: graphlib was unable to topsort the components. circles: ${cycles}`);
+    }
+    const sortedComponentsIds = sortedComponents.map(s => graph.node(s)).reverse();
+    sortedComponentsIds.forEach(id => addToGroupedSorted(id));
+
+    return groupedArraySorted;
   }
 
   async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
@@ -294,20 +371,9 @@ async function convertToCorrectScope(
       const idWithNewScope = id.changeScope(remoteScope);
       const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
       const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
-      const singleQuote = "'";
-      const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach(quoteType => {
-        // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
-        newFileString = newFileString.replace(
-          new RegExp(quoteType + pkgNameWithOldScope + quoteType, 'g'),
-          quoteType + pkgNameWithNewScope + quoteType
-        );
-        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
-        newFileString = newFileString.replace(
-          new RegExp(`${quoteType}${pkgNameWithOldScope}/`, 'g'),
-          `${quoteType}${pkgNameWithNewScope}/`
-        );
-      });
+      // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
+      // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+      newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
     });
     if (newFileString !== fileString) {
       return Source.from(Buffer.from(newFileString));
@@ -366,20 +432,9 @@ async function changePartialNamesToFullNamesInDists(
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-      const singleQuote = "'";
-      const doubleQuotes = '"';
-      [singleQuote, doubleQuotes].forEach(quoteType => {
-        // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
-        newDistString = newDistString.replace(
-          new RegExp(quoteType + pkgNameWithoutScope + quoteType, 'g'),
-          quoteType + pkgNameWithScope + quoteType
-        );
-        // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
-        newDistString = newDistString.replace(
-          new RegExp(`${quoteType}${pkgNameWithoutScope}/`, 'g'),
-          `${quoteType}${pkgNameWithScope}/`
-        );
-      });
+      // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
+      // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+      newDistString = replacePackageName(newDistString, pkgNameWithoutScope, pkgNameWithScope);
     });
     if (newDistString !== distString) {
       return Source.from(Buffer.from(newDistString));

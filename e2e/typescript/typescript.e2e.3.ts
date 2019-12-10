@@ -645,5 +645,21 @@ export class List extends React.Component {
       const show = helper.command.showComponentParsed();
       expect(show.devPackageDependencies).to.deep.equal({ '@types/ninja': '1.0.0' });
     });
+    describe('when the types package set to be ignored in the overrides', () => {
+      before(() => {
+        const overrides = {
+          'bar/foo': {
+            devDependencies: {
+              '@types/ninja': '-'
+            }
+          }
+        };
+        helper.bitJson.addOverrides(overrides);
+      });
+      it('should not show the @types package anymore', () => {
+        const show = helper.command.showComponentParsed();
+        expect(show.devPackageDependencies).to.not.have.property('@types/ninja');
+      });
+    });
   });
 });

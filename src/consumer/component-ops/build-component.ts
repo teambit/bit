@@ -296,19 +296,26 @@ async function _runBuild({
       componentDir = componentMap.getComponentDir() || '';
     }
   }
+  // TODO: merge with the same function in consumer-component file
   let shouldBuildUponDependenciesChanges;
   const isolateFunc = async ({
     targetDir,
-    shouldBuildDependencies
+    shouldBuildDependencies,
+    installNpmPackages,
+    keepExistingCapsule
   }: {
     targetDir?: string;
     shouldBuildDependencies?: boolean;
+    installNpmPackages?: boolean;
+    keepExistingCapsule?: boolean;
   }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {
       shouldBuildDependencies,
-      writeDists: false
+      writeDists: false,
+      installNpmPackages,
+      keepExistingCapsule
     });
     return new ExtensionIsolateResult(isolator, componentWithDependencies);
   };

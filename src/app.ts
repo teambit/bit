@@ -4,6 +4,8 @@ import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 
+process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
+
 // removing this, default to longStackTraces also when env is `development`, which impacts the
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
 Promise.config({

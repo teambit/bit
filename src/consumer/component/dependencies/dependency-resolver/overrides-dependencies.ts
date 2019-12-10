@@ -10,9 +10,9 @@ import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component/consumer-component';
 import Consumer from '../../../../consumer/consumer';
-import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import { FileType, AllDependencies } from './dependencies-resolver';
+import logger from '../../../../logger/logger';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[];
@@ -27,6 +27,7 @@ export default class OverridesDependencies {
   componentFromModel: Component | null | undefined;
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
+  missingPackageDependencies: string[];
   constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer; // $FlowFixMe
@@ -35,6 +36,7 @@ export default class OverridesDependencies {
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};
+    this.missingPackageDependencies = [];
   }
 
   shouldIgnoreFile(file: string, fileType: FileType): boolean {
@@ -208,8 +210,10 @@ export default class OverridesDependencies {
     };
     const versionToAdd = packageVersionToAdd();
     if (!versionToAdd) {
-      throw new GeneralError(`unable to manually add the dependency "${dependency}" into "${this.component.id.toString()}".
-it's not an existing component, nor existing package`);
+      logger.debug(`unable to manually add the dependency "${dependency}" into "${this.component.id.toString()}".
+it's not an existing component, nor existing package (in a package.json)`);
+      this.missingPackageDependencies.push(dependency);
+      return undefined;
     }
     const packageStr = `${dependency}@${versionToAdd}`;
     this._addManuallyAddedDep(field, packageStr);
