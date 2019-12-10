@@ -76,8 +76,6 @@ export function componentToPrintableForDiff(component: Component): Record<string
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.compilerFiles = parseEnvFiles(compiler);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  obj.componentDir = component.componentMap.getComponentDir();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.language = lang || null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.tester = tester ? tester.name : null;

@@ -144,8 +144,7 @@ export default function paintComponent(
       'peerDependencies',
       'files',
       'specs',
-      'deprecated',
-      'componentDir'
+      'deprecated'
     ];
     if (detailed) {
       const extraFields = [
