@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-import { default as Capsule, Exec, Volume, Console, State } from 'capsule-new';
+import { default as Capsule, Exec, Volume, Console, State } from 'capsule';
 import librarian from 'librarian';
 import FsContainer from './container';
 import loader from '../cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)

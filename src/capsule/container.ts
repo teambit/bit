@@ -3,7 +3,7 @@ import os from 'os';
 import v4 from 'uuid';
 import * as path from 'path';
 import { spawn } from 'child_process';
-import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule-new';
+import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
 
 const debug = require('debug')('fs-container');
 
