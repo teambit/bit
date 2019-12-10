@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - [#2182](https://github.com/teambit/bit/issues/2182) fix package-name replacement of dists when a package has a tilda prefix
 - [#2182](https://github.com/teambit/bit/issues/2182) don't write dependencies dists to a capsule when their compiler was removed
+- support write dists from testers isolate API
 
 ## [14.7.1-dev.1] - 2019-12-08
 
