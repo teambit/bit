@@ -8,27 +8,48 @@ const fs = require('fs-extra');
 const cli = require('../dist/cli').default;
 const allCommands = require('../dist/cli/templates/all-help').default;
 
+const formatDescription = description => `${description.split('\n').join('  \n')}  \n\n`;
+
+const genreateOptions = options => {
+  if (!options || options.length <= 0) return '';
+  let ret = `| **Option** | **Option alias** | **Description**|  \n`;
+  ret += `|---|:-----:|---|\n`;
+  options.forEach(o => {
+    let [alias, flag, description] = o;
+    alias = alias ? '--' + alias : '   ';
+    flag = '--' + flag;
+    ret += `|\`${flag}\`|\`${alias}\`|${description}|\n`;
+  });
+  ret += `\n`;
+  return ret;
+};
+
+generateSubCommands = subCommands => {
+  let ret = '';
+  subCommands.forEach(s => {
+    ret += `### ${s.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
+    ret += `**Description**: ${formatDescription(s.description)}`;
+
+    ret += '\n';
+    ret += genreateOptions(s.options);
+    console.log('Subcommand is', s, ret);
+  });
+  return ret;
+};
+
 const generateCommand = c => {
   let result = `## ${c._name}  \n\n`;
   if (c.alias && c.alias.length > 0) {
     result += `**Alias**: \`${c.alias}\`  \n`;
   }
   result += `**Workspace only**: ${c.skipWorkspace ? 'no' : 'yes'}  \n`;
-  result += `**Description**: ${c.description.split('\n').join('  \n')}  \n\n`;
+  result += `**Description**: ${formatDescription(c.description)}`;
   result += `\`bit ${c.name}\`  \n\n`;
 
-  if (c.opts && c.opts.length > 0) {
-    result += `| **Option** | **Option alias** | **Description**|  \n`;
-    result += `|---|:-----:|---|\n`;
-    c.opts.forEach(o => {
-      let [alias, flag, description] = o;
-      alias = alias ? '--' + alias : '   ';
-      flag = '--' + flag;
-      result += `|\`${flag}\`|\`${alias}\`|${description}|\n`;
-    });
-    result += `\n`;
+  if (c.commands && c.commands.length > 0) {
+    result += generateSubCommands(c.commands);
   }
-
+  result += genreateOptions(c.opts);
   result += `---  \n`;
 
   return result;
