@@ -42,7 +42,7 @@ function getCapsuleDirByComponentName(compilerOutput, componentName) {
       'the output of capsule compiler is expected to include the build component name (see the console.log inside the compile function)'
     );
   }
-  return componentOutput.replace(`generated a capsule for ${componentName} at `, '');
+  return componentOutput.replace(new RegExp(`generated a capsule for ${componentName}(.*) at `), '');
 }
 
 const newCompilerApi = {
