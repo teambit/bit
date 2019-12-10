@@ -78,12 +78,11 @@ export default class BitCapsule extends Capsule<Exec> {
   }
 
   removePath(dir: string): Promise<any> {
-    //return this.fs.promises.unlink(dir);
     return this.container.removePath(dir);
   }
 
   symlink(src: string, dest: string): Promise<any> {
-    return this.fs.promises.symlink(src, dest);
+    return this.container.symlink(src, dest);
   }
 
   pause() {
