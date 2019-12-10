@@ -265,7 +265,7 @@ export default class Isolator {
 
   async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<string> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const execResults = await this.capsule.exec(cmd, options);
+    const execResults = await this.capsule.exec({ command: cmd.split(' '), options });
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {
