@@ -1,6 +1,6 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import Capsule from '../../../../components/core/capsule';
+import { BitCapsule } from '../../../capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -71,7 +71,7 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
+  async persistAllToCapsule(capsule: BitCapsule, opts = { keepExistingCapsule: false }) {
     this._log();
     this._validateRelative();
     if (!opts.keepExistingCapsule) {
@@ -84,7 +84,7 @@ export default class DataToPersist {
     );
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
-  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
+  async _writeFileToCapsule(capsule: BitCapsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
     // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
     if (opts.overwriteExistingFile) {
       await capsule.removePath(file.path);
@@ -112,7 +112,7 @@ export default class DataToPersist {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return capsule.outputFile(file.path, file.contents);
   }
-  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+  async atomicSymlink(capsule: BitCapsule, symlink: Symlink) {
     try {
       await capsule.symlink(symlink.src, symlink.dest);
     } catch (e) {
