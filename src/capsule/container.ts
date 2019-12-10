@@ -78,6 +78,7 @@ export default class FsContainer implements Container<Exec> {
   async resume(): Promise<void> {
     // do nothing
   }
+  // eslint-disable-next-line
   stop(ttl?: number | undefined): Promise<void> {
     return fs.remove(this.path);
   }
