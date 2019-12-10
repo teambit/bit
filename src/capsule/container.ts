@@ -13,11 +13,11 @@ export interface BitExecOption extends ExecOptions {
 export default class FsContainer implements Container<Exec> {
   fs: Volume = new Volume();
 
-  id: string = 'FS Container';
+  id = 'FS Container';
   path: string;
 
-  constructor(path?: string) {
-    this.path = path || this.generateDefaultTmpDir();
+  constructor(containerPath?: string) {
+    this.path = containerPath || this.generateDefaultTmpDir();
   }
 
   public getPath() {
@@ -88,6 +88,7 @@ export default class FsContainer implements Container<Exec> {
     throw new Error('Method not implemented.');
   }
   on(event: string, fn: (data: any) => void): void {
-    throw new Error('Method not implemented.');
+    return fn(event);
+    // throw new Error('Method not implemented.');
   }
 }

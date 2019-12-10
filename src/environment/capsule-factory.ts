@@ -2,12 +2,11 @@ import { BitCapsule, FsContainer } from '../capsule';
 
 export default (async function createCapsule(type = 'fs', dir?: string): Promise<BitCapsule> {
   function getContainerFactory() {
-    const x = {
-      createContainer: async function x() {
+    return {
+      createContainer: async function create() {
         return new FsContainer(dir);
       }
     };
-    return x;
   }
   const containerFactory = getContainerFactory();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

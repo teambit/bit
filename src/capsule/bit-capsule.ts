@@ -1,8 +1,7 @@
+// eslint-disable-next-line
 import { default as Capsule, Exec, Volume, Console, State } from 'capsule-new';
-import FsContainer from './container';
-// @ts-ignore
 import librarian from 'librarian';
-
+import FsContainer from './container';
 import loader from '../cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)
 
 export class ContainerFactoryOptions {
@@ -73,7 +72,7 @@ export default class BitCapsule extends Capsule<Exec> {
     this.componentName = componentName;
   }
 
-  outputFile(file: string, data: any, options: Object): Promise<any> {
+  outputFile(file: string, data: any, options: any): Promise<any> {
     return this.container.outputFile(file, data, options);
   }
 
@@ -101,33 +100,7 @@ export default class BitCapsule extends Capsule<Exec> {
     return this.container.inspect();
   }
 
-  /*
-  async exec(command: string, options: Object): Promise<Exec> {
-    return await this.container.exec({
-      command: command.split(' '),
-      ...options
-    });
-  }
-*/
-
-  /*  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
-    return this.container.get(options);
-  }*/
-
   destroy() {
     return this.container.stop();
   }
-
-  /*static async create<BitCapsule>(
-      containerFactory: (options: ContainerFactoryOptions) => Promise<FsContainer>,
-      volume: Volume = new Volume(),
-      config: any = {},
-      initialState: State = new State(),
-      console: Console = new Console()
-    ): Promise<BitCapsule> {
-      const container = await containerFactory(config);
-      const fs = container.fs;
-      return new BitCapsule(config.path, container, fs, console, initialState);
-    }
-  }*/
 }
