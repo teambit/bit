@@ -3,11 +3,16 @@ import os from 'os';
 import v4 from 'uuid';
 import * as path from 'path';
 import { spawn } from 'child_process';
-import { Container, ExecOptions, Exec, ContainerStatus } from '../../core/capsule';
+import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule-new';
 
 const debug = require('debug')('fs-container');
 
-export default class FsContainer implements Container {
+export interface BitExecOption extends ExecOptions {
+  cwd: string;
+}
+export default class FsContainer implements Container<Exec> {
+  fs: Volume = new Volume();
+
   id: string = 'FS Container';
   path: string;
 
@@ -45,7 +50,7 @@ export default class FsContainer implements Container {
     return fs.ensureSymlink(srcPath, destPath);
   }
 
-  async exec(execOptions: ExecOptions): Promise<Exec> {
+  async exec(execOptions: BitExecOption): Promise<Exec> {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
     // first item in the array is the command itself, other items are the flags
@@ -59,22 +64,7 @@ export default class FsContainer implements Container {
     });
     return childProcess;
   }
-  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
-    const filePath = path.join(this.getPath(), options.path);
-    return fs.createReadStream(filePath);
-  }
-  async put(
-    files: { [path: string]: string },
-    options: { overwrite?: boolean | undefined; path: string }
-  ): Promise<void> {
-    const baseDir = path.join(this.getPath(), options.path || '');
-    await fs.ensureDir(baseDir);
-    const fsOptions = options.overwrite ? {} : { flag: 'wx' };
-    const writeFilesP = Object.keys(files).map(filePath => {
-      return fs.writeFile(path.join(baseDir, filePath), files[filePath], fsOptions);
-    });
-    await Promise.all(writeFilesP);
-  }
+
   start(): Promise<void> {
     return fs.ensureDir(this.path);
   }
@@ -93,5 +83,11 @@ export default class FsContainer implements Container {
   }
   async destroy(): Promise<void> {
     await this.stop();
+  }
+  log(): Promise<Exec> {
+    throw new Error('Method not implemented.');
+  }
+  on(event: string, fn: (data: any) => void): void {
+    throw new Error('Method not implemented.');
   }
 }

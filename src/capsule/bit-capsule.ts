@@ -1,27 +1,23 @@
-import State from './state';
-import Container from './container';
+import { default as Capsule, Exec, Volume, Console, State } from 'capsule-new';
+import FsContainer from './container';
 // @ts-ignore
 import librarian from 'librarian';
-import { Volume } from 'memfs/lib/volume';
-import Console from './console';
-// @ts-ignore
-import { Union } from 'unionfs';
-import { ContainerFS } from './container';
-import { Exec } from './container';
 
-import loader from '../../../src/cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)
+import loader from '../cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)
 
 export class ContainerFactoryOptions {
   image: string = '';
   config: object = {};
 }
 
-export default class Capsule {
+export default class BitCapsule extends Capsule<Exec> {
   constructor(
+    public path: string,
+
     /**
      * container implementation the capsule is being executed within.
      */
-    protected container: Container,
+    protected container: FsContainer,
 
     /**
      * the capsule's file system.
@@ -31,18 +27,19 @@ export default class Capsule {
     /**
      * console for controlling process streams as stdout, stdin and stderr.
      */
-    readonly console: Console,
+    readonly console: Console = new Console(),
 
     /**
      * capsule's state.
      */
     readonly state: State
-  ) {}
+  ) {
+    super(container, fs, console, state);
+  }
 
   /**
    * default capsule image.
    */
-  static image = 'ubuntu';
 
   componentName?: string;
 
@@ -68,15 +65,6 @@ export default class Capsule {
     this.container.on(event, fn);
   }
 
-  updateFs(fs: { [path: string]: string }, fn: Function): void {
-    Object.keys(fs).forEach(path => {
-      // @ts-ignorex
-      this.fs.writeFile(path, fs[path], () => {
-        if (Object.keys(fs).length === 1) fn();
-      });
-    });
-  }
-
   async execNode(executable: string, args: any) {
     // TODO: better
     const loaderPrefix = this.componentName ? `isolating ${this.componentName}` : '';
@@ -84,7 +72,7 @@ export default class Capsule {
     const { patchFileSystem } = librarian.api();
     const onScriptRun = () =>
       this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
-    await patchFileSystem(executable, { args, cwd: this.container.path, log, onScriptRun });
+    await patchFileSystem(executable, { args, cwd: this.path, log, onScriptRun });
   }
 
   setComponentName(componentName: string) {
@@ -96,11 +84,12 @@ export default class Capsule {
   }
 
   removePath(dir: string): Promise<any> {
-    return this.container.removePath(dir);
+    return this.fs.promises.unlink(dir);
+    //return this.container.removePath(dir);
   }
 
   symlink(src: string, dest: string): Promise<any> {
-    return this.container.symlink(src, dest);
+    return this.fs.promises.symlink(src, dest);
   }
 
   pause() {
@@ -119,36 +108,32 @@ export default class Capsule {
     return this.container.inspect();
   }
 
+  /*
   async exec(command: string, options: Object): Promise<Exec> {
     return await this.container.exec({
       command: command.split(' '),
       ...options
     });
   }
+*/
 
-  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
+  /*  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
     return this.container.get(options);
-  }
+  }*/
 
   destroy() {
     return this.container.stop();
   }
 
-  private static buildFs(memFs: Volume, containerFs: ContainerFS): Volume {
-    const fs = new Union();
-    fs.use(memFs).use(containerFs);
-
-    return fs;
-  }
-
+  /*
   static async create<T extends Capsule>(
-    containerFactory: (options: ContainerFactoryOptions) => Promise<Container>,
+    containerFactory: (options: ContainerFactoryOptions) => Promise<Container<Exec>>,
     volume: Volume = new Volume(),
     initialState: State = new State(),
     console: Console = new Console()
   ): Promise<T> {
-    const container = await containerFactory({ image: this.image, config: this.config });
-    const fs = await ContainerFS.fromJSON(container, {});
-    return new this(container, this.buildFs(volume, fs), console, initialState) as T;
-  }
+    const container = await containerFactory( config: this.config });
+    const fs = container.fs;
+    return new this(container, fs, console, initialState) as T;
+  }*/
 }
