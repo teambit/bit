@@ -27,12 +27,14 @@ const genreateOptions = options => {
 generateSubCommands = subCommands => {
   let ret = '';
   subCommands.forEach(s => {
-    ret += `### ${s.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
+    let name = s.name.match(/^([\w\-]+)/)[0];
+    console.log(name);
+    ret += `### ${name} \n`;
+    ret += `**Usage**: ${s.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
     ret += `**Description**: ${formatDescription(s.description)}`;
 
     ret += '\n';
     ret += genreateOptions(s.options);
-    console.log('Subcommand is', s, ret);
   });
   return ret;
 };
