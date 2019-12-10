@@ -1215,11 +1215,6 @@ export default class Component {
     // for authored componentConfig is normally undefined
     const bitJson = componentConfig || workspaceConfig;
 
-    // Remove dists if compiler has been deleted
-    if (dists && !bitJson.hasCompiler()) {
-      dists = undefined;
-    }
-
     const envsContext = {
       componentDir: bitDir,
       workspaceDir: consumerPath
@@ -1278,6 +1273,11 @@ export default class Component {
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
+
+    // remove dists if compiler has been deleted
+    if (dists && !compiler) {
+      dists = undefined;
+    }
 
     return new Component({
       name: id.name,
