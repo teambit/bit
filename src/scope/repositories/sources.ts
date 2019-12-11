@@ -26,6 +26,11 @@ export type ComponentTree = {
   objects: BitObject[];
 };
 
+export type LaneTree = {
+  lane: Lane;
+  objects: BitObject[];
+};
+
 export type ComponentDef = {
   id: BitId;
   component: ModelComponent | null | undefined;
@@ -340,6 +345,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       component.addVersion(version, source.version);
     } else {
       const lane = (await this.scope.loadLane(currentLane)) || Lane.create(currentLane);
+      const existingComponentInLane = lane.getComponentByName(component.toBitId());
+      const currentHead = (existingComponentInLane && existingComponentInLane.head) || component.snaps.head;
+      if (currentHead) version.addAsOnlyParent(currentHead);
       lane.addComponent({ id: component.toBitId(), head: version.hash() });
       objectRepo.add(lane);
     }
@@ -591,5 +599,86 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     const conflictVersions = component.diffWith(existingComponent, local);
     throw new MergeConflict(component.id(), conflictVersions);
+  }
+
+  /**
+   * the merge is needed only when both, local lane and remote lane have the same component with
+   * a different head.
+   * the different head can be a result of one component is ahead of the other (fast-forward is
+   *  possible), or they both have diverged.
+   *
+   * 1a) fast-forward case, existing is ahead. existing has snapA => snapB, incoming has snapA.
+   * we can just ignore the incoming.
+   *
+   * 1b) fast-forward case, incoming is ahead. existing has snapA, incoming has snapA => snapB.
+   * we should update the existing head according to the incoming.
+   *
+   * 2) true-merge case, existing has snapA => snapB, incoming has snapA => snapC.
+   *
+   * in case this is a remote (the incoming component comes as a result of export):
+   * throw an error telling the client to pull the lane from the remote in order to merge the
+   * new snaps. the client during the merge process will create a snap-merge that is going to be
+   * the new head, which eventually becoming the case 1b.
+   *
+   * in case this is a local (the incoming component comes as a result of import):
+   * do not update the lane object. only save the data on the refs/remote/lane-name.
+   */
+  async mergeLane(
+    { lane, objects }: LaneTree,
+    local: boolean
+  ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
+    const repo = this.objects();
+    const addObjects = () => objects.forEach(obj => repo.add(obj));
+    const existingLane = await this.scope.loadLane(lane.toLaneId());
+    if (!existingLane) {
+      repo.add(lane);
+    }
+    const mergeResults = await Promise.all(
+      lane.components.map(async component => {
+        const modelComponent = await this.get(component.id);
+        if (!modelComponent) {
+          throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
+        }
+        const existingComponent = existingLane ? existingLane.components.find(c => c.id.isEqual(component.id)) : null;
+        if (!existingComponent) {
+          modelComponent.laneHeadLocal = component.head;
+          const allVersions = await modelComponent.getAllVersionHashes(repo);
+          if (existingLane) existingLane.addComponent(component);
+          return { mergedComponent: modelComponent, mergedVersions: allVersions.map(h => h.toString()) };
+        }
+        if (existingComponent.head.isEqual(component.head)) {
+          return { mergedComponent: modelComponent, mergedVersions: [] };
+        }
+        modelComponent.laneHeadRemote = component.head;
+        modelComponent.laneHeadLocal = existingComponent.head;
+        const divergeResults = await modelComponent.getDivergeData(repo);
+        if (!divergeResults) {
+          throw new Error(`unable to merge lane ${lane.name}.
+the component ${component.id.toString()} doesn't have any snap in common with the incoming component, they seem to be unrelated, it's impossible to merge them
+existing: ${existingComponent.id.toString()}@${existingComponent.head}, incoming: ${component.id.toString()}@${
+            component.head
+          }`);
+        }
+        if (ModelComponent.isTrueMergePending(divergeResults)) {
+          if (local) {
+            // do not update the local lane. later, suggest to snap-merge.
+            return { mergedComponent: modelComponent, mergedVersions: [] };
+          }
+          return new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString());
+        }
+        if (ModelComponent.isRemoteAhead(divergeResults)) {
+          existingComponent.head = component.head;
+          return {
+            mergedComponent: modelComponent,
+            mergedVersions: divergeResults.snapsOnRemoteOnly.map(h => h.toString())
+          };
+        }
+        // local is ahead, nothing to merge.
+        return { mergedComponent: modelComponent, mergedVersions: [] };
+      })
+    );
+    repo.add(existingLane);
+    addObjects();
+    return mergeResults;
   }
 }

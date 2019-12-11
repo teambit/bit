@@ -19,10 +19,12 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK } from '../../../constants';
+import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_LANE } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
+import LaneId from '../../../lane-id/lane-id';
+import { Lane } from '../../../scope/models';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -35,6 +37,7 @@ export default (async function exportAction(params: {
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
+  lanes: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
@@ -52,7 +55,8 @@ async function exportComponents({
   setCurrentScope,
   includeNonStaged,
   codemod,
-  force
+  force,
+  lanes
 }: {
   ids: string[];
   remote: string | null | undefined;
@@ -61,16 +65,18 @@ async function exportComponents({
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
+  lanes: boolean;
 }): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
   const defaultScope = consumer.config.defaultScope;
-  const { idsToExport, missingScope } = await getComponentsToExport(
+  const { idsToExport, missingScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,
     remote,
     includeNonStaged,
     defaultScope,
-    force
+    force,
+    lanes
   );
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
   if (codemod) _throwForModified(consumer, idsToExport);
@@ -81,7 +87,8 @@ async function exportComponents({
     includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
-    defaultScope
+    defaultScope,
+    lanesObjects
   });
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
@@ -115,9 +122,33 @@ async function getComponentsToExport(
   remote: string | null | undefined,
   includeNonStaged: boolean,
   defaultScope: string | null | undefined,
-  force: boolean
-): Promise<{ idsToExport: BitIds; missingScope: BitId[] }> {
+  force: boolean,
+  lanes: boolean
+): Promise<{ idsToExport: BitIds; missingScope: BitId[]; lanesObjects?: Lane[] }> {
   const componentsList = new ComponentsList(consumer);
+  const getLaneNames = async (): Promise<string[]> => {
+    const lanesObj = await consumer.scope.listLanes();
+    const laneNames = lanesObj.map(lane => lane.name);
+    laneNames.push(DEFAULT_LANE);
+    return laneNames;
+  };
+  const laneNames = await getLaneNames();
+  const idsFromWorkspaceAndScope = await componentsList.listAllIdsFromWorkspaceAndScope();
+  const isUserTryingToExportLanes = () => {
+    if (lanes) return true;
+    if (!ids) return false;
+    if (ids.every(id => !laneNames.includes(id))) {
+      // if none of the ids is lane, then user is not trying to export lanes
+      return false;
+    }
+    // some or all ids are lane names, if all are not ids, user is trying to export lanes
+    return ids.every(id => {
+      if (laneNames.includes(id) && idsFromWorkspaceAndScope.hasWithoutScopeAndVersionAsString(id)) {
+        throw new GeneralError(`the id ${id} is both, a component-name and a lane-name`);
+      }
+      return laneNames.includes(id);
+    });
+  };
   const idsHaveWildcard = hasWildcard(ids);
   const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds; missingScope: BitId[] } => {
     if (remote) return { idsToExport: bitIds, missingScope: [] };
@@ -134,6 +165,38 @@ async function getComponentsToExport(
       throw new GeneralError('the operation has been canceled');
     }
   };
+  if (isUserTryingToExportLanes()) {
+    const laneIds = ids.map(laneName => new LaneId({ name: laneName }));
+    const nonExistingLanes: string[] = [];
+    const lanesObjects: Lane[] = [];
+    await Promise.all(
+      laneIds.map(async laneId => {
+        const laneObject = await consumer.scope.loadLane(laneId);
+        if (laneObject) {
+          lanesObjects.push(laneObject);
+        } else if (!laneId.isDefault()) {
+          nonExistingLanes.push(laneId.name);
+        }
+      })
+    );
+    if (nonExistingLanes.length) {
+      throw new GeneralError(
+        `unable to export the following lanes ${nonExistingLanes.join(', ')}. they don't exist or are empty`
+      );
+    }
+    loader.start(BEFORE_LOADING_COMPONENTS);
+    const compsToExportP = lanesObjects.map(async (laneObject: Lane | null) => {
+      // null in case of default-lane
+      return includeNonStaged
+        ? componentsList.listNonNewComponentsIds()
+        : componentsList.listExportPendingComponentsIds(laneObject);
+    });
+    const componentsToExport: BitIds = BitIds.fromArray(R.flatten(await Promise.all(compsToExportP)));
+    await promptForFork(componentsToExport);
+    const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
+    loader.start(loaderMsg);
+    return { ...filterNonScopeIfNeeded(componentsToExport), lanesObjects: lanesObjects.filter(l => l) };
+  }
   if (!ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = includeNonStaged

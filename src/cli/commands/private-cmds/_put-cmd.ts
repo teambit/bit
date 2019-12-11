@@ -26,7 +26,7 @@ export default class Put extends Command {
           const scopePath = fromBase64(path);
           return migrate(scopePath, false)
             .then(() => {
-              return put({ componentObjects: data, path: fromBase64(path) }, headers);
+              return put({ objectsToPush: data, path: fromBase64(path) }, headers);
             })
             .then(resolve)
             .catch(reject);

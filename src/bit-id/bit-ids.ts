@@ -1,5 +1,5 @@
 import R from 'ramda';
-import BitId from '../bit-id/bit-id';
+import BitId, { BitIdStr } from '../bit-id/bit-id';
 import forEach from '../utils/object/foreach';
 import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
@@ -38,6 +38,10 @@ export default class BitIds extends Array<BitId> {
 
   hasWithoutScopeAndVersion(bitId: BitId): boolean {
     return Boolean(this.searchWithoutScopeAndVersion(bitId));
+  }
+
+  hasWithoutScopeAndVersionAsString(bitIdStr: BitIdStr): boolean {
+    return Boolean(this.find(id => id.name === bitIdStr));
   }
 
   search(bitId: BitId): BitId | null | undefined {

@@ -83,7 +83,7 @@ path: ${err.path}`);
         return ref.loadSync(repo);
       });
 
-      objects.concat(objs);
+      objects.push(...objs);
       objs.forEach(obj => addRefs(obj));
     }
 

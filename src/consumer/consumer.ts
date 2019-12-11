@@ -603,7 +603,8 @@ export default class Consumer {
         return status;
       }
 
-      status.staged = componentFromModel.isLocallyChanged();
+      const lane = await this.scope.loadLane(this.getCurrentLane());
+      status.staged = await componentFromModel.isLocallyChangedOnLane(this.scope.objects, lane);
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();
       if (!componentFromFileSystem.id.hasVersion()) {

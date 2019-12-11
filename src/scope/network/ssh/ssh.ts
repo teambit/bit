@@ -33,6 +33,7 @@ import CustomError from '../../../error/custom-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import DependencyGraph from '../../graph/scope-graph';
 import globalFlags from '../../../cli/global-flags';
+import ObjectsToPush from '../../objects-to-push';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -369,10 +370,10 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(manyComponentObjects: ComponentObjects[], context?: Record<string, any>): Promise<string[]> {
+  pushMany(objectsToPush: ObjectsToPush, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
+    return this.exec('_put', objectsToPush.toString(), context).then((data: string) => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return payload.ids;

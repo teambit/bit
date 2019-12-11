@@ -23,7 +23,7 @@ describe('bit lane command', function() {
   });
   describe('create a snap on master then on a new lane', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponents();
@@ -48,6 +48,15 @@ describe('bit lane command', function() {
       it('should show all lanes and mark the current one', () => {
         expect(output).to.have.string('master');
         expect(output).to.have.string('* dev');
+      });
+    });
+    describe('exporting the lane', () => {
+      before(() => {
+        helper.command.exportLane('dev');
+      });
+      it('should export components on that lane', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
       });
     });
   });

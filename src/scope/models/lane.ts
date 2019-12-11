@@ -1,10 +1,13 @@
 import { v4 } from 'uuid';
-import { BitObject, Ref } from '../objects';
+import { BitObject, Ref, Repository } from '../objects';
 import { getStringifyArgs, filterObject, sha1 } from '../../utils';
 import LaneId from '../../lane-id/lane-id';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import ValidationError from '../../error/validation-error';
+import { DEFAULT_LANE } from '../../constants';
+import LaneObjects from '../lane-objects';
+import { Version } from '.';
 
 export type LaneProps = {
   name: string;
@@ -71,7 +74,7 @@ export default class Lane extends BitObject {
       hash: laneObject.hash || hash
     });
   }
-  toBuffer(pretty: boolean) {
+  toBuffer(pretty?: boolean) {
     const args = getStringifyArgs(pretty);
     const obj = this.toObject();
     const str = JSON.stringify(obj, ...args);
@@ -98,6 +101,27 @@ export default class Lane extends BitObject {
   toLaneId() {
     return new LaneId({ name: this.name });
   }
+  collectObjects(repo: Repository): Promise<LaneObjects> {
+    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
+      .then(([rawComponent, objects]) => new LaneObjects(rawComponent, objects))
+      .catch(err => {
+        if (err.code === 'ENOENT') {
+          throw new Error(
+            `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the lane`
+          );
+        }
+        throw err;
+      });
+  }
+  collectObjectsById(repo: Repository): Promise<Array<{ id: BitId; objects: BitObject[] }>> {
+    return Promise.all(
+      this.components.map(async component => {
+        const headVersion = (await component.head.load(repo)) as Version;
+        const objects = [headVersion, ...headVersion.collect(repo)];
+        return { id: component.id, objects };
+      })
+    );
+  }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
     this.components.forEach(component => {
@@ -105,5 +129,8 @@ export default class Lane extends BitObject {
         throw new ValidationError(`${message}, the following component is duplicated "${component.id.name}"`);
       }
     });
+    if (this.name === DEFAULT_LANE) {
+      throw new ValidationError(`${message}, this name is reserved as the default lane`);
+    }
   }
 }

@@ -32,7 +32,7 @@ import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
 import HeadNotFound from '../exceptions/head-not-found';
 import ParentNotFound from '../exceptions/parent-not-found';
-import { Lane } from '.';
+import { Lane, ModelComponent } from '.';
 import LaneId from '../../lane-id/lane-id';
 
 type State = {
@@ -225,6 +225,16 @@ export default class Component extends BitObject {
    */
   static isTrueMergePending(divergeResult: DivergeResult): boolean {
     return Boolean(divergeResult.snapsOnLocalOnly.length && divergeResult.snapsOnRemoteOnly.length);
+  }
+
+  static isLocalAhead(divergeResult: DivergeResult | null): boolean {
+    if (!divergeResult) return false;
+    return Boolean(divergeResult.snapsOnLocalOnly.length);
+  }
+
+  static isRemoteAhead(divergeResult: DivergeResult | null): boolean {
+    if (!divergeResult) return false;
+    return Boolean(divergeResult.snapsOnRemoteOnly.length);
   }
 
   async populateLocalAndRemoteHeads(repo: Repository, laneId: LaneId, lane: Lane | null) {
@@ -775,6 +785,13 @@ export default class Component extends BitObject {
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     // todo: travel the parents to check whether local changes were done.
     return false;
+  }
+
+  async isLocallyChangedOnLane(repo: Repository, lane?: Lane | null): Promise<boolean> {
+    if (!lane) return this.isLocallyChanged();
+    await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
+    const divergeData = await this.getDivergeData(repo);
+    return ModelComponent.isLocalAhead(divergeData);
   }
 
   static parse(contents: string): Component {

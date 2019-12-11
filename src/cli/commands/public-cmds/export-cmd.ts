@@ -12,6 +12,7 @@ export default class Export extends Command {
   name = 'export [remote] [id...]';
   description = `export components to a remote scope.
   bit export <remote> [id...] => export (optionally given ids) to the specified remote
+  bit export <remote> <lane...> => export the specified lanes to the specified remote
   bit export ${CURRENT_UPSTREAM} [id...] => export (optionally given ids) to their current scope
   bit export => export all staged components to their current scope
   https://${BASE_DOCS_DOMAIN}/docs/export
@@ -36,7 +37,12 @@ export default class Export extends Command {
       'rewire',
       'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
     ],
-    ['f', 'force', 'force changing a component remote without asking for a confirmation']
+    ['f', 'force', 'force changing a component remote without asking for a confirmation'],
+    [
+      'l',
+      'lanes',
+      'ensure the ids argument are lane names in case of ambiguity between a component name and a lane name'
+    ]
   ];
   loader = true;
   migration = true;
@@ -50,7 +56,8 @@ export default class Export extends Command {
       setCurrentScope = false,
       all = false,
       force = false,
-      rewire = false
+      rewire = false,
+      lanes = false
     }: any
   ): Promise<any> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
@@ -75,7 +82,8 @@ export default class Export extends Command {
       setCurrentScope,
       includeNonStaged: all,
       codemod: rewire,
-      force
+      force,
+      lanes
     }).then(results => ({
       ...results,
       remote,

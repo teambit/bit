@@ -8,6 +8,7 @@ import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
 import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
+import ObjectsToPush from '../scope/objects-to-push';
 
 /**
  * @ctx bit, primary, remote
@@ -100,7 +101,7 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[], context: Record<string, any> | null | undefined): Promise<string[]> {
+  pushMany(components: ObjectsToPush, context: Record<string, any> | null | undefined): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }

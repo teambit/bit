@@ -15,6 +15,8 @@ import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wil
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import { ComponentOrigin } from '../bit-map/component-map';
+import LaneId from '../../lane-id/lane-id';
+import { Lane } from '../../scope/models';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -248,9 +250,11 @@ export default class ComponentsList {
     return BitIds.fromArray([...newComponents, ...modifiedComponents]);
   }
 
-  async listExportPendingComponentsIds(): Promise<BitIds> {
+  async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = modelComponents.filter(component => component.isLocallyChanged());
+    const pendingExportComponents = modelComponents.filter(component =>
+      component.isLocallyChangedOnLane(this.scope.objects, lane)
+    );
     const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
   }
@@ -295,6 +299,12 @@ export default class ComponentsList {
   idsFromBitMap(origin?: string): BitId[] {
     const fromBitMap = this.getFromBitMap(origin);
     return fromBitMap;
+  }
+
+  async listAllIdsFromWorkspaceAndScope(): Promise<BitIds> {
+    const idsFromBitMap = this.idsFromBitMap();
+    const idsFromObjects = await this.idsFromObjects();
+    return BitIds.uniqFromArray([...idsFromBitMap, ...idsFromObjects]);
   }
 
   /**
