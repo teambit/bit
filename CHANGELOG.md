@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add component dir to bit show (json only)
+
 ## [14.7.1-dev.3] - 2019-12-10
 
 - fix write dists from testers isolate API 
