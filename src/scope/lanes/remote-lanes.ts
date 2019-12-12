@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { REMOTE_REFS_DIR } from '../../constants';
 import { Ref } from '../objects';
 import LaneId from '../../lane-id/lane-id';
+import { Lane } from '../models';
 
 type LaneItem = { name: string; head: Ref };
 type Lanes = { [laneName: string]: LaneItem[] };
@@ -56,6 +57,12 @@ export default class RemoteLanes {
       }
       throw err;
     }
+  }
+
+  async syncWithLaneObject(remoteName: string, lane: Lane) {
+    await Promise.all(
+      lane.components.map(component => this.addEntry(remoteName, lane.toLaneId(), component.id.name, component.head))
+    );
   }
 
   composeRemoteLanePath(remoteName: string, laneName: string) {

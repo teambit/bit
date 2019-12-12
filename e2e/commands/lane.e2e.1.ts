@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -57,6 +58,10 @@ describe('bit lane command', function() {
       it('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();
         expect(list).to.have.lengthOf(1);
+      });
+      it('bit status should show a clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
   });
