@@ -169,14 +169,18 @@ export async function exportMany({
     // @ts-ignore
     idsToChangeLocally.forEach(id => scope.createSymlink(id, remoteNameStr));
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
-    if (idsToChangeLocally.length) {
-      await Promise.all(
-        lanes.map(async lane => {
+
+    // update lanes
+    await Promise.all(
+      lanes.map(async lane => {
+        if (idsToChangeLocally.length) {
+          // otherwise, we don't want to update scope-name of components in the lane object
           scope.objects.add(lane);
-          await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
-        })
-      );
-    }
+        }
+        await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
+      })
+    );
+
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
     const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
