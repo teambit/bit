@@ -218,7 +218,7 @@ describe('bit snap command', function() {
       });
       it('should prevent exporting the component', () => {
         const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
-        const ids = [`${helper.scopes.remote}/bar/foo`];
+        const ids = [{ id: `${helper.scopes.remote}/bar/foo` }];
         const error = new MergeConflictOnRemote([], ids);
         helper.general.expectToThrow(exportFunc, error);
       });

@@ -1,5 +1,4 @@
 import { loadScope } from '../../../scope';
-import ComponentObjects from '../../../scope/component-objects';
 import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
@@ -16,7 +15,7 @@ export type ComponentObjectsInput = {
 
 export default (async function put(
   { path, objectsToPush }: ComponentObjectsInput,
-  headers: Record<string, any> | null | undefined
+  headers: Record<string, any>
 ): Promise<string[]> {
   if (typeof objectsToPush === 'string') {
     objectsToPush = ObjectsToPush.fromString(objectsToPush);

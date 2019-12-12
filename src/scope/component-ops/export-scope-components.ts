@@ -74,7 +74,7 @@ export async function exportMany({
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
   defaultScope: string | null | undefined;
-  lanesObjects: Lane[];
+  lanesObjects?: Lane[];
 }): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);

@@ -15,7 +15,6 @@ import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wil
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import { ComponentOrigin } from '../bit-map/component-map';
-import LaneId from '../../lane-id/lane-id';
 import { Lane } from '../../scope/models';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
@@ -252,7 +251,7 @@ export default class ComponentsList {
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = modelComponents.filter(component =>
+    const pendingExportComponents = await filterAsync(modelComponents, component =>
       component.isLocallyChangedOnLane(this.scope.objects, lane)
     );
     const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
