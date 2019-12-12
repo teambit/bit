@@ -251,7 +251,7 @@ export default class ComponentsList {
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, component =>
+    const pendingExportComponents = await filterAsync(modelComponents, (component: ModelComponent) =>
       component.isLocallyChangedOnLane(this.scope.objects, lane)
     );
     const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));

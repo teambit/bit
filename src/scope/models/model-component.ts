@@ -227,8 +227,12 @@ export default class Component extends BitObject {
     return Boolean(divergeResult.snapsOnLocalOnly.length && divergeResult.snapsOnRemoteOnly.length);
   }
 
-  static isLocalAhead(divergeResult: DivergeResult | null): boolean {
-    if (!divergeResult) return false;
+  isLocalAhead(divergeResult: DivergeResult | null): boolean {
+    if (!divergeResult) {
+      // if there is no data about the remote and the local has snaps, it might not be exported yet
+      if (!this.laneHeadRemote && (this.laneHeadLocal || this.snaps.head)) return true;
+      return false;
+    }
     return Boolean(divergeResult.snapsOnLocalOnly.length);
   }
 
@@ -791,7 +795,7 @@ export default class Component extends BitObject {
     if (!lane) return this.isLocallyChanged();
     await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
     const divergeData = await this.getDivergeData(repo);
-    return ModelComponent.isLocalAhead(divergeData);
+    return this.isLocalAhead(divergeData);
   }
 
   static parse(contents: string): Component {
