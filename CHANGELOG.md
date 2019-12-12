@@ -7,19 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.7.1-dev.3] - 2019-12-10
+## [[14.7.1] - 2019-12-12](https://github.com/teambit/bit/releases/tag/v14.7.1)
 
-- fix write dists from testers isolate API 
+### New
 
-## [14.7.1-dev.2] - 2019-12-10
+- add component root dir to bit show (json only)
+
+### Bug fixes
 
 - [#2182](https://github.com/teambit/bit/issues/2182) fix package-name replacement of dists when a package has a tilda prefix
 - [#2182](https://github.com/teambit/bit/issues/2182) don't write dependencies dists to a capsule when their compiler was removed
-- support write dists from testers isolate API
-
-## [14.7.1-dev.1] - 2019-12-08
-
-- improve isolate function for testers API
+- fix tester's isolate API
 
 ## [[14.7.0] - 2019-12-08](https://github.com/teambit/bit/releases/tag/v14.7.0)
 
