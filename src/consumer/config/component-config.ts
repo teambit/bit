@@ -170,7 +170,7 @@ export default class ComponentConfig extends AbstractConfig {
     const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, workspaceConfig);
     componentConfig.path = bitJsonPath;
     componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
-    componentConfig.packageJsonFile = packageJsonFile;
+    componentConfig.packageJsonFile = packageJsonFile as PackageJsonFile;
     return componentConfig;
   }
 }

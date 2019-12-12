@@ -12,7 +12,7 @@ import GeneralError from '../../../error/general-error';
 export default class Add extends Command {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations 
+  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components`;
   alias = 'a';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
