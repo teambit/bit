@@ -657,7 +657,7 @@ describe('bit export command', function() {
           expect(output).to.have.string(`${anotherRemote}/foo2`);
         });
       });
-      describe('adding one component as a dependency of the other', () => {
+      describe('non-circular dependency between the scopes', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
@@ -666,16 +666,75 @@ describe('bit export command', function() {
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.command.tagScope('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
-          output = helper.general.runWithTryCatch('bit export');
+          output = helper.command.export();
         });
-        // before, it was throwing an error "exportingIds.hasWithoutVersion is not a function"
-        // this makes sure, it doesn't throw this error anymore.
-        // @todo: currently, it throws an error about component-not-found, that's because it tries
+        // before, it was throwing an error about component-not-found, that's because it tried
         // to export the dependency and the dependent at the same time. If the dependent is
         // exported first, in the remote of the dependent it fails because it's not able to find
         // the dependency as it was not exported yet.
-        it('should throw an error about component was not found', () => {
-          expect(output).to.have.string('was not found');
+        it('should be able to export them after toposort them', () => {
+          expect(output).to.have.string('exported the following 2 component');
+        });
+      });
+      describe('circular dependencies between the scopes', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.fs.outputFile('foo1.js', "require('./foo2');");
+          helper.fs.outputFile('foo2.js', "require('./foo1');");
+          helper.command.tagScope('3.0.0');
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
+          output = helper.general.runWithTryCatch('bit export');
+        });
+        it('should throw an error about circle dependencies', () => {
+          expect(output).to.have.string(
+            'unable to export. the following components have circular dependencies between two or more scopes'
+          );
+        });
+      });
+      describe('circular dependencies between the scopes in different versions', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.fs.outputFile('foo1.js', "require('./foo2');");
+
+          helper.command.tagScope('3.0.0');
+          helper.fs.outputFile('foo1.js', '');
+          helper.fs.outputFile('foo2.js', "require('./foo1');");
+          helper.command.tagScope('4.0.0');
+
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
+          helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, anotherRemotePath);
+          output = helper.general.runWithTryCatch('bit export');
+        });
+        it('should throw an error about circle dependencies', () => {
+          expect(output).to.have.string(
+            'unable to export. the following components have circular dependencies between two or more scopes'
+          );
+        });
+      });
+      describe('circular dependencies within the same scope and a non-circular dependency between the scopes', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.fs.outputFile('foo3.js', '');
+          helper.command.addComponent('foo3.js');
+          helper.command.tagAllComponents();
+          helper.command.runCmd(`bit export ${anotherRemote} foo3`);
+          helper.fs.outputFile('foo2.js', "require('./foo3');");
+          helper.fs.outputFile('foo3.js', "require('./foo2');");
+          helper.command.tagScope('3.0.0');
+          helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
+          output = helper.command.export();
+        });
+        it('should export successfully', () => {
+          expect(output).to.have.string('exported the following 3 component');
         });
       });
       describe('having another staged component without scope-name', () => {

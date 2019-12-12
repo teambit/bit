@@ -45,6 +45,22 @@ export function buildComponentsGraphForComponentsAndVersion(
   return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
 }
 
+export function buildOneGraphForComponentsAndMultipleVersions(components: ComponentsAndVersions[]): Graph {
+  const graph = new Graph();
+  components.forEach(({ component, version }) => {
+    const bitId = component.toBitId().changeVersion(null);
+    const idStr = bitId.toString();
+    if (!graph.hasNode(idStr)) graph.setNode(idStr, bitId);
+    version.getAllDependencies().forEach(dependency => {
+      const depId = dependency.id.changeVersion(null);
+      const depIdStr = depId.toString();
+      if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, depId);
+      graph.setEdge(idStr, depIdStr);
+    });
+  });
+  return graph;
+}
+
 function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: Graph) {
   const id = bitId.toString();
   dependencies.get().forEach(dependency => {

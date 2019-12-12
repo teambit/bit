@@ -7,7 +7,40 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- change init interactive to be true by default
+## [[14.7.1] - 2019-12-12](https://github.com/teambit/bit/releases/tag/v14.7.1)
+
+### New
+
+- add component root dir to bit show (json only)
+
+### Bug fixes
+
+- [#2182](https://github.com/teambit/bit/issues/2182) fix package-name replacement of dists when a package has a tilda prefix
+- [#2182](https://github.com/teambit/bit/issues/2182) don't write dependencies dists to a capsule when their compiler was removed
+- fix tester's isolate API
+
+## [[14.7.0] - 2019-12-08](https://github.com/teambit/bit/releases/tag/v14.7.0)
+
+### New
+​
+- Tester's API can use the `isolate` function.
+- `bit status` shows untracked file dependencies recursively.
+​
+### Bug fixes
+​
+- [#2171](https://github.com/teambit/bit/issues/2171) fix component-not-found when exporting to multiple scopes and there are dependencies between them
+- [#2175](https://github.com/teambit/bit/issues/2175) add missing packages from overrides to `bit status`
+- [#2176](https://github.com/teambit/bit/issues/2176) fix workspace overrides to not leak rules to unrelated component
+- [#2178](https://github.com/teambit/bit/issues/2178) fix adding ts types packages to respect overrides settings
+​
+### Experimental
+​
+- [#2162](https://github.com/teambit/bit/pull/2162) add integration with [librarian](https://github.com/teambit/librarian)
+
+## [[14.6.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.6.0)
+
+- compress ssh args before sending
+- add new global config `ssh_no_compress`
 
 ## [[14.5.0] - 2019-11-24](https://github.com/teambit/bit/releases/tag/v14.5.0)
 

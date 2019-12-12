@@ -71,14 +71,25 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule(capsule: Capsule) {
+  async persistAllToCapsule(capsule: Capsule, opts = { keepExistingCapsule: false }) {
     this._log();
     this._validateRelative();
-    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
-    await Promise.all(this.files.map(file => this._writeFileToCapsule(capsule, file)));
+    if (!opts.keepExistingCapsule) {
+      await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    }
+    await Promise.all(
+      this.files.map(file =>
+        this._writeFileToCapsule(capsule, file, { overwriteExistingFile: !!opts.keepExistingCapsule })
+      )
+    );
     await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
   }
-  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl) {
+  async _writeFileToCapsule(capsule: Capsule, file: AbstractVinyl, opts = { overwriteExistingFile: false }) {
+    // overwriteExistingFile: if a file with the same name exists in the capsule, overwrite it
+    if (opts.overwriteExistingFile) {
+      await capsule.removePath(file.path);
+      return capsule.outputFile(file.path, file.contents, {});
+    }
     if (file.override === false) {
       // @todo, capsule hack. use capsule.fs once you get it as a component.
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

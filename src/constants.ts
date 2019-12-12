@@ -226,6 +226,8 @@ export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
 export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 
+export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
+
 /**
  * git hooks
  */
@@ -409,3 +411,6 @@ export const HASH_SIZE = 40;
 export const LANE_SEPARATOR = ':';
 
 export const DEFAULT_LANE = 'master';
+const MISSING_DEPS_SPACE_COUNT = 10;
+export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
+export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);

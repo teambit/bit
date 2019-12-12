@@ -28,7 +28,15 @@ export default class ExtensionIsolateResult {
 
   async writeDists(builtFiles, mainDist): Promise<void> {
     const capsuleComponent: ConsumerComponent = this.componentWithDependencies.component;
-    capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+    if (!capsuleComponent.dists || capsuleComponent.dists.isEmpty()) {
+      if (!builtFiles) {
+        return;
+      }
+      capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+    }
+    // Make sure we are going to write the dists files (also for testers)
+    capsuleComponent.dists.writeDistsFiles = true;
+
     const distsToWrite = await capsuleComponent.dists.getDistsToWrite(
       capsuleComponent,
       this.isolator.capsuleBitMap,
@@ -36,6 +44,7 @@ export default class ExtensionIsolateResult {
       true,
       this.componentWithDependencies
     );
+
     if (distsToWrite) {
       distsToWrite.persistAllToCapsule(this.capsule);
     }

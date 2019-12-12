@@ -22,7 +22,7 @@ import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import { Network } from '../network';
-import { DEFAULT_SSH_READY_TIMEOUT, CFG_USER_TOKEN_KEY } from '../../../constants';
+import { DEFAULT_SSH_READY_TIMEOUT, CFG_USER_TOKEN_KEY, CFG_SSH_NO_COMPRESS } from '../../../constants';
 import RemovedObjects from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
@@ -34,6 +34,7 @@ import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-privat
 import DependencyGraph from '../../graph/scope-graph';
 import globalFlags from '../../../cli/global-flags';
 import ObjectsToPush from '../../objects-to-push';
+import * as globalConfig from '../../../api/consumer/lib/global-config';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -252,7 +253,12 @@ export default class SSH implements Network {
   }
 
   buildCmd(commandName: string, path: string, payload: any, context: any): string {
-    return `bit ${commandName} ${toBase64(path)} ${packCommand(buildCommandMessage(payload, context))}`;
+    const compress = globalConfig.getSync(CFG_SSH_NO_COMPRESS) !== 'true';
+    return `bit ${commandName} ${toBase64(path)} ${packCommand(
+      buildCommandMessage(payload, context, compress),
+      true,
+      compress
+    )}`;
   }
 
   exec(commandName: string, payload?: any, context?: Record<string, any>): Promise<any> {
@@ -363,7 +369,8 @@ export default class SSH implements Network {
 
   _unpack(data, base64 = true) {
     try {
-      return unpackCommand(data, base64);
+      const unpacked = unpackCommand(data, base64);
+      return unpacked;
     } catch (err) {
       logger.error(`unpackCommand found on error "${err}", while parsing the following string: ${data}`);
       throw new SSHInvalidResponse(data);

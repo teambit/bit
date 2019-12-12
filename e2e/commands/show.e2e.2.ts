@@ -571,7 +571,8 @@ describe('bit show command', function() {
       const overrides = {
         'bar/foo': {
           dependencies: {
-            chai: '4.3.2'
+            chai: '4.3.2',
+            react: '+'
           }
         }
       };
@@ -580,6 +581,10 @@ describe('bit show command', function() {
     it('should not show the overrides data when --detailed was not used', () => {
       const barFoo = helper.command.showComponent('bar/foo');
       expect(barFoo).to.not.have.string('overrides');
+    });
+    it('should not show missing packages from overrides', () => {
+      const barFoo = helper.command.showComponent('bar/foo');
+      expect(barFoo).to.not.have.string('react');
     });
     it('should show the overrides data when --detailed was used', () => {
       const barFoo = helper.command.showComponent('bar/foo --detailed');
