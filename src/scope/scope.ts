@@ -47,6 +47,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { IndexType, ComponentItem, LaneItem } from './objects/components-index';
 import Lane from './models/lane';
 import LaneId from '../lane-id/lane-id';
+import ObjectsToPush from './objects-to-push';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -406,12 +407,12 @@ export default class Scope {
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist = true): Promise<any> {
+  async writeManyComponentsToModel(objectsToPush: ObjectsToPush, persist = true, ids: BitId[]): Promise<any> {
     logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
-      `total componentsObjects ${componentsObjects.length}`
+      `total componentsObjects ${objectsToPush.componentsObjects.length}`
     );
-    await pMapSeries(componentsObjects, (componentObjects: ComponentObjects) =>
+    await pMapSeries(objectsToPush.componentsObjects, (componentObjects: ComponentObjects) =>
       componentObjects
         .toObjectsAsync()
         .then(objects => this.sources.merge(objects))
@@ -424,7 +425,21 @@ export default class Scope {
           )
         )
     );
-    return persist ? this.objects.persist() : Promise.resolve();
+    let nonLaneIds: BitId[] = ids;
+    await Promise.all(
+      objectsToPush.laneObjects.map(async laneBuffers => {
+        const laneObjects = await laneBuffers.toObjectsAsync();
+        const lane = laneObjects.lane;
+        if (!lane.scope) {
+          throw new Error(`writeManyComponentsToModel scope is missing from a lane ${lane.name}`);
+        }
+        await this.objects.remoteLanes.syncWithLaneObject(lane.scope, lane);
+        nonLaneIds = nonLaneIds.filter(id => id.name !== lane.name || id.scope !== lane.scope);
+        nonLaneIds.push(...lane.components.map(c => c.id));
+      })
+    );
+    if (persist) await this.objects.persist();
+    return nonLaneIds;
   }
 
   getObject(hash: string): Promise<BitObject> {

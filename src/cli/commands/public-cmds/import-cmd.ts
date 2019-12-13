@@ -31,6 +31,7 @@ export default class Import extends Command {
       'objects',
       "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
+    ['l', 'lanes', 'import lanes'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -71,6 +72,7 @@ export default class Import extends Command {
       extension = false,
       path,
       objects = false,
+      lanes = false,
       displayDependencies = false,
       environment = false,
       override = false,
@@ -89,6 +91,7 @@ export default class Import extends Command {
       extension?: boolean;
       path?: string;
       objects?: boolean;
+      lanes?: boolean;
       displayDependencies?: boolean;
       environment?: boolean;
       override?: boolean;
@@ -113,6 +116,7 @@ export default class Import extends Command {
     if (override && merge) {
       throw new GeneralError('you cant use --override and --merge flags combined');
     }
+    // @todo: reject lanes flag with envs
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);
@@ -134,6 +138,7 @@ export default class Import extends Command {
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
+      idsAreLanes: lanes,
       withEnvironments: environment,
       override,
       writeDists: !ignoreDist,

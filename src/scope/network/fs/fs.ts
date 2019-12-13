@@ -11,6 +11,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
+import ObjectsToPush from '../../objects-to-push';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -57,12 +58,13 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  fetch(bitIds: BitIds, noDependencies = false): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds, noDependencies = false, idsAreLanes = false): Promise<ComponentObjects[]> {
     const idsStr = bitIds.serialize();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return fetch(this.scopePath, idsStr, noDependencies).then(bitsMatrix => {
-      if (noDependencies) return bitsMatrix;
-      return flatten(bitsMatrix);
+    return fetch(this.scopePath, idsStr, noDependencies, idsAreLanes).then(bitsMatrix => {
+      // if (noDependencies) return bitsMatrix;
+      // return flatten(bitsMatrix); // todo: check when this flatten is needed
+      return bitsMatrix;
     });
   }
 

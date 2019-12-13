@@ -23,10 +23,11 @@ import { getScopeRemotes } from '../../scope/scope-remotes';
 import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { Version, ModelComponent } from '../../scope/models';
+import { Version, ModelComponent, Lane } from '../../scope/models';
 import { DivergeResult } from '../../scope/models/model-component';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import { DivergedComponent } from '../component/components-list';
+import { Remote } from '../../remotes';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -42,6 +43,7 @@ export type ImportOptions = {
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
   objectsOnly: boolean; // default: false
+  idsAreLanes: boolean; // default: false
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
@@ -71,6 +73,7 @@ export default class ImportComponents {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
   private divergeData: Array<{ id: BitId; diverge: DivergeResult | null }> = [];
+  private importedLanes: Lane[] = [];
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -160,7 +163,18 @@ export default class ImportComponents {
     const bitIds: BitId[] = [];
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
-        if (hasWildcard(idStr)) {
+        if (this.options.idsAreLanes) {
+          const remotes = await getScopeRemotes(this.consumer.scope);
+          const idParsed = BitId.parse(idStr, true);
+          // @ts-ignore
+          const remote: Remote = await remotes.resolve(idParsed.scope, this.consumer.scope);
+          const objectsToPush = await remote.fetch(new BitIds(idParsed), false, undefined, undefined, true);
+          const laneObjects = await objectsToPush.laneObjects[0].toObjectsAsync();
+          const lane = laneObjects.lane;
+          this.importedLanes.push(lane);
+          const laneIds = lane.components.map(c => c.id.changeVersion(c.head.toString()));
+          bitIds.push(...laneIds);
+        } else if (hasWildcard(idStr)) {
           const ids = await getRemoteBitIdsByWildcards(idStr);
           loader.start(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
           bitIds.push(...ids);

@@ -489,10 +489,16 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(ids: BitIds, noDeps = false, context?: Record<string, any>): Promise<ComponentObjects[]> {
+  async fetch(
+    ids: BitIds,
+    noDeps = false,
+    idsAreLanes = false,
+    context?: Record<string, any>
+  ): Promise<ComponentObjects[]> {
     let options = '';
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';
+    if (idsAreLanes) options += ' --lanes';
     return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
       const parseResponse = () => {
         try {

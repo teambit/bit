@@ -14,16 +14,16 @@ export default class Fetch extends Command {
   description = 'fetch components(s) from a scope';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['n', 'no-dependencies', 'do not include component dependencies']];
+  opts = [['n', 'no-dependencies', 'do not include component dependencies'], ['', 'lanes', 'provided ids are lanes']];
 
-  action([path, args]: [string, string], { noDependencies }: any): Promise<any> {
+  action([path, args]: [string, string], { noDependencies, lanes }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return fetch(scopePath, payload, noDependencies, headers);
+      return fetch(scopePath, payload, noDependencies, lanes, headers);
     });
   }
 

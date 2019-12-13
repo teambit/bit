@@ -63,6 +63,21 @@ describe('bit lane command', function() {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
+      describe('importing the lane', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('dev --lanes');
+        });
+        it('should import components on that lane', () => {
+          const list = helper.command.listLocalScopeParsed();
+          expect(list).to.have.lengthOf(1);
+        });
+        it('bit status should show a clean state', () => {
+          const output = helper.command.runCmd('bit status');
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+      });
     });
   });
   describe('create a snap on a new lane then tagged', () => {

@@ -11,6 +11,7 @@ import { Version } from '.';
 
 export type LaneProps = {
   name: string;
+  scope?: string;
   components?: Component[];
   hash: string;
 };
@@ -19,12 +20,14 @@ type Component = { id: BitId; head: Ref };
 
 export default class Lane extends BitObject {
   name: string;
+  scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
   components: Component[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
     this.name = props.name;
+    this.scope = props.scope;
     this.components = props.components || [];
     this._hash = props.hash;
   }
@@ -49,6 +52,7 @@ export default class Lane extends BitObject {
     return filterObject(
       {
         name: this.name,
+        scope: this.scope,
         components: this.components.map(component => ({
           id: { scope: component.id.scope, name: component.id.name },
           head: component.head.toString()
@@ -67,6 +71,7 @@ export default class Lane extends BitObject {
     const laneObject = JSON.parse(contents);
     return Lane.from({
       name: laneObject.name,
+      scope: laneObject.scope,
       components: laneObject.components.map(component => ({
         id: new BitId({ scope: component.id.scope, name: component.id.name }),
         head: new Ref(component.head)

@@ -244,11 +244,11 @@ export default class ScopeComponentsImporter {
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
         .fetch(left.map(def => def.id), this.scope, undefined, context)
-        .then(componentObjects => {
+        .then(objectsToPush => {
           logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
-          return this.scope.writeManyComponentsToModel(componentObjects, persist);
+          return this.scope.writeManyComponentsToModel(objectsToPush, persist, ids);
         })
-        .then(() => this._getExternalMany(ids, remotes));
+        .then(nonLaneIds => this._getExternalMany(nonLaneIds, remotes));
     });
   }
 
@@ -275,8 +275,8 @@ export default class ScopeComponentsImporter {
 
       return remotes
         .fetch([id], this.scope, undefined, context)
-        .then(([componentObjects]) => {
-          return this.scope.writeComponentToModel(componentObjects);
+        .then(objectsToPush => {
+          return this.scope.writeComponentToModel(objectsToPush.componentsObjects[0]);
         })
         .then(() => this._getExternal({ id, remotes, localFetch: true }));
     });
@@ -301,7 +301,7 @@ export default class ScopeComponentsImporter {
       }
       return remotes
         .fetch([id], this.scope, true, context)
-        .then(([componentObjects]) => this.scope.writeComponentToModel(componentObjects))
+        .then(objectsToPush => this.scope.writeComponentToModel(objectsToPush.componentsObjects[0]))
         .then(() => this._getExternal({ id, remotes, localFetch: true }))
         .then((versionDependencies: VersionDependencies) => versionDependencies.component);
     });
@@ -343,10 +343,10 @@ export default class ScopeComponentsImporter {
       );
       return remotes
         .fetch(left.map(def => def.id), this.scope, true, context)
-        .then(componentObjects => {
-          return this.scope.writeManyComponentsToModel(componentObjects);
+        .then(objectsToPush => {
+          return this.scope.writeManyComponentsToModel(objectsToPush, undefined, ids);
         })
-        .then(() => this._getExternalManyWithoutDependencies(ids, remotes, true));
+        .then(nonLaneIds => this._getExternalManyWithoutDependencies(nonLaneIds, remotes, true));
     });
   }
 

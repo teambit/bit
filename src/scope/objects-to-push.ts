@@ -1,3 +1,4 @@
+import R from 'ramda';
 import ComponentObjects from './component-objects';
 import LaneObjects from './lane-objects';
 
@@ -31,5 +32,12 @@ export default class ObjectsToPush {
     const componentsObjects = components.map(componentObject => ComponentObjects.fromString(componentObject));
     const laneObjects = lanes.map(laneObj => LaneObjects.fromString(laneObj));
     return new ObjectsToPush(componentsObjects, laneObjects);
+  }
+
+  static flatten(manyObjectsToPush: ObjectsToPush[]): ObjectsToPush {
+    return new ObjectsToPush(
+      R.flatten(manyObjectsToPush.map(m => m.componentsObjects)),
+      R.flatten(manyObjectsToPush.map(m => m.laneObjects))
+    );
   }
 }

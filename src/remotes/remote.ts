@@ -78,10 +78,11 @@ export default class Remote {
     bitIds: BitIds,
     withoutDeps: boolean,
     context?: Record<string, any>,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ComponentObjects[]> {
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
+    idsAreLanes = false
+  ): Promise<ObjectsToPush> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, context));
+    return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, idsAreLanes, context));
   }
 
   latestVersions(
