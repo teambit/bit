@@ -151,6 +151,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Doctor(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Graph(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Run()
     ],
     extensionsCommands

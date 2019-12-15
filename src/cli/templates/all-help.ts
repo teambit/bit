@@ -133,6 +133,10 @@ const allCommands = [
       {
         name: 'watch',
         description: 'watch components and perform `build` on changes'
+      },
+      {
+        name: 'run',
+        description: 'run an activity in the capsule'
       }
       // {
       //   name: 'eject-conf',
