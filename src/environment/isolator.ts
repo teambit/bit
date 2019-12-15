@@ -3,7 +3,7 @@ import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import { runModule } from 'librarian';
-import Capsule from '../../components/core/capsule';
+import { BitCapsule } from '../capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
@@ -44,7 +44,7 @@ export interface IsolateOptions {
 }
 
 export default class Isolator {
-  capsule: Capsule;
+  capsule: BitCapsule;
   consumer?: Consumer;
   scope: Scope;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -59,7 +59,7 @@ export default class Isolator {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
   dir?: string;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer, dir?: string) {
+  constructor(capsule: BitCapsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
@@ -265,7 +265,7 @@ export default class Isolator {
 
   async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<string> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const execResults = await this.capsule.exec(cmd, options);
+    const execResults = await this.capsule.exec({ command: cmd.split(' '), options });
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {

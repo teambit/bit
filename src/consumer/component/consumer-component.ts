@@ -68,10 +68,10 @@ import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
 import PackageJsonFile from './package-json-file';
 import Isolator, { IsolateOptions } from '../../environment/isolator';
-import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
+import { BitCapsule } from '../../capsule';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -710,20 +710,18 @@ export default class Component {
           targetDir,
           shouldBuildDependencies,
           installNpmPackages,
-          keepExistingCapsule,
-          writeDists = false
+          keepExistingCapsule
         }: {
           targetDir?: string;
           shouldBuildDependencies?: boolean;
           installNpmPackages?: boolean;
           keepExistingCapsule?: boolean;
-          writeDists: boolean;
-        }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
+        }): Promise<{ capsule: BitCapsule; componentWithDependencies: ComponentWithDependencies }> => {
           shouldBuildDependencies;
           const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
           const componentWithDependencies = await isolator.isolate(component.id, {
             shouldBuildDependencies,
-            writeDists,
+            writeDists: false,
             installNpmPackages,
             keepExistingCapsule
           });

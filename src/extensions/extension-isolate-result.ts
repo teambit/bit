@@ -1,11 +1,11 @@
 import path from 'path';
 import Vinyl from 'vinyl';
-import Capsule from '../../components/core/capsule/dist';
 import { ComponentWithDependencies } from '../scope';
 import Isolator from '../environment/isolator';
 import ConsumerComponent from '../consumer/component';
 import { Dist, AbstractVinyl } from '../consumer/component/sources';
 import { getComponentsDependenciesLinks } from '../links/link-generator';
+import BitCapsule from '../capsule/bit-capsule';
 
 /**
  * This is a formal API for extension developers, changes in this API should result a major version.
@@ -13,7 +13,7 @@ import { getComponentsDependenciesLinks } from '../links/link-generator';
 
 export default class ExtensionIsolateResult {
   private isolator: Isolator;
-  capsule: Capsule;
+  capsule: BitCapsule;
   componentWithDependencies: ComponentWithDependencies;
 
   constructor(isolator: Isolator, componentWithDependencies: ComponentWithDependencies) {
