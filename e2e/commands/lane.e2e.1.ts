@@ -70,7 +70,7 @@ describe('bit lane command', function() {
           helper.command.importComponent('dev --lanes');
         });
         it('should import components on that lane', () => {
-          const list = helper.command.listLocalScopeParsed();
+          const list = helper.command.listLocalScopeParsed('--scope');
           expect(list).to.have.lengthOf(1);
         });
         it('bit status should show a clean state', () => {

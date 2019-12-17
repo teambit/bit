@@ -28,6 +28,7 @@ import { DivergeResult } from '../../scope/models/model-component';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
 import { DivergedComponent } from '../component/components-list';
 import { Remote } from '../../remotes';
+import { isTag } from '../../version/version-parser';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -153,6 +154,8 @@ export default class ImportComponents {
         c =>
           !c.component.id.isEqual(comp.component.id) &&
           c.component.id.isEqualWithoutVersion(comp.component.id) &&
+          isTag(c.component.id.version) &&
+          isTag(comp.component.id.version) &&
           semver.gt(c.component.id.version, comp.component.id.version)
       );
       return !sameIdHigherVersion;
@@ -493,7 +496,8 @@ export default class ImportComponents {
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
-    if (this.options.objectsOnly) return;
+    // @todo: should we fetch only objects when importing a lane?
+    if (this.options.objectsOnly || this.options.idsAreLanes) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
     if (this.options.writeConfig && !this.options.configDir) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

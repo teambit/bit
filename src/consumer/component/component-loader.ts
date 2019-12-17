@@ -11,6 +11,7 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import ObjectsToPush from '../../scope/objects-to-push';
 
 export default class ComponentLoader {
   _componentsCache: Record<string, any> = {}; // cache loaded components
@@ -187,14 +188,14 @@ export default class ComponentLoader {
 
   async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const remotes = await getScopeRemotes(this.consumer.scope);
-    let componentsObjects;
+    let objectsToPush: ObjectsToPush;
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
+      objectsToPush = await remotes.fetch([id], this.consumer.scope, false);
     } catch (err) {
       return null; // probably doesn't exist
     }
-    const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
+    const remoteComponent = await objectsToPush.componentsObjects[0].toObjectsAsync();
     return remoteComponent.component;
   }
 

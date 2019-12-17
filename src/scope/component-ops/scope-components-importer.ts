@@ -104,12 +104,17 @@ export default class ScopeComponentsImporter {
     const allIdsWithAllVersions = new BitIds();
     versionDependenciesArr.forEach(versionDependencies => {
       const versions = versionDependencies.component.component.listVersions();
+      const versionId = versionDependencies.component.id;
       const idsWithAllVersions = versions.map(version => {
         if (version === versionDependencies.component.version) return null; // imported already
-        const versionId = versionDependencies.component.id;
         return versionId.changeVersion(version);
       });
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
+      if (versionDependencies.component.component.snaps.head) {
+        allIdsWithAllVersions.push(
+          versionId.changeVersion(versionDependencies.component.component.snaps.head.toString())
+        );
+      }
     });
     if (allDepsVersions) {
       const verDepsOfOlderVersions = await this.importMany(allIdsWithAllVersions, cache);
