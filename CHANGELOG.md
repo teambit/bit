@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2196](https://github.com/teambit/bit/issues/2196) fix dependency resolution when Bit component is imported in a sub-package
+
 ## [[14.7.1] - 2019-12-12](https://github.com/teambit/bit/releases/tag/v14.7.1)
 
 ### New
