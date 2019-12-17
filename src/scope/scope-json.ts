@@ -19,7 +19,10 @@ export type ScopeJsonProps = {
   license?: string;
   groupName: string | null | undefined;
   remotes?: { name: string; url: string };
+  lanes?: { current: string; tracking: TrackLane[] };
 };
+
+type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
 
 export class ScopeJson {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -29,14 +32,16 @@ export class ScopeJson {
   license: string | null | undefined;
   remotes: { [key: string]: string };
   groupName: string;
+  lanes: { current?: string; tracking?: TrackLane[] };
 
-  constructor({ name, remotes, resolverPath, license, groupName, version }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, license, groupName, version, lanes }: ScopeJsonProps) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
     this.license = license;
     this.remotes = remotes || {};
     this.groupName = groupName || '';
+    this.lanes = lanes || {};
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -57,7 +62,8 @@ export class ScopeJson {
       resolverPath: this.resolverPath,
       license: this.license,
       groupName: this.groupName,
-      version: this.version
+      version: this.version,
+      lanes: this.lanes
     });
   }
 

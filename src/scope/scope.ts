@@ -5,7 +5,7 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore, isValidIdChunk } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   OBJECTS_DIR,
@@ -759,6 +759,30 @@ export default class Scope {
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.load(ref);
+  }
+
+  async addLane(laneName: string) {
+    const lanes = await this.listLanes();
+    if (lanes.find(lane => lane.name === laneName)) {
+      throw new GeneralError(
+        `lane "${laneName}" already exists, to switch to this lane, please use "bit checkout" command`
+      );
+    }
+    if (this.scopeJson.lanes.current === laneName) {
+      throw new GeneralError(`lane "${laneName}" was added before and is the current lane`);
+    }
+    if (!isValidIdChunk(laneName, false)) {
+      // @todo: should we allow slash?
+      throw new GeneralError(
+        `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      );
+    }
+    this.scopeJson.lanes.current = laneName;
+    await this.scopeJson.write(this.getPath());
+  }
+
+  getCurrentLane(): string | undefined {
+    return this.scopeJson.lanes.current;
   }
 
   /**

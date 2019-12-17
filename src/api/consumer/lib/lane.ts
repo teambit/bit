@@ -26,7 +26,7 @@ export default async function lane({
   const consumer: Consumer = await loadConsumer();
   let results: LaneResults;
   if (name) {
-    consumer.bitMap.addLane(name);
+    await consumer.scope.addLane(name);
     results = { added: name };
   } else {
     const currentLane = consumer.getCurrentLane();

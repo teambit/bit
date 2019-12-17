@@ -191,7 +191,7 @@ export default class Consumer {
   }
 
   getCurrentLane(): LaneId {
-    return new LaneId({ name: this.bitMap.lane || DEFAULT_LANE });
+    return new LaneId({ name: this.scope.getCurrentLane() || DEFAULT_LANE });
   }
 
   async cleanTmpFolder() {
