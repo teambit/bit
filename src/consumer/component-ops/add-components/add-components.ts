@@ -133,6 +133,8 @@ export default class AddComponents {
       emptyDirectory: [],
       existInScope: []
     };
+    this.resolvedExcludedFiles = [];
+    this.ignoreList = [];
     this.addedComponents = [];
   }
 
@@ -391,7 +393,6 @@ export default class AddComponents {
 
   // remove excluded files from file list
   async removeExcludedFiles(componentsWithFiles: AddedComponent[]) {
-    const files = R.flatten(componentsWithFiles.map(x => x.files.map(i => i.relativePath)));
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
