@@ -320,6 +320,7 @@ export default class AddComponents {
     } else {
       component.files = componentFiles;
     }
+    if (!R.isEmpty(this.exclude)) await this.removeExcludedFiles([component]);
 
     const { componentId, trackDir } = component;
     const mainFile = determineMainFile(component, foundComponentFromBitMap);
@@ -716,7 +717,6 @@ export default class AddComponents {
         if (addedResult) this.addedComponents.push(addedResult);
       }
     }
-    if (!R.isEmpty(this.exclude)) await this.removeExcludedFiles(this.addedComponents);
     Analytics.setExtraData('num_components', this.addedComponents.length);
     return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
