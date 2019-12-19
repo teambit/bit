@@ -17,7 +17,7 @@
 
 Bit is an [open-source](https://github.com/teambit/bit) cli tool for collaborating on isolated components across projects and repositories.  
 Use Bit to distribute discrete components from a design library or a project into a standalone reusable package and utilize it across applications.  
-You can set up your own server for components collaboration, or use the [bit.dev cloud](#bitdev-cloud-%f0%9f%8c%a9%ef%b8%8f) hosting for private and public components sharing.
+You can set up your own server for components collaboration, or use the [bit.dev cloud](#bitdev-cloud-%EF%B8%8F) hosting for private and public components sharing.
 
 ## Why Bit? 🎖️
 
