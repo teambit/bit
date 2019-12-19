@@ -740,7 +740,7 @@ describe('bit add command', function() {
           helper.command.addComponent('bar/*');
         });
         it('should generate a short id out of the directory only', () => {
-          const bitMap = helper.bitMap.readWithoutVersion();
+          const bitMap = helper.bitMap.readComponentsMapOnly();
           const ids = Object.keys(bitMap);
           expect(ids).to.include('baz1');
           expect(ids).to.include('baz2');
@@ -752,7 +752,7 @@ describe('bit add command', function() {
           helper.command.addComponent('bar/baz1/foo.js bar/baz2/foo.js');
         });
         it('should generate id out of the directory and the filename to not have a conflict', () => {
-          const bitMap = helper.bitMap.readWithoutVersion();
+          const bitMap = helper.bitMap.readComponentsMapOnly();
           const ids = Object.keys(bitMap);
           expect(ids).to.include('baz1/foo');
           expect(ids).to.include('baz2/foo');

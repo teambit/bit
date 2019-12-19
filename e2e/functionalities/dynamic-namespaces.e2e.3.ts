@@ -83,7 +83,7 @@ describe('dynamic namespaces', function() {
     it('should throw an error and not allow the import', () => {
       const output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/foo`);
       expect(output).to.have.string('unable to import');
-      const bitMap = helper.bitMap.readWithoutVersion();
+      const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(Object.keys(bitMap)).to.have.lengthOf(1);
     });
     it('should throw an error also after tagging', () => {
