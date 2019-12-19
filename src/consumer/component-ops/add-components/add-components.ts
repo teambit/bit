@@ -109,6 +109,7 @@ export default class AddComponents {
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  resolvedExcludedFiles: string[];
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
@@ -390,17 +391,14 @@ export default class AddComponents {
   // remove excluded files from file list
   async removeExcludedFiles(componentsWithFiles: AddedComponent[]) {
     const files = R.flatten(componentsWithFiles.map(x => x.files.map(i => i.relativePath)));
-    const resolvedExcludedFiles = await this.getFilesAccordingToDsl(files, this.exclude);
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (resolvedExcludedFiles.includes(mainFile)) {
+      if (this.resolvedExcludedFiles.includes(mainFile)) {
         componentWithFiles.files = [];
       } else {
         // if mainFile is excluded, exclude all files
-        componentWithFiles.files = componentWithFiles.files.filter(
-          key => !resolvedExcludedFiles.includes(key.relativePath)
-        );
+        componentWithFiles.files = componentWithFiles.files.filter(key => !this.exclude.includes(key.relativePath));
       }
     });
   }
@@ -678,11 +676,8 @@ export default class AddComponents {
     );
 
     // add excluded list to gitignore to remove excluded files from list
-    const resolvedExcludedFiles = await this.getFilesAccordingToDsl(
-      resolvedComponentPathsWithoutGitIgnore,
-      this.exclude
-    );
-    this.ignoreList = [...this.ignoreList, ...resolvedExcludedFiles];
+    this.resolvedExcludedFiles = await this.getFilesAccordingToDsl(this.exclude);
+    this.ignoreList = [...this.ignoreList, ...this.resolvedExcludedFiles];
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
@@ -718,6 +713,7 @@ export default class AddComponents {
         if (addedResult) this.addedComponents.push(addedResult);
       }
     }
+    if (!R.isEmpty(this.exclude)) await this.removeExcludedFiles(this.addedComponents);
     Analytics.setExtraData('num_components', this.addedComponents.length);
     return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
