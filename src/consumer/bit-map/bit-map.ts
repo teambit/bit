@@ -40,12 +40,14 @@ export type BitMapComponents = { [componentId: string]: ComponentMap };
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 
-const LANE_KEY = '_bit_lane';
+export const LANE_KEY = '_bit_lane';
 
 export type ResolvedConfigDir = {
   compiler: string;
   tester: string;
 };
+
+type RemoteLane = { name?: string; scope?: string };
 
 export default class BitMap {
   projectRoot: string;
@@ -53,7 +55,7 @@ export default class BitMap {
   components: BitMapComponents;
   hasChanged: boolean;
   version: string;
-  lane?: string; // if not specified, it's the default - master
+  lane: RemoteLane;
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
@@ -61,13 +63,13 @@ export default class BitMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   allTrackDirs: { [trackDir: PathLinux]: BitId } | null | undefined;
 
-  constructor(projectRoot: string, mapPath: string, version: string, lane?: string) {
+  constructor(projectRoot: string, mapPath: string, version: string, lane?: RemoteLane) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
     this.components = {};
     this.hasChanged = false;
     this.version = version;
-    this.lane = lane;
+    this.lane = lane || {};
     this.paths = {};
     this.pathsLowerCase = {};
     this._cacheIds = {};
@@ -797,8 +799,8 @@ export default class BitMap {
     return allChanges;
   }
 
-  addLane(laneName: string) {
-    this.lane = laneName;
+  addLane(remoteLane: RemoteLane) {
+    this.lane = remoteLane;
     this.hasChanged = true;
   }
 

@@ -8,6 +8,7 @@ import ValidationError from '../../error/validation-error';
 import { DEFAULT_LANE } from '../../constants';
 import LaneObjects from '../lane-objects';
 import { Version } from '.';
+import { LaneItem } from '../lanes/remote-lanes';
 
 export type LaneProps = {
   name: string;
@@ -102,6 +103,12 @@ export default class Lane extends BitObject {
     const found = this.components.find(c => c.id.isEqual(bitId));
     if (found) return found.head;
     return null;
+  }
+  addComponentsFromRemote(remoteName: string, laneItems: LaneItem[]) {
+    laneItems.forEach(laneItem => {
+      const id = new BitId({ scope: remoteName, name: laneItem.name });
+      this.components.push({ id, head: laneItem.head });
+    });
   }
   toLaneId() {
     return new LaneId({ name: this.name });

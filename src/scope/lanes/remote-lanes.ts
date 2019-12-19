@@ -5,7 +5,7 @@ import { Ref } from '../objects';
 import LaneId from '../../lane-id/lane-id';
 import { Lane } from '../models';
 
-type LaneItem = { name: string; head: Ref };
+export type LaneItem = { name: string; head: Ref };
 type Lanes = { [laneName: string]: LaneItem[] };
 
 export default class RemoteLanes {
@@ -41,6 +41,13 @@ export default class RemoteLanes {
     const existingComponent = remoteLane.find(n => n.name === componentName);
     if (!existingComponent) return null;
     return existingComponent.head;
+  }
+
+  async getRemoteLane(remoteName: string, laneId: LaneId): Promise<LaneItem[]> {
+    if (!this.remotes[remoteName] || !this.remotes[remoteName][laneId.name]) {
+      await this.loadRemoteLane(remoteName, laneId);
+    }
+    return this.remotes[remoteName][laneId.name];
   }
 
   async loadRemoteLane(remoteName: string, laneId: LaneId) {

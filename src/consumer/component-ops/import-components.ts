@@ -167,14 +167,8 @@ export default class ImportComponents {
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (this.options.idsAreLanes) {
-          const remotes = await getScopeRemotes(this.consumer.scope);
           const idParsed = BitId.parse(idStr, true);
-          // @ts-ignore
-          const remote: Remote = await remotes.resolve(idParsed.scope, this.consumer.scope);
-          const objectsToPush = await remote.fetch(new BitIds(idParsed), false, undefined, undefined, true);
-          const laneObjects = await objectsToPush.laneObjects[0].toObjectsAsync();
-          const lane = laneObjects.lane;
-          this.importedLanes.push(lane);
+          const lane = await this._importRemoteLaneObject(idParsed.scope as string, idParsed.name);
           const laneIds = lane.components.map(c => c.id.changeVersion(c.head.toString()));
           bitIds.push(...laneIds);
         } else if (hasWildcard(idStr)) {
@@ -198,6 +192,23 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
+  }
+
+  async _importRemoteLaneObject(remoteScope: string, remoteLane: string): Promise<Lane> {
+    const remotes = await getScopeRemotes(this.consumer.scope);
+    const remote: Remote = await remotes.resolve(remoteScope, this.consumer.scope);
+    const objectsToPush = await remote.fetch(
+      new BitIds(new BitId({ scope: remoteScope, name: remoteLane })),
+      false,
+      undefined,
+      undefined,
+      true
+    );
+    const laneObjects = await objectsToPush.laneObjects[0].toObjectsAsync();
+    const lane = laneObjects.lane;
+    this.importedLanes.push(lane);
+    await this.scope.objects.remoteLanes.syncWithLaneObject(remoteScope, lane);
+    return lane;
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {

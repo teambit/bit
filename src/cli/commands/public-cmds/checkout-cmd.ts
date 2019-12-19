@@ -13,7 +13,8 @@ export default class Checkout extends Command {
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
-  bit checkout <lane> => switch to the specified lane and checkout components to the head of this lane
+  bit checkout <local-lane> --lane => switch to the specified lane and checkout components to the head of this lane
+  bit checkout <remote> <lane> --lane => switch to the specified remote lane and checkout components to the head of this lane
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -28,6 +29,7 @@ export default class Checkout extends Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'remove local changes'],
     ['a', 'all', 'all components'],
+    ['', 'lane', 'checkout to a lane'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
@@ -43,9 +45,11 @@ export default class Checkout extends Command {
       manual = false,
       reset = false,
       all = false,
+      lane = false,
       verbose = false,
       skipNpmInstall = false,
-      ignoreDist = false
+      ignoreDist = false,
+      skipLaneComponentsNotInWorkspace = false
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -53,9 +57,11 @@ export default class Checkout extends Command {
       manual?: boolean;
       reset?: boolean;
       all?: boolean;
+      lane?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
       ignoreDist?: boolean;
+      skipLaneComponentsNotInWorkspace?: boolean;
     }
   ): Promise<ApplyVersionResults> {
     const checkoutProps: CheckoutProps = {
@@ -64,8 +70,10 @@ export default class Checkout extends Command {
       reset,
       all,
       verbose,
+      isLane: lane,
       skipNpmInstall,
-      ignoreDist
+      ignoreDist,
+      skipLaneComponentsNotInWorkspace
     };
     return checkout(values, checkoutProps);
   }

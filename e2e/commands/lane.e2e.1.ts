@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 
 chai.use(require('chai-fs'));
 
@@ -76,6 +77,41 @@ describe('bit lane command', function() {
         it('bit status should show a clean state', () => {
           const output = helper.command.runCmd('bit status');
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+      });
+      describe('importing the lane objects and switching to that lane', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('dev --lanes --objects');
+          helper.command.checkout(`${helper.scopes.remote} dev --lane`);
+        });
+        it('should write the component to the filesystem with the same version as the lane', () => {
+          const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
+          expect(fileContent).to.equal(fixtures.fooFixtureV2);
+        });
+        it('.bitmap should save the remote lane', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+        });
+        it('bit lane should show the component in the checked out lane', () => {
+          const lanes = helper.command.showLanesParsed();
+          expect(lanes).to.have.property('dev');
+          expect(lanes.dev).to.have.lengthOf(1);
+          expect(lanes.dev[0].id.name).to.equal('bar/foo');
+        });
+        it('bit status should not show the component as pending updates', () => {
+          const status = helper.command.statusJson();
+          expect(status.outdatedComponents).to.have.lengthOf(0);
+        });
+        it('bit status should show clean state', () => {
+          const output = helper.command.runCmd('bit status');
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        it('bit lane should show the checked out lane as the active one', () => {
+          const lanes = helper.command.showLanes();
+          expect(lanes).to.have.string('* dev');
+          expect(lanes).to.not.have.string('* master');
         });
       });
     });

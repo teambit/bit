@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import pathlib from 'path';
 import { writeFile, cleanObject } from '../utils';
 import { Remote } from '../remotes';
-import { SCOPE_JSON } from '../constants';
+import { SCOPE_JSON, DEFAULT_LANE } from '../constants';
 import BitId from '../bit-id/bit-id';
 import GeneralError from '../error/general-error';
 import { ScopeJsonNotFound } from './exceptions';
@@ -22,7 +22,7 @@ export type ScopeJsonProps = {
   lanes?: { current: string; tracking: TrackLane[] };
 };
 
-type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
+export type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
 
 export class ScopeJson {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -32,7 +32,7 @@ export class ScopeJson {
   license: string | null | undefined;
   remotes: { [key: string]: string };
   groupName: string;
-  lanes: { current?: string; tracking?: TrackLane[] };
+  lanes: { current: string; tracking: TrackLane[] };
 
   constructor({ name, remotes, resolverPath, license, groupName, version, lanes }: ScopeJsonProps) {
     this.name = name;
@@ -41,7 +41,7 @@ export class ScopeJson {
     this.license = license;
     this.remotes = remotes || {};
     this.groupName = groupName || '';
-    this.lanes = lanes || {};
+    this.lanes = lanes || { current: DEFAULT_LANE, tracking: [] };
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -18,7 +18,7 @@ import {
   CURRENT_UPSTREAM,
   DEFAULT_LANE
 } from '../constants';
-import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
+import { ScopeJson, getPath as getScopeJsonPath, TrackLane } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
@@ -781,8 +781,23 @@ export default class Scope {
     await this.scopeJson.write(this.getPath());
   }
 
-  getCurrentLane(): string | undefined {
+  getCurrentLane(): string {
     return this.scopeJson.lanes.current;
+  }
+
+  setCurrentLane(laneName: string): void {
+    this.scopeJson.lanes.current = laneName;
+  }
+
+  getLocalTrackedLaneByRemoteName(remoteLane: string, remoteScope: string): string | null {
+    const trackedLane = this.scopeJson.lanes.tracking.find(
+      t => t.remoteLane === remoteLane && t.remoteScope === remoteScope
+    );
+    return trackedLane ? trackedLane.localLane : null;
+  }
+
+  getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
+    return this.scopeJson.lanes.tracking.find(t => t.localLane === localLane);
   }
 
   /**
