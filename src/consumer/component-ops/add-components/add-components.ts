@@ -337,7 +337,8 @@ export default class AddComponents {
         trackDir,
         origin: COMPONENT_ORIGINS.AUTHORED,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        override: this.override
+        override: this.override,
+        exclude: this.exclude
       });
     };
     const componentMap = getComponentMap();

@@ -216,7 +216,8 @@ export default class ComponentWriter {
       origin: this.origin,
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
-      wrapDir: this.component.wrapDir
+      wrapDir: this.component.wrapDir,
+      exclude: this.component.exclude
     });
   }
 

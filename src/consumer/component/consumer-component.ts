@@ -166,6 +166,7 @@ export default class Component {
   originallySharedDir: PathLinux | null | undefined; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: boolean | null | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: PathLinux | null | undefined; // needed when a user adds a package.json file to the component root
+  exclude: string[] | null | undefined;
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model

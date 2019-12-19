@@ -36,6 +36,7 @@ export type ComponentMapData = {
   originallySharedDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
+  exclude?: string[];
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -58,6 +59,7 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
+  exclude?: string[];
   constructor({
     id,
     files,
@@ -67,7 +69,8 @@ export default class ComponentMap {
     configDir,
     origin,
     originallySharedDir,
-    wrapDir
+    wrapDir,
+    exclude
   }: ComponentMapData) {
     let confDir;
     if (configDir && typeof configDir === 'string') {
@@ -84,6 +87,7 @@ export default class ComponentMap {
     this.origin = origin;
     this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
+    this.exclude = exclude;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {
@@ -101,7 +105,8 @@ export default class ComponentMap {
       origin: this.origin,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
-      exported: this.exported
+      exported: this.exported,
+      exclude: this.exclude
     };
     const notNil = val => {
       return !R.isNil(val);
@@ -324,7 +329,8 @@ export default class ComponentMap {
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
-        origin: this.origin
+        origin: this.origin,
+        exclude: this.exclude
       };
       const numOfFilesBefore = this.files.length;
       const addContext: AddContext = { consumer };
