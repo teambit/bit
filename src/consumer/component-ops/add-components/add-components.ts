@@ -676,7 +676,10 @@ export default class AddComponents {
     );
 
     // add excluded list to gitignore to remove excluded files from list
-    this.resolvedExcludedFiles = await this.getFilesAccordingToDsl(this.exclude);
+    this.resolvedExcludedFiles = await this.getFilesAccordingToDsl(
+      resolvedComponentPathsWithoutGitIgnore,
+      this.exclude
+    );
     this.ignoreList = [...this.ignoreList, ...this.resolvedExcludedFiles];
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
