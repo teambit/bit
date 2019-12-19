@@ -55,6 +55,8 @@ export type AbstractConfigProps = {
   lang?: string;
   bindingPrefix?: string;
   extensions?: Extensions;
+  run?: any; // TODO: change type
+  j;
 };
 
 /**
@@ -81,6 +83,7 @@ export default class AbstractConfig {
   extensions: Extensions;
   writeToPackageJson = false;
   writeToBitJson = false;
+  run: any = null;
 
   constructor(props: AbstractConfigProps) {
     this._compiler = props.compiler || {};
@@ -88,6 +91,7 @@ export default class AbstractConfig {
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.extensions = props.extensions || DEFAULT_EXTENSIONS;
+    this.run = props.run;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

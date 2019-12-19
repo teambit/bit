@@ -234,7 +234,6 @@ export default class CommandRegistrar {
     const cmdList = this.commands.map(cmd => first(cmd.name.split(' ')));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const extensionsCmdList = this.extensionsCommands.map(cmd => first(cmd.name.split(' ')));
-    debugger;
     const aliasList = this.commands.map(cmd => first(cmd.alias.split(' ')));
 
     if (
