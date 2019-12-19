@@ -34,6 +34,7 @@ import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
 import WorkspaceConfig from '../config/workspace-config';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { PathOrDSL } from '../../consumer/component-ops/add-components/add-components';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -599,7 +600,7 @@ export default class BitMap {
     trackDir?: PathOsBased | null | undefined;
     originallySharedDir?: PathLinux | null | undefined;
     wrapDir?: PathLinux | null | undefined;
-    exclude?: string[] | null | undefined;
+    exclude?: PathOrDSL[] | null | undefined;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);

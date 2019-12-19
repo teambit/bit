@@ -8,7 +8,7 @@ import { PathOsBasedRelative, PathLinux, PathOsBased, PathLinuxRelative } from '
 import Consumer from '../consumer';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
-import { AddContext } from '../component-ops/add-components/add-components';
+import { AddContext, PathOrDSL } from '../component-ops/add-components/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
@@ -36,7 +36,7 @@ export type ComponentMapData = {
   originallySharedDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
-  exclude?: string[];
+  exclude?: PathOrDSL[];
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -59,7 +59,7 @@ export default class ComponentMap {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  exclude?: string[];
+  exclude?: PathOrDSL[];
   constructor({
     id,
     files,
