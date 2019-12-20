@@ -394,14 +394,17 @@ export default class AddComponents {
 
   // remove excluded files from file list
   async removeExcludedFiles(componentsWithFiles: AddedComponent[]) {
+    const excludeAndResolvedExcludedFiles = [...this.exclude, ...this.resolvedExcludedFiles];
     componentsWithFiles.forEach((componentWithFiles: AddedComponent) => {
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.resolvedExcludedFiles.includes(mainFile)) {
+      if (excludeAndResolvedExcludedFiles.includes(mainFile)) {
         componentWithFiles.files = [];
       } else {
         // if mainFile is excluded, exclude all files
-        componentWithFiles.files = componentWithFiles.files.filter(key => !this.exclude.includes(key.relativePath));
+        componentWithFiles.files = componentWithFiles.files.filter(
+          key => !excludeAndResolvedExcludedFiles.includes(key.relativePath)
+        );
       }
     });
   }
