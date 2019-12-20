@@ -67,8 +67,12 @@ export default class RemoteLanes {
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {
+    const laneId = lane.toLaneId();
+    if (!this.remotes[remoteName] || !this.remotes[remoteName][laneId.name]) {
+      await this.loadRemoteLane(remoteName, laneId);
+    }
     await Promise.all(
-      lane.components.map(component => this.addEntry(remoteName, lane.toLaneId(), component.id.name, component.head))
+      lane.components.map(component => this.addEntry(remoteName, laneId, component.id.name, component.head))
     );
   }
 

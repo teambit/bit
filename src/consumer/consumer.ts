@@ -199,6 +199,12 @@ export default class Consumer {
     return this.scope.loadLane(laneId);
   }
 
+  async getOrCreateCurrentLaneObject(): Promise<Lane | null> {
+    const laneId = this.getCurrentLaneId();
+    if (laneId.isDefault()) return null;
+    return (await this.scope.loadLane(laneId)) || Lane.create(laneId);
+  }
+
   async cleanTmpFolder() {
     const tmpPath = this.getTmpFolder(true);
     const exists = await fs.pathExists(tmpPath);

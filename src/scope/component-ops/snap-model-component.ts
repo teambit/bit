@@ -188,6 +188,7 @@ export default async function snapModelComponents({
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const allDependenciesGraphs = buildComponentsGraph(componentsToTag);
+  const lane = await consumer.getOrCreateCurrentLaneObject();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
@@ -216,6 +217,7 @@ export default async function snapModelComponents({
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       message,
+      lane,
       specsResults: testResult ? testResult.specs : undefined,
       resolveUnmerged
     });

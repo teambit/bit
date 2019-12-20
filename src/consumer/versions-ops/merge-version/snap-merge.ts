@@ -46,7 +46,6 @@ export default async function snapMerge(
   }
   const lane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
   const { components } = await consumer.loadComponents(BitIds.fromArray(bitIds));
-  // if (abort) return abortMerge(consumer, components);
   const allComponentsStatus = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
     component => component.mergeResults && component.mergeResults.hasConflicts
@@ -279,4 +278,8 @@ function getIdsForUnresolved(consumer: Consumer, bitIds?: BitId[]): BitId[] {
   const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
   if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
   return unresolvedComponents.map(u => new BitId(u.id));
+}
+
+export function mergeLanes() {
+  throw new Error('please implement');
 }

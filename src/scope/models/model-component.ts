@@ -279,12 +279,19 @@ export default class Component extends BitObject {
     return Boolean(divergeData.snapsOnRemoteOnly.length);
   }
 
-  async populateLocalAndRemoteHeads(repo: Repository, laneId: LaneId, lane: Lane | null) {
-    if (this.scope) {
-      this.laneHeadRemote = await repo.remoteLanes.getRef(this.scope, laneId, this.name);
-    }
+  async populateLocalAndRemoteHeads(
+    repo: Repository,
+    laneId: LaneId,
+    lane: Lane | null,
+    remoteLaneId = laneId,
+    remote = this.scope
+  ) {
     if (lane) {
       this.laneHeadLocal = lane.getComponentHead(this.toBitId());
+    }
+    if (remote) {
+      // otherwise, it was never exported, so no remote head
+      this.laneHeadRemote = await repo.remoteLanes.getRef(remote, remoteLaneId, this.name);
     }
   }
 

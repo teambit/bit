@@ -29,17 +29,21 @@ export default class Merge extends Command {
   name = 'merge [values...]';
   description = `merge changes of different component versions
   bit merge <version> [ids...] => merge changes of the given version into the checked out version
-  bit merge <lane> => merge given lane into current lane
   bit merge [ids...] => merge changes of the remote head into local, optionally use '--abort' or '--resolve'
+  bit merge <lane> --lane => merge given lane into current lane
+  bit merge <remote> <lane> --lane => merge given remote-lane into current lane
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
-    ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
-    ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
-    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
+    ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
+    ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
-    ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes']
+    ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
+    ['l', 'lane', 'merge lanes'],
+    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
+    ['m', 'message', 'override the default message for the auto snap']
   ];
   loader = true;
 
@@ -50,18 +54,24 @@ export default class Merge extends Command {
       theirs = false,
       manual = false,
       abort = false,
-      resolve = false
+      resolve = false,
+      lane = false,
+      noSnap = false,
+      message
     }: {
       ours?: boolean;
       theirs?: boolean;
       manual?: boolean;
       abort?: boolean;
       resolve?: boolean;
+      lane?: boolean;
+      noSnap?: boolean;
+      message: string;
     }
   ): Promise<ApplyVersionResults> {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
-    return merge(values, mergeStrategy as any, abort, resolve);
+    return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message);
   }
 
   report({ components, version, snappedComponents, abortedComponents }: ApplyVersionResults): string {

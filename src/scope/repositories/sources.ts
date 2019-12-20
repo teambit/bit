@@ -305,6 +305,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedCompilerDependencies,
     flattenedTesterDependencies,
     message,
+    lane,
     specsResults,
     resolveUnmerged = false
   }: {
@@ -315,6 +316,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     flattenedCompilerDependencies: BitIds;
     flattenedTesterDependencies: BitIds;
     message: string;
+    lane: Lane | null;
     specsResults?: any;
     resolveUnmerged?: boolean;
   }): Promise<ModelComponent> {
@@ -339,12 +341,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedTesterDependencies,
       specsResults
     });
-    const currentLane = consumer.getCurrentLaneId();
     objectRepo.add(version);
+    const currentLane = consumer.getCurrentLaneId();
     if (currentLane.isDefault() || !isHash(source.version)) {
       component.addVersion(version, source.version);
     } else {
-      const lane = (await this.scope.loadLane(currentLane)) || Lane.create(currentLane);
+      if (!lane) throw new Error('addSource expects to get lane Object');
       const existingComponentInLane = lane.getComponentByName(component.toBitId());
       const currentHead = (existingComponentInLane && existingComponentInLane.head) || component.snaps.head;
       if (currentHead) version.addAsOnlyParent(currentHead);

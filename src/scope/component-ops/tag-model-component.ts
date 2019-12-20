@@ -21,6 +21,7 @@ import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { Lane } from '../models';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency) => {
@@ -233,6 +234,7 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
+  const lane = await consumer.getOrCreateCurrentLaneObject();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
@@ -262,6 +264,7 @@ export default (async function tagModelComponent({
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       message,
+      lane,
       specsResults: testResult ? testResult.specs : undefined
     });
     return consumerComponent;

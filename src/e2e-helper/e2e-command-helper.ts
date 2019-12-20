@@ -177,7 +177,9 @@ export default class CommandHelper {
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
-
+  importLane(id: string) {
+    return this.runCmd(`bit import ${this.scopes.remote}/${id} --lanes`);
+  }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);
     return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
@@ -272,6 +274,13 @@ export default class CommandHelper {
 
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
+  }
+
+  switchLocalLane(lane: string) {
+    return this.runCmd(`bit checkout ${lane} --lane`);
+  }
+  switchRemoteLane(lane: string) {
+    return this.runCmd(`bit checkout ${this.scopes.remote} ${lane} --lane`);
   }
 
   mergeVersion(version: string, ids: string, flags?: string) {

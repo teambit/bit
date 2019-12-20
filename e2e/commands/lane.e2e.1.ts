@@ -68,7 +68,7 @@ describe('bit lane command', function() {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('dev --lanes');
+          helper.command.importLane('dev');
         });
         it('should import components on that lane', () => {
           const list = helper.command.listLocalScopeParsed('--scope');
@@ -83,8 +83,8 @@ describe('bit lane command', function() {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('dev --lanes --objects');
-          helper.command.checkout(`${helper.scopes.remote} dev --lane`);
+          helper.command.importLane('dev --objects');
+          helper.command.switchRemoteLane('dev');
         });
         it('should write the component to the filesystem with the same version as the lane', () => {
           const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
@@ -166,6 +166,36 @@ describe('bit lane command', function() {
     it('the tag should be saved globally, as master', () => {
       expect(lanes.master[0].id.name).to.equal('bar/foo');
       expect(lanes.master[0].head).to.equal('0.0.1');
+    });
+  });
+  describe('merging lanes', () => {
+    let authorScope;
+    let importedScope;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.createLane('dev');
+      helper.command.snapAllComponents();
+      helper.command.exportLane('dev');
+      authorScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importLane('dev --objects');
+      helper.command.switchRemoteLane('dev');
+      importedScope = helper.scopeHelper.cloneLocalScope();
+
+      helper.scopeHelper.getClonedLocalScope(authorScope);
+      helper.fixtures.populateWorkspaceWithComponentsWithV2();
+      helper.command.snapAllComponents();
+      helper.command.exportLane('dev');
+
+      helper.scopeHelper.getClonedLocalScope(importedScope);
+      helper.command.importLane('dev --objects');
+    });
+    it('bit status should show all components as pending update', () => {
+      const status = helper.command.statusJson();
+      expect(status.outdatedComponents).to.have.lengthOf(3);
     });
   });
 });
