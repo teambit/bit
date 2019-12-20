@@ -13,7 +13,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { Remotes, Remote } from '../../remotes';
 import Scope from '../scope';
-import { LATEST } from '../../constants';
+import { LATEST, DEFAULT_LANE } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
@@ -22,6 +22,7 @@ import LaneObjects from '../lane-objects';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';
 import replacePackageName from '../../utils/string/replace-package-name';
+import LaneId from '../../lane-id/lane-id';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -113,7 +114,7 @@ export async function exportMany({
     );
     const idsAndObjectsP = lanes.map(laneObj => laneObj.collectObjectsById(scope.objects));
     const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
-    const componentsAndObjects = [];
+    const componentsAndObjects: Array<{ component: ModelComponent; objects: BitObject[] }> = [];
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects();
       idsAndObjects.forEach(idAndObjects => {
@@ -180,6 +181,15 @@ export async function exportMany({
         await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
       })
     );
+    const currentLane = scope.getCurrentLane();
+    const defaultLane = new LaneId({ name: DEFAULT_LANE });
+    if (currentLane === DEFAULT_LANE && !lanes.length) {
+      // all exported from master
+      await scope.objects.remoteLanes.loadRemoteLane(remoteNameStr, defaultLane);
+      componentsAndObjects.forEach(({ component }) => {
+        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.name, component.snaps.head);
+      });
+    }
 
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported

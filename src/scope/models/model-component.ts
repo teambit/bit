@@ -828,11 +828,12 @@ export default class Component extends BitObject {
   }
 
   getLocalTagsOrHashes(): string[] {
-    if (!this.divergeData) return this.getLocalVersions();
-    const divergeData = this.getDivergeData();
     const localVersions = this.getLocalVersions();
+    if (!this.divergeData) return localVersions;
+    const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
-    if (!localHashes) return localVersions;
+    if (!localHashes.length) return localVersions;
+    if (!divergeData.snapsOnRemoteOnly.length && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
