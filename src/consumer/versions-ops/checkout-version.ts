@@ -262,9 +262,9 @@ async function getComponentStatusForLanes(
         `unable to checkout ${id.toStringWithoutVersion()}, the component is modified and belongs to another lane`
       );
     }
-    // @ts-ignore we are here because the head is same as master. so, existingBitMapId.version must be set
+
     const currentComponent: Version = await modelComponent.loadVersion(
-      existingBitMapId.version,
+      existingBitMapId.version as string, // we are here because the head is same as master. so, existingBitMapId.version must be set
       consumer.scope.objects
     );
     mergeResults = await threeWayMerge({
