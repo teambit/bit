@@ -50,7 +50,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     if (remoteScopeLane) {
       const localTrackedLane = consumer.scope.getLocalTrackedLaneByRemoteName(laneName, remoteScopeLane);
       checkoutProps.localLaneName = localTrackedLane || laneName;
-      if (consumer.getCurrentLane.name === checkoutProps.localLaneName) {
+      if (consumer.getCurrentLaneId().name === checkoutProps.localLaneName) {
         throw new GeneralError(`already checked out to "${checkoutProps.localLaneName}"`);
       }
       const remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(
@@ -76,7 +76,7 @@ then you can run "bit merge" to merge the remote lane into the local lane`);
       return;
     }
     checkoutProps.localLaneName = laneName;
-    if (consumer.getCurrentLane.name === laneName) {
+    if (consumer.getCurrentLaneId().name === laneName) {
       throw new GeneralError(`already checked out to "${laneName}"`);
     }
     const localLane = lanes.find(lane => lane.name === laneName);

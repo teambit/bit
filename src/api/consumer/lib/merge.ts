@@ -19,7 +19,7 @@ export default (async function merge(
   if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);
     // @todo: version could be the lane only or remote/lane
-    mergeResults = await snapMerge(consumer, bitIds, mergeStrategy, consumer.getCurrentLane(), abort, resolve);
+    mergeResults = await snapMerge(consumer, bitIds, mergeStrategy, consumer.getCurrentLaneId(), abort, resolve);
   } else {
     const version = firstValue;
     const ids = R.tail(values);

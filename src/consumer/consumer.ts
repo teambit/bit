@@ -37,7 +37,7 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { pathNormalizeToLinux, sortObject } from '../utils';
-import { ModelComponent, Version } from '../scope/models';
+import { ModelComponent, Version, Lane } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import * as packageJsonUtils from './component/package-json-utils';
@@ -190,8 +190,13 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
-  getCurrentLane(): LaneId {
+  getCurrentLaneId(): LaneId {
     return new LaneId({ name: this.scope.getCurrentLane() || DEFAULT_LANE });
+  }
+
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    const laneId = this.getCurrentLaneId();
+    return this.scope.loadLane(laneId);
   }
 
   async cleanTmpFolder() {
@@ -603,7 +608,7 @@ export default class Consumer {
         return status;
       }
 
-      const lane = await this.scope.loadLane(this.getCurrentLane());
+      const lane = await this.scope.loadLane(this.getCurrentLaneId());
       status.staged = await componentFromModel.isLocallyChangedOnLane(this.scope.objects, lane);
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();

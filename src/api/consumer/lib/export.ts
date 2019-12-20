@@ -166,6 +166,7 @@ async function getComponentsToExport(
     }
   };
   if (isUserTryingToExportLanes()) {
+    // @todo: stop guessing what the user wants and always ask for "--lanes"
     const laneIds = ids.map(laneName => new LaneId({ name: laneName }));
     const nonExistingLanes: string[] = [];
     const lanesObjects: Lane[] = [];

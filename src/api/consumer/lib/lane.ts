@@ -29,7 +29,7 @@ export default async function lane({
     await consumer.scope.addLane(name);
     results = { added: name };
   } else {
-    const currentLane = consumer.getCurrentLane();
+    const currentLane = consumer.getCurrentLaneId();
     const currentLaneStr = currentLane.toString();
     const lanesObjects = await consumer.scope.listLanes();
     if (components) {

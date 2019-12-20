@@ -113,6 +113,35 @@ describe('bit lane command', function() {
           expect(lanes).to.have.string('* dev');
           expect(lanes).to.not.have.string('* master');
         });
+        describe('changing the component and running bit diff', () => {
+          let diff;
+          before(() => {
+            helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+            diff = helper.command.diff();
+          });
+          it('should show the diff between the filesystem and the lane', () => {
+            expect(diff).to.have.string("-module.exports = function foo() { return 'got foo v2'; }");
+            expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v3'; }");
+          });
+          it('should not show the diff between the filesystem and master', () => {
+            expect(diff).to.not.have.string("-module.exports = function foo() { return 'got foo'; }");
+          });
+        });
+        describe("snapping the component (so, it's an imported lane with local snaps)", () => {
+          before(() => {
+            helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+            helper.command.snapAllComponents();
+          });
+          it('bit status should show the component as staged', () => {
+            const status = helper.command.statusJson();
+            expect(status.stagedComponents).to.have.lengthOf(1);
+          });
+          it('bit status should show the staged hash', () => {
+            const status = helper.command.status();
+            const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
+            expect(status).to.have.string(localSnap);
+          });
+        });
       });
     });
   });

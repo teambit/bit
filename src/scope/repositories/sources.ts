@@ -339,7 +339,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedTesterDependencies,
       specsResults
     });
-    const currentLane = consumer.getCurrentLane();
+    const currentLane = consumer.getCurrentLaneId();
     objectRepo.add(version);
     if (currentLane.isDefault() || !isHash(source.version)) {
       component.addVersion(version, source.version);
@@ -651,22 +651,16 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
         modelComponent.laneHeadRemote = component.head;
         modelComponent.laneHeadLocal = existingComponent.head;
-        const divergeResults = await modelComponent.getDivergeData(repo);
-        if (!divergeResults) {
-          throw new Error(`unable to merge lane ${lane.name}.
-the component ${component.id.toString()} doesn't have any snap in common with the incoming component, they seem to be unrelated, it's impossible to merge them
-existing: ${existingComponent.id.toString()}@${existingComponent.head}, incoming: ${component.id.toString()}@${
-            component.head
-          }`);
-        }
-        if (ModelComponent.isTrueMergePending(divergeResults)) {
+        await modelComponent.setDivergeData(repo);
+        const divergeResults = modelComponent.getDivergeData();
+        if (modelComponent.isTrueMergePending()) {
           if (local) {
             // do not update the local lane. later, suggest to snap-merge.
             return { mergedComponent: modelComponent, mergedVersions: [] };
           }
           return new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString());
         }
-        if (ModelComponent.isRemoteAhead(divergeResults)) {
+        if (modelComponent.isRemoteAhead()) {
           existingComponent.head = component.head;
           return {
             mergedComponent: modelComponent,

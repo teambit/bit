@@ -25,11 +25,12 @@ export type StatusResult = {
 export default (async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
+  const laneObj = await consumer.getCurrentLaneObject();
   const componentsList = new ComponentsList(consumer);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const newComponents: Component[] = await componentsList.listNewComponents(true);
   const modifiedComponent = await componentsList.listModifiedComponents(true);
-  const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
+  const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const allInvalidComponents = await componentsList.listInvalidComponents();

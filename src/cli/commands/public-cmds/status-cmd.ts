@@ -8,6 +8,7 @@ import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { ModelComponent } from '../../../scope/models';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -71,7 +72,7 @@ export default class Status extends Command {
     // troubleshooting doc
     let showTroubleshootingLink = false;
 
-    function format(component: string | Component, showVersions = false, message?: string): string {
+    function format(component: string | Component | ModelComponent, showVersions = false, message?: string): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -85,7 +86,7 @@ export default class Status extends Command {
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const localVersions = component.getLocalVersions();
+        const localVersions = component.getLocalTagsOrHashes();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
       bitFormatted += ' ... ';

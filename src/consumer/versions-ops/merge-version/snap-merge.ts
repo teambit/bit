@@ -103,13 +103,13 @@ async function getComponentStatus(consumer: Consumer, component: Component, lane
   }
   const repo = consumer.scope.objects;
   await modelComponent.populateLocalAndRemoteHeads(repo, laneId, lane);
-  const divergeResult = await modelComponent.getDivergeData(repo);
-  if (!divergeResult) return returnFailure(`component ${component.id.toString()} is already merged`);
-  const isTrueMerge = ModelComponent.isTrueMergePending(divergeResult);
+  await modelComponent.setDivergeData(repo);
+  const divergeResult = modelComponent.getDivergeData();
+  const isTrueMerge = modelComponent.isTrueMergePending();
   if (!isTrueMerge) return returnFailure(`component ${component.id.toString()} is not diverged`);
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
-  const baseSnap = divergeResult.commonSnapBeforeDiverge;
+  const baseSnap = divergeResult.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
   const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
   const remoteHead: Ref = modelComponent.laneHeadRemote as Ref;
   const currentComponent: Version = await modelComponent.loadVersion(remoteHead.toString(), repo);

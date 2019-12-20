@@ -51,7 +51,7 @@ export default class ComponentsList {
 
   async getModelComponents(): Promise<ModelComponent[]> {
     if (!this._modelComponents) {
-      this._modelComponents = await this.scope.listIncludeRemoteHead(this.consumer.getCurrentLane());
+      this._modelComponents = await this.scope.listIncludeRemoteHead(this.consumer.getCurrentLaneId());
     }
     return this._modelComponents;
   }
@@ -147,8 +147,9 @@ export default class ComponentsList {
         componentsFromFs.map(async (component: Component) => {
           const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
           if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)) return null;
-          const divergedData = await modelComponent.getDivergeData(this.scope.objects);
-          if (!divergedData || !ModelComponent.isTrueMergePending(divergedData)) return null;
+          await modelComponent.setDivergeData(this.scope.objects);
+          const divergedData = modelComponent.getDivergeData();
+          if (!modelComponent.isTrueMergePending()) return null;
           return { id: modelComponent.toBitId(), diverge: divergedData };
         })
       )).filter(x => x) as DivergedComponent[];
@@ -281,8 +282,8 @@ export default class ComponentsList {
     return BitIds.fromArray(updatedIds);
   }
 
-  async listExportPendingComponents(): Promise<ModelComponent[]> {
-    const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
+  async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
+    const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds(laneObj);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }

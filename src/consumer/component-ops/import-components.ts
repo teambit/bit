@@ -73,7 +73,7 @@ export default class ImportComponents {
   options: ImportOptions;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   mergeStatus: { [id: string]: FilesStatus };
-  private divergeData: Array<{ id: BitId; diverge: DivergeResult | null }> = [];
+  private divergeData: Array<ModelComponent> = [];
   private importedLanes: Lane[] = [];
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
@@ -119,24 +119,20 @@ export default class ImportComponents {
     await Promise.all(
       componentsWithDependencies.map(async ({ component }) => {
         const modelComponent = await this.scope.getModelComponent(component.id);
-        this.divergeData.push({
-          id: modelComponent.toBitId(),
-          diverge: await modelComponent.getDivergeData(this.scope.objects)
-        });
+        await modelComponent.setDivergeData(this.scope.objects);
+        this.divergeData.push(modelComponent);
       })
     );
   }
 
   _throwForDivergedHistory() {
     if (this.options.merge || this.options.objectsOnly) return;
-    const divergedComponents = this.divergeData.filter(
-      d => d.diverge && ModelComponent.isTrueMergePending(d.diverge)
-    ) as DivergedComponent[];
+    const divergedComponents = this.divergeData.filter(modelComponent => modelComponent.isTrueMergePending());
     if (divergedComponents.length) {
-      const divergeData = divergedComponents.map(d => ({
-        id: d.id.toString(),
-        snapsLocal: d.diverge.snapsOnLocalOnly.length,
-        snapsRemote: d.diverge.snapsOnRemoteOnly.length
+      const divergeData = divergedComponents.map(modelComponent => ({
+        id: modelComponent.id.toString(),
+        snapsLocal: modelComponent.getDivergeData().snapsOnLocalOnly.length,
+        snapsRemote: modelComponent.getDivergeData().snapsOnRemoteOnly.length
       }));
       throw new ComponentsPendingMerge(divergeData);
     }

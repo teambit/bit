@@ -50,7 +50,7 @@ export type ScopeListItem = { url: string; name: string; date: string };
 
 export type SnapModel = { head?: Ref };
 
-export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[]; commonSnapBeforeDiverge: Ref };
+export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[]; commonSnapBeforeDiverge: Ref | null };
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -89,6 +89,7 @@ export default class Component extends BitObject {
   snaps: SnapModel;
   laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  private divergeData;
 
   constructor(props: ComponentProps) {
     super();
@@ -164,10 +165,37 @@ export default class Component extends BitObject {
    * traverse by the local head, if it finds the remote head, no need to traverse by the remote
    * head. (it also means that we can do do fast-forward and no need for snap-merge).
    */
-  async getDivergeData(repo: Repository, throws = true): Promise<DivergeResult | null> {
+  async _loadDivergeData(repo: Repository, throws = true): Promise<DivergeResult> {
     const remoteHead = this.laneHeadRemote;
     const localHead = this.laneHeadLocal || this.snaps.head;
-    if (!remoteHead || !localHead || remoteHead.isEqual(localHead)) return null;
+    const emptyResults = {
+      snapsOnRemoteOnly: [],
+      snapsOnLocalOnly: [],
+      commonSnapBeforeDiverge: null
+    };
+    if (!remoteHead) {
+      if (localHead) {
+        const allVersions = await this.getAllVersionsInfo({ repo });
+        const allLocalHashes = allVersions.map(v => v.ref);
+        return {
+          snapsOnRemoteOnly: [],
+          snapsOnLocalOnly: allLocalHashes,
+          commonSnapBeforeDiverge: null
+        };
+      }
+      return emptyResults;
+    }
+    if (!localHead) {
+      // @todo: this is happening when there a remote head and no local head, not sure this state
+      // is even possible, maybe it is when fetching a remote before merging locally?
+      return emptyResults;
+    }
+
+    if (remoteHead.isEqual(localHead)) {
+      // no diverge they're the same
+      return emptyResults;
+    }
+
     const snapsOnLocal: Ref[] = [];
     const snapsOnRemote: Ref[] = [];
     let remoteHeadExistsLocally = false;
@@ -218,27 +246,37 @@ export default class Component extends BitObject {
     };
   }
 
+  async setDivergeData(repo: Repository, throws = true): Promise<void> {
+    if (!this.divergeData) {
+      this.divergeData = await this._loadDivergeData(repo, throws);
+    }
+    return this.divergeData;
+  }
+
+  getDivergeData(): DivergeResult {
+    if (!this.divergeData)
+      throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
+    return this.divergeData;
+  }
+
   /**
    * when a local and remote history have diverged, a true merge is needed.
    * when a remote is ahead of the local, but local has no new commits, a fast-forward merge is possible.
    * when a local is ahead of the remote, no merge is needed.
    */
-  static isTrueMergePending(divergeResult: DivergeResult): boolean {
-    return Boolean(divergeResult.snapsOnLocalOnly.length && divergeResult.snapsOnRemoteOnly.length);
+  isTrueMergePending(): boolean {
+    const divergeData = this.getDivergeData();
+    return Boolean(divergeData.snapsOnLocalOnly.length && divergeData.snapsOnRemoteOnly.length);
   }
 
-  isLocalAhead(divergeResult: DivergeResult | null): boolean {
-    if (!divergeResult) {
-      // if there is no data about the remote and the local has snaps, it might not be exported yet
-      if (!this.laneHeadRemote && (this.laneHeadLocal || this.snaps.head)) return true;
-      return false;
-    }
-    return Boolean(divergeResult.snapsOnLocalOnly.length);
+  isLocalAhead(): boolean {
+    const divergeData = this.getDivergeData();
+    return Boolean(divergeData.snapsOnLocalOnly.length);
   }
 
-  static isRemoteAhead(divergeResult: DivergeResult | null): boolean {
-    if (!divergeResult) return false;
-    return Boolean(divergeResult.snapsOnRemoteOnly.length);
+  isRemoteAhead(): boolean {
+    const divergeData = this.getDivergeData();
+    return Boolean(divergeData.snapsOnRemoteOnly.length);
   }
 
   async populateLocalAndRemoteHeads(repo: Repository, laneId: LaneId, lane: Lane | null) {
@@ -782,6 +820,14 @@ export default class Component extends BitObject {
     return Object.keys(this.state.versions).filter(version => this.state.versions[version].local);
   }
 
+  getLocalTagsOrHashes(): string[] {
+    const divergeData = this.getDivergeData();
+    const localVersions = this.getLocalVersions();
+    const localHashes = divergeData.snapsOnLocalOnly;
+    if (!localHashes) return localVersions;
+    return this.switchHashesWithTagsIfExist(localHashes);
+  }
+
   isLocallyChanged(): boolean {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
@@ -794,8 +840,8 @@ export default class Component extends BitObject {
   async isLocallyChangedOnLane(repo: Repository, lane?: Lane | null): Promise<boolean> {
     if (!lane) return this.isLocallyChanged();
     await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
-    const divergeData = await this.getDivergeData(repo);
-    return this.isLocalAhead(divergeData);
+    await this.setDivergeData(repo);
+    return this.isLocalAhead();
   }
 
   static parse(contents: string): Component {
