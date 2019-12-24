@@ -5,6 +5,7 @@ import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
 import { loadConsumer } from './consumer';
+import logger from './logger/logger';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -21,24 +22,28 @@ HooksManager.init();
 // eslint-disable-next-line promise/catch-or-return
 loadExtensions().then(async extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
-  const consumer = await loadConsumer();
-  if (consumer) await capsuleOrchestrator.buildPools();
-
-  extensions.forEach(extension => {
-    extension.registerHookActionsOnHooksManager();
-  });
-  const extensionsCommands = extensions.reduce((acc, curr) => {
-    if (curr.commands && curr.commands.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc = acc.concat(curr.commands);
-    }
-    return acc;
-  }, []);
-  const registrar = buildRegistrar(extensionsCommands);
-
   try {
-    registrar.run();
-  } catch (err) {
-    console.error('loud rejected:', err); // eslint-disable-line no-console
+    const consumer = await loadConsumer();
+    if (consumer) await capsuleOrchestrator.buildPools();
+  } catch (e) {
+    logger.info('failed loading consumer for orchestrator');
+  } finally {
+    extensions.forEach(extension => {
+      extension.registerHookActionsOnHooksManager();
+    });
+    const extensionsCommands = extensions.reduce((acc, curr) => {
+      if (curr.commands && curr.commands.length) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        acc = acc.concat(curr.commands);
+      }
+      return acc;
+    }, []);
+    const registrar = buildRegistrar(extensionsCommands);
+
+    try {
+      registrar.run();
+    } catch (err) {
+      console.error('loud rejected:', err); // eslint-disable-line no-console
+    }
   }
 });
