@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import hash from 'object-hash';
 import * as path from 'path';
+import os from 'os';
 import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
 import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
@@ -23,7 +24,8 @@ export default class FsContainer implements Container<Exec, Volume> {
   config: any;
   constructor(config?: BitContainerConfig) {
     this.config = config;
-    this.path = _.get(config, 'wrkDir', this.generateDefaultTmpDir());
+    this.path = _.get(config, 'wrkDir');
+    if (!this.path) this.path = this.generateDefaultTmpDir();
   }
 
   public getPath() {
@@ -35,7 +37,7 @@ export default class FsContainer implements Container<Exec, Volume> {
   }
 
   private generateDefaultTmpDir() {
-    return path.join(this.config.capsuleOptions.baseDir, `${this.config.bitId.toString()}_${hash(this.config)}`);
+    return path.join(os.tmpdir(), `${this.config.bitId.toString()}_${hash(this.config)}`);
     // return path.join(os.tmpdir(), v4());
   }
 
