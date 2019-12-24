@@ -3,6 +3,7 @@ import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
+import capsuleOrchestrator from './orchestrator/orchestrator';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -17,8 +18,10 @@ HooksManager.init();
 
 // Load extensions
 // eslint-disable-next-line promise/catch-or-return
-loadExtensions().then(extensions => {
+loadExtensions().then(async extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
+  await capsuleOrchestrator.buildPools();
+
   extensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
   });

@@ -58,18 +58,36 @@ export default class Isolator {
   _npmVersionHasValidated = false;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  capsuleWrkspaceMap?: { [key: string]: string };
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dir?: string;
-  constructor(capsule: BitCapsule, scope: Scope, consumer?: Consumer, dir?: string) {
+
+  constructor(
+    capsule: BitCapsule,
+    scope: Scope,
+    consumer?: Consumer,
+    dir?: string,
+    capsuleWrkspaceMap?: { [key: string]: string }
+  ) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
     this.dir = dir;
+    this.capsuleWrkspaceMap = capsuleWrkspaceMap;
   }
 
-  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
+  static async getInstance(
+    containerType = 'fs',
+    scope: Scope,
+    consumer?: Consumer,
+    dir?: string,
+    bitCapsule?: BitCapsule,
+    capsuleWrkspaceMap?: { [key: string]: string }
+  ): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
-    const capsule = await createCapsule(containerType, dir);
-    return new Isolator(capsule, scope, consumer, dir);
+    const capsule = bitCapsule || (await createCapsule(containerType, dir));
+    return new Isolator(capsule, scope, consumer, dir, capsuleWrkspaceMap);
   }
 
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
@@ -115,16 +133,19 @@ export default class Isolator {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      isolated: true
+      isolated: true,
+      capsuleWrkspaceMap: this.capsuleWrkspaceMap
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
-    await this.installComponentPackages({
-      installNpmPackages,
-      keepExistingCapsule: !!opts.keepExistingCapsule
-    });
-    await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
+    if (!this.capsuleWrkspaceMap) {
+      await this.installComponentPackages({
+        installNpmPackages,
+        keepExistingCapsule: !!opts.keepExistingCapsule
+      });
+      await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
+    }
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
@@ -132,8 +153,11 @@ export default class Isolator {
   async writeComponentsAndDependencies(opts = { keepExistingCapsule: false }) {
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     this._manipulateDir();
+
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
-    await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
+    if (!this.capsuleWrkspaceMap) {
+      await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
+    }
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
@@ -199,11 +223,12 @@ export default class Isolator {
 
   async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
-    const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
+    const allComponents = [this.componentWithDependencies.component];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
+  // amit - here we need to add a map of all the capsules so we can link the components
   async _addComponentsToRoot(opts = { keepExistingCapsule: false }): Promise<void> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

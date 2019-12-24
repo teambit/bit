@@ -41,6 +41,7 @@ export interface ManyComponentsWriterParams {
   addToRootPackageJson?: boolean;
   verbose?: boolean;
   excludeRegistryPrefix?: boolean;
+  capsuleWrkspaceMap?: { [key: string]: string };
 }
 
 /**
@@ -78,6 +79,8 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
+  capsuleWrkspaceMap?: { [key: string]: string };
+
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -99,6 +102,7 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
+    this.capsuleWrkspaceMap = params.capsuleWrkspaceMap;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -200,6 +204,7 @@ export default class ManyComponentsWriter {
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
+      capsuleWrkspaceMap: this.capsuleWrkspaceMap,
       ...this._getDefaultWriteParams(),
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
@@ -279,7 +284,8 @@ export default class ManyComponentsWriter {
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          existingComponentMap: componentMap
+          existingComponentMap: componentMap,
+          capsuleWrkspaceMap: this.capsuleWrkspaceMap
         });
         return componentWriter.populateComponentsFilesToWrite();
       });
@@ -342,7 +348,8 @@ to move all component files to a different directory, run bit remove and then bi
       bitMap: this.bitMap,
       createNpmLinkFiles: this.createNpmLinkFiles,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      writePackageJson: this.writePackageJson
+      writePackageJson: this.writePackageJson,
+      capsuleMap: this.capsuleWrkspaceMap
     });
   }
   _getComponentRootDir(bitId: BitId): PathOsBasedRelative {

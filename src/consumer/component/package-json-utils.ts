@@ -1,5 +1,6 @@
 import R from 'ramda';
 import fs from 'fs-extra';
+import path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -106,13 +107,24 @@ export function preparePackageJsonToWrite(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   override? = true,
   writeBitDependencies? = false,
-  excludeRegistryPrefix?: boolean
+  excludeRegistryPrefix?: boolean,
+  capsuleWrkspaceMap?: { [key: string]: string }
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
+      let packageDependency;
+      if (capsuleWrkspaceMap && capsuleWrkspaceMap[dep.id.toString()]) {
+        const relative = path.relative(
+          capsuleWrkspaceMap[component.id.toString()],
+          capsuleWrkspaceMap[dep.id.toString()]
+        );
+        packageDependency = `file://${relative}`;
+      } else {
+        packageDependency = getPackageDependency(bitMap, dep.id, component.id);
+      }
+      // const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
       acc[packageName] = packageDependency;
       return acc;
@@ -230,8 +242,12 @@ export function convertToValidPathForPackageManager(pathStr: PathLinux): string 
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap | null | undefined
+  dependencyComponentMap?: ComponentMap | null | undefined,
+  capsuleMap?: any
 ): string | null | undefined {
+  if (capsuleMap && capsuleMap[dependencyId.toString()]) {
+    return capsuleMap[dependencyId.toString()].wrkdir;
+  }
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
   }
