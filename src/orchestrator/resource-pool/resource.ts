@@ -13,6 +13,7 @@ export type ResourceOptions = {
    */
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export default abstract class Resource<T extends Object> extends EventEmitter {
   constructor(protected resource: T, private options: ResourceOptions) {
     super();
@@ -28,6 +29,7 @@ export default abstract class Resource<T extends Object> extends EventEmitter {
   use(): T {
     this.emit(ResourceEvents.Borrowed);
     this.setLastUsed();
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
     return new Proxy(this.resource, {

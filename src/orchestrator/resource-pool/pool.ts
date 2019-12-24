@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import ResourceFactory from './resource-factory';
 import Resource from './resource';
 import AbortablePromise from '../../utils/abortable-promise';
-import { ComponentDB } from '../db/component-db';
+import ComponentDB from '../db/component-db';
 import { BitContainerConfig } from '../../capsule/container';
 
 export enum Events {
@@ -56,7 +56,7 @@ export default class Pool<T> extends EventEmitter {
 
   protected async resourceDestroyed(resource: Resource<T>) {
     // const serialized = resource.serialize();
-    console.log('resource destroyed', resource.id);
+    // console.log('resource destroyed', resource.id);
   }
 
   public async createResource(resourceId: string, options: BitContainerConfig): Promise<Resource<T>> {
@@ -68,16 +68,16 @@ export default class Pool<T> extends EventEmitter {
 
   acquire(resourceId: string): AbortablePromise<Resource<T>> {
     return new AbortablePromise(
-      async (resolve, reject) => {
+      async resolve => {
         const availableResource = await this.db.get(resourceId);
         // @ts-ignore
         if (!availableResource) return resolve();
         // const availableResource = map[this.workspace][resourceId];
         const resource = await this.resourceFactory.obtain(JSON.stringify(availableResource));
         // this.logger.debug(`obtained resource ${resource.id}`);
-        resolve(resource);
+        return resolve(resource);
       },
-      () => console.log('aborting')
+      () => ''
     );
   }
 }

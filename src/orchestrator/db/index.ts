@@ -1,3 +1,3 @@
-import { ComponentDB } from './component-db';
+import ComponentDB from './component-db';
 
 export default ComponentDB;

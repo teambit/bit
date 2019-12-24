@@ -1,8 +1,8 @@
-import _ from 'lodash';
 import { LevelUp } from 'levelup';
 import sub from 'subleveldown';
 import { CAPSULE_MAP_DB } from '../../constants';
-export class ComponentDB {
+
+export default class ComponentDB {
   constructor(workspace?: string) {
     if (!workspace) this.db = CAPSULE_MAP_DB;
     else this.db = sub(CAPSULE_MAP_DB, workspace);

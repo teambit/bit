@@ -1,11 +1,8 @@
 import { Capsule, Exec, Volume } from 'capsule';
-import _ from 'lodash';
-import hash from 'object-hash';
 import { Resource } from './resource-pool';
 import AbortablePromise from '../utils/abortable-promise';
 import { Pool } from './resource-pool';
-import { ComponentDB } from './db/component-db';
-import { PoolNotFound } from './exceptions';
+import ComponentDB from './db/component-db';
 import WorkspacePoolManager from './workspace-pool-manager';
 import { BitCapsule } from '../capsule';
 import CapsuleFactory from './capsule-factory';

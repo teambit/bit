@@ -1,19 +1,19 @@
-import { AbstractLevelDOWN } from 'abstract-leveldown';
-import Pool, { PoolOptions } from './resource-pool/pool';
+import Pool from './resource-pool/pool';
 import Resource, { ResourceEvents } from './resource-pool/resource';
 import { ResourceFactory } from './resource-pool';
-import { ComponentDB } from './db/component-db';
+import ComponentDB from './db/component-db';
 
 export default class WorkspacePoolManager<T> extends Pool<T> {
   constructor(
     readonly workspace: string,
     protected db: ComponentDB,
-    protected resourceFactory: ResourceFactory<T>
-  ) /*  memory: MemoryStore = redisSync(),
+    protected resourceFactory: ResourceFactory<
+      T
+    > /*  memory: MemoryStore = redisSync(),
     logger: Logger,
     options: PoolOptions,
     private observer: Observer */
-  {
+  ) {
     super(workspace, db, resourceFactory);
   }
 
@@ -32,8 +32,8 @@ export default class WorkspacePoolManager<T> extends Pool<T> {
     });
 
     resource.on(ResourceEvents.Borrowed, () => {
-      const serializedResource = resource.serialize();
-      console.log('borrows', resource.id);
+      // const serializedResource = resource.serialize();
+      // console.log('borrows', resource.id);
     });
   }
 }

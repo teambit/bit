@@ -55,8 +55,8 @@ export default class Capsule extends Command {
     );
   }
   report(capsuleObj: { [bitId: string]: BitCapsule }): string {
-    return Object.entries(capsuleObj)
-      .map(([key, capsule]) => chalk.green(`${capsule.bitId.toString()}..........${capsule.wrkDir}\n`))
+    return Object.values(capsuleObj)
+      .map(capsule => chalk.green(`${capsule.bitId.toString()}..........${capsule.wrkDir}\n`))
       .join('');
   }
 }
