@@ -1,14 +1,17 @@
-// eslint-disable-next-line
-import { default as Capsule, Exec, Volume, Console, State } from 'capsule';
+import { Capsule, Exec, Volume, Console, State, ContainerFactory } from 'capsule';
 import librarian from 'librarian';
 import FsContainer from './container';
-import loader from '../cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)
+import BitId from '../bit-id/bit-id';
+import BitContainerFactory from '../orchestrator/bit-container-factory';
+import loader from '../cli/loader';
 
-export class ContainerFactoryOptions {
-  config: object = {};
-}
+export default class BitCapsule extends Capsule<Exec, Volume> {
+  get bitId(): BitId {
+    return this._bitId;
+  }
+  private _wrkDir: string;
+  private _bitId: BitId;
 
-export default class BitCapsule extends Capsule<Exec> {
   constructor(
     /**
      * container implementation the capsule is being executed within.
@@ -25,21 +28,20 @@ export default class BitCapsule extends Capsule<Exec> {
     /**
      * capsule's state.
      */
-    readonly state: State
+    readonly state: State,
+    /**
+     * config to pass capsule
+     */
+    readonly config: any = {}
   ) {
-    super(container, fs, console, state);
+    super(container, fs, console, state, config);
+    this._wrkDir = container.path;
+    this._bitId = config.bitId;
   }
 
-  /**
-   * default capsule image.
-   */
-
-  componentName?: string;
-
-  /**
-   * default capsule config.
-   */
-  static config = {};
+  get wrkDir(): string {
+    return this._wrkDir;
+  }
 
   // implement this to handle capsules ids.
   get id(): string {
@@ -58,18 +60,27 @@ export default class BitCapsule extends Capsule<Exec> {
     this.container.on(event, fn);
   }
 
-  async execNode(executable: string, args: any) {
-    // TODO: better
-    const loaderPrefix = this.componentName ? `isolating ${this.componentName}` : '';
-    const log = message => (this.componentName ? loader.setText(`${loaderPrefix}: ${message}`) : {});
-    const { patchFileSystem } = librarian.api();
-    const onScriptRun = () =>
-      this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
-    await patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
+  serialize(): string {
+    return JSON.stringify({
+      id: this.containerId,
+      wrkDir: this.container.path,
+      bitId: this.bitId,
+      capsuleOptions: this.config.capsuleOptions
+    });
+  }
+  static deSerializeConfig(config: any): string {
+    return Object.assign({}, config, { bitId: new BitId(config.bitId) });
   }
 
-  setComponentName(componentName: string) {
-    this.componentName = componentName;
+  async execNode(executable: string, args: any) {
+    // TODO: better
+    const loaderPrefix = this.bitId.toString() ? `isolating ${this.bitId.toString()}` : '';
+    const log = message => (this.bitId.toString() ? loader.setText(`${loaderPrefix}: ${message}`) : {});
+    const { patchFileSystem } = librarian.api();
+    const onScriptRun = async () => {
+      // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
+      return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
+    };
   }
 
   outputFile(file: string, data: any, options: any): Promise<any> {
@@ -102,5 +113,16 @@ export default class BitCapsule extends Capsule<Exec> {
 
   destroy() {
     return this.container.stop();
+  }
+
+  static async obtain<Exec, Volume, BitCapsule, CapsuleBaseOptions>(
+    containerFactory: BitContainerFactory,
+    raw: string
+  ): Promise<BitCapsule> {
+    const object = JSON.parse(raw);
+    const deserializedObject = Object.assign({}, object, BitCapsule.deSerializeConfig(object));
+    const container = (await containerFactory.obtain(deserializedObject)) as FsContainer;
+    // @ts-ignore
+    return new BitCapsule(container, container.fs, new Console(), new State(), deserializedObject);
   }
 }

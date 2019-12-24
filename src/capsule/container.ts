@@ -1,23 +1,29 @@
 import fs from 'fs-extra';
-import os from 'os';
-import v4 from 'uuid';
+import _ from 'lodash';
+import hash from 'object-hash';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
+import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
 
 const debug = require('debug')('fs-container');
 
 export interface BitExecOption extends ExecOptions {
   cwd: string;
 }
-export default class FsContainer implements Container<Exec> {
+export interface BitContainerConfig extends ContainerFactoryOptions {
+  other?: string;
+}
+
+export default class FsContainer implements Container<Exec, Volume> {
   fs: Volume = new Volume();
 
   id = 'FS Container';
   path: string;
-
-  constructor(containerPath?: string) {
-    this.path = containerPath || this.generateDefaultTmpDir();
+  config: any;
+  constructor(config?: BitContainerConfig) {
+    this.config = config;
+    this.path = _.get(config, 'wrkDir', this.generateDefaultTmpDir());
   }
 
   public getPath() {
@@ -29,7 +35,8 @@ export default class FsContainer implements Container<Exec> {
   }
 
   private generateDefaultTmpDir() {
-    return path.join(os.tmpdir(), v4());
+    return path.join(this.config.capsuleOptions.baseDir, `${this.config.bitId.toString()}_${hash(this.config)}`);
+    // return path.join(os.tmpdir(), v4());
   }
 
   outputFile(file, data, options) {
