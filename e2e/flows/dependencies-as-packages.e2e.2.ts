@@ -261,6 +261,27 @@ chai.use(require('chai-fs'));
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
           });
         });
+        describe('monorepo structure, import a dependency from a sub-package', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.npm.initNpm();
+            helper.fs.createNewDirectoryInLocalWorkspace('sub-pkg');
+            const subPkgDir = path.join(helper.scopes.localPath, 'sub-pkg');
+            helper.npm.initNpm(subPkgDir);
+            helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`, subPkgDir);
+            helper.fs.outputFile('sub-pkg/comp/comp.js', `require('@ci/${helper.scopes.remote}.bar.foo');`);
+            helper.command.addComponent('sub-pkg/comp/comp.js');
+          });
+          it('bit status should not show the dependency as missing', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsWithMissingDeps).to.have.lengthOf(0);
+          });
+          it('bit show should show the correct dependency', () => {
+            const show = helper.command.showComponentParsed('comp');
+            expect(show.dependencies).to.have.lengthOf(1);
+            expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/bar/foo@0.0.2`);
+          });
+        });
       });
     });
     describe('components with nested dependencies and compiler', () => {
