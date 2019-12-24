@@ -514,6 +514,7 @@ async function getLinksByDependencies(
 }
 
 export {
+  getComponentLinks,
   getEntryPointsForComponent,
   getComponentsDependenciesLinks,
   getIndexFileName,

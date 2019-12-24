@@ -34,6 +34,7 @@ import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
 import show from './lib/show';
 import paintGraph from './lib/paint-graph';
+import capsuleIsolate from './lib/capsule-isolate';
 
 export {
   init,
@@ -76,5 +77,6 @@ export {
   ejectAction,
   login,
   show,
-  paintGraph
+  paintGraph,
+  capsuleIsolate
 };

@@ -43,6 +43,7 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
+  capsuleWrkspaceMap?: { [key: string]: string };
 };
 
 export default class ComponentWriter {
@@ -60,6 +61,7 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | null | undefined;
   existingComponentMap: ComponentMap | null | undefined;
   excludeRegistryPrefix: boolean;
+  capsuleWrkspaceMap?: { [key: string]: string };
   constructor({
     component,
     writeToPath,
@@ -74,6 +76,7 @@ export default class ComponentWriter {
     writeBitDependencies = false,
     deleteBitDirContent,
     existingComponentMap,
+    capsuleWrkspaceMap,
     excludeRegistryPrefix = false
   }: ComponentWriterProps) {
     this.component = component;
@@ -90,6 +93,7 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
+    this.capsuleWrkspaceMap = capsuleWrkspaceMap;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -158,7 +162,8 @@ export default class ComponentWriter {
         this.writeToPath,
         this.override,
         this.writeBitDependencies,
-        this.excludeRegistryPrefix
+        this.excludeRegistryPrefix,
+        this.capsuleWrkspaceMap
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
