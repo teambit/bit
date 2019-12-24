@@ -740,7 +740,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         if (existingId) return existingId;
 
         // maybe the dependencies were imported as npm packages
-        if (bitDep.startsWith('node_modules')) {
+        if (bitDep.includes('node_modules')) {
           // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
           const basePath = this.componentMap.rootDir
             ? path.join(this.consumerPath, this.componentMap.rootDir)

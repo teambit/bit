@@ -212,22 +212,19 @@ function addBreadCrumb(category: string, message: string, data: Record<string, a
  */
 if (process.env.BIT_LOG) {
   const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  if (levels.includes(process.env.BIT_LOG)) {
-    const level = process.env.BIT_LOG;
-    // TODO: the level arg is not supported anymore, should be fixed
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    logger.logger.add(winston.transports.Console, { level });
-    // TODO: the cli method is not supported anymore, should be fixed
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    logger.logger.cli();
-  } else {
-    const prefixes = process.env.BIT_LOG.split(',');
-    logger.logger.on('logging', (transport, level, msg) => {
-      if (prefixes.some(prefix => msg.startsWith(prefix))) {
-        console.log(`\n${msg}`); // eslint-disable-line no-console
-      }
-    });
-  }
+  const isLevel = levels.includes(process.env.BIT_LOG);
+  const prefixes = process.env.BIT_LOG.split(',');
+  const filterPrefix = winston.format(info => {
+    if (isLevel) return info;
+    if (prefixes.some(prefix => info.message.startsWith(prefix))) return info;
+    return false;
+  });
+  logger.logger.add(
+    new winston.transports.Console({
+      level: isLevel ? process.env.BIT_LOG : 'silly',
+      format: winston.format.combine(filterPrefix(), winston.format.printf(info => info.message))
+    })
+  );
 }
 
 /**
