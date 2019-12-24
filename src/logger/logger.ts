@@ -238,5 +238,14 @@ winston.loggers.add('consoleOnly', {
   format: winston.format.combine(winston.format.printf(info => info.message)),
   transports: [new winston.transports.Console({ level: 'silly' })]
 });
+export interface Logger {
+  info(message: string, data?: any): void;
+
+  warning(message: string, data?: any): void;
+
+  error(message: string, data?: any): void;
+
+  debug(message: string, data?: any): void;
+}
 
 export default logger;
