@@ -20,3 +20,4 @@ src/scope/migrations/scope-migrator.ts
 src/scope/migrations/component-version/remove-latest-from-compiler.ts
 src/extensions/extension.ts
 src/consumer/component/environment/validate-plugin.ts
+src/addons/run-configuration.ts

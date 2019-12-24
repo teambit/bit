@@ -1,33 +1,43 @@
-import { PipeElementConfig } from './pipe';
+import { PipeElementConfig } from './pipe-element';
+export interface PipeOptions {
+  bail: boolean;
+  keep: boolean;
+}
+
+export interface RunOptions extends PipeOptions {
+  id?: string;
+  step?: string;
+  extensions: string[];
+}
 
 export class RunConfiguration {
-  protected constructor(public raw: RawConfiguration) {}
+  protected constructor(public raw: RawRunConfiguration) {}
+
   validate() {
     return true;
   }
-  toModel() {}
-  fromRaw(raw: RawConfiguration) {
+
+  toModel() {
+    return this.raw;
+  }
+
+  static fromRaw(raw: RawRunConfiguration) {
     const runConfig = new RunConfiguration(raw);
     if (runConfig.validate()) {
       return runConfig;
     }
     throw new Error('run configuration is not valid');
   }
+
   static fromModel(): RunConfiguration {
     return new RunConfiguration({});
   }
 }
+type GenericString = { [k: string]: string };
+type GenericObject = { [k: string]: any };
+type BaseConfiguration = { [k: string]: PipeElementConfig[] | GenericObject | undefined };
 
-type BaseConfiguration = { [k: string]: PipeElementConfig };
-
-export interface RawConfiguration extends baseConfiguration {
-  runOptions?: {
-    [k: string]: {
-      bail: boolean;
-      keep: boolean;
-    };
-  };
-  aliases?: {
-    [k: string]: string;
-  };
+export interface RawRunConfiguration extends BaseConfiguration {
+  runOptions?: PipeOptions;
+  aliases?: GenericString;
 }

@@ -10,7 +10,7 @@ const debug = require('debug')('fs-container');
 export interface BitExecOption extends ExecOptions {
   cwd: string;
 }
-export default class FsContainer implements Container<Exec> {
+export default class FsContainer implements Container<Exec, Volume> {
   fs: Volume = new Volume();
 
   id = 'FS Container';

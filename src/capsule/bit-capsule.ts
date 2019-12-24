@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-import { default as Capsule, Exec, Volume, Console, State } from 'capsule';
+import { Capsule, Exec, Volume, Console, State } from 'capsule';
 import librarian from 'librarian';
 import FsContainer from './container';
 import loader from '../cli/loader'; // TODO: better (have the capsule accept the loader as an arg?)
@@ -8,7 +8,7 @@ export class ContainerFactoryOptions {
   config: object = {};
 }
 
-export default class BitCapsule extends Capsule<Exec> {
+export default class BitCapsule extends Capsule<Exec, Volume> {
   constructor(
     /**
      * container implementation the capsule is being executed within.

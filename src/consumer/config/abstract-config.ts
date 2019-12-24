@@ -20,6 +20,7 @@ import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+import { RunConfiguration, RawRunConfiguration } from '../../addons/run-configuration';
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -55,8 +56,7 @@ export type AbstractConfigProps = {
   lang?: string;
   bindingPrefix?: string;
   extensions?: Extensions;
-  run?: any; // TODO: change type
-  j;
+  run?: RawRunConfiguration;
 };
 
 /**
@@ -83,7 +83,7 @@ export default class AbstractConfig {
   extensions: Extensions;
   writeToPackageJson = false;
   writeToBitJson = false;
-  run: any = null;
+  public run: RawRunConfiguration | null = null;
 
   constructor(props: AbstractConfigProps) {
     this._compiler = props.compiler || {};
@@ -91,7 +91,7 @@ export default class AbstractConfig {
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.extensions = props.extensions || DEFAULT_EXTENSIONS;
-    this.run = props.run;
+    this.run = props.run || null;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -188,7 +188,8 @@ export default class AbstractConfig {
           tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
-        extensions: this.extensions
+        extensions: this.extensions,
+        run: this.extensions
       },
       isPropDefaultOrNull
     );

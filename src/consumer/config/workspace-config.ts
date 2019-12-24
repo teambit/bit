@@ -17,6 +17,7 @@ import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
+import { RunConfiguration, RawRunConfiguration } from '../../addons/run-configuration';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -42,6 +43,7 @@ export type WorkspaceConfigProps = {
   resolveModules?: ResolveModulesConfig;
   defaultScope?: string;
   overrides?: ConsumerOverrides;
+  run: RawRunConfiguration;
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
@@ -62,6 +64,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | null | undefined; // default remote scope to export to
+  public run: RawRunConfiguration;
 
   constructor({
     compiler,
@@ -82,9 +85,10 @@ export default class WorkspaceConfig extends AbstractConfig {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
     defaultScope,
-    overrides = ConsumerOverrides.load()
+    overrides = ConsumerOverrides.load(),
+    run
   }: WorkspaceConfigProps) {
-    super({ compiler, tester, lang, bindingPrefix, extensions });
+    super({ run, compiler, tester, lang, bindingPrefix, extensions });
     if (packageManager !== 'npm' && packageManager !== 'yarn') {
       throw new InvalidPackageManager(packageManager);
     }
@@ -107,6 +111,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     this.resolveModules = resolveModules;
     this.defaultScope = defaultScope;
     this.overrides = overrides;
+    this.run = run;
   }
 
   toPlainObject() {
@@ -156,7 +161,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   static async ensure(
     dirPath: PathOsBasedAbsolute,
     standAlone: boolean,
-    workspaceConfigProps: WorkspaceConfigProps = {}
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
   ): Promise<WorkspaceConfig> {
     try {
       const workspaceConfig = await this.load(dirPath);
@@ -221,7 +226,8 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultScope,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      overrides
+      overrides,
+      run
     } = object;
 
     return new WorkspaceConfig({
@@ -243,7 +249,8 @@ export default class WorkspaceConfig extends AbstractConfig {
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist),
       defaultScope,
-      overrides: ConsumerOverrides.load(overrides)
+      overrides: ConsumerOverrides.load(overrides),
+      run
     });
   }
 

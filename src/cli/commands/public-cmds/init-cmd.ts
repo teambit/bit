@@ -9,6 +9,7 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
+import { RunConfiguration } from '../../../addons/run-configuration';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -78,7 +79,13 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    const workspaceConfigProps = { compiler, tester, componentsDefaultDirectory: defaultDirectory, packageManager };
+    const workspaceConfigProps = {
+      compiler,
+      tester,
+      componentsDefaultDirectory: defaultDirectory,
+      packageManager,
+      run: {}
+    };
     return init(path, standalone, reset, resetHard, force, workspaceConfigProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {

@@ -1,6 +1,7 @@
 {
   "rules": {
-    "no-unused-expressions": [0]
+    "no-unused-expressions": [0],
+    "default-case":"off"
   },
   "env": {
     "mocha": true

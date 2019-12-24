@@ -1,6 +1,6 @@
 import Command, { CommandOption } from '../../command';
 import { run } from '../../../addons';
-import { RunOptions } from '../../../addons/run-options';
+import { RunOptions } from '../../../addons/run-configuration';
 export default class Run extends Command {
   name = 'run [step] [id]';
   description = `run a component activity in the capsule.`;

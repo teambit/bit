@@ -1,8 +1,10 @@
-import { RunOptions, PipeOptions } from './run-options';
+// eslint-disable-next-line max-classes-per-file
+import { RunOptions, PipeOptions } from './run-configuration';
 import Component from '../consumer/component/consumer-component';
 import { BitCapsule } from '../capsule';
+import { PipeElement } from './pipe-element';
 
-function getDefaultOptions(): PipeOptions {
+export function getDefaultOptions(): PipeOptions {
   return {
     bail: true,
     keep: false
@@ -10,18 +12,19 @@ function getDefaultOptions(): PipeOptions {
 }
 
 export interface Runnable {
-  run(component: Component, capsule: BitCapsule): Promise<any>;
+  run({ component: Component, capsule: BitCapsule }): Promise<any>;
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export class Pipe implements Runnable {
-  constructor(public elements: Runnable[] = [], public options: PipeOptions = getDefaultOptions()) {}
+  constructor(public elements: PipeElement[] = [], public options: PipeOptions = getDefaultOptions()) {}
 
-  async run(component: Component, capsule: BitCapsule = {} as BitCapsule): Promise<any> {
+  async run({ component, capsule = {} as BitCapsule }: { component: Component; capsule: BitCapsule }): Promise<any> {
     const options = this.options;
     const results = await Promise.all(
       this.elements.map(async function(elem: Runnable) {
         try {
-          await elem.run(component, capsule);
+          await elem.run({ component, capsule });
         } catch (e) {
           if (options.bail) {
             throw new Error(e);
@@ -35,19 +38,4 @@ export class Pipe implements Runnable {
   }
 }
 
-export type PipeElementConfig =
-  | string
-  | {
-      id: string;
-    };
-
-export class PipeElement implements Runnable {
-  constructor(public config: PipeElementConfig) {}
-  run(component: Component, capsule: BitCapsule): Promise<any> {
-    return Promise.resolve();
-  }
-
-  id() {
-    return typeof this.config === 'string' ? this.config : this.config.id;
-  }
-}
+// eslint-disable-next-line import/prefer-default-export
