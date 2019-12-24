@@ -1,11 +1,11 @@
 import { Runnable } from './pipe';
+import { loadConsumer, Consumer } from '../consumer';
 
 export class PipeElement implements Runnable {
   constructor(public config: PipeElementConfig) {}
-  run({ component: Component, capsule: BitCapsule }): Promise<any> {
-    // bring extension
-    // require extension
-    // run main function with API
+  async un({ component: Component, capsule: BitCapsule }): Promise<any> {
+    const consumer: Consumer = await loadConsumer();
+    const result = await consumer.importEnvironment(new BitId(this.id()));
     const extension = {} as any;
     return Promise.resolve();
   }

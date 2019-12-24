@@ -5,6 +5,7 @@ import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS } from '../constants';
 import { BitCapsule } from '../capsule';
+import { capsuleIsolate } from '../api/consumer';
 
 export async function run(options: RunOptions): Promise<any> {
   const consumer = await loadConsumer();
@@ -23,15 +24,14 @@ export async function run(options: RunOptions): Promise<any> {
       : loadedImported.filter(component => !!getComponentPipe(component, options.step!));
     components.push(...componentWithCorrectPipe);
   }
+  const capsules = await capsuleIsolate(components.map(component => component.id), {});
 
   await Promise.all(
     components.map(async component => {
       const pipe: Pipe | String = options.extensions.length ? new Pipe() : (options.step! as string);
       const actualPipe: Pipe = typeof pipe === 'string' ? getComponentPipe(component, pipe)! : (pipe as Pipe);
       try {
-        const capsule = getCapsule();
-        debugger;
-        console.log('Yo!');
+        const capsule = capsules[component.id.toString()];
         await actualPipe.run({ component, capsule });
       } catch (e) {
         throw e;
