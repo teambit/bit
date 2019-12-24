@@ -4,6 +4,7 @@ import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
+import { loadConsumer } from './consumer';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -20,7 +21,8 @@ HooksManager.init();
 // eslint-disable-next-line promise/catch-or-return
 loadExtensions().then(async extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
-  await capsuleOrchestrator.buildPools();
+  const consumer = await loadConsumer();
+  if (consumer) await capsuleOrchestrator.buildPools();
 
   extensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
