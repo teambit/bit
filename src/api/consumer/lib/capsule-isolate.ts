@@ -154,6 +154,7 @@ export default (async function capsuleIsolate(
   capsuleOptions: CapsuleOptions,
   globalCapsuleOptions?: GlobalCapsuleOptions
 ): Promise<any> {
+  if (!capsuleOrchestrator.loaded) await capsuleOrchestrator.buildPools();
   const consumer = await loadConsumer();
   const capsuleObj: { [bitId: string]: BitCapsule } = {};
   const allComponents: Component[] = await Promise.all(

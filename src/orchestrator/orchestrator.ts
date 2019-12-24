@@ -9,7 +9,16 @@ import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 
 export class CapsuleOrchestrator {
-  constructor(private db: ComponentDB, private pools: Pool<Capsule<Exec, Volume>>[] = []) {}
+  private _loaded = false;
+
+  constructor(private db: ComponentDB, private pools: Pool<Capsule<Exec, Volume>>[] = []) {
+    this._loaded = true;
+  }
+
+  get loaded(): boolean {
+    return this._loaded;
+  }
+
   private getPool(workspace: string): Pool<Capsule<Exec, Volume>> | undefined {
     return this.pools.find(pool => pool.workspace === workspace);
   }
