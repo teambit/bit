@@ -1,4 +1,5 @@
 import { Capsule, Exec, Volume } from 'capsule';
+import hash from 'object-hash';
 import { Resource } from './resource-pool';
 import AbortablePromise from '../utils/abortable-promise';
 import { Pool } from './resource-pool';
@@ -11,12 +12,14 @@ import BitContainerFactory from './bit-container-factory';
 export class CapsuleOrchestrator {
   private _loaded = false;
 
-  constructor(private db: ComponentDB, private pools: Pool<Capsule<Exec, Volume>>[] = []) {
-    this._loaded = true;
-  }
+  constructor(private db: ComponentDB, private pools: Pool<Capsule<Exec, Volume>>[] = []) {}
 
   get loaded(): boolean {
     return this._loaded;
+  }
+
+  set loaded(value: boolean) {
+    this._loaded = value;
   }
 
   private getPool(workspace: string): Pool<Capsule<Exec, Volume>> | undefined {
@@ -35,7 +38,7 @@ export class CapsuleOrchestrator {
     return pool.acquire(bitId);
   }
 
-  create(workspace: string, resourceId: string, options?: any): Promise<Resource<Capsule<Exec, Volume>>> {
+  async create(workspace: string, resourceId: string, options?: any): Promise<Resource<Capsule<Exec, Volume>>> {
     let pool = this.getPool(workspace);
     if (!pool) {
       // add workspace to pool
@@ -49,9 +52,8 @@ export class CapsuleOrchestrator {
           BitCapsule.obtain.bind(BitCapsule)
         )
       );
-      this.pools.push(pool);
     }
-
+    await this.db.put(workspace, hash(workspace));
     return pool.createResource(resourceId, options);
   }
   drain() {
@@ -75,9 +77,10 @@ export class CapsuleOrchestrator {
       );
     });
     this.pools = pools;
+    this.loaded = true;
   }
   static initiate(): CapsuleOrchestrator {
-    const orchDb = new ComponentDB();
+    const orchDb = new ComponentDB('orchestrator');
 
     return new CapsuleOrchestrator(orchDb);
   }

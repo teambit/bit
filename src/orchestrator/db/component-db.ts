@@ -1,11 +1,13 @@
 import { LevelUp } from 'levelup';
-import sub from 'subleveldown';
-import { CAPSULE_MAP_DB } from '../../constants';
+// import sub from 'subleveldown';
+import level from 'level-party';
+import hash from 'object-hash';
+import * as path from 'path';
+import { COMPONENT_CACHE_ROOT } from '../../constants';
 
 export default class ComponentDB {
-  constructor(workspace?: string) {
-    if (!workspace) this.db = CAPSULE_MAP_DB;
-    else this.db = sub(CAPSULE_MAP_DB, workspace);
+  constructor(workspace: string) {
+    this.db = level(path.join(COMPONENT_CACHE_ROOT, hash(workspace)), { valueEncoding: 'json' }, {});
   }
   private db: LevelUp;
 
@@ -17,6 +19,7 @@ export default class ComponentDB {
       return Promise.resolve();
     }
   }
+
   public async put(key: string, val: string): Promise<void> {
     await this.db.put(key, val);
   }
@@ -25,15 +28,17 @@ export default class ComponentDB {
     await this.db.del(key);
   }
 
+  public batch(ops: Array<{ type: string; key: string; value: string }>) {
+    // @ts-ignore
+    return this.db.batch(ops);
+  }
   public keys(): Promise<any> {
     return new Promise((resolve, reject) => {
       const keys: Array<string> = [];
       this.db
         .createKeyStream()
         .on('data', function(data) {
-          // console.log(data.key, '=', data.value);
-          const x = data.split('!');
-          keys.push(x[1]);
+          keys.push(data);
         })
         .on('error', function(err) {
           // console.log('Oh my!', err);

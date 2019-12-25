@@ -2,8 +2,6 @@ import cliSpinners from 'cli-spinners';
 import os from 'os';
 import * as path from 'path';
 import format from 'string-format';
-import level from 'level-party';
-import { LevelUp } from 'levelup';
 import { PathOsBased } from './utils/path';
 import { ComponentOrigin } from './consumer/bit-map/component-map';
 
@@ -306,9 +304,9 @@ export const HOOKS_NAMES = [
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * capsule map
+ * cache root directory
  */
-export const CAPSULE_MAP_DB: LevelUp = level(path.join(CACHE_ROOT, '/component-map'), { valueEncoding: 'json' }, {});
+export const COMPONENT_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
 
 /**
  * app cache directory
