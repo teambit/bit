@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import { Consumer } from '../..';
 import { BitId, BitIds } from '../../../bit-id';
 import LaneId from '../../../lane-id/lane-id';
-import { ModelComponent, Version, Lane } from '../../../scope/models';
+import { Version, Lane } from '../../../scope/models';
 import threeWayMerge, { MergeResultsThreeWay } from './three-way-merge';
 import { Ref } from '../../../scope/objects';
 import {
@@ -44,7 +44,11 @@ export default async function snapMerge(
     const ids = getIdsForUnresolved(consumer, bitIds);
     return resolve ? resolveMerge(consumer, ids) : abortMerge(consumer, ids);
   }
-  const lane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
+  const localLane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
+  const remoteTrackedLane = consumer.scope.getRemoteTrackedDataByLocalLane(laneId.name);
+  if (!laneId.isDefault() && !remoteTrackedLane) {
+    throw new Error(`unable to find a remote tracked to the local lane "${laneId.name}"`);
+  }
   const { components } = await consumer.loadComponents(BitIds.fromArray(bitIds));
   const allComponentsStatus = await getAllComponentsStatus();
   const componentWithConflict = allComponentsStatus.find(
@@ -62,8 +66,22 @@ export default async function snapMerge(
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ componentFromFS, mergeResults, remoteHead }) => {
-    return applyVersion(consumer, componentFromFS, mergeResults, mergeStrategy, remoteHead, laneId as LaneId);
+    const remoteName = remoteTrackedLane ? remoteTrackedLane.remoteScope : componentFromFS.scope;
+    return applyVersion({
+      consumer,
+      componentFromFS,
+      id: componentFromFS.id,
+      mergeResults,
+      mergeStrategy,
+      remoteHead,
+      remoteName,
+      laneId,
+      localLane
+    });
   });
+
+  consumer.scope.objects.add(localLane);
+  await consumer.scope.objects.persist();
 
   await consumer.scope.objects.unmergedComponents.write();
 
@@ -75,7 +93,16 @@ export default async function snapMerge(
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        components.map(component => getComponentStatus(consumer, component, laneId as LaneId, lane))
+        components.map(async component => {
+          const remoteLaneId = remoteTrackedLane ? LaneId.from(remoteTrackedLane.remoteLane) : laneId;
+          const remoteName = remoteTrackedLane ? remoteTrackedLane.remoteScope : component.scope;
+          const remoteHead = await consumer.scope.objects.remoteLanes.getRef(
+            remoteName as string,
+            remoteLaneId,
+            component.name
+          );
+          return getComponentStatus(consumer, component, localLane, remoteHead as Ref);
+        })
       );
       await tmp.clear();
       return componentsStatus;
@@ -86,7 +113,7 @@ export default async function snapMerge(
   }
 }
 
-async function getComponentStatus(consumer: Consumer, component: Component, laneId: LaneId, lane: Lane | null) {
+async function getComponentStatus(consumer: Consumer, component: Component, localLane: Lane | null, remoteHead: Ref) {
   const modelComponent = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
   const returnFailure = (msg: string) => {
@@ -98,27 +125,35 @@ async function getComponentStatus(consumer: Consumer, component: Component, lane
   }
   const componentModificationStatus = await consumer.getComponentStatusById(component.id);
   if (componentModificationStatus.modified) {
+    // @todo: should we throw new error instead and stop the entire process?
     return returnFailure(`component ${component.id.toString()} is modified, please snap or tag the component first`);
   }
   const repo = consumer.scope.objects;
-  await modelComponent.populateLocalAndRemoteHeads(repo, laneId, lane);
+  if (localLane) {
+    modelComponent.laneHeadLocal = localLane.getComponentHead(modelComponent.toBitId());
+  }
+  modelComponent.laneHeadRemote = remoteHead;
   await modelComponent.setDivergeData(repo);
   const divergeResult = modelComponent.getDivergeData();
   const isTrueMerge = modelComponent.isTrueMergePending();
+  // @todo: it it's not true merge, we still need to add the components to the local lane.
+  // check if this is done already later
   if (!isTrueMerge) return returnFailure(`component ${component.id.toString()} is not diverged`);
   const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
   const currentlyUsedVersion = existingBitMapId.version;
   const baseSnap = divergeResult.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
   const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
-  const remoteHead: Ref = modelComponent.laneHeadRemote as Ref;
   const currentComponent: Version = await modelComponent.loadVersion(remoteHead.toString(), repo);
+  // threeWayMerge expects `otherComponent` to be Component and `currentComponent` to be Version
+  // since it doesn't matter whether we take the changes from base to current or the changes from
+  // base to other, here we replace the two. the result is going to be the same.
   const mergeResults = await threeWayMerge({
     consumer,
     otherComponent: component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     otherLabel: `${currentlyUsedVersion} (local)`,
     currentComponent,
-    currentLabel: `${remoteHead.toString()} (${component.id.scope}/${laneId.name})`,
+    currentLabel: `${remoteHead.toString()} (${component.id.scope}/${consumer.getCurrentLaneId().name})`,
     baseComponent
   });
   // return { componentFromFS: component, id: component.id.changeVersion(remoteHead.toString()), mergeResults, remoteHead };
@@ -142,15 +177,27 @@ async function getComponentStatus(consumer: Consumer, component: Component, lane
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
  * Added file => if files are not in used version but in the modified one, they'll be under mergeResults.addFiles
  */
-async function applyVersion(
-  consumer: Consumer,
-  componentFromFS: Component,
-  mergeResults: MergeResultsThreeWay,
-  mergeStrategy: MergeStrategy,
-  remoteHead: Ref,
-  laneId: LaneId
-): Promise<ApplyVersionResult> {
-  const id = componentFromFS.id;
+export async function applyVersion({
+  consumer,
+  componentFromFS,
+  id,
+  mergeResults,
+  mergeStrategy,
+  remoteHead,
+  remoteName,
+  laneId,
+  localLane
+}: {
+  consumer: Consumer;
+  componentFromFS: Component | null;
+  id: BitId;
+  mergeResults: MergeResultsThreeWay | null;
+  mergeStrategy: MergeStrategy;
+  remoteHead: Ref;
+  remoteName: string | null;
+  laneId: LaneId;
+  localLane: Lane | null;
+}): Promise<ApplyVersionResult> {
   const filesStatus = {};
   const unmergedComponent: UnmergedComponent = {
     // @ts-ignore
@@ -158,10 +205,11 @@ async function applyVersion(
     // @ts-ignore
     head: remoteHead,
     // @ts-ignore
-    remote: id.scope, // @todo: change according to the remote user entered
+    remote: remoteName,
     lane: laneId.name
   };
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
+    if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
     componentFromFS.files.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
@@ -174,22 +222,23 @@ async function applyVersion(
   const remoteId = id.changeVersion(remoteHead.toString());
   const idToLoad = mergeStrategy === MergeOptions.theirs ? remoteId : id;
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(idToLoad);
-  const componentMap = componentFromFS.componentMap;
-  if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
+  const componentMap = componentFromFS && componentFromFS.componentMap;
+  if (componentFromFS && !componentMap) throw new GeneralError('applyVersion: componentMap was not found');
+  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
     componentWithDependencies.compilerDependencies = [];
     componentWithDependencies.testerDependencies = [];
   }
-  const rootDir = componentMap.rootDir;
   const shouldWritePackageJson = async (): Promise<boolean> => {
+    if (!componentMap) return true;
+    const rootDir = componentMap && componentMap.rootDir;
     if (!rootDir) return false;
     const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
     return fs.pathExists(packageJsonPath);
   };
   const shouldInstallNpmPackages = (): boolean => {
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
+    if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
     return true;
   };
   const writePackageJson = await shouldWritePackageJson();
@@ -220,22 +269,27 @@ async function applyVersion(
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
-    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
+    writeConfig: Boolean(componentMap && componentMap.configDir), // write bit.json and config files only if it was there before
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap.configDir,
+    configDir: componentMap && componentMap.configDir,
     verbose: false, // @todo: do we need a flag here?
     writeDists: true, // @todo: do we need a flag here?
     writePackageJson
   });
   await manyComponentsWriter.writeAll();
 
-  if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
+  if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
     unmergedComponent.resolved = false;
     unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter(f => f.conflict).map(f => f.filePath);
-  } else {
+  } else if (mergeResults) {
     unmergedComponent.resolved = true;
   }
-  consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
+  if (unmergedComponent.resolved !== undefined) {
+    consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
+  }
+  if (localLane) {
+    localLane.addComponent({ id, head: remoteHead });
+  }
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
@@ -278,8 +332,4 @@ function getIdsForUnresolved(consumer: Consumer, bitIds?: BitId[]): BitId[] {
   const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
   if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
   return unresolvedComponents.map(u => new BitId(u.id));
-}
-
-export function mergeLanes() {
-  throw new Error('please implement');
 }

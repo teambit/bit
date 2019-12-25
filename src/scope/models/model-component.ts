@@ -284,14 +284,14 @@ export default class Component extends BitObject {
     laneId: LaneId,
     lane: Lane | null,
     remoteLaneId = laneId,
-    remote = this.scope
+    remoteName = this.scope
   ) {
     if (lane) {
       this.laneHeadLocal = lane.getComponentHead(this.toBitId());
     }
-    if (remote) {
+    if (remoteName) {
       // otherwise, it was never exported, so no remote head
-      this.laneHeadRemote = await repo.remoteLanes.getRef(remote, remoteLaneId, this.name);
+      this.laneHeadRemote = await repo.remoteLanes.getRef(remoteName, remoteLaneId, this.name);
     }
   }
 

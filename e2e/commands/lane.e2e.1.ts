@@ -197,5 +197,16 @@ describe('bit lane command', function() {
       const status = helper.command.statusJson();
       expect(status.outdatedComponents).to.have.lengthOf(3);
     });
+    describe('merging the remote lane', () => {
+      let mergeOutput;
+      before(() => {
+        mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
+      });
+      it('should succeed', () => {
+        expect(mergeOutput).to.have.string('successfully merged components');
+      });
+      // @todo: create an app.js and make sure they're all v2
+      it('should save the latest versions from the remote into the local', () => {});
+    });
   });
 });

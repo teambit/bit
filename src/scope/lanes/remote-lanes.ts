@@ -4,6 +4,7 @@ import { REMOTE_REFS_DIR } from '../../constants';
 import { Ref } from '../objects';
 import LaneId from '../../lane-id/lane-id';
 import { Lane } from '../models';
+import { BitId } from '../../bit-id';
 
 export type LaneItem = { name: string; head: Ref };
 type Lanes = { [laneName: string]: LaneItem[] };
@@ -19,10 +20,7 @@ export default class RemoteLanes {
     if (!remoteName) throw new TypeError('addEntry expects to get remoteName');
     if (!laneId) throw new TypeError('addEntry expects to get LaneId');
     if (!head) return; // do nothing
-    if (!this.remotes[remoteName] || !this.remotes[remoteName][laneId.name]) {
-      await this.loadRemoteLane(remoteName, laneId);
-    }
-    const remoteLane = this.remotes[remoteName][laneId.name];
+    const remoteLane = await this.getRemoteLane(remoteName, laneId);
     const existingComponent = remoteLane.find(n => n.name === componentName);
     if (existingComponent) {
       existingComponent.head = head;
@@ -48,6 +46,11 @@ export default class RemoteLanes {
       await this.loadRemoteLane(remoteName, laneId);
     }
     return this.remotes[remoteName][laneId.name];
+  }
+
+  async getRemoteBitIds(remoteName: string, laneId: LaneId): Promise<BitId[]> {
+    const remoteLane = await this.getRemoteLane(remoteName, laneId);
+    return remoteLane.map(item => new BitId({ scope: remoteName, name: item.name, version: item.head.toString() }));
   }
 
   async loadRemoteLane(remoteName: string, laneId: LaneId) {

@@ -17,4 +17,7 @@ export default class LaneId {
   toString(): string {
     return this.name;
   }
+  static from(name: string): LaneId {
+    return new LaneId({ name });
+  }
 }
