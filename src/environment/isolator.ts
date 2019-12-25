@@ -63,6 +63,9 @@ export default class Isolator {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dir?: string;
 
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  useNewCapsule = false;
+
   constructor(
     capsule: BitCapsule,
     scope: Scope,
@@ -75,6 +78,7 @@ export default class Isolator {
     this.consumer = consumer;
     this.dir = dir;
     this.capsuleWrkspaceMap = capsuleWrkspaceMap;
+    this.useNewCapsule = !!capsuleWrkspaceMap;
   }
 
   static async getInstance(
@@ -139,7 +143,7 @@ export default class Isolator {
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
-    if (!this.capsuleWrkspaceMap) {
+    if (!this.useNewCapsule) {
       await this.installComponentPackages({
         installNpmPackages,
         keepExistingCapsule: !!opts.keepExistingCapsule
@@ -155,7 +159,7 @@ export default class Isolator {
     this._manipulateDir();
 
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
-    if (!this.capsuleWrkspaceMap) {
+    if (!this.useNewCapsule) {
       await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
     }
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
@@ -223,7 +227,8 @@ export default class Isolator {
 
   async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
-    const allComponents = [this.componentWithDependencies.component];
+    let allComponents = [this.componentWithDependencies.component];
+    if (!this.useNewCapsule) allComponents = R.concat(allComponents, this.componentWithDependencies.allDependencies);
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }

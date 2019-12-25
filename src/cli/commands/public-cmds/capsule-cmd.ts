@@ -33,7 +33,8 @@ export default class Capsule extends Command {
   opts = [
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
     ['n', 'newCapsule', 'create new environment for capsule'],
-    ['h', 'hash <string>', 'reuse capsule of certain hash']
+    ['h', 'hash <string>', 'reuse capsule of certain hash'],
+    ['i', 'installPackages', 'install packages in capsule with npm']
   ];
   loader = true;
   migration = true;
@@ -43,20 +44,26 @@ export default class Capsule extends Command {
     {
       baseDir,
       newCapsule = false,
-      hash
+      hash,
+      installPackages = false
     }: {
       baseDir: string | null | undefined;
       newCapsule: boolean;
       hash: string;
+      installPackages: boolean;
     }
   ): Promise<any> {
     return Promise.resolve(
-      capsuleIsolate(values, _.omitBy({ baseDir }, _.isNil), _.omitBy({ new: newCapsule, hash }, _.isNil))
+      capsuleIsolate(
+        values,
+        _.omitBy({ baseDir }, _.isNil),
+        _.omitBy({ new: newCapsule, hash, installPackages }, _.isNil)
+      )
     );
   }
   report(capsuleObj: { [bitId: string]: BitCapsule }): string {
-    return Object.entries(capsuleObj)
-      .map(([key, capsule]) => chalk.green(`${capsule.bitId.toString()}..........${capsule.wrkDir}\n`))
+    return Object.values(capsuleObj)
+      .map(capsule => chalk.green(`${capsule.bitId.toString()}..........${capsule.wrkDir}\n`))
       .join('');
   }
 }

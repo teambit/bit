@@ -33,7 +33,8 @@ const DEFAULT_ISOLATION_OPTIONS = {
   baseDir: os.tmpdir()
 };
 const DEFAULT_GLOBAL_OPTIONS = {
-  new: false
+  new: false,
+  installPackages: false
 };
 export type CapsuleOptions = {
   baseDir?: string;
@@ -46,8 +47,9 @@ export type CapsuleOptions = {
 };
 
 type GlobalCapsuleOptions = {
-  new: boolean;
-  hash: string;
+  new?: boolean;
+  hash?: string;
+  installPackages?: boolean;
 };
 
 function generateWrkDir(
@@ -60,7 +62,6 @@ function generateWrkDir(
   if (globalCapsuleOptions.hash) return path.join(capsuleOptions.baseDir!, `${bitId}_${globalCapsuleOptions.hash}`);
   return path.join(capsuleOptions.baseDir!, `${bitId}_${hash(capsuleOptions)}`);
 }
-
 async function createOrGetCapsules(
   components: Component[],
   capsuleOptions: CapsuleOptions = DEFAULT_ISOLATION_OPTIONS,
@@ -69,34 +70,50 @@ async function createOrGetCapsules(
 ): Promise<{ capsuleMap: { [bitId: string]: string }; capsules: BitCapsule[] }> {
   const capsuleMap = {};
   const globalHash = v4();
-  const capsules: BitCapsule[] = await Promise.all(
-    _.map(components, async function(component) {
-      let resource;
-      const componentFromBitMap = consumer.bitMap.getBitIdIfExist(component.id, { ignoreVersion: true });
-      if (componentFromBitMap) {
-        if (!globalCapsuleOptions.new) {
-          resource = await capsuleOrchestrator.acquire(consumer.getPath(), componentFromBitMap.toString());
+
+  // eslint-disable-next-line consistent-return
+  const idsForIsolation: Component[] = _.map(components, component => {
+    const componentFromBitMap = consumer.bitMap.getBitIdIfExist(component.id, { ignoreVersion: true });
+    if (componentFromBitMap) {
+      const wrkDir = generateWrkDir(component.id.toString(), globalHash, capsuleOptions, globalCapsuleOptions);
+      return {
+        resourceId: `${componentFromBitMap.toString()}_${hash(wrkDir)}`,
+        options: {
+          bitId: component.id,
+          wrkDir,
+          capsuleOptions
         }
-        if (!resource) {
-          const wrkDir = generateWrkDir(component.id.toString(), globalHash, capsuleOptions, globalCapsuleOptions);
-          resource = await capsuleOrchestrator.create(
-            consumer.getPath(),
-            `${componentFromBitMap.toString()}_${hash(wrkDir)}`,
-            {
-              bitId: component.id,
-              wrkDir,
-              capsuleOptions
-            }
-          );
-        }
-        const capsule = resource.use() as BitCapsule;
-        capsuleMap[componentFromBitMap.toString()] = capsule.wrkDir;
-        return capsule;
-      }
-      return undefined;
-    })
-  );
-  return { capsuleMap, capsules: _.compact(capsules) };
+      };
+    }
+  });
+
+  const resources = await capsuleOrchestrator.getCapsules(consumer.getPath(), _.compact(idsForIsolation));
+  const capsules = resources.map(resource => {
+    const capsule = resource.use() as BitCapsule;
+    capsuleMap[capsule.bitId.toString()] = capsule.wrkDir;
+    return capsule;
+  });
+  return {
+    capsuleMap,
+    capsules
+  };
+}
+
+async function writeLinkFiles(consumer, isolator: Isolator) {
+  const componentWithDependencies = await _loadComponentFromConsumer(consumer, isolator.capsule.bitId);
+  componentWithDependencies.component.writtenPath = '.';
+  const componentLinkFiles: DataToPersist = getComponentLinks({
+    consumer,
+    component: componentWithDependencies.component,
+    dependencies: componentWithDependencies.allDependencies,
+    bitMap: consumer.bitMap,
+    createNpmLinkFiles: true
+  });
+  await Promise.all(componentLinkFiles.files.map(file => isolator.capsule.outputFile(file.path, file.contents, {})));
+}
+
+async function installpackages(capsules: BitCapsule[]) {
+  await Promise.all(capsules.map(capsule => capsule.exec({ command: `npm i`.split(' ') })));
 }
 
 async function isolateCapsules(
@@ -125,20 +142,7 @@ async function isolateCapsules(
           capsuleOptions
         )
       );
-
-      // generate links and write them
-      const componentWithDependencies = await _loadComponentFromConsumer(consumer, capsule.bitId);
-      componentWithDependencies.component.writtenPath = '.';
-      const componentLinkFiles: DataToPersist = getComponentLinks({
-        consumer,
-        component: componentWithDependencies.component,
-        dependencies: componentWithDependencies.allDependencies,
-        bitMap: consumer.bitMap,
-        createNpmLinkFiles: true
-      });
-      await Promise.all(componentLinkFiles.files.map(file => capsule.outputFile(file.path, file.contents, {})));
-      // @ts-ignore
-      // await capsule.exec({ command: `npm i`.split(' ') });
+      return writeLinkFiles(consumer, isolator);
     })
   );
 }
@@ -152,8 +156,9 @@ async function _loadComponentFromConsumer(consumer: Consumer, id: BitId): Promis
 export default (async function capsuleIsolate(
   bitIds: BitId[] | string[],
   capsuleOptions: CapsuleOptions,
-  globalCapsuleOptions?: GlobalCapsuleOptions
+  globalCapsuleOptions: GlobalCapsuleOptions = DEFAULT_GLOBAL_OPTIONS
 ): Promise<any> {
+  if (!capsuleOrchestrator.loaded) await capsuleOrchestrator.buildPools();
   const consumer = await loadConsumer();
   const capsuleObj: { [bitId: string]: BitCapsule } = {};
   const allComponents: Component[] = await Promise.all(
@@ -176,6 +181,7 @@ export default (async function capsuleIsolate(
     consumer
   );
   await isolateCapsules(consumer, capsuleOptions, capsules, capsuleMap);
+  if (globalCapsuleOptions.installPackages) await installpackages(capsules);
   _.map(capsules, (capsule: BitCapsule) => (capsuleObj[capsule.bitId.toString()] = capsule));
   return capsuleObj;
 });

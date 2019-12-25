@@ -1,15 +1,14 @@
-import * as Promise from 'bluebird';
+import * as BPromise from 'bluebird';
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
-import capsuleOrchestrator from './orchestrator/orchestrator';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
 // removing this, default to longStackTraces also when env is `development`, which impacts the
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-Promise.config({
+BPromise.config({
   longStackTraces: process.env.BLUEBIRD_DEBUG
 });
 
@@ -20,8 +19,6 @@ HooksManager.init();
 // eslint-disable-next-line promise/catch-or-return
 loadExtensions().then(async extensions => {
   // Make sure to register all the hooks actions in the global hooks manager
-  await capsuleOrchestrator.buildPools();
-
   extensions.forEach(extension => {
     extension.registerHookActionsOnHooksManager();
   });
