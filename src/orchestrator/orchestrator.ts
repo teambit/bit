@@ -1,9 +1,7 @@
 import { Capsule, Exec, Volume } from 'capsule';
 import path from 'path';
 import fs from 'fs-extra';
-import hash from 'object-hash';
 import { Resource } from './resource-pool';
-import AbortablePromise from '../utils/abortable-promise';
 import { Pool } from './resource-pool';
 import ComponentDB from './db/component-db';
 import WorkspacePoolManager from './workspace-pool-manager';
@@ -29,10 +27,10 @@ export class CapsuleOrchestrator {
     return this.pools.find(pool => pool.workspace === workspace);
   }
 
-  async list(workspace?: string) {
-    const x = await Promise.all(this.pools.map(pool => pool.list()));
-    return x;
-  }
+  /* async list(workspace?: string) {
+    // const x = await Promise.all(this.pools.map(pool => pool.list()));
+    // return x;
+  } */
 
   acquire(workspace: string, bitId: string): Promise<Resource<Capsule<Exec, Volume>>> {
     const pool = this.getPool(workspace);

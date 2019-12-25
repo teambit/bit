@@ -71,6 +71,7 @@ async function createOrGetCapsules(
   const capsuleMap = {};
   const globalHash = v4();
 
+  // eslint-disable-next-line consistent-return
   const idsForIsolation: Component[] = _.map(components, component => {
     const componentFromBitMap = consumer.bitMap.getBitIdIfExist(component.id, { ignoreVersion: true });
     if (componentFromBitMap) {

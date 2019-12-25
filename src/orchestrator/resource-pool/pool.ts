@@ -1,14 +1,13 @@
 import { EventEmitter } from 'events';
 import ResourceFactory from './resource-factory';
 import Resource from './resource';
-import AbortablePromise from '../../utils/abortable-promise';
 import ComponentDB from '../db/component-db';
 import { BitContainerConfig } from '../../capsule/container';
 
-export enum Events {
+/* export enum Events {
   FactoryCreateErrors = 'factory-create-error',
   ResourceAvailable = 'resource-available'
-}
+} */
 
 export type PoolOptions = {
   /**
