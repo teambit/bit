@@ -1,15 +1,17 @@
 import { LevelUp } from 'levelup';
-// import sub from 'subleveldown';
 import level from 'level-party';
-import hash from 'object-hash';
 import * as path from 'path';
 import { COMPONENT_CACHE_ROOT } from '../../constants';
 
 export default class ComponentDB {
-  constructor(workspace: string) {
-    this.db = level(path.join(COMPONENT_CACHE_ROOT, hash(workspace)), { valueEncoding: 'json' }, {});
-  }
-  private db: LevelUp;
+  constructor(
+    workspace: string,
+    private db: LevelUp = level(
+      path.join(COMPONENT_CACHE_ROOT, workspace.split(path.sep).join('_')),
+      { valueEncoding: 'json' },
+      {}
+    )
+  ) {}
 
   public async get(key: string): Promise<any> {
     try {

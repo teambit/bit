@@ -66,18 +66,32 @@ export default class Pool<T> extends EventEmitter {
     return resource;
   }
 
-  acquire(resourceId: string): AbortablePromise<Resource<T>> {
-    return new AbortablePromise(
-      async resolve => {
-        const availableResource = await this.db.get(resourceId);
-        // @ts-ignore
-        if (!availableResource) return resolve();
-        // const availableResource = map[this.workspace][resourceId];
-        const resource = await this.resourceFactory.obtain(JSON.stringify(availableResource));
-        // this.logger.debug(`obtained resource ${resource.id}`);
-        return resolve(resource);
-      },
-      () => ''
+  async getResources(capsulesToGet: { resourceId: string; options: any }[], globalOptions) {
+    const resources = await Promise.all(
+      capsulesToGet.map(async data => {
+        let acquiredResource;
+        if (!globalOptions.new) {
+          acquiredResource = await this.acquire(data.resourceId);
+        }
+        if (!acquiredResource) {
+          return this.createResource(data.resourceId, data.options);
+        }
+        return acquiredResource;
+      })
     );
+    return resources;
+  }
+
+  acquire(resourceId: string): Promise<Resource<T>> {
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise(async (resolve, reject) => {
+      const availableResource = await this.db.get(resourceId);
+      // @ts-ignore
+      if (!availableResource) return resolve();
+      // const availableResource = map[this.workspace][resourceId];
+      const resource = await this.resourceFactory.obtain(JSON.stringify(availableResource));
+      // this.logger.debug(`obtained resource ${resource.id}`);
+      return resolve(resource);
+    });
   }
 }
