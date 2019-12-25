@@ -34,7 +34,7 @@ export default class Capsule extends Command {
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
     ['n', 'newCapsule', 'create new environment for capsule'],
     ['h', 'hash <string>', 'reuse capsule of certain hash'],
-    ['i', 'installPkgs', 'install packages in capsule with npm']
+    ['i', 'installPackages', 'install packages in capsule with npm']
   ];
   loader = true;
   migration = true;
@@ -45,16 +45,20 @@ export default class Capsule extends Command {
       baseDir,
       newCapsule = false,
       hash,
-      installPkgs = false
+      installPackages = false
     }: {
       baseDir: string | null | undefined;
       newCapsule: boolean;
       hash: string;
-      installPkgs: boolean;
+      installPackages: boolean;
     }
   ): Promise<any> {
     return Promise.resolve(
-      capsuleIsolate(values, _.omitBy({ baseDir }, _.isNil), _.omitBy({ new: newCapsule, hash, installPkgs }, _.isNil))
+      capsuleIsolate(
+        values,
+        _.omitBy({ baseDir }, _.isNil),
+        _.omitBy({ new: newCapsule, hash, installPackages }, _.isNil)
+      )
     );
   }
   report(capsuleObj: { [bitId: string]: BitCapsule }): string {

@@ -112,7 +112,7 @@ async function writeLinkFiles(consumer, isolator: Isolator) {
 }
 
 async function installpackages(capsules: BitCapsule[]) {
-  return Promise.all(capsules.map(capsule => capsule.exec({ command: `npm i`.split(' ') })));
+  await Promise.all(capsules.map(capsule => capsule.exec({ command: `npm i`.split(' ') })));
 }
 
 async function isolateCapsules(
