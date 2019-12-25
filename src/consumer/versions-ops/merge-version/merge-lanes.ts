@@ -94,8 +94,8 @@ export default async function mergeLanes({
     });
   });
 
-  consumer.scope.objects.add(localLane);
-  await consumer.scope.objects.persist();
+  if (localLane) consumer.scope.objects.add(localLane);
+  await consumer.scope.objects.persist(); // persist anyway, it localLane is null it should save all master heads
 
   await consumer.scope.objects.unmergedComponents.write();
 

@@ -289,6 +289,11 @@ export async function applyVersion({
   }
   if (localLane) {
     localLane.addComponent({ id, head: remoteHead });
+  } else {
+    // this is master
+    const modelComponent = await consumer.scope.getModelComponent(id);
+    modelComponent.snaps.head = remoteHead;
+    consumer.scope.objects.add(modelComponent);
   }
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };

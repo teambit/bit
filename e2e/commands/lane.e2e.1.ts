@@ -178,35 +178,70 @@ describe('bit lane command', function() {
       helper.command.snapAllComponents();
       helper.command.exportLane('dev');
       authorScope = helper.scopeHelper.cloneLocalScope();
-
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('dev --objects');
-      helper.command.switchRemoteLane('dev');
-      importedScope = helper.scopeHelper.cloneLocalScope();
-
-      helper.scopeHelper.getClonedLocalScope(authorScope);
-      helper.fixtures.populateWorkspaceWithComponentsWithV2();
-      helper.command.snapAllComponents();
-      helper.command.exportLane('dev');
-
-      helper.scopeHelper.getClonedLocalScope(importedScope);
-      helper.command.importLane('dev --objects');
     });
-    it('bit status should show all components as pending update', () => {
-      const status = helper.command.statusJson();
-      expect(status.outdatedComponents).to.have.lengthOf(3);
-    });
-    describe('merging the remote lane', () => {
-      let mergeOutput;
+    describe('merging remote lane into master', () => {
       before(() => {
-        mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --objects');
+        helper.command.merge(`${helper.scopes.remote} dev --lane`);
       });
-      it('should succeed', () => {
-        expect(mergeOutput).to.have.string('successfully merged components');
+      it('should save the files to the filesystem', () => {
+        helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
-      // @todo: create an app.js and make sure they're all v2
-      it('should save the latest versions from the remote into the local', () => {});
+      it('bit status should show clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('bit lane should show that all components are belong to master', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.master).to.have.lengthOf(3);
+      });
+    });
+    describe('importing a remote lane which is ahead of the local lane', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --objects');
+        helper.command.switchRemoteLane('dev');
+        importedScope = helper.scopeHelper.cloneLocalScope();
+
+        helper.scopeHelper.getClonedLocalScope(authorScope);
+        helper.fixtures.populateWorkspaceWithComponentsWithV2();
+        helper.command.snapAllComponents();
+        helper.command.exportLane('dev');
+
+        helper.scopeHelper.getClonedLocalScope(importedScope);
+        helper.command.importLane('dev --objects');
+      });
+      it('bit status should show all components as pending update', () => {
+        const status = helper.command.statusJson();
+        expect(status.outdatedComponents).to.have.lengthOf(3);
+      });
+      describe('merging the remote lane', () => {
+        let mergeOutput;
+        before(() => {
+          mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
+        });
+        it('should succeed', () => {
+          expect(mergeOutput).to.have.string('successfully merged components');
+        });
+        it('should save the latest versions from the remote into the local', () => {
+          helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
+          const result = helper.command.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
+        });
+        it('bit status should show clean state', () => {
+          const output = helper.command.runCmd('bit status');
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        it('bit lane should show that all components are belong to the local lane', () => {
+          const lanes = helper.command.showLanesParsed();
+          expect(lanes.dev).to.have.lengthOf(3);
+        });
+      });
     });
   });
 });
