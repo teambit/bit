@@ -93,7 +93,7 @@ export default class ComponentsList {
   async listModifiedComponents(load = false): Promise<Array<BitId | Component>> {
     if (!this._modifiedComponents) {
       const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
-      const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
+      const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
       this._modifiedComponents = (await filterAsync(fileSystemComponents, (component: Component) => {
         return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
       })).filter((component: Component) => !componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id));
@@ -105,7 +105,7 @@ export default class ComponentsList {
   async listOutdatedComponents(): Promise<Component[]> {
     const fileSystemComponents = await this.getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.getModelComponents();
-    const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
+    const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
     const mergePendingComponents = await this.listMergePendingComponents();
     const mergePendingComponentsIds = BitIds.fromArray(mergePendingComponents.map(c => c.id));
     await Promise.all(
@@ -142,7 +142,7 @@ export default class ComponentsList {
     if (!this._mergePendingComponents) {
       const componentsFromFs = await this.getAuthoredAndImportedFromFS();
       const componentsFromModel = await this.getModelComponents();
-      const componentsWithUnresolvedConflicts = this.listComponentsWithUnresolvedConflicts();
+      const componentsWithUnresolvedConflicts = this.listDuringMergeStateComponents();
       this._mergePendingComponents = (await Promise.all(
         componentsFromFs.map(async (component: Component) => {
           const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
@@ -159,6 +159,11 @@ export default class ComponentsList {
 
   listComponentsWithUnresolvedConflicts(): BitIds {
     const unresolvedComponents = this.scope.objects.unmergedComponents.getUnresolvedComponents();
+    return BitIds.fromArray(unresolvedComponents.map(u => new BitId(u.id)));
+  }
+
+  listDuringMergeStateComponents(): BitIds {
+    const unresolvedComponents = this.scope.objects.unmergedComponents.getComponents();
     return BitIds.fromArray(unresolvedComponents.map(u => new BitId(u.id)));
   }
 

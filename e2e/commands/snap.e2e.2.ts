@@ -258,11 +258,13 @@ describe('bit snap command', function() {
         });
       });
       describe('merge with merge=ours flag', () => {
-        let beforeMergeScope;
+        let beforeMergeScope: string;
+        let beforeMergeHead: string;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
           beforeMergeScope = helper.scopeHelper.cloneLocalScope();
+          beforeMergeHead = helper.command.getSnapHead('bar/foo');
         });
         describe('without --no-snap flag', () => {
           let mergeOutput;
@@ -271,6 +273,9 @@ describe('bit snap command', function() {
           });
           it('should succeed and indicate that the files were not changed', () => {
             expect(mergeOutput).to.have.string('unchanged');
+          });
+          it('should indicate that a component was snapped', () => {
+            expect(mergeOutput).to.have.string('merge-snapped components');
           });
           it('should not change the files on the filesystem', () => {
             const content = helper.fs.readFile('bar/foo.js');
@@ -291,15 +296,66 @@ describe('bit snap command', function() {
             const bitMap = helper.bitMap.read();
             const head = helper.command.getSnapHead('bar/foo');
             expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+            expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@${beforeMergeHead}`);
           });
         });
         describe('with --no-snap flag', () => {
+          let mergeOutput;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeMergeScope);
-            helper.command.merge('bar/foo --ours --no-snap');
+            mergeOutput = helper.command.merge('bar/foo --ours --no-snap');
           });
-          it('should not create the merge-snap (of two parents)', () => {});
-          it('should leave the components in a state of resolved but not snapped', () => {});
+          it('should succeed and indicate that the files were not changed', () => {
+            expect(mergeOutput).to.have.string('unchanged');
+          });
+          it('should not show a message about merge-snapped components', () => {
+            expect(mergeOutput).to.not.have.string('merge-snapped components');
+          });
+          it('should not change the files on the filesystem', () => {
+            const content = helper.fs.readFile('bar/foo.js');
+            expect(content).to.equal(fixtures.fooFixtureV3);
+          });
+          it('should not generate a snap-merge snap with two parents', () => {
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(1);
+          });
+          it('should leave the components in a state of resolved but not snapped', () => {
+            const status = helper.command.statusJson();
+            expect(status.componentsDuringMergeState).to.have.lengthOf(1);
+            expect(status.mergePendingComponents).to.have.lengthOf(0);
+            expect(status.mergePendingComponents).to.have.lengthOf(0);
+          });
+          it('should not update bitmap', () => {
+            const bitMap = helper.bitMap.read();
+            expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${beforeMergeHead}`);
+          });
+          describe('generating merge-snap by merge --resolve flag', () => {
+            let resolveOutput;
+            before(() => {
+              resolveOutput = helper.command.merge('bar/foo --resolve');
+            });
+            it('should resolve successfully', () => {
+              expect(resolveOutput).to.have.string('successfully resolved component');
+            });
+            it('bit status should not show the component as during merge state', () => {
+              const status = helper.command.statusJson();
+              expect(status.componentsDuringMergeState).to.have.lengthOf(0);
+              expect(status.modifiedComponent).to.have.lengthOf(0);
+              expect(status.outdatedComponents).to.have.lengthOf(0);
+              expect(status.mergePendingComponents).to.have.lengthOf(0);
+              expect(status.stagedComponents).to.have.lengthOf(1);
+            });
+            it('should generate a snap-merge snap with two parents, the local and the remote', () => {
+              const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+              expect(lastVersion.parents).to.have.lengthOf(2);
+            });
+            it('should update bitmap snap', () => {
+              const bitMap = helper.bitMap.read();
+              const head = helper.command.getSnapHead('bar/foo');
+              expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+              expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@${beforeMergeHead}`);
+            });
+          });
         });
       });
       describe('merge with merge=theirs flag', () => {
@@ -363,7 +419,7 @@ describe('bit snap command', function() {
         });
         it('bit status should show it as component with conflict and not as pending update or modified', () => {
           const status = helper.command.statusJson();
-          expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(1);
+          expect(status.componentsDuringMergeState).to.have.lengthOf(1);
           expect(status.modifiedComponent).to.have.lengthOf(0);
           expect(status.outdatedComponents).to.have.lengthOf(0);
           expect(status.mergePendingComponents).to.have.lengthOf(0);
@@ -415,7 +471,7 @@ describe('bit snap command', function() {
           });
           it('bit status should not show the component as a component with conflicts but as outdated', () => {
             const status = helper.command.statusJson();
-            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.componentsDuringMergeState).to.have.lengthOf(0);
             expect(status.modifiedComponent).to.have.lengthOf(1);
             expect(status.outdatedComponents).to.have.lengthOf(1);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
@@ -434,7 +490,7 @@ describe('bit snap command', function() {
           });
           it('bit status should not show the component as if it has conflicts', () => {
             const status = helper.command.statusJson();
-            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.componentsDuringMergeState).to.have.lengthOf(0);
             expect(status.modifiedComponent).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.mergePendingComponents).to.have.lengthOf(0);
@@ -464,7 +520,7 @@ describe('bit snap command', function() {
           it('bit status should show the same state as before the merge', () => {
             const status = helper.command.statusJson();
             expect(status.mergePendingComponents).to.have.lengthOf(1);
-            expect(status.componentsWithUnresolvedConflicts).to.have.lengthOf(0);
+            expect(status.componentsDuringMergeState).to.have.lengthOf(0);
             expect(status.modifiedComponent).to.have.lengthOf(0);
             expect(status.outdatedComponents).to.have.lengthOf(0);
             expect(status.stagedComponents).to.have.lengthOf(1);

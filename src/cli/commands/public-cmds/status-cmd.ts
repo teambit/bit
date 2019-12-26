@@ -48,7 +48,7 @@ export default class Status extends Command {
     invalidComponents,
     outdatedComponents,
     mergePendingComponents,
-    componentsWithUnresolvedConflicts
+    componentsDuringMergeState
   }: StatusResult): string {
     if (this.json) {
       return JSON.stringify(
@@ -62,7 +62,7 @@ export default class Status extends Command {
           invalidComponents,
           outdatedComponents: outdatedComponents.map(c => c.id.toString()),
           mergePendingComponents: mergePendingComponents.map(c => c.id.toString()),
-          componentsWithUnresolvedConflicts: componentsWithUnresolvedConflicts.map(id => id.toString())
+          componentsDuringMergeState: componentsDuringMergeState.map(id => id.toString())
         },
         null,
         2
@@ -130,10 +130,10 @@ export default class Status extends Command {
       ? [pendingMergeTitle, pendingMergeDesc, pendingMergeComps].join('\n')
       : '';
 
-    const compWithConflictsTitle = chalk.underline.white('components with unresolved conflicts');
+    const compWithConflictsTitle = chalk.underline.white('components during merge state');
     const compWithConflictsDesc = `(use "bit merge [component-id] --resolve" to mark them as resolved and snap the changes
 or use "bit merge [component-id] --abort" to cancel the merge operation)\n`;
-    const compWithConflictsComps = componentsWithUnresolvedConflicts
+    const compWithConflictsComps = componentsDuringMergeState
       .map(id => {
         return `    > ${chalk.cyan(id.toString())}`;
       })

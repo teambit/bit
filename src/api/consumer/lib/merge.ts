@@ -25,14 +25,21 @@ export default async function merge(
   let mergeResults;
   const firstValue = R.head(values);
   if (resolve) {
-    mergeResults = await resolveMerge(consumer, values);
+    mergeResults = await resolveMerge(consumer, values, message);
   } else if (abort) {
     mergeResults = await abortMerge(consumer, values);
   } else if (idIsLane) {
     if (!firstValue) throw new GeneralError('please specify lane name');
     const remote = values.length === 2 ? firstValue : null;
     const laneName = values.length === 2 ? values[1] : firstValue;
-    mergeResults = await mergeLanes({ consumer, remoteName: remote, laneName, mergeStrategy });
+    mergeResults = await mergeLanes({
+      consumer,
+      remoteName: remote,
+      laneName,
+      mergeStrategy,
+      noSnap,
+      snapMessage: message
+    });
   } else if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);
     // @todo: version could be the lane only or remote/lane

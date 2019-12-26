@@ -19,7 +19,7 @@ export type StatusResult = {
   invalidComponents: InvalidComponent[];
   outdatedComponents: Component[];
   mergePendingComponents: DivergedComponent[];
-  componentsWithUnresolvedConflicts: BitIds;
+  componentsDuringMergeState: BitIds;
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -52,7 +52,7 @@ export default (async function status(): Promise<StatusResult> {
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return Boolean(component.issues);
   });
-  const componentsWithUnresolvedConflicts = componentsList.listComponentsWithUnresolvedConflicts();
+  const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
@@ -71,6 +71,6 @@ export default (async function status(): Promise<StatusResult> {
     invalidComponents,
     outdatedComponents,
     mergePendingComponents,
-    componentsWithUnresolvedConflicts
+    componentsDuringMergeState
   };
 });

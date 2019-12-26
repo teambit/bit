@@ -40,7 +40,7 @@ export async function mergeComponents(
   mergeStrategy: MergeStrategy,
   laneId: LaneId,
   noSnap: boolean,
-  message: boolean
+  snapMessage: string
 ): Promise<ApplyVersionResults> {
   const localLane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
   const remoteTrackedLane = consumer.scope.getRemoteTrackedDataByLocalLane(laneId.name);
@@ -55,7 +55,9 @@ export async function mergeComponents(
     allComponentsStatus,
     remoteName: remoteTrackedLane ? remoteTrackedLane.remoteScope : null,
     laneId,
-    localLane
+    localLane,
+    noSnap,
+    snapMessage
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -93,7 +95,9 @@ async function merge({
   allComponentsStatus,
   remoteName,
   laneId,
-  localLane
+  localLane,
+  noSnap,
+  snapMessage
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -101,6 +105,8 @@ async function merge({
   remoteName: string | null;
   laneId: LaneId;
   localLane: Lane | null;
+  noSnap: boolean;
+  snapMessage: string;
 }) {
   const componentWithConflict = allComponentsStatus.find(
     component => component.mergeResults && component.mergeResults.hasConflicts
@@ -135,7 +141,7 @@ async function merge({
 
   await consumer.scope.objects.unmergedComponents.write();
 
-  const mergeSnapResults = await snapResolvedComponents(consumer);
+  const mergeSnapResults = noSnap ? null : await snapResolvedComponents(consumer, snapMessage);
 
   return { components: componentsResults, failedComponents, mergeSnapResults };
 }
@@ -144,12 +150,16 @@ export async function mergeLanes({
   consumer,
   mergeStrategy,
   laneName,
-  remoteName
+  remoteName,
+  noSnap,
+  snapMessage
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
   laneName: string;
   remoteName: string | null;
+  noSnap: boolean;
+  snapMessage: string;
 }): Promise<ApplyVersionResults> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
@@ -185,7 +195,9 @@ export async function mergeLanes({
     allComponentsStatus,
     remoteName,
     laneId,
-    localLane
+    localLane,
+    noSnap,
+    snapMessage
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -421,14 +433,16 @@ export async function applyVersion({
 }
 
 async function snapResolvedComponents(
-  consumer: Consumer
+  consumer: Consumer,
+  snapMessage: string
 ): Promise<null | { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
   const resolvedComponents = consumer.scope.objects.unmergedComponents.getResolvedComponents();
   logger.debug(`merge-snaps, snapResolvedComponents, total ${resolvedComponents.length.toString()} components`);
   if (!resolvedComponents.length) return null;
   const ids = BitIds.fromArray(resolvedComponents.map(r => new BitId(r.id)));
   return consumer.snap({
-    ids
+    ids,
+    message: snapMessage
   });
 }
 
@@ -441,11 +455,16 @@ export async function abortMerge(consumer: Consumer, values: string[]): Promise<
   return { abortedComponents: results.components };
 }
 
-export async function resolveMerge(consumer: Consumer, values: string[]): Promise<ApplyVersionResults> {
+export async function resolveMerge(
+  consumer: Consumer,
+  values: string[],
+  snapMessage: string
+): Promise<ApplyVersionResults> {
   const ids = getIdsForUnresolved(consumer, values);
   const { snappedComponents } = await consumer.snap({
     ids: BitIds.fromArray(ids),
-    resolveUnmerged: true
+    resolveUnmerged: true,
+    message: snapMessage
   });
   return { resolvedComponents: snappedComponents };
 }
@@ -455,13 +474,13 @@ function getIdsForUnresolved(consumer: Consumer, idsStr?: string[]): BitId[] {
     const bitIds = idsStr.map(id => consumer.getParsedId(id));
     bitIds.forEach(id => {
       const entry = consumer.scope.objects.unmergedComponents.getEntry(id.name);
-      if (!entry || entry.resolved) {
+      if (!entry) {
         throw new GeneralError(`unable to merge-resolve ${id.toString()}, it is not marked as unresolved`);
       }
     });
     return bitIds;
   }
-  const unresolvedComponents = consumer.scope.objects.unmergedComponents.getUnresolvedComponents();
+  const unresolvedComponents = consumer.scope.objects.unmergedComponents.getComponents();
   if (!unresolvedComponents.length) throw new GeneralError(`all components are resolved already, nothing to do`);
   return unresolvedComponents.map(u => new BitId(u.id));
 }

@@ -63,6 +63,10 @@ export default class UnmergedComponents {
     return this.unmerged.filter(u => !u.resolved);
   }
 
+  getComponents() {
+    return this.unmerged;
+  }
+
   removeComponent(componentName: string): boolean {
     const found = this.getEntry(componentName);
     if (!found) return false;
