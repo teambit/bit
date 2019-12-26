@@ -12,6 +12,7 @@ import { PathLinux, PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import ComponentWriter from '../../component-ops/component-writer';
 import { Tmp } from '../../../scope/repositories';
+import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -34,8 +35,9 @@ export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;
   failedComponents?: FailedComponents[];
-  snappedComponents?: Component[]; // relevant for bit merge --resolve
+  resolvedComponents?: Component[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
+  mergeSnapResults?: { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] } | null;
 };
 type ComponentStatus = {
   componentFromFS: Component;

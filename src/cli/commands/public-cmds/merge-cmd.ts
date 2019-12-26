@@ -5,6 +5,7 @@ import { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versi
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
 import { WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { AUTO_SNAPPED_MSG } from './snap-cmd';
 
 export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';
@@ -74,10 +75,16 @@ export default class Merge extends Command {
     return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message);
   }
 
-  report({ components, version, snappedComponents, abortedComponents }: ApplyVersionResults): string {
-    if (snappedComponents) {
+  report({
+    components,
+    version,
+    resolvedComponents,
+    abortedComponents,
+    mergeSnapResults
+  }: ApplyVersionResults): string {
+    if (resolvedComponents) {
       const title = 'successfully resolved component(s)\n';
-      const componentsStr = snappedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
+      const componentsStr = resolvedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
     if (abortedComponents) {
@@ -89,6 +96,31 @@ export default class Merge extends Command {
     const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
     // @ts-ignore components is set in case of merge command
     const componentsStr = applyVersionReport(components);
-    return chalk.underline(title) + chalk.green(componentsStr);
+
+    const getSnapsOutput = () => {
+      if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
+      const { snappedComponents, autoSnappedResults } = mergeSnapResults;
+      const outputComponents = comps => {
+        return comps
+          .map(component => {
+            let componentOutput = `     > ${component.id.toString()}`;
+            const autoTag = autoSnappedResults.filter(result =>
+              result.triggeredBy.searchWithoutScopeAndVersion(component.id)
+            );
+            if (autoTag.length) {
+              const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
+              componentOutput += `\n       ${AUTO_SNAPPED_MSG}: ${autoTagComp.join(', ')}`;
+            }
+            return componentOutput;
+          })
+          .join('\n');
+      };
+
+      return `\n${chalk.underline(
+        'merge-snapped components'
+      )}\n(${'components that snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
+    };
+
+    return chalk.underline(title) + chalk.green(componentsStr) + getSnapsOutput();
   }
 }

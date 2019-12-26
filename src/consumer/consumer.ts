@@ -708,7 +708,7 @@ export default class Consumer {
     verbose?: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
-  }) {
+  }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debug(`snapping the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('snap', `snapping the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);

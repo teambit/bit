@@ -1,14 +1,18 @@
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import { MergeStrategy, ApplyVersionResults, mergeVersion } from '../../../consumer/versions-ops/merge-version';
-import snapMerge from '../../../consumer/versions-ops/merge-version/snap-merge';
+import {
+  mergeComponents,
+  mergeLanes,
+  resolveMerge,
+  abortMerge
+} from '../../../consumer/versions-ops/merge-version/merge-snaps';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
-import mergeLanes from '../../../consumer/versions-ops/merge-version/merge-lanes';
 import GeneralError from '../../../error/general-error';
 
-export default (async function merge(
+export default async function merge(
   values: string[],
   mergeStrategy: MergeStrategy,
   abort: boolean,
@@ -20,24 +24,19 @@ export default (async function merge(
   const consumer: Consumer = await loadConsumer();
   let mergeResults;
   const firstValue = R.head(values);
-  if (idIsLane) {
+  if (resolve) {
+    mergeResults = await resolveMerge(consumer, values);
+  } else if (abort) {
+    mergeResults = await abortMerge(consumer, values);
+  } else if (idIsLane) {
     if (!firstValue) throw new GeneralError('please specify lane name');
     const remote = values.length === 2 ? firstValue : null;
     const laneName = values.length === 2 ? values[1] : firstValue;
-    mergeResults = await mergeLanes({ consumer, remoteName: remote, laneName, mergeStrategy, abort, resolve });
+    mergeResults = await mergeLanes({ consumer, remoteName: remote, laneName, mergeStrategy });
   } else if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);
     // @todo: version could be the lane only or remote/lane
-    mergeResults = await snapMerge(
-      consumer,
-      bitIds,
-      mergeStrategy,
-      consumer.getCurrentLaneId(),
-      abort,
-      resolve,
-      noSnap,
-      message
-    );
+    mergeResults = await mergeComponents(consumer, bitIds, mergeStrategy, consumer.getCurrentLaneId(), noSnap, message);
   } else {
     const version = firstValue;
     const ids = R.tail(values);
@@ -46,7 +45,7 @@ export default (async function merge(
   }
   await consumer.onDestroy();
   return mergeResults;
-});
+}
 
 function getComponentsToMerge(consumer: Consumer, ids: string[]): BitId[] {
   if (hasWildcard(ids)) {
