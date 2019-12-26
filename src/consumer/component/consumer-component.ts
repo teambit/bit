@@ -291,7 +291,6 @@ export default class Component {
     this.scopesList = scopesList;
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
-    debugger;
     const conf = RunConfiguration.fromRaw(runConfig || {});
     this.registry = getRegistry(conf);
   }

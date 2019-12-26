@@ -24,7 +24,10 @@ export async function run(options: RunOptions): Promise<any> {
       : loadedImported.filter(component => !!getComponentPipe(component, options.step!));
     components.push(...componentWithCorrectPipe);
   }
-  const capsules = await capsuleIsolate(components.map(component => component.id), {});
+  const capsules = await capsuleIsolate(
+    components.map(component => component.id),
+    {}
+  );
 
   await Promise.all(
     components.map(async component => {
@@ -42,8 +45,4 @@ export async function run(options: RunOptions): Promise<any> {
 
 function getComponentPipe(component: Component, pipe: string): Pipe | undefined {
   return component.getPipeRegistry()[pipe];
-}
-
-function getCapsule() {
-  return {} as BitCapsule;
 }

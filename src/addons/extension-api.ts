@@ -1,6 +1,10 @@
 import BitMap from '../consumer/bit-map';
+import Component from '../consumer/component/consumer-component';
+import { BitCapsule } from '../capsule';
+import { UserExtension } from './extension';
 
 export class ExtensionAPI {
+  constructor(public component: Component, public capsule: BitCapsule, public extension: UserExtension) {}
   /**
     Component ---> consumerComponent or modelComponent
     Workspace ---> consumer

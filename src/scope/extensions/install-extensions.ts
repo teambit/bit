@@ -90,7 +90,7 @@ export default function installExtensions({
 /**
  * sync method that loads the environment/(path to environment component)
  */
-function isEnvironmentInstalled(scope: Scope, bitId: BitId) {
+export function isEnvironmentInstalled(scope: Scope, bitId: BitId) {
   logger.debug(`scope.isEnvironmentInstalled, id: ${bitId.toString()}`);
   Analytics.addBreadCrumb(
     'isEnvironmentInstalled',

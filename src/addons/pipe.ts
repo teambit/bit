@@ -22,7 +22,7 @@ export class Pipe implements Runnable {
   async run({ component, capsule = {} as BitCapsule }: { component: Component; capsule: BitCapsule }): Promise<any> {
     const options = this.options;
     const results = await Promise.all(
-      this.elements.map(async function(elem: Runnable) {
+      this.elements.map(async function(elem: PipeElement) {
         try {
           await elem.run({ component, capsule });
         } catch (e) {
