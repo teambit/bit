@@ -17,10 +17,6 @@ export default class WorkspacePoolManager<T> extends Pool<T> {
     super(workspace, db, resourceFactory);
   }
 
-  async list() {
-    const x = await this.db.keys();
-    return x;
-  }
   protected observeResource(resource: Resource<T>) {
     resource.on(ResourceEvents.Destroyed, () => {
       this.resourceDestroyed(resource);
