@@ -38,7 +38,9 @@ export default async function snapMerge(
   mergeStrategy: MergeStrategy,
   laneId: LaneId,
   abort: boolean,
-  resolve: boolean
+  resolve: boolean,
+  noSnap: boolean,
+  message: boolean
 ): Promise<ApplyVersionResults> {
   if (resolve || abort) {
     const ids = getIdsForUnresolved(consumer, bitIds);

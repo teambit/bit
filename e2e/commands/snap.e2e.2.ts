@@ -258,34 +258,48 @@ describe('bit snap command', function() {
         });
       });
       describe('merge with merge=ours flag', () => {
-        let mergeOutput;
+        let beforeMergeScope;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
-          mergeOutput = helper.command.merge('bar/foo --ours');
+          beforeMergeScope = helper.scopeHelper.cloneLocalScope();
         });
-        it('should succeed and indicate that the files were not changed', () => {
-          expect(mergeOutput).to.have.string('unchanged');
+        describe('without --no-snap flag', () => {
+          let mergeOutput;
+          before(() => {
+            mergeOutput = helper.command.merge('bar/foo --ours');
+          });
+          it('should succeed and indicate that the files were not changed', () => {
+            expect(mergeOutput).to.have.string('unchanged');
+          });
+          it('should not change the files on the filesystem', () => {
+            const content = helper.fs.readFile('bar/foo.js');
+            expect(content).to.equal(fixtures.fooFixtureV3);
+          });
+          it('should generate a snap-merge snap with two parents, the local and the remote', () => {
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.parents).to.have.lengthOf(2);
+            expect(lastVersion.parents).to.include(secondSnap); // the remote head
+            expect(lastVersion.parents).to.include(localHead);
+          });
+          it('should add a descriptive message about the merge', () => {
+            const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+            expect(lastVersion.log.message).to.have.string('merge remote');
+            expect(lastVersion.log.message).to.have.string('master');
+          });
+          it('should update bitmap snap', () => {
+            const bitMap = helper.bitMap.read();
+            const head = helper.command.getSnapHead('bar/foo');
+            expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+          });
         });
-        it('should not change the files on the filesystem', () => {
-          const content = helper.fs.readFile('bar/foo.js');
-          expect(content).to.equal(fixtures.fooFixtureV3);
-        });
-        it('should generate a snap-merge snap with two parents, the local and the remote', () => {
-          const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-          expect(lastVersion.parents).to.have.lengthOf(2);
-          expect(lastVersion.parents).to.include(secondSnap); // the remote head
-          expect(lastVersion.parents).to.include(localHead);
-        });
-        it('should add a descriptive message about the merge', () => {
-          const lastVersion = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-          expect(lastVersion.log.message).to.have.string('merge remote');
-          expect(lastVersion.log.message).to.have.string('master');
-        });
-        it('should update bitmap snap', () => {
-          const bitMap = helper.bitMap.read();
-          const head = helper.command.getSnapHead('bar/foo');
-          expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+        describe('with --no-snap flag', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeMergeScope);
+            helper.command.merge('bar/foo --ours --no-snap');
+          });
+          it('should not create the merge-snap (of two parents)', () => {});
+          it('should leave the components in a state of resolved but not snapped', () => {});
         });
       });
       describe('merge with merge=theirs flag', () => {
