@@ -278,16 +278,17 @@ export async function applyVersion({
   });
   await manyComponentsWriter.writeAll();
 
-  if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
-    unmergedComponent.resolved = false;
-    unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter(f => f.conflict).map(f => f.filePath);
-  } else if (mergeResults) {
-    unmergedComponent.resolved = true;
-  }
-  if (unmergedComponent.resolved !== undefined) {
+  // if mergeResults, the head snap is going to be updated on a later phase when snapping with two parents
+  // otherwise, update the head of the current lane or master
+  if (mergeResults) {
+    if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
+      unmergedComponent.resolved = false;
+      unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter(f => f.conflict).map(f => f.filePath);
+    } else {
+      unmergedComponent.resolved = true;
+    }
     consumer.scope.objects.unmergedComponents.addEntry(unmergedComponent);
-  }
-  if (localLane) {
+  } else if (localLane) {
     localLane.addComponent({ id, head: remoteHead });
   } else {
     // this is master
