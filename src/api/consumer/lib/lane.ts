@@ -2,10 +2,13 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import { DEFAULT_LANE } from '../../../constants';
 import { Lane } from '../../../scope/models';
+import { filterAsync } from '../../../utils';
 
 export type LaneResults = {
   added?: string;
   lanes?: string[];
+  merged?: string[];
+  notMerged?: string[];
   lanesWithComponents?: { [lane: string]: Array<{ id: BitId; head: string }> };
   currentLane?: string;
 };
@@ -32,6 +35,18 @@ export default async function lane({
     const currentLane = consumer.getCurrentLaneId();
     const currentLaneStr = currentLane.toString();
     const lanesObjects = await consumer.scope.listLanes();
+    if (merged) {
+      const mergedLanes: Lane[] = await filterAsync(lanesObjects, (laneObj: Lane) =>
+        laneObj.isFullyMerged(consumer.scope).then(result => result)
+      );
+      return { merged: mergedLanes.map(l => l.name) };
+    }
+    if (notMerged) {
+      const unmergedLanes: Lane[] = await filterAsync(lanesObjects, (laneObj: Lane) =>
+        laneObj.isFullyMerged(consumer.scope).then(result => !result)
+      );
+      return { notMerged: unmergedLanes.map(l => l.name) };
+    }
     if (components) {
       const lanesWithComponents = lanesObjects.reduce((acc, current: Lane) => {
         acc[current.toLaneId().toString()] = current.components.map(c => ({ id: c.id, head: c.head.toString() }));

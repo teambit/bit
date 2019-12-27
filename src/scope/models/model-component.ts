@@ -296,6 +296,15 @@ export default class Component extends BitObject {
   }
 
   /**
+   * when checking component against master, we are not interested in the local lane.
+   * todo: this is risky. we should consider a different approach. better to not have these props on the object
+   */
+  resetLocalAndRemoteHeads() {
+    this.laneHeadLocal = null;
+    this.laneHeadRemote = null;
+  }
+
+  /**
    * returns only the versions that exist in both components (regardless whether the hash are the same)
    * e.g. this.component = [0.0.1, 0.0.2, 0.0.3], other component = [0.0.3, 0.0.4]. it returns only [0.0.3].
    * also, in case it is coming from 'bit import', the version must be locally changed.
@@ -541,6 +550,11 @@ export default class Component extends BitObject {
   async getAllVersionHashes(repo: Repository, throws = true): Promise<Ref[]> {
     const allVersionsInfo = await this.getAllVersionsInfo({ repo, throws });
     return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
+  }
+
+  async hasVersionByRef(ref: Ref, repo: Repository): Promise<boolean> {
+    const allVersionHashes = await this.getAllVersionHashes(repo);
+    return allVersionHashes.some(hash => hash.isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {

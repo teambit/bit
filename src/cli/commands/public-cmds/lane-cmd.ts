@@ -56,6 +56,14 @@ export default class Lane extends Command {
         })
         .join('\n');
     }
+    if (results.merged) {
+      if (!results.merged.length) return chalk.green('None of the lanes is merged');
+      return chalk.green(results.merged.join('\n'));
+    }
+    if (results.notMerged) {
+      if (!results.notMerged.length) return chalk.green('All lanes are merged');
+      return chalk.green(results.notMerged.join('\n'));
+    }
     if (results.lanesWithComponents) {
       if (args[1].json) return JSON.stringify(results.lanesWithComponents, null, 2);
       return Object.keys(results.lanesWithComponents)

@@ -9,6 +9,7 @@ import { DEFAULT_LANE } from '../../constants';
 import LaneObjects from '../lane-objects';
 import { Version } from '.';
 import { LaneItem } from '../lanes/remote-lanes';
+import { Scope } from '..';
 
 export type LaneProps = {
   name: string;
@@ -109,6 +110,31 @@ export default class Lane extends BitObject {
       const id = new BitId({ scope: remoteName, name: laneItem.name });
       this.components.push({ id, head: laneItem.head });
     });
+  }
+  async isFullyMerged(scope: Scope): Promise<boolean> {
+    const { unmerged } = await this.getMergedAndUnmergedIds(scope);
+    return unmerged.length === 0;
+  }
+  async getMergedAndUnmergedIds(scope: Scope): Promise<{ merged: BitId[]; unmerged: BitId[] }> {
+    const merged: BitId[] = [];
+    const unmerged: BitId[] = [];
+    await Promise.all(
+      this.components.map(async component => {
+        const modelComponent = await scope.getModelComponentIfExist(component.id);
+        if (!modelComponent) {
+          unmerged.push(component.id);
+          return;
+        }
+        modelComponent.resetLocalAndRemoteHeads();
+        const headExist = await modelComponent.hasVersionByRef(component.head, scope.objects);
+        if (headExist) merged.push(component.id);
+        else unmerged.push(component.id);
+      })
+    );
+    return { merged, unmerged };
+  }
+  getAllIds(): BitId[] {
+    return this.components.map(c => c.id);
   }
   toLaneId() {
     return new LaneId({ name: this.name });
