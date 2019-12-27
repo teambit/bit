@@ -16,7 +16,7 @@ const genreateOptions = options => {
   ret += `|---|:-----:|---|\n`;
   options.forEach(o => {
     let [alias, flag, description] = o;
-    alias = alias ? '--' + alias : '   ';
+    alias = alias ? '-' + alias : '   ';
     flag = '--' + flag;
     ret += `|\`${flag}\`|\`${alias}\`|${description}|\n`;
   });
@@ -28,7 +28,6 @@ generateSubCommands = subCommands => {
   let ret = '';
   subCommands.forEach(s => {
     let name = s.name.match(/^([\w\-]+)/)[0];
-    console.log(name);
     ret += `### ${name} \n`;
     ret += `**Usage**: ${s.name.replace(/([<>*()?])/g, '\\$1')}  \n\n`;
     ret += `**Description**: ${formatDescription(s.description)}`;
