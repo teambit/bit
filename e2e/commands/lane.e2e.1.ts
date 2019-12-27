@@ -81,10 +81,12 @@ describe('bit lane command', function() {
         });
       });
       describe('importing the lane objects and switching to that lane', () => {
+        let beforeLaneSwitch;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.importLane('dev --objects');
+          beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
           helper.command.switchRemoteLane('dev');
         });
         it('should write the component to the filesystem with the same version as the lane', () => {
@@ -141,6 +143,17 @@ describe('bit lane command', function() {
             const status = helper.command.status();
             const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
             expect(status).to.have.string(localSnap);
+          });
+        });
+        describe('switching with a different lane name', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
+            helper.command.switchRemoteLane('dev --new-lane-name my-new-lane');
+          });
+          it('should save the remote-lane data into a local with the specified name', () => {
+            const lanes = helper.command.showLanesParsed();
+            expect(lanes['my-new-lane']).to.have.lengthOf(1);
+            expect(lanes).to.not.have.property('dev');
           });
         });
       });

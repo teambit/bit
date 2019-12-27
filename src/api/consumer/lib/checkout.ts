@@ -49,7 +49,8 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     const lanes = await consumer.scope.listLanes();
     if (remoteScopeLane) {
       const localTrackedLane = consumer.scope.getLocalTrackedLaneByRemoteName(laneName, remoteScopeLane);
-      checkoutProps.localLaneName = localTrackedLane || laneName;
+      checkoutProps.localLaneName = checkoutProps.newLaneName || localTrackedLane || laneName;
+      console.log('TCL: parseValues -> checkoutProps.localLaneName', checkoutProps.localLaneName);
       if (consumer.getCurrentLaneId().name === checkoutProps.localLaneName) {
         throw new GeneralError(`already checked out to "${checkoutProps.localLaneName}"`);
       }
@@ -85,6 +86,9 @@ then you can run "bit merge" to merge the remote lane into the local lane`);
     }
     checkoutProps.ids = localLane.components.map(c => c.id.changeVersion(c.head.toString()));
     return;
+  }
+  if (checkoutProps.newLaneName) {
+    throw new GeneralError('the --name flag is relevant only when switching lanes');
   }
   if (!checkoutProps.reset && !checkoutProps.version) {
     if (ids.length) throw new GeneralError(`the specified version "${ids[0]}" is not a valid version`);

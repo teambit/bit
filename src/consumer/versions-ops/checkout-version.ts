@@ -38,6 +38,7 @@ export type CheckoutProps = {
   remoteLaneName?: string;
   remoteLane?: LaneItem[];
   localTrackedLane?: string;
+  newLaneName?: string;
 };
 type ComponentStatus = {
   componentFromFS?: ConsumerComponent;
