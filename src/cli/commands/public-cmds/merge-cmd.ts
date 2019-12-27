@@ -81,6 +81,7 @@ export default class Merge extends Command {
 
   report({
     components,
+    failedComponents,
     version,
     resolvedComponents,
     abortedComponents,
@@ -96,10 +97,13 @@ export default class Merge extends Command {
       const componentsStr = abortedComponents.map(c => c.id.toStringWithoutVersion()).join('\n');
       return chalk.underline(title) + chalk.green(componentsStr);
     }
-    // @ts-ignore version is set in case of merge command
-    const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
-    // @ts-ignore components is set in case of merge command
-    const componentsStr = applyVersionReport(components);
+    const getSuccessOutput = () => {
+      if (!components || !components.length) return '';
+      // @ts-ignore version is set in case of merge command
+      const title = `successfully merged components${version ? `from version ${chalk.bold(version)}` : ''}\n`;
+      // @ts-ignore components is set in case of merge command
+      return chalk.underline(title) + chalk.green(applyVersionReport(components));
+    };
 
     const getSnapsOutput = () => {
       if (!mergeSnapResults || !mergeSnapResults.snappedComponents) return '';
@@ -125,6 +129,18 @@ export default class Merge extends Command {
       )}\n(${'components that snapped as a result of the merge'})\n${outputComponents(snappedComponents)}\n`;
     };
 
-    return chalk.underline(title) + chalk.green(componentsStr) + getSnapsOutput();
+    const getFailureOutput = () => {
+      if (!failedComponents || !failedComponents.length) return '';
+      const title = 'the merge has been canceled on the following component(s)';
+      const body = failedComponents
+        .map(
+          failedComponent =>
+            `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
+        )
+        .join('\n');
+      return `${chalk.underline(title)}\n${body}\n\n`;
+    };
+
+    return getSuccessOutput() + getFailureOutput() + getSnapsOutput();
   }
 }

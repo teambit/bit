@@ -1,3 +1,4 @@
+import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -198,6 +199,34 @@ describe('bit lane command', function() {
       it('bit lane should show that all components are belong to master', () => {
         const lanes = helper.command.showLanesParsed();
         expect(lanes.master).to.have.lengthOf(3);
+      });
+    });
+    describe('merging remote lane into master when components are not in workspace using --existing flag', () => {
+      let mergeOutput;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --objects');
+        mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane --existing`);
+      });
+      it('should indicate that the components were not merge because they are not in the workspace', () => {
+        expect(mergeOutput).to.have.string('the merge has been canceled on the following component(s)');
+        expect(mergeOutput).to.have.string('is not in the workspace');
+      });
+      it('bitmap should not save any component', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        expect(Object.keys(bitMap)).to.have.lengthOf(0);
+      });
+      it('should not save the files to the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'components/bar/foo')).to.not.be.a.path();
+      });
+      it('bit status should show clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('bit lane should not show the components as if they belong to master', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.master).to.have.lengthOf(0);
       });
     });
     describe('importing a remote lane which is ahead of the local lane', () => {
