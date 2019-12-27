@@ -19,7 +19,8 @@ export default async function merge(
   resolve: boolean,
   idIsLane: boolean,
   noSnap: boolean,
-  message: string
+  message: string,
+  existingOnWorkspaceOnly: boolean
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
   let mergeResults;
@@ -38,7 +39,8 @@ export default async function merge(
       laneName,
       mergeStrategy,
       noSnap,
-      snapMessage: message
+      snapMessage: message,
+      existingOnWorkspaceOnly
     });
   } else if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);

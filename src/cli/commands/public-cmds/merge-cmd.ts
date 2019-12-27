@@ -43,6 +43,7 @@ export default class Merge extends Command {
     ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
     ['l', 'lane', 'merge lanes'],
+    ['', 'existing', 'relevant for lanes. checkout only components in a lane that exist in the workspace'],
     ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
     ['m', 'message <message>', 'override the default message for the auto snap']
   ];
@@ -58,6 +59,7 @@ export default class Merge extends Command {
       resolve = false,
       lane = false,
       noSnap = false,
+      existing = false,
       message
     }: {
       ours?: boolean;
@@ -67,13 +69,14 @@ export default class Merge extends Command {
       resolve?: boolean;
       lane?: boolean;
       noSnap?: boolean;
+      existing?: boolean;
       message: string;
     }
   ): Promise<ApplyVersionResults> {
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');
-    return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message);
+    return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message, existing);
   }
 
   report({

@@ -77,7 +77,7 @@ export async function mergeComponents(
             throw new GeneralError(
               `unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${otherLaneName}"`
             );
-          return getComponentStatus(consumer, bitId.changeVersion(remoteHead.toString()), localLane, {}, otherLaneName);
+          return getComponentStatus(consumer, bitId.changeVersion(remoteHead.toString()), localLane, otherLaneName);
         })
       );
       await tmp.clear();
@@ -152,7 +152,8 @@ export async function mergeLanes({
   laneName,
   remoteName,
   noSnap,
-  snapMessage
+  snapMessage,
+  existingOnWorkspaceOnly
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -160,6 +161,7 @@ export async function mergeLanes({
   remoteName: string | null;
   noSnap: boolean;
   snapMessage: string;
+  existingOnWorkspaceOnly: boolean;
 }): Promise<ApplyVersionResults> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
@@ -204,7 +206,7 @@ export async function mergeLanes({
     const tmp = new Tmp(consumer.scope);
     try {
       const componentsStatus = await Promise.all(
-        bitIds.map(bitId => getComponentStatus(consumer, bitId, localLane, {}, otherLaneName))
+        bitIds.map(bitId => getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
       );
       await tmp.clear();
       return componentsStatus;
@@ -219,8 +221,8 @@ async function getComponentStatus(
   consumer: Consumer,
   id: BitId,
   localLane: Lane | null,
-  mergeProps = {},
-  otherLaneName: string
+  otherLaneName: string,
+  existingOnWorkspaceOnly = false
 ): Promise<ComponentStatus> {
   const componentStatus: ComponentStatus = { id };
   const returnFailure = (msg: string) => {
@@ -243,8 +245,7 @@ async function getComponentStatus(
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
   if (!existingBitMapId) {
-    // @todo: add this flag to bit-merge
-    if (mergeProps.skipLaneComponentsNotInWorkspace) {
+    if (existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
     }
     // @ts-ignore

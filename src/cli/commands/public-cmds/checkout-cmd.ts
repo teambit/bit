@@ -30,6 +30,7 @@ export default class Checkout extends Command {
     ['r', 'reset', 'remove local changes'],
     ['a', 'all', 'all components'],
     ['', 'lane', 'checkout to a lane'],
+    ['', 'existing', 'relevant for lanes. checkout only components in a lane that exist in the workspace'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
@@ -49,7 +50,7 @@ export default class Checkout extends Command {
       verbose = false,
       skipNpmInstall = false,
       ignoreDist = false,
-      skipLaneComponentsNotInWorkspace = false
+      existing = false
     }: {
       interactiveMerge?: boolean;
       ours?: boolean;
@@ -61,7 +62,7 @@ export default class Checkout extends Command {
       verbose?: boolean;
       skipNpmInstall?: boolean;
       ignoreDist?: boolean;
-      skipLaneComponentsNotInWorkspace?: boolean;
+      existing?: boolean;
     }
   ): Promise<ApplyVersionResults> {
     const checkoutProps: CheckoutProps = {
@@ -72,8 +73,8 @@ export default class Checkout extends Command {
       verbose,
       isLane: lane,
       skipNpmInstall,
-      ignoreDist,
-      skipLaneComponentsNotInWorkspace
+      existingOnWorkspaceOnly: existing,
+      ignoreDist
     };
     return checkout(values, checkoutProps);
   }

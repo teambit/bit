@@ -32,12 +32,12 @@ export type CheckoutProps = {
   ignoreDist: boolean;
   // @todo: aggregate all the following props into one object "lanes"
   isLane: boolean;
+  existingOnWorkspaceOnly: boolean;
   localLaneName?: string;
   remoteLaneScope?: string;
   remoteLaneName?: string;
   remoteLane?: LaneItem[];
   localTrackedLane?: string;
-  skipLaneComponentsNotInWorkspace: boolean;
 };
 type ComponentStatus = {
   componentFromFS?: ConsumerComponent;
@@ -234,7 +234,7 @@ async function getComponentStatusForLanes(
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
   if (!existingBitMapId) {
-    if (checkoutProps.skipLaneComponentsNotInWorkspace) {
+    if (checkoutProps.existingOnWorkspaceOnly) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is not in the workspace`);
     }
     // @ts-ignore
