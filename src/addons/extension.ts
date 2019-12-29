@@ -62,12 +62,10 @@ export async function isComponentInstalled(id: BitId | BitCapsule): Promise<bool
 
 export async function loadComponent(id: BitId) {
   const capsule = await installComponent(id);
-  debugger;
   return require(capsule.wrkDir);
 }
 
 export function canBeRequired(id: string) {
-  debugger;
   let canRequire = true;
   try {
     require.resolve(id);
