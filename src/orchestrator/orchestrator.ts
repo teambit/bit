@@ -114,6 +114,7 @@ export class CapsuleOrchestrator {
   async prune() {
     const keys: string[] = await this.db.keys();
     await Promise.all(
+      // eslint-disable-next-line consistent-return
       keys.map(async workspace => {
         if (!fs.pathExistsSync(workspace)) {
           return this.db.del(workspace);
