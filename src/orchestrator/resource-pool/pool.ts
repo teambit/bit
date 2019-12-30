@@ -76,7 +76,25 @@ export default class Pool<T> extends EventEmitter {
       // console.log('borrows', resource.id);
     });
   }
+  async getResource(capsuleWithConf: CreateOptions, newCapsule = false): Promise<BitCapsule> {
+    const create = async ({ resourceId, options }: CreateOptions): Promise<BitCapsule> => {
+      let acquiredResource;
+      let created = false;
+      if (!newCapsule) {
+        acquiredResource = await this.acquire(resourceId);
+      }
+      if (!acquiredResource) {
+        acquiredResource = await this.createResource(resourceId, options);
+        created = true;
+      }
+      this.observeResource(acquiredResource);
+      const capsule = acquiredResource.use();
+      capsule.new = created;
+      return capsule;
+    };
 
+    return create(capsuleWithConf);
+  }
   async getResources(
     capsuleWithConf: CreateOptions[] | CreateOptions,
     newCapsule = false

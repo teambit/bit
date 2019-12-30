@@ -70,6 +70,13 @@ export class CapsuleOrchestrator {
     if (!pool) return Promise.resolve();
     return pool.acquire(bitId);
   }
+  async getCapsule(workspace: string, capsuleConf: CreateOptions, options: Options): Promise<BitCapsule> {
+    let pool = this.getPool(workspace);
+    if (!pool) {
+      pool = await this.addPool(workspace);
+    }
+    return pool.getResource(capsuleConf, options.alwaysNew);
+  }
 
   async getCapsules(
     workspace: string,
