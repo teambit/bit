@@ -1,5 +1,4 @@
 import { Runnable } from './pipe';
-import { loadConsumer, Consumer } from '../consumer';
 import Component from '../consumer/component/consumer-component';
 import { BitCapsule } from '../capsule';
 import { BitId } from '../bit-id';

@@ -22,6 +22,7 @@ export class RunConfiguration {
   }
 
   static fromRaw(raw: RawRunConfiguration) {
+    debugger;
     const runConfig = new RunConfiguration(raw);
     if (runConfig.validate()) {
       return runConfig;
