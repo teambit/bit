@@ -2,10 +2,11 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import hash from 'object-hash';
 import * as path from 'path';
+import execa from 'execa';
 import os from 'os';
-import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
 import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
+import ContainerExec from './container-exec';
 
 const debug = require('debug')('fs-container');
 
@@ -59,19 +60,19 @@ export default class FsContainer implements Container<Exec, Volume> {
     return fs.ensureSymlink(srcPath, destPath);
   }
 
-  async exec(execOptions: BitExecOption): Promise<Exec> {
+  async exec(execOptions: BitExecOption): Promise<ContainerExec> {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
-    // first item in the array is the command itself, other items are the flags
-    // `shell: true` is a must for Windows. otherwise, it throws an error  Error: spawn {command} ENOENT
-    // @ts-ignore
-    const childProcess = spawn(execOptions.command.shift(), execOptions.command, { cwd, shell: true });
-    childProcess.abort = async () => childProcess.kill();
-    childProcess.inspect = async () => ({
-      pid: childProcess.pid,
-      running: !childProcess.killed
+    const command = execOptions.command.splice(0, 1)[0];
+    const exec = new ContainerExec();
+    const result = await execa(command, execOptions.command, {
+      shell: true,
+      cwd,
+      stdout: exec.stdout,
+      stderr: exec.stderr
     });
-    return childProcess;
+    exec.setStatus(result.exitCode);
+    return exec;
   }
 
   start(): Promise<void> {
