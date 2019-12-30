@@ -14,7 +14,7 @@ import { getComponentLinks } from '../links/link-generator';
 import Component from '../consumer/component';
 
 export type Options = {
-  newCapsule: boolean;
+  alwaysNew: boolean;
   name?: string;
 };
 
@@ -26,7 +26,7 @@ const DEFAULT_ISOLATION_OPTIONS = {
 };
 
 const DEFAULT_OPTIONS = {
-  newCapsule: false,
+  alwaysNew: false,
   name: v4(),
   installPackages: false
 };
@@ -60,14 +60,17 @@ export default class CapsuleBuilder {
     }, {});
   }
 
-  async createCapsule(bitId: BitId, capsuleOptions: CapsuleOptions = DEFAULT_OPTIONS, options: Options) {
+  async createCapsule(
+    bitId: BitId,
+    capsuleOptions: CapsuleOptions = DEFAULT_ISOLATION_OPTIONS,
+    options: Options = DEFAULT_OPTIONS
+  ) {
     if (!this.orch) throw new Error('cant load orch in non consumer env');
     const config = this._generateResourceConfig(bitId, capsuleOptions, options);
     return this.orch.getCapsules(this.workspace, config, options);
   }
 
   async writeLinkFiles(consumer: Consumer, isolator: Isolator): Promise<void> {
-    // const componentWithDependencies = R.head(await consumer.loadComponentsForCapsule([isolator.capsule.bitId]));
     isolator.componentWithDependencies.component.writtenPath = '.';
     const componentLinkFiles: DataToPersist = getComponentLinks({
       consumer,
@@ -115,7 +118,7 @@ export default class CapsuleBuilder {
     const baseDir = capsuleOptions.baseDir || os.tmpdir();
     if (!options.name) options.name = v4();
     capsuleOptions.baseDir = baseDir;
-    if (options.newCapsule) return path.join(baseDir, `${bitId}_${options.name}`);
+    if (options.alwaysNew) return path.join(baseDir, `${bitId}_${options.name}`);
     if (options.name) return path.join(baseDir, `${bitId}_${options.name}`);
     return path.join(baseDir, `${bitId}_${hash(capsuleOptions)}`);
   }

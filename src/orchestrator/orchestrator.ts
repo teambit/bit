@@ -80,7 +80,7 @@ export class CapsuleOrchestrator {
     if (!pool) {
       pool = await this.addPool(workspace);
     }
-    return pool.getResources(capsuleConf, options.newCapsule);
+    return pool.getResources(capsuleConf, options.alwaysNew);
   }
 
   async addPool(workspace: string) {

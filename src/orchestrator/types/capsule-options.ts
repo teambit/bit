@@ -7,5 +7,5 @@ export interface CapsuleOptions extends ContainerFactoryOptions {
   writeDists?: boolean;
   writeSrcs?: boolean;
   writeBitDependencies?: boolean;
-  installPackages: boolean;
+  installPackages?: boolean;
 }
