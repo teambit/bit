@@ -17,6 +17,7 @@ export type Options = {
   newCapsule: boolean;
   name?: string;
 };
+
 const DEFAULT_ISOLATION_OPTIONS = {
   baseDir: os.tmpdir(),
   writeDists: true,
@@ -53,7 +54,7 @@ export default class CapsuleBuilder {
     const capsuleMapping = this._buildCapsuleMap(capsules);
     await Promise.all(R.map(capsule => this.isolate(consumer, capsule, capsuleOptions, capsuleMapping), capsules));
     if (capsuleOptions.installPackages) await this.installpackages(capsules);
-    return capsules.reduce(function(acc, cur, i) {
+    return capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
     }, {});

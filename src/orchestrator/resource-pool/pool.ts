@@ -117,7 +117,7 @@ export default class Pool<T> extends EventEmitter {
 
   acquire(resourceId: string): Promise<Resource<T>> {
     // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async resolve => {
       const availableResource = await this.db.get(resourceId);
       if (!availableResource) return resolve();
       const resource = await this.resourceFactory.obtain(JSON.stringify(availableResource));
