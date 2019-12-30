@@ -76,6 +76,7 @@
     "vue-components"
   ],
   "dependencies": {
+    "subleveldown": "4.1.4",
     "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
@@ -87,7 +88,7 @@
     "babel-runtime": "^6.23.0",
     "bit-javascript": "2.1.4",
     "bluebird": "^3.5.3",
-    "capsule": "https://storage.googleapis.com/bit-assets/amit/capsule-0.0.1.tgz",
+    "capsule": "https://bit-assets.storage.googleapis.com/amit/capsule-0.0.1.tgz",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
     "cli-spinners": "^1.0.0",
