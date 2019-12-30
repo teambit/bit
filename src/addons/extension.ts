@@ -15,7 +15,6 @@ export type UserExtension = {
 export type UserExtensionFactory = () => UserExtension;
 
 export async function importExtensionObject(id: BitId) {
-  debugger;
   const module = await loadComponent(id);
   return ((module as any) as UserExtensionFactory)();
 }
@@ -31,17 +30,20 @@ export async function installComponent(id: BitId) {
   const capsule = await createComponentCapsule(id);
   const isInstalled = await isComponentInstalled(capsule);
   console.log('after bit install', isInstalled);
+  debugger;
   if (!isInstalled) {
     await capsule.exec({ command: 'npm init --yes'.split(' ') });
     const npmId = `@bit/${id
       .toString()
       .split('/')
       .join('.')}`;
+    console.log('work directory', capsule.wrkDir);
     const command = `npm i ${npmId}`.split(' ');
-    console.log(command.join(' '));
+    console.log('command', '"', command.join(' '), '"');
     await capsule.exec({ command: command });
     await capsule.fs.promises.writeFile(path.join(capsule.wrkDir, 'index.js'), `module.exports = require('${npmId}');`);
   }
+  console.log('work directory', capsule.wrkDir);
   return capsule;
 }
 
