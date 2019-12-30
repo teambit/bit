@@ -27,7 +27,6 @@ const DEFAULT_ISOLATION_OPTIONS = {
 
 const DEFAULT_OPTIONS = {
   alwaysNew: false,
-  name: v4(),
   installPackages: true
 };
 
