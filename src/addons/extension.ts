@@ -1,10 +1,11 @@
+import path from 'path';
 import { ExtensionAPI } from './extension-api';
 import { BitId, BitIds } from '../bit-id';
 import { CACHE_ROOT } from '../constants';
-import path from 'path';
 import { loadConsumer } from '../consumer';
 import { BitCapsule } from '../capsule';
 import { default as CapsuleBuilder, Options } from '../environment/capsule-builder';
+import logger from '../logger/logger';
 
 export type UserExtension = {
   run: (api: ExtensionAPI) => Promise<void>;
@@ -32,7 +33,6 @@ export async function installComponent(id: BitId) {
   console.log('after bit install', isInstalled);
   if (!isInstalled) {
     try {
-      console.log('try!!!!!!!');
       await capsule.exec({ command: 'npm init --yes'.split(' ') });
       const npmId = `@bit/${id
         .toString()
@@ -41,15 +41,13 @@ export async function installComponent(id: BitId) {
       console.log('work directory', capsule.wrkDir);
       const command = `npm i ${npmId}`.split(' ');
       console.log('command', '"', command.join(' '), '"');
-      await capsule.exec({ command: command });
-      const z = await capsule.fs.promises.writeFile(
+      await capsule.exec({ command });
+      await capsule.fs.promises.writeFile(
         path.join(capsule.wrkDir, 'index.js'),
         `module.exports = require('${npmId}');`
       );
-      // await capsule.outputFile('index.js', `module.exports = require('${npmId}')`,{})
     } catch (e) {
-      console.log('wow');
-      debugger;
+      logger.error(`extensions.ts-installComponent failed to setup capsule`);
     }
   }
   console.log('work directory', capsule.wrkDir);
@@ -74,14 +72,12 @@ export async function loadComponent(id: BitId) {
   try {
     component = require(capsule.wrkDir);
   } catch (e) {
-    debugger;
-    console.log('~~~~~~~~~~~~~~~~~~~~~~ERROR~~~~~~~~~~~~~~~~~~~~~~~~~``');
+    logger.error(`extension.ts-loadComponent failed to load(require) capsule`);
   }
   return component!;
 }
 
 export function canBeRequired(id: string) {
-  debugger;
   let canRequire = true;
   try {
     require.resolve(id);
