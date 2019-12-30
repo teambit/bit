@@ -1,4 +1,5 @@
 import { Capsule, Exec, Volume, Console, State } from 'capsule';
+import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
 import BitId from '../bit-id/bit-id';
@@ -73,7 +74,7 @@ export default class BitCapsule extends Capsule<Exec, Volume> {
       id: this.containerId,
       wrkDir: this.container.path,
       bitId: this.bitId,
-      capsuleOptions: this.config.capsuleOptions
+      options: _.omit(this.config, ['bitId', 'wrkDir'])
     });
   }
   static deSerializeConfig(config: any): string {

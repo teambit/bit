@@ -26,8 +26,7 @@ const DEFAULT_ISOLATION_OPTIONS = {
 };
 
 const DEFAULT_OPTIONS = {
-  alwaysNew: false,
-  installPackages: true
+  alwaysNew: false
 };
 
 export default class CapsuleBuilder {
@@ -35,7 +34,10 @@ export default class CapsuleBuilder {
 
   private _buildCapsuleMap(capsules: BitCapsule[]) {
     const capsuleMapping = {};
-    R.map(capsules, (capsule: BitCapsule) => (capsuleMapping[capsule.bitId.toString()] = capsule.wrkDir));
+    // eslint-disable-next-line array-callback-return
+    R.map((capsule: BitCapsule) => {
+      capsuleMapping[capsule.bitId.toString()] = capsule.wrkDir;
+    }, capsules);
     return capsuleMapping;
   }
 
@@ -84,7 +86,11 @@ export default class CapsuleBuilder {
   }
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
-    await Promise.all(capsules.map(capsule => capsule.exec({ command: `npm i`.split(' ') })));
+    try {
+      await Promise.all(capsules.map(capsule => capsule.exec({ command: `npm install`.split(' ') })));
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   async isolate(

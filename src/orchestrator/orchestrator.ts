@@ -37,13 +37,11 @@ export class CapsuleOrchestrator {
   }
 
   async describe(capsule: string): Promise<any> {
-    await this.buildPools();
     const capsuleData = await Promise.all(this.pools.map(pool => pool.describe(capsule)));
     return _.head(_.compact(capsuleData));
   }
 
   async list(workspace?: string): Promise<ListResults[] | ListResults> {
-    await this.buildPools();
     if (workspace) {
       const pool = this.getPool(workspace);
       if (!pool) throw new Error(`No workspace ${workspace}`);

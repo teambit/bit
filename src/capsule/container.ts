@@ -4,6 +4,7 @@ import hash from 'object-hash';
 import * as path from 'path';
 import execa from 'execa';
 import os from 'os';
+import v4 from 'uuid';
 import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
 import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
 import ContainerExec from './container-exec';
@@ -38,8 +39,11 @@ export default class FsContainer implements Container<Exec, Volume> {
   }
 
   private generateDefaultTmpDir() {
-    return path.join(os.tmpdir(), `${this.config.bitId.toString()}_${hash(this.config)}`);
-    // return path.join(os.tmpdir(), v4());
+    if (this.config.bitId) {
+      return path.join(os.tmpdir(), `${this.config.bitId.toString()}_${hash(this.config)}`);
+    }
+    // backword capsule support - remove
+    return path.join(os.tmpdir(), v4());
   }
 
   outputFile(file, data, options) {
