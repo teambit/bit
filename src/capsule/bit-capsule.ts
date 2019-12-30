@@ -6,12 +6,9 @@ import BitContainerFactory from '../orchestrator/bit-container-factory';
 import loader from '../cli/loader';
 
 export default class BitCapsule extends Capsule<Exec, Volume> {
-  get bitId(): BitId {
-    return this._bitId;
-  }
   private _wrkDir: string;
   private _bitId: BitId;
-
+  private _new = false;
   constructor(
     /**
      * container implementation the capsule is being executed within.
@@ -37,6 +34,17 @@ export default class BitCapsule extends Capsule<Exec, Volume> {
     super(container, fs, console, state, config);
     this._wrkDir = container.path;
     this._bitId = config.bitId;
+  }
+
+  get new(): boolean {
+    return this._new;
+  }
+
+  set new(value: boolean) {
+    this._new = value;
+  }
+  get bitId(): BitId {
+    return this._bitId;
   }
 
   get wrkDir(): string {
