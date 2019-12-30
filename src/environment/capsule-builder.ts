@@ -67,7 +67,7 @@ export default class CapsuleBuilder {
   ) {
     if (!this.orch) throw new Error('cant load orch in non consumer env');
     const config = this._generateResourceConfig(bitId, capsuleOptions, options);
-    return this.orch.getCapsules(this.workspace, config, options);
+    return this.orch.getCapsule(this.workspace, config, options);
   }
 
   async writeLinkFiles(consumer: Consumer, isolator: Isolator): Promise<void> {
