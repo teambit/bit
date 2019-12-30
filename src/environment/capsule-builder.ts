@@ -22,13 +22,13 @@ const DEFAULT_ISOLATION_OPTIONS = {
   baseDir: os.tmpdir(),
   writeDists: true,
   writeBitDependencies: true,
-  installPackages: false
+  installPackages: true
 };
 
 const DEFAULT_OPTIONS = {
   alwaysNew: false,
   name: v4(),
-  installPackages: false
+  installPackages: true
 };
 
 export default class CapsuleBuilder {
@@ -43,8 +43,8 @@ export default class CapsuleBuilder {
   async isolateComponents(
     consumer: Consumer,
     bitIds: BitId[],
-    capsuleOptions: CapsuleOptions,
-    options: Options
+    capsuleOptions: CapsuleOptions = DEFAULT_ISOLATION_OPTIONS,
+    options: Options = DEFAULT_OPTIONS
   ): Promise<{ [bitId: string]: BitCapsule }> {
     const components = await consumer.loadComponentsForCapsule(bitIds);
 
