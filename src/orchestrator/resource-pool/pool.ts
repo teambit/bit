@@ -88,7 +88,7 @@ export default class Pool<T> extends EventEmitter {
         created = true;
       }
       this.observeResource(acquiredResource);
-      const capsule = acquiredResource.use();
+      const capsule = acquiredResource.use() as BitCapsule;
       capsule.new = created;
       return capsule;
     };

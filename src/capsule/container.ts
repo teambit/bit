@@ -63,14 +63,15 @@ export default class FsContainer implements Container<Exec, Volume> {
   async exec(execOptions: BitExecOption): Promise<ContainerExec> {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
-    const command = execOptions.command.splice(0, 1)[0];
+    const command = _.head(execOptions.command.splice(0, 1));
     const exec = new ContainerExec();
-    const result = await execa(command, execOptions.command, {
+    const subprocessP = execa(command, execOptions.command, {
       shell: true,
-      cwd,
-      stdout: exec.stdout,
-      stderr: exec.stderr
+      cwd
     });
+    subprocessP.stdout!.pipe(exec.stdout);
+    subprocessP.stderr!.pipe(exec.stderr);
+    const result = await subprocessP;
     exec.setStatus(result.exitCode);
     return exec;
   }
