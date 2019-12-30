@@ -15,6 +15,7 @@ export type UserExtension = {
 export type UserExtensionFactory = () => UserExtension;
 
 export async function importExtensionObject(id: BitId) {
+  debugger;
   const module = await loadComponent(id);
   return ((module as any) as UserExtensionFactory)();
 }
