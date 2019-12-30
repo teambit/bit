@@ -6,6 +6,7 @@ import Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS } from '../constants';
 import { BitCapsule } from '../capsule';
 import { capsuleIsolate } from '../api/consumer';
+import CapsuleBuilder from '../environment/capsule-builder';
 
 export async function run(options: RunOptions): Promise<any> {
   const consumer = await loadConsumer();
@@ -24,9 +25,11 @@ export async function run(options: RunOptions): Promise<any> {
       : loadedImported.filter(component => !!getComponentPipe(component, options.step!));
     components.push(...componentWithCorrectPipe);
   }
-  const capsules = await capsuleIsolate(
-    components.map(component => component.id),
-    {}
+  const build = new CapsuleBuilder(consumer.getPath());
+  const capsules = await build.isolateComponents(
+    consumer,
+    components.map(comp => comp.id),
+    { baseDir: '/tmp/ninja' }
   );
 
   await Promise.all(

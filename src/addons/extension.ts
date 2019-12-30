@@ -3,8 +3,8 @@ import { BitId, BitIds } from '../bit-id';
 import { CACHE_ROOT } from '../constants';
 import path from 'path';
 import { loadConsumer } from '../consumer';
-import orc from '../orchestrator/orchestrator';
 import { BitCapsule } from '../capsule';
+import { default as CapsuleBuilder, Options } from '../environment/capsule-builder';
 
 export type UserExtension = {
   run: (api: ExtensionAPI) => Promise<void>;
@@ -30,18 +30,27 @@ export async function installComponent(id: BitId) {
   const capsule = await createComponentCapsule(id);
   const isInstalled = await isComponentInstalled(capsule);
   console.log('after bit install', isInstalled);
-  debugger;
   if (!isInstalled) {
-    await capsule.exec({ command: 'npm init --yes'.split(' ') });
-    const npmId = `@bit/${id
-      .toString()
-      .split('/')
-      .join('.')}`;
-    console.log('work directory', capsule.wrkDir);
-    const command = `npm i ${npmId}`.split(' ');
-    console.log('command', '"', command.join(' '), '"');
-    await capsule.exec({ command: command });
-    await capsule.fs.promises.writeFile(path.join(capsule.wrkDir, 'index.js'), `module.exports = require('${npmId}');`);
+    try {
+      console.log('try!!!!!!!');
+      await capsule.exec({ command: 'npm init --yes'.split(' ') });
+      const npmId = `@bit/${id
+        .toString()
+        .split('/')
+        .join('.')}`;
+      console.log('work directory', capsule.wrkDir);
+      const command = `npm i ${npmId}`.split(' ');
+      console.log('command', '"', command.join(' '), '"');
+      await capsule.exec({ command: command });
+      const z = await capsule.fs.promises.writeFile(
+        path.join(capsule.wrkDir, 'index.js'),
+        `module.exports = require('${npmId}');`
+      );
+      // await capsule.outputFile('index.js', `module.exports = require('${npmId}')`,{})
+    } catch (e) {
+      console.log('wow');
+      debugger;
+    }
   }
   console.log('work directory', capsule.wrkDir);
   return capsule;
@@ -49,11 +58,8 @@ export async function installComponent(id: BitId) {
 
 export async function createComponentCapsule(id: BitId) {
   const componentDir = path.join(CACHE_ROOT, 'components');
-  const resource = (
-    await orc.getCapsules(componentDir, [{ resourceId: id.toString(), options: { bitId: id, baseDir: componentDir } }])
-  )[0];
-  const capsule = resource.use() as BitCapsule;
-  return capsule;
+  const builder = new CapsuleBuilder(componentDir);
+  return builder.createCapsule(id);
 }
 
 export async function isComponentInstalled(id: BitId | BitCapsule): Promise<boolean> {
@@ -64,10 +70,18 @@ export async function isComponentInstalled(id: BitId | BitCapsule): Promise<bool
 
 export async function loadComponent(id: BitId) {
   const capsule = await installComponent(id);
-  return require(capsule.wrkDir);
+  let component = null;
+  try {
+    component = require(capsule.wrkDir);
+  } catch (e) {
+    debugger;
+    console.log('~~~~~~~~~~~~~~~~~~~~~~ERROR~~~~~~~~~~~~~~~~~~~~~~~~~``');
+  }
+  return component!;
 }
 
 export function canBeRequired(id: string) {
+  debugger;
   let canRequire = true;
   try {
     require.resolve(id);
