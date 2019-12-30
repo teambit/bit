@@ -52,7 +52,9 @@ export default class CapsuleBuilder {
       R.map((component: Component) => this.createCapsule(component.id, capsuleOptions, options), components)
     );
     const capsuleMapping = this._buildCapsuleMap(capsules);
-    await Promise.all(R.map(capsule => this.isolate(consumer, capsule, capsuleOptions, capsuleMapping), capsules));
+    await Promise.all(
+      R.map(capsule => this.isolate(consumer, capsule, capsuleOptions, options, capsuleMapping), capsules)
+    );
     if (capsuleOptions.installPackages) await this.installpackages(capsules);
     return capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
@@ -90,6 +92,7 @@ export default class CapsuleBuilder {
     consumer: Consumer,
     capsule: BitCapsule,
     capsuleOptions: CapsuleOptions,
+    options: Options,
     capsuleMap: { [bitId: string]: string }
   ) {
     const isolator: Isolator = await Isolator.getInstance(
@@ -106,7 +109,8 @@ export default class CapsuleBuilder {
         {},
         DEFAULT_ISOLATION_OPTIONS,
         {
-          writeToPath: capsule.wrkDir
+          writeToPath: capsule.wrkDir,
+          keepExistingCapsule: options.alwaysNew
         },
         capsuleOptions
       )
@@ -116,7 +120,6 @@ export default class CapsuleBuilder {
 
   private _generateWrkDir(bitId: string, capsuleOptions: CapsuleOptions, options: Options) {
     const baseDir = capsuleOptions.baseDir || os.tmpdir();
-    if (!options.name) options.name = v4();
     capsuleOptions.baseDir = baseDir;
     if (options.alwaysNew) return path.join(baseDir, `${bitId}_${options.name}`);
     if (options.name) return path.join(baseDir, `${bitId}_${options.name}`);
