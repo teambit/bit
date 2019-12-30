@@ -1,7 +1,7 @@
 import { LevelUp } from 'levelup';
 
 export default class Repository {
-  constructor(workspace: string, private db: LevelUp) {}
+  constructor(private db: LevelUp) {}
 
   public async get(key: string): Promise<any> {
     try {

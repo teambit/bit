@@ -1,5 +1,6 @@
 import { Capsule, Exec, Volume } from 'capsule';
 import _ from 'lodash';
+import sub from 'subleveldown';
 import fs from 'fs-extra';
 import level from 'level-party';
 import { LevelUp } from 'levelup';
@@ -19,7 +20,7 @@ export class CapsuleOrchestrator {
 
   constructor(
     private rootRepository: LevelUp,
-    private db: Repository = new Repository('orchestartor', rootRepository),
+    private db: Repository = new Repository(sub(rootRepository, 'orchestartor')),
     private pools: Pool<Capsule<Exec, Volume>>[] = []
   ) {}
 
@@ -94,7 +95,7 @@ export class CapsuleOrchestrator {
     await this.db.put(workspace, '');
     const pool = new Pool<BitCapsule>(
       workspace,
-      new Repository(workspace, this.rootRepository),
+      new Repository(sub(this.rootRepository, workspace)),
       new CapsuleFactory<BitCapsule>(
         new BitContainerFactory(),
         // @ts-ignore
@@ -135,7 +136,7 @@ export class CapsuleOrchestrator {
     const pools = keys.map(workspace => {
       return new Pool<BitCapsule>(
         workspace,
-        new Repository(workspace, this.rootRepository),
+        new Repository(sub(this.rootRepository, workspace)),
         new CapsuleFactory<BitCapsule>(
           new BitContainerFactory(),
           // TODO - FIX THIS ASAP
