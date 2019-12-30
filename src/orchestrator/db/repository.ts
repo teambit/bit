@@ -1,17 +1,7 @@
 import { LevelUp } from 'levelup';
-import level from 'level-party';
-import * as path from 'path';
-import { COMPONENT_CACHE_ROOT } from '../../constants';
 
-export default class ComponentDB {
-  constructor(
-    workspace: string,
-    private db: LevelUp = level(
-      path.join(COMPONENT_CACHE_ROOT, workspace.split(path.sep).join('_')),
-      { valueEncoding: 'json' },
-      {}
-    )
-  ) {}
+export default class Repository {
+  constructor(workspace: string, private db: LevelUp) {}
 
   public async get(key: string): Promise<any> {
     try {
@@ -34,6 +24,34 @@ export default class ComponentDB {
     // @ts-ignore
     return this.db.batch(ops);
   }
+
+  public getAll(key = true, vals = true): Promise<Array<{ key: string; value: any }>> {
+    return new Promise((resolve, reject) => {
+      const keys: Array<{ key: string; value: any }> = [];
+      this.db
+        .createReadStream({ keys: key, values: vals })
+        .on('data', function(data: { key: string; value: any }) {
+          try {
+            const val = JSON.parse(data.value);
+            data.value = val;
+            keys.push(data);
+          } catch (e) {
+            // this.del(data.key)
+          }
+        })
+        .on('error', function(err) {
+          // console.log('Oh my!', err);
+          reject(err);
+        })
+        .on('close', function() {})
+        .on('end', function() {
+          // console.log('Stream ended');
+
+          return resolve(keys);
+        });
+    });
+  }
+
   public keys(): Promise<any> {
     return new Promise((resolve, reject) => {
       const keys: Array<string> = [];
