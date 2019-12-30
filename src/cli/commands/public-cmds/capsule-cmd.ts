@@ -55,7 +55,7 @@ export class CapsuleCreate extends Command {
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
     ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
-    ['ip', 'installPackages', 'install packages in capsule with npm']
+    ['d', 'installPackages', 'install packages in capsule with npm']
   ];
   loader = true;
   migration = true;
@@ -77,8 +77,8 @@ export class CapsuleCreate extends Command {
     return Promise.resolve(
       capsuleIsolate(
         values,
-        _.omitBy({ baseDir }, _.isNil),
-        _.omitBy({ alwaysNew, name: id, installPackages }, _.isNil)
+        _.omitBy({ baseDir, installPackages }, _.isNil),
+        _.omitBy({ alwaysNew, name: id }, _.isNil)
       )
     );
   }
