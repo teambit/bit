@@ -57,6 +57,7 @@ import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
 import Run from './commands/public-cmds/run-cmd';
 import Capsule from './commands/public-cmds/capsule-cmd';
+import { CapsuleCreate, CapsuleList, CapsuleDescribe } from './commands/public-cmds/capsule-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
@@ -155,7 +156,11 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Run(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Capsule()
+      new CapsuleCreate(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new CapsuleList(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new CapsuleDescribe()
     ],
     extensionsCommands
   );

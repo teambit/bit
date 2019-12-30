@@ -71,6 +71,7 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
+import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 
 type ConsumerProps = {
   projectPath: string;
@@ -362,6 +363,17 @@ export default class Consumer {
   async loadComponent(id: BitId): Promise<Component> {
     const { components } = await this.loadComponents(BitIds.fromArray([id]));
     return components[0];
+  }
+
+  async loadComponentsForCapsule(ids: BitId[]): Promise<Component[]> {
+    const allComponents = await Promise.all(
+      ids.map(async id => {
+        const component = await this.loadComponentForCapsule(id);
+        const componenetWithDependencies = await loadFlattenedDependenciesForCapsule(this, component);
+        return R.concat([component], componenetWithDependencies.allDependencies);
+      })
+    );
+    return R.uniqBy((component: Component) => component.id.toString(), R.flatten(allComponents));
   }
 
   loadComponentForCapsule(id: BitId): Promise<Component> {

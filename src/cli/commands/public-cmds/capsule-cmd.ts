@@ -1,40 +1,61 @@
-import chalk from 'chalk';
+// eslint-disable-next-line max-classes-per-file
 import _ from 'lodash';
 import Command from '../../command';
 import { capsuleIsolate } from '../../../api/consumer';
 import BitCapsule from '../../../capsule/bit-capsule';
+import capsuleOrchestrator from '../../../orchestrator/orchestrator';
+import { ListResults } from '../../../orchestrator/types';
+import { render } from '../../../utils';
 
-/* export class CapsuleList extends Command {
+export class CapsuleList extends Command {
   // first command is supposed to be the action and the rest is the bitIds
-  name = 'list <workspace>';
+  name = 'capsule-list [workspace]';
   description = `list all capsule`;
   alias = '';
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  opts = [['workspace', 'workspace<string>', 'list workspace capsules']];
+  loader = true;
+  migration = true;
+
+  action([workspace]: [string]): Promise<ListResults[] | ListResults> {
+    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
+    return capsuleOrchestrator.list(workspace);
+  }
+
+  report(capsuleListByWorkspace: ListResults[] | ListResults): string {
+    return render(capsuleListByWorkspace);
+  }
+}
+
+export class CapsuleDescribe extends Command {
+  // first command is supposed to be the action and the rest is the bitIds
+  name = 'capsule-describe <capsule>';
+  description = `describe capsule`;
+  alias = 'd';
   opts = [];
   loader = true;
   migration = true;
 
-  action(workspace: string): Promise<any[]> {
-    return capsuleOrchestrator.list().then(res => res.flat());
+  action([capsule]: [string]): Promise<any[]> {
+    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
+    return capsuleOrchestrator.describe(capsule);
   }
 
-  report(list: any): string {
-    return chalk.green('added configuration successfully');
+  report(capsuleListByWorkspace: ListResults[]): string {
+    return render(capsuleListByWorkspace);
   }
-} */
+}
 
-export default class Capsule extends Command {
-  // first command is supposed to be the action and the rest is the bitIds
-  name = 'capsule [values...]';
+export class CapsuleCreate extends Command {
+  name = 'capsule-create [path...]';
   description = `capsule`;
   alias = '';
-  // commands = [new CapsuleList()];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-
   opts = [
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
-    ['n', 'newCapsule', 'create new environment for capsule'],
-    ['h', 'hash <string>', 'reuse capsule of certain hash'],
-    ['i', 'installPackages', 'install packages in capsule with npm']
+    ['c', 'newCapsule', 'create new environment for capsule'],
+    ['i', 'id <name>', 'reuse capsule of certain name'],
+    ['ip', 'installPackages', 'install packages in capsule with npm']
   ];
   loader = true;
   migration = true;
@@ -44,12 +65,12 @@ export default class Capsule extends Command {
     {
       baseDir,
       newCapsule = false,
-      hash,
+      id,
       installPackages = false
     }: {
       baseDir: string | null | undefined;
       newCapsule: boolean;
-      hash: string;
+      id: string;
       installPackages: boolean;
     }
   ): Promise<any> {
@@ -57,13 +78,38 @@ export default class Capsule extends Command {
       capsuleIsolate(
         values,
         _.omitBy({ baseDir }, _.isNil),
-        _.omitBy({ new: newCapsule, hash, installPackages }, _.isNil)
+        _.omitBy({ newCapsule, name: id, installPackages }, _.isNil)
       )
     );
   }
+
   report(capsuleObj: { [bitId: string]: BitCapsule }): string {
-    return Object.values(capsuleObj)
-      .map(capsule => chalk.green(`${capsule.bitId.toString()}..........${capsule.wrkDir}\n`))
-      .join('');
+    const createdCapsules = Object.values(capsuleObj).map(capsule => {
+      return {
+        bitId: capsule.bitId.toString(),
+        wrkDir: capsule.wrkDir
+      };
+    });
+    return render(createdCapsules);
   }
 }
+/* export default class Capsule extends Command {
+  name = 'capsule';
+  description = ``;
+  alias = '';
+  // @ts-ignore
+  commands = [];
+  subCommands=[new CapsuleCreate(), new CapsuleList(), new CapsuleDescribe()]
+  opts = [];
+  migration = false;
+
+  action(): Promise<any> {
+    return Promise.resolve()
+  }
+
+  report(conf: { [key: string]: string }): string {
+    return '';
+  }
+
+
+} */

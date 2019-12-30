@@ -1,19 +1,27 @@
 import { Capsule, Exec, Volume } from 'capsule';
-import path from 'path';
+import _ from 'lodash';
 import fs from 'fs-extra';
+import level from 'level-party';
+import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
-import ComponentDB from './db/component-db';
-import WorkspacePoolManager from './workspace-pool-manager';
+import Repository from './db/repository';
 import { BitCapsule } from '../capsule';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
-import { COMPONENT_CACHE_ROOT } from '../constants';
+import { CreateOptions, ListResults } from './types';
+import { Options } from '../environment/capsule-builder';
+import { getSync } from '../api/consumer/lib/global-config';
+import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../constants';
 
 export class CapsuleOrchestrator {
   private _loaded = false;
 
-  constructor(private pools: Pool<Capsule<Exec, Volume>>[] = []) {}
+  constructor(
+    private rootRepository: LevelUp,
+    private db: Repository = new Repository('orchestartor', rootRepository),
+    private pools: Pool<Capsule<Exec, Volume>>[] = []
+  ) {}
 
   get loaded(): boolean {
     return this._loaded;
@@ -27,10 +35,34 @@ export class CapsuleOrchestrator {
     return this.pools.find(pool => pool.workspace === workspace);
   }
 
-  /* async list(workspace?: string) {
-    // const x = await Promise.all(this.pools.map(pool => pool.list()));
-    // return x;
-  } */
+  async describe(capsule: string): Promise<any> {
+    await this.buildPools();
+    const capsuleData = await Promise.all(this.pools.map(pool => pool.describe(capsule)));
+    return _.head(_.compact(capsuleData));
+  }
+
+  async list(workspace?: string): Promise<ListResults[] | ListResults> {
+    await this.buildPools();
+    if (workspace) {
+      const pool = this.getPool(workspace);
+      if (!pool) throw new Error(`No workspace ${workspace}`);
+      const capsules = await pool.list();
+      return {
+        workspace,
+        capsules
+      };
+    }
+    const data = await Promise.all(
+      this.pools.map(async pool => {
+        const capsules = await pool.list();
+        return {
+          workspace: pool.workspace,
+          capsules
+        };
+      })
+    );
+    return data;
+  }
 
   acquire(workspace: string, bitId: string): Promise<Resource<Capsule<Exec, Volume>>> {
     const pool = this.getPool(workspace);
@@ -41,20 +73,21 @@ export class CapsuleOrchestrator {
 
   async getCapsules(
     workspace: string,
-    bitIdsWithData: { resourceId: string; options: any }[],
-    globalOptions = { new: false }
-  ) {
+    capsuleConf: CreateOptions[] | CreateOptions,
+    options: Options
+  ): Promise<BitCapsule[] | BitCapsule> {
     let pool = this.getPool(workspace);
     if (!pool) {
       pool = await this.addPool(workspace);
     }
-    return pool.getResources(bitIdsWithData, globalOptions);
+    return pool.getResources(capsuleConf, options.newCapsule);
   }
 
   async addPool(workspace: string) {
-    const pool = new WorkspacePoolManager<BitCapsule>(
+    await this.db.put(workspace, '');
+    const pool = new Pool<BitCapsule>(
       workspace,
-      new ComponentDB(workspace),
+      new Repository(workspace, this.rootRepository),
       new CapsuleFactory<BitCapsule>(
         new BitContainerFactory(),
         // @ts-ignore
@@ -63,7 +96,6 @@ export class CapsuleOrchestrator {
       )
     );
     this.pools.push(pool);
-    // await this.db.put(workspace, hash(workspace));
     return pool;
   }
 
@@ -74,18 +106,28 @@ export class CapsuleOrchestrator {
     }
     return pool.createResource(resourceId, options);
   }
+
   drain() {
     return Promise.resolve();
   }
 
-  async buildPools() {
-    const keys: string[] = fs.readdirSync(COMPONENT_CACHE_ROOT);
+  async prune() {
+    const keys: string[] = await this.db.keys();
+    await Promise.all(
+      keys.map(async workspace => {
+        if (!fs.pathExistsSync(workspace)) {
+          return this.db.del(workspace);
+        }
+      })
+    );
+  }
 
+  async buildPools() {
+    const keys: string[] = await this.db.keys();
     const pools = keys.map(workspace => {
-      workspace = workspace.split('_').join(path.sep);
-      return new WorkspacePoolManager<BitCapsule>(
+      return new Pool<BitCapsule>(
         workspace,
-        new ComponentDB(workspace),
+        new Repository(workspace, this.rootRepository),
         new CapsuleFactory<BitCapsule>(
           new BitContainerFactory(),
           // TODO - FIX THIS ASAP
@@ -96,11 +138,17 @@ export class CapsuleOrchestrator {
       );
     });
     this.pools = pools;
+    await Promise.all(this.pools.map(pool => pool.prune()));
+    await this.prune();
     this.loaded = true;
   }
 
-  static initiate(): CapsuleOrchestrator {
-    return new CapsuleOrchestrator();
+  static initiate(): CapsuleOrchestrator | undefined {
+    const shouldInitOrchestrator = getSync(CFG_GLOBAL_REPOSITORY) || true;
+    if (!shouldInitOrchestrator) return;
+    const ROOT_REPOSITORY: LevelUp = level(REPOSITORY_CACHE_ROOT);
+    // eslint-disable-next-line consistent-return
+    return new CapsuleOrchestrator(ROOT_REPOSITORY);
   }
 }
 export default CapsuleOrchestrator.initiate();

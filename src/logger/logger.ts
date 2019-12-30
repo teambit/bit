@@ -222,7 +222,10 @@ if (process.env.BIT_LOG) {
   logger.logger.add(
     new winston.transports.Console({
       level: isLevel ? process.env.BIT_LOG : 'silly',
-      format: winston.format.combine(filterPrefix(), winston.format.printf(info => info.message))
+      format: winston.format.combine(
+        filterPrefix(),
+        winston.format.printf(info => info.message)
+      )
     })
   );
 }
@@ -238,7 +241,7 @@ winston.loggers.add('consoleOnly', {
 export interface Logger {
   info(message: string, data?: any): void;
 
-  warning(message: string, data?: any): void;
+  warn(message: string, data?: any): void;
 
   error(message: string, data?: any): void;
 

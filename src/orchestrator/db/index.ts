@@ -1,3 +1,3 @@
-import ComponentDB from './component-db';
+import Repository from './repository';
 
-export default ComponentDB;
+export default Repository;

@@ -1,7 +1,6 @@
 import cliSpinners from 'cli-spinners';
 import os from 'os';
 import * as path from 'path';
-import fse from 'fs-extra';
 import format from 'string-format';
 import { PathOsBased } from './utils/path';
 import { ComponentOrigin } from './consumer/bit-map/component-map';
@@ -304,15 +303,8 @@ export const HOOKS_NAMES = [
  */
 export const CACHE_ROOT = getCacheDirectory();
 
-/**
- * cache root directory
- */
-function getComponentDirectory(): string {
-  const pth = path.join(CACHE_ROOT, 'component-map');
-  fse.ensureDirSync(pth);
-  return pth;
-}
-export const COMPONENT_CACHE_ROOT = getComponentDirectory();
+export const CFG_GLOBAL_REPOSITORY = 'global_repository';
+export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
 
 /**
  * app cache directory

@@ -76,6 +76,7 @@
     "vue-components"
   ],
   "dependencies": {
+    "subleveldown": "4.1.4",
     "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
