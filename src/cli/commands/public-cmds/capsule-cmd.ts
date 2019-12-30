@@ -53,7 +53,7 @@ export class CapsuleCreate extends Command {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['b', 'baseDir <name>', 'set base dir of all capsules'],
-    ['c', 'newCapsule', 'create new environment for capsule'],
+    ['a', 'alwaysNew', 'create new environment for capsule'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['ip', 'installPackages', 'install packages in capsule with npm']
   ];
@@ -64,12 +64,12 @@ export class CapsuleCreate extends Command {
     [values]: [string[]],
     {
       baseDir,
-      newCapsule = false,
+      alwaysNew = false,
       id,
       installPackages = false
     }: {
       baseDir: string | null | undefined;
-      newCapsule: boolean;
+      alwaysNew: boolean;
       id: string;
       installPackages: boolean;
     }
@@ -78,7 +78,7 @@ export class CapsuleCreate extends Command {
       capsuleIsolate(
         values,
         _.omitBy({ baseDir }, _.isNil),
-        _.omitBy({ newCapsule, name: id, installPackages }, _.isNil)
+        _.omitBy({ alwaysNew, name: id, installPackages }, _.isNil)
       )
     );
   }
