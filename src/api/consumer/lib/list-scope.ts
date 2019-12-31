@@ -12,6 +12,7 @@ import GeneralError from '../../../error/general-error';
 import { BitId } from '../../../bit-id';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 import { SSHConnectionStrategyName } from '../../../scope/network/ssh/ssh';
+import getRemoteByName from '../../../remotes/get-remote-by-name';
 
 export async function listScope({
   scopeName,
@@ -26,14 +27,14 @@ export async function listScope({
   namespacesUsingWildcards?: string;
   strategiesNames?: SSHConnectionStrategyName[];
 }): Promise<ListScopeResult[]> {
-  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
+  const consumer: Consumer | null = await loadConsumerIfExist();
   if (scopeName) {
     return remoteList();
   }
   return scopeList();
 
   async function remoteList(): Promise<ListScopeResult[]> {
-    const remote: Remote = await _getRemote();
+    const remote: Remote = await getRemoteByName(scopeName as string, consumer);
     loader.start(BEFORE_REMOTE_LIST);
     return remote.list(namespacesUsingWildcards, strategiesNames);
   }
@@ -46,16 +47,6 @@ export async function listScope({
     const componentsList = new ComponentsList(consumer);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentsList.listScope(showRemoteVersion, showAll, namespacesUsingWildcards);
-  }
-
-  async function _getRemote(): Promise<Remote> {
-    if (consumer) {
-      const remotes = await getScopeRemotes(consumer.scope);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return remotes.resolve(scopeName, consumer.scope);
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Remotes.getScopeRemote(scopeName);
   }
 }
 

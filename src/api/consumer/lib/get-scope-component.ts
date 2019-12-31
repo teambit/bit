@@ -9,6 +9,7 @@ import { loadConsumerIfExist, Consumer } from '../../../consumer';
 import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import getRemoteByName from '../../../remotes/get-remote-by-name';
 
 export default (async function getScopeComponent({
   id,
@@ -32,8 +33,8 @@ export default (async function getScopeComponent({
     return { component };
   }
 
-  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
-  const remote = await getRemote();
+  const consumer: Consumer | null = await loadConsumerIfExist();
+  const remote = await getRemoteByName(bitId.scope as string, consumer);
   loader.start(BEFORE_REMOTE_SHOW);
   const component = await remote.show(bitId);
   let dependenciesInfo: DependenciesInfo[] = [];
@@ -59,16 +60,5 @@ export default (async function getScopeComponent({
     }
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     return scopeComponentsImporter.loadRemoteComponent(bitId);
-  }
-
-  async function getRemote(): Promise<Remote> {
-    // $FlowFixMe scope must be set as it came from a remote
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const scopeName: string = bitId.scope;
-    if (consumer) {
-      const remotes: Remotes = await getScopeRemotes(consumer.scope);
-      return remotes.resolve(scopeName, consumer.scope);
-    }
-    return Remotes.getScopeRemote(scopeName);
   }
 });

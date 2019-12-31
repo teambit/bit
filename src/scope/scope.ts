@@ -48,6 +48,7 @@ import { IndexType, ComponentItem, LaneItem } from './objects/components-index';
 import Lane from './models/lane';
 import LaneId from '../lane-id/lane-id';
 import ObjectsToPush from './objects-to-push';
+import { ComponentLogs } from './models/model-component';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -553,8 +554,7 @@ export default class Scope {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<{ [key: number]: { message: string; date: string; hash: string } }> {
+  loadComponentLogs(id: BitId): Promise<ComponentLogs> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);

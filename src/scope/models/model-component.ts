@@ -51,6 +51,7 @@ export type ScopeListItem = { url: string; name: string; date: string };
 export type SnapModel = { head?: Ref };
 
 export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[]; commonSnapBeforeDiverge: Ref | null };
+export type ComponentLogs = { [key: number]: { message: string; date: string; hash: string } | null | undefined };
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -430,9 +431,7 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(
-    repo: Repository
-  ): Promise<{ [key: string]: { message: string; date: string; hash: string } | null | undefined }> {
+  async collectLogs(repo: Repository): Promise<ComponentLogs> {
     const versionsInfo = await this.getAllVersionsInfo({ repo, throws: false });
     return versionsInfo.reduce((acc, current: VersionInfo) => {
       const log = current.version ? current.version.log : { message: '<no-data-available>' };

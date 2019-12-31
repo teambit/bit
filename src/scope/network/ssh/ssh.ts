@@ -35,6 +35,7 @@ import DependencyGraph from '../../graph/scope-graph';
 import globalFlags from '../../../cli/global-flags';
 import ObjectsToPush from '../../objects-to-push';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
+import { ComponentLogs } from '../../models/model-component';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -477,6 +478,14 @@ export default class SSH implements Network {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       return str ? ConsumerComponent.fromString(payload) : null;
+    });
+  }
+
+  log(id: BitId): Promise<ComponentLogs> {
+    return this.exec('_log', id.toString()).then((str: string) => {
+      const { payload, headers } = this._unpack(str);
+      checkVersionCompatibility(headers.version);
+      return str ? JSON.parse(payload) : null;
     });
   }
 

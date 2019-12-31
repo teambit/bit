@@ -12,6 +12,7 @@ import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 import ObjectsToPush from '../../objects-to-push';
+import { ComponentLogs } from '../../models/model-component';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -85,10 +86,13 @@ export default class Fs implements Network {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   show(bitId: BitId): Promise<> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
     return scopeComponentsImporter.loadComponent(bitId);
+  }
+
+  log(bitId: BitId): Promise<ComponentLogs> {
+    return this.getScope().loadComponentLogs(bitId);
   }
 
   async graph(bitId?: BitId): Promise<DependencyGraph> {

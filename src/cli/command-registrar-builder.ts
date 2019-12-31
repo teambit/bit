@@ -7,6 +7,7 @@ import ScopeList from './commands/private-cmds/_list-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
+import ScopeLog from './commands/private-cmds/_log-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Tag from './commands/public-cmds/tag-cmd';
@@ -93,7 +94,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new CatLane(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Log(),
+      new ScopeLog(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Search(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
