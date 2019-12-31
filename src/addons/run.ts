@@ -1,11 +1,9 @@
+import plimit from 'p-limit';
 import { Pipe } from './pipe';
 import { RunOptions } from './run-configuration';
 import { loadConsumer } from '../consumer';
-import { BitId, BitIds } from '../bit-id';
 import Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS } from '../constants';
-import { BitCapsule } from '../capsule';
-import { capsuleIsolate } from '../api/consumer';
 import CapsuleBuilder from '../environment/capsule-builder';
 
 export async function run(options: RunOptions): Promise<any> {
@@ -26,24 +24,31 @@ export async function run(options: RunOptions): Promise<any> {
     components.push(...componentWithCorrectPipe);
   }
   const build = new CapsuleBuilder(consumer.getPath());
+  console.time('isolate');
   const capsules = await build.isolateComponents(
     consumer,
     components.map(comp => comp.id),
-    { baseDir: '/tmp/ninja' }
+    { baseDir: '/tmp/ninja', installPackages: true }
   );
-
+  console.timeEnd('isolate');
+  const limit = plimit(7);
+  console.time('compile');
   await Promise.all(
     components.map(async component => {
       const pipe: Pipe | String = options.extensions.length ? new Pipe() : (options.step! as string);
       const actualPipe: Pipe = typeof pipe === 'string' ? getComponentPipe(component, pipe)! : (pipe as Pipe);
-      try {
-        const capsule = capsules[component.id.toString()];
-        await actualPipe.run({ component, capsule });
-      } catch (e) {
-        throw e;
-      }
+      const capsule = capsules[component.id.toString()];
+      return limit(async function() {
+        try {
+          await actualPipe.run({ component, capsule });
+        } catch (e) {
+          console.log(`component`, component.name, 'failed');
+          return Promise.resolve();
+        }
+      });
     })
   );
+  console.timeEnd('compile');
 }
 
 function getComponentPipe(component: Component, pipe: string): Pipe | undefined {

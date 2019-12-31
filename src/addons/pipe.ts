@@ -24,6 +24,7 @@ export class Pipe implements Runnable {
     const results = await Promise.all(
       this.elements.map(async function(elem: PipeElement) {
         try {
+          console.log(`working on ${component.name}`);
           await elem.run({ component, capsule });
         } catch (e) {
           if (options.bail) {

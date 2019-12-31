@@ -9,7 +9,6 @@ export class PipeElement implements Runnable {
   constructor(public config: PipeElementConfig) {}
   async run({ component, capsule }: { component: Component; capsule: BitCapsule }): Promise<any> {
     const id = this.id();
-    console.log(`id is`, id);
     const extensionId = BitId.parse(id);
     let extensionComponent = await importExtensionObject(extensionId);
     const api = new ExtensionAPI(component, capsule, extensionComponent);

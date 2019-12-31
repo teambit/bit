@@ -17,6 +17,7 @@ export type UserExtension = {
 export type UserExtensionFactory = () => UserExtension;
 
 export async function importExtensionObject(id: BitId) {
+  console.log('importing ');
   const module = await loadComponent(id);
   const factory = typeof module === 'function' ? module : (module as any).default;
   return factory();
@@ -32,7 +33,6 @@ export async function installComponents(ids: BitId[]): Promise<any[]> {
 export async function installComponent(id: BitId) {
   const capsule = await createComponentCapsule(id);
   const isInstalled = await isComponentInstalled(capsule);
-  console.log('after bit install', isInstalled);
   if (!isInstalled) {
     try {
       await capsule.exec({ command: 'npm init --yes'.split(' ') });
@@ -40,9 +40,7 @@ export async function installComponent(id: BitId) {
         .toString()
         .split('/')
         .join('.')}`;
-      console.log('work directory', capsule.wrkDir);
       const command = `npm i ${npmId}`.split(' ');
-      console.log('command', '"', command.join(' '), '"');
       await capsule.exec({ command });
       await capsule.fs.promises.writeFile(
         path.join(capsule.wrkDir, 'index.js'),
@@ -52,7 +50,6 @@ export async function installComponent(id: BitId) {
       logger.error(`extensions.ts-installComponent failed to setup capsule`);
     }
   }
-  console.log('work directory', capsule.wrkDir);
   return capsule;
 }
 
@@ -96,7 +93,6 @@ export async function loadComponentFromScope(id: BitId) {
   if (loadResult.invalidComponents.length) {
     return null;
   }
-  console.log('loading from scope');
   const builder = new CapsuleBuilder(consumer.getPath());
   return builder.createCapsule(id);
 }
