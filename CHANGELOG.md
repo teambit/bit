@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1894](https://github.com/teambit/bit/issues/1894) introduce `--remote` flag for `bit log`
 - fix overrides of a component added with package syntax to be recognized as bit-component
 
 ## [14.7.2-dev.1] - 2019-12-17
