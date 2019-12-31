@@ -169,7 +169,10 @@ describe('bit snap command', function() {
           const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
-          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+          expect(remoteRefContent).to.deep.include({
+            id: { scope: helper.scopes.remote, name: 'bar/foo' },
+            head: secondSnap
+          });
         });
         it('should not change the version/snap in .bitmap', () => {
           const bitMap = helper.bitMap.read();
@@ -192,7 +195,10 @@ describe('bit snap command', function() {
           const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
-          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+          expect(remoteRefContent).to.deep.include({
+            id: { scope: helper.scopes.remote, name: 'bar/foo' },
+            head: secondSnap
+          });
         });
         it('should change the version/snap in .bitmap', () => {
           const bitMap = helper.bitMap.read();
@@ -234,7 +240,10 @@ describe('bit snap command', function() {
           const remoteRefs = helper.general.getRemoteRefPath();
           expect(remoteRefs).to.be.a.file();
           const remoteRefContent = fs.readJsonSync(remoteRefs);
-          expect(remoteRefContent).to.deep.include({ name: 'bar/foo', head: secondSnap });
+          expect(remoteRefContent).to.deep.include({
+            id: { scope: helper.scopes.remote, name: 'bar/foo' },
+            head: secondSnap
+          });
         });
         it('bit status should show the component as pending merge', () => {
           const status = helper.command.statusJson();
