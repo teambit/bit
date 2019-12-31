@@ -44,33 +44,33 @@ export default class CapsuleBuilder {
   async isolateComponents(
     consumer: Consumer,
     bitIds: BitId[],
-    capsuleOptions: CapsuleOptions = DEFAULT_ISOLATION_OPTIONS,
-    options: Options = DEFAULT_OPTIONS
+    capsuleOptions?: CapsuleOptions,
+    orchestrationOptions?: Options
   ): Promise<{ [bitId: string]: BitCapsule }> {
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
+    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const components = await consumer.loadComponentsForCapsule(bitIds);
 
     const capsules: BitCapsule[] = await Promise.all(
-      R.map((component: Component) => this.createCapsule(component.id, capsuleOptions, options), components)
+      R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
     );
     const capsuleMapping = this._buildCapsuleMap(capsules);
     await Promise.all(
-      R.map(capsule => this.isolate(consumer, capsule, capsuleOptions, options, capsuleMapping), capsules)
+      R.map(capsule => this._isolate(consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping), capsules)
     );
-    if (capsuleOptions.installPackages) await this.installpackages(capsules);
+    if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
     return capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
     }, {});
   }
 
-  async createCapsule(
-    bitId: BitId,
-    capsuleOptions: CapsuleOptions = DEFAULT_ISOLATION_OPTIONS,
-    options: Options = DEFAULT_OPTIONS
-  ) {
+  async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
+    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     if (!this.orch) throw new Error('cant load orch in non consumer env');
-    const config = this._generateResourceConfig(bitId, capsuleOptions, options);
-    return this.orch.getCapsule(this.workspace, config, options);
+    const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
+    return this.orch.getCapsule(this.workspace, config, orchOptions);
   }
 
   async writeLinkFiles(consumer: Consumer, isolator: Isolator): Promise<void> {
@@ -93,7 +93,7 @@ export default class CapsuleBuilder {
     }
   }
 
-  async isolate(
+  private async _isolate(
     consumer: Consumer,
     capsule: BitCapsule,
     capsuleOptions: CapsuleOptions,
