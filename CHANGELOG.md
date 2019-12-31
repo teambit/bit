@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix overrides of a component added with package syntax to be recognized as bit-component
+
 ## [14.7.2-dev.1] - 2019-12-17
 
 - [#2196](https://github.com/teambit/bit/issues/2196) fix dependency resolution when Bit component is imported in a sub-package
