@@ -178,7 +178,7 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
   importLane(id: string) {
-    return this.runCmd(`bit import ${this.scopes.remote}/${id} --lanes`);
+    return this.runCmd(`bit import ${this.scopes.remote} ${id} --lanes`);
   }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);

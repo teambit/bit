@@ -31,7 +31,7 @@ export default class Import extends Command {
       'objects',
       "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
-    ['l', 'lanes', 'import lanes'],
+    ['l', 'lanes', 'import lanes. please specify two args <remote-lane-scope> and <remote-lane-name>'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -58,7 +58,9 @@ export default class Import extends Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    ['', 'checkout', 'checkout to the imported lane'],
+    ['', 'new-lane-name <name>', 'name a local lane differently than the remote lane']
   ];
   loader = true;
   migration = true;
@@ -84,7 +86,9 @@ export default class Import extends Command {
       ignorePackageJson = false,
       merge,
       dependencies = false,
-      dependents = false
+      dependents = false,
+      checkout = false,
+      newLaneName
     }: {
       tester?: boolean;
       compiler?: boolean;
@@ -104,6 +108,8 @@ export default class Import extends Command {
       merge?: MergeStrategy;
       dependencies?: boolean;
       dependents?: boolean;
+      checkout?: boolean;
+      newLaneName?: string;
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -146,7 +152,9 @@ export default class Import extends Command {
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
       importDependenciesDirectly: dependencies,
-      importDependents: dependents
+      importDependents: dependents,
+      checkoutToLane: checkout,
+      newLaneName
     };
     // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
     if (typeof conf === 'string') {

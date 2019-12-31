@@ -8,22 +8,21 @@ import ValidationError from '../../error/validation-error';
 import { DEFAULT_LANE } from '../../constants';
 import LaneObjects from '../lane-objects';
 import { Version } from '.';
-import { LaneItem } from '../lanes/remote-lanes';
 import { Scope } from '..';
 
 export type LaneProps = {
   name: string;
   scope?: string;
-  components?: Component[];
+  components?: LaneComponent[];
   hash: string;
 };
 
-type Component = { id: BitId; head: Ref };
+export type LaneComponent = { id: BitId; head: Ref };
 
 export default class Lane extends BitObject {
   name: string;
   scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
-  components: Component[];
+  components: LaneComponent[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   constructor(props: LaneProps) {
     super();
@@ -88,7 +87,7 @@ export default class Lane extends BitObject {
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return Buffer.from(str);
   }
-  addComponent(component: Component) {
+  addComponent(component: LaneComponent) {
     const existsComponent = this.getComponentByName(component.id);
     if (existsComponent) {
       existsComponent.id = component.id;
@@ -97,7 +96,7 @@ export default class Lane extends BitObject {
       this.components.push(component);
     }
   }
-  getComponentByName(bitId: BitId): Component | undefined {
+  getComponentByName(bitId: BitId): LaneComponent | undefined {
     return this.components.find(c => c.id.isEqualWithoutScopeAndVersion(bitId));
   }
   getComponentHead(bitId: BitId): Ref | null {
@@ -105,9 +104,9 @@ export default class Lane extends BitObject {
     if (found) return found.head;
     return null;
   }
-  addComponentsFromRemote(remoteName: string, laneItems: LaneItem[]) {
+  addComponentsFromRemote(laneItems: LaneComponent[]) {
     laneItems.forEach(laneItem => {
-      const id = new BitId({ scope: remoteName, name: laneItem.name });
+      const id = laneItem.id;
       this.components.push({ id, head: laneItem.head });
     });
   }

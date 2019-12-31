@@ -50,15 +50,14 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     if (remoteScopeLane) {
       const localTrackedLane = consumer.scope.getLocalTrackedLaneByRemoteName(laneName, remoteScopeLane);
       checkoutProps.localLaneName = checkoutProps.newLaneName || localTrackedLane || laneName;
-      console.log('TCL: parseValues -> checkoutProps.localLaneName', checkoutProps.localLaneName);
       if (consumer.getCurrentLaneId().name === checkoutProps.localLaneName) {
         throw new GeneralError(`already checked out to "${checkoutProps.localLaneName}"`);
       }
-      const remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(
+      const remoteLaneComponents = await consumer.scope.objects.remoteLanes.getRemoteLane(
         remoteScopeLane,
         new LaneId({ name: laneName })
       );
-      if (!remoteLane.length) {
+      if (!remoteLaneComponents.length) {
         throw new GeneralError(`remote lane ${remoteScopeLane}/${laneName} does not exist, please import it first`);
       }
       const laneExistsLocally = lanes.find(l => l.name === checkoutProps.localLaneName);
@@ -67,12 +66,10 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
 the local lane ${checkoutProps.localLaneName} already exists, please checkout to the local lane by omitting the remote-scope name.
 then you can run "bit merge" to merge the remote lane into the local lane`);
       }
-      checkoutProps.ids = remoteLane.map(
-        l => new BitId({ scope: remoteScopeLane, name: l.name, version: l.head.toString() })
-      );
+      checkoutProps.ids = remoteLaneComponents.map(l => l.id.changeVersion(l.head.toString()));
       checkoutProps.remoteLaneScope = remoteScopeLane;
       checkoutProps.remoteLaneName = laneName;
-      checkoutProps.remoteLane = remoteLane;
+      checkoutProps.remoteLaneComponents = remoteLaneComponents;
       checkoutProps.localTrackedLane = localTrackedLane || undefined;
       return;
     }

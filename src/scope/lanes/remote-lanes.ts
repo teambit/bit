@@ -5,9 +5,9 @@ import { Ref } from '../objects';
 import LaneId from '../../lane-id/lane-id';
 import { Lane } from '../models';
 import { BitId } from '../../bit-id';
+import { LaneComponent } from '../models/lane';
 
-export type LaneItem = { name: string; head: Ref };
-type Lanes = { [laneName: string]: LaneItem[] };
+type Lanes = { [laneName: string]: LaneComponent[] };
 
 export default class RemoteLanes {
   basePath: string;
@@ -16,32 +16,32 @@ export default class RemoteLanes {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
     this.remotes = {};
   }
-  async addEntry(remoteName: string, laneId: LaneId, componentName: string, head?: Ref) {
+  async addEntry(remoteName: string, laneId: LaneId, componentId: BitId, head?: Ref) {
     if (!remoteName) throw new TypeError('addEntry expects to get remoteName');
     if (!laneId) throw new TypeError('addEntry expects to get LaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteName, laneId);
-    const existingComponent = remoteLane.find(n => n.name === componentName);
+    const existingComponent = remoteLane.find(n => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
       existingComponent.head = head;
     } else {
-      remoteLane.push({ name: componentName, head });
+      remoteLane.push({ id: componentId, head });
     }
   }
 
-  async getRef(remoteName: string, laneId: LaneId, componentName: string): Promise<Ref | null> {
+  async getRef(remoteName: string, laneId: LaneId, bitId: BitId): Promise<Ref | null> {
     if (!remoteName) throw new TypeError('getEntry expects to get remoteName');
     if (!laneId) throw new TypeError('getEntry expects to get laneId');
     if (!this.remotes[remoteName] || !this.remotes[remoteName][laneId.name]) {
       await this.loadRemoteLane(remoteName, laneId);
     }
     const remoteLane = this.remotes[remoteName][laneId.name];
-    const existingComponent = remoteLane.find(n => n.name === componentName);
+    const existingComponent = remoteLane.find(n => n.id.isEqualWithoutVersion(bitId));
     if (!existingComponent) return null;
     return existingComponent.head;
   }
 
-  async getRemoteLane(remoteName: string, laneId: LaneId): Promise<LaneItem[]> {
+  async getRemoteLane(remoteName: string, laneId: LaneId): Promise<LaneComponent[]> {
     if (!this.remotes[remoteName] || !this.remotes[remoteName][laneId.name]) {
       await this.loadRemoteLane(remoteName, laneId);
     }
@@ -50,7 +50,7 @@ export default class RemoteLanes {
 
   async getRemoteBitIds(remoteName: string, laneId: LaneId): Promise<BitId[]> {
     const remoteLane = await this.getRemoteLane(remoteName, laneId);
-    return remoteLane.map(item => new BitId({ scope: remoteName, name: item.name, version: item.head.toString() }));
+    return remoteLane.map(item => item.id.changeVersion(item.head.toString()));
   }
 
   async loadRemoteLane(remoteName: string, laneId: LaneId) {
@@ -58,7 +58,10 @@ export default class RemoteLanes {
     try {
       const remoteFile = await fs.readJson(remoteLanePath);
       if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
-      this.remotes[remoteName][laneId.name] = remoteFile.map(({ name, head }) => ({ name, head: new Ref(head) }));
+      this.remotes[remoteName][laneId.name] = remoteFile.map(({ id, head }) => ({
+        id: new BitId({ scope: id.scope, name: id.name }),
+        head: new Ref(head)
+      }));
     } catch (err) {
       if (err.code === 'ENOENT') {
         if (!this.remotes[remoteName]) this.remotes[remoteName] = {};
@@ -75,7 +78,7 @@ export default class RemoteLanes {
       await this.loadRemoteLane(remoteName, laneId);
     }
     await Promise.all(
-      lane.components.map(component => this.addEntry(remoteName, laneId, component.id.name, component.head))
+      lane.components.map(component => this.addEntry(remoteName, laneId, component.id, component.head))
     );
   }
 
@@ -94,7 +97,10 @@ export default class RemoteLanes {
   }
 
   async writeRemoteLaneFile(remoteName: string, laneName: string) {
-    const obj = this.remotes[remoteName][laneName].map(({ name, head }) => ({ name, head: head.toString() }));
+    const obj = this.remotes[remoteName][laneName].map(({ id, head }) => ({
+      id: { scope: id.scope, name: id.name },
+      head: head.toString()
+    }));
     return fs.outputFile(this.composeRemoteLanePath(remoteName, laneName), JSON.stringify(obj, null, 2));
   }
 }

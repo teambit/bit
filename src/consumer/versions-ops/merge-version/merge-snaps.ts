@@ -67,11 +67,7 @@ export async function mergeComponents(
         bitIds.map(async bitId => {
           const remoteLaneId = remoteTrackedLane ? LaneId.from(remoteTrackedLane.remoteLane) : laneId;
           const remoteName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
-          const remoteHead = await consumer.scope.objects.remoteLanes.getRef(
-            remoteName as string,
-            remoteLaneId,
-            bitId.name
-          );
+          const remoteHead = await consumer.scope.objects.remoteLanes.getRef(remoteName as string, remoteLaneId, bitId);
           const otherLaneName = `${remoteName}/${remoteLaneId.name}`;
           if (!remoteHead)
             throw new GeneralError(

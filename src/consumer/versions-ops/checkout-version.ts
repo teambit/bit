@@ -15,9 +15,9 @@ import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { Tmp } from '../../scope/repositories';
-import { ModelComponent, Lane } from '../../scope/models';
+import { Lane } from '../../scope/models';
 import LaneId from '../../lane-id/lane-id';
-import { LaneItem } from '../../scope/lanes/remote-lanes';
+import { LaneComponent } from '../../scope/models/lane';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -36,7 +36,7 @@ export type CheckoutProps = {
   localLaneName?: string;
   remoteLaneScope?: string;
   remoteLaneName?: string;
-  remoteLane?: LaneItem[];
+  remoteLaneComponents?: LaneComponent[];
   localTrackedLane?: string;
   newLaneName?: string;
 };
@@ -104,41 +104,67 @@ export default (async function checkoutVersion(
   }
   async function saveLanesData() {
     if (!isLane) return;
-    const saveRemoteLaneToBitmap = () => {
-      if (checkoutProps.remoteLaneScope) {
-        consumer.bitMap.addLane({ scope: checkoutProps.remoteLaneScope, name: checkoutProps.remoteLaneName });
-      } else {
-        const trackData = consumer.scope.getRemoteTrackedDataByLocalLane(checkoutProps.localLaneName as string);
-        if (!trackData) {
-          return; // the lane was never exported
-        }
-        consumer.bitMap.addLane({ scope: trackData.remoteScope, name: trackData.remoteLane });
-      }
-    };
-    if (checkoutProps.remoteLaneScope) {
-      // otherwise, user switched to a local lane, it must exists
-      // we made sure in checkout.ts that a lane object doesn't exist already. (otherwise, it throws
-      // an error suggesting the user to checkout to the local lane and merge)
-      const lane = Lane.create(new LaneId({ name: checkoutProps.localLaneName as string }));
-      // @ts-ignore
-      lane.addComponentsFromRemote(checkoutProps.remoteLaneScope, checkoutProps.remoteLane);
-      consumer.scope.objects.add(lane);
-      await consumer.scope.objects.persist();
-      if (!checkoutProps.localTrackedLane) {
-        // otherwise, it is tracked already
-        consumer.scope.scopeJson.lanes.tracking.push({
-          localLane: checkoutProps.localLaneName as string,
-          remoteLane: checkoutProps.remoteLaneName as string,
-          remoteScope: checkoutProps.remoteLaneScope as string
-        });
-      }
-    }
-
-    saveRemoteLaneToBitmap();
-    consumer.scope.setCurrentLane(checkoutProps.localLaneName as string);
-    await consumer.scope.scopeJson.write(consumer.scope.getPath());
+    await saveCheckedOutLaneInfo(consumer, {
+      remoteLaneScope: checkoutProps.remoteLaneScope,
+      remoteLaneName: checkoutProps.remoteLaneName,
+      localLaneName: checkoutProps.localLaneName,
+      addTrackingInfo: !checkoutProps.localTrackedLane,
+      laneComponents: checkoutProps.remoteLaneComponents
+    });
   }
 });
+
+export async function saveCheckedOutLaneInfo(
+  consumer: Consumer,
+  opts: {
+    remoteLaneScope?: string;
+    remoteLaneName?: string;
+    localLaneName?: string;
+    addTrackingInfo?: boolean;
+    laneComponents?: LaneComponent[];
+  }
+) {
+  const saveRemoteLaneToBitmap = () => {
+    if (opts.remoteLaneScope) {
+      consumer.bitMap.addLane({ scope: opts.remoteLaneScope, name: opts.remoteLaneName });
+    } else {
+      const trackData = consumer.scope.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
+      if (!trackData) {
+        return; // the lane was never exported
+      }
+      consumer.bitMap.addLane({ scope: trackData.remoteScope, name: trackData.remoteLane });
+    }
+  };
+  const throwIfLaneExists = async () => {
+    const allLanes = await consumer.scope.listLanes();
+    if (allLanes.find(l => l.name === opts.localLaneName)) {
+      throw new GeneralError(`unable to checkout to lane "${opts.localLaneName}".
+the lane already exists. please checkout to the lane and merge`);
+    }
+  };
+  if (opts.remoteLaneScope) {
+    await throwIfLaneExists();
+    // we made sure in checkout.ts that a lane object doesn't exist already. (otherwise, it throws
+    // an error suggesting the user to checkout to the local lane and merge)
+    const lane = Lane.create(new LaneId({ name: opts.localLaneName as string }));
+    // @ts-ignore
+    lane.addComponentsFromRemote(opts.laneComponents);
+    consumer.scope.objects.add(lane);
+    await consumer.scope.objects.persist();
+    if (opts.addTrackingInfo) {
+      // otherwise, it is tracked already
+      consumer.scope.scopeJson.lanes.tracking.push({
+        localLane: opts.localLaneName as string,
+        remoteLane: opts.remoteLaneName as string,
+        remoteScope: opts.remoteLaneScope as string
+      });
+    }
+  }
+
+  saveRemoteLaneToBitmap();
+  consumer.scope.setCurrentLane(opts.localLaneName as string);
+  await consumer.scope.scopeJson.write(consumer.scope.getPath());
+}
 
 async function getComponentStatus(
   consumer: Consumer,

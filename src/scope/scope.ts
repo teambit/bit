@@ -420,7 +420,7 @@ export default class Scope {
           this.objects.remoteLanes.addEntry(
             mergedComponent.scope as string,
             new LaneId({ name: DEFAULT_LANE }),
-            mergedComponent.name,
+            mergedComponent.toBitId(),
             mergedComponent.laneHeadRemote || mergedComponent.snaps.head
           )
         )

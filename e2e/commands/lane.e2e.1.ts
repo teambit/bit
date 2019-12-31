@@ -65,121 +65,182 @@ describe('bit lane command', function() {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
-      describe('importing the lane', () => {
-        before(() => {
-          helper.scopeHelper.reInitLocalScope();
-          helper.scopeHelper.addRemoteScope();
-          helper.command.importLane('dev');
-        });
-        it('should import components on that lane', () => {
-          const list = helper.command.listLocalScopeParsed('--scope');
-          expect(list).to.have.lengthOf(1);
-        });
-        it('bit status should show a clean state', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
-        });
+    });
+  });
+  describe('importing lanes', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.createLane('dev');
+      helper.command.snapAllComponents();
+      helper.command.exportLane('dev');
+    });
+    describe('importing the lane with no args', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev');
       });
-      describe('importing the lane objects and switching to that lane', () => {
-        let beforeLaneSwitch;
-        before(() => {
-          helper.scopeHelper.reInitLocalScope();
-          helper.scopeHelper.addRemoteScope();
-          helper.command.importLane('dev --objects');
-          beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
-          helper.command.switchRemoteLane('dev');
-        });
-        it('should write the component to the filesystem with the same version as the lane', () => {
-          const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
-          expect(fileContent).to.equal(fixtures.fooFixtureV2);
-        });
-        it('.bitmap should save the remote lane', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
-        });
-        it('bit lane should show the component in the checked out lane', () => {
-          const lanes = helper.command.showLanesParsed();
-          expect(lanes).to.have.property('dev');
-          expect(lanes.dev).to.have.lengthOf(1);
-          expect(lanes.dev[0].id.name).to.equal('bar/foo');
-        });
-        it('bit status should not show the component as pending updates', () => {
-          const status = helper.command.statusJson();
-          expect(status.outdatedComponents).to.have.lengthOf(0);
-        });
-        it('bit status should show clean state', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
-        });
-        it('bit lane should show the checked out lane as the active one', () => {
-          const lanes = helper.command.showLanes();
-          expect(lanes).to.have.string('* dev');
-          expect(lanes).to.not.have.string('* master');
-        });
-        describe('changing the component and running bit diff', () => {
-          let diff;
-          before(() => {
-            helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
-            diff = helper.command.diff();
-          });
-          it('should show the diff between the filesystem and the lane', () => {
-            expect(diff).to.have.string("-module.exports = function foo() { return 'got foo v2'; }");
-            expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v3'; }");
-          });
-          it('should not show the diff between the filesystem and master', () => {
-            expect(diff).to.not.have.string("-module.exports = function foo() { return 'got foo'; }");
-          });
-        });
-        describe("snapping the component (so, it's an imported lane with local snaps)", () => {
-          before(() => {
-            helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
-            helper.command.snapAllComponents();
-          });
-          it('bit status should show the component as staged', () => {
-            const status = helper.command.statusJson();
-            expect(status.stagedComponents).to.have.lengthOf(1);
-          });
-          it('bit status should show the staged hash', () => {
-            const status = helper.command.status();
-            const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
-            expect(status).to.have.string(localSnap);
-          });
-        });
-        describe('switching with a different lane name', () => {
-          before(() => {
-            helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
-            helper.command.switchRemoteLane('dev --new-lane-name my-new-lane');
-          });
-          it('should save the remote-lane data into a local with the specified name', () => {
-            const lanes = helper.command.showLanesParsed();
-            expect(lanes['my-new-lane']).to.have.lengthOf(1);
-            expect(lanes).to.not.have.property('dev');
-          });
-        });
+      it('should not write the components to the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'components/bar/foo')).to.not.be.a.path();
+      });
+      it('bitmap should be empty', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        expect(Object.keys(bitMap)).to.have.lengthOf(0);
+      });
+      it('should import components objects on that lane', () => {
+        const list = helper.command.listLocalScopeParsed('--scope');
+        expect(list).to.have.lengthOf(3);
+      });
+      it('bit status should show a clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+    });
+    describe('importing the lane with --checkout arg', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --checkout');
+      });
+      it('should write the components to the filesystem', () => {
+        helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('.bitmap should save the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+      });
+      it('bit lane should show the component in the checked out lane', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes).to.have.property('dev');
+        expect(lanes.dev).to.have.lengthOf(3);
+      });
+      it('bit status should show clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('bit lane should show the checked out lane as the active one', () => {
+        const lanes = helper.command.showLanes();
+        expect(lanes).to.have.string('* dev');
+        expect(lanes).to.not.have.string('* master');
+      });
+    });
+    describe('importing the lane and checking out with a different local lane-name', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --checkout --new-lane-name my-new-lane');
+      });
+      it('bit lane should show the component in the checked out lane', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes).to.have.property('my-new-lane');
+        expect(lanes['my-new-lane']).to.have.lengthOf(3);
+      });
+      it('bit lane should show the checked out lane as the active one', () => {
+        const lanes = helper.command.showLanes();
+        expect(lanes).to.have.string('* my-new-lane');
+        expect(lanes).to.not.have.string('* master');
+        expect(lanes).to.not.have.string('dev');
+      });
+      it('should write the components to the filesystem', () => {
+        helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('.bitmap should save the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
     });
   });
-  describe('create a snap on a new lane then tagged', () => {
-    let lanes;
-    let firstSnap;
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.createLane();
-      helper.command.snapAllComponents();
-      firstSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
-      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.tagAllComponents();
-      lanes = helper.command.showLanesParsed();
-    });
-    it('the new tag should not change the head of the lane', () => {
-      expect(lanes.dev[0].id.name).to.equal('bar/foo');
-      expect(lanes.dev[0].head).to.equal(firstSnap);
-    });
-    it('the tag should be saved globally, as master', () => {
-      expect(lanes.master[0].id.name).to.equal('bar/foo');
-      expect(lanes.master[0].head).to.equal('0.0.1');
+  describe('checkout/switching lanes', () => {
+    describe('importing the lane objects and switching to that lane', () => {
+      let beforeLaneSwitch;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.createComponentBarFoo();
+        helper.fixtures.addComponentBarFoo();
+        helper.command.snapAllComponents();
+        helper.command.createLane();
+        helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+        helper.command.snapAllComponents();
+        helper.command.exportLane('dev');
+
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importLane('dev --objects');
+        beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
+        helper.command.switchRemoteLane('dev');
+      });
+      it('should write the component to the filesystem with the same version as the lane', () => {
+        const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
+        expect(fileContent).to.equal(fixtures.fooFixtureV2);
+      });
+      it('.bitmap should save the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+      });
+      it('bit lane should show the component in the checked out lane', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes).to.have.property('dev');
+        expect(lanes.dev).to.have.lengthOf(1);
+        expect(lanes.dev[0].id.name).to.equal('bar/foo');
+      });
+      it('bit status should not show the component as pending updates', () => {
+        const status = helper.command.statusJson();
+        expect(status.outdatedComponents).to.have.lengthOf(0);
+      });
+      it('bit status should show clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('bit lane should show the checked out lane as the active one', () => {
+        const lanes = helper.command.showLanes();
+        expect(lanes).to.have.string('* dev');
+        expect(lanes).to.not.have.string('* master');
+      });
+      describe('changing the component and running bit diff', () => {
+        let diff;
+        before(() => {
+          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          diff = helper.command.diff();
+        });
+        it('should show the diff between the filesystem and the lane', () => {
+          expect(diff).to.have.string("-module.exports = function foo() { return 'got foo v2'; }");
+          expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v3'; }");
+        });
+        it('should not show the diff between the filesystem and master', () => {
+          expect(diff).to.not.have.string("-module.exports = function foo() { return 'got foo'; }");
+        });
+      });
+      describe("snapping the component (so, it's an imported lane with local snaps)", () => {
+        before(() => {
+          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          helper.command.snapAllComponents();
+        });
+        it('bit status should show the component as staged', () => {
+          const status = helper.command.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(1);
+        });
+        it('bit status should show the staged hash', () => {
+          const status = helper.command.status();
+          const localSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
+          expect(status).to.have.string(localSnap);
+        });
+      });
+      describe('switching with a different lane name', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
+          helper.command.switchRemoteLane('dev --new-lane-name my-new-lane');
+        });
+        it('should save the remote-lane data into a local with the specified name', () => {
+          const lanes = helper.command.showLanesParsed();
+          expect(lanes['my-new-lane']).to.have.lengthOf(1);
+          expect(lanes).to.not.have.property('dev');
+        });
+      });
     });
   });
   describe('merging lanes', () => {
@@ -294,6 +355,29 @@ describe('bit lane command', function() {
           expect(merged).to.not.have.string('All lanes are merged');
         });
       });
+    });
+  });
+  describe('create a snap on a new lane then tagged', () => {
+    let lanes;
+    let firstSnap;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.createLane();
+      helper.command.snapAllComponents();
+      firstSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
+      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+      helper.command.tagAllComponents();
+      lanes = helper.command.showLanesParsed();
+    });
+    it('the new tag should not change the head of the lane', () => {
+      expect(lanes.dev[0].id.name).to.equal('bar/foo');
+      expect(lanes.dev[0].head).to.equal(firstSnap);
+    });
+    it('the tag should be saved globally, as master', () => {
+      expect(lanes.master[0].id.name).to.equal('bar/foo');
+      expect(lanes.master[0].head).to.equal('0.0.1');
     });
   });
 });

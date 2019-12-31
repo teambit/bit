@@ -187,7 +187,7 @@ export async function exportMany({
       // all exported from master
       await scope.objects.remoteLanes.loadRemoteLane(remoteNameStr, defaultLane);
       componentsAndObjects.forEach(({ component }) => {
-        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.name, component.snaps.head);
+        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.toBitId(), component.snaps.head);
       });
     }
 
