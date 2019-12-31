@@ -1,7 +1,7 @@
 import path from 'path';
 import R from 'ramda';
 import os from 'os';
-import v4 from 'uuid';
+import pLimit, { Limit } from 'p-limit';
 import hash from 'object-hash';
 import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
@@ -30,7 +30,11 @@ const DEFAULT_OPTIONS = {
 };
 
 export default class CapsuleBuilder {
-  constructor(private workspace: string, private orch: CapsuleOrchestrator | undefined = orchestrator) {}
+  constructor(
+    private workspace: string,
+    private limit: Limit = pLimit(10),
+    private orch: CapsuleOrchestrator | undefined = orchestrator
+  ) {}
 
   private _buildCapsuleMap(capsules: BitCapsule[]) {
     const capsuleMapping = {};
@@ -87,7 +91,7 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
     try {
-      await Promise.all(capsules.map(capsule => capsule.exec({ command: `npm install`.split(' ') })));
+      await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `npm install`.split(' ') }))));
     } catch (e) {
       console.log(e);
     }
