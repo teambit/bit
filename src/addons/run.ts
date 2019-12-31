@@ -12,7 +12,7 @@ export async function run(options: RunOptions): Promise<any> {
   const consumer = await loadConsumer();
   let components: Component[] = [];
   if (options.id) {
-    const id = BitId.parse(options.id);
+    const id = consumer.getParsedId(options.id);
     const component = await consumer.loadComponent(id);
     components.push(component);
   } else {

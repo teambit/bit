@@ -5,7 +5,6 @@ import _ from 'lodash';
 export type PipeRegistry = { [k: string]: Pipe };
 
 export function getRegistry(runConfig: RunConfiguration): PipeRegistry {
-  debugger;
   const registry: PipeRegistry = Object.keys(runConfig.raw)
     .filter(e => e !== 'aliases' && e !== 'runOptions')
     .reduce(function(accum, curr) {

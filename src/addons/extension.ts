@@ -2,13 +2,14 @@ import path from 'path';
 import { ExtensionAPI } from './extension-api';
 import { BitId, BitIds } from '../bit-id';
 import { CACHE_ROOT } from '../constants';
-import { loadConsumer } from '../consumer';
+import { loadConsumer, Consumer } from '../consumer';
 import { BitCapsule } from '../capsule';
 import { default as CapsuleBuilder, Options } from '../environment/capsule-builder';
 import logger from '../logger/logger';
+import { PipeElementConfig } from './pipe-element';
 
 export type UserExtension = {
-  run: (api: ExtensionAPI) => Promise<void>;
+  run: (api: ExtensionAPI, config: PipeElementConfig) => Promise<void>;
   show?: (api: ExtensionAPI) => Promise<void>;
   defineDependencies?: (api: ExtensionAPI) => Promise<void>;
 };
@@ -17,7 +18,8 @@ export type UserExtensionFactory = () => UserExtension;
 
 export async function importExtensionObject(id: BitId) {
   const module = await loadComponent(id);
-  return ((module as any) as UserExtensionFactory)();
+  const factory = typeof module === 'function' ? module : (module as any).default;
+  return factory();
 }
 
 export async function installComponents(ids: BitId[]): Promise<any[]> {
@@ -67,6 +69,7 @@ export async function isComponentInstalled(id: BitId | BitCapsule): Promise<bool
 }
 
 export async function loadComponent(id: BitId) {
+  // const capsule = await loadComponentFromScope(id) || await installComponent(id);
   const capsule = await installComponent(id);
   let component = null;
   try {
@@ -85,4 +88,15 @@ export function canBeRequired(id: string) {
     canRequire = false;
   }
   return canRequire;
+}
+
+export async function loadComponentFromScope(id: BitId) {
+  const consumer = await loadConsumer();
+  const loadResult = await consumer.loadComponents(new BitIds(id));
+  if (loadResult.invalidComponents.length) {
+    return null;
+  }
+  console.log('loading from scope');
+  const builder = new CapsuleBuilder(consumer.getPath());
+  return builder.createCapsule(id);
 }

@@ -8,14 +8,19 @@ import { ExtensionAPI } from './extension-api';
 export class PipeElement implements Runnable {
   constructor(public config: PipeElementConfig) {}
   async run({ component, capsule }: { component: Component; capsule: BitCapsule }): Promise<any> {
-    const extensionId = BitId.parse(this.id());
+    const id = this.id();
+    console.log(`id is`, id);
+    const extensionId = BitId.parse(id);
     let extensionComponent = await importExtensionObject(extensionId);
     const api = new ExtensionAPI(component, capsule, extensionComponent);
-    return extensionComponent.run(api);
+    return extensionComponent.run(api, this.getConfig());
   }
 
   id() {
     return typeof this.config === 'string' ? this.config : this.config.id;
+  }
+  getConfig() {
+    return typeof this.config === 'string' ? { id: this.config } : this.config;
   }
 }
 export type PipeElementConfig = string | { id: string };

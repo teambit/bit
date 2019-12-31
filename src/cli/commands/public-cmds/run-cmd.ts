@@ -35,7 +35,6 @@ export default class Run extends Command {
     return run(config);
   }
   report(data: any, params: any, opts: { [key: string]: any }): string {
-    debugger;
     return '';
   }
 }
