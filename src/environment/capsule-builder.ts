@@ -119,7 +119,7 @@ export default class CapsuleBuilder {
         DEFAULT_ISOLATION_OPTIONS,
         {
           writeToPath: capsule.wrkDir,
-          keepExistingCapsule: options.alwaysNew
+          keepExistingCapsule: !options.alwaysNew
         },
         capsuleOptions
       )
