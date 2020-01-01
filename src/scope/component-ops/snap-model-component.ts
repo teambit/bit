@@ -188,7 +188,7 @@ export default async function snapModelComponents({
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
   const allDependenciesGraphs = buildComponentsGraph(componentsToTag);
-  const lane = await consumer.getOrCreateCurrentLaneObject();
+  const lane = await consumer.getCurrentLaneObject();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {

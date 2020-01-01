@@ -36,7 +36,7 @@ import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { pathNormalizeToLinux, sortObject } from '../utils';
+import { pathNormalizeToLinux, sortObject, isValidIdChunk } from '../utils';
 import { ModelComponent, Version, Lane } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -74,6 +74,7 @@ import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import LaneId from '../lane-id/lane-id';
 import snapModelComponents from '../scope/component-ops/snap-model-component';
+import { LaneComponent } from '../scope/models/lane';
 
 type ConsumerProps = {
   projectPath: string;
@@ -199,10 +200,34 @@ export default class Consumer {
     return this.scope.loadLane(laneId);
   }
 
-  async getOrCreateCurrentLaneObject(): Promise<Lane | null> {
-    const laneId = this.getCurrentLaneId();
-    if (laneId.isDefault()) return null;
-    return (await this.scope.loadLane(laneId)) || Lane.create(laneId);
+  async createNewLane(laneName: string, laneComponents?: LaneComponent[]): Promise<Lane> {
+    const lanes = await this.scope.listLanes();
+    if (lanes.find(lane => lane.name === laneName)) {
+      throw new GeneralError(
+        `lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`
+      );
+    }
+    if (!isValidIdChunk(laneName, false)) {
+      // @todo: should we allow slash?
+      throw new GeneralError(
+        `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      );
+    }
+
+    const getDataToPopulateLaneIfNeeded = async (): Promise<LaneComponent[]> => {
+      if (laneComponents) return laneComponents;
+      // when branching from one lane to another, copy components from the origin lane
+      // when branching from master, no need to copy anything
+      const currentLaneObject = await this.getCurrentLaneObject();
+      return currentLaneObject ? currentLaneObject.components : [];
+    };
+    const newLane = Lane.create(laneName);
+    const dataToPopulate = await getDataToPopulateLaneIfNeeded();
+    newLane.setLaneComponents(dataToPopulate);
+
+    await this.scope.saveLane(newLane);
+
+    return newLane;
   }
 
   async cleanTmpFolder() {

@@ -29,6 +29,10 @@ export default class Ref {
     return this.toString() === ref.toString();
   }
 
+  clone() {
+    return new Ref(this.hash);
+  }
+
   static from(hash: string): Ref {
     return new Ref(hash);
   }

@@ -139,18 +139,12 @@ export async function saveCheckedOutLaneInfo(
     const allLanes = await consumer.scope.listLanes();
     if (allLanes.find(l => l.name === opts.localLaneName)) {
       throw new GeneralError(`unable to checkout to lane "${opts.localLaneName}".
-the lane already exists. please checkout to the lane and merge`);
+the lane already exists. please switch to the lane and merge`);
     }
   };
   if (opts.remoteLaneScope) {
     await throwIfLaneExists();
-    // we made sure in checkout.ts that a lane object doesn't exist already. (otherwise, it throws
-    // an error suggesting the user to checkout to the local lane and merge)
-    const lane = Lane.create(new LaneId({ name: opts.localLaneName as string }));
-    // @ts-ignore
-    lane.addComponentsFromRemote(opts.laneComponents);
-    consumer.scope.objects.add(lane);
-    await consumer.scope.objects.persist();
+    await consumer.createNewLane(opts.localLaneName as string, opts.laneComponents);
     if (opts.addTrackingInfo) {
       // otherwise, it is tracked already
       consumer.scope.scopeJson.lanes.tracking.push({
@@ -162,8 +156,7 @@ the lane already exists. please checkout to the lane and merge`);
   }
 
   saveRemoteLaneToBitmap();
-  consumer.scope.setCurrentLane(opts.localLaneName as string);
-  await consumer.scope.scopeJson.write(consumer.scope.getPath());
+  await consumer.scope.setCurrentLane(opts.localLaneName as string);
 }
 
 async function getComponentStatus(

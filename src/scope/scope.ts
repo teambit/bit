@@ -262,6 +262,11 @@ export default class Scope {
     return (await this.objects.load(new Ref(hash))) as Lane;
   }
 
+  async saveLane(laneObject: Lane) {
+    this.objects.add(laneObject);
+    await this.objects.persist();
+  }
+
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
@@ -761,32 +766,13 @@ export default class Scope {
     return this.objects.load(ref);
   }
 
-  async addLane(laneName: string) {
-    const lanes = await this.listLanes();
-    if (lanes.find(lane => lane.name === laneName)) {
-      throw new GeneralError(
-        `lane "${laneName}" already exists, to switch to this lane, please use "bit checkout" command`
-      );
-    }
-    if (this.scopeJson.lanes.current === laneName) {
-      throw new GeneralError(`lane "${laneName}" was added before and is the current lane`);
-    }
-    if (!isValidIdChunk(laneName, false)) {
-      // @todo: should we allow slash?
-      throw new GeneralError(
-        `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
-      );
-    }
-    this.scopeJson.lanes.current = laneName;
-    await this.scopeJson.write(this.getPath());
-  }
-
   getCurrentLane(): string {
     return this.scopeJson.lanes.current;
   }
 
-  setCurrentLane(laneName: string): void {
+  async setCurrentLane(laneName: string): Promise<void> {
     this.scopeJson.lanes.current = laneName;
+    await this.scopeJson.write(this.getPath());
   }
 
   getLocalTrackedLaneByRemoteName(remoteLane: string, remoteScope: string): string | null {

@@ -380,4 +380,34 @@ describe('bit lane command', function() {
       expect(lanes.master[0].head).to.equal('0.0.1');
     });
   });
+  describe('master => lane-a => labe-b, so laneB branched from laneA', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+
+      // master
+      helper.fixtures.createComponentUtilsIsType();
+      helper.fixtures.addComponentUtilsIsType();
+      helper.command.snapAllComponents();
+
+      // laneA
+      helper.command.createLane('lane-a');
+      helper.fixtures.createComponentUtilsIsString();
+      helper.fixtures.addComponentUtilsIsString();
+      helper.command.snapAllComponents();
+
+      // laneB
+      helper.command.createLane('lane-b');
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.snapAllComponents();
+    });
+    it('lane-a should not contain components from master', () => {
+      const lanes = helper.command.showLanesParsed();
+      expect(lanes['lane-a']).to.have.lengthOf(1);
+    });
+    it('laneB object should include components from laneA, but not from master', () => {
+      const lanes = helper.command.showLanesParsed();
+      expect(lanes['lane-b']).to.have.lengthOf(2);
+    });
+  });
 });

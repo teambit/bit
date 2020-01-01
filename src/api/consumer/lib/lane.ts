@@ -29,7 +29,8 @@ export default async function lane({
   const consumer: Consumer = await loadConsumer();
   let results: LaneResults;
   if (name) {
-    await consumer.scope.addLane(name);
+    await consumer.createNewLane(name);
+    await consumer.scope.setCurrentLane(name);
     results = { added: name };
   } else {
     const currentLane = consumer.getCurrentLaneId();

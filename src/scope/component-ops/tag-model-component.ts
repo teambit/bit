@@ -234,7 +234,7 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const notFoundDependencies = new BitIds();
-  const lane = await consumer.getOrCreateCurrentLaneObject();
+  const lane = await consumer.getCurrentLaneObject();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {

@@ -65,8 +65,8 @@ export default class Lane extends BitObject {
   static from(props: LaneProps): Lane {
     return new Lane(props);
   }
-  static create(id: LaneId) {
-    return new Lane({ name: id.name, hash: sha1(v4()) });
+  static create(name: string) {
+    return new Lane({ name, hash: sha1(v4()) });
   }
   static parse(contents: string, hash: string): Lane {
     const laneObject = JSON.parse(contents);
@@ -104,11 +104,10 @@ export default class Lane extends BitObject {
     if (found) return found.head;
     return null;
   }
-  addComponentsFromRemote(laneItems: LaneComponent[]) {
-    laneItems.forEach(laneItem => {
-      const id = laneItem.id;
-      this.components.push({ id, head: laneItem.head });
-    });
+  setLaneComponents(laneComponents: LaneComponent[]) {
+    // this gets called when adding lane-components from other lanes/remotes, so it's better to
+    // clone the objects to not change the original data.
+    this.components = laneComponents.map(c => ({ id: c.id.clone(), head: c.head.clone() }));
   }
   async isFullyMerged(scope: Scope): Promise<boolean> {
     const { unmerged } = await this.getMergedAndUnmergedIds(scope);
