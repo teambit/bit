@@ -1,5 +1,5 @@
 import { Pipe, getDefaultOptions } from './pipe';
-import { RunConfiguration } from './run-configuration';
+import { RunConfiguration, RawRunConfiguration } from './run-configuration';
 import { PipeElement, PipeElementConfig } from './pipe-element';
 import _ from 'lodash';
 export type PipeRegistry = { [k: string]: Pipe };
@@ -16,4 +16,11 @@ export function getRegistry(runConfig: RunConfiguration): PipeRegistry {
       return accum;
     }, {});
   return registry;
+}
+
+export function pipeRegistryToJSON(reg: PipeRegistry): RawRunConfiguration {
+  return Object.keys(reg).reduce((accum, pipeName) => {
+    accum[pipeName] = reg[pipeName].toJson();
+    return accum;
+  }, {});
 }

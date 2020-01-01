@@ -37,6 +37,10 @@ export class Pipe implements Runnable {
       capsule.destroy;
     }
   }
+
+  toJson() {
+    return this.elements.map(elem => elem.getConfig());
+  }
 }
 
 // eslint-disable-next-line import/prefer-default-export

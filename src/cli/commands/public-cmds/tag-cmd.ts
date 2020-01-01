@@ -76,7 +76,7 @@ export default class Tag extends Command {
     }
 
     if (!id && !all && !scope) {
-      throw new GeneralError('missing [id]. to tag all components, please use --all flag');
+      throw new GeneralError('missing id. to tag all components, please use --all flag');
     }
     if (id && all) {
       throw new GeneralError(

@@ -320,6 +320,7 @@ export default class Component {
     newInstance.overrides = this.overrides.clone();
     newInstance.files = this.files.map(file => file.clone());
     newInstance.dists = this.dists.clone();
+    newInstance.registry = Object.assign({}, this.registry);
     return newInstance;
   }
 

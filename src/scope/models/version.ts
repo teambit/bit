@@ -20,6 +20,8 @@ import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { EnvPackages } from '../../extensions/env-extension';
+import { RawRunConfiguration } from '../../addons/run-configuration';
+import { pipeRegistryToJSON } from '../../addons/registry';
 
 type CiProps = {
   error: Record<string, any>;
@@ -78,6 +80,7 @@ export type VersionProps = {
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
+  run: RawRunConfiguration;
 };
 
 /**
@@ -118,7 +121,7 @@ export default class Version extends BitObject {
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
-
+  run: RawRunConfiguration;
   constructor(props: VersionProps) {
     super();
     this.mainFile = props.mainFile;
@@ -149,6 +152,7 @@ export default class Version extends BitObject {
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.extensions = props.extensions || [];
+    this.run = props.run;
     this.validateVersion();
   }
 
@@ -359,7 +363,8 @@ export default class Version extends BitObject {
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
         packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions
+        extensions: this.extensions,
+        run: this.run
       },
       val => !!val
     );
@@ -411,7 +416,8 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions,
+      run
     } = JSON.parse(contents);
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
@@ -490,7 +496,8 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions,
+      run
     });
   }
 
@@ -548,6 +555,7 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+    const run = pipeRegistryToJSON(component.registry);
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -588,7 +596,8 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: component.extensions
+      extensions: component.extensions,
+      run
     });
   }
 
