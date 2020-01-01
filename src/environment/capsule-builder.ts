@@ -84,14 +84,15 @@ export default class CapsuleBuilder {
       component: isolator.componentWithDependencies.component,
       dependencies: isolator.componentWithDependencies.allDependencies,
       bitMap: consumer.bitMap,
-      createNpmLinkFiles: true
+      createNpmLinkFiles: false
     });
+
     await Promise.all(componentLinkFiles.files.map(file => isolator.capsule.outputFile(file.path, file.contents, {})));
   }
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
     try {
-      await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `npm install`.split(' ') }))));
+      await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
     } catch (e) {
       console.log(e);
     }
