@@ -560,7 +560,26 @@ export default class DependencyResolver {
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return false;
     if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return false;
 
-    const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
+    let { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
+    // if the package manager is librarian, we do not have a node_modules folder to look for dependencies
+    // for that reason, we assume the dependency will be installed at runtime and get it from the model
+    // in order to provide a proper dif
+    if (!componentId && this.consumer.config.packageManager === 'librarian') {
+      const matchInModel = this.componentFromModel.getAllDependencies().find(dep => {
+        return dep.relativePaths.find(relativePath => {
+          return relativePath.sourceRelativePath === depFile;
+        });
+      });
+      if (matchInModel) {
+        const relativePathInModel = matchInModel.relativePaths.find(
+          relativePath => relativePath.sourceRelativePath === depFile
+        );
+        componentId = matchInModel.id;
+        depFileRelative = depFile;
+        destination = relativePathInModel ? relativePathInModel.destinationRelativePath : null;
+        // destination = depFile;
+      }
+    }
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -845,19 +864,22 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
-    missingComponents.forEach(missingBit => {
-      const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
-        missingBit,
-        this.component.bindingPrefix
-      );
-      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-      // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-      if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
-        this._pushToMissingLinksIssues(originFile, componentId);
-      } else {
-        this._pushToMissingComponentsIssues(originFile, componentId);
-      }
-    });
+    // when using librarian, we do not have node_modules, so this would be wrong
+    if (this.consumer.config.packageManager !== 'librarian') {
+      missingComponents.forEach(missingBit => {
+        const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
+          missingBit,
+          this.component.bindingPrefix
+        );
+        if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+        // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+        if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
+          this._pushToMissingLinksIssues(originFile, componentId);
+        } else {
+          this._pushToMissingComponentsIssues(originFile, componentId);
+        }
+      });
+    }
   }
 
   processErrors(originFile: PathLinuxRelative) {

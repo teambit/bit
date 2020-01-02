@@ -18,9 +18,11 @@ const rejectNils = R.reject(isNil);
 
 const defaultNpmArgs = [];
 const defaultYarnArgs = [];
+const defaultLibrarianArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
-  yarn: defaultYarnArgs
+  yarn: defaultYarnArgs,
+  librarian: defaultLibrarianArgs
 };
 const defaultPackageManagerProcessOptions = {
   cwd: process.cwd
@@ -67,7 +69,7 @@ type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'npm' | 'yarn';
+  packageManager: 'npm' | 'yarn' | 'librarian';
   packageManagerArgs: string[];
   packageManagerProcessOptions: Record<string, any>;
   useWorkspaces: boolean;

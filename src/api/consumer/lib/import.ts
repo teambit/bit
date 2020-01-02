@@ -165,39 +165,45 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
     )
   );
 
-  // eslint-disable-next-line
-  dependencies.forEach(dep => {
-    if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
+  // since librarian does not install node_modules on the hd,
+  // transient dependencies will be neither in the root package.json
+  // nor in the (non-existent) node_modules
+  // TODO: a better check would be to check the dependency package.json files
+  if (consumer.config.packageManager !== 'librarian') {
+    // eslint-disable-next-line
+    dependencies.forEach(dep => {
+      if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
-    R.forEachObjIndexed((packageDepVersion, packageDepName) => {
-      const packageDep = { [packageDepName]: packageDepVersion };
-      const compatibleWithPackgeJson = compatibleWith(packageDep, packageJsonDependencies);
-      const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
+      R.forEachObjIndexed((packageDepVersion, packageDepName) => {
+        const packageDep = { [packageDepName]: packageDepVersion };
+        const compatibleWithPackgeJson = compatibleWith(packageDep, packageJsonDependencies);
+        const compatibleWithNodeModules = compatibleWith(packageDep, nodeModules);
 
-      if (!compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInBoth)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        warnings.notInBoth.push(packageDep);
-      }
+        if (!compatibleWithPackgeJson && !compatibleWithNodeModules && !R.contains(packageDep, warnings.notInBoth)) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          warnings.notInBoth.push(packageDep);
+        }
 
-      if (
-        !compatibleWithPackgeJson &&
-        compatibleWithNodeModules &&
-        !R.contains(packageDep, warnings.notInPackageJson)
-      ) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        warnings.notInPackageJson.push(packageDep);
-      }
+        if (
+          !compatibleWithPackgeJson &&
+          compatibleWithNodeModules &&
+          !R.contains(packageDep, warnings.notInPackageJson)
+        ) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          warnings.notInPackageJson.push(packageDep);
+        }
 
-      if (
-        compatibleWithPackgeJson &&
-        !compatibleWithNodeModules &&
-        !R.contains(packageDep, warnings.notInNodeModules)
-      ) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        warnings.notInNodeModules.push(packageDep);
-      }
-    }, dep.packageDependencies);
-  });
+        if (
+          compatibleWithPackgeJson &&
+          !compatibleWithNodeModules &&
+          !R.contains(packageDep, warnings.notInNodeModules)
+        ) {
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          warnings.notInNodeModules.push(packageDep);
+        }
+      }, dep.packageDependencies);
+    });
+  }
 
   // Remove duplicates warnings for missing packages
   warnings.notInBoth = R.uniq(warnings.notInBoth);

@@ -25,6 +25,8 @@ import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Version } from '../../scope/models';
 
+import { installPackages } from '../../npm-client/install-packages';
+
 export type ImportOptions = {
   ids: string[]; // array might be empty
   verbose: boolean; // default: false
@@ -81,6 +83,10 @@ export default class ImportComponents {
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
     }
+    if (this.consumer.config.packageManager === 'librarian') {
+      // librarian installs packages at runtime, no need to run the installation for the components
+      this.options.installNpmPackages = false;
+    }
     if (!this.options.ids || R.isEmpty(this.options.ids)) {
       return this.importAccordingToBitMap();
     }
@@ -101,6 +107,11 @@ export default class ImportComponents {
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._writeToFileSystem(componentsWithDependenciesFiltered);
+    if (this.consumer.config.packageManager === 'librarian') {
+      // for the librarian package manager, we only need to trigger the install once
+      // after all the components have been written to the hd
+      await installPackages(this.consumer, [this.consumer.getPath()], true);
+    }
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependenciesFiltered, importDetails };
   }
