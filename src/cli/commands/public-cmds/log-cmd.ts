@@ -12,6 +12,7 @@ export default class Log extends Command {
   opts = [['r', 'remote', 'show log of a remote component']];
   migration = true;
   remoteOp = true; // should support log against remote
+  skipWorkspace = true;
 
   action([id]: [string], { remote = false }: { remote: boolean }): Promise<any> {
     return getComponentLogs(id, remote).then(logs => {
