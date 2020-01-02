@@ -1,7 +1,6 @@
 import path from 'path';
 import R from 'ramda';
 import os from 'os';
-import pLimit, { Limit } from 'p-limit';
 import hash from 'object-hash';
 import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
@@ -11,7 +10,8 @@ import BitCapsule from '../capsule/bit-capsule';
 import Isolator from './isolator';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { getComponentLinks } from '../links/link-generator';
-import Component from '../consumer/component';
+import Graph from '../scope/graph/graph';
+import { Queue } from '../utils';
 
 export type Options = {
   alwaysNew: boolean;
@@ -32,7 +32,7 @@ const DEFAULT_OPTIONS = {
 export default class CapsuleBuilder {
   constructor(
     private workspace: string,
-    private limit: Limit = pLimit(10),
+    private queue: Queue = new Queue(),
     private orch: CapsuleOrchestrator | undefined = orchestrator
   ) {}
 
@@ -53,16 +53,39 @@ export default class CapsuleBuilder {
   ): Promise<{ [bitId: string]: BitCapsule }> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const components = await consumer.loadComponentsForCapsule(bitIds);
+    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const depenenciesFromAllIds = bitIds.map(bitId => {
+      const dependencies = [];
+      const visited = {};
+      graph.getSuccessorsByEdgeTypeRecursively(bitId.toString(), dependencies, visited);
+      return dependencies;
+    });
 
+    const bitIdsToCreate = R.uniq(
+      R.concat(
+        R.flatten(depenenciesFromAllIds),
+        bitIds.map(bitId => bitId.toString())
+      )
+    );
+    const bitIdFormat = R.map(bitId => consumer.getParsedId(bitId), bitIdsToCreate);
+
+    // create capsules
     const capsules: BitCapsule[] = await Promise.all(
-      R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
+      R.map((component: BitId) => this.createCapsule(component, actualCapsuleOptions, orchOptions), bitIdFormat)
     );
+
+    // generate capsule map
     const capsuleMapping = this._buildCapsuleMap(capsules);
-    await Promise.all(
-      R.map(capsule => this._isolate(consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping), capsules)
+
+    await this.queue.addAll(
+      R.map(
+        capsule => () => this._isolate(consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping),
+        capsules
+      )
     );
-    if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
+
+    if (actualCapsuleOptions.installPackages) await this.installpackages(capsules, consumer.config.packageManager);
+    await this.queue.onIdle();
     return capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
@@ -90,12 +113,10 @@ export default class CapsuleBuilder {
     await Promise.all(componentLinkFiles.files.map(file => isolator.capsule.outputFile(file.path, file.contents, {})));
   }
 
-  async installpackages(capsules: BitCapsule[]): Promise<void> {
-    try {
-      await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
-    } catch (e) {
-      console.log(e);
-    }
+  async installpackages(capsules: BitCapsule[], packageManager = 'yarn'): Promise<void> {
+    const command = packageManager === 'yarn' ? 'yarn' : 'npm install';
+    const executions = capsules.map(capsule => () => capsule.exec({ command: command.split(' ') }));
+    await this.queue.addAll(executions);
   }
 
   private async _isolate(

@@ -120,7 +120,7 @@ export function preparePackageJsonToWrite(
           capsuleWrkspaceMap[component.id.toString()],
           capsuleWrkspaceMap[dep.id.toString()]
         );
-        packageDependency = `file://${relative}`;
+        packageDependency = `file:${relative}`;
       } else {
         packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       }
