@@ -710,18 +710,20 @@ export default class Component {
           targetDir,
           shouldBuildDependencies,
           installNpmPackages,
-          keepExistingCapsule
+          keepExistingCapsule,
+          writeDists = false
         }: {
           targetDir?: string;
           shouldBuildDependencies?: boolean;
           installNpmPackages?: boolean;
           keepExistingCapsule?: boolean;
+          writeDists: boolean;
         }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
           shouldBuildDependencies;
           const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
           const componentWithDependencies = await isolator.isolate(component.id, {
             shouldBuildDependencies,
-            writeDists: false,
+            writeDists,
             installNpmPackages,
             keepExistingCapsule
           });

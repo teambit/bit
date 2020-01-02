@@ -43,6 +43,8 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
+export type ComponentLogs = { [key: number]: { message: string; date: string; hash: string } | null | undefined };
+
 export type ComponentProps = {
   scope: string | null | undefined;
   name: string;
@@ -188,7 +190,7 @@ export default class Component extends BitObject {
     repo: Repository
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  ): Promise<{ [key: number]: { message: string; date: string; hash: string } | null | undefined }> {
+  ): Promise<ComponentLogs> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const versions: Version[] = await repo.findMany(this.versionArray);
     const logValues = versions.map(version => (version ? version.log : { message: '<no-data-available>' }));

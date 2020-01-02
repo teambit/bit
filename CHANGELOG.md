@@ -7,12 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1894](https://github.com/teambit/bit/issues/1894) introduce `--remote` flag for `bit log`
+- fix overrides of a component added with package syntax to be recognized as bit-component
+
+## [14.7.2-dev.1] - 2019-12-17
+
+- [#2196](https://github.com/teambit/bit/issues/2196) fix dependency resolution when Bit component is imported in a sub-package
+- install librarian from npm
+
+## [[14.7.1] - 2019-12-12](https://github.com/teambit/bit/releases/tag/v14.7.1)
+
+### New
+
+- add component root dir to bit show (json only)
+
+### Bug fixes
+
 - [#2182](https://github.com/teambit/bit/issues/2182) fix package-name replacement of dists when a package has a tilda prefix
 - [#2182](https://github.com/teambit/bit/issues/2182) don't write dependencies dists to a capsule when their compiler was removed
-
-## [14.7.1-dev.1] - 2019-12-08
-
-- improve isolate function for testers API
+- fix tester's isolate API
 
 ## [[14.7.0] - 2019-12-08](https://github.com/teambit/bit/releases/tag/v14.7.0)
 
