@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add `--conf` and `--ignore-package-json` flags to `bit checkout` similar to `bit import`
+- improve performance of `bit checkout` by writing multiple components in parallel
 - [#1894](https://github.com/teambit/bit/issues/1894) introduce `--remote` flag for `bit log`
 - fix overrides of a component added with package syntax to be recognized as bit-component
 

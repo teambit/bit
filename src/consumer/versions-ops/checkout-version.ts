@@ -1,5 +1,4 @@
 import * as path from 'path';
-import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
@@ -18,6 +17,7 @@ import { Tmp } from '../../scope/repositories';
 import { Lane } from '../../scope/models';
 import LaneId from '../../lane-id/lane-id';
 import { LaneComponent } from '../../scope/models/lane';
+import { ComponentWithDependencies } from '../../scope';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -27,6 +27,9 @@ export type CheckoutProps = {
   mergeStrategy: MergeStrategy | null | undefined;
   verbose: boolean;
   skipNpmInstall: boolean;
+  ignorePackageJson: boolean;
+  writeConfig: boolean;
+  configDir?: string;
   reset: boolean; // remove local changes. if set, the version is undefined.
   all: boolean; // checkout all ids
   ignoreDist: boolean;
@@ -85,7 +88,24 @@ export default (async function checkoutVersion(
   });
   await saveLanesData();
 
-  return { components: componentsResults, version, failedComponents };
+  const componentsWithDependencies = componentsResults.map(c => c.component).filter(c => c);
+
+  const manyComponentsWriter = new ManyComponentsWriter({
+    consumer,
+    componentsWithDependencies,
+    installNpmPackages: !checkoutProps.skipNpmInstall,
+    override: true,
+    verbose: checkoutProps.verbose,
+    writeDists: !checkoutProps.ignoreDist,
+    writeConfig: checkoutProps.writeConfig,
+    configDir: checkoutProps.configDir,
+    writePackageJson: !checkoutProps.ignorePackageJson
+  });
+  await manyComponentsWriter.writeAll();
+
+  const appliedVersionComponents = componentsResults.map(c => c.applyVersionResult);
+
+  return { components: appliedVersionComponents, version, failedComponents };
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
@@ -323,7 +343,7 @@ async function applyVersion(
   componentFromFS: ConsumerComponent | null, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
-): Promise<ApplyVersionResult> {
+): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
@@ -337,7 +357,7 @@ async function applyVersion(
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
-    return { id, filesStatus };
+    return { applyVersionResult: { id, filesStatus } };
   }
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS && componentFromFS.componentMap;
@@ -348,25 +368,11 @@ async function applyVersion(
     componentWithDependencies.compilerDependencies = [];
     componentWithDependencies.testerDependencies = [];
   }
-  const shouldWritePackageJson = async (): Promise<boolean> => {
-    if (!componentMap) return true; // comes from lanes and the component is not in the workspace yet
-    const rootDir = componentMap && componentMap.rootDir;
-    if (!rootDir) return false;
-    const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
-    return fs.pathExists(packageJsonPath);
-  };
-  const shouldInstallNpmPackages = (): boolean => {
-    if (componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
-    return !skipNpmInstall;
-  };
-  const writePackageJson = await shouldWritePackageJson();
-
   const files = componentWithDependencies.component.files;
   files.forEach(file => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
-
   let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
@@ -382,21 +388,10 @@ async function applyVersion(
   componentWithDependencies.component.dependenciesSavedAsComponents =
     shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
-  const manyComponentsWriter = new ManyComponentsWriter({
-    consumer,
-    componentsWithDependencies: [componentWithDependencies],
-    installNpmPackages: shouldInstallNpmPackages(),
-    override: true,
-    writeConfig: Boolean(componentMap && componentMap.configDir), // write bit.json and config files only if it was there before
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap && componentMap.configDir,
-    verbose,
-    writeDists: !ignoreDist,
-    writePackageJson
-  });
-  await manyComponentsWriter.writeAll();
-
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  return {
+    applyVersionResult: { id, filesStatus: Object.assign(filesStatus, modifiedStatus) },
+    component: componentWithDependencies
+  };
 }
 
 /**
@@ -440,7 +435,6 @@ export function applyModifiedVersion(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
