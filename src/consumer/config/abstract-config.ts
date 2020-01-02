@@ -189,7 +189,7 @@ export default class AbstractConfig {
         },
         dependencies: this.dependencies,
         extensions: this.extensions,
-        run: this.extensions
+        run: this.run
       },
       isPropDefaultOrNull
     );
