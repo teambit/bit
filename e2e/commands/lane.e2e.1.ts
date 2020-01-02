@@ -172,7 +172,7 @@ describe('bit lane command', function() {
         helper.scopeHelper.addRemoteScope();
         helper.command.importLane('dev --objects');
         beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
-        helper.command.switchRemoteLane('dev');
+        helper.command.switchRemoteLane('dev', '--get-all');
       });
       it('should write the component to the filesystem with the same version as the lane', () => {
         const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
@@ -233,7 +233,7 @@ describe('bit lane command', function() {
       describe('switching with a different lane name', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeLaneSwitch);
-          helper.command.switchRemoteLane('dev --new-lane-name my-new-lane');
+          helper.command.switchRemoteLane('dev', '--as my-new-lane');
         });
         it('should save the remote-lane data into a local with the specified name', () => {
           const lanes = helper.command.showLanesParsed();
@@ -307,8 +307,7 @@ describe('bit lane command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --objects');
-        helper.command.switchRemoteLane('dev');
+        helper.command.switchRemoteLane('dev', '--get-all');
         importedScope = helper.scopeHelper.cloneLocalScope();
 
         helper.scopeHelper.getClonedLocalScope(authorScope);

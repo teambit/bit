@@ -275,12 +275,11 @@ export default class CommandHelper {
   checkout(values: string) {
     return this.runCmd(`bit checkout ${values}`);
   }
-
-  switchLocalLane(lane: string) {
-    return this.runCmd(`bit checkout ${lane} --lane`);
+  switchLocalLane(lane: string, flags?: string) {
+    return this.runCmd(`bit switch ${lane} ${flags}`);
   }
-  switchRemoteLane(lane: string) {
-    return this.runCmd(`bit checkout ${this.scopes.remote} ${lane} --lane`);
+  switchRemoteLane(lane: string, flags?: string) {
+    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${flags}`);
   }
 
   mergeVersion(version: string, ids: string, flags?: string) {

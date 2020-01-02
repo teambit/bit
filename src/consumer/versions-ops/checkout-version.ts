@@ -14,8 +14,6 @@ import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { Tmp } from '../../scope/repositories';
-import { Lane } from '../../scope/models';
-import LaneId from '../../lane-id/lane-id';
 import { LaneComponent } from '../../scope/models/lane';
 import { ComponentWithDependencies } from '../../scope';
 
@@ -346,7 +344,7 @@ async function applyVersion(
 ): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
-  const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
+  const { mergeStrategy } = checkoutProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     // even when isLane is true, the mergeResults is possible only when the component is on the filesystem

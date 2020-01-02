@@ -30,6 +30,8 @@ import { DivergedComponent } from '../component/components-list';
 import { Remote } from '../../remotes';
 import { isTag } from '../../version/version-parser';
 import { LaneComponent } from '../../scope/models/lane';
+import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
+import RemoteLaneId from '../../lane-id/remote-lane-id';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -179,7 +181,13 @@ export default class ImportComponents {
       const remoteLaneScope = this.options.ids[0];
       const remoteLaneName = this.options.ids[1];
       const localLaneName = this.options.newLaneName || remoteLaneName;
-      const lane = await this._importRemoteLaneObject(remoteLaneScope, remoteLaneName);
+
+      const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
+      const remoteLaneObjects = await scopeComponentImporter.importFromLanes([
+        RemoteLaneId.from(remoteLaneScope, remoteLaneName)
+      ]);
+
+      const lane = remoteLaneObjects[0];
       this.laneData = {
         remoteLaneScope,
         remoteLaneName,
@@ -214,22 +222,6 @@ export default class ImportComponents {
       }
     }
     return BitIds.uniqFromArray(bitIds);
-  }
-
-  async _importRemoteLaneObject(remoteScope: string, remoteLane: string): Promise<Lane> {
-    const remotes = await getScopeRemotes(this.consumer.scope);
-    const remote: Remote = await remotes.resolve(remoteScope, this.consumer.scope);
-    const objectsToPush = await remote.fetch(
-      new BitIds(new BitId({ scope: remoteScope, name: remoteLane })),
-      false,
-      undefined,
-      undefined,
-      true
-    );
-    const laneObjects = await objectsToPush.laneObjects[0].toObjectsAsync();
-    const lane = laneObjects.lane;
-    await this.scope.objects.remoteLanes.syncWithLaneObject(remoteScope, lane);
-    return lane;
   }
 
   _getDependenciesFromGraph(bitIds: BitId[], graphs: DependencyGraph[]): BitId[] {

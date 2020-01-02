@@ -131,8 +131,8 @@ export default class Lane extends BitObject {
     );
     return { merged, unmerged };
   }
-  getAllIds(): BitId[] {
-    return this.components.map(c => c.id);
+  toBitIds(): BitId[] {
+    return this.components.map(c => c.id.changeVersion(c.head.toString()));
   }
   toLaneId() {
     return new LaneId({ name: this.name });

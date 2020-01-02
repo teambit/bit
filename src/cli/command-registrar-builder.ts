@@ -59,6 +59,7 @@ import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
 import Lane from './commands/public-cmds/lane-cmd';
+import Switch from './commands/public-cmds/switch-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
@@ -160,7 +161,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Graph(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Lane()
+      new Lane(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Switch()
     ],
     extensionsCommands
   );

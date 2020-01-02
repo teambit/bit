@@ -16,8 +16,9 @@ import GeneralError from '../../error/general-error';
 import { getScopeRemotes } from '../scope-remotes';
 import ConsumerComponent from '../../consumer/component';
 import { splitBy } from '../../utils';
-import { ModelComponent, Version } from '../models';
+import { ModelComponent, Version, Lane } from '../models';
 import ShowDoctorError from '../../error/show-doctor-error';
+import RemoteLaneId from '../../lane-id/remote-lane-id';
 
 const removeNils = R.reject(R.isNil);
 
@@ -140,6 +141,26 @@ export default class ScopeComponentsImporter {
           return reject(new DependencyNotFound(e.id));
         });
     });
+  }
+
+  async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
+    const lanes = await this.importLanes(remoteLaneIds);
+    const ids = lanes.map(lane => lane.toBitIds());
+    const bitIds = BitIds.uniqFromArray(R.flatten(ids));
+    await this.importManyWithAllVersions(bitIds, false);
+    return lanes;
+  }
+
+  async importLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
+    const remotes = await getScopeRemotes(this.scope);
+    // @todo, this is very yuck. we currently only fetch bit-ids, so we kind of convert the lane-id to bit-id :(
+    const ids = new BitIds(...remoteLaneIds.map(id => new BitId({ scope: id.scope, name: id.name })));
+    const objectsToPush = await remotes.fetch(ids, this.scope, undefined, undefined, true);
+
+    const laneObjects = await Promise.all(objectsToPush.laneObjects.map(l => l.toObjectsAsync()));
+    const lanes = laneObjects.map(l => l.lane);
+    await Promise.all(lanes.map(lane => this.scope.objects.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
+    return lanes;
   }
 
   async componentToVersionDependencies(component: ModelComponent, id: BitId): Promise<VersionDependencies> {

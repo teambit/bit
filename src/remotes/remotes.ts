@@ -41,7 +41,8 @@ export default class Remotes extends Map<string, Remote> {
     ids: BitId[],
     thisScope: Scope,
     withoutDeps = false,
-    context?: Record<string, any>
+    context?: Record<string, any>,
+    idsAreLanes = false
   ): Promise<ObjectsToPush> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
@@ -51,7 +52,7 @@ export default class Remotes extends Map<string, Remote> {
       promises.push(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.resolve(scopeName, thisScope).then(remote =>
-          remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context)
+          remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context, undefined, idsAreLanes)
         )
       );
     });
