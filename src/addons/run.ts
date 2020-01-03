@@ -6,6 +6,7 @@ import Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS } from '../constants';
 import CapsuleBuilder from '../environment/capsule-builder';
 
+// eslint-disable-next-line import/prefer-default-export
 export async function run(options: RunOptions): Promise<any> {
   const consumer = await loadConsumer();
   let components: Component[] = [];
@@ -33,7 +34,7 @@ export async function run(options: RunOptions): Promise<any> {
   console.timeEnd('isolate');
   const limit = plimit(7);
   console.time('compile');
-  debugger;
+
   await Promise.all(
     components.map(async component => {
       const pipe: Pipe | String = options.extensions.length ? new Pipe() : (options.step! as string);

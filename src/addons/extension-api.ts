@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import BitMap from '../consumer/bit-map';
 import Component from '../consumer/component/consumer-component';
 import { BitCapsule } from '../capsule';

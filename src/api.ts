@@ -7,6 +7,8 @@ import { BaseLoadArgsProps } from './extensions/base-extension';
 
 HooksManager.init();
 
+export { default as Extension } from './harmony';
+
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getScopeComponent({ scopePath, id, allVersions: opts && opts.versions }).then(({ component }) => {
