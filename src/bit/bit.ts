@@ -1,32 +1,20 @@
 import { Workspace } from '../workspace';
 import { Scope, loadScope } from '../scope';
 import { loadConsumer } from '../consumer';
-import { buildRegistry, CommandRegistry } from '../cli';
 import { Harmony } from '../harmony';
 
 export default class Bit {
-  constructor(
-    private scope: Scope,
-    private workspace: Workspace | null,
-    private cmdRegistry: CommandRegistry,
-    private harmony: Harmony
-  ) {}
+  constructor(private scope: Scope, private workspace: Workspace | null, private harmony: Harmony) {}
 
-  static async load(): Promise<Bit> {
-    const harmony = Harmony.load();
-    const cmdRegistry = buildRegistry([]);
-
-    try {
-      cmdRegistry.run();
-    } catch (err) {
-      console.error('loud rejected:', err); // eslint-disable-line no-console
-    }
-
+  /**
+   * loads Bit
+   */
+  static async load(harmony: Harmony): Promise<Bit> {
     try {
       const consumer = await loadConsumer();
-      return new Bit(consumer.scope, await Workspace.load(), cmdRegistry, harmony);
+      return new Bit(consumer.scope, await Workspace.load(), harmony);
     } catch {
-      return new Bit(await loadScope(), null, cmdRegistry, harmony);
+      return new Bit(await loadScope(), null, harmony);
     }
   }
 }

@@ -4,7 +4,7 @@ import loadExtensions from './extensions/extensions-loader';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
-import { Bit } from './bit';
+import { BitCli, Bit } from './bit';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -17,8 +17,8 @@ BPromise.config({
 loudRejection();
 HooksManager.init();
 
-Bit.load()
-  .then(async Bit => {
+BitCli.load(Harmony.load())
+  .then(async () => {
     if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
   })
   .catch(err => console.error('loud rejected:', err));
