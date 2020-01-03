@@ -865,21 +865,22 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
     // when using librarian, we do not have node_modules, so this would be wrong
-    if (this.consumer.config.packageManager !== 'librarian') {
-      missingComponents.forEach(missingBit => {
-        const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
-          missingBit,
-          this.component.bindingPrefix
-        );
-        if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
-        // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-        if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
-          this._pushToMissingLinksIssues(originFile, componentId);
-        } else {
-          this._pushToMissingComponentsIssues(originFile, componentId);
-        }
-      });
+    if (this.consumer.config.packageManager === 'librarian') {
+      return;
     }
+    missingComponents.forEach(missingBit => {
+      const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
+        missingBit,
+        this.component.bindingPrefix
+      );
+      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+      // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+      if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
+        this._pushToMissingLinksIssues(originFile, componentId);
+      } else {
+        this._pushToMissingComponentsIssues(originFile, componentId);
+      }
+    });
   }
 
   processErrors(originFile: PathLinuxRelative) {
