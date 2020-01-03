@@ -2,8 +2,9 @@ import R from 'ramda';
 import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import GeneralError from '../../../error/general-error';
-import ImportComponents from '../../../consumer/component-ops/import-components';
+import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
+import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
 
 export default async function fetch(ids: string[], lanes: boolean, components: boolean) {
   if (!lanes && !components) {
@@ -13,7 +14,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   }
   loader.start('fetching objects...');
   const consumer: Consumer = await loadConsumer();
-  const importOptions = {
+  const importOptions: ImportOptions = {
     ids,
     objectsOnly: true,
     idsAreLanes: lanes,
@@ -26,9 +27,25 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
     installNpmPackages: false
   };
   const importComponents = new ImportComponents(consumer, importOptions);
+  if (lanes) {
+    const laneIds = await getLaneIds();
+    importOptions.lanes = { laneIds };
+  }
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
   return { dependencies, envComponents, importDetails };
+
+  async function getLaneIds(): Promise<RemoteLaneId[]> {
+    if (ids.length) {
+      return ids.map(id => {
+        const trackLane = consumer.scope.getRemoteTrackedDataByLocalLane(id);
+        if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
+        // assuming it's a remote
+        return RemoteLaneId.parse(id);
+      });
+    }
+    return consumer.scope.objects.remoteLanes.getAllRemoteLaneIds();
+  }
 }

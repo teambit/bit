@@ -87,7 +87,10 @@ export default class Switch extends Command {
     return switchAction(switchProps);
   }
 
-  report({ components, version, failedComponents }: ApplyVersionResults): string {
+  report({ components, version, failedComponents }: ApplyVersionResults, ...args): string {
+    if (args[1].create) {
+      return chalk.green(`successfully added a new lane ${chalk.bold(args[0])}`);
+    }
     const isLatest = Boolean(version && version === LATEST);
     const isReset = !version;
     const getFailureOutput = () => {

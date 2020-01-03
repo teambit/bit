@@ -29,7 +29,7 @@ export default class Import extends Command {
     [
       'o',
       'objects',
-      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
+      "(deprecated. use 'bit fetch' instead) import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
     ['l', 'lanes', 'import lanes. please specify two args <remote-lane-scope> and <remote-lane-name>'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
@@ -152,9 +152,7 @@ export default class Import extends Command {
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
       importDependenciesDirectly: dependencies,
-      importDependents: dependents,
-      checkoutToLane: checkout,
-      newLaneName
+      importDependents: dependents
     };
     // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
     if (typeof conf === 'string') {

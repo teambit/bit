@@ -12,7 +12,7 @@ import logger from '../../logger/logger';
 import { filterAsync, pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
-import { applyModifiedVersion, saveCheckedOutLaneInfo } from '../versions-ops/checkout-version';
+import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ManyComponentsWriter from './many-components-writer';
@@ -24,12 +24,8 @@ import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Version, ModelComponent, Lane } from '../../scope/models';
-import { DivergeResult } from '../../scope/models/model-component';
 import ComponentsPendingMerge from './exceptions/components-pending-merge';
-import { DivergedComponent } from '../component/components-list';
-import { Remote } from '../../remotes';
 import { isTag } from '../../version/version-parser';
-import { LaneComponent } from '../../scope/models/lane';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 
@@ -51,8 +47,7 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
-  checkoutToLane?: boolean; // default: false
-  newLaneName?: string;
+  lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
 };
 type ComponentMergeStatus = {
   componentWithDependencies: ComponentWithDependencies;
@@ -80,13 +75,6 @@ export default class ImportComponents {
   mergeStatus: { [id: string]: FilesStatus };
   private divergeData: Array<ModelComponent> = [];
   // @ts-ignore
-  private laneData: {
-    remoteLaneScope: string;
-    remoteLaneName: string;
-    localLaneName: string;
-    addTrackingInfo: boolean;
-    laneComponents: LaneComponent[];
-  } | null;
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -101,7 +89,7 @@ export default class ImportComponents {
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
     }
-    if (!this.options.ids || R.isEmpty(this.options.ids)) {
+    if (!this.options.lanes && (!this.options.ids || R.isEmpty(this.options.ids))) {
       return this.importAccordingToBitMap();
     }
     return this.importSpecificComponents();
@@ -172,31 +160,10 @@ export default class ImportComponents {
 
   async _getBitIds(): Promise<BitIds> {
     const bitIds: BitId[] = [];
-    if (this.options.idsAreLanes) {
-      if (this.options.ids.length !== 2) {
-        throw new GeneralError(
-          'please specify exactly two arguments when importing a lane: bit import <remote-name> <lane-name>'
-        );
-      }
-      const remoteLaneScope = this.options.ids[0];
-      const remoteLaneName = this.options.ids[1];
-      const localLaneName = this.options.newLaneName || remoteLaneName;
-
+    if (this.options.lanes) {
       const scopeComponentImporter = ScopeComponentsImporter.getInstance(this.consumer.scope);
-      const remoteLaneObjects = await scopeComponentImporter.importFromLanes([
-        RemoteLaneId.from(remoteLaneScope, remoteLaneName)
-      ]);
-
-      const lane = remoteLaneObjects[0];
-      this.laneData = {
-        remoteLaneScope,
-        remoteLaneName,
-        localLaneName,
-        addTrackingInfo: true,
-        laneComponents: lane.components
-      };
-      const laneBitIds = lane.components.map(c => c.id.changeVersion(c.head.toString()));
-      bitIds.push(...laneBitIds);
+      const lanes = await scopeComponentImporter.importLanes(this.options.lanes.laneIds);
+      lanes.forEach(lane => bitIds.push(...lane.toBitIds()));
     } else {
       await Promise.all(
         this.options.ids.map(async (idStr: string) => {
@@ -520,7 +487,7 @@ export default class ImportComponents {
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
-    if (this.options.objectsOnly || (this.options.idsAreLanes && !this.options.merge && !this.options.checkoutToLane)) {
+    if (this.options.objectsOnly) {
       return;
     }
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
@@ -542,9 +509,5 @@ export default class ImportComponents {
       override: this.options.override
     });
     await manyComponentsWriter.writeAll();
-    if (this.options.checkoutToLane) {
-      if (!this.laneData) throw new Error('unable to checkout to a lane, lane-data is missing');
-      await saveCheckedOutLaneInfo(this.consumer, this.laneData);
-    }
   }
 }

@@ -1,11 +1,14 @@
 import path from 'path';
 import fs from 'fs-extra';
+import R from 'ramda';
 import { REMOTE_REFS_DIR } from '../../constants';
 import { Ref } from '../objects';
 import LaneId from '../../lane-id/lane-id';
 import { Lane } from '../models';
 import { BitId } from '../../bit-id';
 import { LaneComponent } from '../models/lane';
+import { RemoteLaneId } from '../../lane-id/lane-id';
+import { glob } from '../../utils';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 
@@ -70,6 +73,16 @@ export default class RemoteLanes {
       }
       throw err;
     }
+  }
+
+  async getAllRemoteLaneIds(): Promise<RemoteLaneId[]> {
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
+    return matches.map(match => {
+      const split = match.split(path.sep);
+      // in the future, lane-name might have slashes, so until the first slash is the scope.
+      // the rest are the name
+      return RemoteLaneId.from(R.tail(split).join('/'), R.head(split));
+    });
   }
 
   async syncWithLaneObject(remoteName: string, lane: Lane) {

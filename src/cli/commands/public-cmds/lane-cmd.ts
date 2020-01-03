@@ -8,7 +8,6 @@ export default class Lane extends Command {
   name = 'lane [name]';
   description = `manage lanes
   bit lane => shows all available lanes and mark the checked out lane
-  bit lane name => creates a new lane
   https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -46,9 +45,6 @@ export default class Lane extends Command {
   }
 
   report(results: LaneResults, ...args): string {
-    if (results.added) {
-      return chalk.green(`successfully added a new lane ${chalk.bold(results.added)}`);
-    }
     if (results.lanes) {
       return results.lanes
         .map(laneName => {

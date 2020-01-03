@@ -75,11 +75,11 @@ describe('bit lane command', function() {
       helper.command.snapAllComponents();
       helper.command.exportLane('dev');
     });
-    describe('importing the lane with no args', () => {
+    describe('fetching lanes objects', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev');
+        helper.command.fetchRemoteLane('dev');
       });
       it('should not write the components to the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'components/bar/foo')).to.not.be.a.path();
@@ -97,11 +97,11 @@ describe('bit lane command', function() {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
-    describe('importing the lane with --checkout arg', () => {
+    describe('importing the lane and checking out by bit switch', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --checkout');
+        helper.command.switchRemoteLane('dev');
       });
       it('should write the components to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
@@ -131,7 +131,7 @@ describe('bit lane command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --checkout --new-lane-name my-new-lane');
+        helper.command.switchRemoteLane('dev', '--as my-new-lane');
       });
       it('bit lane should show the component in the checked out lane', () => {
         const lanes = helper.command.showLanesParsed();
@@ -170,9 +170,9 @@ describe('bit lane command', function() {
 
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --objects');
+        helper.command.fetchRemoteLane('dev');
         beforeLaneSwitch = helper.scopeHelper.cloneLocalScope();
-        helper.command.switchRemoteLane('dev', '--get-all');
+        helper.command.switchRemoteLane('dev');
       });
       it('should write the component to the filesystem with the same version as the lane', () => {
         const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
@@ -258,7 +258,7 @@ describe('bit lane command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --objects');
+        helper.command.fetchRemoteLane('dev');
         helper.command.merge(`${helper.scopes.remote} dev --lane`);
       });
       it('should save the files to the filesystem', () => {
@@ -280,7 +280,7 @@ describe('bit lane command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importLane('dev --objects');
+        helper.command.fetchRemoteLane('dev');
         mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane --existing`);
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
@@ -307,7 +307,7 @@ describe('bit lane command', function() {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
-        helper.command.switchRemoteLane('dev', '--get-all');
+        helper.command.switchRemoteLane('dev');
         importedScope = helper.scopeHelper.cloneLocalScope();
 
         helper.scopeHelper.getClonedLocalScope(authorScope);
@@ -316,7 +316,7 @@ describe('bit lane command', function() {
         helper.command.exportLane('dev');
 
         helper.scopeHelper.getClonedLocalScope(importedScope);
-        helper.command.importLane('dev --objects');
+        helper.command.fetchRemoteLane('dev');
       });
       it('bit status should show all components as pending update', () => {
         const status = helper.command.statusJson();

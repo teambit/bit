@@ -1,5 +1,7 @@
 /* eslint max-classes-per-file: 0 */
-import { DEFAULT_LANE } from '../constants';
+import R from 'ramda';
+import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../constants';
+import GeneralError from '../error/general-error';
 
 export default class LaneId {
   readonly name: string;
@@ -7,6 +9,7 @@ export default class LaneId {
   constructor({ name, scope }: { name: string; scope?: string | null }) {
     this.name = name;
     this.scope = scope;
+    Object.freeze(this);
   }
   hasSameName(id: LaneId): boolean {
     return this.name === id.name;
@@ -23,9 +26,8 @@ export default class LaneId {
   }
   toString(): string {
     if (!this.scope) return this.name;
-    // @todo: decide how the delimiter should look like
-    const delimiter = '//';
-    return this.scope + delimiter + this.name;
+
+    return this.scope + LANE_REMOTE_DELIMITER + this.name;
   }
   static from(name: string, scope?: string | null): LaneId {
     return new LaneId({ scope, name });
@@ -33,18 +35,22 @@ export default class LaneId {
 }
 
 export class RemoteLaneId extends LaneId {
-  readonly name!: string;
-  readonly scope!: string;
   constructor({ name, scope }: { name: string; scope: string }) {
     super({ name, scope });
   }
   static from(name: string, scope: string): RemoteLaneId {
     return new RemoteLaneId({ scope, name });
   }
+  static parse(id: string): RemoteLaneId {
+    if (!id.includes(LANE_REMOTE_DELIMITER)) {
+      throw new GeneralError(`invalid remote lane-id, ${id} is missing a delimiter "(${LANE_REMOTE_DELIMITER})"`);
+    }
+    const split = id.split(LANE_REMOTE_DELIMITER);
+    return new RemoteLaneId({ scope: R.head(split), name: R.tail(split).join(LANE_REMOTE_DELIMITER) });
+  }
 }
 
 export class LocalLaneId extends LaneId {
-  readonly name!: string;
   constructor({ name }: { name: string }) {
     super({ name });
   }

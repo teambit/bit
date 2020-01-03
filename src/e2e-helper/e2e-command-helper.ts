@@ -9,7 +9,7 @@ import { removeChalkCharacters } from '../utils';
 import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
-import { CURRENT_UPSTREAM } from '../constants';
+import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
@@ -123,7 +123,7 @@ export default class CommandHelper {
     return result;
   }
   createLane(laneName = 'dev') {
-    return this.runCmd(`bit lane ${laneName}`);
+    return this.runCmd(`bit switch ${laneName} --create`);
   }
   showLanes(options = '') {
     return this.runCmd(`bit lane ${options}`);
@@ -177,8 +177,14 @@ export default class CommandHelper {
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
-  importLane(id: string) {
-    return this.runCmd(`bit import ${this.scopes.remote} ${id} --lanes`);
+  fetchLane(id: string) {
+    return this.runCmd(`bit fetch ${id} --lanes`);
+  }
+  fetchRemoteLane(id: string) {
+    return this.runCmd(`bit fetch ${this.scopes.remote}${LANE_REMOTE_DELIMITER}${id} --lanes`);
+  }
+  fetchAllLanes() {
+    return this.runCmd(`bit fetch --lanes`);
   }
   importManyComponents(ids: string[]) {
     const idsWithRemote = ids.map(id => `${this.scopes.remote}/${id}`);
@@ -276,10 +282,11 @@ export default class CommandHelper {
     return this.runCmd(`bit checkout ${values}`);
   }
   switchLocalLane(lane: string, flags?: string) {
-    return this.runCmd(`bit switch ${lane} ${flags}`);
+    return this.runCmd(`bit switch ${lane} ${flags || ''}`);
   }
-  switchRemoteLane(lane: string, flags?: string) {
-    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${flags}`);
+  switchRemoteLane(lane: string, flags?: string, getAll = true) {
+    const getAllFlag = getAll ? '--get-all' : '';
+    return this.runCmd(`bit switch ${lane} --remote ${this.scopes.remote} ${getAllFlag} ${flags || ''}`);
   }
 
   mergeVersion(version: string, ids: string, flags?: string) {
