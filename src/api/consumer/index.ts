@@ -37,6 +37,7 @@ import show from './lib/show';
 import paintGraph from './lib/paint-graph';
 import lane from './lib/lane';
 import switchAction from './lib/switch';
+import fetch from './lib/fetch';
 
 export {
   init,
@@ -82,5 +83,6 @@ export {
   show,
   paintGraph,
   lane,
-  switchAction
+  switchAction,
+  fetch
 };

@@ -27,7 +27,7 @@ import CatComponent from './commands/private-cmds/cat-component-cmd';
 import CatLane from './commands/private-cmds/cat-lane-cmd';
 import DescribeScope from './commands/private-cmds/_scope-cmd';
 import Put from './commands/private-cmds/_put-cmd';
-import Fetch from './commands/private-cmds/_fetch-cmd';
+import _Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import EjectConf from './commands/public-cmds/eject-conf-cmd';
@@ -60,6 +60,7 @@ import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
 import Lane from './commands/public-cmds/lane-cmd';
 import Switch from './commands/public-cmds/switch-cmd';
+import Fetch from './commands/public-cmds/fetch-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
@@ -108,7 +109,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new ScopeShow(),
       new ScopeGraph(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Fetch(),
+      new _Fetch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Build(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -163,7 +164,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Lane(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Switch()
+      new Switch(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new Fetch()
     ],
     extensionsCommands
   );
