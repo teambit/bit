@@ -1,7 +1,8 @@
+import _ from 'lodash';
+import { PipeElement, PipeElementConfig } from './pipe-element';
 import { Pipe, getDefaultOptions } from './pipe';
 import { RunConfiguration, RawRunConfiguration } from './run-configuration';
-import { PipeElement, PipeElementConfig } from './pipe-element';
-import _ from 'lodash';
+
 export type PipeRegistry = { [k: string]: Pipe };
 
 export function getRegistry(runConfig: RunConfiguration): PipeRegistry {

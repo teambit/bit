@@ -41,7 +41,7 @@ export type TesterExtensionObject = EnvExtensionObject;
 
 export type CompilerExtensionObject = EnvExtensionObject;
 
-export type Extensions = { [extensionName: string]: RegularExtensionObject };
+export type Extensions = { [extensionName: string]: { [key: string]: any } };
 export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };

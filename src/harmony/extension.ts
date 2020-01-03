@@ -1,3 +1,5 @@
 // import { Scope } from "../scope";
 
-export default class Extension {}
+export default class Extension {
+  static load() {}
+}

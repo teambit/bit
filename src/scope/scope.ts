@@ -43,6 +43,8 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
+import ScopeComponentsImporter from './component-ops/scope-components-importer';
+import VersionDependencies from './version-dependencies';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -81,6 +83,7 @@ export default class Scope {
   scopeJson: ScopeJson;
   tmp: Tmp;
   path: string;
+  scopeImporter: ScopeComponentsImporter;
   sources: SourcesRepository;
   objects: Repository;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -93,6 +96,14 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects;
+    this.scopeImporter = ScopeComponentsImporter.getInstance(this);
+  }
+
+  /**
+   * import components to the `Scope.
+   */
+  async import(ids: BitIds, cache = true, persist = true): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany(ids, cache, persist);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -308,7 +319,7 @@ export default class Scope {
             component.devDependencies.isCustomResolvedUsed() ||
             component.compilerDependencies.isCustomResolvedUsed() ||
             component.testerDependencies.isCustomResolvedUsed()) &&
-          (component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) &&
+          component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
           !component.dists.isEmpty()
       );
     if (isNodePathNeeded) {
