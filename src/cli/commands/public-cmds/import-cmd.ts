@@ -31,7 +31,6 @@ export default class Import extends Command {
       'objects',
       "(deprecated. use 'bit fetch' instead) import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
-    ['l', 'lanes', 'import lanes. please specify two args <remote-lane-scope> and <remote-lane-name>'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -58,9 +57,7 @@ export default class Import extends Command {
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
-    ['', 'checkout', 'checkout to the imported lane'],
-    ['', 'new-lane-name <name>', 'name a local lane differently than the remote lane']
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
   ];
   loader = true;
   migration = true;
@@ -74,7 +71,6 @@ export default class Import extends Command {
       extension = false,
       path,
       objects = false,
-      lanes = false,
       displayDependencies = false,
       environment = false,
       override = false,
@@ -86,16 +82,13 @@ export default class Import extends Command {
       ignorePackageJson = false,
       merge,
       dependencies = false,
-      dependents = false,
-      checkout = false,
-      newLaneName
+      dependents = false
     }: {
       tester?: boolean;
       compiler?: boolean;
       extension?: boolean;
       path?: string;
       objects?: boolean;
-      lanes?: boolean;
       displayDependencies?: boolean;
       environment?: boolean;
       override?: boolean;
@@ -108,8 +101,6 @@ export default class Import extends Command {
       merge?: MergeStrategy;
       dependencies?: boolean;
       dependents?: boolean;
-      checkout?: boolean;
-      newLaneName?: string;
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -122,7 +113,6 @@ export default class Import extends Command {
     if (override && merge) {
       throw new GeneralError('you cant use --override and --merge flags combined');
     }
-    // @todo: reject lanes flag with envs
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);
@@ -144,7 +134,6 @@ export default class Import extends Command {
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
-      idsAreLanes: lanes,
       withEnvironments: environment,
       override,
       writeDists: !ignoreDist,

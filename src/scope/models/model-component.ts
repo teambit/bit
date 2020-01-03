@@ -32,7 +32,7 @@ import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
 import HeadNotFound from '../exceptions/head-not-found';
 import ParentNotFound from '../exceptions/parent-not-found';
-import { Lane, ModelComponent } from '.';
+import { Lane } from '.';
 import LaneId from '../../lane-id/lane-id';
 
 type State = {

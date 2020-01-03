@@ -5,7 +5,6 @@ import HooksManager from '../../../hooks';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import ComponentObjects from '../../../scope/component-objects';
-import { Lane } from '../../../scope/models';
 import ObjectsToPush from '../../../scope/objects-to-push';
 import LaneObjects from '../../../scope/lane-objects';
 

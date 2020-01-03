@@ -4,7 +4,7 @@ import loader from '../../../cli/loader';
 import GeneralError from '../../../error/general-error';
 import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
-import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 export default async function fetch(ids: string[], lanes: boolean, components: boolean) {
   if (!lanes && !components) {
@@ -17,7 +17,6 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   const importOptions: ImportOptions = {
     ids,
     objectsOnly: true,
-    idsAreLanes: lanes,
     verbose: false,
     withEnvironments: false,
     writePackageJson: false,

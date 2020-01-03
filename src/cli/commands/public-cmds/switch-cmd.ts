@@ -4,7 +4,6 @@ import Command from '../../command';
 import { switchAction } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import { LATEST } from '../../../constants';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import GeneralError from '../../../error/general-error';
@@ -84,18 +83,31 @@ export default class Switch extends Command {
       ignoreDist,
       newLaneName: as
     };
-    return switchAction(switchProps);
+    return switchAction(switchProps).then(results => ({ ...results, lane, create, json }));
   }
 
-  report({ components, version, failedComponents }: ApplyVersionResults, ...args): string {
-    if (args[1].create) {
-      return chalk.green(`successfully added a new lane ${chalk.bold(args[0])}`);
+  report({
+    components,
+    failedComponents,
+    laneName,
+    create,
+    json
+  }: {
+    components: ApplyVersionResults['components'];
+    failedComponents: ApplyVersionResults['failedComponents'];
+    laneName: string;
+    create: boolean;
+    json: boolean;
+  }): string {
+    if (create) {
+      return chalk.green(`successfully added a new lane ${chalk.bold(laneName)}`);
     }
-    const isLatest = Boolean(version && version === LATEST);
-    const isReset = !version;
+    if (json) {
+      return JSON.stringify({ components, failedComponents }, null, 4);
+    }
     const getFailureOutput = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      const title = 'the checkout has been canceled on the following component(s)';
+      const title = 'the switch has been canceled on the following component(s)';
       const body = failedComponents
         .map(
           failedComponent =>
@@ -108,26 +120,13 @@ export default class Switch extends Command {
       if (!components || !components.length) return '';
       if (components.length === 1) {
         const component = components[0];
-        const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
-        if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
-        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
-          // $FlowFixMe version is defined when !isReset
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          isLatest ? component.id.version : version
-        )}\n`;
+        const componentName = component.id.toStringWithoutVersion();
+        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(component.id
+          .version as string)}\n`;
         return `${title} ${applyVersionReport(components, false)}`;
       }
-      if (isReset) {
-        const title = 'successfully reset the following components\n\n';
-        const body = components.map(component => chalk.bold(component.id.toString())).join('\n');
-        return title + body;
-      }
-      // $FlowFixMe version is defined when !isReset
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionOutput = isLatest ? 'their latest version' : `version ${chalk.bold(version)}`;
-      const title = `successfully switched the following components to ${versionOutput}\n\n`;
-      const showVersion = isLatest || isReset;
-      const componentsStr = applyVersionReport(components, true, showVersion);
+      const title = `successfully switched the following components to the version of ${laneName}\n\n`;
+      const componentsStr = applyVersionReport(components, true, false);
       return title + componentsStr;
     };
     const failedOutput = getFailureOutput();

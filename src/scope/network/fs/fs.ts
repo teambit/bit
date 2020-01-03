@@ -3,7 +3,6 @@ import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
-import { flatten } from '../../../utils';
 import Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
 import { Network } from '../network';
@@ -11,7 +10,6 @@ import ComponentsList from '../../../consumer/component/components-list';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
-import ObjectsToPush from '../../objects-to-push';
 import { ComponentLogs } from '../../models/model-component';
 
 export default class Fs implements Network {

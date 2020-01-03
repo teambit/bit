@@ -3,7 +3,6 @@ import { BitId, BitIds } from '../bit-id';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
-import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
 import GlobalRemotes from '../global-config/global-remotes';
 import Scope from '../scope/scope';

@@ -43,7 +43,6 @@ export type ImportOptions = {
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
   objectsOnly: boolean; // default: false
-  idsAreLanes: boolean; // default: false
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,

@@ -1,8 +1,6 @@
 import Command from '../../command';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
-import { scopeShow } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
-import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
 import log from '../../../api/scope/lib/log';

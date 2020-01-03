@@ -5,7 +5,7 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore, isValidIdChunk } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first, readDirSyncIgnoreDsStore } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   OBJECTS_DIR,
