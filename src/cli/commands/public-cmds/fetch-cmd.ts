@@ -4,6 +4,7 @@ import Command from '../../command';
 import { fetch } from '../../../api/consumer';
 import { ComponentWithDependencies } from '../../../scope';
 import { ImportDetails } from '../../../consumer/component-ops/import-components';
+import { formatPlainComponentItemWithVersions } from '../../chalk-box';
 
 export default class Fetch extends Command {
   name = 'fetch [ids...]';

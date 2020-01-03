@@ -18,7 +18,7 @@ import ConsumerComponent from '../../consumer/component';
 import { splitBy } from '../../utils';
 import { ModelComponent, Version, Lane } from '../models';
 import ShowDoctorError from '../../error/show-doctor-error';
-import RemoteLaneId from '../../lane-id/remote-lane-id';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 
 const removeNils = R.reject(R.isNil);
 

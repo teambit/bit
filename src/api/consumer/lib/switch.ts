@@ -4,7 +4,7 @@ import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import GeneralError from '../../../error/general-error';
 import switchLanes, { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
-import RemoteLaneId from '../../../lane-id/remote-lane-id';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default async function switchAction(switchProps: SwitchProps): Promise<ApplyVersionResults> {
@@ -35,7 +35,7 @@ async function resolveLanes(consumer: Consumer, switchProps: SwitchProps) {
       throw new GeneralError(`already checked out to "${switchProps.localLaneName}"`);
     }
     const scopeComponentImporter = ScopeComponentsImporter.getInstance(consumer.scope);
-    const remoteLaneObjects = await scopeComponentImporter.importFromLanes([RemoteLaneId.from(remoteScope, laneName)]);
+    const remoteLaneObjects = await scopeComponentImporter.importFromLanes([RemoteLaneId.from(laneName, remoteScope)]);
     const remoteLaneComponents = remoteLaneObjects[0].components;
     const laneExistsLocally = lanes.find(l => l.name === switchProps.localLaneName);
     if (laneExistsLocally) {

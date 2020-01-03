@@ -31,7 +31,7 @@ import { Remote } from '../../remotes';
 import { isTag } from '../../version/version-parser';
 import { LaneComponent } from '../../scope/models/lane';
 import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
-import RemoteLaneId from '../../lane-id/remote-lane-id';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
