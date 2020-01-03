@@ -1,4 +1,4 @@
-import CommandRegistrar from './command-registrar';
+import CommandRegistry from './command-registry';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import { Commands } from '../extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
@@ -58,8 +58,8 @@ import Graph from './commands/public-cmds/graph-cmd';
 import Run from './commands/public-cmds/run-cmd';
 import { CapsuleCreate, CapsuleList, CapsuleDescribe } from './commands/public-cmds/capsule-cmd';
 
-export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
-  return new CommandRegistrar(
+export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
+  return new CommandRegistry(
     BIT_USAGE,
     BIT_DESCRIPTION,
     BIT_VERSION,

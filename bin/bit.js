@@ -82,9 +82,8 @@ function loadCli() {
 function promptAnalyticsIfNeeded(cb) {
   // this require is needed here because bit caches are not created yet and will cause exception
   const { Analytics } = require('../dist/analytics/analytics');
-  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2))
-    .then(() => cb())
-    .catch(() => console.log(chalk.yellow('\noperation aborted')));
+  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2)).then(() => cb());
+  // .catch(() => console.log(chalk.yellow('\noperation aborted')));
 }
 verifyCompatibility();
 ensureDirectories();

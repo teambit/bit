@@ -175,7 +175,7 @@ function register(command: Command, commanderCmd) {
   return registerAction(command, concrete);
 }
 
-export default class CommandRegistrar {
+export default class CommandRegistry {
   version: string;
   usage: string;
   description: string;
@@ -248,7 +248,10 @@ export default class CommandRegistrar {
           `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
-      const suggestion = didYouMean(subcommand, commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name));
+      const suggestion = didYouMean(
+        subcommand,
+        commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name)
+      );
       if (suggestion) {
         const match = typeof suggestion === 'string' ? suggestion : suggestion[0];
         console.log(chalk.red(`Did you mean ${chalk.bold(match)}?`)); // eslint-disable-line no-console

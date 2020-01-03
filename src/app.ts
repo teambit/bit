@@ -1,9 +1,10 @@
 import * as BPromise from 'bluebird';
 import loudRejection from 'loud-rejection';
-import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
+import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
+import { Bit } from './bit';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -16,26 +17,8 @@ BPromise.config({
 loudRejection();
 HooksManager.init();
 
-// Load extensions
-// eslint-disable-next-line promise/catch-or-return
-loadExtensions().then(async extensions => {
-  if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
-  // Make sure to register all the hooks actions in the global hooks manager
-  extensions.forEach(extension => {
-    extension.registerHookActionsOnHooksManager();
-  });
-  const extensionsCommands = extensions.reduce((acc, curr) => {
-    if (curr.commands && curr.commands.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc = acc.concat(curr.commands);
-    }
-    return acc;
-  }, []);
-  const registrar = buildRegistrar(extensionsCommands);
-
-  try {
-    registrar.run();
-  } catch (err) {
-    console.error('loud rejected:', err); // eslint-disable-line no-console
-  }
-});
+Bit.load()
+  .then(async Bit => {
+    if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
+  })
+  .catch(err => console.error('loud rejected:', err));
