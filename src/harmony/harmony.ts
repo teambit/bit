@@ -2,9 +2,11 @@ import { container } from 'tsyringe';
 import Extension from './extension';
 
 export default class Harmony {
-  register(extension: Extension) {}
+  register() {}
 
   resolve() {}
 
-  static load(workspace: Workspace) {}
+  static load() {
+    return new Harmony();
+  }
 }

@@ -24,9 +24,9 @@ export default class Bit {
 
     try {
       const consumer = await loadConsumer();
-      return new Bit(consumer.scope, await Workspace.load(), cmdRegistry);
+      return new Bit(consumer.scope, await Workspace.load(), cmdRegistry, harmony);
     } catch {
-      return new Bit(await loadScope(), null, cmdRegistry);
+      return new Bit(await loadScope(), null, cmdRegistry, harmony);
     }
   }
 }
