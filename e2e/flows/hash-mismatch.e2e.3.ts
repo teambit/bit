@@ -43,7 +43,7 @@ describe('hash mismatch', function() {
     it('should save the Version object into the original hash', () => {
       const objectsFiles = helper.fs.getObjectFiles();
       expect(objectsFiles).to.have.lengthOf(4);
-      expect(objectsFiles).to.deep.include(`6b${path.sep}d019fe5dbf11a5adf2f68d0099457ad077fa8c`);
+      expect(objectsFiles).to.deep.include(`6b/d019fe5dbf11a5adf2f68d0099457ad077fa8c`);
     });
   });
 });

@@ -1,3 +1,4 @@
+import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -564,8 +565,9 @@ describe('bit snap command', function() {
       });
       it('bit diff should show the differences', () => {
         const diff = helper.command.diff(` bar/foo ${firstSnap}`);
-        expect(diff).to.have.string(`--- bar/foo.js (${firstSnap})`);
-        expect(diff).to.have.string(`+++ bar/foo.js (${secondSnap})`);
+        const barFooFile = path.join('bar', 'foo.js');
+        expect(diff).to.have.string(`--- ${barFooFile} (${firstSnap})`);
+        expect(diff).to.have.string(`+++ ${barFooFile} (${secondSnap})`);
 
         expect(diff).to.have.string("-module.exports = function foo() { return 'got foo'; }");
         expect(diff).to.have.string("+module.exports = function foo() { return 'got foo v2'; }");
