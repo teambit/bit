@@ -26,11 +26,9 @@ HooksManager.init();
 
 Harmony.load(BitCliExt)
   .run()
-  .then(() => {
-    console.log('done');
-  })
+  .then(() => {})
   .catch(err => {
-    console.error(err);
+    console.error(err, err.stack);
   });
 
 // BitCli.load(Harmony.load(PaperExt))

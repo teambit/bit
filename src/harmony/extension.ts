@@ -15,7 +15,7 @@ export default class Extension<Conf = {}, Deps = []> {
     readonly provider: ProviderFn<Conf, Deps>
   ) {}
 
-  private instance = null;
+  readonly instance = null;
 
   async run(dependencies: any[]) {
     if (!this.instance) {

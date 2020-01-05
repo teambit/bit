@@ -5,6 +5,12 @@ import { ExtensionProvider, ProviderFn } from './extension.provider';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
 
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
+}
+
 export default class Harmony {
   constructor(private graph: DependencyGraph) {}
 
@@ -23,16 +29,20 @@ export default class Harmony {
 
   async runOne(extension: AnyExtension) {
     // create an index of all vertices in dependency graph
-    const dependencies = extension.dependencies.map((ext: AnyExtension) => {
-      return this.graph.getExtension(ext.name);
-    });
+    const dependencies = await Promise.all(
+      extension.dependencies.map(async (ext: AnyExtension) => {
+        return ext.instance;
+      })
+    );
 
-    return extension.run(dependencies);
+    await extension.run(dependencies);
   }
 
   async run() {
     const executionOrder = this.graph.byExecutionOrder();
-    executionOrder.forEach(async ext => this.runOne(ext));
+    await asyncForEach(executionOrder, async ext => {
+      await this.runOne(ext);
+    });
   }
 
   static load(extension: Extension<any, any>) {

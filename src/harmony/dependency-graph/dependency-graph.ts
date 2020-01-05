@@ -8,6 +8,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
     return this.topologicallySort().map(vertex => vertex.attr);
   }
 
+  // :TODO refactor this asap
   getExtension(id: string) {
     const cachedVertex = this.cache.get(id);
     if (cachedVertex) return cachedVertex;

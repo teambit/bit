@@ -7,7 +7,7 @@ export type PaperConfig = {
 
 export type PaperDeps = {};
 
-export function providePaper({ silence }: PaperConfig) {
+export async function providePaper({ silence }: PaperConfig) {
   const cmdRegistry = buildRegistry([]);
 
   try {
