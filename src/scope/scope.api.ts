@@ -6,6 +6,8 @@ export class Scope {
     /**
      * legacy consumer
      */
-    readonly consumer: Consumer
+    private consumer: Consumer
   ) {}
+
+  fetch() {}
 }
