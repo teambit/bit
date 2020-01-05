@@ -1,8 +1,8 @@
-export default abstract class Type<T> {
-  constructor() {}
+// export default abstract class Type<T> {
+//   constructor() {}
 
-  /**
-   *
-   */
-  abstract toString();
-}
+//   /**
+//    *
+//    */
+//   abstract toString();
+// }

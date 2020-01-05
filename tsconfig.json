@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "strict": true,
     "moduleResolution": "node",
     "noEmit": true,

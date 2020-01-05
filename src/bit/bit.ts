@@ -1,26 +1,22 @@
 import { Workspace } from '../workspace';
-import { Scope, loadScope } from '../scope';
+import { Scope } from '../scope/scope.api';
 import { loadConsumer } from '../consumer';
 import { Harmony } from '../harmony';
-import loadExtensions from './load-extensions';
 
 export default class Bit {
-  constructor(private scope: Scope, private workspace: Workspace | null, private harmony: Harmony) {}
+  constructor(private scope: Scope, private workspace: Workspace | null) {}
 
-  /**
-   * loads Bit's API
-   */
-  static async load(harmony?: Harmony): Promise<Bit> {
-    if (!harmony) harmony = Harmony.load();
+  // /**
+  //  * loads Bit's API
+  //  */
+  // static async load(harmony: Harmony): Promise<Bit> {
+  //   try {
+  //     const consumer = await loadConsumer();
+  //     const workspace = await Workspace.load();
 
-    try {
-      const consumer = await loadConsumer();
-      const workspace = await Workspace.load();
-      loadExtensions(workspace);
-
-      return new Bit(consumer.scope, workspace, harmony);
-    } catch {
-      return new Bit(await loadScope(), null, harmony);
-    }
-  }
+  //     return new Bit(consumer.scope, workspace, harmony);
+  //   } catch {
+  //     return new Bit(await loadScope(), null, harmony);
+  //   }
+  // }
 }

@@ -24,3 +24,11 @@ refactoring to do in Bit:
 - build capsule worker for in memory usage using process distribution and v8 isolation (in process v8:isolate).
 - refactor all paths in bit to be absolute.
 - refactor "bit-id" to be called "component-id", better be on top of the `Component` new API.
+- replace commander with something proper (amit).
+- add typescript completions to dependency injection
+- refactor a component outside of a component.
+- consider inclduing the extension in the container to avoid conflicts in runtime.
+
+things done:
+- 
+

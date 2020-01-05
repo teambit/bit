@@ -1,10 +1,13 @@
+import 'reflect-metadata';
 import * as BPromise from 'bluebird';
 import loudRejection from 'loud-rejection';
-import loadExtensions from './extensions/extensions-loader';
-import { Harmony } from './harmony';
+import { Harmony, Extension, ExtensionProvider } from './harmony';
 import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
-import { BitCli, Bit } from './bit';
+import { Bit } from './bit';
+import { BitCliExt } from './cli';
+import { Pipes } from './pipes';
+import { PaperExt } from './paper';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -17,8 +20,21 @@ BPromise.config({
 loudRejection();
 HooksManager.init();
 
-BitCli.load(Harmony.load())
-  .then(async () => {
-    if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
+// const defaultExtensions: ExtensionProvider<any, any>[] = [
+//   Paper
+// ];
+
+Harmony.load(BitCliExt)
+  .run()
+  .then(() => {
+    console.log('done');
   })
-  .catch(err => console.error('loud rejected:', err));
+  .catch(err => {
+    console.error(err);
+  });
+
+// BitCli.load(Harmony.load(PaperExt))
+//   .then(async () => {
+//     // if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
+//   })
+//   .catch(err => console.error('loud rejected:', err));

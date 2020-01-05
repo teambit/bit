@@ -1,6 +1,6 @@
 import { merge } from 'lodash';
 import { ExtensionConfig } from './extension-config';
-import { RawMap, AnyMap } from './types';
+import { RawMap } from './types';
 
 export default class Config {
   constructor(readonly extensions: ExtensionConfig[]) {}

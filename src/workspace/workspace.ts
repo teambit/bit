@@ -1,4 +1,4 @@
-import { loadConsumer, Consumer } from '../consumer';
+import { Consumer } from '../consumer';
 import { Scope } from '../scope';
 
 /**
@@ -19,10 +19,5 @@ export default class Workspace {
 
   get config() {
     return this.consumer.config;
-  }
-
-  static async load(): Promise<Workspace> {
-    const consumer = await loadConsumer();
-    return new Workspace(consumer);
   }
 }

@@ -5,6 +5,7 @@ import { Workspace } from '../workspace';
 // bare scope extension execution
 // consumer extension
 export default async function loadExtensions(workspace: Workspace) {
+  const extensionConfig = workspace.config.extensions;
   const ids = BitIds.deserialize(['bit.envs/compilers/typescript']);
   const components = await workspace.scope.import(ids);
   return components;
