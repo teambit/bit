@@ -76,7 +76,6 @@
     "vue-components"
   ],
   "dependencies": {
-    "subleveldown": "4.1.4",
     "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
@@ -159,6 +158,7 @@
     "ssh2": "^0.5.4",
     "string-format": "^0.5.0",
     "stringify-package": "^1.0.0",
+    "subleveldown": "^4.1.4",
     "symlink-or-copy": "^1.1.8",
     "synchronous-promise": "^2.0.10",
     "table": "^5.2.3",

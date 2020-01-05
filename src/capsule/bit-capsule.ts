@@ -69,6 +69,10 @@ export default class BitCapsule extends Capsule<Exec, Volume> {
     this.container.on(event, fn);
   }
 
+  async terminal(shell: string = process.env.SHELL || '/bin/sh') {
+    return this.container.terminal();
+  }
+
   serialize(): string {
     return JSON.stringify({
       id: this.containerId,

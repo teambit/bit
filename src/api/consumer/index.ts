@@ -35,6 +35,7 @@ import login from './lib/login';
 import show from './lib/show';
 import paintGraph from './lib/paint-graph';
 import capsuleIsolate from './lib/capsule-isolate';
+import sshIntoCapsule from './lib/capsule-ssh';
 
 export {
   init,
@@ -78,5 +79,6 @@ export {
   login,
   show,
   paintGraph,
-  capsuleIsolate
+  capsuleIsolate,
+  sshIntoCapsule
 };

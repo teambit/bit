@@ -63,12 +63,17 @@ export class CapsuleOrchestrator {
     return data;
   }
 
-  acquire(workspace: string, bitId: string): Promise<Resource<Capsule<Exec, Volume>>> {
+  async acquire(bitId: string, workspace?: string): Promise<Resource<Capsule<Exec, Volume>>> {
+    if (!workspace) {
+      const capsuleData = await Promise.all(this.pools.map(pool => pool.acquire(bitId)));
+      return _.head(_.compact(capsuleData));
+    }
     const pool = this.getPool(workspace);
     // @ts-ignore
     if (!pool) return Promise.resolve();
     return pool.acquire(bitId);
   }
+
   async getCapsule(workspace: string, capsuleConf: CreateOptions, options: Options): Promise<BitCapsule> {
     let pool = this.getPool(workspace);
     if (!pool) {

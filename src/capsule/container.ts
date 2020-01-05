@@ -8,11 +8,13 @@ import v4 from 'uuid';
 import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
 import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
 import ContainerExec from './container-exec';
+import { Stream } from 'stream';
 
 const debug = require('debug')('fs-container');
 
 export interface BitExecOption extends ExecOptions {
   cwd: string;
+  stdio?: 'pipe' | 'ipc' | 'ignore' | 'inherit' | Stream | number | undefined;
 }
 export interface BitContainerConfig extends ContainerFactoryOptions {
   other?: string;
@@ -77,6 +79,10 @@ export default class FsContainer implements Container<Exec, Volume> {
     const result = await subprocessP;
     exec.setStatus(result.exitCode);
     return exec;
+  }
+  async terminal() {
+    const cwd = this.getPath();
+    return execa.command(process.env.SHELL || '/bin/zsh', { cwd, stdio: 'inherit' });
   }
 
   start(): Promise<void> {

@@ -55,7 +55,7 @@ import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
-import { CapsuleCreate, CapsuleList, CapsuleDescribe } from './commands/public-cmds/capsule-cmd';
+import { CapsuleCreate, CapsuleList, CapsuleDescribe, CapsuleSSH } from './commands/public-cmds/capsule-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistrar {
   return new CommandRegistrar(
@@ -156,7 +156,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CapsuleList(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new CapsuleDescribe()
+      new CapsuleDescribe(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new CapsuleSSH()
     ],
     extensionsCommands
   );
