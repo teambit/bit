@@ -468,6 +468,15 @@ export default class BitMap {
     return this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   }
 
+  getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
+    const all = this.getAuthoredAndImportedBitIds();
+    const filtered = all.filter(id => {
+      const componentMap = this.getComponent(id);
+      return !componentMap.onLanesOnly;
+    });
+    return BitIds.fromArray(filtered);
+  }
+
   getAuthoredExportedComponents(): BitId[] {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());

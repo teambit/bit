@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import ConsumerComponent from '../component';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_LANE } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import { PathOsBased } from '../../utils/path';
 import Version from '../../scope/models/version';
@@ -268,7 +268,12 @@ async function getComponentStatusForLanes(
       `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
     );
   }
-  const version = id.version as string;
+  // when checking out to a lane, id.version is the "head" in the lane object.
+  // when checking out to master, id.version is null. use modelComponent to figure out the version
+  const version = id.version || modelComponent.latest();
+  if (!version) {
+    return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`);
+  }
   const existingBitMapId = consumer.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
   const componentOnLane: Version = await modelComponent.loadVersion(version, consumer.scope.objects);
   if (!existingBitMapId) {

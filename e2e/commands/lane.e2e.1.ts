@@ -4,6 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
+import { removeChalkCharacters } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
@@ -408,5 +409,59 @@ describe('bit lane command', function() {
       const lanes = helper.command.showLanesParsed();
       expect(lanes['lane-b']).to.have.lengthOf(2);
     });
+    it('bit list should show all components available to lane-b', () => {
+      const list = helper.command.listLocalScopeParsed();
+      expect(list).to.have.lengthOf(3);
+    });
+    describe('checking out to lane-a', () => {
+      let switchOutput;
+      before(() => {
+        switchOutput = helper.command.switchLocalLane('lane-a');
+      });
+      it('should indicate that it switched to the new lane', () => {
+        expect(switchOutput).to.have.string(removeChalkCharacters(
+          'successfully set "lane-a" as the active lane'
+        ) as string);
+      });
+      it('bit status should not show lane-b components as staged', () => {
+        const statusParsed = helper.command.statusJson();
+        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string', 'utils/is-type']);
+        const status = helper.command.status();
+        expect(status).to.not.have.string('bar/foo');
+      });
+      it('bit list should not show lane-b components', () => {
+        const list = helper.command.listLocalScopeParsed();
+        expect(list).to.have.lengthOf(2);
+      });
+      // @todo: test each one of the commands on bar/foo
+    });
+    describe('checking out to master', () => {
+      before(() => {
+        helper.command.switchLocalLane('master');
+      });
+      it('bit list should only show master components', () => {
+        const list = helper.command.listLocalScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+      it('bit status should show only master components as staged', () => {
+        const statusParsed = helper.command.statusJson();
+        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const status = helper.command.status();
+        expect(status).to.not.have.string('bar/foo');
+        expect(status).to.not.have.string('utils/is-string');
+      });
+    });
+  });
+  // @todo: implement
+  describe('master => lane-a => labe-b, so laneB branched from laneA all exported', () => {
+    describe('then cloned to another project and checked out to lane-a', () => {
+      it('lane-a should not include lane-b component, although locally it switched from it', () => {});
+    });
+  });
+  // @todo: implement
+  describe('importing a component when checked out to a lane', () => {
+    it('the component should be part of the lane', () => {});
+    it('if a flag X (todo: decide) was used, it should not be part of the lane', () => {});
+    it('should be on .bitmap with "onLanesOnly": true', () => {});
   });
 });

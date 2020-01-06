@@ -14,7 +14,7 @@ import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
-import { ComponentOrigin } from '../bit-map/component-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import { Lane } from '../../scope/models';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
@@ -401,9 +401,15 @@ export default class ComponentsList {
       }
     });
     if (includeNested) return listScopeResults;
+    const currentLane = await this.consumer.getCurrentLaneObject();
+    const isIdOnCurrentLane = (componentMap: ComponentMap): boolean => {
+      if (!componentMap.onLanesOnly) return true; // component is on master, always show it
+      if (!currentLane) return false; // if !currentLane the user is on master, don't show it.
+      return Boolean(currentLane.getComponent(componentMap.id));
+    };
     return listScopeResults.filter(listResult => {
       const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
-      return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
+      return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && isIdOnCurrentLane(componentMap);
     });
   }
 

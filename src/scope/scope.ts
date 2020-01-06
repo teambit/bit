@@ -46,7 +46,7 @@ import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
 import { IndexType, ComponentItem, LaneItem } from './objects/components-index';
 import Lane from './models/lane';
-import LaneId from '../lane-id/lane-id';
+import LaneId, { LocalLaneId } from '../lane-id/lane-id';
 import ObjectsToPush from './objects-to-push';
 import { ComponentLogs } from './models/model-component';
 
@@ -766,8 +766,12 @@ export default class Scope {
     return this.objects.load(ref);
   }
 
-  getCurrentLane(): string {
+  getCurrentLaneName(): string {
     return this.scopeJson.lanes.current;
+  }
+
+  async getCurrentLaneObject(): Promise<Lane | null> {
+    return this.loadLane(LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE));
   }
 
   async setCurrentLane(laneName: string): Promise<void> {

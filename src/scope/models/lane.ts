@@ -99,6 +99,9 @@ export default class Lane extends BitObject {
   getComponentByName(bitId: BitId): LaneComponent | undefined {
     return this.components.find(c => c.id.isEqualWithoutScopeAndVersion(bitId));
   }
+  getComponent(id: BitId): LaneComponent | undefined {
+    return this.components.find(c => c.id.isEqualWithoutVersion(id));
+  }
   getComponentHead(bitId: BitId): Ref | null {
     const found = this.components.find(c => c.id.isEqual(bitId));
     if (found) return found.head;

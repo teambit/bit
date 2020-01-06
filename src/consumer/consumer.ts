@@ -192,7 +192,7 @@ export default class Consumer {
   }
 
   getCurrentLaneId(): LaneId {
-    return new LaneId({ name: this.scope.getCurrentLane() || DEFAULT_LANE });
+    return new LaneId({ name: this.scope.getCurrentLaneName() || DEFAULT_LANE });
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -782,11 +782,22 @@ export default class Consumer {
       if (!bitId.hasScope()) return null;
       return getNodeModulesPathOfComponent(bindingPrefix, bitId);
     };
+    const currentLane = this.getCurrentLaneId();
+    const isAvailableOnMaster = async (component: ModelComponent | Component): Promise<boolean> => {
+      if (currentLane.isDefault()) return true;
+      const modelComponent =
+        component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
+      return Boolean(modelComponent.snaps.head);
+    };
 
-    const updateVersionsP = components.map(component => {
+    const updateVersionsP = components.map(async component => {
       const id: BitId =
         component instanceof ModelComponent ? component.toBitIdWithLatestVersionAllowNull() : component.id;
       this.bitMap.updateComponentId(id);
+      const availableOnMaster = await isAvailableOnMaster(component);
+      if (!availableOnMaster) {
+        this.bitMap.setComponentProp(id, 'onLanesOnly', true);
+      }
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir // if it has package.json, it's imported, which must have a version

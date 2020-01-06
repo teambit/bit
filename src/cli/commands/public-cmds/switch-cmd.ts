@@ -89,18 +89,18 @@ export default class Switch extends Command {
   report({
     components,
     failedComponents,
-    laneName,
+    lane,
     create,
     json
   }: {
     components: ApplyVersionResults['components'];
     failedComponents: ApplyVersionResults['failedComponents'];
-    laneName: string;
+    lane: string;
     create: boolean;
     json: boolean;
   }): string {
     if (create) {
-      return chalk.green(`successfully added a new lane ${chalk.bold(laneName)}`);
+      return chalk.green(`successfully added a new lane ${chalk.bold(lane)}`);
     }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
@@ -117,17 +117,18 @@ export default class Switch extends Command {
       return `${title}\n${body}\n\n`;
     };
     const getSuccessfulOutput = () => {
-      if (!components || !components.length) return '';
+      const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);
+      if (!components || !components.length) return `No component had been changed.${laneSwitched}`;
       if (components.length === 1) {
         const component = components[0];
         const componentName = component.id.toStringWithoutVersion();
         const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(component.id
           .version as string)}\n`;
-        return `${title} ${applyVersionReport(components, false)}`;
+        return `${title} ${applyVersionReport(components, false)}${laneSwitched}`;
       }
-      const title = `successfully switched the following components to the version of ${laneName}\n\n`;
+      const title = `successfully switched the following components to the version of ${lane}\n\n`;
       const componentsStr = applyVersionReport(components, true, false);
-      return title + componentsStr;
+      return title + componentsStr + laneSwitched;
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();

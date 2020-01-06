@@ -349,6 +349,7 @@ export default class Component extends BitObject {
       const version = this.getTagOfRefIfExists(this.snaps.head);
       return version || this.snaps.head.toString();
     }
+    // backward compatibility. components created before v15 have master without snaps.head
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 

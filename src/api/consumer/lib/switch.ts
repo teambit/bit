@@ -6,6 +6,7 @@ import switchLanes, { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
+import { DEFAULT_LANE } from '../../../constants';
 
 export default async function switchAction(switchProps: SwitchProps): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
@@ -53,6 +54,12 @@ then run "bit merge" to merge the remote lane into the local lane`);
   switchProps.localLaneName = laneName;
   if (consumer.getCurrentLaneId().name === laneName) {
     throw new GeneralError(`already checked out to "${laneName}"`);
+  }
+  if (laneName === DEFAULT_LANE) {
+    const ids = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
+    // version of .bitmap can be from other lanes. we need the snap.head
+    switchProps.ids = ids.map(id => id.changeVersion(null));
+    return;
   }
   const localLane = lanes.find(lane => lane.name === laneName);
   if (!localLane) {
