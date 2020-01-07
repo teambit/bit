@@ -458,10 +458,55 @@ describe('bit lane command', function() {
       it('lane-a should not include lane-b component, although locally it switched from it', () => {});
     });
   });
-  // @todo: implement
   describe('importing a component when checked out to a lane', () => {
-    it('the component should be part of the lane', () => {});
-    it('if a flag X (todo: decide) was used, it should not be part of the lane', () => {});
-    it('should be on .bitmap with "onLanesOnly": true', () => {});
+    let beforeImport;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.createLane();
+      beforeImport = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('without --skip-lane flag', () => {
+      before(() => {
+        helper.command.importComponent('bar/foo');
+      });
+      it('the component should be part of the lane', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.dev).to.have.lengthOf(1);
+      });
+      describe('switching to master', () => {
+        before(() => {
+          helper.command.switchLocalLane('master');
+        });
+        it('bit list should not show the component', () => {
+          const list = helper.command.listLocalScopeParsed();
+          expect(list).to.have.lengthOf(0);
+        });
+      });
+    });
+    describe('with --skip-lane flag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeImport);
+        helper.command.importComponent('bar/foo --skip-lane');
+      });
+      it('the component should not be part of the current lane', () => {
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.dev).to.have.lengthOf(0);
+      });
+      describe('switching to master', () => {
+        before(() => {
+          helper.command.switchLocalLane('master');
+        });
+        it('bit list should show the component', () => {
+          const list = helper.command.listLocalScopeParsed();
+          expect(list).to.have.lengthOf(1);
+        });
+      });
+    });
   });
 });

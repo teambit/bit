@@ -604,7 +604,8 @@ export default class BitMap {
     configDir,
     trackDir,
     originallySharedDir,
-    wrapDir
+    wrapDir,
+    onLanesOnly
   }: {
     componentId: BitId;
     files: ComponentMapFile[];
@@ -615,6 +616,7 @@ export default class BitMap {
     trackDir?: PathOsBased | null | undefined;
     originallySharedDir?: PathLinux | null | undefined;
     wrapDir?: PathLinux | null | undefined;
+    onLanesOnly?: boolean;
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
@@ -644,6 +646,9 @@ export default class BitMap {
     }
     if (wrapDir) {
       this.components[componentIdStr].wrapDir = wrapDir;
+    }
+    if (onLanesOnly) {
+      this.components[componentIdStr].onLanesOnly = onLanesOnly;
     }
     this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {

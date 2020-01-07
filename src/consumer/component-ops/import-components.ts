@@ -46,6 +46,7 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
+  skipLane?: boolean; // save on master instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
 };
 type ComponentMergeStatus = {
@@ -110,6 +111,7 @@ export default class ImportComponents {
     await this._fetchDivergeData(componentsWithDependenciesFiltered);
     this._throwForDivergedHistory();
     await this._writeToFileSystem(componentsWithDependenciesFiltered);
+    await this._saveLaneDataIfNeeded(componentsWithDependenciesFiltered);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependenciesFiltered, importDetails };
   }
@@ -485,6 +487,37 @@ export default class ImportComponents {
     return removeNulls(componentsToWrite);
   }
 
+  _shouldSaveLaneData(): boolean {
+    if (this.options.skipLane || this.options.objectsOnly) {
+      return false;
+    }
+    const currentLaneId = this.consumer.getCurrentLaneId();
+    return !currentLaneId.isDefault();
+  }
+
+  async _saveLaneDataIfNeeded(componentsWithDependencies: ComponentWithDependencies[]): Promise<void> {
+    if (!this._shouldSaveLaneData()) {
+      return;
+    }
+    const currentLane = await this.consumer.getCurrentLaneObject();
+    if (!currentLane) {
+      return; // user on master
+    }
+    await Promise.all(
+      componentsWithDependencies.map(async compWithDeps => {
+        const allComps = [compWithDeps.component, ...compWithDeps.allDependencies];
+        const updateAllCompsP = allComps.map(async comp => {
+          const modelComponent = await this.scope.getModelComponent(comp.id);
+          const ref = modelComponent.getRef(comp.id.version as string);
+          if (!ref) throw new Error(`_saveLaneDataIfNeeded unable to get ref for ${comp.id.toString()}`);
+          currentLane.addComponent({ id: comp.id, head: ref });
+        });
+        await Promise.all(updateAllCompsP);
+      })
+    );
+    await this.scope.saveLane(currentLane);
+  }
+
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) {
       return;
@@ -505,7 +538,8 @@ export default class ImportComponents {
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,
-      override: this.options.override
+      override: this.options.override,
+      saveOnLane: this._shouldSaveLaneData()
     });
     await manyComponentsWriter.writeAll();
   }

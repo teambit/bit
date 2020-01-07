@@ -41,6 +41,7 @@ export interface ManyComponentsWriterParams {
   addToRootPackageJson?: boolean;
   verbose?: boolean;
   excludeRegistryPrefix?: boolean;
+  saveOnLane?: boolean;
 }
 
 /**
@@ -78,6 +79,7 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
+  saveOnLane?: boolean;
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -99,6 +101,7 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
+    this.saveOnLane = params.saveOnLane;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -195,7 +198,8 @@ export default class ManyComponentsWriter {
       return {
         configDir: this.configDir || configDirFromComponentMap,
         origin,
-        existingComponentMap: componentMap
+        existingComponentMap: componentMap,
+        saveOnLane: this.saveOnLane
       };
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

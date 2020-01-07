@@ -56,6 +56,7 @@ export default class Import extends Command {
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ],
+    ['', 'skip-lane', 'when checked out to a lane, do not import the component into the lane, save it on master'],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
     ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
   ];
@@ -81,6 +82,7 @@ export default class Import extends Command {
       skipNpmInstall = false,
       ignorePackageJson = false,
       merge,
+      skipLane = false,
       dependencies = false,
       dependents = false
     }: {
@@ -99,6 +101,7 @@ export default class Import extends Command {
       skipNpmInstall?: boolean;
       ignorePackageJson?: boolean;
       merge?: MergeStrategy;
+      skipLane?: boolean;
       dependencies?: boolean;
       dependents?: boolean;
     },
@@ -140,6 +143,7 @@ export default class Import extends Command {
       writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson,
+      skipLane,
       importDependenciesDirectly: dependencies,
       importDependents: dependents
     };
