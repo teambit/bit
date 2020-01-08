@@ -177,7 +177,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.0.0",
-    "@babel/preset-typescript": "^7.6.0",
+    "@babel/preset-typescript": "^7.7.7",
     "@babel/register": "^7.4.4",
     "@types/chai": "^4.2.5",
     "@types/chai-arrays": "^1.0.3",
@@ -190,8 +190,8 @@
     "@types/node": "^12.7.9",
     "@types/open": "^6.2.1",
     "@types/vinyl": "^2.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.3.2",
-    "@typescript-eslint/parser": "^2.3.2",
+    "@typescript-eslint/eslint-plugin": "^2.15.0",
+    "@typescript-eslint/parser": "^2.15.0",
     "babel-eslint": "^9.0.0",
     "chai": "^4.1.2",
     "chai-arrays": "^1.0.0",
@@ -218,7 +218,7 @@
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
     "typescript": "3.7.4",
-    "verdaccio": "^4.1.0"
+    "verdaccio": "^4.4.1"
   },
   "files": [
     "/bin",
