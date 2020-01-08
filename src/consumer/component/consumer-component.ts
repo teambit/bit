@@ -71,9 +71,7 @@ import Isolator, { IsolateOptions } from '../../environment/isolator';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
-import { BitCapsule } from '../../capsule';
-import { getRegistry, PipeRegistry } from '../../addons/registry';
-import { RunConfiguration, RawRunConfiguration } from '../../addons/run-configuration';
+import { BitCapsule } from '../../capsule-ext';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -120,7 +118,6 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   extensions: ExtensionData[];
   componentFromModel?: Component | null | undefined;
-  runConfig: RawRunConfiguration;
 };
 
 export default class Component {
@@ -194,7 +191,6 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
   extensions: ExtensionData[] = [];
-  registry: PipeRegistry = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -250,8 +246,7 @@ export default class Component {
     origin,
     customResolvedPaths,
     scopesList,
-    extensions,
-    runConfig
+    extensions
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -291,12 +286,8 @@ export default class Component {
     this.scopesList = scopesList;
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
-    const conf = RunConfiguration.fromRaw(runConfig || {});
-    this.registry = getRegistry(conf);
   }
-  getPipeRegistry() {
-    return this.registry;
-  }
+
   validateComponent() {
     const nonEmptyFields = ['name', 'mainFile'];
     nonEmptyFields.forEach(field => {
@@ -320,7 +311,6 @@ export default class Component {
     newInstance.overrides = this.overrides.clone();
     newInstance.files = this.files.map(file => file.clone());
     newInstance.dists = this.dists.clone();
-    newInstance.registry = Object.assign({}, this.registry);
     return newInstance;
   }
 
@@ -1315,8 +1305,7 @@ export default class Component {
       packageJsonFile,
       packageJsonChangedProps,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      extensions,
-      runConfig: bitJson.run!
+      extensions
     });
   }
 }

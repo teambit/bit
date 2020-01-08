@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import React, { Component } from 'react';
 import Cmd, { CommandOption, CommandOptions } from '../cli/command';
 import LegacyCommand from './legacy-command';
 import { render } from 'ink';

@@ -5,7 +5,7 @@ import Isolator from '../environment/isolator';
 import ConsumerComponent from '../consumer/component';
 import { Dist, AbstractVinyl } from '../consumer/component/sources';
 import { getComponentsDependenciesLinks } from '../links/link-generator';
-import BitCapsule from '../capsule/bit-capsule';
+import BitCapsule from '../capsule-ext/bit-capsule';
 
 /**
  * This is a formal API for extension developers, changes in this API should result a major version.
@@ -32,7 +32,10 @@ export default class ExtensionIsolateResult {
       if (!builtFiles) {
         return;
       }
-      capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+      capsuleComponent.setDists(
+        builtFiles.map(file => new Dist(file)),
+        mainDist
+      );
     }
     // Make sure we are going to write the dists files (also for testers)
     capsuleComponent.dists.writeDistsFiles = true;

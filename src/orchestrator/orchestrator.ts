@@ -7,7 +7,7 @@ import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
 import Repository from './db/repository';
-import { BitCapsule } from '../capsule';
+import { BitCapsule } from '../capsule-ext';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 import { CreateOptions, ListResults } from './types';

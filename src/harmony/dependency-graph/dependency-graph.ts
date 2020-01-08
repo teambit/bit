@@ -2,7 +2,7 @@ import { Graph, VertexId, Vertex, Edge } from '../../graph';
 import { AnyExtension } from '../types';
 
 export default class DependencyGraph extends Graph<AnyExtension, string> {
-  private cache = new Map<string, Vertex<AnyExtension>>();
+  private cache = new Map<string, AnyExtension>();
 
   byExecutionOrder() {
     return this.topologicallySort().map(vertex => vertex.attr);

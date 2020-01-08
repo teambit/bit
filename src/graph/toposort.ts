@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
  * @author Fred Eisele (https://github.com/phreed)
  *

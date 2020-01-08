@@ -9,7 +9,6 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
-import { RunConfiguration } from '../../../addons/run-configuration';
 
 export default class Init extends Command {
   name = 'init [path]';

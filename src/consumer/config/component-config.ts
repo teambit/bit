@@ -8,7 +8,6 @@ import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { RunConfiguration, RawRunConfiguration } from '../../addons/run-configuration';
 
 type ConfigProps = {
   lang?: string;
@@ -17,22 +16,20 @@ type ConfigProps = {
   bindingPrefix: string;
   extensions?: Record<string, any>;
   overrides?: ComponentOverridesData;
-  run: RawRunConfiguration;
 };
 
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
-  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides, run }: ConfigProps) {
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
       tester,
       lang,
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      extensions,
-      run
+      extensions
     });
     this.overrides = overrides;
     this.writeToBitJson = true; // will be changed later to work similar to workspace-config
@@ -78,8 +75,7 @@ export default class ComponentConfig extends AbstractConfig {
       extensions,
       lang,
       bindingPrefix,
-      overrides,
-      run
+      overrides
     });
   }
 
@@ -93,8 +89,7 @@ export default class ComponentConfig extends AbstractConfig {
       compiler: component.compiler || {},
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       tester: component.tester || {},
-      overrides: component.overrides.componentOverridesData,
-      run: component.bitJson && component.bitJson.run ? component.bitJson.run : {}
+      overrides: component.overrides.componentOverridesData
     });
   }
 

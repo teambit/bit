@@ -1,11 +1,10 @@
 import { Extension } from '../harmony';
 import { WorkspaceExt } from '../workspace';
+import { BitExt } from '../bit';
 
 export default Extension.instantiate({
-  name: 'Pipes',
-  dependencies: [WorkspaceExt],
-  config: {
-    pipes: []
-  },
+  name: 'ExtensionResolver',
+  dependencies: [BitExt],
+  config: {},
   provider: async () => {}
 });

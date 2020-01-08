@@ -1,4 +1,4 @@
-import { BitCapsule, FsContainer } from '../capsule';
+import { BitCapsule, FsContainer } from '../capsule-ext';
 
 export default (async function createCapsule(type = 'fs', dir?: string): Promise<BitCapsule> {
   function getContainerFactory() {

@@ -6,7 +6,12 @@ export type PipeConfig = {};
 export type PipesDeps = [Workspace];
 
 export type PipesConfig = {
-  pipes: { [key: string]: Pipe };
+  pipes: { [key: string]: PipeElementConf | string[] };
+};
+
+export type PipeElementConf = {
+  extension: string;
+  // config options
 };
 
 export default function providePipes(config: PipeConfig, [workspace]: PipesDeps) {

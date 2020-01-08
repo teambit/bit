@@ -3,7 +3,7 @@ import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import { runModule } from 'librarian';
-import { BitCapsule } from '../capsule';
+import { BitCapsule } from '../capsule-ext';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';

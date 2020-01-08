@@ -55,7 +55,6 @@ import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 import Graph from './commands/public-cmds/graph-cmd';
-import Run from './commands/public-cmds/run-cmd';
 import { CapsuleCreate, CapsuleList, CapsuleDescribe } from './commands/public-cmds/capsule-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
@@ -152,8 +151,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Doctor(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Graph(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Run(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CapsuleCreate(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

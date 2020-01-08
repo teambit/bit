@@ -3,7 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import CapsuleBuilder, { Options } from '../../../environment/capsule-builder';
 import { CapsuleOptions } from '../../../orchestrator/types';
-import BitCapsule from '../../../capsule/bit-capsule';
+import BitCapsule from '../../../capsule-ext/bit-capsule';
 
 export default (async function capsuleIsolate(
   bitIds: BitId[] | string[],

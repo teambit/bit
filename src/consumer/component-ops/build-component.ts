@@ -18,7 +18,7 @@ import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
 import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
-import { BitCapsule } from '../../capsule';
+import { BitCapsule } from '../../capsule-ext';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { CompilerResults } from '../../extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
@@ -109,7 +109,10 @@ export default (async function buildComponent({
     }
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  component.setDists(builtFiles.map(file => new Dist(file)), mainDist);
+  component.setDists(
+    builtFiles.map(file => new Dist(file)),
+    mainDist
+  );
   if (save) {
     await scope.sources.updateDist({ source: component });
   }

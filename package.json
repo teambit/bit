@@ -2,7 +2,7 @@
   "name": "bit-bin",
   "version": "14.7.2-dev.1",
   "license": "Apache-2.0",
-  "main": "./dist/api.js",
+  "main": "./dist/src/api.js",
   "preferGlobal": true,
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
@@ -19,7 +19,7 @@
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
     "test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter './src/**/*.spec.ts'",
     "mocha-circleci": "mocha --require ./babel-register --reporter mocha-circleci-reporter",
-    "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts",
+    "e2e-test": "mocha --require ./babel-register ./e2e/**/*.e2e*.ts", 
     "e2e-test:appveyor1": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.1.ts 2> output.err",
     "e2e-test:appveyor2": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.2.ts 2> output.err",
     "e2e-test:appveyor3": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.3.ts 2> output.err",

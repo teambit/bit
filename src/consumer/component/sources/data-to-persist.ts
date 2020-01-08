@@ -1,6 +1,6 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import { BitCapsule } from '../../../capsule';
+import { BitCapsule } from '../../../capsule-ext';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';

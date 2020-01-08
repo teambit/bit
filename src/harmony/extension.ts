@@ -2,7 +2,8 @@ import { ProviderFn } from './extension.provider';
 
 export type ExtensionProps<Conf, Deps> = {
   name: string;
-  dependencies: Extension<any>[];
+  // TODO: fix that type
+  dependencies: any[];
   config: Conf;
   provider: ProviderFn<Conf, Deps>;
 };
@@ -15,12 +16,17 @@ export default class Extension<Conf = {}, Deps = []> {
     readonly provider: ProviderFn<Conf, Deps>
   ) {}
 
-  readonly instance = null;
+  private _instance = null;
+
+  get instance() {
+    return this._instance;
+  }
 
   async run(dependencies: any[]) {
     if (!this.instance) {
+      // @ts-ignore TODO: doron please fix (:
       const instance = await this.provider(this.config, dependencies);
-      this.instance = instance;
+      this._instance = instance;
       return instance;
     }
 

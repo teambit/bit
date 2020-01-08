@@ -355,7 +355,6 @@ export default class Component extends BitObject {
     const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
-    const run = version.run;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
       filesP,
@@ -408,8 +407,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
-      extensions: clone(version.extensions),
-      runConfig: run
+      extensions: clone(version.extensions)
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

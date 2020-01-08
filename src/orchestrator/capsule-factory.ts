@@ -2,7 +2,7 @@ import { Capsule, ContainerFactory, Exec, Volume, State } from 'capsule';
 import { EventEmitter } from 'events';
 import { ResourceFactory, Resource } from './resource-pool';
 import CapsuleResource from './capsule-resource';
-import { BitContainerConfig } from '../capsule/container';
+import { BitContainerConfig } from '../capsule-ext/container';
 
 export default class CapsuleFactory<T extends Capsule<Exec, Volume>> extends EventEmitter
   implements ResourceFactory<T> {

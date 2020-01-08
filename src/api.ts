@@ -1,13 +1,13 @@
 import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
-import Extension from './extensions/extension';
+// import Extension from './extensions/extension';
 import HooksManager from './hooks';
 import { BaseLoadArgsProps } from './extensions/base-extension';
 
 HooksManager.init();
 
-export { default as Extension } from './harmony';
+export { Extension as Ext } from './harmony';
 export { Bit } from './bit';
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
@@ -43,7 +43,7 @@ export async function addMany(components: AddProps[], alternateCwd?: string) {
 /**
  * Load extension programmatically
  */
-export async function loadExtension(args: BaseLoadArgsProps): Promise<Extension> {
-  const extension = await Extension.load(args);
-  return Promise.resolve(extension);
-}
+// export async function loadExtension(args: BaseLoadArgsProps): Promise<Extension> {
+//   const extension = await Extension.load(args);
+//   return Promise.resolve(extension);
+// }

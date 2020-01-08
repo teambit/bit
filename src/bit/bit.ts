@@ -12,4 +12,9 @@ export default class Bit {
   get version() {
     return '1.0.0';
   }
+
+  get config() {
+    if (!this.workspace) return null;
+    return this.workspace.config;
+  }
 }

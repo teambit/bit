@@ -8,7 +8,7 @@ export default class Container {
     this.instances.set(token, instance);
   }
 
-  resolve<AnyExtension>(token: string): T {
+  resolve<AnyExtension>(token: string) {
     return this.instances.get(token);
   }
 

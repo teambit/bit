@@ -5,7 +5,6 @@
     "emitDecoratorMetadata": true,
     "strict": true,
     "moduleResolution": "node",
-    "noEmit": true,
     "module": "commonjs",
     "target": "es2015",
     "noImplicitAny": false,
@@ -14,15 +13,11 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["*"] // resolve all modules prefixed with `@/` from `src` directory
-    },
-    "outDir": "./dist",
+    "baseUrl": "./src",
+    "outDir": "./dist"
   },
   "include": [
-    "src",
-    "e2e"
+    "src"
   ],
   "exclude": [
     "components",

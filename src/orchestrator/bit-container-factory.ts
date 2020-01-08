@@ -1,5 +1,5 @@
 import { ContainerFactory, Container, Exec, Volume } from 'capsule';
-import FsContainer, { BitContainerConfig } from '../capsule/container';
+import FsContainer, { BitContainerConfig } from '../capsule-ext/container';
 
 export default class BitContainerFactory implements ContainerFactory<Exec, Volume> {
   createContainer(options?: BitContainerConfig): Promise<Container<Exec, Volume>> {

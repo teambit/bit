@@ -7,7 +7,7 @@ import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../orchestrator/types';
 import Consumer from '../consumer/consumer';
-import BitCapsule from '../capsule/bit-capsule';
+import BitCapsule from '../capsule-ext/bit-capsule';
 import Isolator from './isolator';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { getComponentLinks } from '../links/link-generator';
