@@ -5,6 +5,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import { removeChalkCharacters } from '../../src/utils';
+import { DEFAULT_LANE } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -22,7 +23,7 @@ describe('bit lane command', function() {
       output = helper.command.showLanes();
     });
     it('bit lane should show the active lane', () => {
-      expect(output).to.have.string('* dev');
+      expect(output).to.have.string('current lane - dev');
     });
   });
   describe('create a snap on master then on a new lane', () => {
@@ -44,14 +45,13 @@ describe('bit lane command', function() {
       expect(status.newComponents).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(0);
     });
-    describe('bit lane with --components flag', () => {
+    describe('bit lane with --details flag', () => {
       let output: string;
       before(() => {
-        output = helper.command.showLanes('--components');
+        output = helper.command.showLanes('--details');
       });
       it('should show all lanes and mark the current one', () => {
-        expect(output).to.have.string('master');
-        expect(output).to.have.string('* dev');
+        expect(output).to.have.string('current lane - dev');
       });
     });
     describe('exporting the lane', () => {
@@ -114,9 +114,8 @@ describe('bit lane command', function() {
         expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane should show the component in the checked out lane', () => {
-        const lanes = helper.command.showLanesParsed();
-        expect(lanes).to.have.property('dev');
-        expect(lanes.dev).to.have.lengthOf(3);
+        const lanes = helper.command.showOneLaneParsed('dev');
+        expect(lanes.components).to.have.lengthOf(3);
       });
       it('bit status should show clean state', () => {
         const output = helper.command.runCmd('bit status');
@@ -124,8 +123,7 @@ describe('bit lane command', function() {
       });
       it('bit lane should show the checked out lane as the active one', () => {
         const lanes = helper.command.showLanes();
-        expect(lanes).to.have.string('* dev');
-        expect(lanes).to.not.have.string('* master');
+        expect(lanes).to.have.string('current lane - dev');
       });
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
@@ -135,15 +133,12 @@ describe('bit lane command', function() {
         helper.command.switchRemoteLane('dev', '--as my-new-lane');
       });
       it('bit lane should show the component in the checked out lane', () => {
-        const lanes = helper.command.showLanesParsed();
-        expect(lanes).to.have.property('my-new-lane');
-        expect(lanes['my-new-lane']).to.have.lengthOf(3);
+        const lane = helper.command.showOneLaneParsed('my-new-lane');
+        expect(lane.components).to.have.lengthOf(3);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanes();
-        expect(lanes).to.have.string('* my-new-lane');
-        expect(lanes).to.not.have.string('* master');
-        expect(lanes).to.not.have.string('dev');
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.currentLane).to.equal('my-new-lane');
       });
       it('should write the components to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintBarFoo);
@@ -184,10 +179,9 @@ describe('bit lane command', function() {
         expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
       it('bit lane should show the component in the checked out lane', () => {
-        const lanes = helper.command.showLanesParsed();
-        expect(lanes).to.have.property('dev');
-        expect(lanes.dev).to.have.lengthOf(1);
-        expect(lanes.dev[0].id.name).to.equal('bar/foo');
+        const lanes = helper.command.showOneLaneParsed('dev');
+        expect(lanes.components).to.have.lengthOf(1);
+        expect(lanes.components[0].id.name).to.equal('bar/foo');
       });
       it('bit status should not show the component as pending updates', () => {
         const status = helper.command.statusJson();
@@ -198,9 +192,8 @@ describe('bit lane command', function() {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('bit lane should show the checked out lane as the active one', () => {
-        const lanes = helper.command.showLanes();
-        expect(lanes).to.have.string('* dev');
-        expect(lanes).to.not.have.string('* master');
+        const lanes = helper.command.showLanesParsed();
+        expect(lanes.currentLane).to.equal('dev');
       });
       describe('changing the component and running bit diff', () => {
         let diff;
@@ -237,9 +230,12 @@ describe('bit lane command', function() {
           helper.command.switchRemoteLane('dev', '--as my-new-lane');
         });
         it('should save the remote-lane data into a local with the specified name', () => {
-          const lanes = helper.command.showLanesParsed();
-          expect(lanes['my-new-lane']).to.have.lengthOf(1);
-          expect(lanes).to.not.have.property('dev');
+          const lanes = helper.command.showOneLaneParsed('my-new-lane');
+          expect(lanes.components).to.have.lengthOf(1);
+        });
+        it('should not create a lane with the same name as the remote', () => {
+          const output = helper.general.runWithTryCatch('bit lane dev');
+          expect(output).to.have.string('not found');
         });
       });
     });
@@ -273,7 +269,8 @@ describe('bit lane command', function() {
       });
       it('bit lane should show that all components are belong to master', () => {
         const lanes = helper.command.showLanesParsed();
-        expect(lanes.master).to.have.lengthOf(3);
+        const defaultLane = lanes.lanes.find(lane => lane.name === DEFAULT_LANE);
+        expect(defaultLane.components).to.have.lengthOf(3);
       });
     });
     describe('merging remote lane into master when components are not in workspace using --existing flag', () => {
@@ -301,7 +298,8 @@ describe('bit lane command', function() {
       });
       it('bit lane should not show the components as if they belong to master', () => {
         const lanes = helper.command.showLanesParsed();
-        expect(lanes.master).to.have.lengthOf(0);
+        const defaultLane = lanes.lanes.find(lane => lane.name === DEFAULT_LANE);
+        expect(defaultLane.components).to.have.lengthOf(0);
       });
     });
     describe('importing a remote lane which is ahead of the local lane', () => {
@@ -341,8 +339,8 @@ describe('bit lane command', function() {
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('bit lane should show that all components are belong to the local lane', () => {
-          const lanes = helper.command.showLanesParsed();
-          expect(lanes.dev).to.have.lengthOf(3);
+          const lane = helper.command.showOneLaneParsed('dev');
+          expect(lane.components).to.have.lengthOf(3);
         });
         it('bit lane --merged should not show the lane as it was not merged into master yet', () => {
           const merged = helper.command.showLanes('--merged');
@@ -357,7 +355,8 @@ describe('bit lane command', function() {
       });
     });
   });
-  describe('create a snap on a new lane then tagged', () => {
+  // @todo: not clear how the behavior should be. needs to be discussed
+  describe.skip('create a snap on a new lane then tagged', () => {
     let lanes;
     let firstSnap;
     before(() => {
@@ -372,12 +371,14 @@ describe('bit lane command', function() {
       lanes = helper.command.showLanesParsed();
     });
     it('the new tag should not change the head of the lane', () => {
-      expect(lanes.dev[0].id.name).to.equal('bar/foo');
-      expect(lanes.dev[0].head).to.equal(firstSnap);
+      const dev = lanes.lanes.find(l => l.name === 'dev');
+      expect(dev.components[0].id.name).to.equal('bar/foo');
+      expect(dev.components[0].head).to.equal(firstSnap);
     });
     it('the tag should be saved globally, as master', () => {
-      expect(lanes.master[0].id.name).to.equal('bar/foo');
-      expect(lanes.master[0].head).to.equal('0.0.1');
+      const master = lanes.lanes.find(l => l.name === DEFAULT_LANE);
+      expect(master.components[0].id.name).to.equal('bar/foo');
+      expect(master.components[0].head).to.equal('0.0.1');
     });
   });
   describe('master => lane-a => labe-b, so laneB branched from laneA', () => {
@@ -402,12 +403,12 @@ describe('bit lane command', function() {
       helper.command.snapAllComponents();
     });
     it('lane-a should not contain components from master', () => {
-      const lanes = helper.command.showLanesParsed();
-      expect(lanes['lane-a']).to.have.lengthOf(1);
+      const lane = helper.command.showOneLaneParsed('lane-a');
+      expect(lane.components).to.have.lengthOf(1);
     });
     it('laneB object should include components from laneA, but not from master', () => {
-      const lanes = helper.command.showLanesParsed();
-      expect(lanes['lane-b']).to.have.lengthOf(2);
+      const lane = helper.command.showOneLaneParsed('lane-b');
+      expect(lane.components).to.have.lengthOf(2);
     });
     it('bit list should show all components available to lane-b', () => {
       const list = helper.command.listLocalScopeParsed();
@@ -476,8 +477,8 @@ describe('bit lane command', function() {
         helper.command.importComponent('bar/foo');
       });
       it('the component should be part of the lane', () => {
-        const lanes = helper.command.showLanesParsed();
-        expect(lanes.dev).to.have.lengthOf(1);
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(1);
       });
       describe('switching to master', () => {
         before(() => {
@@ -495,8 +496,8 @@ describe('bit lane command', function() {
         helper.command.importComponent('bar/foo --skip-lane');
       });
       it('the component should not be part of the current lane', () => {
-        const lanes = helper.command.showLanesParsed();
-        expect(lanes.dev).to.have.lengthOf(0);
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(0);
       });
       describe('switching to master', () => {
         before(() => {

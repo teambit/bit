@@ -126,11 +126,20 @@ export default class CommandHelper {
     return this.runCmd(`bit switch ${laneName} --create`);
   }
   showLanes(options = '') {
-    return this.runCmd(`bit lane ${options}`);
+    const results = this.runCmd(`bit lane ${options}`);
+    return removeChalkCharacters(results) as string;
+  }
+  showOneLane(name: string) {
+    return this.runCmd(`bit lane ${name}`);
   }
   showLanesParsed(options = '') {
-    const results = this.runCmd(`bit lane ${options} --json --components`);
+    const results = this.runCmd(`bit lane ${options} --json`);
     return JSON.parse(results);
+  }
+  showOneLaneParsed(name: string) {
+    const results = this.runCmd(`bit lane ${name} --json`);
+    const parsed = JSON.parse(results);
+    return parsed.lanes[0];
   }
   getSnapHead(id: string) {
     const comp = this.catComponent(id);

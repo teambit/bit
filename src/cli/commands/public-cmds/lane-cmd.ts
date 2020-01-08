@@ -2,19 +2,17 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { lane } from '../../../api/consumer';
-import { LaneResults } from '../../../api/consumer/lib/lane';
+import { LaneResults, LaneData } from '../../../api/consumer/lib/lane';
 
 export default class Lane extends Command {
   name = 'lane [name]';
-  description = `manage lanes
-  bit lane => shows all available lanes and mark the checked out lane
+  description = `show lanes details
   https://${BASE_DOCS_DOMAIN}/docs/lanes`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
-    ['c', 'components', 'show more details on the state of each component in each lane'],
+    ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
-    ['r', 'remove', 'delete a merged lane'],
     ['', 'merged', 'show merged lanes'],
     ['', 'not-merged', 'show not merged lanes']
   ];
@@ -24,55 +22,91 @@ export default class Lane extends Command {
   action(
     [name]: string[],
     {
-      components = false,
-      remove = false,
+      details = false,
       merged = false,
-      notMerged = false
+      notMerged = false,
+      json = false
     }: {
-      components: boolean;
-      remove: boolean;
+      details: boolean;
       merged: boolean;
       notMerged: boolean;
+      json: boolean;
     }
   ): Promise<any> {
     return lane({
       name,
-      components,
-      remove,
+      showDefaultLane: json,
       merged,
       notMerged
-    });
+    }).then(results => ({ results, details, json, name }));
   }
 
-  report(results: LaneResults, ...args): string {
-    if (results.lanes) {
-      return results.lanes
-        .map(laneName => {
-          return laneName === results.currentLane ? `* ${laneName}` : laneName;
-        })
-        .join('\n');
+  report({
+    results,
+    details,
+    json,
+    name
+  }: {
+    results: LaneResults;
+    details: boolean;
+    json: boolean;
+    name?: string;
+  }): string {
+    if (!results.lanes) {
+      if (results.merged) {
+        if (!results.merged.length) return chalk.green('None of the lanes is merged');
+        return chalk.green(results.merged.join('\n'));
+      }
+      if (results.notMerged) {
+        if (!results.notMerged.length) return chalk.green('All lanes are merged');
+        return chalk.green(results.notMerged.join('\n'));
+      }
+      throw new Error('unknown bit-lane flags combination');
     }
-    if (results.merged) {
-      if (!results.merged.length) return chalk.green('None of the lanes is merged');
-      return chalk.green(results.merged.join('\n'));
+    if (json) return JSON.stringify(results, null, 2);
+    if (name) {
+      const onlyLane = results.lanes[0];
+      const title = `showing information for ${chalk.bold(name)}${outputRemoteLane(onlyLane.remote)}\n`;
+      const components = outputComponents(onlyLane.components);
+      return title + components;
     }
-    if (results.notMerged) {
-      if (!results.notMerged.length) return chalk.green('All lanes are merged');
-      return chalk.green(results.notMerged.join('\n'));
+    let currentLane = `current lane - ${chalk.bold(results.currentLane as string)}`;
+    if (details) {
+      const laneDataOfCurrentLane = results.lanes.find(l => l.name === results.currentLane);
+      const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
+      const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
+      currentLane += `${outputRemoteLane(remoteOfCurrentLane)}\n${currentLaneComponents}`;
     }
-    if (results.lanesWithComponents) {
-      if (args[1].json) return JSON.stringify(results.lanesWithComponents, null, 2);
-      return Object.keys(results.lanesWithComponents)
-        .map(laneName => {
-          const laneStr = laneName === results.currentLane ? `* ${laneName}` : laneName;
-          // @ts-ignore
-          const components = results.lanesWithComponents[laneName]
-            .map(c => `${c.id.toString()}\t${c.head}`)
-            .join('\t\n');
-          return `${chalk.bold(laneStr)}\n\t${components}`;
-        })
-        .join('\n');
+
+    const availableLanes = results.lanes
+      .filter(l => l.name !== results.currentLane)
+      // @ts-ignore
+      .map(laneData => {
+        if (details) {
+          const laneTitle = `> ${chalk.green(laneData.name)}${outputRemoteLane(laneData.remote)}\n`;
+          const components = outputComponents(laneData.components);
+          return laneTitle + components;
+        }
+        return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)`;
+      })
+      .join('\n');
+    const footer = details
+      ? `switch lanes using 'bit switch <name>'.
+You can use --merge and --no-merge to see which of the lanes is fully merged.`
+      : `to get more info on all lanes in workspace use 'bit lane --details' or 'bit lane <lane-name>' for a specific lane.
+switch lanes using 'bit switch <name>'.`;
+    const availableLanesStr = availableLanes ? `\nAvailable lanes:\n${availableLanes}\n` : '';
+    return `${currentLane}\n${availableLanesStr}\n${footer}`;
+
+    function outputComponents(components: LaneData['components']): string {
+      const title = `\tcomponents (${components.length})\n`;
+      const componentsStr = components.map(c => `\t  ${c.id.toString()} - ${c.head}`).join('\n');
+      return title + componentsStr;
     }
-    return JSON.stringify(results, null, 2);
+
+    function outputRemoteLane(remoteLane: string | null | undefined): string {
+      if (!remoteLane) return '';
+      return ` - (remote lane - ${remoteLane})`;
+    }
   }
 }
