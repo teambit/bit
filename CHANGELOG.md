@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2231](https://github.com/teambit/bit/issues/2231) update typescript to support optional chaining
 - add `--conf` and `--ignore-package-json` flags to `bit checkout` similar to `bit import`
 - improve performance of `bit checkout` by writing multiple components in parallel
 - [#1894](https://github.com/teambit/bit/issues/1894) introduce `--remote` flag for `bit log`
