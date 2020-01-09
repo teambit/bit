@@ -89,6 +89,11 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array.map(id => BitId.parse(id, true)));
   }
 
+  static deserializeObsolete(array: string[] = []): BitIds {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return new BitIds(...array.map(id => BitId.parseObsolete(id)));
+  }
+
   toString(): string {
     return this.map(id => id.toString()).join(', ');
   }

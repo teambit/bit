@@ -1,9 +1,11 @@
 import path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import os from 'os';
+import v4 from 'uuid';
 import pLimit, { Limit } from 'p-limit';
 import hash from 'object-hash';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../orchestrator/types';
 import Consumer from '../consumer/consumer';
@@ -12,6 +14,8 @@ import Isolator from './isolator';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { getComponentLinks } from '../links/link-generator';
 import Component from '../consumer/component';
+import { Workspace } from 'workspace';
+import execa from 'execa';
 
 export type Options = {
   alwaysNew: boolean;
@@ -46,27 +50,31 @@ export default class CapsuleBuilder {
   }
 
   async isolateComponents(
-    consumer: Consumer,
-    bitIds: BitId[],
+    workspace: Workspace,
+    bitIds: BitIds,
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options
   ): Promise<{ [bitId: string]: BitCapsule }> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const components = await consumer.loadComponentsForCapsule(bitIds);
+    const components = await workspace.loadComponentsForCapsule(bitIds);
 
     const capsules: BitCapsule[] = await Promise.all(
       R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
     );
     const capsuleMapping = this._buildCapsuleMap(capsules);
     await Promise.all(
-      R.map(capsule => this._isolate(consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping), capsules)
+      R.map(
+        capsule => this._isolate(workspace._consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping),
+        capsules
+      )
     );
     if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
-    return capsules.reduce(function(acc, cur) {
+    const res = capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
     }, {});
+    return res;
   }
 
   async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
@@ -92,7 +100,21 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
     try {
-      await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
+      // await capsules[1].exec({ command: `yarn`.split(' ') })
+      // await capsules[0].exec({ command: `yarn`.split(' ') })
+      capsules.map(capsule => {
+        const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+        const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
+        const packageJson = JSON.parse(pjsonString);
+        const bitBinPath = './node_modules/bit-bin';
+        const localBitBinPath = path.join(__dirname, '../../../');
+        delete packageJson.dependencies['bit-bin'];
+        capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+        execa.sync('yarn', [], { cwd: capsule.wrkDir });
+        execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+      });
+      return Promise.resolve();
+      // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
     } catch (e) {
       console.log(e);
     }
@@ -119,6 +141,7 @@ export default class CapsuleBuilder {
         {},
         DEFAULT_ISOLATION_OPTIONS,
         {
+          writeDists: true,
           writeToPath: capsule.wrkDir,
           keepExistingCapsule: !options.alwaysNew
         },
@@ -131,7 +154,7 @@ export default class CapsuleBuilder {
   private _generateWrkDir(bitId: string, capsuleOptions: CapsuleOptions, options: Options) {
     const baseDir = capsuleOptions.baseDir || os.tmpdir();
     capsuleOptions.baseDir = baseDir;
-    if (options.alwaysNew) return path.join(baseDir, `${bitId}_${options.name}`);
+    if (options.alwaysNew) return path.join(baseDir, `${bitId}_${v4()}`);
     if (options.name) return path.join(baseDir, `${bitId}_${options.name}`);
     return path.join(baseDir, `${bitId}_${hash(capsuleOptions)}`);
   }

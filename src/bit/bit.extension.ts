@@ -1,11 +1,12 @@
 import { Extension } from '../harmony';
 import { WorkspaceExt } from '../workspace';
 import ScopeExt from '../scope/scope.extension';
+import CapsuleExt from '../environment/capsule.extension';
 import provideBit from './bit.provider';
 
 export default Extension.instantiate({
   name: 'Bit',
-  dependencies: [WorkspaceExt, ScopeExt],
+  dependencies: [WorkspaceExt, ScopeExt, CapsuleExt],
   config: {},
   provider: provideBit
 });
