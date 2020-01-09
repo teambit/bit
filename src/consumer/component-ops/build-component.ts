@@ -110,6 +110,7 @@ export default (async function buildComponent({
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   component.setDists(
+    //@ts-ignore
     builtFiles.map(file => new Dist(file)),
     mainDist
   );
