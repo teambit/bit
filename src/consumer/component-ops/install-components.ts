@@ -15,9 +15,7 @@ import { Analytics } from '../../analytics/analytics';
  */
 export async function install(consumer: Consumer, verbose: boolean): Promise<LinksResult[]> {
   const candidateComponents = consumer.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.NESTED]);
-  const dirs = Object.keys(candidateComponents)
-    .map(id => candidateComponents[id].rootDir)
-    .filter(dir => dir);
+  const dirs = candidateComponents.map(componentMap => componentMap.rootDir).filter(dir => dir);
   const consumerPath = consumer.getPath();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const dirsAbsolute = dirs.map(dir => path.join(consumerPath, dir));

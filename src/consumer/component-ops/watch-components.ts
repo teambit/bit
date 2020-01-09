@@ -128,8 +128,8 @@ export default class WatchComponents {
 
   _getPathsToWatch(): string[] {
     const componentsFromBitMap = this.consumer.bitMap.getAllComponents();
-    const paths = Object.keys(componentsFromBitMap).map(componentId => {
-      const componentMap = componentsFromBitMap[componentId];
+    const paths = componentsFromBitMap.map(componentMap => {
+      const componentId = componentMap.id.toString();
       const trackDir = componentMap.getTrackDir();
       if (trackDir) {
         this.trackDirs[trackDir] = componentId;
