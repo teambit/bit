@@ -16,13 +16,31 @@
 
 ## About  
 
-**Bit makes it easy to share and manage components between projects and apps at any scale**.
+**Bit helps you build, version and distribute reusable components.**
 
-It lets you **isolate components** from existing projects with **0 refactoring**, with **fully-automated dependancy definition/resolution** and **scalable versioning**.
+#### What's inside?
 
-It lets you **reuse individual components across projects**, using your favorite package managers like **npm** and **yarn** through **[Bit's component hub](https://bit.dev)**.
+* Develop components in a decoupled and isolated dev environment.
 
-It lets you **extend Git's workflow** to **develop components from any consuming project** , suggest updates and **easily sync changes across your codebase**.
+* Insta-pack components with automatic dependency definition/resolution.
+
+* Define per-component compiler (Babel, TS etc) with nearly-zero configurations.
+
+* Define per-component tester (Jest, Mocha etc) with nearly-zero configurations. 
+
+* Ensure reusability by building and testing each component outside of your project.
+
+* Version multiple components in a project using semantic versioning.
+
+* Automatically bump dependent component versions with SemVer increments.
+
+* Export components to a remote, distributed scope for reuse in different projects. 
+
+* Import components for local usage, editing and debugging. 
+
+* Update components with new versions in multiple repos. Merge code changes.
+
+**Recommended: Visit [bit.dev](https://bit.dev/) for a full enterprise-grade solution with added features for hosting, managing and collaborating on components at scale. Built-in component explorer, GitHub integration and npm registry.**
 
 ## Why?
 
