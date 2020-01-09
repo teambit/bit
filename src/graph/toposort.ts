@@ -1,9 +1,4 @@
 // @ts-nocheck
-/*
- * @author Fred Eisele (https://github.com/phreed)
- *
- */
-
 export enum Mark {
   UNMARKED = 0,
   TEMPORARY = 1,

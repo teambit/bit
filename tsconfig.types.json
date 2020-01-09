@@ -2,11 +2,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "types",
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "noEmit": false,
+    "declaration": true
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "components",
+    "node_modules",
+    "e2e/fixtures"
   ]
 }

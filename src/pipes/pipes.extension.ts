@@ -7,5 +7,7 @@ export default Extension.instantiate({
   config: {
     pipes: []
   },
-  provider: async () => {}
+  provider: async () => {
+    console.log('pipes is loaded');
+  }
 });

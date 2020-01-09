@@ -1,11 +1,20 @@
 import { Graph, VertexId, Vertex, Edge } from '../../graph';
 import { AnyExtension } from '../types';
+import { fromExtension, fromExtensions } from './from-extension';
 
 export default class DependencyGraph extends Graph<AnyExtension, string> {
   private cache = new Map<string, AnyExtension>();
 
   byExecutionOrder() {
     return this.topologicallySort().map(vertex => vertex.attr);
+  }
+
+  addExtensions(extensions: AnyExtension[]) {
+    const { vertices, edges } = fromExtensions(extensions);
+    this.setVertices(vertices);
+    this.setEdges(edges);
+
+    return this;
   }
 
   // :TODO refactor this asap
@@ -23,33 +32,8 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   }
 
   static fromRoot(extension: AnyExtension) {
-    const vertices: { [id: string]: Vertex<AnyExtension> } = {};
-    let edges: Edge<string>[] = [];
-    // extension.
+    const { vertices, edges } = fromExtension(extension);
 
-    function iterate(root: AnyExtension) {
-      const id = root.name;
-      if (vertices[id]) return;
-
-      vertices[id] = new Vertex<AnyExtension>(id, root);
-
-      const newEdges = root.dependencies.map((dep: AnyExtension) => {
-        return Edge.fromObject({
-          srcId: id,
-          dstId: dep.name,
-          attr: 'dependency'
-        });
-      });
-
-      edges = edges.concat(newEdges);
-
-      root.dependencies.forEach((dep: AnyExtension) => {
-        iterate(dep);
-      });
-    }
-
-    iterate(extension);
-
-    return new DependencyGraph(edges, Object.values(vertices));
+    return new DependencyGraph(edges, vertices);
   }
 }

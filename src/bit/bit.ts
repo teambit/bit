@@ -8,7 +8,17 @@ import resolveExtensions from './extension-resolver';
 import { CapsuleOptions } from 'orchestrator/types';
 
 export default class Bit {
-  constructor(readonly scope: Scope, readonly workspace: Workspace | null) {}
+  constructor(
+    /**
+     * Scope
+     */
+    readonly scope: Scope,
+
+    /**
+     * Workspace
+     */
+    readonly workspace: Workspace | null
+  ) {}
 
   /**
    * bit's current version
@@ -17,6 +27,9 @@ export default class Bit {
     return '1.0.0';
   }
 
+  /**
+   *
+   */
   get config() {
     if (!this.workspace) return null;
     return this.workspace.config;

@@ -12,7 +12,7 @@ export default class Command {
   ) {}
 
   render(Root: Component) {
-    render(<Root />);
+    // render(<Root />);
   }
 
   toLegacyFormat() {

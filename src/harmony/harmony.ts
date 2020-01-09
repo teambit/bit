@@ -4,9 +4,12 @@ import { Graph } from '../graph';
 import { ExtensionProvider, ProviderFn } from './extension.provider';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
+import { fromExtensions } from './dependency-graph/from-extension';
 
 async function asyncForEach(array, callback) {
+  // eslint-disable-next-line no-plusplus
   for (let index = 0; index < array.length; index++) {
+    // eslint-disable-next-line no-await-in-loop
     await callback(array[index], index, array);
   }
 }
@@ -14,20 +17,17 @@ async function asyncForEach(array, callback) {
 export default class Harmony {
   constructor(private graph: DependencyGraph) {}
 
-  register(extension: Extension) {
-    // container.register(extension.name, { useValue: extension });
-  }
-
-  // resolve<T extends Extension>(token: string): T {
-  // const instance = container.resolve<T>(token);
-  // return instance;
-  // }
-
   get extensions() {
     return this.graph.vertices.map(vertex => vertex.attr);
   }
 
+  load(extensions: AnyExtension[]) {
+    this.graph.addExtensions(extensions);
+    extensions.forEach(ext => this.runOne(ext));
+  }
+
   async runOne(extension: AnyExtension) {
+    if (extension.instance) return;
     // create an index of all vertices in dependency graph
     const dependencies = await Promise.all(
       extension.dependencies.map(async (ext: AnyExtension) => {
@@ -35,7 +35,7 @@ export default class Harmony {
       })
     );
 
-    await extension.run(dependencies);
+    await extension.run(dependencies, this);
   }
 
   async run() {

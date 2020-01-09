@@ -7,7 +7,7 @@ import { BaseLoadArgsProps } from './extensions/base-extension';
 
 HooksManager.init();
 
-export { Extension as Ext } from './harmony';
+export { Extension } from './harmony';
 export { Bit } from './bit';
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
