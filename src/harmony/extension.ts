@@ -1,4 +1,5 @@
 import { ProviderFn } from './extension.provider';
+import Harmony from './harmony';
 
 export type ExtensionProps<Conf, Deps> = {
   name: string;
@@ -22,10 +23,10 @@ export default class Extension<Conf = {}, Deps = []> {
     return this._instance;
   }
 
-  async run(dependencies: any[]) {
+  async run(dependencies: any[], harmony: Harmony) {
     if (!this.instance) {
       // @ts-ignore TODO: doron please fix (:
-      const instance = await this.provider(this.config, dependencies);
+      const instance = await this.provider(this.config, dependencies, harmony);
       this._instance = instance;
       return instance;
     }

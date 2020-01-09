@@ -20,6 +20,10 @@ export class Edge<ED> {
   static fromObject<ED>(object: RawEdge<ED>) {
     return new Edge(object.srcId, object.dstId, object.attr);
   }
+
+  get id(): string {
+    return `${this.srcId}_${this.dstId}`;
+  }
 }
 
 export type RawEdge<ED> = {

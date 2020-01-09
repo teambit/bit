@@ -14,10 +14,10 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 // removing this, default to longStackTraces also when env is `development`, which impacts the
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
 BPromise.config({
-  longStackTraces: process.env.BLUEBIRD_DEBUG
+  longStackTraces: true
 });
 
-loudRejection();
+// loudRejection();
 HooksManager.init();
 
 // const defaultExtensions: ExtensionProvider<any, any>[] = [

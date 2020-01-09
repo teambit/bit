@@ -411,8 +411,7 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions,
-      run
+      extensions
     } = JSON.parse(contents);
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
@@ -589,8 +588,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: component.extensions,
-      run
+      extensions: component.extensions
     });
   }
 

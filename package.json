@@ -2,7 +2,7 @@
   "name": "bit-bin",
   "version": "14.7.2-dev.1",
   "license": "Apache-2.0",
-  "main": "./dist/src/api.js",
+  "main": "./dist/api.js",
   "preferGlobal": true,
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
