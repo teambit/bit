@@ -14,7 +14,7 @@ import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
-import { ComponentOrigin } from '../bit-map/component-map';
+import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -284,20 +284,20 @@ export default class ComponentsList {
 
   getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute = false): string[] {
     // TODO: maybe cache this as well
-    const componentsFromBitMap = this.bitMap.getAllComponents(origin);
-    const res = [];
-    const getPaths = (agg, isAbsolute) => componentMap => {
+    const componentMaps = this.bitMap.getAllComponents(origin);
+    const result: string[] = [];
+    const populatePaths = (componentMap: ComponentMap) => {
       const relativePaths = componentMap.getFilesRelativeToConsumer();
-      if (!isAbsolute) {
-        agg.push(...relativePaths);
+      if (!absolute) {
+        result.push(...relativePaths);
         return;
       }
       const consumerPath = this.consumer.getPath();
       const absPaths = relativePaths.map(relativePath => path.join(consumerPath, relativePath));
-      agg.push(...absPaths);
+      result.push(...absPaths);
     };
-    R.forEachObjIndexed(getPaths(res, absolute), componentsFromBitMap);
-    return res;
+    componentMaps.forEach(componentMap => populatePaths(componentMap));
+    return result;
   }
 
   /**

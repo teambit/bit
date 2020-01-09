@@ -35,8 +35,6 @@ import ConfigDir from './config-dir';
 import WorkspaceConfig from '../config/workspace-config';
 import ShowDoctorError from '../../error/show-doctor-error';
 
-export type BitMapComponents = { [componentId: string]: ComponentMap };
-
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
 
@@ -48,7 +46,7 @@ export type ResolvedConfigDir = {
 export default class BitMap {
   projectRoot: string;
   mapPath: string;
-  components: BitMapComponents;
+  components: ComponentMap[];
   hasChanged: boolean;
   version: string;
   paths: { [path: string]: BitId }; // path => componentId
@@ -61,7 +59,7 @@ export default class BitMap {
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
-    this.components = {};
+    this.components = [];
     this.hasChanged = false;
     this.version = version;
     this.paths = {};
@@ -91,7 +89,7 @@ export default class BitMap {
     }
 
     componentMap.id = bitId;
-    this.components[id] = componentMap;
+    this.components.push(componentMap);
     this.markAsChanged();
   }
 
@@ -267,11 +265,11 @@ export default class BitMap {
       componentFromJson.id = BitId.parse(componentId, idHasScope());
       const componentMap = ComponentMap.fromJson(componentsJson[componentId]);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
-      this.components[componentId] = componentMap;
+      this.components.push(componentMap);
     });
   }
 
-  getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
+  getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): ComponentMap[] {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
     // $FlowFixMe we know origin is an array in that case
@@ -293,7 +291,7 @@ export default class BitMap {
       files: [],
       dirs: []
     };
-    const populateIgnoreListP = R.values(this.components).map(async (component: ComponentMap) => {
+    const populateIgnoreListP = this.components.map(async (component: ComponentMap) => {
       const configDir = component.configDir;
       const componentDir = component.getComponentDir();
       if (configDir && componentDir) {
@@ -335,7 +333,7 @@ export default class BitMap {
       const cacheKey = oneOrigin || 'all';
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
-      const allComponents = R.values(this.components);
+      const allComponents = this.components;
       const components = oneOrigin ? allComponents.filter(c => c.origin === oneOrigin) : allComponents;
       const componentIds = ids(components);
       this._cacheIds[cacheKey] = componentIds;
@@ -418,7 +416,7 @@ export default class BitMap {
     } = {}
   ): ComponentMap {
     const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
-    return this.components[existingBitId.toString()];
+    return this.components.find(c => c.id.isEqual(existingBitId)) as ComponentMap;
   }
 
   /**
@@ -470,7 +468,7 @@ export default class BitMap {
     if (configDir.startsWith('./')) {
       configDir = configDir.replace('./', '');
     }
-    const comps = R.pickBy(component => {
+    const comps = components.filter(component => {
       const compDir = component.getComponentDir();
       if (compDir && pathIsInside(configDir, compDir)) {
         return true;
@@ -483,10 +481,10 @@ export default class BitMap {
         return true;
       }
       return false;
-    }, components);
+    });
     if (!R.isEmpty(comps)) {
-      const id = R.keys(comps)[0];
-      const stringId = BitId.parse(id).toStringWithoutVersion();
+      const id = comps[0].id;
+      const stringId = id.toStringWithoutVersion();
       if (compId !== stringId) {
         throw new InvalidConfigDir(stringId);
       }
@@ -537,18 +535,17 @@ export default class BitMap {
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
-    const components: ComponentMap[] = R.values(this.components);
     const idHasVersion = id.includes(VERSION_DELIMITER);
 
     // start with a more strict comparison. assume the id from the user has a scope name
-    const componentWithScope = components.find((componentMap: ComponentMap) => {
+    const componentWithScope = this.components.find((componentMap: ComponentMap) => {
       return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
     });
     if (componentWithScope) return componentWithScope.id;
 
     // continue with searching without the scope name
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
-    const componentWithoutScope = components.find((componentMap: ComponentMap) => {
+    const componentWithoutScope = this.components.find((componentMap: ComponentMap) => {
       return idHasVersion
         ? componentMap.id.toStringWithoutScope() === id
         : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
@@ -601,55 +598,61 @@ export default class BitMap {
   }): ComponentMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
-    if (this.components[componentIdStr]) {
-      logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-      this.components[componentIdStr].files = files;
-    } else {
+
+    const getOrCreateComponentMap = (): ComponentMap => {
+      const componentMap = this.getComponentIfExist(componentId);
+      if (componentMap) {
+        logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+        componentMap.files = files;
+        return componentMap;
+      }
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
         // if there are older versions, the user is updating an existing component, delete old ones from bit.map
         this.deleteOlderVersionsOfComponent(componentId);
       }
-      // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const componentMap = new ComponentMap({ files, origin });
-      componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
-      this.setComponent(componentId, componentMap);
-    }
-    this.components[componentIdStr].mainFile = mainFile;
+      // @ts-ignore not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
+      const newComponentMap = new ComponentMap({ files, origin });
+      newComponentMap.setMarkAsChangedCb(this.markAsChangedBinded);
+      this.setComponent(componentId, newComponentMap);
+      return newComponentMap;
+    };
+    const componentMap = getOrCreateComponentMap();
+    componentMap.mainFile = mainFile;
     if (rootDir) {
-      this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootDir);
+      componentMap.rootDir = pathNormalizeToLinux(rootDir);
     }
     if (configDir) {
-      this.components[componentIdStr].configDir = configDir;
+      componentMap.configDir = configDir;
     }
     if (trackDir) {
-      this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+      componentMap.trackDir = pathNormalizeToLinux(trackDir);
     }
     if (wrapDir) {
-      this.components[componentIdStr].wrapDir = wrapDir;
+      componentMap.wrapDir = wrapDir;
     }
-    this.components[componentIdStr].removeTrackDirIfNeeded();
+    componentMap.removeTrackDirIfNeeded();
     if (originallySharedDir) {
-      this.components[componentIdStr].originallySharedDir = originallySharedDir;
+      componentMap.originallySharedDir = originallySharedDir;
     }
-    this.sortValidateAndMarkAsChanged(componentIdStr);
-    return this.components[componentIdStr];
+    this.sortValidateAndMarkAsChanged(componentMap);
+    return componentMap;
   }
 
   addFilesToComponent({ componentId, files }: { componentId: BitId; files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
-    if (!this.components[componentIdStr]) {
+    const componentMap = this.getComponentIfExist(componentId);
+    if (!componentMap) {
       throw new ShowDoctorError(`unable to add files to a non-exist component ${componentIdStr}`);
     }
     logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-    this.components[componentIdStr].files = files;
-    this.sortValidateAndMarkAsChanged(componentIdStr);
-    return this.components[componentIdStr];
+    componentMap.files = files;
+    this.sortValidateAndMarkAsChanged(componentMap);
+    return componentMap;
   }
 
-  sortValidateAndMarkAsChanged(componentIdStr: BitIdStr) {
-    this.components[componentIdStr].sort();
-    this.components[componentIdStr].validate();
+  sortValidateAndMarkAsChanged(componentMap: ComponentMap) {
+    componentMap.sort();
+    componentMap.validate();
     this.markAsChanged();
   }
 
@@ -661,7 +664,7 @@ export default class BitMap {
   };
 
   _removeFromComponentsArray(componentId: BitId) {
-    delete this.components[componentId.toString()];
+    this.components = this.components.filter(componentMap => !componentMap.id.isEqual(componentId));
     this.markAsChanged();
   }
 
@@ -675,7 +678,7 @@ export default class BitMap {
   }
 
   isExistWithSameVersion(id: BitId): boolean {
-    return Boolean(id.hasVersion() && this.components[id.toString()]);
+    return Boolean(id.hasVersion() && this.getComponentIfExist(id));
   }
 
   /**
@@ -703,7 +706,7 @@ export default class BitMap {
       return oldId;
     }
     logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
-    const componentMap = this.components[oldIdStr];
+    const componentMap = this.getComponent(oldId);
     if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       throw new Error('updateComponentId should not manipulate Nested components');
     }
@@ -711,18 +714,6 @@ export default class BitMap {
     this.setComponent(newId, componentMap);
     this.markAsChanged();
     return newId;
-  }
-
-  /**
-   * Return a potential componentMap if file is supposed to be part of it
-   * by a path exist in the files object
-   *
-   * @param {string} componentPath relative to consumer - as stored in bit.map files object
-   * @returns {ComponentMap} componentMap
-   */
-  getComponentObjectOfFileByPath(componentPath: string): BitMapComponents {
-    const components = this.getAllComponents();
-    return R.pickBy(component => pathIsInside(componentPath, component.rootDir || this.projectRoot), components);
   }
 
   /**
@@ -740,8 +731,7 @@ export default class BitMap {
 
   _populateAllPaths() {
     if (R.isEmpty(this.paths)) {
-      Object.keys(this.components).forEach(componentId => {
-        const component = this.components[componentId];
+      this.components.forEach(component => {
         component.files.forEach(file => {
           const relativeToConsumer = component.rootDir
             ? pathJoinLinux(component.rootDir, file.relativePath)
@@ -756,8 +746,7 @@ export default class BitMap {
   getAllTrackDirs() {
     if (!this.allTrackDirs) {
       this.allTrackDirs = {};
-      Object.keys(this.components).forEach(componentId => {
-        const component = this.components[componentId];
+      this.components.forEach(component => {
         if (!component.trackDir) return;
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.allTrackDirs[component.trackDir] = component.id;
@@ -773,8 +762,7 @@ export default class BitMap {
   ): PathChangeResult[] {
     const isPathDir = isDir(existingPath);
     const allChanges = [];
-    Object.keys(this.components).forEach(componentId => {
-      const componentMap: ComponentMap = this.components[componentId];
+    this.components.forEach(componentMap => {
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -796,13 +784,14 @@ export default class BitMap {
    */
   toObjects(): Record<string, any> {
     const components = {};
-    Object.keys(this.components).forEach(id => {
-      const componentMap = this.components[id].clone();
-      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-        componentMap.exported = componentMap.id.hasScope();
+    this.components.forEach(componentMap => {
+      const componentMapCloned = componentMap.clone();
+      if (componentMapCloned.origin === COMPONENT_ORIGINS.AUTHORED) {
+        componentMapCloned.exported = componentMapCloned.id.hasScope();
       }
-      delete componentMap.id;
-      components[id] = componentMap.toPlainObject();
+      const idStr = componentMapCloned.id.toString();
+      delete componentMapCloned.id;
+      components[idStr] = componentMap.toPlainObject();
     });
 
     return sortObject(components);
