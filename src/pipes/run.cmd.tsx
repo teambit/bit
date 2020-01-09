@@ -14,4 +14,8 @@ export default class RunCmd extends Command {
   render() {
     return <Color>my first extension!!!</Color>
   }
+
+  json() {
+    
+  }
 }

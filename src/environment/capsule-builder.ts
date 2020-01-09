@@ -107,10 +107,11 @@ export default class CapsuleBuilder {
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
         const packageJson = JSON.parse(pjsonString);
         const bitBinPath = './node_modules/bit-bin';
-        const localBitBinPath = path.join(__dirname, '../../../');
+        const localBitBinPath = path.join(__dirname, '../..');
         delete packageJson.dependencies['bit-bin'];
         capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
         execa.sync('yarn', [], { cwd: capsule.wrkDir });
+        capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
         execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
       });
       return Promise.resolve();

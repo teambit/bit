@@ -997,7 +997,7 @@ describe('workspace config', function() {
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
           const output = helper.command.status();
-          expect(output).to.have.string('missing packages dependencies');
+          expect(output).to.have.string('missing package dependencies');
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });

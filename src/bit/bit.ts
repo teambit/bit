@@ -42,13 +42,11 @@ export default class Bit {
         installPackages: true
       };
       const capsulesMap = await capsule.isolateComponents(this.workspace, extensionsIds, capsuleOptions);
-      const extensions = R.mapObjIndexed(capsule => {
+
+      return Object.values(capsulesMap).map(capsule => {
         const extPath = capsule.wrkDir;
-        // console.log(extPath)
-        const ext = require(extPath);
-      }, capsulesMap);
-      return extensions;
-      // console.log(extensions)
+        return require(extPath);
+      });
     }
   }
 }

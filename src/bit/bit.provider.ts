@@ -11,8 +11,8 @@ export type BitDeps = [Workspace, Scope, Capsule];
 export type BitConfig = {};
 
 export default async function provideBit(config: BitConfig, [workspace, scope, Capsule]: BitDeps, harmony: Harmony) {
-  harmony.load([PipesExt]);
   const bit = new Bit(scope, workspace);
-  await bit.loadExtensions(Capsule);
+  const exts = await bit.loadExtensions(Capsule);
+  harmony.load(exts);
   return bit;
 }

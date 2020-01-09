@@ -619,10 +619,10 @@ describe('custom module resolutions', function() {
         before(() => {
           fs.removeSync(path.join(helper.scopes.localPath, 'components/bar/foo/node_modules'));
         });
-        it('bit status should show it as missing links and not as missing packages dependencies', () => {
+        it('bit status should show it as missing links and not as missing package dependencies', () => {
           const output = helper.command.runCmd('bit status');
           expect(output).to.have.string('missing links');
-          expect(output).to.not.have.string('missing packages dependencies');
+          expect(output).to.not.have.string('missing package dependencies');
         });
         describe('bit link', () => {
           let linkOutput;

@@ -8,7 +8,7 @@ import { Analytics } from '../../analytics/analytics';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
-    'missing packages dependencies (use your package manager to make sure all package dependencies are installed)',
+    'missing package dependencies (use your package manager to make sure all package dependencies are installed)',
   missingComponents:
     'missing components (use "bit import" or your package manager to make sure all components are installed)',
   untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',

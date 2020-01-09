@@ -125,7 +125,7 @@ describe('bit status command', function() {
       });
       it('Should show missing package dependencies', () => {
         output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing packages dependencies');
+        expect(output).to.have.string('missing package dependencies');
         expect(output).to.have.string('bar/foo.js -> react');
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
@@ -146,7 +146,7 @@ describe('bit status command', function() {
       });
       it('Should show missing package dependencies', () => {
         output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing packages dependencies');
+        expect(output).to.have.string('missing package dependencies');
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
     });
