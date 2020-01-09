@@ -349,20 +349,20 @@ export default class ComponentsList {
 
   getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute = false): string[] {
     // TODO: maybe cache this as well
-    const componentsFromBitMap = this.bitMap.getAllComponents(origin);
-    const res = [];
-    const getPaths = (agg, isAbsolute) => componentMap => {
+    const componentMaps = this.bitMap.getAllComponents(origin);
+    const result: string[] = [];
+    const populatePaths = (componentMap: ComponentMap) => {
       const relativePaths = componentMap.getFilesRelativeToConsumer();
-      if (!isAbsolute) {
-        agg.push(...relativePaths);
+      if (!absolute) {
+        result.push(...relativePaths);
         return;
       }
       const consumerPath = this.consumer.getPath();
       const absPaths = relativePaths.map(relativePath => path.join(consumerPath, relativePath));
-      agg.push(...absPaths);
+      result.push(...absPaths);
     };
-    R.forEachObjIndexed(getPaths(res, absolute), componentsFromBitMap);
-    return res;
+    componentMaps.forEach(componentMap => populatePaths(componentMap));
+    return result;
   }
 
   /**
