@@ -25,6 +25,8 @@ export type ComponentMapFile = {
   test: boolean;
 };
 
+type LaneVersion = { remoteLane: string; version: string };
+
 export type ComponentMapData = {
   id: BitId;
   files: ComponentMapFile[];
@@ -37,6 +39,7 @@ export type ComponentMapData = {
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly: boolean;
+  lanes?: LaneVersion[];
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -60,6 +63,7 @@ export default class ComponentMap {
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   onLanesOnly? = false; // whether a component is available only on lanes and not on master
+  lanes?: LaneVersion[]; // save component versions per lanes if they're different than the id
   constructor({
     id,
     files,
@@ -70,7 +74,8 @@ export default class ComponentMap {
     origin,
     originallySharedDir,
     wrapDir,
-    onLanesOnly
+    onLanesOnly,
+    lanes
   }: ComponentMapData) {
     let confDir;
     if (configDir && typeof configDir === 'string') {
@@ -88,6 +93,7 @@ export default class ComponentMap {
     this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
+    this.lanes = lanes;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {
@@ -96,7 +102,6 @@ export default class ComponentMap {
 
   toPlainObject(): Record<string, any> {
     let res = {
-      id: this.id,
       files: this.files,
       mainFile: this.mainFile,
       rootDir: this.rootDir,

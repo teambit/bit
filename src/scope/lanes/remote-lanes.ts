@@ -12,6 +12,9 @@ import { glob } from '../../utils';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 
+/**
+ * each lane holds components and hashes, which are the heads of the remote
+ */
 export default class RemoteLanes {
   basePath: string;
   remotes: { [remoteName: string]: Lanes };

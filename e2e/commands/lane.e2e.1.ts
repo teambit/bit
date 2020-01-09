@@ -510,4 +510,25 @@ describe('bit lane command', function() {
       });
     });
   });
+  describe('branching out when a component is checked out to an older version', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('bar/foo@0.0.1');
+
+      helper.command.createLane();
+      helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+      helper.command.snapAllComponents();
+
+      helper.command.switchLocalLane('master');
+    });
+  });
 });

@@ -847,6 +847,8 @@ export default class Component extends BitObject {
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
+    // @todo: this doesn't make sense when creating a new lane locally.
+    // the laneHeadRemote is not set. it needs to be compare to the snaps.head
     if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
