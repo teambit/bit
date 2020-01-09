@@ -30,7 +30,7 @@ describe('BitMap', function() {
   logger.info = () => {};
   this.timeout(0);
   describe('toObject', () => {
-    let bitMap;
+    let bitMap: BitMap;
     let componentMap;
     before(() => {
       bitMap = BitMap.load(__dirname);

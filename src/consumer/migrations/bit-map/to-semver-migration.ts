@@ -1,28 +1,20 @@
-// import R from 'ramda';
-// import semver from 'semver';
+import semver from 'semver';
 import BitMap from '../../bit-map';
-// import { VERSION_DELIMITER } from '../../../constants';
 
 /**
  * Change all the component's version to be a valid semver
  * @param {*} bitMap - The bit map object
  */
 function changeVersionToSemVer(bitMap: BitMap): BitMap {
-  throw new Error('"changeVersionToSemVer" is a very old migration script which should not be running anymore!');
-  // const addUpdatedVersion = (value, key) => {
-  //   // In case there is already a semver, do nothing
-  //   const splitedId = key.split(VERSION_DELIMITER);
-  //   const version = splitedId[1];
-  //   if (version && !semver.valid(version)) {
-  //     const newVersion = `0.0.${version}`;
-  //     const newId = `${splitedId[0]}${VERSION_DELIMITER}${newVersion}`;
-  //     bitMap.components[newId] = value;
-  //     delete bitMap.components[key];
-  //   }
-  // };
-  // // Go over the versions array and update them
-  // R.forEachObjIndexed(addUpdatedVersion, bitMap.getAllComponents());
-  // return bitMap;
+  bitMap.getAllComponents().forEach(componentMap => {
+    // In case there is already a semver, do nothing
+    const version = componentMap.id.version;
+    if (version && !semver.valid(version) && typeof version === 'number') {
+      const newVersion = `0.0.${version}`;
+      componentMap.id = componentMap.id.changeVersion(newVersion);
+    }
+  });
+  return bitMap;
 }
 
 const changeVersionToSemVerDeclartaion = {

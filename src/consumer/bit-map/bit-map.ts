@@ -791,7 +791,7 @@ export default class BitMap {
       }
       const idStr = componentMapCloned.id.toString();
       delete componentMapCloned.id;
-      components[idStr] = componentMap.toPlainObject();
+      components[idStr] = componentMapCloned.toPlainObject();
     });
 
     return sortObject(components);
