@@ -8,6 +8,7 @@ import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
 import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
+import { ComponentLogs } from '../scope/models/model-component';
 
 /**
  * @ctx bit, primary, remote
@@ -28,10 +29,7 @@ export default class Remote {
   }
 
   connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
-    return connect(
-      this.host,
-      strategiesNames
-    );
+    return connect(this.host, strategiesNames);
   }
 
   toPlainObject() {
@@ -117,6 +115,9 @@ export default class Remote {
   }
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then(network => network.undeprecateMany(ids, context));
+  }
+  log(id: BitId): Promise<ComponentLogs> {
+    return connect(this.host).then(network => network.log(id));
   }
 
   static load(name: string, host: string): Remote {
