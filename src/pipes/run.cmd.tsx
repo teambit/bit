@@ -1,8 +1,9 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../paper';
+// import { Run } from './run.component';
+// import { Command } from '../paper';
 
-export default class RunCmd extends Command {
+export default class RunCmd {
   name = 'run <pipe>';
   description = `executes a pipe of extensions on any set of components.`;
   alias = 'r';
@@ -12,10 +13,12 @@ export default class RunCmd extends Command {
   ];
 
   render() {
-    return <Color>my first extension!!!</Color>
+    return <Color>my first extension!!!</Color>;
   }
 
   json() {
-    
+    return {
+      
+    };
   }
 }

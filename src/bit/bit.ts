@@ -1,11 +1,9 @@
-import R from 'ramda';
+import { CapsuleOptions } from '../orchestrator/types';
 import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';
-import { loadConsumer } from '../consumer';
-import { Harmony } from '../harmony';
 import Capsule from '../environment/capsule-builder';
 import resolveExtensions from './extension-resolver';
-import { CapsuleOptions } from 'orchestrator/types';
+import { AnyExtension } from '../harmony/types';
 
 export default class Bit {
   constructor(
@@ -35,7 +33,7 @@ export default class Bit {
     return this.workspace.config;
   }
 
-  async loadExtensions(capsule: Capsule) {
+  async loadExtensions(capsule: Capsule): AnyExtension[] {
     if (this.config && this.workspace) {
       const extensionsIds = await resolveExtensions(this.config);
       const capsuleOptions: CapsuleOptions = {

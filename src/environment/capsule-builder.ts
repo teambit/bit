@@ -1,5 +1,5 @@
+import execa from 'execa';
 import path from 'path';
-import fs from 'fs-extra';
 import R from 'ramda';
 import os from 'os';
 import v4 from 'uuid';
@@ -14,8 +14,7 @@ import Isolator from './isolator';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { getComponentLinks } from '../links/link-generator';
 import Component from '../consumer/component';
-import { Workspace } from 'workspace';
-import execa from 'execa';
+import { Workspace } from '../workspace';
 
 export type Options = {
   alwaysNew: boolean;
@@ -100,8 +99,6 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
     try {
-      // await capsules[1].exec({ command: `yarn`.split(' ') })
-      // await capsules[0].exec({ command: `yarn`.split(' ') })
       capsules.map(capsule => {
         const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();

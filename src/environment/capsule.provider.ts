@@ -6,6 +6,5 @@ export type CapsuleDeps = [Workspace];
 export type CapsuleConfig = {};
 
 export default async function provideCapsule(config: CapsuleConfig, [workspace]: CapsuleDeps) {
-  const capsuleBuilder = new CapsuleBuilder(workspace.path);
-  return capsuleBuilder;
+  return new CapsuleBuilder(workspace.path);
 }

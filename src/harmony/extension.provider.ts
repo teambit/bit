@@ -1,6 +1,6 @@
-import Extension from './extension';
+import Harmony from './harmony';
 
-export type ProviderFn<Conf = {}, Deps = []> = (config: Conf, deps: Deps) => any;
+export type ProviderFn<Conf = {}, Deps = []> = (config: Conf, deps: Deps, harmony: Harmony) => any;
 
 export interface ProviderClass<Conf = {}, Deps = {}> {
   provide(config: Conf, deps: Deps): any;

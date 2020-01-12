@@ -1,9 +1,7 @@
-import { has } from 'lodash';
 import { Toposort, distinct, StrAMethods } from './toposort';
 import { Vertex, VertexId } from './vertex';
 import { Edge, RawEdge } from './edge';
 
-has();
 /**
  * The Graph abstractly represents a graph with arbitrary objects
  * associated with vertices and edges.  The graph provides basic
@@ -16,7 +14,7 @@ has();
 export default class Graph<VD, ED> {
   constructor(readonly edges: Edge<ED>[], readonly vertices: Vertex<VD>[]) {
     this.vertices.forEach(vertex => this.setVertex(vertex));
-    this.edges.forEach(edge => this.setVertex(edge));
+    this.edges.forEach(edge => this.setEdge(edge));
   }
 
   private _vertices = new Map<VertexId, Vertex<VD>>();
@@ -88,6 +86,9 @@ export default class Graph<VD, ED> {
     return !!this._edges[edge.id];
   }
 
+  /**
+   * traverse the graph.
+   */
   traverse() {}
 
   /**
