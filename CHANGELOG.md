@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [2.1.5-dev.1] - 2020-01-08
+## [2.1.5] - 2020-01-12
+
+### Bug fixes
 
 - [#2231](https://github.com/teambit/bit/issues/2231) update typescript to support optional chaining
 
