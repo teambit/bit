@@ -7,14 +7,14 @@ const changelogUrl = `https://github.com/teambit/bit/blob/master/CHANGELOG.md`;
 const ciBuildNumber = process.env.DOC_GEN_BUILD_NUM;
 const cliDocsUrl = `https://${ciBuildNumber}-79723839-gh.circle-artifacts.com/0/home/circleci/bit/bit/dist/cli.md`;
 const slackBaseUrl = 'hooks.slack.com';
-const slackSubPath = `/services/${slackDeploymentChannel}`;
-const slackFullUrl = `${slackBaseUrl}/${slackDeploymentChannel}`;
 const ts = Date.now();
 
 const publishToCommunity = process.argv[2] === 'community';
 const slackDeploymentChannel = publishToCommunity
   ? process.env.COMMUNITY_SLACK_DEPLOYMENT_CHANNEL
   : process.env.SLACK_DEPLOYMENT_CHANNEL;
+const slackSubPath = `/services/${slackDeploymentChannel}`;
+const slackFullUrl = `${slackBaseUrl}/${slackDeploymentChannel}`;
 
 const data = {
   attachments: [
