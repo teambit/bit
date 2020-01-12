@@ -29,6 +29,16 @@ export default class Checkout extends Command {
     ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
+    [
+      '',
+      'ignore-package-json',
+      'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+    ],
+    [
+      '',
+      'conf [path]',
+      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)'
+    ],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
   ];
   loader = true;
@@ -44,6 +54,8 @@ export default class Checkout extends Command {
       all = false,
       verbose = false,
       skipNpmInstall = false,
+      ignorePackageJson = false,
+      conf,
       ignoreDist = false
     }: {
       interactiveMerge?: boolean;
@@ -54,6 +66,8 @@ export default class Checkout extends Command {
       all?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
+      ignorePackageJson?: boolean;
+      conf?: string;
       ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
@@ -64,8 +78,13 @@ export default class Checkout extends Command {
       all,
       verbose,
       skipNpmInstall,
+      ignorePackageJson,
+      writeConfig: !!conf,
       ignoreDist
     };
+    if (typeof conf === 'string') {
+      checkoutProps.configDir = conf;
+    }
     return checkout(values, checkoutProps);
   }
 

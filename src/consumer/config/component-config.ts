@@ -170,7 +170,7 @@ export default class ComponentConfig extends AbstractConfig {
     const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, workspaceConfig);
     componentConfig.path = bitJsonPath;
     componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
-    // @ts-ignore
+    // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }

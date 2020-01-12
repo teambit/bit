@@ -177,16 +177,21 @@ export default class OverridesDependencies {
   ): BitId | null | undefined {
     if (field === 'peerDependencies') return null;
     if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return null;
-    dependency = dependency.replace(OVERRIDE_COMPONENT_PREFIX, '');
-    const idFromBitMap =
-      idsFromBitmap.searchStrWithoutVersion(dependency) || idsFromBitmap.searchStrWithoutScopeAndVersion(dependency);
-    const idFromModel =
-      idsFromModel.searchStrWithoutVersion(dependency) || idsFromModel.searchStrWithoutScopeAndVersion(dependency);
-    if (!idFromBitMap && !idFromModel) return null;
-    // $FlowFixMe one of them must be set (see one line above)
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const id: BitId = idFromModel || idFromBitMap;
-    return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
+    const compIds = this.component.overrides._getComponentNamesFromPackages(dependency);
+    for (const compId of [...compIds, dependency]) {
+      const bitId = compId.replace(OVERRIDE_COMPONENT_PREFIX, '');
+      const idFromBitMap =
+        idsFromBitmap.searchStrWithoutVersion(bitId) || idsFromBitmap.searchStrWithoutScopeAndVersion(bitId);
+      const idFromModel =
+        idsFromModel.searchStrWithoutVersion(bitId) || idsFromModel.searchStrWithoutScopeAndVersion(bitId);
+      // $FlowFixMe one of them must be set (see one line above)
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const id: BitId = idFromModel || idFromBitMap;
+      if (id) {
+        return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
+      }
+    }
+    return null;
   }
 
   _manuallyAddPackage(

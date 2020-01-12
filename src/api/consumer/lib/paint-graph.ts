@@ -2,14 +2,13 @@ import { Graph } from 'graphviz';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import VisualDependencyGraph from '../../../scope/graph/vizgraph';
 import { Consumer, loadConsumerIfExist } from '../../../consumer';
-import { Remote, Remotes } from '../../../remotes';
 import { BitId } from '../../../bit-id';
-import { getScopeRemotes } from '../../../scope/scope-remotes';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
+import getRemoteByName from '../../../remotes/get-remote-by-name';
 
 export default (async function paintGraph(id: string, options: Record<string, any>): Promise<string> {
   const { image, remote, layout, allVersions } = options;
-  const consumer: Consumer | null | undefined = await loadConsumerIfExist();
+  const consumer: Consumer | null = await loadConsumerIfExist();
   if (!consumer && !remote) throw new ConsumerNotFound();
   const getBitId = (): BitId | undefined => {
     if (!id) return undefined;
@@ -36,14 +35,14 @@ export default (async function paintGraph(id: string, options: Record<string, an
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
-        const remoteScope = await getRemote(scopeName);
+        const remoteScope = await getRemoteByName(scopeName, consumer);
         const componentDepGraph = await remoteScope.graph(bitId);
         return componentDepGraph.graph;
       }
       if (typeof remote !== 'string') {
         throw new Error('please specify remote scope name or enter an id');
       }
-      const remoteScope = await getRemote(remote);
+      const remoteScope = await getRemoteByName(remote, consumer);
       const componentDepGraph = await remoteScope.graph();
       return componentDepGraph.graph;
     }
@@ -60,12 +59,5 @@ export default (async function paintGraph(id: string, options: Record<string, an
       return componentDepGraph.graph;
     }
     return dependencyGraph.graph;
-  }
-  async function getRemote(scopeName: string): Promise<Remote> {
-    if (consumer) {
-      const remotes: Remotes = await getScopeRemotes(consumer.scope);
-      return remotes.resolve(scopeName, consumer.scope);
-    }
-    return Remotes.getScopeRemote(scopeName);
   }
 });

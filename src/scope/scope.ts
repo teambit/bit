@@ -43,6 +43,7 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
+import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
 
@@ -319,7 +320,8 @@ export default class Scope {
             component.devDependencies.isCustomResolvedUsed() ||
             component.compilerDependencies.isCustomResolvedUsed() ||
             component.testerDependencies.isCustomResolvedUsed()) &&
-          component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+          component.componentMap &&
+          component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
           !component.dists.isEmpty()
       );
     if (isNodePathNeeded) {
@@ -515,8 +517,7 @@ export default class Scope {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<{ [key: number]: { message: string; date: string; hash: string } }> {
+  loadComponentLogs(id: BitId): Promise<ComponentLogs> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
