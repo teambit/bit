@@ -1,9 +1,12 @@
+import { Observable, from, ReplaySubject } from 'rxjs';
 import { CapsuleOptions } from '../orchestrator/types';
 import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';
 import Capsule from '../environment/capsule-builder';
-import resolveExtensions from './extension-resolver';
 import { AnyExtension } from '../harmony/types';
+import { BitIds as ComponentIds, BitId as ComponentId } from '../bit-id';
+import { Harmony } from '../harmony';
+import { EventEmitter } from 'events';
 
 export default class Bit {
   constructor(
@@ -15,7 +18,17 @@ export default class Bit {
     /**
      * Workspace
      */
-    readonly workspace: Workspace | null
+    readonly workspace: Workspace | null,
+
+    /**
+     * reference to capsule orchestrator.
+     */
+    private capsule: Capsule,
+
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony
   ) {}
 
   /**
@@ -25,26 +38,46 @@ export default class Bit {
     return '1.0.0';
   }
 
+  async extensions(): Promise<ComponentId[]> {
+    if (!this.config) return Promise.resolve([]);
+
+    return ComponentIds.deserializeObsolete(Object.keys(this.config.extensions));
+  }
+
+  public onExtensionsLoaded = new ReplaySubject();
+
   /**
-   *
+   * returns bit's configuration.
    */
   get config() {
     if (!this.workspace) return null;
     return this.workspace.config;
   }
 
-  async loadExtensions(capsule: Capsule): AnyExtension[] {
+  async loadExtensions() {
+    const extensions = await this.resolveExtensions();
+    await this.harmony.load(extensions);
+  }
+
+  /**
+   * load all of bit's extensions.
+   * :TODO must be refactored by @gilad
+   */
+  private async resolveExtensions(): Promise<AnyExtension[]> {
     if (this.config && this.workspace) {
-      const extensionsIds = await resolveExtensions(this.config);
+      const extensionsIds = await this.extensions();
       const capsuleOptions: CapsuleOptions = {
         installPackages: true
       };
-      const capsulesMap = await capsule.isolateComponents(this.workspace, extensionsIds, capsuleOptions);
+      const capsulesMap = await this.capsule.isolateComponents(this.workspace, extensionsIds, capsuleOptions);
 
       return Object.values(capsulesMap).map(capsule => {
         const extPath = capsule.wrkDir;
+        // eslint-disable-next-line global-require, import/no-dynamic-require
         return require(extPath);
       });
     }
+
+    return [];
   }
 }

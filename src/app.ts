@@ -24,7 +24,7 @@ HooksManager.init();
 //   Paper
 // ];
 
-Harmony.load(BitCliExt)
+Harmony.load(PaperExt)
   .run()
   .then(() => {})
   .catch(err => {

@@ -50,7 +50,7 @@ export default class CapsuleBuilder {
 
   async isolateComponents(
     workspace: Workspace,
-    bitIds: BitIds,
+    bitIds: BitId[],
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options
   ): Promise<{ [bitId: string]: BitCapsule }> {

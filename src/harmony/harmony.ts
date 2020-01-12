@@ -21,9 +21,9 @@ export default class Harmony {
     return this.graph.vertices.map(vertex => vertex.attr);
   }
 
-  load(extensions: AnyExtension[]) {
+  async load(extensions: AnyExtension[]) {
     this.graph.addExtensions(extensions);
-    extensions.forEach(ext => this.runOne(ext));
+    asyncForEach(extensions, async ext => this.runOne(ext));
   }
 
   async runOne(extension: AnyExtension) {

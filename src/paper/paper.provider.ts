@@ -1,20 +1,17 @@
-import { buildRegistry } from '../cli';
 import { Paper } from '../paper';
+import { BitCli } from '../cli';
+import CommandRegistry from './registry';
+import { Bit } from '../bit';
 
-export type PaperConfig = {
-  silence: boolean;
-};
+export type PaperConfig = {};
 
-export type PaperDeps = {};
+export type PaperDeps = [BitCli, Bit];
 
-export async function providePaper({ silence }: PaperConfig) {
-  const cmdRegistry = buildRegistry([]);
-
-  try {
-    cmdRegistry.run();
-  } catch (err) {
-    console.error('loud rejected:', err); // eslint-disable-line no-console
-  }
-
-  return new Paper();
+export async function providePaper(config: PaperConfig, [cli, bit]: PaperDeps) {
+  const paper = new Paper(cli, new CommandRegistry([]));
+  setTimeout(() => {
+    bit.onExtensionsLoaded.subscribe(() => {
+      paper.run();
+    });
+  }, 1000);
 }

@@ -1,7 +1,5 @@
-import React, { Component } from 'react';
-import Cmd, { CommandOption, CommandOptions } from '../cli/command';
+import { CommandOptions } from '../cli/command';
 import LegacyCommand from './legacy-command';
-import { render } from 'ink';
 
 export default class Command {
   constructor(
@@ -16,12 +14,12 @@ export default class Command {
     readonly description: string,
 
     /**
-     * 
+     * command alias (for example: 't' for 'tag')
      */
     readonly alias: string,
 
     /**
-     * 
+     * array of command options.
      */
     readonly opts: CommandOptions
   ) {}
