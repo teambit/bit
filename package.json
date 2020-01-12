@@ -84,7 +84,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "2.1.5-dev.1",
+    "bit-javascript": "2.1.5",
     "bluebird": "^3.5.3",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
