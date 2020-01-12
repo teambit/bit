@@ -7,10 +7,14 @@ const changelogUrl = `https://github.com/teambit/bit/blob/master/CHANGELOG.md`;
 const ciBuildNumber = process.env.DOC_GEN_BUILD_NUM;
 const cliDocsUrl = `https://${ciBuildNumber}-79723839-gh.circle-artifacts.com/0/home/circleci/bit/bit/dist/cli.md`;
 const slackBaseUrl = 'hooks.slack.com';
-const slackDeploymentChannel = process.env.SLACK_DEPLOYMENT_CHANNEL;
 const slackSubPath = `/services/${slackDeploymentChannel}`;
 const slackFullUrl = `${slackBaseUrl}/${slackDeploymentChannel}`;
 const ts = Date.now();
+
+const publishToCommunity = process.argv[2] === 'community';
+const slackDeploymentChannel = publishToCommunity
+  ? process.env.COMMUNITY_SLACK_DEPLOYMENT_CHANNEL
+  : process.env.SLACK_DEPLOYMENT_CHANNEL;
 
 const data = {
   attachments: [
@@ -28,17 +32,22 @@ const data = {
           title: 'Change log',
           value: changelogUrl,
           short: false
-        },
-        {
-          title: 'CLI documentation',
-          value: cliDocsUrl,
-          short: false
         }
       ],
       ts
     }
   ]
 };
+
+const cliDocsField = {
+  title: 'CLI documentation',
+  value: cliDocsUrl,
+  short: false
+};
+
+if (!publishToCommunity) {
+  data.attachments[0].fields.push(cliDocsField);
+}
 
 const payload = JSON.stringify(data);
 

@@ -341,6 +341,10 @@ jobs:
         run:
           name: 'notify slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js'
+      -
+        run:
+          name: 'notify community slack'
+          command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
   build_bit_javascript:
     <<: *defaults
     steps:
