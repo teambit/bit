@@ -317,21 +317,21 @@ describe('bit checkout command', function() {
           expect(path.join(helper.scopes.localPath, 'components/bar/foo', 'package-lock.json')).to.not.be.a.path();
         });
       });
-      describe('switching a version when import included bit.json file', () => {
+      describe('switching a version with --conf flag', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);
-          helper.command.importComponent('bar/foo --conf');
-          helper.command.checkoutVersion('0.0.1', 'bar/foo');
+          helper.command.importComponent('bar/foo');
+          helper.command.checkoutVersion('0.0.1', 'bar/foo', '--conf');
         });
-        it('should rewrite the bit.json file', () => {
+        it('should write the bit.json file', () => {
           expect(path.join(helper.scopes.localPath, 'components/bar/foo/bit.json')).to.be.a.path();
         });
       });
-      describe('switching a version when import did not write package.json file', () => {
+      describe('switching a version with --ignore-package-json flag', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeAfterImport);
-          helper.command.importComponent('bar/foo --ignore-package-json');
-          helper.command.checkoutVersion('0.0.1', 'bar/foo');
+          helper.command.importComponent('bar/foo');
+          helper.command.checkoutVersion('0.0.1', 'bar/foo', '--ignore-package-json');
         });
         it('should not write package.json file', () => {
           expect(path.join(helper.scopes.localPath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
@@ -795,7 +795,7 @@ describe('bit checkout command', function() {
   describe('checkout with latest --all when multiple components have conflicts', () => {
     let output;
     let scopeBeforeModified;
-    // for some wierd reason, the bug related to this test was happening when it's 5 components.
+    // for some weird reason, the bug related to this test was happening when it's 5 components.
     // tried with 10 and 20 and it didn't happen. probably related to the implementation of
     // `Promise.all` somehow. also, with 5 components, it was happening in about 30% of the times.
     const numOfComponents = 5;

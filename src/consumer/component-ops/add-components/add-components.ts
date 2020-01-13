@@ -504,7 +504,10 @@ export default class AddComponents {
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
     const testFiles = !R.isEmpty(this.tests)
-      ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
+      ? await this.getFilesAccordingToDsl(
+          files.map(file => file.relativePath),
+          this.tests
+        )
       : [];
 
     const resolvedTestFiles = testFiles.map(testFile => {
@@ -648,8 +651,8 @@ export default class AddComponents {
     const consumerPath = this.consumer.getPath();
     let ignoreList = retrieveIgnoreList(consumerPath);
     const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
-    const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
-      pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
+    const distDirsOfImportedComponents = importedComponents.map(componentMap =>
+      pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
     const configsToIgnore = await this.bitMap.getConfigDirsAndFilesToIgnore(
       this.consumer.getPath(),

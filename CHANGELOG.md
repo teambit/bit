@@ -7,12 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.2] - 2020-01-12](https://github.com/teambit/bit/releases/tag/v14.7.2)
+
+### New
+
 - [#1894](https://github.com/teambit/bit/issues/1894) introduce `--remote` flag for `bit log`
+- add `--conf` and `--ignore-package-json` flags to `bit checkout` similar to `bit import`
+
+### Bug fixes
+
+- [#2231](https://github.com/teambit/bit/issues/2231) update typescript to support optional chaining
+- improve performance of `bit checkout` by writing multiple components in parallel
 - fix overrides of a component added with package syntax to be recognized as bit-component
-
-## [14.7.2-dev.1] - 2019-12-17
-
 - [#2196](https://github.com/teambit/bit/issues/2196) fix dependency resolution when Bit component is imported in a sub-package
+
+### Internal
+
 - install librarian from npm
 
 ## [[14.7.1] - 2019-12-12](https://github.com/teambit/bit/releases/tag/v14.7.1)

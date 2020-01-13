@@ -92,7 +92,6 @@ export default class ComponentMap {
 
   toPlainObject(): Record<string, any> {
     let res = {
-      id: this.id,
       files: this.files,
       mainFile: this.mainFile,
       rootDir: this.rootDir,

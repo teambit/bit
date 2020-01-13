@@ -5,8 +5,6 @@ import { BEFORE_REMOTE_LIST, BEFORE_LOCAL_LIST } from '../../../cli/loader/loade
 import Remote from '../../../remotes/remote';
 import ComponentsList from '../../../consumer/component/components-list';
 import { ListScopeResult } from '../../../consumer/component/components-list';
-import { getScopeRemotes } from '../../../scope/scope-remotes';
-import { Remotes } from '../../../remotes';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import GeneralError from '../../../error/general-error';
 import { BitId } from '../../../bit-id';
