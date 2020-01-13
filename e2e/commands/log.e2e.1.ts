@@ -36,4 +36,21 @@ describe('bit log', function() {
       });
     });
   });
+  describe('log of a remote component', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should show the log successfully', () => {
+      const output = helper.command.log(`${helper.scopes.remote}/bar/foo --remote`);
+      expect(output).to.have.string('0.0.1');
+      expect(output).to.have.string('author');
+      expect(output).to.have.string('date');
+    });
+  });
 });
