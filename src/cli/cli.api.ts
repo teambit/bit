@@ -1,11 +1,11 @@
 import CommandRegistry from './command-registry';
-
+import Command from './command';
 export default class BitCli {
   constructor(
     /**
      * bit's legacy command registry
      */
-    private commandRegistry: CommandRegistry
+    readonly commandRegistry: CommandRegistry
   ) {}
 
   /**
@@ -18,7 +18,8 @@ export default class BitCli {
   /**
    * execute bit's cli
    */
-  run() {
+  run(commands: Command[]) {
+    this.commandRegistry.commands.push(...commands);
     this.commandRegistry.run();
   }
 }

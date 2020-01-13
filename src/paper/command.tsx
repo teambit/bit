@@ -1,33 +1,35 @@
 import { CommandOptions } from '../cli/command';
-import LegacyCommand from './legacy-command';
 
-export default class Command {
-  constructor(
-    /**
-     * the name of the command. for example: 'add <> []'
-     */
-    readonly name: string,
+export interface Command {
+  /**
+   * the name of the command. for example: 'add <> []'
+   */
+  name: string;
 
-    /**
-     * the descriotion of the command. will be seen in 
-     */
-    readonly description: string,
+  /**
+   * the description of the command. Will be seen in bit help and command help.
+   * Examples:
+   *  1. `bit`
+   *  2. `bit add --help`
+   */
+  description: string;
 
-    /**
-     * command alias (for example: 't' for 'tag')
-     */
-    readonly alias: string,
+  /**
+   * command alias (for example: 't' for 'tag')
+   */
+  alias: string;
 
-    /**
-     * array of command options.
-     */
-    readonly opts: CommandOptions
-  ) {}
+  /**
+   * array of command options.
+   */
+  opts: PaperOptions;
 
-  render() {
-  }
-
-  toLegacyFormat() {
-    return new LegacyCommand(this);
-  }
+  /**
+   *
+   * @param args command options provided in CLI
+   *
+   */
+  render:(args:PaperOptions) => Promise<React.ReactElement>;
 }
+
+export type PaperOptions = CommandOptions

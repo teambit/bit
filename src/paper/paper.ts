@@ -1,6 +1,7 @@
-import Command from './command';
+import { Command } from './command';
 import { BitCli } from '../cli';
 import CommandRegistry from './registry';
+import LegacyCommand from './legacy-command';
 
 export default class Paper {
   constructor(
@@ -27,6 +28,7 @@ export default class Paper {
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   run() {
-    this.cli.run();
+    const legacyCommands = this.registry.commands.map(cmd => new LegacyCommand(cmd));
+    this.cli.run(legacyCommands);
   }
 }
