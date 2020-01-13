@@ -18,6 +18,7 @@ import { getManipulateDirForComponentWithDependencies } from '../consumer/compon
 import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { Workspace } from '../workspace';
+import { loadConsumerIfExist } from '../consumer';
 
 export type Options = {
   alwaysNew: boolean;
@@ -58,10 +59,16 @@ export default class CapsuleBuilder {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
-    const graph = consumer ? await Graph.buildGraphFromWorkspace(consumer) : await Graph.buildGraphFromScope(scope);
+    const loadedConsumer = consumer || (await loadConsumerIfExist());
+    const graph = loadedConsumer
+      ? await Graph.buildGraphFromWorkspace(loadedConsumer)
+      : await Graph.buildGraphFromScope(scope);
     const depenenciesFromAllIds = R.flatten(bitIds.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
 
-    const components: Component[] = R.uniq(R.concat(depenenciesFromAllIds, bitIds)).map((id: string) => graph.node(id));
+    const components: Component[] = R.filter(
+      val => val,
+      R.uniq(R.concat(depenenciesFromAllIds, bitIds)).map((id: string) => graph.node(id))
+    );
 
     // create capsules
     const capsules: BitCapsule[] = await Promise.all(

@@ -69,7 +69,10 @@ export default class Bit {
       const capsuleOptions: CapsuleOptions = {
         installPackages: true
       };
-      const capsulesMap = await this.capsule.isolateComponents(this.workspace, extensionsIds, capsuleOptions);
+      const capsulesMap = await this.capsule.isolateComponents(
+        extensionsIds.map(ex => ex.toString()),
+        capsuleOptions
+      );
 
       return Object.values(capsulesMap).map(capsule => {
         const extPath = capsule.wrkDir;
