@@ -6,8 +6,9 @@ import HooksManager from './hooks';
 import capsuleOrchestrator from './orchestrator/orchestrator';
 import { Bit } from './bit';
 import { BitCliExt } from './cli';
-import { Pipes } from './pipes';
+import { Pipes, PipesExt } from './pipes';
 import { PaperExt } from './paper';
+import { AnyExtension } from 'harmony/types';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -25,6 +26,7 @@ HooksManager.init();
 // ];
 
 Harmony.load(PaperExt)
+  // .load((PipesExt))
   .run()
   .then(() => {})
   .catch(err => {

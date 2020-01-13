@@ -1,13 +1,19 @@
 import { Extension } from '../harmony';
-import { WorkspaceExt } from '../workspace';
+import { Workspace, WorkspaceExt } from '../workspace';
+import { PaperExt, Paper } from '../paper';
+import RunCmd from './run.cmd';
 
-export default Extension.instantiate({
+type PipesDeps = [Workspace, Paper];
+type Config = {};
+
+export default Extension.instantiate<Config, PipesDeps>({
   name: 'Pipes',
-  dependencies: [WorkspaceExt],
-  config: {
-    pipes: []
-  },
-  provider: async () => {
-    console.log('pipes is loaded');
+  dependencies: [WorkspaceExt, PaperExt],
+  config: {},
+  provider: async (_config: Config, [_workspace, paper]: PipesDeps) => {
+    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+    console.log(paper);
+    paper.register(new RunCmd());
+    console.log('yo');
   }
 });
