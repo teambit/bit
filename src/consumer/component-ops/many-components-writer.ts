@@ -153,6 +153,21 @@ export default class ManyComponentsWriter {
     dataToPersist.addBasePath(this.basePath);
     await dataToPersist.persistAllToFS();
   }
+
+  async _populateComponentsFilesToWriteCapsule() {
+    const writeComponentsParams = this._getWriteComponentsParams();
+    const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
+    // add componentMap entries into .bitmap before starting the process because steps like writing package-json
+    // rely on .bitmap to determine whether a dependency exists and what's its origin
+    componentWriterInstances.forEach(componentWriter => {
+      componentWriter.existingComponentMap =
+        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
+    });
+    this.writtenComponents = await pMapSeries(componentWriterInstances, async componentWriter =>
+      componentWriter.populateComponentsFilesToWriteForCapsule()
+    );
+  }
+
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
     const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));

@@ -48,7 +48,8 @@
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
-    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'"
+    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
+    "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts"
   },
   "pkg": {
     "assets": [
@@ -78,6 +79,8 @@
   "dependencies": {
     "@babel/preset-react": "^7.7.4",
     "@babel/runtime": "^7.4.5",
+    "@teambit/any-fs": "0.0.1",
+    "@teambit/capsule": "0.0.6",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
     "@types/react": "^16.9.17",
@@ -89,7 +92,6 @@
     "babel-runtime": "^6.23.0",
     "bit-javascript": "2.1.5",
     "bluebird": "^3.5.3",
-    "capsule": "https://bit-assets.storage.googleapis.com/amit/capsule-0.0.1.tgz",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
     "cli-spinners": "^1.0.0",
@@ -102,6 +104,7 @@
     "didyoumean": "^1.2.1",
     "doctrine": "^2.0.2",
     "execa": "^2.0.3",
+    "filenamify": "^4.1.0",
     "find-up": "^2.1.0",
     "firstline": "^2.0.2",
     "fs-extra": "^6.0.0",
@@ -117,6 +120,7 @@
     "is-glob": "^4.0.0",
     "isbinaryfile": "^4.0.2",
     "jfs": "^0.2.6",
+    "level-mem": "^5.0.1",
     "level-party": "^4.0.0",
     "librarian": "^3.0.2",
     "lodash": "^4.17.15",
@@ -164,7 +168,7 @@
     "ssh2": "^0.5.4",
     "string-format": "^0.5.0",
     "stringify-package": "^1.0.0",
-    "subleveldown": "4.1.4",
+    "subleveldown": "^4.1.4",
     "symlink-or-copy": "^1.1.8",
     "synchronous-promise": "^2.0.10",
     "table": "^5.2.3",
@@ -228,6 +232,7 @@
     "mocha-appveyor-reporter": "^0.4.2",
     "mocha-circleci-reporter": "0.0.3",
     "mocha-junit-reporter": "^1.13.0",
+    "p-queue": "^6.2.1",
     "prettier": "^1.18.2",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",

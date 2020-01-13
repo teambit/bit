@@ -1,4 +1,5 @@
-import { Capsule, Exec, Volume, Console, State } from 'capsule';
+import { Capsule, Exec, Console, State } from '@teambit/capsule';
+import { Volume } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
@@ -67,6 +68,10 @@ export default class BitCapsule extends Capsule<Exec, Volume> {
 
   on(event: string, fn: (data: any) => void) {
     this.container.on(event, fn);
+  }
+
+  async terminal(shell: string = process.env.SHELL || '/bin/sh') {
+    return this.container.terminal();
   }
 
   serialize(): string {

@@ -5,20 +5,22 @@ import * as path from 'path';
 import execa from 'execa';
 import os from 'os';
 import v4 from 'uuid';
-import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
-import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
+import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
+import { FS as AnyFS, Volume } from '@teambit/any-fs';
+import { Stream } from 'stream';
 import ContainerExec from './container-exec';
 
 const debug = require('debug')('fs-container');
 
 export interface BitExecOption extends ExecOptions {
   cwd: string;
+  stdio?: 'pipe' | 'ipc' | 'ignore' | 'inherit' | Stream | number | undefined;
 }
 export interface BitContainerConfig extends ContainerFactoryOptions {
   other?: string;
 }
 
-export default class FsContainer implements Container<Exec, Volume> {
+export default class FsContainer implements Container<Exec, AnyFS> {
   fs: Volume = new Volume();
 
   id = 'FS Container';
@@ -69,7 +71,7 @@ export default class FsContainer implements Container<Exec, Volume> {
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
     const exec = new ContainerExec();
     const subprocessP = execa.command(execOptions.command.join(' '), {
-      shell: false,
+      shell: true,
       cwd
     });
     subprocessP.stdout!.pipe(exec.stdout);
@@ -77,6 +79,11 @@ export default class FsContainer implements Container<Exec, Volume> {
     const result = await subprocessP;
     exec.setStatus(result.exitCode);
     return exec;
+  }
+
+  async terminal() {
+    const cwd = this.getPath();
+    return execa.command(process.env.SHELL || '/bin/zsh', { cwd, stdio: 'inherit' });
   }
 
   start(): Promise<void> {

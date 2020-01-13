@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import _ from 'lodash';
 import Command from '../../command';
-import { capsuleIsolate } from '../../../api/consumer';
+import { capsuleIsolate, sshIntoCapsule } from '../../../api/consumer';
 import BitCapsule from '../../../capsule-ext/bit-capsule';
 import capsuleOrchestrator from '../../../orchestrator/orchestrator';
 import { ListResults } from '../../../orchestrator/types';
@@ -24,6 +24,24 @@ export class CapsuleList extends Command {
 
   report(capsuleListByWorkspace: ListResults[] | ListResults): string {
     return render(capsuleListByWorkspace);
+  }
+}
+export class CapsuleSSH extends Command {
+  // first command is supposed to be the action and the rest is the bitIds
+  name = 'connect <capsule>';
+  description = `connect to capsule`;
+  alias = 'c';
+  opts = [];
+  loader = true;
+  migration = true;
+
+  action([capsule]: [string]): Promise<any[]> {
+    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
+    return sshIntoCapsule(capsule);
+  }
+
+  report(capsuleListByWorkspace: ListResults[]): string {
+    return '';
   }
 }
 

@@ -1,18 +1,21 @@
-import execa from 'execa';
 import path from 'path';
+import execa from 'execa';
 import R from 'ramda';
 import os from 'os';
-import v4 from 'uuid';
-import pLimit, { Limit } from 'p-limit';
 import hash from 'object-hash';
+import v4 from 'uuid';
+import filenamify from 'filenamify';
 import { BitId, BitIds } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../orchestrator/types';
 import Consumer from '../consumer/consumer';
 import BitCapsule from '../capsule-ext/bit-capsule';
-import Isolator from './isolator';
-import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { getComponentLinks } from '../links/link-generator';
+import { Queue } from '../utils';
+import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
+import { ComponentWithDependencies, loadScope } from '../scope';
+import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
+import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { Workspace } from '../workspace';
 
@@ -35,66 +38,50 @@ const DEFAULT_OPTIONS = {
 export default class CapsuleBuilder {
   constructor(
     private workspace: string,
-    private limit: Limit = pLimit(10),
-    private orch: CapsuleOrchestrator | undefined = orchestrator
+    private queue: Queue = new Queue(),
+    private orch: CapsuleOrchestrator = orchestrator
   ) {}
 
   private _buildCapsuleMap(capsules: BitCapsule[]) {
-    const capsuleMapping = {};
-    // eslint-disable-next-line array-callback-return
-    R.map((capsule: BitCapsule) => {
-      capsuleMapping[capsule.bitId.toString()] = capsule.wrkDir;
-    }, capsules);
-    return capsuleMapping;
+    return capsules.reduce(function(acc, cur) {
+      acc[cur.bitId.toString()] = cur.wrkDir;
+      return acc;
+    }, {});
   }
 
   async isolateComponents(
-    workspace: Workspace,
-    bitIds: BitId[],
+    bitIds: string[],
     capsuleOptions?: CapsuleOptions,
-    orchestrationOptions?: Options
+    orchestrationOptions?: Options,
+    consumer?: Consumer
   ): Promise<{ [bitId: string]: BitCapsule }> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const components = await workspace.loadComponentsForCapsule(bitIds);
+    const scope = await loadScope(process.cwd());
+    const graph = consumer ? await Graph.buildGraphFromWorkspace(consumer) : await Graph.buildGraphFromScope(scope);
+    const depenenciesFromAllIds = R.flatten(bitIds.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
 
+    const components: Component[] = R.uniq(R.concat(depenenciesFromAllIds, bitIds)).map((id: string) => graph.node(id));
+
+    // create capsules
     const capsules: BitCapsule[] = await Promise.all(
       R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
     );
-    const capsuleMapping = this._buildCapsuleMap(capsules);
-    await Promise.all(
-      R.map(
-        capsule => this._isolate(workspace._consumer, capsule, actualCapsuleOptions, orchOptions, capsuleMapping),
-        capsules
-      )
-    );
-    if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
-    const res = capsules.reduce(function(acc, cur) {
+
+    const bitCapsulesObject: { [componentId: string]: BitCapsule } = capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
     }, {});
-    return res;
+
+    await this.isolateComponentsInCapsules(components, graph, this._buildCapsuleMap(capsules), bitCapsulesObject);
+    return bitCapsulesObject;
   }
 
   async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    if (!this.orch) throw new Error('cant load orch in non consumer env');
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
     return this.orch.getCapsule(this.workspace, config, orchOptions);
-  }
-
-  async writeLinkFiles(consumer: Consumer, isolator: Isolator): Promise<void> {
-    isolator.componentWithDependencies.component.writtenPath = '.';
-    const componentLinkFiles: DataToPersist = getComponentLinks({
-      consumer,
-      component: isolator.componentWithDependencies.component,
-      dependencies: isolator.componentWithDependencies.allDependencies,
-      bitMap: consumer.bitMap,
-      createNpmLinkFiles: false
-    });
-
-    await Promise.all(componentLinkFiles.files.map(file => isolator.capsule.outputFile(file.path, file.contents, {})));
   }
 
   async installpackages(capsules: BitCapsule[]): Promise<void> {
@@ -118,35 +105,77 @@ export default class CapsuleBuilder {
     }
   }
 
-  private async _isolate(
-    consumer: Consumer,
-    capsule: BitCapsule,
-    capsuleOptions: CapsuleOptions,
-    options: Options,
-    capsuleMap: { [bitId: string]: string }
+  _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
+    const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
+    const manipulateDirData = getManipulateDirForComponentWithDependencies(componentWithDependencies);
+    allComponents.forEach(component => {
+      component.stripOriginallySharedDir(manipulateDirData);
+    });
+  }
+
+  async isolateComponentsInCapsules(
+    components: Component[],
+    graph: Graph,
+    capsuleMappingForPackageJson: { [componentId: string]: string },
+    capsuleObject: { [componentId: string]: BitCapsule }
   ) {
-    const isolator: Isolator = await Isolator.getInstance(
-      'fs',
-      consumer.scope,
-      consumer,
-      capsule.wrkDir,
-      capsule,
-      capsuleMap
+    const writeToPath = '.';
+    const componentsWithDependencies = components.map(component => {
+      const dependencies = component.dependencies.get().map(dep => graph.node(dep.id.toString()));
+      const devDependencies = component.devDependencies.get().map(dep => graph.node(dep.id.toString()));
+      const compilerDependencies = component.compilerDependencies.get().map(dep => graph.node(dep.id.toString()));
+      const testerDependencies = component.testerDependencies.get().map(dep => graph.node(dep.id.toString()));
+      return new ComponentWithDependencies({
+        component,
+        dependencies,
+        devDependencies,
+        compilerDependencies,
+        testerDependencies
+      });
+    });
+    const concreteOpts: ManyComponentsWriterParams = {
+      componentsWithDependencies,
+      writeToPath,
+      override: false,
+      writePackageJson: true,
+      writeConfig: false,
+      writeBitDependencies: true,
+      createNpmLinkFiles: false,
+      saveDependenciesAsComponents: false,
+      writeDists: true,
+      installNpmPackages: false,
+      installPeerDependencies: false,
+      addToRootPackageJson: false,
+      verbose: false,
+      excludeRegistryPrefix: false,
+      silentPackageManagerResult: false,
+      isolated: true,
+      capsuleWrkspaceMap: capsuleMappingForPackageJson
+    };
+    componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
+    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await manyComponentsWriter._populateComponentsFilesToWriteCapsule();
+    componentsWithDependencies.forEach(componentWithDependencies => {
+      const links = getComponentLinks({
+        component: componentWithDependencies.component,
+        dependencies: componentWithDependencies.allDependencies,
+        createNpmLinkFiles: false,
+        bitMap: manyComponentsWriter.bitMap
+      });
+      componentWithDependencies.component.dataToPersist.files = R.concat(
+        links.files,
+        componentWithDependencies.component.dataToPersist.files
+      );
+    });
+    // write data to capsule
+    await Promise.all(
+      manyComponentsWriter.writtenComponents.map(async c => {
+        const capsule = capsuleObject[c.id.toString()];
+        if (!capsule) return;
+        await c.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: false });
+      })
     );
-    await isolator.isolate(
-      capsule.bitId,
-      Object.assign(
-        {},
-        DEFAULT_ISOLATION_OPTIONS,
-        {
-          writeDists: true,
-          writeToPath: capsule.wrkDir,
-          keepExistingCapsule: !options.alwaysNew
-        },
-        capsuleOptions
-      )
-    );
-    return this.writeLinkFiles(consumer, isolator);
+    return manyComponentsWriter.writtenComponents;
   }
 
   private _generateWrkDir(bitId: string, capsuleOptions: CapsuleOptions, options: Options) {
@@ -158,7 +187,8 @@ export default class CapsuleBuilder {
   }
 
   private _generateResourceConfig(bitId: BitId, capsuleOptions: CapsuleOptions, options: Options): CreateOptions {
-    const wrkDir = this._generateWrkDir(bitId.toString(), capsuleOptions, options);
+    const dirName = filenamify(bitId.toString(), { replacement: '_' });
+    const wrkDir = this._generateWrkDir(dirName, capsuleOptions, options);
     return {
       resourceId: `${bitId.toString()}_${hash(wrkDir)}`,
       options: Object.assign(
