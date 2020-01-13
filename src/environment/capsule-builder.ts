@@ -74,6 +74,7 @@ export default class CapsuleBuilder {
     }, {});
 
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsuleMap(capsules), bitCapsulesObject);
+    if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
     return bitCapsulesObject;
   }
 
