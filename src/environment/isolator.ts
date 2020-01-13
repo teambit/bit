@@ -59,39 +59,19 @@ export default class Isolator {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentRootDir: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  capsuleWrkspaceMap?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dir?: string;
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  useNewCapsule = false;
-
-  constructor(
-    capsule: BitCapsule,
-    scope: Scope,
-    consumer?: Consumer,
-    dir?: string,
-    capsuleWrkspaceMap?: { [key: string]: string }
-  ) {
+  constructor(capsule: BitCapsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
     this.dir = dir;
-    this.capsuleWrkspaceMap = capsuleWrkspaceMap;
-    this.useNewCapsule = !!capsuleWrkspaceMap;
   }
 
-  static async getInstance(
-    containerType = 'fs',
-    scope: Scope,
-    consumer?: Consumer,
-    dir?: string,
-    bitCapsule?: BitCapsule,
-    capsuleWrkspaceMap?: { [key: string]: string }
-  ): Promise<Isolator> {
+  static async getInstance(containerType = 'fs', scope: Scope, consumer?: Consumer, dir?: string): Promise<Isolator> {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
-    const capsule = bitCapsule || (await createCapsule(containerType, dir));
-    return new Isolator(capsule, scope, consumer, dir, capsuleWrkspaceMap);
+    const capsule = await createCapsule(containerType, dir);
+    return new Isolator(capsule, scope, consumer, dir);
   }
 
   async isolate(componentId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
@@ -137,19 +117,16 @@ export default class Isolator {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      isolated: true,
-      capsuleWrkspaceMap: this.capsuleWrkspaceMap
+      isolated: true
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await this.writeComponentsAndDependencies({ keepExistingCapsule: !!opts.keepExistingCapsule });
-    if (!this.useNewCapsule) {
-      await this.installComponentPackages({
-        installNpmPackages,
-        keepExistingCapsule: !!opts.keepExistingCapsule
-      });
-      await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
-    }
+    await this.installComponentPackages({
+      installNpmPackages,
+      keepExistingCapsule: !!opts.keepExistingCapsule
+    });
+    await this.writeLinks({ keepExistingCapsule: !!opts.keepExistingCapsule });
     this.capsuleBitMap = this.manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
@@ -159,9 +136,7 @@ export default class Isolator {
     this._manipulateDir();
 
     await this.manyComponentsWriter._populateComponentsFilesToWrite();
-    if (!this.useNewCapsule) {
-      await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
-    }
+    await this.manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule({ keepExistingCapsule: !!opts.keepExistingCapsule });
   }
 
@@ -227,8 +202,7 @@ export default class Isolator {
 
   async _persistComponentsDataToCapsule(opts = { keepExistingCapsule: false }) {
     const dataToPersist = new DataToPersist();
-    let allComponents = [this.componentWithDependencies.component];
-    if (!this.useNewCapsule) allComponents = R.concat(allComponents, this.componentWithDependencies.allDependencies);
+    const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
     allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     await dataToPersist.persistAllToCapsule(this.capsule, { keepExistingCapsule: !!opts.keepExistingCapsule });
   }

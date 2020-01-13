@@ -1,26 +1,37 @@
 import { Graph as GraphLib } from 'graphlib';
+import R from 'ramda';
 import Consumer from '../../consumer/consumer';
 import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component';
 import { ModelComponent, Version } from '../models';
 import { BitId } from '../../bit-id';
 import { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
+import { loadScope } from '../index';
+import Scope from '../scope';
 
 export default class Graph extends GraphLib {
   getSuccessorsByEdgeTypeRecursively(
     bitId: string,
-    successorsList: string[],
+    successorsList: string[] = [],
     visited: { [key: string]: boolean } = {}
   ) {
     const successors = this.successors(bitId) || [];
     if (successors.length > 0 && !visited[bitId]) {
       successors.forEach(successor => {
-        successorsList.push(successor);
         visited[bitId] = true;
-        this.getSuccessorsByEdgeTypeRecursively(successor, successorsList, visited);
+        successorsList.push(successor);
+
+        return this.getSuccessorsByEdgeTypeRecursively(successor, successorsList, visited);
       });
     }
-    return [];
+    return successorsList;
+  }
+
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static async buildGraphFromScope(scope: Scope): Promise<Graph> {
+    const graph = new Graph();
+    const allModelComponents: ModelComponent[] = await scope.list();
+    await this.addScopeComponentsAsNodes(allModelComponents, graph);
   }
 
   static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
@@ -36,34 +47,57 @@ export default class Graph extends GraphLib {
     });
   }
 
+  static async addScopeComponentsAsNodes(
+    allModelComponents: ModelComponent[],
+    graph: Graph,
+    workspaceComponents?: Component[],
+    onlyLatest = false
+  ) {
+    const scope = await loadScope(process.cwd());
+    await Promise.all(
+      allModelComponents.map(async modelComponent => {
+        const latestVersion = modelComponent.latest();
+        const buildVersionP = modelComponent.listVersions().map(async versionNum => {
+          if (onlyLatest && latestVersion !== versionNum) return;
+          const id = modelComponent.toBitId().changeVersion(versionNum);
+          const componentFromWorkspace = workspaceComponents
+            ? workspaceComponents.find(comp => comp.id.isEqual(id))
+            : undefined;
+          if (!componentFromWorkspace) {
+            const componentVersion = componentFromWorkspace || (await scope.getConsumerComponent(id));
+            if (componentVersion) {
+              // a component might be in the scope with only the latest version (happens when it's a nested dep)
+              graph.setNode(componentVersion.id.toString(), componentVersion);
+            }
+          }
+        });
+        await Promise.all(buildVersionP);
+      })
+    );
+  }
+
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
+    const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
-    const allModelComponents: ModelComponent[] = await consumer.scope.list();
-    const buildGraphP = allModelComponents.map(async modelComponent => {
-      const latestVersion = modelComponent.latest();
-      const buildVersionP = modelComponent.listVersions().map(async versionNum => {
-        if (onlyLatest && latestVersion !== versionNum) return;
-        const id = modelComponent.toBitId().changeVersion(versionNum);
-        const componentFromWorkspace = workspaceComponents.find(comp => comp.id.isEqual(id));
-        // if the same component exists in the workspace, use it as it might be modified
-        const version =
-          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects));
-        if (!version) {
-          // a component might be in the scope with only the latest version (happens when it's a nested dep)
-          return;
-        }
-        this._addDependenciesToGraph(id, graph, version);
-      });
-      await Promise.all(buildVersionP);
-    });
-    await Promise.all(buildGraphP);
-
     workspaceComponents.forEach((component: Component) => {
-      const id = component.id;
-      this._addDependenciesToGraph(id, graph, component);
+      const id = component.id.toString();
+      graph.setNode(id, component);
     });
+    await this.addScopeComponentsAsNodes(allModelComponents, graph, workspaceComponents, onlyLatest);
+    R.forEach((componentId: string) => {
+      const component: Component = graph.node(componentId);
+      DEPENDENCIES_TYPES.forEach(depType => {
+        component[depType].get().forEach(dependency => {
+          const depIdStr = dependency.id.toString();
+          if (graph.hasNode(depIdStr)) {
+            graph.setEdge(componentId, depIdStr, depType);
+          }
+        });
+      });
+    }, graph.nodes());
+
     return graph;
   }
 }

@@ -1,6 +1,5 @@
-import { Exec, ExecStatus } from 'capsule';
+import { Exec, ExecStatus, DuplexBufferStream } from '@teambit/capsule';
 import { EventEmitter } from 'events';
-import DuplexBufferStream from 'capsule/dist/utils/duplex-buffer-stream';
 
 export default class ContainerExec extends EventEmitter implements Exec {
   constructor(private _code: number = 0) {

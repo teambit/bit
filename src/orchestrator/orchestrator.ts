@@ -1,8 +1,10 @@
-import { Capsule, Exec, Volume } from 'capsule';
+import { Capsule, Exec } from '@teambit/capsule';
+import { FS as AnyFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import sub from 'subleveldown';
 import fs from 'fs-extra';
 import level from 'level-party';
+import levelMem from 'level-mem';
 import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
@@ -14,6 +16,7 @@ import { CreateOptions, ListResults } from './types';
 import { Options } from '../environment/capsule-builder';
 import { getSync } from '../api/consumer/lib/global-config';
 import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../constants';
+import { toBoolean } from '../utils';
 
 export class CapsuleOrchestrator {
   private _loaded = false;
@@ -21,7 +24,7 @@ export class CapsuleOrchestrator {
   constructor(
     private rootRepository: LevelUp,
     private db: Repository = new Repository(sub(rootRepository, 'orchestartor')),
-    private pools: Pool<Capsule<Exec, Volume>>[] = []
+    private pools: Pool<Capsule<Exec, AnyFS>>[] = []
   ) {}
 
   get loaded(): boolean {
@@ -32,7 +35,7 @@ export class CapsuleOrchestrator {
     this._loaded = value;
   }
 
-  private getPool(workspace: string): Pool<Capsule<Exec, Volume>> | undefined {
+  private getPool(workspace: string): Pool<Capsule<Exec, AnyFS>> | undefined {
     return this.pools.find(pool => pool.workspace === workspace);
   }
 
@@ -63,7 +66,7 @@ export class CapsuleOrchestrator {
     return data;
   }
 
-  async acquire(bitId: string, workspace?: string): Promise<Resource<Capsule<Exec, Volume>>> {
+  async acquire(bitId: string, workspace?: string): Promise<Resource<Capsule<Exec, AnyFS>>> {
     if (!workspace) {
       const capsuleData = await Promise.all(this.pools.map(pool => pool.acquire(bitId)));
       return _.head(_.compact(capsuleData));
@@ -110,7 +113,7 @@ export class CapsuleOrchestrator {
     return pool;
   }
 
-  async create(workspace: string, resourceId: string, options?: any): Promise<Resource<Capsule<Exec, Volume>>> {
+  async create(workspace: string, resourceId: string, options?: any): Promise<Resource<Capsule<Exec, AnyFS>>> {
     let pool = this.getPool(workspace);
     if (!pool) {
       pool = await this.addPool(workspace);
@@ -155,11 +158,8 @@ export class CapsuleOrchestrator {
     this.loaded = true;
   }
 
-  static initiate(): CapsuleOrchestrator | undefined {
-    const shouldInitOrchestrator = getSync(CFG_GLOBAL_REPOSITORY) || true;
-    if (!shouldInitOrchestrator) return;
-    const ROOT_REPOSITORY: LevelUp = level(REPOSITORY_CACHE_ROOT);
-    // eslint-disable-next-line consistent-return
+  static initiate(useInMemoryDB: boolean = toBoolean(getSync(CFG_GLOBAL_REPOSITORY), false)): CapsuleOrchestrator {
+    const ROOT_REPOSITORY: LevelUp = useInMemoryDB ? levelMem() : level(REPOSITORY_CACHE_ROOT);
     return new CapsuleOrchestrator(ROOT_REPOSITORY);
   }
 }

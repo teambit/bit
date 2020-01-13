@@ -1,4 +1,4 @@
-import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
+import { ContainerFactoryOptions } from '@teambit/capsule';
 import BitId from '../../bit-id/bit-id';
 
 export interface CapsuleOptions extends ContainerFactoryOptions {

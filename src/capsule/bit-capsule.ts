@@ -1,4 +1,5 @@
-import { Capsule, Exec, Volume, Console, State } from 'capsule';
+import { Capsule, Exec, Console, State } from '@teambit/capsule';
+import { Volume } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';

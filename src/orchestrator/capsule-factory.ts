@@ -1,21 +1,21 @@
-import { Capsule, ContainerFactory, Exec, Volume, State } from 'capsule';
+import { Capsule, ContainerFactory, Exec, State } from '@teambit/capsule';
+import { FS as AnyFS, Volume } from '@teambit/any-fs';
 import { EventEmitter } from 'events';
 import { ResourceFactory, Resource } from './resource-pool';
 import CapsuleResource from './capsule-resource';
 import { BitContainerConfig } from '../capsule/container';
 
-export default class CapsuleFactory<T extends Capsule<Exec, Volume>> extends EventEmitter
-  implements ResourceFactory<T> {
+export default class CapsuleFactory<T extends Capsule<Exec, AnyFS>> extends EventEmitter implements ResourceFactory<T> {
   constructor(
-    private bitContainerFactory: ContainerFactory<Exec, Volume>,
+    private bitContainerFactory: ContainerFactory<Exec, AnyFS>,
     private createFn: (
-      containerFactory: ContainerFactory<Exec, Volume>,
-      volume?: Volume,
+      containerFactory: ContainerFactory<Exec, AnyFS>,
+      volume?: AnyFS,
       config?: any,
       initialState?: State,
       console?: Console
     ) => Promise<T>,
-    private obtainFn: (containerFactory: ContainerFactory<Exec, Volume>, raw: string) => Promise<T>
+    private obtainFn: (containerFactory: ContainerFactory<Exec, AnyFS>, raw: string) => Promise<T>
   ) {
     super();
   }

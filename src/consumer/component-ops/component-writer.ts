@@ -117,6 +117,25 @@ export default class ComponentWriter {
     return this.component;
   }
 
+  async populateComponentsFilesToWriteForCapsule(): Promise<Record<string, any>> {
+    if (!this.component.files || !this.component.files.length) {
+      throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+    }
+    this.component.dataToPersist = new DataToPersist();
+    this._updateFilesBasePaths();
+    this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
+    this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
+    this._determineWhetherToDeleteComponentDirContent();
+    await this._handlePreviouslyNestedCurrentlyImportedCase();
+    this._determineWhetherToWriteConfig();
+    this._updateComponentRootPathAccordingToBitMap();
+    this._updateBitMapIfNeeded();
+    await this._updateConsumerConfigIfNeeded();
+    this._determineWhetherToWritePackageJson();
+    await this.populateFilesToWriteToComponentDir();
+    return this.component;
+  }
+
   async populateComponentsFilesToWrite(): Promise<Record<string, any>> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);

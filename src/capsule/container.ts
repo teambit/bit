@@ -5,10 +5,10 @@ import * as path from 'path';
 import execa from 'execa';
 import os from 'os';
 import v4 from 'uuid';
-import { Container, ExecOptions, Exec, ContainerStatus, Volume } from 'capsule';
-import { ContainerFactoryOptions } from 'capsule/dist/capsule/container/container-factory';
-import ContainerExec from './container-exec';
+import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
+import { FS as AnyFS, Volume } from '@teambit/any-fs';
 import { Stream } from 'stream';
+import ContainerExec from './container-exec';
 
 const debug = require('debug')('fs-container');
 
@@ -20,7 +20,7 @@ export interface BitContainerConfig extends ContainerFactoryOptions {
   other?: string;
 }
 
-export default class FsContainer implements Container<Exec, Volume> {
+export default class FsContainer implements Container<Exec, AnyFS> {
   fs: Volume = new Volume();
 
   id = 'FS Container';
