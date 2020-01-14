@@ -1,11 +1,12 @@
 import { Extension } from '../harmony';
 import provideSnap from './snap.provider';
 import ScopeExt from '../scope/scope.extension';
+import { PaperExt } from '../paper';
 import { WorkspaceExt } from '../workspace';
 
-Extension.instantiate({
+export default Extension.instantiate({
   name: 'Snap',
-  dependencies: [WorkspaceExt, ScopeExt],
+  dependencies: [PaperExt, WorkspaceExt, ScopeExt],
   config: {},
   provider: provideSnap
 });
