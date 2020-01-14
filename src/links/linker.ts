@@ -17,7 +17,7 @@ import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
-  const componentsIds = consumer.bitmapIds;
+  const componentsIds = consumer.bitMap.getAllIdsAvailableOnLane();
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);

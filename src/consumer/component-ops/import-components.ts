@@ -226,6 +226,7 @@ export default class ImportComponents {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
+    // @todo: when .bitmap has a remote-lane, it should import the lane object as well
     const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = [...authoredExportedComponents, ...importedComponents];
 

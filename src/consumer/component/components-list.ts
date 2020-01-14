@@ -344,7 +344,7 @@ export default class ComponentsList {
 
   getFromBitMap(origin?: ComponentOrigin): BitIds {
     const originParam = origin ? [origin] : undefined;
-    return this.bitMap.getAllBitIds(originParam, true);
+    return this.bitMap.getAllIdsAvailableOnLane(originParam);
   }
 
   getPathsForAllFilesOfAllComponents(origin?: ComponentOrigin, absolute = false): string[] {

@@ -366,15 +366,30 @@ export default class BitMap {
     return ignoreList;
   }
 
-  getAllBitIds(origin?: ComponentOrigin[], onlyAvailableOnCurrentLane = false): BitIds {
+  getAllBitIds(origin?: ComponentOrigin[]): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
     const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
       const cacheKey = oneOrigin || 'all';
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
-      const allComponents = onlyAvailableOnCurrentLane
-        ? this.components.filter(c => c.isAvailableOnCurrentLane)
-        : this.components;
+      const allComponents = this.components;
+      const components = oneOrigin ? allComponents.filter(c => c.origin === oneOrigin) : allComponents;
+      const componentIds = ids(components);
+      this._cacheIds[cacheKey] = componentIds;
+      return componentIds;
+    };
+
+    if (!origin) return getIdsOfOrigin();
+    return BitIds.fromArray(R.flatten(origin.map(oneOrigin => getIdsOfOrigin(oneOrigin))));
+  }
+
+  getAllIdsAvailableOnLane(origin?: ComponentOrigin[]): BitIds {
+    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
+    const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
+      const cacheKey = `lane-${oneOrigin}` || 'lane-all';
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+      const allComponents = this.components.filter(c => c.isAvailableOnCurrentLane);
       const components = oneOrigin ? allComponents.filter(c => c.origin === oneOrigin) : allComponents;
       const componentIds = ids(components);
       this._cacheIds[cacheKey] = componentIds;

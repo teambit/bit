@@ -40,7 +40,7 @@ export default (async function remove({
 
 async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {
-    const allIds = consumer.bitMap.getAllBitIds();
+    const allIds = consumer.bitMap.getAllIdsAvailableOnLane();
     const bitIds = ComponentsList.filterComponentsByWildcard(allIds, ids);
     if (!bitIds.length) throw new NoIdMatchWildcard(ids);
     return bitIds;
