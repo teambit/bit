@@ -3,7 +3,7 @@ import * as BPromise from 'bluebird';
 import loudRejection from 'loud-rejection';
 import { Harmony, Extension, ExtensionProvider } from './harmony';
 import HooksManager from './hooks';
-import capsuleOrchestrator from './orchestrator/orchestrator';
+import capsuleOrchestrator from './capsule/orchestrator/orchestrator';
 import { Bit } from './bit';
 import { BitCliExt } from './cli';
 import { Pipes } from './pipes';

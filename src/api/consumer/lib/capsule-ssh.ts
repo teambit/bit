@@ -1,5 +1,5 @@
 import BitCapsule from '../../../capsule-ext/bit-capsule';
-import orchestrator from '../../../orchestrator/orchestrator';
+import orchestrator from '../../../capsule/orchestrator/orchestrator';
 
 export default (async function sshIntoCapsule(bitId: string): Promise<any> {
   if (!orchestrator) throw new Error(`can't connect to capsule in non consumer environment`);

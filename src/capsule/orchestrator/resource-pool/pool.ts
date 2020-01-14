@@ -3,11 +3,11 @@ import { EventEmitter } from 'events';
 import ResourceFactory from './resource-factory';
 import Resource, { ResourceEvents } from './resource';
 import Repository from '../db/repository';
-import { BitContainerConfig } from '../../capsule-ext/container';
+import { BitContainerConfig } from '../../../capsule-ext/container';
 // eslint-disable-next-line import/no-named-as-default
-import Logger, { Logger as LTYPE } from '../../logger/logger';
+import Logger, { Logger as LTYPE } from '../../../logger/logger';
 import { CreateOptions } from '../types';
-import BitCapsule from '../../capsule-ext/bit-capsule';
+import BitCapsule from '../../../capsule-ext/bit-capsule';
 
 /* export enum Events {
   FactoryCreateErrors = 'factory-create-error',

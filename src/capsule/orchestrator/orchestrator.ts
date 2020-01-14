@@ -9,14 +9,14 @@ import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
 import Repository from './db/repository';
-import { BitCapsule } from '../capsule-ext';
+import { BitCapsule } from '../../capsule-ext';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 import { CreateOptions, ListResults } from './types';
-import { Options } from '../environment/capsule-builder';
-import { getSync } from '../api/consumer/lib/global-config';
-import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../constants';
-import { toBoolean } from '../utils';
+import { Options } from '../../environment/capsule-builder';
+import { getSync } from '../../api/consumer/lib/global-config';
+import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../../constants';
+import { toBoolean } from '../../utils';
 
 export class CapsuleOrchestrator {
   private _loaded = false;

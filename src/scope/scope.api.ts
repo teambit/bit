@@ -9,5 +9,8 @@ export class Scope {
     readonly consumer: Consumer
   ) {}
 
+  /**
+   * fetch component(s) from a remote Scope.
+   */
   fetch() {}
 }

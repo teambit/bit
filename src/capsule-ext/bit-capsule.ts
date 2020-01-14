@@ -4,7 +4,7 @@ import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
 import BitId from '../bit-id/bit-id';
-import BitContainerFactory from '../orchestrator/bit-container-factory';
+import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 import loader from '../cli/loader';
 
 export default class BitCapsule extends Capsule<Exec, Volume> {
