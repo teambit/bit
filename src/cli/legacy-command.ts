@@ -16,7 +16,7 @@ export default class LegacyCommand extends Cmd {
   }
 
   async action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
-    const element = await this.paperCommand.render(params);
+    const element = await this.paperCommand.render(params, opts);
     return render(element);
   }
 

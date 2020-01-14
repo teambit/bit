@@ -35,7 +35,7 @@ module.exports = function(api) {
   return {
     presets,
     plugins,
-    only: ['**/*.ts'],
+    only: ['**/*.ts', '**/*.tsx'],
     ignore: ['components/*']
   };
 };
