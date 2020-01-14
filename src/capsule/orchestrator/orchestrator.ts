@@ -9,14 +9,14 @@ import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
 import Repository from './db/repository';
-import { BitCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../../capsule-ext';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 import { CreateOptions, ListResults } from './types';
-import { Options } from '../environment/capsule-builder';
-import { getSync } from '../api/consumer/lib/global-config';
-import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../constants';
-import { toBoolean } from '../utils';
+import { Options } from '../../environment/capsule-builder';
+import { getSync } from '../../api/consumer/lib/global-config';
+import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../../constants';
+import { toBoolean } from '../../utils';
 
 export class CapsuleOrchestrator {
   private _loaded = false;
@@ -77,7 +77,7 @@ export class CapsuleOrchestrator {
     return pool.acquire(bitId);
   }
 
-  async getCapsule(workspace: string, capsuleConf: CreateOptions, options: Options): Promise<BitCapsule> {
+  async getCapsule(workspace: string, capsuleConf: CreateOptions, options: Options): Promise<ComponentCapsule> {
     let pool = this.getPool(workspace);
     if (!pool) {
       pool = await this.addPool(workspace);
@@ -89,7 +89,7 @@ export class CapsuleOrchestrator {
     workspace: string,
     capsuleConf: CreateOptions[] | CreateOptions,
     options: Options
-  ): Promise<BitCapsule[] | BitCapsule> {
+  ): Promise<ComponentCapsule[] | ComponentCapsule> {
     let pool = this.getPool(workspace);
     if (!pool) {
       pool = await this.addPool(workspace);
@@ -99,14 +99,14 @@ export class CapsuleOrchestrator {
 
   async addPool(workspace: string) {
     await this.db.put(workspace, '');
-    const pool = new Pool<BitCapsule>(
+    const pool = new Pool<ComponentCapsule>(
       workspace,
       new Repository(sub(this.rootRepository, workspace)),
-      new CapsuleFactory<BitCapsule>(
+      new CapsuleFactory<ComponentCapsule>(
         new BitContainerFactory(),
         // @ts-ignore
-        BitCapsule.create.bind(BitCapsule),
-        BitCapsule.obtain.bind(BitCapsule)
+        ComponentCapsule.create.bind(ComponentCapsule),
+        ComponentCapsule.obtain.bind(ComponentCapsule)
       )
     );
     this.pools.push(pool);
@@ -140,15 +140,15 @@ export class CapsuleOrchestrator {
   async buildPools() {
     const keys: string[] = await this.db.keys();
     const pools = keys.map(workspace => {
-      return new Pool<BitCapsule>(
+      return new Pool<ComponentCapsule>(
         workspace,
         new Repository(sub(this.rootRepository, workspace)),
-        new CapsuleFactory<BitCapsule>(
+        new CapsuleFactory<ComponentCapsule>(
           new BitContainerFactory(),
           // TODO - FIX THIS ASAP
           // @ts-ignore
-          BitCapsule.create.bind(BitCapsule),
-          BitCapsule.obtain.bind(BitCapsule)
+          ComponentCapsule.create.bind(ComponentCapsule),
+          ComponentCapsule.obtain.bind(ComponentCapsule)
         )
       );
     });

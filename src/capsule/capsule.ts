@@ -1,9 +1,37 @@
 import { CreateConfig, WorkspaceCapsules } from './types';
+import { Component } from '../component';
+import { CapsuleOrchestrator } from './orchestrator/orchestrator';
+import capsuleExtension from 'environment/capsule.extension';
+import { ComponentCapsule } from '../capsule-ext';
 
 export default class Capsule {
-  create(component, config: CreateConfig) {}
+  constructor(
+    /**
+     * instance of the capsule orchestrator.
+     */
+    private orchestrator: CapsuleOrchestrator
+  ) {}
 
-  list(): ComponentCapsule[] {}
+  /**
+   * create a new capsule from a component.
+   */
+  create(component: Component, config: CreateConfig) {
+    // @ts-ignore
+    component.write();
+  }
 
-  listAll(): WorkspaceCapsules {}
+  /**
+   * list all of the existing workspace capsules.
+   */
+  list(): ComponentCapsule[] {
+    return [];
+  }
+
+  /**
+   * list capsules from all workspaces.
+   */
+  listAll(): WorkspaceCapsules {
+    // @ts-ignore
+    return '';
+  }
 }

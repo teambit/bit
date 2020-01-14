@@ -3,7 +3,9 @@ import { BitCli } from '../cli';
 import CommandRegistry from './registry';
 import { Bit } from '../bit';
 
-export type PaperConfig = {};
+export type PaperConfig = {
+  silence: boolean;
+};
 
 export type PaperDeps = [];
 

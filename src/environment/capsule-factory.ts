@@ -1,6 +1,6 @@
-import { BitCapsule, FsContainer } from '../capsule-ext';
+import { ComponentCapsule, FsContainer } from '../capsule-ext';
 
-export default (async function createCapsule(type = 'fs', dir?: string): Promise<BitCapsule> {
+export default (async function createCapsule(type = 'fs', dir?: string): Promise<ComponentCapsule> {
   function getContainerFactory() {
     switch (type) {
       case 'fs':
@@ -14,7 +14,7 @@ export default (async function createCapsule(type = 'fs', dir?: string): Promise
   }
   const containerFactory = getContainerFactory();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const capsule = await BitCapsule.create(containerFactory);
+  const capsule = await ComponentCapsule.create(containerFactory);
   await capsule.start();
   return capsule;
 });
