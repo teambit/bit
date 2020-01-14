@@ -6,7 +6,7 @@ import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import { PathOsBasedRelative, PathLinux, PathOsBased, PathLinuxRelative } from '../../utils/path';
 import Consumer from '../consumer';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
@@ -14,6 +14,7 @@ import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import ConfigDir from './config-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 
 // TODO: should be better defined
 // @ts-ignore
@@ -25,7 +26,7 @@ export type ComponentMapFile = {
   test: boolean;
 };
 
-type LaneVersion = { remoteLane: string; version: string };
+type LaneVersion = { remoteLane: RemoteLaneId; version: string };
 
 export type ComponentMapData = {
   id: BitId;
@@ -40,6 +41,8 @@ export type ComponentMapData = {
   exported?: boolean;
   onLanesOnly: boolean;
   lanes?: LaneVersion[];
+  defaultVersion?: string;
+  isAvailableOnCurrentLane?: boolean;
 };
 
 export type PathChange = { from: PathLinux; to: PathLinux };
@@ -63,7 +66,9 @@ export default class ComponentMap {
   markBitMapChangedCb: Function;
   exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
   onLanesOnly? = false; // whether a component is available only on lanes and not on master
-  lanes?: LaneVersion[]; // save component versions per lanes if they're different than the id
+  lanes: LaneVersion[]; // save component versions per lanes if they're different than the id
+  defaultVersion?: string | null;
+  isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   constructor({
     id,
     files,
@@ -75,7 +80,9 @@ export default class ComponentMap {
     originallySharedDir,
     wrapDir,
     onLanesOnly,
-    lanes
+    lanes,
+    defaultVersion,
+    isAvailableOnCurrentLane
   }: ComponentMapData) {
     let confDir;
     if (configDir && typeof configDir === 'string') {
@@ -93,10 +100,16 @@ export default class ComponentMap {
     this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
-    this.lanes = lanes;
+    this.lanes = lanes || [];
+    this.defaultVersion = defaultVersion;
+    this.isAvailableOnCurrentLane = isAvailableOnCurrentLane;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {
+    componentMapObj.lanes = componentMapObj.lanes
+      ? // @ts-ignore
+        componentMapObj.lanes.map(lane => ({ remoteLane: RemoteLaneId.parse(lane.remoteLane), version: lane.version }))
+      : [];
     return new ComponentMap(componentMapObj);
   }
 
@@ -111,7 +124,8 @@ export default class ComponentMap {
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
-      onLanesOnly: this.onLanesOnly || null // if false, change to null so it won't be written
+      onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
+      lanes: this.lanes.map(l => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
     };
     const notNil = val => {
       return !R.isNil(val);
@@ -317,6 +331,40 @@ export default class ComponentMap {
     const componentDir = this.getComponentDir();
     const configDir = this.configDir && this.configDir.getResolved({ componentDir }).getEnvTypeCleaned().linuxDirPath;
     return configDir;
+  }
+
+  /**
+   * this.id.version should indicate the currently used version, regardless of the lane.
+   * on the filesystem, id.version is saved according to the master, so it needs to be changed.
+   * @param currentRemote
+   * @param currentLaneIds
+   */
+  updatePerLane(currentRemote?: RemoteLaneId | null, currentLaneIds?: BitIds | null) {
+    this.isAvailableOnCurrentLane = undefined;
+    const replaceVersion = version => {
+      this.defaultVersion = this.id.version;
+      this.id = this.id.changeVersion(version);
+      this.isAvailableOnCurrentLane = true;
+    };
+    const localBitId = currentLaneIds ? currentLaneIds.searchWithoutVersion(this.id) : null;
+    if (localBitId) {
+      replaceVersion(localBitId.version);
+    } else if (currentRemote) {
+      const remoteExist = this.lanes.find(lane => lane.remoteLane.isEqual(currentRemote));
+      if (remoteExist) {
+        replaceVersion(remoteExist.version);
+      }
+    }
+    if (typeof this.isAvailableOnCurrentLane === 'undefined') {
+      // either, it's the default lane. or, it's a lane and the component is not part of the lane
+      this.isAvailableOnCurrentLane = !this.onLanesOnly;
+    }
+  }
+
+  addLane(remoteLaneId: RemoteLaneId, version: string) {
+    const existing = this.lanes.find(l => l.remoteLane.isEqual(remoteLaneId));
+    if (existing) existing.version = version;
+    this.lanes.push({ remoteLane: remoteLaneId, version });
   }
 
   /**

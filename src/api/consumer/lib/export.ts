@@ -23,8 +23,9 @@ import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_LANE } fr
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
-import LaneId from '../../../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
 import { Lane } from '../../../scope/models';
+import WorkspaceLane from '../../../consumer/bit-map/workspace-lane';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -90,6 +91,7 @@ async function exportComponents({
     defaultScope,
     lanesObjects
   });
+  if (lanesObjects) await updateLanes(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
@@ -102,6 +104,35 @@ async function exportComponents({
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
   return { updatedIds, nonExistOnBitMap, missingScope, exported };
+}
+
+async function updateLanes(consumer: Consumer, lanes: Lane[]) {
+  const lanesToUpdate = lanes.filter(l => l.remoteLaneId);
+  // lanes that don't have remoteLaneId should not be updated. it happens when updating to a
+  // different remote with no intention to save the remote.
+  if (!lanesToUpdate.length) return;
+  const currentLane = consumer.getCurrentLaneId();
+  const workspaceLanesToUpdate: WorkspaceLane[] = [];
+  lanesToUpdate.forEach(lane => {
+    const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
+    consumer.scope.trackLane({
+      localLane: lane.name,
+      remoteLane: remoteLaneId.name,
+      remoteScope: remoteLaneId.scope as string
+    });
+    const isCurrentLane = lane.name === currentLane.name;
+    if (isCurrentLane) {
+      consumer.bitMap.addLane(remoteLaneId);
+    }
+    const workspaceLane = isCurrentLane
+      ? (consumer.bitMap.workspaceLane as WorkspaceLane) // bitMap.workspaceLane is empty only when is on master
+      : WorkspaceLane.load(lane.name, consumer.scope.path);
+    if (!isCurrentLane) workspaceLanesToUpdate.push(workspaceLane);
+    consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
+    workspaceLane.reset();
+  });
+  await Promise.all(workspaceLanesToUpdate.map(l => l.write()));
+  await consumer.scope.scopeJson.write(consumer.scope.getPath());
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {

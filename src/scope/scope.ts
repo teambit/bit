@@ -581,7 +581,13 @@ export default class Scope {
    */
   async getModelComponent(id: BitId): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
-    if (component) return component;
+    if (component) {
+      // @todo: what about the remote head
+      // @todo: what about other places the model-component is loaded
+      const currentLane = await this.getCurrentLaneObject();
+      component.setLaneHeadLocal(currentLane);
+      return component;
+    }
     throw new ComponentNotFound(id.toString());
   }
 
@@ -788,6 +794,14 @@ export default class Scope {
 
   getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
     return this.scopeJson.lanes.tracking.find(t => t.localLane === localLane);
+  }
+
+  trackLane(trackLaneData: TrackLane) {
+    this.scopeJson.lanes.tracking.push({
+      localLane: trackLaneData.localLane,
+      remoteLane: trackLaneData.remoteLane,
+      remoteScope: trackLaneData.remoteScope
+    });
   }
 
   /**

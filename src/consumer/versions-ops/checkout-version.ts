@@ -16,6 +16,7 @@ import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { Tmp } from '../../scope/repositories';
 import { LaneComponent } from '../../scope/models/lane';
 import { ComponentWithDependencies } from '../../scope';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -144,13 +145,14 @@ export async function saveCheckedOutLaneInfo(
 ) {
   const saveRemoteLaneToBitmap = () => {
     if (opts.remoteLaneScope) {
-      consumer.bitMap.addLane({ scope: opts.remoteLaneScope, name: opts.remoteLaneName });
+      consumer.bitMap.addLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
+      // add versions to lane
     } else {
       const trackData = consumer.scope.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
       if (!trackData) {
         return; // the lane was never exported
       }
-      consumer.bitMap.addLane({ scope: trackData.remoteScope, name: trackData.remoteLane });
+      consumer.bitMap.addLane(RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope));
     }
   };
   const throwIfLaneExists = async () => {
@@ -165,7 +167,7 @@ the lane already exists. please switch to the lane and merge`);
     await consumer.createNewLane(opts.localLaneName as string, opts.laneComponents);
     if (opts.addTrackingInfo) {
       // otherwise, it is tracked already
-      consumer.scope.scopeJson.lanes.tracking.push({
+      consumer.scope.trackLane({
         localLane: opts.localLaneName as string,
         remoteLane: opts.remoteLaneName as string,
         remoteScope: opts.remoteLaneScope as string
@@ -268,9 +270,7 @@ async function getComponentStatusForLanes(
       `component ${id.toStringWithoutVersion()} has conflicts that need to be resolved first, please use bit merge --resolve/--abort`
     );
   }
-  // when checking out to a lane, id.version is the "head" in the lane object.
-  // when checking out to master, id.version is null. use modelComponent to figure out the version
-  const version = id.version || modelComponent.latest();
+  const version = id.version;
   if (!version) {
     return returnFailure(`component doesn't have any snaps on ${DEFAULT_LANE}`);
   }

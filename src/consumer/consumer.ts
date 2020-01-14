@@ -75,6 +75,7 @@ import { EnvType } from '../extensions/env-extension-types';
 import LaneId from '../lane-id/lane-id';
 import snapModelComponents from '../scope/component-ops/snap-model-component';
 import { LaneComponent } from '../scope/models/lane';
+import WorkspaceLane from './bit-map/workspace-lane';
 
 type ConsumerProps = {
   projectPath: string;
@@ -132,7 +133,7 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = bitMap || BitMap.load(projectPath);
+    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.getCurrentLaneName());
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
@@ -214,18 +215,29 @@ export default class Consumer {
       );
     }
 
-    const getDataToPopulateLaneIfNeeded = async (): Promise<LaneComponent[]> => {
+    const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
       if (laneComponents) return laneComponents;
       // when branching from one lane to another, copy components from the origin lane
       // when branching from master, no need to copy anything
       const currentLaneObject = await this.getCurrentLaneObject();
       return currentLaneObject ? currentLaneObject.components : [];
     };
+    const getDataToPopulateWorkspaceLaneIfNeeded = (): BitIds => {
+      if (laneComponents) return new BitIds(); // if laneComponent, this got created when importing a remote lane
+      // when branching from one lane to another, copy components from the origin workspace-lane
+      // when branching from master, no need to copy anything
+      const currentWorkspaceLane = this.bitMap.workspaceLane;
+      return currentWorkspaceLane ? currentWorkspaceLane.ids : new BitIds();
+    };
     const newLane = Lane.create(laneName);
-    const dataToPopulate = await getDataToPopulateLaneIfNeeded();
+    const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
     newLane.setLaneComponents(dataToPopulate);
 
     await this.scope.saveLane(newLane);
+
+    const workspaceConfig = WorkspaceLane.load(laneName, this.scope.getPath());
+    workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();
+    await workspaceConfig.write();
 
     return newLane;
   }
@@ -885,11 +897,11 @@ export default class Consumer {
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
-    const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
     const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
+    const bitMap = BitMap.load(projectPath, scope.path, scope.getCurrentLaneName());
     return new Consumer({
       projectPath,
       created: true,
@@ -906,7 +918,7 @@ export default class Consumer {
    */
   static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-    BitMap.reset(projectPath, resetHard);
+    BitMap.reset(projectPath, resetHard, resolvedScopePath);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
     const configP = WorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, configP]);

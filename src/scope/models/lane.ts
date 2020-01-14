@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 import { BitObject, Ref, Repository } from '../objects';
 import { getStringifyArgs, filterObject, sha1 } from '../../utils';
-import LaneId from '../../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import ValidationError from '../../error/validation-error';
@@ -21,7 +21,9 @@ export type LaneComponent = { id: BitId; head: Ref };
 
 export default class Lane extends BitObject {
   name: string;
+  // @todo: delete this. seems like it being written to the filesystem and it should not
   scope?: string; // scope is only needed to know where a lane came from, it should not be written to the fs
+  remoteLaneId?: RemoteLaneId;
   components: LaneComponent[];
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   constructor(props: LaneProps) {

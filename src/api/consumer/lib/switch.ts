@@ -56,9 +56,7 @@ then run "bit merge" to merge the remote lane into the local lane`);
     throw new GeneralError(`already checked out to "${laneName}"`);
   }
   if (laneName === DEFAULT_LANE) {
-    const ids = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
-    // version of .bitmap can be from other lanes. we need the snap.head
-    switchProps.ids = ids.map(id => id.changeVersion(null));
+    switchProps.ids = consumer.bitMap.getAuthoredAndImportedBitIdsOfDefaultLane();
     return;
   }
   const localLane = lanes.find(lane => lane.name === laneName);

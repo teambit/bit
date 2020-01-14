@@ -45,6 +45,13 @@ describe('bit lane command', function() {
       expect(status.newComponents).to.have.lengthOf(0);
       expect(status.outdatedComponents).to.have.lengthOf(0);
     });
+    it('bit log should show both snaps', () => {
+      const log = helper.command.log('bar/foo');
+      const masterSnap = helper.command.getSnapHead('bar/foo');
+      const devSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
+      expect(log).to.have.string(masterSnap);
+      expect(log).to.have.string(devSnap);
+    });
     describe('bit lane with --details flag', () => {
       let output: string;
       before(() => {
@@ -382,6 +389,7 @@ describe('bit lane command', function() {
     });
   });
   describe('master => lane-a => labe-b, so laneB branched from laneA', () => {
+    let beforeSwitchingBack;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
 
@@ -401,6 +409,8 @@ describe('bit lane command', function() {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponents();
+
+      beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();
     });
     it('lane-a should not contain components from master', () => {
       const lane = helper.command.showOneLaneParsed('lane-a');
@@ -436,8 +446,28 @@ describe('bit lane command', function() {
       });
       // @todo: test each one of the commands on bar/foo
     });
-    describe('checking out to master', () => {
+    describe('checking out from lane-b to master', () => {
       before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
+        helper.command.switchLocalLane('master');
+      });
+      it('bit list should only show master components', () => {
+        const list = helper.command.listLocalScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+      it('bit status should show only master components as staged', () => {
+        const statusParsed = helper.command.statusJson();
+        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-type']);
+        const status = helper.command.status();
+        expect(status).to.not.have.string('bar/foo');
+        expect(status).to.not.have.string('utils/is-string');
+      });
+    });
+    // @todo: implement.
+    describe.skip('switching to lane-a then to master', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
+        helper.command.switchLocalLane('lane-a');
         helper.command.switchLocalLane('master');
       });
       it('bit list should only show master components', () => {
@@ -529,6 +559,19 @@ describe('bit lane command', function() {
       helper.command.snapAllComponents();
 
       helper.command.switchLocalLane('master');
+    });
+    it('should checkout to the same version the origin branch had before the switch', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
+    });
+    it('bit status should not show the component as modified only as pending update', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponent).to.have.lengthOf(0);
+      expect(status.outdatedComponents).to.have.lengthOf(1);
+      expect(status.importPendingComponents).to.have.lengthOf(0);
+      expect(status.stagedComponents).to.have.lengthOf(0);
+      expect(status.invalidComponents).to.have.lengthOf(0);
+      expect(status.newComponents).to.have.lengthOf(0);
     });
   });
 });

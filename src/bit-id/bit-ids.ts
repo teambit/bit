@@ -80,6 +80,10 @@ export default class BitIds extends Array<BitId> {
     return this.filter(id => id.hasSameName(bitId));
   }
 
+  removeIfExist(bitId: BitId): BitIds {
+    return BitIds.fromArray(this.filter(id => !id.isEqual(bitId)));
+  }
+
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
     return BitIds.fromArray(this.filter(id => !id.isEqualWithoutVersion(bitId)));
   }

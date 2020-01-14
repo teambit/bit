@@ -2,6 +2,7 @@ import R from 'ramda';
 import ComponentObjects from './component-objects';
 import LaneObjects from './lane-objects';
 
+// @todo: change the name. this name is temporarily. it also functions for fetch not only to push
 export default class ObjectsToPush {
   componentsObjects: ComponentObjects[];
   laneObjects: LaneObjects[];
