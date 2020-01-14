@@ -29,7 +29,7 @@ export interface Command {
    * @param args command options provided in CLI
    *
    */
-  render:(params:PaperOptions, opts?:any) => Promise<React.ReactElement>;
+  render:(params: any, opts: { [key: string]: any }) => Promise<React.ReactElement>;
 }
 
 export type PaperOptions = CommandOptions
