@@ -10,7 +10,7 @@ export type SnapDeps = [Paper, Workspace, Scope];
 export type SnapConfig = {};
 
 export default async function provideSnap(config: SnapConfig, [paper, workspace, scope]: SnapDeps, harmony: Harmony) {
-  paper.register(new SnapCommand());
   const snap = new Snap(workspace, scope);
+  paper.register(new SnapCommand(snap));
   return snap;
 }
