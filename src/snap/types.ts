@@ -1,9 +1,11 @@
 export type SemverBumpType = 'patch' | 'minor' | 'major';
+import { ReleaseType } from 'semver';
 
 export type SnapOptions = {
+  id?: string;
   all?: boolean;
   message?: string;
-  bumpType?: SemverBumpType;
+  releaseType?: ReleaseType;
   exactVersion?: string;
   force?: boolean;
   verbose?: boolean;
@@ -11,6 +13,6 @@ export type SnapOptions = {
   ignoreUnresolvedDependencies?: boolean;
   ignoreNewestVersion?: boolean;
   skipTests?: boolean;
-  skipAutoTag?: boolean; // Maybe should be on the workspace
-  snapAllInScope?: string; // Maybe should be on the workspace
+  skipAutoTag?: boolean;
+  snapAllInScope?: boolean;
 };
