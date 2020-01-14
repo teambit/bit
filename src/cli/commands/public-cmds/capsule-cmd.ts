@@ -2,7 +2,7 @@
 import _ from 'lodash';
 import Command from '../../command';
 import { capsuleIsolate, sshIntoCapsule } from '../../../api/consumer';
-import BitCapsule from '../../../capsule-ext/bit-capsule';
+import { ComponentCapsule } from '../../../capsule-ext';
 import capsuleOrchestrator from '../../../capsule/orchestrator/orchestrator';
 import { ListResults } from '../../../capsule/orchestrator/types';
 import { render } from '../../../utils';
@@ -101,7 +101,7 @@ export class CapsuleCreate extends Command {
     );
   }
 
-  report(capsuleObj: { [bitId: string]: BitCapsule }): string {
+  report(capsuleObj: { [bitId: string]: ComponentCapsule }): string {
     const createdCapsules = Object.values(capsuleObj).map(capsule => {
       return {
         bitId: capsule.bitId.toString(),

@@ -1,3 +1,4 @@
+import { FS as AnyFS } from '@teambit/any-fs';
 import { Capsule as CapsuleOrchestrator } from '../capsule';
 
 export default class Component {
@@ -21,15 +22,17 @@ export default class Component {
   modified() {}
 
   checkout() {
-    const version = this.versions.find();
+    const version = this.versions.find(x => x);
     this.head;
   }
 
-  get dependencyGraph() {}
+  get dependencyGraph() {
+    return '';
+  }
 
   getCapsule() {
     return this.capsuleOrchestrator.create(this, {});
   }
 
-  write(path: string, fs?: FS) {}
+  write(path: string, fs?: AnyFS) {}
 }

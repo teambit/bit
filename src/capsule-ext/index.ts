@@ -1,4 +1,4 @@
-import BitCapsule from './bit-capsule';
+import ComponentCapsule from './component-capsule';
 import FsContainer from './container';
 
-export { BitCapsule, FsContainer };
+export { ComponentCapsule, FsContainer };

@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import { EventEmitter } from 'events';
+import { ComponentCapsule } from '../../../capsule-ext';
 import ResourceFactory from './resource-factory';
 import Resource, { ResourceEvents } from './resource';
 import Repository from '../db/repository';
@@ -7,7 +8,6 @@ import { BitContainerConfig } from '../../../capsule-ext/container';
 // eslint-disable-next-line import/no-named-as-default
 import Logger, { Logger as LTYPE } from '../../../logger/logger';
 import { CreateOptions } from '../types';
-import BitCapsule from '../../../capsule-ext/bit-capsule';
 
 /* export enum Events {
   FactoryCreateErrors = 'factory-create-error',
@@ -76,8 +76,8 @@ export default class Pool<T> extends EventEmitter {
       // console.log('borrows', resource.id);
     });
   }
-  async getResource(capsuleWithConf: CreateOptions, newCapsule = false): Promise<BitCapsule> {
-    const create = async ({ resourceId, options }: CreateOptions): Promise<BitCapsule> => {
+  async getResource(capsuleWithConf: CreateOptions, newCapsule = false): Promise<ComponentCapsule> {
+    const create = async ({ resourceId, options }: CreateOptions): Promise<ComponentCapsule> => {
       let acquiredResource;
       let created = false;
       if (!newCapsule) {
@@ -88,7 +88,7 @@ export default class Pool<T> extends EventEmitter {
         created = true;
       }
       this.observeResource(acquiredResource);
-      const capsule = acquiredResource.use() as BitCapsule;
+      const capsule = acquiredResource.use() as ComponentCapsule;
       capsule.new = created;
       return capsule;
     };
@@ -98,8 +98,8 @@ export default class Pool<T> extends EventEmitter {
   async getResources(
     capsuleWithConf: CreateOptions[] | CreateOptions,
     newCapsule = false
-  ): Promise<BitCapsule[] | BitCapsule> {
-    const create = async ({ resourceId, options }: CreateOptions): Promise<BitCapsule> => {
+  ): Promise<ComponentCapsule[] | ComponentCapsule> {
+    const create = async ({ resourceId, options }: CreateOptions): Promise<ComponentCapsule> => {
       let acquiredResource;
       let created = false;
       if (!newCapsule) {
