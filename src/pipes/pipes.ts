@@ -1,1 +1,1 @@
-export default class Pipes {}
+export class Pipes {}

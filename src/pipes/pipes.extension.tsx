@@ -3,23 +3,27 @@ import { Workspace, WorkspaceExt } from '../workspace';
 import { PaperExt, Paper } from '../paper';
 import RunCmd from './run.cmd';
 import React from 'react';
+import { Pipes } from './pipes';
+import { Color } from 'ink';
 
-type PipesDeps = [Paper];
+type PipesDeps = [Workspace, Paper];
 type Config = {};
 
 export default Extension.instantiate<Config, PipesDeps>({
   name: 'Pipes',
   dependencies: [WorkspaceExt, PaperExt],
   config: {},
-  provider: async (_config: Config, [paper]: PipesDeps) => {
+  provider: async (_config: Config, [_, paper]: PipesDeps) => {
+    const pipes = new Pipes()
     paper.register({
-      name:'',
+      name:'run',
       alias: '',
-      description: '',
+      description: 'some description',
       opts: [],
       render: async () => {
-        return <div>Hi!</div>
+        return <Color green>Hi!</Color>
       }
     })
+    return pipes
   }
 });
