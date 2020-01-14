@@ -1,4 +1,5 @@
 import yn from 'yn';
+import chalk from 'chalk';
 import Command from '../../command';
 import { remove } from '../../../api/consumer';
 import RemovedObjects from '../../../scope/removed-components';
@@ -29,7 +30,8 @@ export default class Remove extends Command {
       'force [boolean]',
       'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
-    ['s', 'silent [boolean]', 'skip confirmation']
+    ['s', 'silent [boolean]', 'skip confirmation'],
+    ['', 'lane [boolean]', 'remove a lane']
   ];
   loader = true;
   migration = true;
@@ -42,8 +44,9 @@ export default class Remove extends Command {
       remote = false,
       track = false,
       deleteFiles = false,
-      silent = false
-    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean }
+      silent = false,
+      lane = false
+    }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; lane: boolean }
   ): Promise<any> {
     if (!silent) {
       const removePromptResult = await removePrompt();
@@ -53,15 +56,20 @@ export default class Remove extends Command {
       }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ ids, remote, force, track, deleteFiles });
+    return remove({ ids, remote, force, track, deleteFiles, lane });
   }
   report({
     localResult,
-    remoteResult = []
+    remoteResult = [],
+    laneResults = []
   }: {
     localResult: RemovedLocalObjects;
     remoteResult: RemovedObjects[];
+    laneResults: string[];
   }): string {
+    if (laneResults.length) {
+      return chalk.green(`successfully removed the following lane(s): ${chalk.bold(laneResults.join(', '))}`);
+    }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }

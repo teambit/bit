@@ -799,6 +799,32 @@ export default class Scope {
     this.scopeJson.trackLane(trackLaneData);
   }
 
+  async removeLanes(lanes: string[], force: boolean) {
+    const existingLanes = await this.listLanes();
+    const lanesToRemove: Lane[] = lanes.map(laneName => {
+      if (laneName === DEFAULT_LANE) throw new GeneralError(`unable to remove the default lane "${DEFAULT_LANE}"`);
+      if (laneName === this.getCurrentLaneName())
+        throw new GeneralError(`unable to remove the currently used lane "${laneName}"`);
+      const existingLane = existingLanes.find(l => l.name === laneName);
+      if (!existingLane) throw new GeneralError(`lane ${laneName} was not found in scope ${this.name}`);
+      return existingLane;
+    });
+    if (!force) {
+      await Promise.all(
+        lanesToRemove.map(async laneObj => {
+          const isFullyMerged = await laneObj.isFullyMerged(this);
+          if (!isFullyMerged) {
+            throw new GeneralError(
+              `unable to remove ${laneObj.name} lane, it is not fully merged. to disregard this error, please use --force flag`
+            );
+          }
+        })
+      );
+    }
+    this.objects.removeManyObjects(lanesToRemove.map(l => l.hash()));
+    this.objects.persist();
+  }
+
   /**
    * if it's not in the scope, it's probably new, we assume it doesn't have scope.
    */

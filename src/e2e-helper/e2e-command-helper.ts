@@ -125,6 +125,9 @@ export default class CommandHelper {
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
   }
+  removeLane(laneName = 'dev') {
+    return this.runCmd(`bit remove ${laneName} --lane --silent`);
+  }
   showLanes(options = '') {
     const results = this.runCmd(`bit lane ${options}`);
     return removeChalkCharacters(results) as string;
@@ -304,6 +307,9 @@ export default class CommandHelper {
 
   merge(values: string) {
     return this.runCmd(`bit merge ${values}`);
+  }
+  mergeLane(laneName: string, options = '') {
+    return this.runCmd(`bit merge ${laneName} ${options} --lane`);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

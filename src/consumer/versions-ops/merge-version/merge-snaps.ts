@@ -182,7 +182,7 @@ export async function mergeLanes({
   } else {
     otherLane = await consumer.scope.loadLane(laneId);
     if (!otherLane) throw new GeneralError(`unable to switch to "${laneName}", the lane was not found`);
-    bitIds = otherLane.components.map(c => c.id);
+    bitIds = otherLane.components.map(c => c.id.changeVersion(c.head.toString()));
     otherLaneName = laneId.name;
   }
   const allComponentsStatus = await getAllComponentsStatus();

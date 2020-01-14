@@ -8,35 +8,56 @@ import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 import removeComponents from '../../../consumer/component-ops/remove-components';
 import { getRemoteBitIdsByWildcards } from './list-scope';
+import WorkspaceLane from '../../../consumer/bit-map/workspace-lane';
 
 export default (async function remove({
   ids,
   force,
   remote,
   track,
-  deleteFiles
+  deleteFiles,
+  lane
 }: {
   ids: string[];
   force: boolean;
   remote: boolean;
   track: boolean;
   deleteFiles: boolean;
+  lane: boolean;
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer | null | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
-  const removeResults = await removeComponents({
-    consumer,
-    ids: BitIds.fromArray(bitIds),
-    force,
-    remote,
-    track,
-    deleteFiles
-  });
+  let removeResults;
+  if (lane) {
+    removeResults = await removeLanes(consumer, ids, remote, force);
+  } else {
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const bitIds = remote ? await getRemoteBitIdsToRemove(ids) : await getLocalBitIdsToRemove(consumer, ids);
+    removeResults = await removeComponents({
+      consumer,
+      ids: BitIds.fromArray(bitIds),
+      force,
+      remote,
+      track,
+      deleteFiles
+    });
+  }
   if (consumer) await consumer.onDestroy();
   return removeResults;
 });
+
+async function removeLanes(consumer: Consumer | null, lanes: string[], remote: boolean, force: boolean) {
+  if (remote) {
+    // todo: implement
+    return { laneResults: [] };
+  }
+  if (!consumer) throw new Error('consumer must exist for local removal');
+  await consumer.scope.removeLanes(lanes, force);
+  const workspaceLanes = lanes.map(lane => WorkspaceLane.load(lane, consumer.scope.path));
+  workspaceLanes.forEach(workspaceLane => workspaceLane.reset());
+  await Promise.all(workspaceLanes.map(workspaceLane => workspaceLane.write()));
+  return { laneResults: lanes };
+}
 
 async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {

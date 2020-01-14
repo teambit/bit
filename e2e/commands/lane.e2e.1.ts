@@ -594,4 +594,69 @@ describe('bit lane command', function() {
       expect(status.newComponents).to.have.lengthOf(0);
     });
   });
+  describe('remove lanes', () => {
+    describe('switching to a new lane and snapping', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateWorkspaceWithComponents();
+        helper.command.snapAllComponents();
+        helper.command.exportAllComponents();
+
+        helper.command.createLane();
+        helper.command.snapComponent('bar/foo -f');
+      });
+      it('as an intermediate step, make sure the snapped components are part of the lane', () => {
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(1);
+      });
+      it('should not alow removing the current lane', () => {
+        const output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+        expect(output).to.have.string('unable to remove the currently used lane');
+      });
+      it('should not alow removing the default lane', () => {
+        const output = helper.general.runWithTryCatch(`bit remove ${DEFAULT_LANE} --lane -s`);
+        expect(output).to.have.string('unable to remove the default lane');
+      });
+      describe('switching back to default lane', () => {
+        let beforeRemove;
+        before(() => {
+          helper.command.switchLocalLane(DEFAULT_LANE);
+          beforeRemove = helper.scopeHelper.cloneLocalScope();
+        });
+        describe('then removing without --force flag', () => {
+          let output;
+          before(() => {
+            output = helper.general.runWithTryCatch('bit remove dev --lane -s');
+          });
+          it('should throw an error saying it is not fully merged', () => {
+            expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
+          });
+        });
+        describe('then removing with --force flag', () => {
+          let output;
+          before(() => {
+            output = helper.command.removeLane('dev --force');
+          });
+          it('should remove the lane successfully', () => {
+            expect(output).to.have.string('successfully removed the following lane(s)');
+          });
+          it('bit lane should not show the lane anymore', () => {
+            const lanes = helper.command.showLanes();
+            expect(lanes).not.to.have.string('dev');
+          });
+        });
+        describe('merge the lane, then remove without --force', () => {
+          let output;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeRemove);
+            helper.command.mergeLane('dev');
+            output = helper.command.removeLane('dev');
+          });
+          it('should remove the lane successfully', () => {
+            expect(output).to.have.string('successfully removed the following lane(s)');
+          });
+        });
+      });
+    });
+  });
 });
