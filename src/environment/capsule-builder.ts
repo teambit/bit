@@ -6,10 +6,10 @@ import hash from 'object-hash';
 import v4 from 'uuid';
 import filenamify from 'filenamify';
 import { BitId, BitIds } from '../bit-id';
-import orchestrator, { CapsuleOrchestrator } from '../orchestrator/orchestrator';
-import { CapsuleOptions, CreateOptions } from '../orchestrator/types';
+import orchestrator, { CapsuleOrchestrator } from '../capsule/orchestrator/orchestrator';
+import { CapsuleOptions, CreateOptions } from '../capsule/orchestrator/types';
 import Consumer from '../consumer/consumer';
-import BitCapsule from '../capsule-ext/bit-capsule';
+import { ComponentCapsule } from '../capsule-ext';
 import { getComponentLinks } from '../links/link-generator';
 import { Queue } from '../utils';
 import ManyComponentsWriter, { ManyComponentsWriterParams } from '../consumer/component-ops/many-components-writer';
@@ -43,7 +43,7 @@ export default class CapsuleBuilder {
     private orch: CapsuleOrchestrator = orchestrator
   ) {}
 
-  private _buildCapsuleMap(capsules: BitCapsule[]) {
+  private _buildCapsuleMap(capsules: ComponentCapsule[]) {
     return capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur.wrkDir;
       return acc;
@@ -55,7 +55,7 @@ export default class CapsuleBuilder {
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options,
     consumer?: Consumer
-  ): Promise<{ [bitId: string]: BitCapsule }> {
+  ): Promise<{ [bitId: string]: ComponentCapsule }> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
@@ -71,11 +71,11 @@ export default class CapsuleBuilder {
     );
 
     // create capsules
-    const capsules: BitCapsule[] = await Promise.all(
+    const capsules: ComponentCapsule[] = await Promise.all(
       R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
     );
 
-    const bitCapsulesObject: { [componentId: string]: BitCapsule } = capsules.reduce(function(acc, cur) {
+    const bitCapsulesObject: { [componentId: string]: ComponentCapsule } = capsules.reduce(function(acc, cur) {
       acc[cur.bitId.toString()] = cur;
       return acc;
     }, {});
@@ -92,7 +92,7 @@ export default class CapsuleBuilder {
     return this.orch.getCapsule(this.workspace, config, orchOptions);
   }
 
-  async installpackages(capsules: BitCapsule[]): Promise<void> {
+  async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
       capsules.map(capsule => {
         const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
@@ -128,7 +128,7 @@ export default class CapsuleBuilder {
     components: Component[],
     graph: Graph,
     capsuleMappingForPackageJson: { [componentId: string]: string },
-    capsuleObject: { [componentId: string]: BitCapsule }
+    capsuleObject: { [componentId: string]: ComponentCapsule }
   ) {
     const writeToPath = '.';
     const componentsWithDependencies = components.map(component => {

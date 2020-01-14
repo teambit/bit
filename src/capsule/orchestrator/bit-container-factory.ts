@@ -1,6 +1,6 @@
 import { ContainerFactory, Container, Exec } from '@teambit/capsule';
 import { FS as Anyfs } from '@teambit/any-fs';
-import FsContainer, { BitContainerConfig } from '../capsule-ext/container';
+import FsContainer, { BitContainerConfig } from '../../capsule-ext/container';
 
 export default class BitContainerFactory implements ContainerFactory<Exec, Anyfs> {
   createContainer(options?: BitContainerConfig): Promise<Container<Exec, Anyfs>> {

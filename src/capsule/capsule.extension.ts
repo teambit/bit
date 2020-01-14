@@ -1,9 +1,8 @@
 import { Extension } from '../harmony';
-import { BitExt } from 'bit';
 
-Extension.instantiate({
-  name: 'Capsule',
-  dependencies: [BitExt],
+export default Extension.instantiate({
+  name: 'CapsuleOrchestrator',
+  dependencies: [],
   config: {},
   provider: async () => {}
 });

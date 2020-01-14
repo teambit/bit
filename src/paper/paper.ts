@@ -1,14 +1,9 @@
-import Command from './command';
+import { Command } from './command';
 import { BitCli } from '../cli';
 import CommandRegistry from './registry';
 
 export default class Paper {
   constructor(
-    /**
-     * instance of the legacy bit cli.
-     */
-    private cli: BitCli,
-
     /**
      * paper's command registry
      */
@@ -23,10 +18,14 @@ export default class Paper {
     return this;
   }
 
+  get commands() {
+    return this.registry.commands;
+  }
+
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   run() {
-    this.cli.run();
+    throw new Error('Paper.run is not implemented.');
   }
 }

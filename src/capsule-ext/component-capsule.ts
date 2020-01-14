@@ -4,10 +4,10 @@ import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
 import BitId from '../bit-id/bit-id';
-import BitContainerFactory from '../orchestrator/bit-container-factory';
+import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 import loader from '../cli/loader';
 
-export default class BitCapsule extends Capsule<Exec, Volume> {
+export default class ComponentCapsule extends Capsule<Exec, Volume> {
   private _wrkDir: string;
   private _bitId: BitId;
   private _new = false;
@@ -130,14 +130,14 @@ export default class BitCapsule extends Capsule<Exec, Volume> {
     return this.container.stop();
   }
 
-  static async obtain<Exec, Volume, BitCapsule, CapsuleBaseOptions>(
+  static async obtain<Exec, Volume, ComponentCapsule, CapsuleBaseOptions>(
     containerFactory: BitContainerFactory,
     raw: string
-  ): Promise<BitCapsule> {
+  ): Promise<ComponentCapsule> {
     const object = JSON.parse(raw);
-    const deserializedObject = Object.assign({}, object, BitCapsule.deSerializeConfig(object));
+    const deserializedObject = Object.assign({}, object, ComponentCapsule.deSerializeConfig(object));
     const container = (await containerFactory.obtain(deserializedObject)) as FsContainer;
     // @ts-ignore
-    return new BitCapsule(container, container.fs, new Console(), new State(), deserializedObject);
+    return new ComponentCapsule(container, container.fs, new Console(), new State(), deserializedObject);
   }
 }

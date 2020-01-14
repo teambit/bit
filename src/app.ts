@@ -1,13 +1,10 @@
 import 'reflect-metadata';
 import * as BPromise from 'bluebird';
-import loudRejection from 'loud-rejection';
-import { Harmony, Extension, ExtensionProvider } from './harmony';
+import { Harmony } from './harmony';
 import HooksManager from './hooks';
-import capsuleOrchestrator from './orchestrator/orchestrator';
+import capsuleOrchessrator from './capsule/orchestrator/orchestrator';
 import { Bit } from './bit';
 import { BitCliExt } from './cli';
-import { Pipes } from './pipes';
-import { PaperExt } from './paper';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -24,7 +21,7 @@ HooksManager.init();
 //   Paper
 // ];
 
-Harmony.load(PaperExt)
+Harmony.load(BitCliExt)
   .run()
   .then(() => {})
   .catch(err => {

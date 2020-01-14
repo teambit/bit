@@ -1,13 +1,13 @@
 import { loadConsumerIfExist } from '../../../consumer';
 import CapsuleBuilder, { Options } from '../../../environment/capsule-builder';
-import { CapsuleOptions } from '../../../orchestrator/types';
-import BitCapsule from '../../../capsule-ext/bit-capsule';
+import { CapsuleOptions } from '../../../capsule/orchestrator/types';
+import { ComponentCapsule } from '../../../capsule-ext';
 
 export default (async function capsuleIsolate(
   bitIds: string[],
   capsuleOptions: CapsuleOptions,
   options: Options
-): Promise<{ [bitId: string]: BitCapsule }> {
+): Promise<{ [bitId: string]: ComponentCapsule }> {
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new Error('no consumer found');
   const capsuleBuilder = new CapsuleBuilder(consumer.getPath());
