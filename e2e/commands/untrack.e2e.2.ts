@@ -34,9 +34,8 @@ describe('bit untrack command', function() {
       helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
       helper.command.untrackComponent('bar/foo');
       const bitMap = helper.bitMap.read();
-      expect(Object.keys(bitMap)).to.be.ofSize(2);
+      expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('version');
-      expect(bitMap).to.have.property(LANE_KEY);
     });
     it('Should return an error message if you try to untrack a non-existing component', () => {
       const output = helper.command.untrackComponent('bar/foo');

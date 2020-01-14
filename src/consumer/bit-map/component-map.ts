@@ -105,12 +105,19 @@ export default class ComponentMap {
     this.isAvailableOnCurrentLane = isAvailableOnCurrentLane;
   }
 
-  static fromJson(componentMapObj: ComponentMapData): ComponentMap {
-    componentMapObj.lanes = componentMapObj.lanes
-      ? // @ts-ignore
-        componentMapObj.lanes.map(lane => ({ remoteLane: RemoteLaneId.parse(lane.remoteLane), version: lane.version }))
-      : [];
-    return new ComponentMap(componentMapObj);
+  static fromJson(
+    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> }
+  ): ComponentMap {
+    const componentMapParams = {
+      ...componentMapObj,
+      lanes: componentMapObj.lanes
+        ? componentMapObj.lanes.map(lane => ({
+            remoteLane: RemoteLaneId.parse(lane.remoteLane),
+            version: lane.version
+          }))
+        : []
+    };
+    return new ComponentMap(componentMapParams);
   }
 
   toPlainObject(): Record<string, any> {
