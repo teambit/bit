@@ -14,7 +14,7 @@ export default async function switchAction(switchProps: SwitchProps): Promise<Ap
   let results;
   if (switchProps.create) {
     await consumer.createNewLane(switchProps.laneName);
-    await consumer.scope.setCurrentLane(switchProps.laneName);
+    consumer.scope.setCurrentLane(switchProps.laneName);
     results = { added: switchProps.laneName };
   } else {
     await resolveLanes(consumer, switchProps);

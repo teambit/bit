@@ -708,6 +708,14 @@ export default class BitMap {
     return componentMap;
   }
 
+  reLoadAfterSwitchingLane(workspaceLane: null | WorkspaceLane) {
+    this.workspaceLane = workspaceLane;
+    this._invalidateCache();
+    this.components.forEach(componentMap =>
+      componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null)
+    );
+  }
+
   sortValidateAndMarkAsChanged(componentMap: ComponentMap) {
     componentMap.sort();
     componentMap.validate();

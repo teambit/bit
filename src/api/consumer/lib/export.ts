@@ -139,7 +139,6 @@ async function updateLanes(consumer: Consumer, lanes: Lane[]) {
     workspaceLane.reset();
   });
   await Promise.all(workspaceLanesToUpdate.map(l => l.write()));
-  await consumer.scope.scopeJson.write(consumer.scope.getPath());
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {

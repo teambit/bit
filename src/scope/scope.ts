@@ -780,9 +780,8 @@ export default class Scope {
     return this.loadLane(LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE));
   }
 
-  async setCurrentLane(laneName: string): Promise<void> {
-    this.scopeJson.lanes.current = laneName;
-    await this.scopeJson.write(this.getPath());
+  setCurrentLane(laneName: string): void {
+    this.scopeJson.setCurrentLane(laneName);
   }
 
   getLocalTrackedLaneByRemoteName(remoteLane: string, remoteScope: string): string | null {
@@ -797,11 +796,7 @@ export default class Scope {
   }
 
   trackLane(trackLaneData: TrackLane) {
-    this.scopeJson.lanes.tracking.push({
-      localLane: trackLaneData.localLane,
-      remoteLane: trackLaneData.remoteLane,
-      remoteScope: trackLaneData.remoteScope
-    });
+    this.scopeJson.trackLane(trackLaneData);
   }
 
   /**

@@ -33,6 +33,7 @@ export class ScopeJson {
   remotes: { [key: string]: string };
   groupName: string;
   lanes: { current: string; tracking: TrackLane[] };
+  hasChanged = false;
 
   constructor({ name, remotes, resolverPath, license, groupName, version, lanes }: ScopeJsonProps) {
     this.name = name;
@@ -104,6 +105,26 @@ export class ScopeJson {
 
   async write(path: string) {
     return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
+  }
+
+  trackLane(trackLaneData: TrackLane) {
+    this.lanes.tracking.push({
+      localLane: trackLaneData.localLane,
+      remoteLane: trackLaneData.remoteLane,
+      remoteScope: trackLaneData.remoteScope
+    });
+    this.hasChanged = true;
+  }
+  setCurrentLane(laneName: string): void {
+    if (this.lanes.current !== laneName) {
+      this.lanes.current = laneName;
+      this.hasChanged = true;
+    }
+  }
+  async writeIfChanged(path: string) {
+    if (this.hasChanged) {
+      await this.write(path);
+    }
   }
 
   static loadFromJson(json: string): ScopeJson {

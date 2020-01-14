@@ -484,8 +484,7 @@ describe('bit lane command', function() {
         expect(status).to.not.have.string('utils/is-string');
       });
     });
-    // @todo: implement.
-    describe.skip('switching to lane-a then to master', () => {
+    describe('switching to lane-a then to master', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeSwitchingBack);
         helper.command.switchLocalLane('lane-a');

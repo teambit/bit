@@ -17,6 +17,7 @@ import { Tmp } from '../../scope/repositories';
 import { LaneComponent } from '../../scope/models/lane';
 import { ComponentWithDependencies } from '../../scope';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import WorkspaceLane from '../bit-map/workspace-lane';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -176,7 +177,10 @@ the lane already exists. please switch to the lane and merge`);
   }
 
   saveRemoteLaneToBitmap();
-  await consumer.scope.setCurrentLane(opts.localLaneName as string);
+  consumer.scope.setCurrentLane(opts.localLaneName as string);
+  const workspaceLane =
+    opts.localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(opts.localLaneName as string, consumer.scope.path);
+  consumer.bitMap.reLoadAfterSwitchingLane(workspaceLane);
 }
 
 async function getComponentStatus(

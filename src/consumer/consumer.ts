@@ -1011,10 +1011,10 @@ export default class Consumer {
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
-    const authoredAndImportedComponents = this.bitMap.getAllBitIds([
-      COMPONENT_ORIGINS.IMPORTED,
-      COMPONENT_ORIGINS.AUTHORED
-    ]);
+    const authoredAndImportedComponents = this.bitMap.getAllBitIds(
+      [COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED],
+      true
+    );
     const componentsIds = BitIds.fromArray(components.map(c => c.id));
     return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
@@ -1065,6 +1065,7 @@ export default class Consumer {
 
   async onDestroy() {
     await this.cleanTmpFolder();
+    await this.scope.scopeJson.writeIfChanged(this.scope.path);
     return this.bitMap.write();
   }
 }
