@@ -41,10 +41,10 @@ export default (async function exportAction(params: {
   lanes: boolean;
 }) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
-  const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
+  const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await exportComponents(params);
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
-  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
+  const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults, exportedLanes };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
   return exportResults;
 });
@@ -67,7 +67,13 @@ async function exportComponents({
   codemod: boolean;
   force: boolean;
   lanes: boolean;
-}): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
+}): Promise<{
+  updatedIds: BitId[];
+  nonExistOnBitMap: BitId[];
+  missingScope: BitId[];
+  exported: BitId[];
+  exportedLanes: Lane[];
+}> {
   const consumer: Consumer = await loadConsumer();
   const defaultScope = consumer.config.defaultScope;
   const { idsToExport, missingScope, lanesObjects } = await getComponentsToExport(
@@ -79,7 +85,8 @@ async function exportComponents({
     force,
     lanes
   );
-  if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
+  if (R.isEmpty(idsToExport))
+    return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [], exportedLanes: [] };
   if (codemod) _throwForModified(consumer, idsToExport);
   const { exported, updatedLocally } = await exportMany({
     scope: consumer.scope,
@@ -103,7 +110,7 @@ async function exportComponents({
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return { updatedIds, nonExistOnBitMap, missingScope, exported };
+  return { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes: lanesObjects || [] };
 }
 
 async function updateLanes(consumer: Consumer, lanes: Lane[]) {

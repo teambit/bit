@@ -7,6 +7,7 @@ import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../cons
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
+import { Lane } from '../../../scope/models';
 
 export default class Export extends Command {
   name = 'export [remote] [id...]';
@@ -95,6 +96,7 @@ export default class Export extends Command {
     componentsIds,
     nonExistOnBitMap,
     missingScope,
+    exportedLanes,
     ejectResults,
     remote,
     includeDependencies
@@ -102,6 +104,7 @@ export default class Export extends Command {
     componentsIds: BitId[];
     nonExistOnBitMap: BitId[];
     missingScope: BitId[];
+    exportedLanes: Lane[];
     ejectResults: EjectResults | null | undefined;
     remote: string;
     includeDependencies: boolean;
@@ -138,7 +141,14 @@ export default class Export extends Command {
       const output = ejectTemplate(ejectResults);
       return `\n${output}`;
     };
+    const lanesOutput = () => {
+      if (!exportedLanes.length) return '';
+      return chalk.green(
+        `exported the following ${exportedLanes.length} lane(s):
+${exportedLanes.map(l => `${chalk.bold(l.name)} (${l.components.length} components)`).join('\n')}\n\n`
+      );
+    };
 
-    return nonExistOnBitMapOutput() + missingScopeOutput() + exportOutput() + ejectOutput();
+    return nonExistOnBitMapOutput() + missingScopeOutput() + lanesOutput() + exportOutput() + ejectOutput();
   }
 }
