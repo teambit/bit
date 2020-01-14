@@ -165,9 +165,13 @@ async function getComponentsToExport(
   };
   const laneNames = await getLaneNames();
   const idsFromWorkspaceAndScope = await componentsList.listAllIdsFromWorkspaceAndScope();
+  const currentLaneId = consumer.getCurrentLaneId();
   const isUserTryingToExportLanes = () => {
     if (lanes) return true;
-    if (!ids) return false;
+    if (!ids.length) {
+      // if no ids entered, when a user checked out to a lane, we should export the lane
+      return !currentLaneId.isDefault();
+    }
     if (ids.every(id => !laneNames.includes(id))) {
       // if none of the ids is lane, then user is not trying to export lanes
       return false;
@@ -198,7 +202,7 @@ async function getComponentsToExport(
   };
   if (isUserTryingToExportLanes()) {
     // @todo: stop guessing what the user wants and always ask for "--lanes"
-    const laneIds = ids.map(laneName => new LaneId({ name: laneName }));
+    const laneIds = ids.length ? ids.map(laneName => new LaneId({ name: laneName })) : [currentLaneId];
     const nonExistingLanes: string[] = [];
     const lanesObjects: Lane[] = [];
     await Promise.all(

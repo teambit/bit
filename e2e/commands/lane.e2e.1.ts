@@ -27,6 +27,7 @@ describe('bit lane command', function() {
     });
   });
   describe('create a snap on master then on a new lane', () => {
+    let beforeExport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
@@ -35,6 +36,7 @@ describe('bit lane command', function() {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponents();
+      beforeExport = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component only once as staged', () => {
       const status = helper.command.statusJson();
@@ -61,7 +63,7 @@ describe('bit lane command', function() {
         expect(output).to.have.string('current lane - dev');
       });
     });
-    describe('exporting the lane', () => {
+    describe('exporting the lane by explicitly entering the lane to the cli', () => {
       before(() => {
         helper.command.exportLane('dev');
       });
@@ -72,6 +74,25 @@ describe('bit lane command', function() {
       it('bit status should show a clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+    });
+    describe('exporting the lane implicitly (no lane-name entered)', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeExport);
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.export(helper.command.scopes.remote);
+      });
+      it('should export components on that lane', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+      it('bit status should show a clean state', () => {
+        const output = helper.command.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('should change .bitmap to have the remote lane', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
       });
     });
   });
