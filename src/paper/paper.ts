@@ -18,6 +18,9 @@ export default class Paper {
     return this;
   }
 
+  /**
+   * list of all registered commands.
+   */
   get commands() {
     return this.registry.commands;
   }
