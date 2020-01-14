@@ -18,8 +18,7 @@ export default class BitCli {
   /**
    * execute bit's cli
    */
-  run(commands: Command[]) {
-    this.commandRegistry.commands.push(...commands);
+  run() {
     this.commandRegistry.run();
   }
 }

@@ -3,17 +3,14 @@ import { Workspace, WorkspaceExt } from '../workspace';
 import { PaperExt, Paper } from '../paper';
 import RunCmd from './run.cmd';
 
-type PipesDeps = [Workspace, Paper];
+type PipesDeps = [];
 type Config = {};
 
 export default Extension.instantiate<Config, PipesDeps>({
   name: 'Pipes',
   dependencies: [WorkspaceExt, PaperExt],
   config: {},
-  provider: async (_config: Config, [_workspace, paper]: PipesDeps) => {
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
-    console.log(paper);
-    paper.register(new RunCmd());
-    console.log('yo');
+  provider: async (_config: Config, []: PipesDeps) => {
+    console.log('Pipes provider');
   }
 });

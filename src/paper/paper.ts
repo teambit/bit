@@ -1,15 +1,9 @@
 import { Command } from './command';
 import { BitCli } from '../cli';
 import CommandRegistry from './registry';
-import LegacyCommand from './legacy-command';
 
 export default class Paper {
   constructor(
-    /**
-     * instance of the legacy bit cli.
-     */
-    private cli: BitCli,
-
     /**
      * paper's command registry
      */
@@ -24,11 +18,14 @@ export default class Paper {
     return this;
   }
 
+  get commands() {
+    return this.registry.commands;
+  }
+
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   run() {
-    const legacyCommands = this.registry.commands.map(cmd => new LegacyCommand(cmd));
-    this.cli.run(legacyCommands);
+    throw new Error('Paper.run is not implemented.');
   }
 }

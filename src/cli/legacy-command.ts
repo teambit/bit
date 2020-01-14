@@ -1,5 +1,5 @@
 import Cmd, { CommandOption, CommandOptions } from '../cli/command';
-import { Command } from './command';
+import { Command } from '../paper/command';
 import { render } from 'ink';
 
 /**
@@ -16,16 +16,11 @@ export default class LegacyCommand extends Cmd {
   }
 
   async action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
-    const options = LegacyCommand.createOptions();
-    const element = await this.paperCommand.render(options);
+    const element = await this.paperCommand.render(params);
     return render(element);
   }
 
   report(data: any, params: any, opts: { [key: string]: any }): string {
     return '';
-  }
-
-  static createOptions(): CommandOptions {
-    return [] as CommandOptions;
   }
 }
