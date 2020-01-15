@@ -4,7 +4,7 @@ import HooksManager from '../../../hooks';
 import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
 import BitIds from '../../../bit-id/bit-ids';
 import { isClientHasVersionBefore } from '../../../scope/network/check-version-compatibility';
-import CompsAndLanesObjects from '../../../scope/objects-to-push';
+import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 
 const HooksManagerInstance = HooksManager.getInstance();
 

@@ -17,7 +17,7 @@ import { LATEST, DEFAULT_LANE } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import CompsAndLanesObjects from '../objects-to-push';
+import CompsAndLanesObjects from '../comps-and-lanes-objects';
 import LaneObjects from '../lane-objects';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';

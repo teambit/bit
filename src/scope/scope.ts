@@ -47,7 +47,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { IndexType, ComponentItem } from './objects/components-index';
 import Lane from './models/lane';
 import LaneId from '../lane-id/lane-id';
-import CompsAndLanesObjects from './objects-to-push';
+import CompsAndLanesObjects from './comps-and-lanes-objects';
 import { ComponentLogs } from './models/model-component';
 import Lanes from './lanes/lanes';
 

@@ -8,7 +8,7 @@ import GlobalRemotes from '../global-config/global-remotes';
 import Scope from '../scope/scope';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';
-import CompsAndLanesObjects from '../scope/objects-to-push';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {

@@ -33,7 +33,7 @@ import CustomError from '../../../error/custom-error';
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import DependencyGraph from '../../graph/scope-graph';
 import globalFlags from '../../../cli/global-flags';
-import CompsAndLanesObjects from '../../objects-to-push';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { ComponentLogs } from '../../models/model-component';
 import { LaneData } from '../../lanes/lanes';

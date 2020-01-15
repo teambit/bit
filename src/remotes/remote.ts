@@ -8,7 +8,7 @@ import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
 import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
-import CompsAndLanesObjects from '../scope/objects-to-push';
+import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import { ComponentLogs } from '../scope/models/model-component';
 import { LaneData } from '../scope/lanes/lanes';
 
