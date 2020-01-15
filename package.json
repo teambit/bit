@@ -29,7 +29,7 @@
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
-    "build": "babel src -d dist --verbose --extensions \".ts\"",
+    "build": "babel src -d dist --verbose --extensions \".ts,.tsx\"",
     "build:types": "./scripts/build-types.bash",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
