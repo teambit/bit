@@ -18,10 +18,6 @@ import { LegacyCommand } from './legacy-command';
 
 didYouMean.returnFirstMatch = true;
 
-function logAndExit(msg: string, commandName, code = 0) {
-  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, commandName));
-}
-
 function logErrAndExit(msg: Error | string, commandName: string) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (msg.code) throw msg;
