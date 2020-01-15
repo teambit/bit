@@ -12,7 +12,7 @@ export class LegacyCommand extends Cmd {
     super();
     this.name = paperCommand.name;
     this.description = paperCommand.description;
-    this.opts = paperCommand.opts;
+    this.opts = paperCommand.options;
     this.alias = paperCommand.alias;
   }
 
@@ -25,6 +25,7 @@ export class LegacyCommand extends Cmd {
       render(element)
     }
   }
+
   report(data: any, params: any, opts: { [key: string]: any }): string {
     return '';
   }

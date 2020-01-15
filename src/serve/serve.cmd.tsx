@@ -6,9 +6,9 @@ export default class ServeCommand implements Command {
   name = 'serve <id>';
   description = 'serve a component';
   alias = '';
-  opts = []
+  options = []
 
-  async render() {    
+  async render() {
     return <Color>hi amit</Color>
   }
 }

@@ -18,7 +18,7 @@ export default Extension.instantiate<Config, PipesDeps>({
       name:'run',
       alias: '',
       description: 'some description',
-      opts: [
+      options: [
         ['j', 'json', 'hey']
       ],
       render: async () => {
