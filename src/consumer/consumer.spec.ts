@@ -9,7 +9,7 @@ describe('Consumer', function() {
   const getConsumerInstance = () => {
     sandbox.stub(Consumer.prototype, 'warnForMissingDriver').returns();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const consumer = new Consumer({ projectPath: '', config: {}, scope: { getCurrentLaneName: () => '' } });
+    const consumer = new Consumer({ projectPath: '', config: {}, scope: { lanes: { getCurrentLaneName: () => '' } } });
     return consumer;
   };
   describe('getComponentIdFromNodeModulesPath', () => {
