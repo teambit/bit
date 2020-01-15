@@ -3,7 +3,7 @@ import { Scope } from '../scope/scope.api';
 import { Workspace } from '../workspace';
 import { Paper } from '../paper';
 import { Harmony } from '../harmony';
-import { SnapCommand } from './snap-command';
+import { SnapCommand } from './snap.cmd';
 
 export type SnapDeps = [Paper, Workspace, Scope];
 
