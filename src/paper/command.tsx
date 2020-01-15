@@ -2,12 +2,14 @@ import { CommandOptions } from '../cli/command';
 
 export interface Command {
   /**
-   * the name of the command. for example: 'add <> []'
+   * Name of command with arguments:
+   * <> for mandatory arguments.
+   * [] for optional arguments.
    */
   name: string;
 
   /**
-   * the description of the command. Will be seen in bit help and command help.
+   * The description of the command. Will be seen in bit help and command help.
    * Examples:
    *  1. `bit`
    *  2. `bit add --help`
@@ -20,21 +22,30 @@ export interface Command {
   alias: string;
 
   /**
-   * array of command options.
+   * Array of command options where each element is a tuple.
+   * ['shorten flag', 'long flag', 'flag description']
+   * for example:
+   * ['j', 'json', 'output json command']
+   *
    */
-  opts: PaperOptions;
+  options: PaperOptions;
 
   /**
-   *
-   * @param args command options provided in CLI
-   *
+   * Main command handler which is called when invoking commands
+   * @param params  - arguments object as defined in name.
+   * @param options - command flags as described in options.
+   * @return - JSX element which is rendered with ink
    */
-  render:(params: any, opts: { [key: string]: any }) => Promise<React.ReactElement>;
-  json?:(params: any, opts: { [key: string]: any }) => GenericObject;
+  render: (params: any, options: { [key: string]: any }) => Promise<React.ReactElement>;
+  /**
+   * Optional handler to provide a raw result of the command.
+   * Will be go called if '-j' option is provided by user.
+   * @param params  - arguments object as defined in name.
+   * @param options - command flags as described in options.
+   * @return a GenericObject to be rendered to string in the console.
+   */
+  json?: (params: any, options: { [key: string]: any }) => GenericObject;
 }
 
-export type GenericObject = {[k:string]:any}
-
-
-
-export type PaperOptions = CommandOptions
+export type GenericObject = { [k: string]: any };
+export type PaperOptions = CommandOptions;

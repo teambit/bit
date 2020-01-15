@@ -11,7 +11,7 @@ export class SnapCommand implements Command {
   public name = 'snap [id] [version]';
   public description = 'snap command';
   public alias = '';
-  public opts: PaperOptions = [
+  public options: PaperOptions = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
     ['s', 'scope <version>', 'tag all components of the current scope'],

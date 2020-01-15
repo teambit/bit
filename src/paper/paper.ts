@@ -27,8 +27,10 @@ export default class Paper {
 
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
+   *
    */
   run() {
+    // TODO: Implement this to wrap the legacy CLI (code smell)
     throw new Error('Paper.run is not implemented.');
   }
 }
