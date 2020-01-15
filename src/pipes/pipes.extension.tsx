@@ -1,7 +1,6 @@
 import { Extension } from '../harmony';
 import { Workspace, WorkspaceExt } from '../workspace';
 import { PaperExt, Paper } from '../paper';
-import RunCmd from './run.cmd';
 import React from 'react';
 import { Pipes } from './pipes';
 import { Color } from 'ink';
@@ -19,7 +18,9 @@ export default Extension.instantiate<Config, PipesDeps>({
       name:'run',
       alias: '',
       description: 'some description',
-      opts: [],
+      opts: [
+        ['j', 'json', 'hey']
+      ],
       render: async () => {
         return <Color green>Hi!</Color>
       }

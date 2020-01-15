@@ -14,6 +14,7 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
+import { LegacyCommand } from './legacy-command';
 
 didYouMean.returnFirstMatch = true;
 
@@ -99,7 +100,10 @@ function execAction(command, concrete, args) {
           data = res.data;
           code = res.__code;
         }
-        return logAndExit(command.report(data, relevantArgs, flags), command.name, code);
+        const msg = command.report(data, relevantArgs, flags);
+        return command instanceof LegacyCommand
+          ? logger.exitAfterFlush(code, command.name)
+          : process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, command.name));
       });
     })
     .catch(err => {

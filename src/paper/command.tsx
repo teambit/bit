@@ -30,6 +30,11 @@ export interface Command {
    *
    */
   render:(params: any, opts: { [key: string]: any }) => Promise<React.ReactElement>;
+  json?:(params: any, opts: { [key: string]: any }) => GenericObject;
 }
+
+export type GenericObject = {[k:string]:any}
+
+
 
 export type PaperOptions = CommandOptions

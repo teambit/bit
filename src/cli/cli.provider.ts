@@ -2,7 +2,7 @@ import { buildRegistry, CommandRegistry } from '../cli';
 import BitCli from './cli.api';
 import { Paper } from '../paper';
 import { Bit } from '../bit';
-import LegacyCommand from './legacy-command';
+import { LegacyCommand } from './legacy-command';
 
 export type BitCLIDeps = [Paper, Bit];
 /**
