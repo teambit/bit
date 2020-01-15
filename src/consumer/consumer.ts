@@ -133,7 +133,7 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.getCurrentLaneName());
+    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
@@ -193,7 +193,7 @@ export default class Consumer {
   }
 
   getCurrentLaneId(): LaneId {
-    return new LaneId({ name: this.scope.getCurrentLaneName() || DEFAULT_LANE });
+    return new LaneId({ name: this.scope.lanes.getCurrentLaneName() || DEFAULT_LANE });
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
@@ -233,7 +233,7 @@ export default class Consumer {
     const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
     newLane.setLaneComponents(dataToPopulate);
 
-    await this.scope.saveLane(newLane);
+    await this.scope.lanes.saveLane(newLane);
 
     const workspaceConfig = WorkspaceLane.load(laneName, this.scope.getPath());
     workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();
@@ -901,7 +901,7 @@ export default class Consumer {
     const scopeP = Scope.ensure(resolvedScopePath);
     const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
-    const bitMap = BitMap.load(projectPath, scope.path, scope.getCurrentLaneName());
+    const bitMap = BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
     return new Consumer({
       projectPath,
       created: true,

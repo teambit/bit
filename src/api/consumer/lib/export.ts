@@ -122,7 +122,7 @@ async function updateLanes(consumer: Consumer, lanes: Lane[]) {
   const workspaceLanesToUpdate: WorkspaceLane[] = [];
   lanesToUpdate.forEach(lane => {
     const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
-    consumer.scope.trackLane({
+    consumer.scope.lanes.trackLane({
       localLane: lane.name,
       remoteLane: remoteLaneId.name,
       remoteScope: remoteLaneId.scope as string

@@ -149,7 +149,7 @@ export async function saveCheckedOutLaneInfo(
       consumer.bitMap.addLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
       // add versions to lane
     } else {
-      const trackData = consumer.scope.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
+      const trackData = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
       if (!trackData) {
         return; // the lane was never exported
       }
@@ -168,7 +168,7 @@ the lane already exists. please switch to the lane and merge`);
     await consumer.createNewLane(opts.localLaneName as string, opts.laneComponents);
     if (opts.addTrackingInfo) {
       // otherwise, it is tracked already
-      consumer.scope.trackLane({
+      consumer.scope.lanes.trackLane({
         localLane: opts.localLaneName as string,
         remoteLane: opts.remoteLaneName as string,
         remoteScope: opts.remoteLaneScope as string
@@ -177,7 +177,7 @@ the lane already exists. please switch to the lane and merge`);
   }
 
   saveRemoteLaneToBitmap();
-  consumer.scope.setCurrentLane(opts.localLaneName as string);
+  consumer.scope.lanes.setCurrentLane(opts.localLaneName as string);
   const workspaceLane =
     opts.localLaneName === DEFAULT_LANE ? null : WorkspaceLane.load(opts.localLaneName as string, consumer.scope.path);
   consumer.bitMap.reLoadAfterSwitchingLane(workspaceLane);

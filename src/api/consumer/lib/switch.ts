@@ -14,7 +14,7 @@ export default async function switchAction(switchProps: SwitchProps): Promise<Ap
   let results;
   if (switchProps.create) {
     await consumer.createNewLane(switchProps.laneName);
-    consumer.scope.setCurrentLane(switchProps.laneName);
+    consumer.scope.lanes.setCurrentLane(switchProps.laneName);
     results = { added: switchProps.laneName };
   } else {
     await resolveLanes(consumer, switchProps);
@@ -30,7 +30,7 @@ async function resolveLanes(consumer: Consumer, switchProps: SwitchProps) {
   const { laneName, remoteScope } = switchProps;
   if (remoteScope) {
     // fetch the remote to update all heads
-    const localTrackedLane = consumer.scope.getLocalTrackedLaneByRemoteName(laneName, remoteScope);
+    const localTrackedLane = consumer.scope.lanes.getLocalTrackedLaneByRemoteName(laneName, remoteScope);
     switchProps.localLaneName = switchProps.newLaneName || localTrackedLane || laneName;
     if (consumer.getCurrentLaneId().name === switchProps.localLaneName) {
       throw new GeneralError(`already checked out to "${switchProps.localLaneName}"`);

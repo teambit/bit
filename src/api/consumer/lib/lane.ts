@@ -58,7 +58,7 @@ export default async function lane({
 
   function getLaneDataOfLane(laneObject: Lane): LaneData {
     const laneName = laneObject.toLaneId().toString();
-    const trackingData = consumer.scope.getRemoteTrackedDataByLocalLane(laneName);
+    const trackingData = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(laneName);
     return {
       name: laneName,
       remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,

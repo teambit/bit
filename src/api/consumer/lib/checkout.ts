@@ -48,7 +48,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     const remoteScopeLane = values.length === 2 ? firstValue : undefined;
     const lanes = await consumer.scope.listLanes();
     if (remoteScopeLane) {
-      const localTrackedLane = consumer.scope.getLocalTrackedLaneByRemoteName(laneName, remoteScopeLane);
+      const localTrackedLane = consumer.scope.lanes.getLocalTrackedLaneByRemoteName(laneName, remoteScopeLane);
       checkoutProps.localLaneName = checkoutProps.newLaneName || localTrackedLane || laneName;
       if (consumer.getCurrentLaneId().name === checkoutProps.localLaneName) {
         throw new GeneralError(`already checked out to "${checkoutProps.localLaneName}"`);

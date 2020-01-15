@@ -39,7 +39,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
   async function getLaneIds(): Promise<RemoteLaneId[]> {
     if (ids.length) {
       return ids.map(id => {
-        const trackLane = consumer.scope.getRemoteTrackedDataByLocalLane(id);
+        const trackLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(id);
         if (trackLane) return RemoteLaneId.from(trackLane.remoteLane, trackLane.remoteScope);
         // assuming it's a remote
         return RemoteLaneId.parse(id);

@@ -44,11 +44,12 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
-import { IndexType, ComponentItem, LaneItem } from './objects/components-index';
+import { IndexType, ComponentItem } from './objects/components-index';
 import Lane from './models/lane';
-import LaneId, { LocalLaneId } from '../lane-id/lane-id';
+import LaneId from '../lane-id/lane-id';
 import ObjectsToPush from './objects-to-push';
 import { ComponentLogs } from './models/model-component';
+import Lanes from './lanes/lanes';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -91,6 +92,7 @@ export default class Scope {
   objects: Repository;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
+  lanes: Lanes;
 
   constructor(scopeProps: ScopeProps) {
     this.path = scopeProps.path;
@@ -99,6 +101,7 @@ export default class Scope {
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects;
+    this.lanes = new Lanes(this.objects, this.scopeJson);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -251,20 +254,11 @@ export default class Scope {
   }
 
   async listLanes(): Promise<Lane[]> {
-    return (await this.objects.listObjectsFromIndex(IndexType.lanes)) as Lane[];
+    return this.lanes.listLanes();
   }
 
   async loadLane(id: LaneId): Promise<Lane | null> {
-    if (id.isDefault()) return null; // master lane is not saved
-    const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
-    const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
-    if (!hash) return null;
-    return (await this.objects.load(new Ref(hash))) as Lane;
-  }
-
-  async saveLane(laneObject: Lane) {
-    this.objects.add(laneObject);
-    await this.objects.persist();
+    return this.lanes.loadLane(id);
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
@@ -584,7 +578,7 @@ export default class Scope {
     if (component) {
       // @todo: what about the remote head
       // @todo: what about other places the model-component is loaded
-      const currentLane = await this.getCurrentLaneObject();
+      const currentLane = await this.lanes.getCurrentLaneObject();
       component.setLaneHeadLocal(currentLane);
       return component;
     }
@@ -770,59 +764,6 @@ export default class Scope {
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.objects.load(ref);
-  }
-
-  getCurrentLaneName(): string {
-    return this.scopeJson.lanes.current;
-  }
-
-  async getCurrentLaneObject(): Promise<Lane | null> {
-    return this.loadLane(LocalLaneId.from(this.getCurrentLaneName() || DEFAULT_LANE));
-  }
-
-  setCurrentLane(laneName: string): void {
-    this.scopeJson.setCurrentLane(laneName);
-  }
-
-  getLocalTrackedLaneByRemoteName(remoteLane: string, remoteScope: string): string | null {
-    const trackedLane = this.scopeJson.lanes.tracking.find(
-      t => t.remoteLane === remoteLane && t.remoteScope === remoteScope
-    );
-    return trackedLane ? trackedLane.localLane : null;
-  }
-
-  getRemoteTrackedDataByLocalLane(localLane: string): TrackLane | undefined {
-    return this.scopeJson.lanes.tracking.find(t => t.localLane === localLane);
-  }
-
-  trackLane(trackLaneData: TrackLane) {
-    this.scopeJson.trackLane(trackLaneData);
-  }
-
-  async removeLanes(lanes: string[], force: boolean) {
-    const existingLanes = await this.listLanes();
-    const lanesToRemove: Lane[] = lanes.map(laneName => {
-      if (laneName === DEFAULT_LANE) throw new GeneralError(`unable to remove the default lane "${DEFAULT_LANE}"`);
-      if (laneName === this.getCurrentLaneName())
-        throw new GeneralError(`unable to remove the currently used lane "${laneName}"`);
-      const existingLane = existingLanes.find(l => l.name === laneName);
-      if (!existingLane) throw new GeneralError(`lane ${laneName} was not found in scope ${this.name}`);
-      return existingLane;
-    });
-    if (!force) {
-      await Promise.all(
-        lanesToRemove.map(async laneObj => {
-          const isFullyMerged = await laneObj.isFullyMerged(this);
-          if (!isFullyMerged) {
-            throw new GeneralError(
-              `unable to remove ${laneObj.name} lane, it is not fully merged. to disregard this error, please use --force flag`
-            );
-          }
-        })
-      );
-    }
-    this.objects.removeManyObjects(lanesToRemove.map(l => l.hash()));
-    this.objects.persist();
   }
 
   /**

@@ -184,7 +184,7 @@ export async function exportMany({
         await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
       })
     );
-    const currentLane = scope.getCurrentLaneName();
+    const currentLane = scope.lanes.getCurrentLaneName();
     const defaultLane = new LaneId({ name: DEFAULT_LANE });
     if (currentLane === DEFAULT_LANE && !lanes.length) {
       // all exported from master

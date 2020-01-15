@@ -43,7 +43,7 @@ export async function mergeComponents(
   snapMessage: string
 ): Promise<ApplyVersionResults> {
   const localLane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
-  const remoteTrackedLane = consumer.scope.getRemoteTrackedDataByLocalLane(laneId.name);
+  const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(laneId.name);
   if (!laneId.isDefault() && !remoteTrackedLane) {
     throw new Error(`unable to find a remote tracked to the local lane "${laneId.name}"`);
   }
