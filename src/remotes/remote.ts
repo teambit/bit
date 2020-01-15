@@ -8,7 +8,7 @@ import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';
 import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/network/ssh/ssh';
 import DependencyGraph from '../scope/graph/scope-graph';
-import ObjectsToPush from '../scope/objects-to-push';
+import CompsAndLanesObjects from '../scope/objects-to-push';
 import { ComponentLogs } from '../scope/models/model-component';
 import { LaneData } from '../scope/lanes/lanes';
 
@@ -82,7 +82,7 @@ export default class Remote {
     context?: Record<string, any>,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
     idsAreLanes = false
-  ): Promise<ObjectsToPush> {
+  ): Promise<CompsAndLanesObjects> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, idsAreLanes, context));
   }
@@ -104,7 +104,7 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ObjectsToPush, context: Record<string, any> | null | undefined): Promise<string[]> {
+  pushMany(components: CompsAndLanesObjects, context: Record<string, any> | null | undefined): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return connect(this.host).then(network => network.pushMany(components, context));
   }

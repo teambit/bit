@@ -155,9 +155,9 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     // @todo, this is very yuck. we currently only fetch bit-ids, so we kind of convert the lane-id to bit-id :(
     const ids = new BitIds(...remoteLaneIds.map(id => new BitId({ scope: id.scope, name: id.name })));
-    const objectsToPush = await remotes.fetch(ids, this.scope, undefined, undefined, true);
+    const compsAndLanesObjects = await remotes.fetch(ids, this.scope, undefined, undefined, true);
 
-    const laneObjects = await Promise.all(objectsToPush.laneObjects.map(l => l.toObjectsAsync()));
+    const laneObjects = await Promise.all(compsAndLanesObjects.laneObjects.map(l => l.toObjectsAsync()));
     const lanes = laneObjects.map(l => l.lane);
     await Promise.all(lanes.map(lane => this.scope.objects.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     return lanes;
@@ -270,9 +270,9 @@ export default class ScopeComponentsImporter {
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
         .fetch(left.map(def => def.id), this.scope, undefined, context)
-        .then(objectsToPush => {
+        .then(compsAndLanesObjects => {
           logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
-          return this.scope.writeManyComponentsToModel(objectsToPush, persist, ids);
+          return this.scope.writeManyComponentsToModel(compsAndLanesObjects, persist, ids);
         })
         .then(nonLaneIds => this._getExternalMany(nonLaneIds, remotes));
     });
@@ -301,8 +301,8 @@ export default class ScopeComponentsImporter {
 
       return remotes
         .fetch([id], this.scope, undefined, context)
-        .then(objectsToPush => {
-          return this.scope.writeComponentToModel(objectsToPush.componentsObjects[0]);
+        .then(compsAndLanesObjects => {
+          return this.scope.writeComponentToModel(compsAndLanesObjects.componentsObjects[0]);
         })
         .then(() => this._getExternal({ id, remotes, localFetch: true }));
     });
@@ -327,7 +327,7 @@ export default class ScopeComponentsImporter {
       }
       return remotes
         .fetch([id], this.scope, true, context)
-        .then(objectsToPush => this.scope.writeComponentToModel(objectsToPush.componentsObjects[0]))
+        .then(compsAndLanesObjects => this.scope.writeComponentToModel(compsAndLanesObjects.componentsObjects[0]))
         .then(() => this._getExternal({ id, remotes, localFetch: true }))
         .then((versionDependencies: VersionDependencies) => versionDependencies.component);
     });
@@ -369,8 +369,8 @@ export default class ScopeComponentsImporter {
       );
       return remotes
         .fetch(left.map(def => def.id), this.scope, true, context)
-        .then(objectsToPush => {
-          return this.scope.writeManyComponentsToModel(objectsToPush, undefined, ids);
+        .then(compsAndLanesObjects => {
+          return this.scope.writeManyComponentsToModel(compsAndLanesObjects, undefined, ids);
         })
         .then(nonLaneIds => this._getExternalManyWithoutDependencies(nonLaneIds, remotes, true));
     });

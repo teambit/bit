@@ -17,7 +17,7 @@ import { LATEST, DEFAULT_LANE } from '../../constants';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import ObjectsToPush from '../objects-to-push';
+import CompsAndLanesObjects from '../objects-to-push';
 import LaneObjects from '../lane-objects';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';
@@ -154,10 +154,10 @@ export async function exportMany({
         return new LaneObjects(laneBuffer, []);
       })
     );
-    const objectsToPush = new ObjectsToPush(manyObjects, manyLanesObjects);
+    const compsAndLanesObjects = new CompsAndLanesObjects(manyObjects, manyLanesObjects);
     let exportedIds: string[];
     try {
-      exportedIds = await remote.pushMany(objectsToPush, context);
+      exportedIds = await remote.pushMany(compsAndLanesObjects, context);
       logger.debugAndAddBreadCrumb(
         'exportMany',
         'successfully pushed all ids to the bare-scope, going to save them back to local scope'

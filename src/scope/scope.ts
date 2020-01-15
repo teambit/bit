@@ -47,7 +47,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { IndexType, ComponentItem } from './objects/components-index';
 import Lane from './models/lane';
 import LaneId from '../lane-id/lane-id';
-import ObjectsToPush from './objects-to-push';
+import CompsAndLanesObjects from './objects-to-push';
 import { ComponentLogs } from './models/model-component';
 import Lanes from './lanes/lanes';
 
@@ -407,12 +407,16 @@ export default class Scope {
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(objectsToPush: ObjectsToPush, persist = true, ids: BitId[]): Promise<any> {
+  async writeManyComponentsToModel(
+    compsAndLanesObjects: CompsAndLanesObjects,
+    persist = true,
+    ids: BitId[]
+  ): Promise<any> {
     logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
-      `total componentsObjects ${objectsToPush.componentsObjects.length}`
+      `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
     );
-    await pMapSeries(objectsToPush.componentsObjects, (componentObjects: ComponentObjects) =>
+    await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
       componentObjects
         .toObjectsAsync()
         .then(objects => this.sources.merge(objects))
@@ -427,7 +431,7 @@ export default class Scope {
     );
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
-      objectsToPush.laneObjects.map(async laneBuffers => {
+      compsAndLanesObjects.laneObjects.map(async laneBuffers => {
         const laneObjects = await laneBuffers.toObjectsAsync();
         const lane = laneObjects.lane;
         if (!lane.scope) {

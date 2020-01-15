@@ -4,27 +4,27 @@ import HooksManager from '../../../hooks';
 import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
 import BitIds from '../../../bit-id/bit-ids';
 import { isClientHasVersionBefore } from '../../../scope/network/check-version-compatibility';
-import ObjectsToPush from '../../../scope/objects-to-push';
+import CompsAndLanesObjects from '../../../scope/objects-to-push';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type ComponentObjectsInput = {
   path: string;
-  objectsToPush: string | ObjectsToPush;
+  compsAndLanesObjects: string | CompsAndLanesObjects;
 };
 
 export default (async function put(
-  { path, objectsToPush }: ComponentObjectsInput,
+  { path, compsAndLanesObjects }: ComponentObjectsInput,
   headers: Record<string, any>
 ): Promise<string[]> {
-  if (typeof objectsToPush === 'string') {
-    objectsToPush = ObjectsToPush.fromString(objectsToPush);
+  if (typeof compsAndLanesObjects === 'string') {
+    compsAndLanesObjects = CompsAndLanesObjects.fromString(compsAndLanesObjects);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(
     PRE_RECEIVE_OBJECTS,
-    { path, componentObjects: objectsToPush.componentsObjects },
+    { path, componentObjects: compsAndLanesObjects.componentsObjects },
     headers
   );
   const scope = await loadScope(path);
@@ -34,15 +34,15 @@ export default (async function put(
   const clientIsOld = Boolean(headers && headers.version && isClientHasVersionBefore('14.1.1', headers.version));
   const componentsBitIds: BitIds = await exportManyBareScope(
     scope,
-    objectsToPush.componentsObjects,
+    compsAndLanesObjects.componentsObjects,
     clientIsOld,
-    objectsToPush.laneObjects
+    compsAndLanesObjects.laneObjects
   );
   const componentsIds: string[] = componentsBitIds.map(id => id.toString());
   await HooksManagerInstance.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
-      componentObjects: objectsToPush.componentsObjects,
+      componentObjects: compsAndLanesObjects.componentsObjects,
       componentsIds,
       scopePath: path,
       scopeName: scope.scopeJson.name

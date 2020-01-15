@@ -8,7 +8,7 @@ import GlobalRemotes from '../global-config/global-remotes';
 import Scope from '../scope/scope';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';
-import ObjectsToPush from '../scope/objects-to-push';
+import CompsAndLanesObjects from '../scope/objects-to-push';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -42,7 +42,7 @@ export default class Remotes extends Map<string, Remote> {
     withoutDeps = false,
     context?: Record<string, any>,
     idsAreLanes = false
-  ): Promise<ObjectsToPush> {
+  ): Promise<CompsAndLanesObjects> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
     const groupedIds = this._groupByScopeName(ids);
@@ -57,10 +57,10 @@ export default class Remotes extends Map<string, Remote> {
     });
 
     logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) on a remote`);
-    const manyObjectsToPush: ObjectsToPush[] = await Promise.all(promises);
+    const manyCompsAndLanesObjects: CompsAndLanesObjects[] = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
 
-    return ObjectsToPush.flatten(manyObjectsToPush);
+    return CompsAndLanesObjects.flatten(manyCompsAndLanesObjects);
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {

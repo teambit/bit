@@ -40,7 +40,7 @@ export default class Fs implements Network {
 
   pushMany(components: ComponentObjects[]): Promise<string[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return put({ path: this.scopePath, objectsToPush: components });
+    return put({ path: this.scopePath, compsAndLanesObjects: components });
   }
 
   deleteMany(ids: string[], force: boolean): Promise<ComponentObjects[]> {

@@ -2,8 +2,7 @@ import R from 'ramda';
 import ComponentObjects from './component-objects';
 import LaneObjects from './lane-objects';
 
-// @todo: change the name. this name is temporarily. it also functions for fetch not only to push
-export default class ObjectsToPush {
+export default class CompsAndLanesObjects {
   componentsObjects: ComponentObjects[];
   laneObjects: LaneObjects[];
 
@@ -32,13 +31,13 @@ export default class ObjectsToPush {
     }
     const componentsObjects = components.map(componentObject => ComponentObjects.fromString(componentObject));
     const laneObjects = lanes.map(laneObj => LaneObjects.fromString(laneObj));
-    return new ObjectsToPush(componentsObjects, laneObjects);
+    return new CompsAndLanesObjects(componentsObjects, laneObjects);
   }
 
-  static flatten(manyObjectsToPush: ObjectsToPush[]): ObjectsToPush {
-    return new ObjectsToPush(
-      R.flatten(manyObjectsToPush.map(m => m.componentsObjects)),
-      R.flatten(manyObjectsToPush.map(m => m.laneObjects))
+  static flatten(manyCompsAndLanesObjects: CompsAndLanesObjects[]): CompsAndLanesObjects {
+    return new CompsAndLanesObjects(
+      R.flatten(manyCompsAndLanesObjects.map(m => m.componentsObjects)),
+      R.flatten(manyCompsAndLanesObjects.map(m => m.laneObjects))
     );
   }
 }

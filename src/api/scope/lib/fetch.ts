@@ -5,7 +5,7 @@ import HooksManager from '../../../hooks';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import ComponentObjects from '../../../scope/component-objects';
-import ObjectsToPush from '../../../scope/objects-to-push';
+import CompsAndLanesObjects from '../../../scope/objects-to-push';
 import LaneObjects from '../../../scope/lane-objects';
 
 const HooksManagerInstance = HooksManager.getInstance();
@@ -16,7 +16,7 @@ export default async function fetch(
   noDependencies = false,
   idsAreLanes = false,
   headers: Record<string, any> | null | undefined
-): Promise<ObjectsToPush> {
+): Promise<CompsAndLanesObjects> {
   const bitIds: BitIds = BitIds.deserialize(ids);
 
   const args = { path, bitIds, noDependencies };
@@ -53,7 +53,7 @@ export default async function fetch(
     componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents, clientVersion);
   }
 
-  const objectsToPush = new ObjectsToPush(componentObjects, lanesObjects);
+  const compsAndLanesObjects = new CompsAndLanesObjects(componentObjects, lanesObjects);
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(
       POST_SEND_OBJECTS,
@@ -67,5 +67,5 @@ export default async function fetch(
       headers
     );
   }
-  return objectsToPush;
+  return compsAndLanesObjects;
 }
