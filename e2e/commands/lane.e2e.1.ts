@@ -669,4 +669,52 @@ describe('bit lane command', function() {
       });
     });
   });
+  describe('remove components when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.snapAllComponents();
+      helper.command.exportAllComponents();
+
+      helper.command.createLane();
+      helper.fixtures.populateWorkspaceWithComponentsWithV2();
+      helper.command.snapAllComponents();
+    });
+    it('as an intermediate step, make sure the snapped components are part of the lane', () => {
+      const lane = helper.command.showOneLaneParsed('dev');
+      expect(lane.components).to.have.lengthOf(3);
+    });
+    describe('removing a component that has dependents', () => {
+      let output;
+      before(() => {
+        output = helper.command.removeComponent('utils/is-type --silent');
+      });
+      it('should stop the process and indicate that a component has dependents', () => {
+        expect(output).to.have.string('error: unable to delete');
+      });
+    });
+    describe('removing a component that has no dependents', () => {
+      let output;
+      before(() => {
+        output = helper.command.removeComponent('bar/foo --silent');
+      });
+      it('should indicate that the component was removed from the lane', () => {
+        expect(output).to.have.string('lane');
+        expect(output).to.have.string('successfully removed components');
+      });
+      it('should remove the component from the lane', () => {
+        const lane = helper.command.showOneLaneParsed('dev');
+        expect(lane.components).to.have.lengthOf(2);
+        lane.components.forEach(c => expect(c.id.name).to.not.have.string('bar'));
+      });
+      it('should not remove the component from .bitmap', () => {
+        const bitMap = helper.bitMap.read();
+        const head = helper.command.getSnapHead('bar/foo');
+        expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
+      });
+      it('should not delete the files from the filesystem', () => {
+        expect(path.join(helper.scopes.localPath, 'bar/foo.js')).to.be.a.file();
+      });
+    });
+  });
 });

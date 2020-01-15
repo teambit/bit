@@ -6,6 +6,7 @@ export type RemovedObjectSerialized = {
   missingComponents: BitIdStr[];
   removedDependencies: BitIdStr[];
   dependentBits: Record<string, any>;
+  removedFromLane?: boolean;
 };
 
 export default class RemovedObjects {
@@ -13,21 +14,25 @@ export default class RemovedObjects {
   missingComponents: BitIds;
   removedDependencies: BitIds;
   dependentBits: Record<string, any>;
+  removedFromLane?: boolean;
   constructor({
     removedComponentIds,
     missingComponents,
     removedDependencies,
-    dependentBits
+    dependentBits,
+    removedFromLane
   }: {
     removedComponentIds?: BitIds;
     missingComponents?: BitIds;
     removedDependencies?: BitIds;
     dependentBits?: Record<string, any>;
+    removedFromLane?: boolean;
   }) {
     this.removedComponentIds = removedComponentIds || new BitIds();
     this.missingComponents = missingComponents || new BitIds();
     this.removedDependencies = removedDependencies || new BitIds();
     this.dependentBits = dependentBits || {};
+    this.removedFromLane = removedFromLane;
   }
 
   serialize(): RemovedObjectSerialized {
@@ -35,7 +40,8 @@ export default class RemovedObjects {
       removedComponentIds: this.removedComponentIds.serialize(),
       missingComponents: this.missingComponents.serialize(),
       removedDependencies: this.removedDependencies.serialize(),
-      dependentBits: this.dependentBits
+      dependentBits: this.dependentBits,
+      removedFromLane: this.removedFromLane
     };
   }
 

@@ -120,10 +120,11 @@ async function removeLocal(
     removedComponentIds,
     missingComponents,
     dependentBits,
-    removedDependencies
+    removedDependencies,
+    removedFromLane
   } = await consumer.scope.removeMany(force ? bitIds : nonModifiedComponents, force, true, consumer);
 
-  if (!R.isEmpty(removedComponentIds)) {
+  if (!R.isEmpty(removedComponentIds) && !removedFromLane) {
     await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
@@ -136,6 +137,7 @@ async function removeLocal(
     missingComponents,
     modifiedComponents,
     removedDependencies,
-    dependentBits
+    dependentBits,
+    removedFromLane
   );
 }

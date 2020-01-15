@@ -98,6 +98,12 @@ export default class Lane extends BitObject {
       this.components.push(component);
     }
   }
+  removeComponent(id: BitId): boolean {
+    const existsComponent = this.getComponentByName(id);
+    if (!existsComponent) return false;
+    this.components = this.components.filter(c => !c.id.isEqualWithoutScopeAndVersion(id));
+    return true;
+  }
   getComponentByName(bitId: BitId): LaneComponent | undefined {
     return this.components.find(c => c.id.isEqualWithoutScopeAndVersion(bitId));
   }

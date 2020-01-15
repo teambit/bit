@@ -486,9 +486,10 @@ export default class Scope {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
+        const allRefs = await component.getAllVersionHashes(this.objects, false);
         const loadedVersions = await Promise.all(
-          Object.keys(component.versions).map(async version => {
-            const componentVersion = await component.loadVersion(version, this.objects);
+          allRefs.map(async ref => {
+            const componentVersion = await component.loadVersion(ref.toString(), this.objects);
             if (!componentVersion) return null;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();

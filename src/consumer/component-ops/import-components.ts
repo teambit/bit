@@ -516,7 +516,7 @@ export default class ImportComponents {
         await Promise.all(updateAllCompsP);
       })
     );
-    await this.scope.lanes.saveLane(currentLane);
+    await this.scope.lanes.saveLane(currentLane, true);
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {

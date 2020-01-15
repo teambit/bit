@@ -233,7 +233,7 @@ export default class Consumer {
     const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
     newLane.setLaneComponents(dataToPopulate);
 
-    await this.scope.lanes.saveLane(newLane);
+    await this.scope.lanes.saveLane(newLane, true);
 
     const workspaceConfig = WorkspaceLane.load(laneName, this.scope.getPath());
     workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();

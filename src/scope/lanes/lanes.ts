@@ -28,9 +28,9 @@ export default class Lanes {
     return (await this.objects.load(new Ref(hash))) as Lane;
   }
 
-  async saveLane(laneObject: Lane) {
+  async saveLane(laneObject: Lane, persist = false) {
     this.objects.add(laneObject);
-    await this.objects.persist();
+    if (persist) await this.objects.persist();
   }
 
   getCurrentLaneName(): string {
