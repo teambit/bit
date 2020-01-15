@@ -62,7 +62,6 @@ export class SnapCommand implements Command {
       scope?: boolean;
     }
   ) {
-    // return Promise.resolve(<Color green>run snap  command</Color>);
     // return Promise.resolve(() => <Color green>Hello World</Color>);
     // return Promise.resolve(`<Color green>run snap command</Color>`);
     const releaseFlags = [patch, minor, major].filter(x => x);
@@ -101,6 +100,6 @@ export class SnapCommand implements Command {
 
     const snapResult = this.snapApi.snap(snapOptions);
     console.log('result', snapResult);
-    return Promise.resolve('snap run finished');
+    return Promise.resolve(<Color green>snap run finished</Color>);
   }
 }
