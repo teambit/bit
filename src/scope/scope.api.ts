@@ -19,7 +19,7 @@ export class Scope {
    * @param {ComponentsIds} componentsIds list of ids to fetch
    * @memberof Scope
    */
-  fetch(componentsIds: ComponentsIds) {}
+  fetch(ids: ComponentsIds) {}
 
   /**
    * This function will get a component and sealed it's current state into the scope
@@ -28,7 +28,7 @@ export class Scope {
    * @param {PersistComponentsGeneralOptions} persistGeneralOptions General persistence options such as verbose
    * @memberof Scope
    */
-  persistComponents(components: ComponentToPersist[], persistGeneralOptions: PersistComponentsGeneralOptions) {
+  persist(components: Component[], options: PersistOptions) {
     console.log('im persistComponents');
   }
 }

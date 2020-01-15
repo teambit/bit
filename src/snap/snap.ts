@@ -32,7 +32,7 @@ export default class Snap {
     skipTests,
     skipAutoTag,
     snapAllInScope
-  }) {
+  }: SnapOptions) {
     console.log('im snapping a component');
 
     if (!id && !all && !snapAllInScope) {
