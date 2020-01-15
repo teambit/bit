@@ -18,11 +18,11 @@ export class LegacyCommand extends Cmd {
 
   async action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
     if (opts.json) {
-      const element = await this.paperCommand.render(params, opts)
-      render(element)
-    } else {
       const json = await this.paperCommand.json!(params, opts)
       console.log(JSON.stringify(json,null, 2))
+    } else {
+      const element = await this.paperCommand.render(params, opts)
+      render(element)
     }
   }
   report(data: any, params: any, opts: { [key: string]: any }): string {
