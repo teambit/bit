@@ -4,6 +4,7 @@ import ComponentConfig from './component-config';
 import ComponentFS from './component-fs';
 import TagMap from './tag-map';
 import { BitId as ComponentID } from '../bit-id';
+import Snap from './snap';
 
 /**
  * in-memory representation of a component. (initial concept)
@@ -16,14 +17,14 @@ export default class Component {
     readonly id: ComponentID,
 
     /**
-     * list of all component tags
+     * head version of the component. represented as an
      */
-    readonly tags: TagMap = new TagMap(),
+    readonly head: Snap,
 
     /**
-     * list of all component snaps
+     * list of all component tags
      */
-    readonly snaps: Snap[] = []
+    readonly tags: TagMap = new TagMap()
   ) {}
 
   /**
@@ -33,12 +34,7 @@ export default class Component {
     return this.current.config;
   }
 
-  /**
-   * head version of the component. represented as an
-   */
-  readonly head: Snap = this.snaps[0];
-
-  private _current = this.snaps[0];
+  private _current: Snap = this.head;
 
   /**
    * current version of the component in the file system.
@@ -58,7 +54,7 @@ export default class Component {
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
   get dependencyGraph() {
-    return this.head.dependencyGraph;
+    return this.current.dependencyGraph;
   }
 
   /**

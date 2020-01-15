@@ -1,5 +1,10 @@
 import ComponentConfig from './component-config';
-import { Hash } from 'crypto';
+import ComponentFS from './component-fs';
+import { DependencyGraph } from './dependency-graph';
+
+export type Hash = {};
+
+export type Author = {};
 
 /**
  * `Snap` represents the state of the component in the working tree.
@@ -30,5 +35,14 @@ export default class Snap {
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
-  get dependencyGraph() {}
+  get dependencyGraph() {
+    return new DependencyGraph();
+  }
+
+  /**
+   * in-memory representation of the component current filesystem.
+   */
+  get filesystem(): ComponentFS {
+    return new ComponentFS();
+  }
 }
