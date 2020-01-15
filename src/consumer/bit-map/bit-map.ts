@@ -37,7 +37,6 @@ import WorkspaceConfig from '../config/workspace-config';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import WorkspaceLane from './workspace-lane';
-import { LaneComponent } from '../../scope/models/lane';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };

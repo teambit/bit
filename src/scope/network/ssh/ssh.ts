@@ -36,6 +36,7 @@ import globalFlags from '../../../cli/global-flags';
 import ObjectsToPush from '../../objects-to-push';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { ComponentLogs } from '../../models/model-component';
+import { LaneData } from '../../lanes/lanes';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -454,6 +455,17 @@ export default class SSH implements Network {
       });
       return payload;
     });
+  }
+
+  async listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    const options = mergeData ? '--merge-data' : '';
+    const str = await this.exec(`_lanes ${options}`, name);
+    const { payload, headers } = this._unpack(str);
+    checkVersionCompatibility(headers.version);
+    return payload.map(result => ({
+      ...result,
+      components: result.components.map(component => ({ id: new BitId(component.id), head: component.head }))
+    }));
   }
 
   latestVersions(componentIds: BitId[]) {

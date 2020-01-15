@@ -4,6 +4,7 @@ import { Commands } from '../extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';
+import ScopeLanesList from './commands/private-cmds/_lanes-cmd';
 import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
@@ -166,7 +167,9 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Switch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Fetch()
+      new Fetch(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      new ScopeLanesList()
     ],
     extensionsCommands
   );

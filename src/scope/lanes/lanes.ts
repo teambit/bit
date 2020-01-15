@@ -3,9 +3,10 @@ import { Lane } from '../models';
 import LaneId, { LocalLaneId } from '../../lane-id/lane-id';
 import { LaneItem, IndexType } from '../objects/components-index';
 import { Ref, Repository } from '../objects';
-import { DEFAULT_LANE } from '../../constants';
+import { DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '../../constants';
 import { TrackLane, ScopeJson } from '../scope-json';
 import GeneralError from '../../error/general-error';
+import { BitId } from '../../bit-id';
 
 export default class Lanes {
   objects: Repository;
@@ -84,4 +85,34 @@ export default class Lanes {
     this.objects.removeManyObjects(lanesToRemove.map(l => l.hash()));
     this.objects.persist();
   }
+
+  async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    const getLaneDataOfLane = async (laneObject: Lane): Promise<LaneData> => {
+      const laneName = laneObject.name;
+      const trackingData = this.getRemoteTrackedDataByLocalLane(laneName);
+      return {
+        name: laneName,
+        remote: trackingData ? `${trackingData.remoteScope}${LANE_REMOTE_DELIMITER}${trackingData.remoteLane}` : null,
+        components: laneObject.components.map(c => ({ id: c.id, head: c.head.toString() })),
+        isMerged: mergeData ? await laneObject.isFullyMerged(scope) : null
+      };
+    };
+    if (name) {
+      const laneObject = await this.loadLane(LaneId.from(name));
+      if (!laneObject) throw new GeneralError(`lane "${name}" was not found`);
+      return [await getLaneDataOfLane(laneObject)];
+    }
+
+    const lanesObjects = await this.listLanes();
+    const lanes: LaneData[] = await Promise.all(lanesObjects.map((laneObject: Lane) => getLaneDataOfLane(laneObject)));
+
+    return lanes;
+  }
 }
+
+export type LaneData = {
+  name: string;
+  components: Array<{ id: BitId; head: string }>;
+  remote: string | null;
+  isMerged: boolean | null;
+};

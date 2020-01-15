@@ -6,6 +6,7 @@ import { ListScopeResult } from '../../consumer/component/components-list';
 import DependencyGraph from '../graph/scope-graph';
 import { SSHConnectionStrategyName } from './ssh/ssh';
 import { ComponentLogs } from '../models/model-component';
+import { LaneData } from '../lanes/lanes';
 
 export interface Network {
   connect(host: string): Network;
@@ -20,4 +21,5 @@ export interface Network {
   log(id: BitId): Promise<ComponentLogs>;
   latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;
+  listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
 }

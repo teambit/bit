@@ -3,7 +3,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 
 const assertArrays = require('chai-arrays');
 

@@ -2,7 +2,8 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { lane } from '../../../api/consumer';
-import { LaneResults, LaneData } from '../../../api/consumer/lib/lane';
+import { LaneResults } from '../../../api/consumer/lib/lane';
+import { LaneData } from '../../../scope/lanes/lanes';
 
 export default class Lane extends Command {
   name = 'lane [name]';
@@ -13,21 +14,26 @@ export default class Lane extends Command {
   opts = [
     ['d', 'details', 'show more details on the state of each component in each lane'],
     ['j', 'json', 'show lanes details in json format'],
+    ['r', 'remote <string>', 'show remote lanes'],
     ['', 'merged', 'show merged lanes'],
     ['', 'not-merged', 'show not merged lanes']
   ];
   loader = true;
   migration = true;
+  remoteOp = true;
+  skipWorkspace = true;
 
   action(
     [name]: string[],
     {
       details = false,
+      remote,
       merged = false,
       notMerged = false,
       json = false
     }: {
       details: boolean;
+      remote?: string;
       merged: boolean;
       notMerged: boolean;
       json: boolean;
@@ -35,47 +41,55 @@ export default class Lane extends Command {
   ): Promise<any> {
     return lane({
       name,
+      remote,
       showDefaultLane: json,
       merged,
       notMerged
-    }).then(results => ({ results, details, json, name }));
+    }).then(results => ({ results, details, json, name, merged, notMerged, remote }));
   }
 
   report({
     results,
     details,
     json,
-    name
+    name,
+    merged,
+    notMerged,
+    remote
   }: {
     results: LaneResults;
     details: boolean;
     json: boolean;
     name?: string;
+    merged: boolean;
+    notMerged: boolean;
+    remote?: string;
   }): string {
-    if (!results.lanes) {
-      if (results.merged) {
-        if (!results.merged.length) return chalk.green('None of the lanes is merged');
-        return chalk.green(results.merged.join('\n'));
-      }
-      if (results.notMerged) {
-        if (!results.notMerged.length) return chalk.green('All lanes are merged');
-        return chalk.green(results.notMerged.join('\n'));
-      }
-      throw new Error('unknown bit-lane flags combination');
-    }
     if (json) return JSON.stringify(results, null, 2);
+    if (merged) {
+      const mergedLanes = results.lanes.filter(l => l.isMerged);
+      if (!mergedLanes.length) return chalk.green('None of the lanes is merged');
+      return chalk.green(mergedLanes.map(m => m.name).join('\n'));
+    }
+    if (notMerged) {
+      const unmergedLanes = results.lanes.filter(l => !l.isMerged);
+      if (!unmergedLanes.length) return chalk.green('All lanes are merged');
+      return chalk.green(unmergedLanes.map(m => m.name).join('\n'));
+    }
     if (name) {
       const onlyLane = results.lanes[0];
       const title = `showing information for ${chalk.bold(name)}${outputRemoteLane(onlyLane.remote)}\n`;
       const components = outputComponents(onlyLane.components);
       return title + components;
     }
-    let currentLane = `current lane - ${chalk.bold(results.currentLane as string)}`;
+    let currentLane = results.currentLane ? `current lane - ${chalk.bold(results.currentLane as string)}` : '';
     if (details) {
       const laneDataOfCurrentLane = results.lanes.find(l => l.name === results.currentLane);
       const remoteOfCurrentLane = laneDataOfCurrentLane ? laneDataOfCurrentLane.remote : null;
       const currentLaneComponents = laneDataOfCurrentLane ? outputComponents(laneDataOfCurrentLane.components) : '';
-      currentLane += `${outputRemoteLane(remoteOfCurrentLane)}\n${currentLaneComponents}`;
+      if (currentLane) {
+        currentLane += `${outputRemoteLane(remoteOfCurrentLane)}\n${currentLaneComponents}`;
+      }
     }
 
     const availableLanes = results.lanes
@@ -90,13 +104,8 @@ export default class Lane extends Command {
         return `    > ${chalk.green(laneData.name)} (${laneData.components.length} components)`;
       })
       .join('\n');
-    const footer = details
-      ? `switch lanes using 'bit switch <name>'.
-You can use --merge and --no-merge to see which of the lanes is fully merged.`
-      : `to get more info on all lanes in workspace use 'bit lane --details' or 'bit lane <lane-name>' for a specific lane.
-switch lanes using 'bit switch <name>'.`;
-    const availableLanesStr = availableLanes ? `\nAvailable lanes:\n${availableLanes}\n` : '';
-    return `${currentLane}\n${availableLanesStr}\n${footer}`;
+
+    return outputCurrentLane() + outputAvailableLanes() + outputFooter();
 
     function outputComponents(components: LaneData['components']): string {
       const title = `\tcomponents (${components.length})\n`;
@@ -107,6 +116,28 @@ switch lanes using 'bit switch <name>'.`;
     function outputRemoteLane(remoteLane: string | null | undefined): string {
       if (!remoteLane) return '';
       return ` - (remote lane - ${remoteLane})`;
+    }
+
+    function outputCurrentLane() {
+      return currentLane ? `${currentLane}\n` : '';
+    }
+
+    function outputAvailableLanes() {
+      if (!availableLanes) return '';
+      return remote ? `${availableLanes}\n` : `\nAvailable lanes:\n${availableLanes}\n`;
+    }
+
+    function outputFooter() {
+      let footer = '\n';
+      if (details) {
+        footer += 'You can use --merged and --not-merged to see which of the lanes is fully merged.';
+      } else {
+        footer +=
+          "to get more info on all lanes in workspace use 'bit lane --details' or 'bit lane <lane-name>' for a specific lane.";
+      }
+      if (!remote) footer += `\nswitch lanes using 'bit switch <name>'.`;
+
+      return footer;
     }
   }
 }

@@ -139,6 +139,10 @@ export default class CommandHelper {
     const results = this.runCmd(`bit lane ${options} --json`);
     return JSON.parse(results);
   }
+  showRemoteLanesParsed(options = '') {
+    const results = this.runCmd(`bit lane --remote ${this.scopes.remote} ${options} --json`);
+    return JSON.parse(results);
+  }
   showOneLaneParsed(name: string) {
     const results = this.runCmd(`bit lane ${name} --json`);
     const parsed = JSON.parse(results);

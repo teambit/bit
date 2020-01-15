@@ -75,6 +75,11 @@ describe('bit lane command', function() {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
+      it('bit lane --remote should show the exported lane', () => {
+        const remoteLanes = helper.command.showRemoteLanesParsed();
+        expect(remoteLanes.lanes).to.have.lengthOf(1);
+        expect(remoteLanes.lanes[0].name).to.equal('dev');
+      });
     });
     describe('exporting the lane implicitly (no lane-name entered)', () => {
       before(() => {
@@ -93,6 +98,11 @@ describe('bit lane command', function() {
       it('should change .bitmap to have the remote lane', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap[LANE_KEY]).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+      });
+      it('bit lane --remote should show the exported lane', () => {
+        const remoteLanes = helper.command.showRemoteLanesParsed();
+        expect(remoteLanes.lanes).to.have.lengthOf(1);
+        expect(remoteLanes.lanes[0].name).to.equal('dev');
       });
     });
   });

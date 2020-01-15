@@ -11,6 +11,7 @@ import { ListScopeResult } from '../../../consumer/component/components-list';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 import { ComponentLogs } from '../../models/model-component';
+import { LaneData } from '../../lanes/lanes';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -91,6 +92,10 @@ export default class Fs implements Network {
 
   log(bitId: BitId): Promise<ComponentLogs> {
     return this.getScope().loadComponentLogs(bitId);
+  }
+
+  listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
   }
 
   async graph(bitId?: BitId): Promise<DependencyGraph> {

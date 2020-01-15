@@ -10,6 +10,7 @@ import { SSHConnectionStrategyName, DEFAULT_READ_STRATEGIES } from '../scope/net
 import DependencyGraph from '../scope/graph/scope-graph';
 import ObjectsToPush from '../scope/objects-to-push';
 import { ComponentLogs } from '../scope/models/model-component';
+import { LaneData } from '../scope/lanes/lanes';
 
 /**
  * @ctx bit, primary, remote
@@ -123,6 +124,9 @@ export default class Remote {
   }
   log(id: BitId): Promise<ComponentLogs> {
     return connect(this.host).then(network => network.log(id));
+  }
+  listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
+    return connect(this.host).then(network => network.listLanes(name, mergeData));
   }
 
   static load(name: string, host: string): Remote {

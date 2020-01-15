@@ -18,7 +18,7 @@ import {
   CURRENT_UPSTREAM,
   DEFAULT_LANE
 } from '../constants';
-import { ScopeJson, getPath as getScopeJsonPath, TrackLane } from './scope-json';
+import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
