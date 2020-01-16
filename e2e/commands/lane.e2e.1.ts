@@ -393,30 +393,21 @@ describe('bit lane command', function() {
       });
     });
   });
-  // @todo: not clear how the behavior should be. needs to be discussed
-  describe.skip('create a snap on a new lane then tagged', () => {
-    let lanes;
-    let firstSnap;
+  describe('tagging on a lane', () => {
+    let output;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.createLane();
       helper.command.snapAllComponents();
-      firstSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.tagAllComponents();
-      lanes = helper.command.showLanesParsed();
+      output = helper.general.runWithTryCatch('bit tag bar/foo');
     });
-    it('the new tag should not change the head of the lane', () => {
-      const dev = lanes.lanes.find(l => l.name === 'dev');
-      expect(dev.components[0].id.name).to.equal('bar/foo');
-      expect(dev.components[0].head).to.equal(firstSnap);
-    });
-    it('the tag should be saved globally, as master', () => {
-      const master = lanes.lanes.find(l => l.name === DEFAULT_LANE);
-      expect(master.components[0].id.name).to.equal('bar/foo');
-      expect(master.components[0].head).to.equal('0.0.1');
+    it('should block the tag and suggest to switch to master and merge the changes', () => {
+      expect(output).to.have.string(
+        'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+      );
     });
   });
   describe('master => lane-a => labe-b, so laneB branched from laneA', () => {

@@ -15,7 +15,7 @@ import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
-import { isHash } from '../../version/version-parser';
+import { isHash, isTag } from '../../version/version-parser';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import Lane from '../models/lane';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -343,10 +343,15 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
     objectRepo.add(version);
     const currentLane = consumer.getCurrentLaneId();
-    if (currentLane.isDefault() || !isHash(source.version)) {
+    if (currentLane.isDefault()) {
       component.addVersion(version, source.version);
     } else {
       if (!lane) throw new Error('addSource expects to get lane Object');
+      if (isTag(source.version)) {
+        throw new GeneralError(
+          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+        );
+      }
       const existingComponentInLane = lane.getComponentByName(component.toBitId());
       const currentHead = (existingComponentInLane && existingComponentInLane.head) || component.snaps.head;
       if (currentHead) version.addAsOnlyParent(currentHead);
