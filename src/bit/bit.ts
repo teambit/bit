@@ -18,7 +18,7 @@ export default class Bit {
     /**
      * Workspace
      */
-    readonly workspace: Workspace | null,
+    readonly workspace: Workspace | undefined,
 
     /**
      * reference to capsule orchestrator.

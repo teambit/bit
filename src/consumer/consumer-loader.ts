@@ -25,12 +25,12 @@ export async function loadConsumerIfExist(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   currentPath?: string = process.cwd(),
   newInstance? = false
-): Promise<Consumer | null> {
+): Promise<Consumer | undefined> {
   try {
     return await loadConsumer(currentPath, newInstance);
   } catch (err) {
     if (err instanceof ConsumerNotFound) {
-      return null;
+      return undefined;
     }
     throw err;
   }

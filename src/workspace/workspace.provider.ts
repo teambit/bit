@@ -6,5 +6,8 @@ export type WorkspaceDeps = [Scope];
 
 export default async function provideWorkspace(config: {}, [scope]: WorkspaceDeps) {
   const consumer = scope.consumer;
-  return new Workspace(consumer);
+  if (consumer) {
+    return new Workspace(consumer);
+  }
+  return undefined;
 }

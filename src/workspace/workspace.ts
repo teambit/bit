@@ -1,11 +1,15 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope';
 import { BitIds } from 'bit-id';
+import { Graph } from '../graph/graph';
+import { buildGraph } from './graph-builder';
 
 /**
  * API of the Bit Workspace
  */
 export default class Workspace {
+  _graph?: Graph;
+
   constructor(
     /**
      * private access to the legacy consumer instance.
@@ -34,6 +38,14 @@ export default class Workspace {
    */
   get _consumer() {
     return this.consumer;
+  }
+
+  async getGraph(): Graph {
+    if (this._graph) {
+      return this._graph;
+    }
+    this._graph = await buildGraph(this.consumer);
+    return this._graph;
   }
 
   loadComponentsForCapsule(ids: BitIds) {
