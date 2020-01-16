@@ -705,6 +705,30 @@ export default class Component {
         contextPaths.componentDir = component.writtenPath;
       }
       try {
+        // TODO: merge with the same function in build component file
+        const isolateFunc = async ({
+          targetDir,
+          shouldBuildDependencies,
+          installNpmPackages,
+          keepExistingCapsule,
+          writeDists = false
+        }: {
+          targetDir?: string;
+          shouldBuildDependencies?: boolean;
+          installNpmPackages?: boolean;
+          keepExistingCapsule?: boolean;
+          writeDists: boolean;
+        }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
+          shouldBuildDependencies;
+          const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
+          const componentWithDependencies = await isolator.isolate(component.id, {
+            shouldBuildDependencies,
+            writeDists,
+            installNpmPackages,
+            keepExistingCapsule
+          });
+          return new ExtensionIsolateResult(isolator, componentWithDependencies);
+        };
         if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
@@ -726,7 +750,8 @@ export default class Component {
           }
 
           const context: Record<string, any> = {
-            componentObject: component.toObject()
+            componentObject: component.toObject(),
+            isolate: isolateFunc
           };
 
           contextPaths && Object.assign(context, contextPaths);
@@ -754,13 +779,6 @@ export default class Component {
           const oneFileSpecResult = async testFile => {
             const testFilePath = testFile.path;
             try {
-              const isolateFunc = async (
-                destDir?: string
-              ): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
-                const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
-                const componentWithDependencies = await isolator.isolate(component.id, {});
-                return new ExtensionIsolateResult(isolator, componentWithDependencies);
-              };
               const context: Record<string, any> = {
                 componentDir: cwd,
                 isolate: isolateFunc
@@ -1199,11 +1217,6 @@ export default class Component {
     // for authored componentConfig is normally undefined
     const bitJson = componentConfig || workspaceConfig;
 
-    // Remove dists if compiler has been deleted
-    if (dists && !bitJson.hasCompiler()) {
-      dists = undefined;
-    }
-
     const envsContext = {
       componentDir: bitDir,
       workspaceDir: consumerPath
@@ -1262,6 +1275,11 @@ export default class Component {
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
+
+    // remove dists if compiler has been deleted
+    if (dists && !compiler) {
+      dists = undefined;
+    }
 
     return new Component({
       name: id.name,

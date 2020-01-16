@@ -2,11 +2,11 @@
 
 import * as path from 'path';
 import fs from 'fs-extra';
-import { generateRandomStr } from './e2e-helper';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
+import { generateRandomStr } from '../utils';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -923,7 +923,7 @@ describe('envs', function() {
           // tag a new version (so the conf files won't consider as modified)
           helper.command.tagAllComponents();
           // Checkout previous version
-          helper.command.checkoutVersion('0.0.1', 'comp/my-comp');
+          helper.command.checkoutVersion('0.0.1', 'comp/my-comp', '--conf');
           // Read config files again after checkout
           const babelRcFromFS2 = fs.readJsonSync(babelRcPath);
           const mochaConfigFromFS2 = fs.readJsonSync(mochaConfigPath);

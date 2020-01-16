@@ -64,11 +64,4 @@ export const FileStatusWithoutChalk = R.fromPairs(
   Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );
 
-export function generateRandomStr(size = 8): string {
-  return Math.random()
-    .toString(36)
-    .slice(size * -1)
-    .replace('.', ''); // it's rare but possible that the first char is '.', which is invalid for a scope-name
-}
-
 export { VERSION_DELIMITER };

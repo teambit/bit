@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.6.0",
+  "version": "14.7.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -48,7 +48,8 @@
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
-    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'"
+    "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
+    "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts"
   },
   "pkg": {
     "assets": [
@@ -84,7 +85,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "2.1.4",
+    "bit-javascript": "2.1.5",
     "bluebird": "^3.5.3",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
@@ -112,6 +113,7 @@
     "is-glob": "^4.0.0",
     "isbinaryfile": "^4.0.2",
     "jfs": "^0.2.6",
+    "librarian": "^3.0.2",
     "lodash.assignwith": "^4.2.0",
     "lodash.groupby": "^4.6.0",
     "lodash.merge": "^4.6.2",
@@ -176,7 +178,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.2.0",
     "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.0.0",
-    "@babel/preset-typescript": "^7.6.0",
+    "@babel/preset-typescript": "^7.7.7",
     "@babel/register": "^7.4.4",
     "@types/chai": "^4.2.5",
     "@types/chai-arrays": "^1.0.3",
@@ -189,8 +191,8 @@
     "@types/node": "^12.7.9",
     "@types/open": "^6.2.1",
     "@types/vinyl": "^2.0.3",
-    "@typescript-eslint/eslint-plugin": "^2.3.2",
-    "@typescript-eslint/parser": "^2.3.2",
+    "@typescript-eslint/eslint-plugin": "^2.15.0",
+    "@typescript-eslint/parser": "^2.15.0",
     "babel-eslint": "^9.0.0",
     "chai": "^4.1.2",
     "chai-arrays": "^1.0.0",
@@ -216,8 +218,8 @@
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
-    "typescript": "3.6.3",
-    "verdaccio": "^4.1.0"
+    "typescript": "3.7.4",
+    "verdaccio": "^4.4.1"
   },
   "files": [
     "/bin",

@@ -47,10 +47,10 @@ function normalizeResults(mochaJsonResults) {
 }
 
 const run = (specFile, context) => {
-  const destDir = path.join(os.tmpdir(), generateRandomStr());
-  return context.isolate(destDir).then(({ capsule, componentWithDependencies }) => {
+  const targetDir = path.join(os.tmpdir(), generateRandomStr());
+  return context.isolate({ targetDir }).then(({ capsule, componentWithDependencies }) => {
     return new Promise(resolve => {
-      const componentRootDir = path.join(destDir, componentWithDependencies.component.writtenPath);
+      const componentRootDir = path.join(targetDir, componentWithDependencies.component.writtenPath);
       const relativeSpecFile = path.relative(componentWithDependencies.component.originallySharedDir, specFile);
       const specFileInCapsule = path.join(componentRootDir, relativeSpecFile);
       const mocha = new Mocha({ reporter: JSONReporter });

@@ -4,7 +4,7 @@ import os from 'os';
 import chalk from 'chalk';
 import Command from '../../command';
 import { paintGraph } from '../../../api/consumer';
-import { generateRandomStr } from '../../../e2e-helper/e2e-helper';
+import { generateRandomStr } from '../../../utils';
 
 export default class Graph extends Command {
   name = 'graph [id]';

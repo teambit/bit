@@ -24,11 +24,10 @@ function getComponentFiles(consumer: Consumer) {
   const bitmap = consumer.bitMap;
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
-  const values = Object.keys(componentsMaps).map(key => componentsMaps[key]);
-  values.forEach(function(value) {
-    if (value && value.files && Array.isArray(value.files)) {
+  componentsMaps.forEach(function(componentMap) {
+    if (componentMap.files && Array.isArray(componentMap.files)) {
       const currentFiles = [];
-      value.files.forEach(function(file) {
+      componentMap.files.forEach(function(file) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (file && file.relativePath) currentFiles.push(file.relativePath);
       });

@@ -3,6 +3,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -988,9 +989,17 @@ describe('workspace config', function() {
           };
           helper.bitJson.addOverrides(overrides);
         });
-        it('should throw an error', () => {
-          const output = helper.general.runWithTryCatch('bit show bar/foo');
-          expect(output).to.have.string('unable to manually add the dependency "chai" into "bar/foo"');
+        // See similar test in show.e2e - component with overrides data
+        it('should not show the package in dependencies', () => {
+          const output = helper.command.showComponent('bar/foo');
+          expect(output).to.not.have.string('chai"');
+        });
+        // See similar test in status.e2e - when a component is created and added without its package dependencies
+        it('should show a missing package in status', () => {
+          const output = helper.command.status();
+          expect(output).to.have.string('missing packages dependencies');
+          expect(output).to.have.string('bar/foo.js -> chai');
+          expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
       });
       describe('adding a component with a version', () => {
@@ -1039,12 +1048,14 @@ describe('workspace config', function() {
           });
           describe('importing the component', () => {
             let originalAuthorScope;
+            let afterImport;
             before(() => {
               helper.command.exportAllComponents();
               originalAuthorScope = helper.scopeHelper.cloneLocalScope();
               helper.scopeHelper.reInitLocalScope();
               helper.scopeHelper.addRemoteScope();
               helper.command.importComponent('bar');
+              afterImport = helper.scopeHelper.cloneLocalScope();
             });
             it('should also import the manually added dependency', () => {
               const fooPath = path.join(helper.scopes.localPath, 'components/.dependencies/foo');
@@ -1061,8 +1072,23 @@ describe('workspace config', function() {
               const status = helper.command.status();
               expect(status).to.have.string(statusWorkspaceIsCleanMsg);
             });
+            describe('changing the component name in the overrides to a package syntax', () => {
+              before(() => {
+                const componentPackageJson = helper.packageJson.readComponentPackageJson('bar');
+                componentPackageJson.bit.overrides.dependencies = {
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.foo`]: '0.0.1'
+                };
+                helper.packageJson.write(componentPackageJson, path.join(helper.scopes.localPath, 'components/bar'));
+              });
+              it('should not recognize the bit component as a package', () => {
+                const show = helper.command.showComponentParsed('bar');
+                expect(show.packageDependencies).to.deep.equal({});
+                expect(show.dependencies).to.have.lengthOf(1);
+              });
+            });
             describe('removing the manually added dependency from the imported', () => {
               before(() => {
+                helper.scopeHelper.getClonedLocalScope(afterImport);
                 const barPath = path.join(helper.scopes.localPath, 'components/bar');
                 const packageJson = helper.packageJson.read(barPath);
                 packageJson.bit.overrides.dependencies = {};
@@ -1466,7 +1492,8 @@ describe('workspace config', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
-        helper.fixtures.addComponentBarFoo();
+        helper.fs.outputFile('baz.js');
+        helper.command.addComponent('baz.js');
         overrides = {
           '*': {
             scripts: {
@@ -1530,6 +1557,18 @@ describe('workspace config', function() {
           expect(output.overrides.scripts).to.have.property('test');
           expect(output.overrides.scripts).to.have.property('watch');
           expect(output.overrides.scripts).to.not.have.property('lint');
+        });
+      });
+      describe('tagging the components and then changing the propagate of one component', () => {
+        before(() => {
+          helper.command.tagAllComponents();
+          const bitJson = helper.bitJson.read();
+          bitJson.overrides['bar/foo'].propagate = false;
+          helper.bitJson.write(bitJson);
+        });
+        it('should not affect other components that do not match any overrides criteria', () => {
+          const status = helper.command.statusJson();
+          expect(status.modifiedComponent).to.not.include('baz@0.0.1');
         });
       });
     });

@@ -43,6 +43,7 @@ import GeneralError from '../error/general-error';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
+import { ComponentLogs } from './models/model-component';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -504,8 +505,7 @@ export default class Scope {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<{ [key: number]: { message: string; date: string; hash: string } }> {
+  loadComponentLogs(id: BitId): Promise<ComponentLogs> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getModelComponent(id).then(componentModel => {
       return componentModel.collectLogs(this.objects);
@@ -580,6 +580,23 @@ export default class Scope {
     });
     const componentsAndVersions = await Promise.all(componentsAndVersionsP);
     return removeNils(componentsAndVersions);
+  }
+
+  async getComponentsAndAllLocalUnexportedVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
+    const componentsObjects = await this.sources.getMany(ids);
+    const componentsAndVersionsP = componentsObjects.map(async componentObjects => {
+      if (!componentObjects.component) return null;
+      const component: ModelComponent = componentObjects.component;
+      const localVersions = component.getLocalVersions();
+      return Promise.all(
+        localVersions.map(async versionStr => {
+          const version: Version = await component.loadVersion(versionStr, this.objects);
+          return { component, version, versionStr };
+        })
+      );
+    });
+    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
+    return removeNils(R.flatten(componentsAndVersions));
   }
 
   /**

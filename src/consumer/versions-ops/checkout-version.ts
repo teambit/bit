@@ -1,5 +1,4 @@
 import * as path from 'path';
-import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
@@ -15,6 +14,7 @@ import { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { Tmp } from '../../scope/repositories';
+import { ComponentWithDependencies } from '../../scope';
 
 export type CheckoutProps = {
   version?: string; // if reset is true, the version is undefined
@@ -24,6 +24,9 @@ export type CheckoutProps = {
   mergeStrategy: MergeStrategy | null | undefined;
   verbose: boolean;
   skipNpmInstall: boolean;
+  ignorePackageJson: boolean;
+  writeConfig: boolean;
+  configDir?: string;
   reset: boolean; // remove local changes. if set, the version is undefined.
   all: boolean; // checkout all ids
   ignoreDist: boolean;
@@ -67,7 +70,24 @@ export default (async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  return { components: componentsResults, version, failedComponents };
+  const componentsWithDependencies = componentsResults.map(c => c.component).filter(c => c);
+
+  const manyComponentsWriter = new ManyComponentsWriter({
+    consumer,
+    componentsWithDependencies,
+    installNpmPackages: !checkoutProps.skipNpmInstall,
+    override: true,
+    verbose: checkoutProps.verbose,
+    writeDists: !checkoutProps.ignoreDist,
+    writeConfig: checkoutProps.writeConfig,
+    configDir: checkoutProps.configDir,
+    writePackageJson: !checkoutProps.ignorePackageJson
+  });
+  await manyComponentsWriter.writeAll();
+
+  const appliedVersionComponents = componentsResults.map(c => c.applyVersionResult);
+
+  return { components: appliedVersionComponents, version, failedComponents };
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
     const tmp = new Tmp(consumer.scope);
@@ -171,8 +191,8 @@ async function applyVersion(
   componentFromFS: ConsumerComponent,
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
-): Promise<ApplyVersionResult> {
-  const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
+): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {
+  const { mergeStrategy } = checkoutProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     componentFromFS.files.forEach(file => {
@@ -180,7 +200,7 @@ async function applyVersion(
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
-    return { id, filesStatus };
+    return { applyVersionResult: { id, filesStatus } };
   }
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS.componentMap;
@@ -191,24 +211,11 @@ async function applyVersion(
     componentWithDependencies.compilerDependencies = [];
     componentWithDependencies.testerDependencies = [];
   }
-  const rootDir = componentMap.rootDir;
-  const shouldWritePackageJson = async (): Promise<boolean> => {
-    if (!rootDir) return false;
-    const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
-    return fs.pathExists(packageJsonPath);
-  };
-  const shouldInstallNpmPackages = (): boolean => {
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
-    return !skipNpmInstall;
-  };
-  const writePackageJson = await shouldWritePackageJson();
-
   const files = componentWithDependencies.component.files;
   files.forEach(file => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
-
   let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
@@ -224,21 +231,10 @@ async function applyVersion(
   componentWithDependencies.component.dependenciesSavedAsComponents =
     shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
-  const manyComponentsWriter = new ManyComponentsWriter({
-    consumer,
-    componentsWithDependencies: [componentWithDependencies],
-    installNpmPackages: shouldInstallNpmPackages(),
-    override: true,
-    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap.configDir,
-    verbose,
-    writeDists: !ignoreDist,
-    writePackageJson
-  });
-  await manyComponentsWriter.writeAll();
-
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  return {
+    applyVersionResult: { id, filesStatus: Object.assign(filesStatus, modifiedStatus) },
+    component: componentWithDependencies
+  };
 }
 
 /**
@@ -282,7 +278,6 @@ export function applyModifiedVersion(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;

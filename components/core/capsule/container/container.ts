@@ -6,6 +6,7 @@ export default interface Container {
    * container id
    */
   id: string;
+  path: string;
 
   /**
    * execute a command on the container
@@ -20,13 +21,13 @@ export default interface Container {
   /**
    * put a file or a directory to the container.
    */
-  put(files: {[path: string]: string}, options: { overwrite?: boolean, path: string }): Promise<void>;
+  put(files: { [path: string]: string }, options: { overwrite?: boolean; path: string }): Promise<void>;
 
-  on(event: string, fn: (data: any) => void): void; 
-  
+  on(event: string, fn: (data: any) => void): void;
+
   /**
    * start a container.
-   */   
+   */
   start(): Promise<void>;
 
   /**
@@ -69,37 +70,37 @@ export type ContainerStatus = {
   /**
    * array of open container ports
    */
-  ports: number[],
+  ports: number[];
 
   /**
    * container host
    */
-  host: string,
+  host: string;
 };
 
 export type CommitOptions = {
   /**
    * repository name for the created image
    */
-  repo: string,
-  
+  repo: string;
+
   /**
    * tag name for the create image
    */
-  tag: string,
+  tag: string;
 
   /**
    * commit message
    */
-  comment: string,
+  comment: string;
 
   /**
    * author of the image.
    */
-  author: string,
+  author: string;
 
   /**
    * whether to pause the container before committing
    */
-  pause: boolean,
+  pause: boolean;
 };
