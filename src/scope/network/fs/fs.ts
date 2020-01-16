@@ -43,9 +43,14 @@ export default class Fs implements Network {
     return put({ path: this.scopePath, compsAndLanesObjects: components });
   }
 
-  deleteMany(ids: string[], force: boolean): Promise<ComponentObjects[]> {
+  deleteMany(
+    ids: string[],
+    force: boolean,
+    context: Record<string, any>,
+    idsAreLanes?: boolean
+  ): Promise<ComponentObjects[]> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remove({ path: this.scopePath, ids, force });
+    return remove({ path: this.scopePath, ids, force, lanes: idsAreLanes });
   }
 
   deprecateMany(ids: string[]): Promise<ComponentObjects[]> {

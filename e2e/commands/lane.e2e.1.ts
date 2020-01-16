@@ -668,6 +668,50 @@ describe('bit lane command', function() {
         });
       });
     });
+    describe('removing a remote lane', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.command.createLane();
+        helper.fixtures.populateWorkspaceWithComponents();
+        helper.command.snapAllComponents();
+        helper.command.exportAllComponents();
+      });
+      it('as an intermediate step, make sure the lane is on the remote', () => {
+        const lanes = helper.command.showRemoteLanesParsed();
+        expect(lanes.lanes).to.have.lengthOf(1);
+      });
+      it('should not remove without --force flag as the lane is not merged', () => {
+        const output = helper.general.runWithTryCatch(
+          `bit remove ${helper.scopes.remote}/dev --lane --remote --silent`
+        );
+        expect(output).to.have.string('unable to remove dev lane, it is not fully merged');
+      });
+      describe('remove with --force flag', () => {
+        let output;
+        before(() => {
+          output = helper.command.removeRemoteLane('dev', '--force');
+        });
+        it('should remove successfully', () => {
+          expect(output).to.have.string('successfully removed');
+        });
+        it('the remote should not have the lane anymore', () => {
+          const lanes = helper.command.showRemoteLanesParsed();
+          expect(lanes.lanes).to.have.lengthOf(0);
+        });
+        describe('removing again after the lane was removed', () => {
+          let removeOutput;
+          before(() => {
+            removeOutput = helper.general.runWithTryCatch(
+              `bit remove ${helper.scopes.remote}/dev --lane --remote --silent --force`
+            );
+          });
+          it('should indicate that the lane was not found', () => {
+            // this is to make sure it doesn't show an error about indexJson having the component but missing from the scope
+            expect(removeOutput).to.have.string('lane dev was not found in scope');
+          });
+        });
+      });
+    });
   });
   describe('remove components when on a lane', () => {
     before(() => {

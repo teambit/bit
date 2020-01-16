@@ -8,7 +8,7 @@ import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 import removeComponents from '../../../consumer/component-ops/remove-components';
 import { getRemoteBitIdsByWildcards } from './list-scope';
-import WorkspaceLane from '../../../consumer/bit-map/workspace-lane';
+import removeLanes from '../../../consumer/lanes/remove-lanes';
 
 export default (async function remove({
   ids,
@@ -45,19 +45,6 @@ export default (async function remove({
   if (consumer) await consumer.onDestroy();
   return removeResults;
 });
-
-async function removeLanes(consumer: Consumer | null, lanes: string[], remote: boolean, force: boolean) {
-  if (remote) {
-    // todo: implement
-    return { laneResults: [] };
-  }
-  if (!consumer) throw new Error('consumer must exist for local removal');
-  await consumer.scope.lanes.removeLanes(consumer.scope, lanes, force);
-  const workspaceLanes = lanes.map(lane => WorkspaceLane.load(lane, consumer.scope.path));
-  workspaceLanes.forEach(workspaceLane => workspaceLane.reset());
-  await Promise.all(workspaceLanes.map(workspaceLane => workspaceLane.write()));
-  return { laneResults: lanes };
-}
 
 async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {

@@ -125,8 +125,11 @@ export default class CommandHelper {
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
   }
-  removeLane(laneName = 'dev') {
-    return this.runCmd(`bit remove ${laneName} --lane --silent`);
+  removeLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
+  }
+  removeRemoteLane(laneName = 'dev', options = '') {
+    return this.runCmd(`bit remove ${this.scopes.remote}/${laneName} ${options} --remote --lane --silent`);
   }
   showLanes(options = '') {
     const results = this.runCmd(`bit lane ${options}`);

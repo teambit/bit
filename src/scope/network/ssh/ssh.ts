@@ -392,13 +392,15 @@ export default class SSH implements Network {
   deleteMany(
     ids: string[],
     force: boolean,
-    context?: Record<string, any>
+    context?: Record<string, any>,
+    idsAreLanes?: boolean
   ): Promise<ComponentObjects[] | RemovedObjects> {
     return this.exec(
       '_delete',
       {
         bitIds: ids,
-        force
+        force,
+        lanes: idsAreLanes
       },
       context
     ).then((data: string) => {

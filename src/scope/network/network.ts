@@ -12,6 +12,7 @@ export interface Network {
   connect(host: string): Network;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
+  deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   search(query: string, reindex: boolean): Promise<string>;

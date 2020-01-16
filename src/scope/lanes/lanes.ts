@@ -60,7 +60,7 @@ export default class Lanes {
     this.scopeJson.trackLane(trackLaneData);
   }
 
-  async removeLanes(scope: Scope, lanes: string[], force: boolean) {
+  async removeLanes(scope: Scope, lanes: string[], force: boolean): Promise<string[]> {
     const existingLanes = await this.listLanes();
     const lanesToRemove: Lane[] = lanes.map(laneName => {
       if (laneName === DEFAULT_LANE) throw new GeneralError(`unable to remove the default lane "${DEFAULT_LANE}"`);
@@ -75,6 +75,7 @@ export default class Lanes {
         lanesToRemove.map(async laneObj => {
           const isFullyMerged = await laneObj.isFullyMerged(scope);
           if (!isFullyMerged) {
+            // @todo: this error comes pretty ugly to the client when removing from a lane from remote using ssh
             throw new GeneralError(
               `unable to remove ${laneObj.name} lane, it is not fully merged. to disregard this error, please use --force flag`
             );
@@ -83,7 +84,8 @@ export default class Lanes {
       );
     }
     this.objects.removeManyObjects(lanesToRemove.map(l => l.hash()));
-    this.objects.persist();
+    await this.objects.persist();
+    return lanes;
   }
 
   async getLanesData(scope: Scope, name?: string, mergeData?: boolean): Promise<LaneData[]> {

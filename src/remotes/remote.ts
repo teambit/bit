@@ -111,10 +111,11 @@ export default class Remote {
   deleteMany(
     ids: string[],
     force: boolean,
-    context: Record<string, any> | null | undefined
-  ): Promise<Record<string, any>[]> {
+    context: Record<string, any> | null | undefined,
+    idsAreLanes = false
+  ): Promise<Record<string, any>> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return connect(this.host).then(network => network.deleteMany(ids, force, context));
+    return connect(this.host).then(network => network.deleteMany(ids, force, context, idsAreLanes));
   }
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
