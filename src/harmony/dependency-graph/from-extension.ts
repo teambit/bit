@@ -1,5 +1,5 @@
 import { AnyExtension } from '../types';
-import { Vertex, Edge } from '../../graph';
+import { Vertex, Edge } from '../../r-graph';
 
 /**
  * build vertices and edges from the given extension

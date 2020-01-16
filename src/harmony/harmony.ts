@@ -1,6 +1,6 @@
 import Container from './container';
 import Extension from './extension';
-import { Graph } from '../graph';
+import { Graph } from '../r-graph';
 import { ExtensionProvider, ProviderFn } from './extension.provider';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
