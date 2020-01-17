@@ -49,8 +49,12 @@ export default async function fetch(
       : await scopeComponentsImporter.importMany(bitIds);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clientVersion = headers ? headers.version : null;
-
-    componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents, clientVersion);
+    const collectParents = !noDependencies;
+    componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(
+      importedComponents,
+      clientVersion,
+      collectParents
+    );
   }
 
   const compsAndLanesObjects = new CompsAndLanesObjects(componentObjects, lanesObjects);

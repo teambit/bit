@@ -63,7 +63,11 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 
-  async toObjects(repo: Repository, clientVersion: string | null | undefined): Promise<ComponentObjects> {
+  async toObjects(
+    repo: Repository,
+    clientVersion: string | null | undefined,
+    collectParents: boolean
+  ): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
@@ -76,7 +80,8 @@ Please upgrade your bit client to version >= v14.1.0`);
       const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
         this.component.asRaw(repo),
         // version.collectRawWithoutParents(repo),
-        version.collectRaw(repo),
+        // version.collectRaw(repo),
+        collectParents ? version.collectRaw(repo) : version.collectRawWithoutParents(repo),
         version.asRaw(repo),
         repo.getScopeMetaObject()
       ]);
