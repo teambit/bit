@@ -380,10 +380,7 @@ export default class ImportComponents {
     const componentStatus = await this.consumer.getComponentStatusById(component.id);
     const mergeStatus: ComponentMergeStatus = { componentWithDependencies, mergeResults: null };
     if (!componentStatus.modified) return mergeStatus;
-    const componentModel = await this.consumer.scope.sources.get(component.id);
-    if (!componentModel) {
-      throw new ShowDoctorError(`component ${component.id.toString()} wasn't found in the model`);
-    }
+    const componentModel = await this.consumer.scope.getModelComponent(component.id);
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;

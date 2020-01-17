@@ -349,21 +349,12 @@ export default class Component extends BitObject {
   }
 
   latest(): string {
-    if (this.isEmpty()) return VERSION_ZERO;
-    if (this.snaps.head) {
-      const version = this.getTagOfRefIfExists(this.snaps.head);
-      return version || this.snaps.head.toString();
-    }
-    // backward compatibility. components created before v15 have master without snaps.head
-    return semver.maxSatisfying(this.listVersions(), '*');
-  }
-
-  latestOnLane(): string {
     if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
     const head = this.laneHeadLocal || this.snaps.head;
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
+    // backward compatibility. components created before v15 have master without snaps.head
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
@@ -376,7 +367,7 @@ export default class Component extends BitObject {
    * on master, which goes to this.snaps.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async latestIncludeRemote(repo: Repository): Promise<string> {
-    const latestLocally = this.latestOnLane();
+    const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
     if (!this.laneHeadLocal && !this.snaps.head) {
@@ -398,7 +389,7 @@ export default class Component extends BitObject {
   // @todo: make it readable, it's a mess
   isLatestGreaterThan(version: string | null | undefined): boolean {
     if (!version) throw TypeError('isLatestGreaterThan expect to get a Version');
-    const latest = this.latestOnLane();
+    const latest = this.latest();
     if (this.isEmpty()) return false; // in case a snap was created on another lane
     if (isTag(latest) && isTag(version)) {
       return semver.gt(latest, version);
@@ -638,7 +629,7 @@ export default class Component extends BitObject {
   }
 
   toBitIdWithLatestVersion(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.latestOnLane() });
+    return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
   }
 
   toBitIdWithLatestVersionAllowNull(): BitId {

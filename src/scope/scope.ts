@@ -269,7 +269,7 @@ export default class Scope {
         const modelComponent = throwOnFailure
           ? await this.getModelComponent(id)
           : await this.getModelComponentIfExist(id);
-        const version = modelComponent ? modelComponent.latestOnLane() : DEFAULT_BIT_VERSION;
+        const version = modelComponent ? modelComponent.latest() : DEFAULT_BIT_VERSION;
         return id.changeVersion(version);
       })
     );

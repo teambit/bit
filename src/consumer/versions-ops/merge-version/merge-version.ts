@@ -80,7 +80,7 @@ export async function mergeVersion(
 }
 
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
-  const componentModel = await consumer.scope.sources.get(component.id);
+  const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   if (!componentModel) {
     throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }

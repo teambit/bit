@@ -122,7 +122,7 @@ export default class ComponentsList {
           // different, however we want them both to be separated as they need different treatment
           return;
         }
-        const latestVersionLocally = modelComponent.latestOnLane();
+        const latestVersionLocally = modelComponent.latest();
         const latestIncludeRemoteHead = await modelComponent.latestIncludeRemote(this.scope.objects);
         const isOutdated = (): boolean => {
           if (latestIncludeRemoteHead !== latestVersionLocally) return true;
