@@ -7,6 +7,7 @@ import MergeConflict from './merge-conflict';
 import MergeConflictOnRemote from './merge-conflict-on-remote';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
+import ParentNotFound from './parent-not-found';
 import VersionAlreadyExists from './version-already-exists';
 import HashNotFound from './hash-not-found';
 import ResolutionException from './resolution-exception';
@@ -27,6 +28,7 @@ export {
   MergeConflict,
   MergeConflictOnRemote,
   VersionNotFound,
+  ParentNotFound,
   VersionAlreadyExists,
   ScopeAlreadyExists,
   BitNotInScope,

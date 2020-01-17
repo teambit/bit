@@ -391,7 +391,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       email,
       date: Date.now().toString()
     };
-    version.setNewHash();
+    if (isTag(versionToAdd)) {
+      version.setNewHash();
+    } else {
+      version._hash = versionToAdd;
+    }
+
     component.addVersion(version, versionToAdd);
     return this.put({ component, objects: [version] });
   }

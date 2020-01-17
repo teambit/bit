@@ -7,6 +7,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';
 import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
+import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -611,6 +612,65 @@ describe('bit snap command', function() {
           expect(content).to.have.string(fixtures.fooFixture);
           expect(content).to.have.string(`>>>>>>> ${firstSnap}`);
         });
+      });
+    });
+  });
+  describe('auto snap', () => {
+    let snapOutput;
+    let isTypeHead;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithComponents();
+      helper.command.snapAllComponents();
+
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+
+      const statusOutput = helper.command.runCmd('bit status');
+      expect(statusOutput).to.have.string('components pending to be tagged automatically');
+
+      snapOutput = helper.command.snapComponent('utils/is-type');
+      isTypeHead = helper.command.getSnapHead('utils/is-type');
+    });
+    it('should auto snap the dependencies and the nested dependencies', () => {
+      expect(snapOutput).to.have.string(AUTO_SNAPPED_MSG);
+    });
+    it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
+      const barFoo = helper.command.catComponent('utils/is-string@latest');
+      expect(barFoo.dependencies[0].id.name).to.equal('utils/is-type');
+      expect(barFoo.dependencies[0].id.version).to.equal(isTypeHead);
+
+      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: isTypeHead });
+    });
+    it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
+      const barFoo = helper.command.catComponent('bar/foo@latest');
+      const isStringHead = helper.command.getSnapHead('utils/is-string');
+      expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
+      expect(barFoo.dependencies[0].id.version).to.equal(isStringHead);
+
+      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: isTypeHead });
+      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: isStringHead });
+    });
+    it('bit-status should show them all as staged and not modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponent).to.be.empty;
+      expect(status.stagedComponents).to.include('bar/foo');
+      expect(status.stagedComponents).to.include('utils/is-string');
+      expect(status.stagedComponents).to.include('utils/is-type');
+    });
+    // @todo: fix
+    describe.skip('importing the component to another scope', () => {
+      before(() => {
+        helper.command.exportAllComponents();
+
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('bar/foo');
+      });
+      it('should use the updated dependencies and print the results from the latest versions', () => {
+        fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), fixtures.appPrintBarFoo);
+        const result = helper.command.runCmd('node app.js');
+        // notice the "v2" (!)
+        expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
       });
     });
   });

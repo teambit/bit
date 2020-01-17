@@ -41,6 +41,7 @@ import {
   MergeConflictOnRemote,
   OutdatedIndexJson,
   VersionNotFound,
+  ParentNotFound,
   CyclicDependencies,
   HashNotFound,
   HeadNotFound
@@ -435,6 +436,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
   [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
+  [
+    ParentNotFound,
+    err =>
+      `component ${chalk.bold(err.id)} missing data. parent ${err.parentHash} of version ${
+        err.versionHash
+      } was not found.`
+  ],
   [
     MissingComponentIdForImportedComponent,
     err =>

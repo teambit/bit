@@ -228,7 +228,7 @@ export default async function snapModelComponents({
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
+  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, true);
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedResults };

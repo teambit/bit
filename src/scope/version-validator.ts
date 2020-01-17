@@ -257,4 +257,11 @@ ${duplicationStr}`);
       );
     }
   });
+  if (version.parents) {
+    version.parents.forEach(parent => {
+      if (parent.isEqual(version.hash())) {
+        throw new VersionInvalid(`${message}, its parent has the same hash as itself: ${parent.toString()}`);
+      }
+    });
+  }
 }

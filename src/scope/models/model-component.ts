@@ -1,10 +1,11 @@
 import * as semver from 'semver';
+import { v4 } from 'uuid';
 import { equals, forEachObjIndexed, isEmpty, clone, difference } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, filterObject, getStringifyArgs } from '../../utils';
+import { forEach, empty, mapObject, filterObject, getStringifyArgs, sha1 } from '../../utils';
 import Version from './version';
 import {
   DEFAULT_LANGUAGE,
@@ -578,10 +579,22 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
+  getSnapToAdd() {
+    return sha1(v4());
+  }
+
   addVersion(version: Version, versionToAdd: string): string {
-    if (this.snaps.head && !this.hasTag(versionToAdd)) {
-      // if this tag exists, the same version was added before with a different hash.
+    if (
+      this.snaps.head &&
+      this.snaps.head.toString() !== versionToAdd && // happens with auto-snap
+      !this.hasTag(versionToAdd)
+    ) {
+      // happens with auto-tag
+      // if this is a tag and this tag exists, the same version was added before with a different hash.
       // adding the current head into the parent will result in a non-exist hash in the parent.
+      // if this is a hash and it's the same hash as the current head, adding it as a parent
+      // results in a parent and a version has the same hash.
+      // @todo: fix it in a more elegant way
       version.addAsOnlyParent(this.snaps.head);
     }
     this.snaps.head = version.hash();
