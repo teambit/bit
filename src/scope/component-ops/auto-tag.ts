@@ -125,6 +125,7 @@ async function updateComponents(
   graph: Graph,
   shouldSnap: boolean
 ): Promise<AutoTagResult[]> {
+  const currentLaneObj = await scope.lanes.getCurrentLaneObject();
   const autoTagResults: AutoTagResult[] = [];
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {
     let pendingUpdate = false;
@@ -182,7 +183,7 @@ async function updateComponents(
       };
       const versionToAdd = getVersionToAdd();
       autoTagResults.push({ component, triggeredBy, version, versionStr: versionToAdd });
-      return scope.sources.putAdditionalVersion(component, version, message, versionToAdd);
+      return scope.sources.putAdditionalVersion(component, version, message, versionToAdd, currentLaneObj);
     }
     return null;
   });

@@ -263,19 +263,17 @@ export default class Scope {
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
-    const components = await this.sources.getMany(componentIds);
-    const ids = components.map(component => {
-      const getVersion = () => {
-        if (component.component) {
-          return component.component.latest();
-        }
-        if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
-        return DEFAULT_BIT_VERSION;
-      };
-      const version = getVersion();
-      return component.id.changeVersion(version);
-    });
-    return BitIds.fromArray(ids);
+
+    const latestIds = await Promise.all(
+      componentIds.map(async id => {
+        const modelComponent = throwOnFailure
+          ? await this.getModelComponent(id)
+          : await this.getModelComponentIfExist(id);
+        const version = modelComponent ? modelComponent.latestOnLane() : DEFAULT_BIT_VERSION;
+        return id.changeVersion(version);
+      })
+    );
+    return BitIds.fromArray(latestIds);
   }
 
   /**
@@ -455,7 +453,14 @@ export default class Scope {
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
-    return this.sources.get(id);
+    const modelComponent = await this.sources.get(id);
+    if (modelComponent) {
+      // @todo: what about the remote head
+      // @todo: what about other places the model-component is loaded
+      const currentLane = await this.lanes.getCurrentLaneObject();
+      modelComponent.setLaneHeadLocal(currentLane);
+    }
+    return modelComponent;
   }
 
   /**
@@ -581,10 +586,6 @@ export default class Scope {
   async getModelComponent(id: BitId): Promise<ModelComponent> {
     const component = await this.getModelComponentIfExist(id);
     if (component) {
-      // @todo: what about the remote head
-      // @todo: what about other places the model-component is loaded
-      const currentLane = await this.lanes.getCurrentLaneObject();
-      component.setLaneHeadLocal(currentLane);
       return component;
     }
     throw new ComponentNotFound(id.toString());

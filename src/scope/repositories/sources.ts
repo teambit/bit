@@ -342,22 +342,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       specsResults
     });
     objectRepo.add(version);
-    const currentLane = consumer.getCurrentLaneId();
-    if (currentLane.isDefault()) {
-      component.addVersion(version, source.version);
-    } else {
-      if (!lane) throw new Error('addSource expects to get lane Object');
-      if (isTag(source.version)) {
-        throw new GeneralError(
-          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
-        );
-      }
-      const existingComponentInLane = lane.getComponentByName(component.toBitId());
-      const currentHead = (existingComponentInLane && existingComponentInLane.head) || component.snaps.head;
-      if (currentHead) version.addAsOnlyParent(currentHead);
-      lane.addComponent({ id: component.toBitId(), head: version.hash() });
-      objectRepo.add(lane);
-    }
+    component.addVersion(version, source.version, lane, objectRepo);
+
     if (unmergedComponent) {
       version.addParent(unmergedComponent.head);
       version.log.message = version.log.message
@@ -379,7 +365,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     version: Version,
     message: string,
-    versionToAdd: string
+    versionToAdd: string,
+    currentLane: Lane | null
   ): Promise<ModelComponent> {
     const [username, email] = await Promise.all([
       globalConfig.get(CFG_USER_NAME_KEY),
@@ -397,7 +384,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       version._hash = versionToAdd;
     }
 
-    component.addVersion(version, versionToAdd);
+    component.addVersion(version, versionToAdd, currentLane, this.objects());
+
     return this.put({ component, objects: [version] });
   }
 

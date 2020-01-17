@@ -359,7 +359,7 @@ export default class Component extends BitObject {
   }
 
   latestOnLane(): string {
-    if (this.isEmpty()) return VERSION_ZERO;
+    if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
     const head = this.laneHeadLocal || this.snaps.head;
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
@@ -583,7 +583,25 @@ export default class Component extends BitObject {
     return sha1(v4());
   }
 
-  addVersion(version: Version, versionToAdd: string): string {
+  addVersion(version: Version, versionToAdd: string, lane: Lane | null, repo: Repository): string {
+    if (lane) {
+      if (isTag(versionToAdd)) {
+        throw new GeneralError(
+          'unable to tag when checked out to a lane, please switch to master, merge the lane and then tag again'
+        );
+      }
+      const versionToAddRef = Ref.from(versionToAdd);
+      const existingComponentInLane = lane.getComponentByName(this.toBitId());
+      const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.snaps.head;
+      if (currentHead && !currentHead.isEqual(versionToAddRef)) {
+        version.addAsOnlyParent(currentHead);
+      }
+      lane.addComponent({ id: this.toBitId(), head: versionToAddRef });
+      repo.add(lane);
+      this.laneHeadLocal = versionToAddRef;
+      return versionToAdd;
+    }
+    // user on master
     if (
       this.snaps.head &&
       this.snaps.head.toString() !== versionToAdd && // happens with auto-snap
@@ -620,7 +638,7 @@ export default class Component extends BitObject {
   }
 
   toBitIdWithLatestVersion(): BitId {
-    return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
+    return new BitId({ scope: this.scope, name: this.name, version: this.latestOnLane() });
   }
 
   toBitIdWithLatestVersionAllowNull(): BitId {
