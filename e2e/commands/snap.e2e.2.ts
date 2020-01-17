@@ -658,7 +658,7 @@ describe('bit snap command', function() {
       expect(status.stagedComponents).to.include('utils/is-type');
     });
     // @todo: fix
-    describe.skip('importing the component to another scope', () => {
+    describe('importing the component to another scope', () => {
       before(() => {
         helper.command.exportAllComponents();
 
