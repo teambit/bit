@@ -838,7 +838,6 @@ export default class Consumer {
     return null;
   }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
-    debugger;
     const consumerInfo = await getConsumerInfo(currentPath);
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());

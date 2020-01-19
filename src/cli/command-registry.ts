@@ -18,7 +18,7 @@ import { LegacyCommand } from './legacy-command';
 
 didYouMean.returnFirstMatch = true;
 
-function logErrAndExit(msg: Error | string, commandName: string) {
+export function logErrAndExit(msg: Error | string, commandName: string) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (msg.code) throw msg;
   console.error(msg); // eslint-disable-line
@@ -103,6 +103,7 @@ function execAction(command, concrete, args) {
       });
     })
     .catch(err => {
+      console.log('command-registry.catch');
       logger.error(
         `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
           err,

@@ -5,7 +5,8 @@ import HooksManager from './hooks';
 import capsuleOrchessrator from './capsule/orchestrator/orchestrator';
 import { Bit } from './bit';
 import { BitCliExt } from './cli';
-
+import defaultHandleError from './cli/default-error-handler';
+import { logErrAndExit } from './cli/command-registry';
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
 // removing this, default to longStackTraces also when env is `development`, which impacts the
@@ -25,7 +26,8 @@ Harmony.load(BitCliExt)
   .run()
   .then(() => {})
   .catch(err => {
-    console.error(err, err.stack);
+    const handledError = defaultHandleError(err);
+    logErrAndExit(handledError || err, process.argv[1] || '');
   });
 
 // BitCli.load(Harmony.load(PaperExt))

@@ -46,7 +46,6 @@ export function pathHasLocalScope(path: string) {
  * propagate from the given directory up to the root to find the consumer
  */
 export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | null | undefined> {
-  debugger;
   const searchPaths = buildPropagationPaths();
   searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
