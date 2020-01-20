@@ -190,7 +190,7 @@ export async function exportMany({
       // all exported from master
       await scope.objects.remoteLanes.loadRemoteLane(remoteNameStr, defaultLane);
       componentsAndObjects.forEach(({ component }) => {
-        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.toBitId(), component.snaps.head);
+        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.toBitId(), component.getSnapHead());
       });
     }
 
@@ -379,8 +379,8 @@ async function convertToCorrectScope(
             versions[version] = Ref.from(hashAfter);
           }
         });
-        if (componentsObjects.component.getHeadHash() === hashBefore) {
-          componentsObjects.component.snaps.head = Ref.from(hashAfter);
+        if (componentsObjects.component.getSnapHeadStr() === hashBefore) {
+          componentsObjects.component.setSnapHead(Ref.from(hashAfter));
         }
         versionsObjects.forEach(versionObj => {
           versionObj.parents = versionObj.parents.map(parent => {

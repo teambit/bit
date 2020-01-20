@@ -111,10 +111,9 @@ export default class ScopeComponentsImporter {
         return versionId.changeVersion(version);
       });
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
-      if (versionDependencies.component.component.snaps.head) {
-        allIdsWithAllVersions.push(
-          versionId.changeVersion(versionDependencies.component.component.snaps.head.toString())
-        );
+      const snapHead = versionDependencies.component.component.getSnapHead();
+      if (snapHead) {
+        allIdsWithAllVersions.push(versionId.changeVersion(snapHead.toString()));
       }
     });
     if (allDepsVersions) {

@@ -426,19 +426,16 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     versions.forEach(version => {
       const ref = component.removeVersion(version);
       const refStr = ref.toString();
-      const versionObject = allVersionsObjects.find(v => v.hash().toString() === refStr);
+      const versionObject = allVersionsObjects.find(v => v.hash().isEqual(ref));
       if (!versionObject) throw new Error(`removeComponentVersions failed finding a version object of ${refStr}`);
       // update the snap head if needed
-      if (component.getHeadHash() === refStr) {
+      if (component.getSnapHeadStr() === refStr) {
         if (versionObject.parents.length > 1)
           throw new Error(
             `removeComponentVersions found multiple parents for a local (un-exported) version ${version} of ${component.id()}`
           );
-        if (versionObject.parents.length === 1) {
-          component.snaps.head = versionObject.parents[0];
-        } else {
-          component.snaps.head = undefined;
-        }
+        const head = versionObject.parents.length === 1 ? versionObject.parents[0] : undefined;
+        component.setSnapHead(head);
       }
       // update other versions parents if they point to the deleted version
       allVersionsObjects.forEach(obj => {
@@ -451,7 +448,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       objectRepo.removeObject(ref);
     });
 
-    if (component.versionArray.length || component.snaps.head) {
+    if (component.versionArray.length || component.hasSnapHead()) {
       objectRepo.add(component); // add the modified component object
     } else {
       // @todo: make sure not to delete the component when it has snaps but not versions!
@@ -525,7 +522,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         mergedVersions.push(incomingVersion);
       }
     });
-    if (incomingComponent.snaps.head) {
+    if (incomingComponent.hasSnapHead()) {
       const mergedSnaps = incomingComponentTagsAndSnaps.filter(
         tagOrSnap => !existingComponentTagsAndSnaps.includes(tagOrSnap) && !mergedVersions.includes(tagOrSnap)
       );
@@ -564,9 +561,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       this.put({ component, objects });
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
-    const existingComponentHead = existingComponent.snaps.head;
+    const existingComponentHead = existingComponent.getSnapHead();
     const existingHeadIsMissingInIncomingComponent =
-      component.snaps.head && existingComponentHead && !allHashes.find(ref => ref.isEqual(existingComponentHead));
+      component.hasSnapHead() && existingComponentHead && !allHashes.find(ref => ref.isEqual(existingComponentHead));
     if (
       !local &&
       existingHeadIsMissingInIncomingComponent &&
@@ -587,10 +584,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         existingComponentTagsAndSnaps,
         tagsAndSnaps
       );
-      if (component.snaps.head) {
+      const componentHead = component.getSnapHead();
+      if (componentHead) {
         // when importing (local), do not override the head
-        if (!local || !existingHeadIsMissingInIncomingComponent) mergedComponent.snaps.head = component.snaps.head;
-        else mergedComponent.laneHeadRemote = component.snaps.head;
+        if (!local || !existingHeadIsMissingInIncomingComponent) mergedComponent.setSnapHead(componentHead);
+        else mergedComponent.laneHeadRemote = componentHead;
       }
 
       this.put({ component: mergedComponent, objects });

@@ -423,7 +423,7 @@ export default class Scope {
             mergedComponent.scope as string,
             new LaneId({ name: DEFAULT_LANE }),
             mergedComponent.toBitId(),
-            mergedComponent.laneHeadRemote || mergedComponent.snaps.head
+            mergedComponent.laneHeadRemote || mergedComponent.getSnapHead()
           )
         )
     );

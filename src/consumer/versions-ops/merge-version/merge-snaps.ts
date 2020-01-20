@@ -422,7 +422,7 @@ export async function applyVersion({
   } else {
     // this is master
     const modelComponent = await consumer.scope.getModelComponent(id);
-    modelComponent.snaps.head = remoteHead;
+    modelComponent.setSnapHead(remoteHead);
     consumer.scope.objects.add(modelComponent);
   }
 

@@ -799,7 +799,7 @@ export default class Consumer {
       if (currentLane.isDefault()) return true;
       const modelComponent =
         component instanceof ModelComponent ? component : await this.scope.getModelComponent(component.id);
-      return Boolean(modelComponent.snaps.head);
+      return modelComponent.hasSnapHead();
     };
 
     const updateVersionsP = components.map(async component => {

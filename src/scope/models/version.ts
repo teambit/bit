@@ -21,6 +21,7 @@ import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { EnvPackages } from '../../extensions/env-extension';
 import { isHash } from '../../version/version-parser';
+import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type CiProps = {
   error: Record<string, any>;
@@ -652,6 +653,7 @@ export default class Version extends BitObject {
   }
 
   addParent(ref: Ref) {
+    if (!isLaneEnabled()) return;
     if (this.hasParent(ref)) {
       return; // make sure to not add twice
     }
@@ -659,6 +661,7 @@ export default class Version extends BitObject {
   }
 
   addAsOnlyParent(ref: Ref) {
+    if (!isLaneEnabled()) return;
     this.parents = [ref];
   }
 

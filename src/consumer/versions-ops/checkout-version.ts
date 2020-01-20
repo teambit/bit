@@ -297,10 +297,11 @@ async function getComponentStatusForLanes(
   const isModified = await consumer.isComponentModified(baseComponent, component);
   let mergeResults: MergeResultsThreeWay | null | undefined;
   const isHeadSameAsMaster = () => {
-    if (!modelComponent.snaps.head) return false;
+    const snapHead = modelComponent.getSnapHead();
+    if (!snapHead) return false;
     if (!existingBitMapId.version) return false;
-    const tagVersion = modelComponent.getTagOfRefIfExists(modelComponent.snaps.head);
-    const headVersion = tagVersion || modelComponent.snaps.head.toString();
+    const tagVersion = modelComponent.getTagOfRefIfExists(snapHead);
+    const headVersion = tagVersion || snapHead.toString();
     return existingBitMapId.version === headVersion;
   };
   if (isModified) {
