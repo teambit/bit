@@ -12,6 +12,7 @@ import ScopeComponentsImporter from '../../component-ops/scope-components-import
 import DependencyGraph from '../../graph/scope-graph';
 import { ComponentLogs } from '../../models/model-component';
 import { LaneData } from '../../lanes/lanes';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -63,7 +64,7 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  fetch(bitIds: BitIds, noDependencies = false, idsAreLanes = false): Promise<ComponentObjects[]> {
+  fetch(bitIds: BitIds, noDependencies = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {
     const idsStr = bitIds.serialize();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return fetch(this.scopePath, idsStr, noDependencies, idsAreLanes).then(bitsMatrix => {

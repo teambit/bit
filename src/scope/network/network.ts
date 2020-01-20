@@ -7,13 +7,14 @@ import DependencyGraph from '../graph/scope-graph';
 import { SSHConnectionStrategyName } from './ssh/ssh';
 import { ComponentLogs } from '../models/model-component';
 import { LaneData } from '../lanes/lanes';
+import CompsAndLanesObjects from '../comps-and-lanes-objects';
 
 export interface Network {
   connect(host: string): Network;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
-  fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
+  fetch(bitIds: BitIds): Promise<CompsAndLanesObjects>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<Component | null | undefined>;

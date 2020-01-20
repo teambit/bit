@@ -517,7 +517,7 @@ export default class SSH implements Network {
     noDeps = false,
     idsAreLanes = false,
     context?: Record<string, any>
-  ): Promise<ComponentObjects[]> {
+  ): Promise<CompsAndLanesObjects> {
     let options = '';
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';
@@ -533,7 +533,7 @@ export default class SSH implements Network {
       };
       const { payload, headers } = parseResponse();
       checkVersionCompatibility(headers.version);
-      const componentObjects = ComponentObjects.manyFromString(payload);
+      const componentObjects = CompsAndLanesObjects.fromString(payload);
       return componentObjects;
     });
   }

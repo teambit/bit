@@ -12,8 +12,15 @@ export default class CompsAndLanesObjects {
   }
 
   toString() {
+    const components = this.componentsObjects.map(componentAndObject => componentAndObject.toString());
+    if (!this.laneObjects.length) {
+      // @todo: delete this `if` block before releasing v15
+      // backward compatibility, before v15, it used to be an array of component-objects
+      // this makes sure that old clients could run "bit import"
+      return JSON.stringify(components);
+    }
     return JSON.stringify({
-      components: this.componentsObjects.map(componentAndObject => componentAndObject.toString()),
+      components,
       lanes: this.laneObjects.map(laneObj => laneObj.toString())
     });
   }
@@ -23,7 +30,9 @@ export default class CompsAndLanesObjects {
     let components;
     let lanes = [];
     if (Array.isArray(parsed)) {
+      // @todo: delete this `if` block before releasing v15
       // backward compatibility, before v15, it used to be an array of component-objects
+      // this makes sure that old clients could run "bit export"
       components = parsed;
     } else {
       components = parsed.components;

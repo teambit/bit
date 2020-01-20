@@ -6,6 +6,7 @@ import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import clientSupportCompressedCommand from '../../../utils/ssh/client-support-compressed-command';
+import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 
 let compressResponse;
 export default class Fetch extends Command {
@@ -27,8 +28,8 @@ export default class Fetch extends Command {
     });
   }
 
-  report(componentObjects: ComponentObjects[]): string {
-    const components = ComponentObjects.manyToString(componentObjects);
+  report(compsAndLanesObjects: CompsAndLanesObjects): string {
+    const components = compsAndLanesObjects.toString();
     // No need to use packCommand because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
     return JSON.stringify(buildCommandMessage(components, undefined, compressResponse));
   }
