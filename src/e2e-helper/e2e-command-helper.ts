@@ -11,6 +11,7 @@ import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
+import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -18,15 +19,24 @@ export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
   bitBin: string;
+  featuresToggle: string | undefined;
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
+  setFeatures(featuresToggle: string) {
+    this.featuresToggle = featuresToggle;
+  }
+
   runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
-    if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
+    const isBitCommand = cmd.startsWith('bit ');
+    if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
+    const featuresTogglePrefix =
+      isBitCommand && this.featuresToggle ? `${ENV_VAR_FEATURE_TOGGLE}=${this.featuresToggle} ` : '';
+    cmd = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });

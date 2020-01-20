@@ -14,6 +14,7 @@ chai.use(require('chai-fs'));
 describe('bit lane command', function() {
   this.timeout(0);
   const helper = new Helper();
+  helper.command.setFeatures('lanes');
   after(() => {
     helper.scopeHelper.destroy();
   });
