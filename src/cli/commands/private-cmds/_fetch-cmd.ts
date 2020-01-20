@@ -1,7 +1,6 @@
 import Command from '../../command';
 import { fromBase64, unpackCommand, buildCommandMessage } from '../../../utils';
 import { fetch } from '../../../api/scope';
-import ComponentObjects from '../../../scope/component-objects';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';

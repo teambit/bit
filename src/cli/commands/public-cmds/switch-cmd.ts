@@ -7,7 +7,7 @@ import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merg
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import GeneralError from '../../../error/general-error';
-import { isLaneEnabled } from '../../../api/consumer/lib/feature-toggle';
+import { isLaneEnabled, throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Switch extends Command {
   name = 'switch <lane>';
@@ -63,9 +63,7 @@ export default class Switch extends Command {
       ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
-    if (!isLaneEnabled()) {
-      throw new GeneralError('unable to run bit switch, the lanes feature is disabled');
-    }
+    throwForUsingLaneIfDisabled();
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);

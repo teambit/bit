@@ -6,6 +6,7 @@ import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/mer
 import { WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { AUTO_SNAPPED_MSG } from './snap-cmd';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';
@@ -42,10 +43,14 @@ export default class Merge extends Command {
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
     ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
-    ['l', 'lane', 'merge lanes'],
-    ['', 'existing', 'relevant for lanes. checkout only components in a lane that exist in the workspace'],
-    ['', 'no-snap', 'do not auto snap in case the merge completed without conflicts'],
-    ['m', 'message <message>', 'override the default message for the auto snap']
+    ['l', 'lane', 'EXPERIMENTAL. merge lanes'],
+    [
+      '',
+      'existing',
+      'EXPERIMENTAL. relevant for lanes. checkout only components in a lane that exist in the workspace'
+    ],
+    ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
+    ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap']
   ];
   loader = true;
 
@@ -73,6 +78,7 @@ export default class Merge extends Command {
       message: string;
     }
   ): Promise<ApplyVersionResults> {
+    if (lane || existing || noSnap || message) throwForUsingLaneIfDisabled();
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');

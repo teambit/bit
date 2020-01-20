@@ -5,6 +5,7 @@ import { fetch } from '../../../api/consumer';
 import { ComponentWithDependencies } from '../../../scope';
 import { ImportDetails } from '../../../consumer/component-ops/import-components';
 import { formatPlainComponentItemWithVersions } from '../../chalk-box';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Fetch extends Command {
   name = 'fetch [ids...]';
@@ -12,7 +13,7 @@ export default class Fetch extends Command {
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
-    ['l', 'lanes', 'fetch lanes'],
+    ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON']
   ];
@@ -30,6 +31,7 @@ export default class Fetch extends Command {
       json?: boolean;
     }
   ): Promise<{}> {
+    if (lanes) throwForUsingLaneIfDisabled();
     return fetch(ids, lanes, components).then(results => ({ ...results, json }));
   }
 

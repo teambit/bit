@@ -8,6 +8,7 @@ import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -31,7 +32,7 @@ export default class Remove extends Command {
       'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
     ['s', 'silent [boolean]', 'skip confirmation'],
-    ['', 'lane [boolean]', 'remove a lane']
+    ['', 'lane [boolean]', 'EXPERIMENTAL. remove a lane']
   ];
   loader = true;
   migration = true;
@@ -48,6 +49,7 @@ export default class Remove extends Command {
       lane = false
     }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; lane: boolean }
   ): Promise<any> {
+    if (lane) throwForUsingLaneIfDisabled();
     if (!silent) {
       const removePromptResult = await removePrompt();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

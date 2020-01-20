@@ -4,6 +4,7 @@ import { snapAction } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { SnapResults } from '../../../api/consumer/lib/snap';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
 export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
@@ -47,6 +48,7 @@ export default class Snap extends Command {
       skipAutoSnap?: boolean;
     }
   ): Promise<any> {
+    throwForUsingLaneIfDisabled();
     if (!id && !all) {
       throw new GeneralError('missing [id]. to snap all components, please use --all flag');
     }

@@ -13,8 +13,6 @@ export default class Checkout extends Command {
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
   bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
-  bit checkout <local-lane> --lane => switch to the specified lane and checkout components to the head of this lane
-  bit checkout <remote> <lane> --lane => switch to the specified remote lane and checkout components to the head of this lane
   ${WILDCARD_HELP('checkout 0.0.1')}`;
   alias = 'U';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -29,7 +27,6 @@ export default class Checkout extends Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'remove local changes'],
     ['a', 'all', 'all components'],
-    ['', 'lane', 'checkout to a lane'],
     ['', 'new-lane-name <name>', 'name a local lane differently than the remote lane'],
     ['', 'existing', 'relevant for lanes. checkout only components in a lane that exist in the workspace'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -57,7 +54,6 @@ export default class Checkout extends Command {
       manual = false,
       reset = false,
       all = false,
-      lane = false,
       verbose = false,
       skipNpmInstall = false,
       existing = false,
@@ -72,7 +68,6 @@ export default class Checkout extends Command {
       manual?: boolean;
       reset?: boolean;
       all?: boolean;
-      lane?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
       existing?: boolean;
@@ -88,7 +83,7 @@ export default class Checkout extends Command {
       reset,
       all,
       verbose,
-      isLane: lane,
+      isLane: false,
       skipNpmInstall,
       existingOnWorkspaceOnly: existing,
       ignoreDist,
