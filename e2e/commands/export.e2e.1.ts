@@ -394,17 +394,16 @@ describe('bit export command', function() {
       const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
       expect(isType).to.have.property('files');
     });
-    // @todo: after working on the backward compatibility of lanes, enable this test, it should work
-    // currently it fails because it has "parents" and this "parents" causes dependencies to be
-    // fetched completely.
-    it.skip('should not have is-type@0.0.1 on that remote', () => {
+    // @todo: this fails when lane features is enabled because it has "parents" and this "parents"
+    // causes dependencies to be fetched completely.
+    it('should not have is-type@0.0.1 on that remote', () => {
       let isType;
       try {
         isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
       } catch (err) {
         isType = err.toString();
       }
-      expect(isType).to.have.string('component was not found');
+      expect(isType).to.have.string('ComponentNotFound');
     });
     describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
       before(() => {

@@ -21,10 +21,9 @@ describe('bit log', function() {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
-    // @todo: after working on the backward compatibility of lanes, enable this test, it should work
-    // currently it fails because it has "parents" and this "parents" causes dependencies to be
-    // fetched completely.
-    it.skip('should not throw an error and should indicate that that version has no data', () => {
+    // @todo: this fails when lane features is enabled because it has "parents" and this "parents"
+    // causes dependencies to be fetched completely.
+    it('should not throw an error and should indicate that that version has no data', () => {
       const output = helper.command.log('utils/is-string');
       expect(output).to.have.string('0.0.1');
       expect(output).to.have.string('<no-data-available>');
