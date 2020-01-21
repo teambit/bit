@@ -1,7 +1,7 @@
 import loadScope from '../../scope-loader';
 import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
-import { BitIds, BitId } from '../../../bit-id';
+import { BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';

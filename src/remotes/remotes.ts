@@ -1,6 +1,6 @@
 import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded } from './exceptions';

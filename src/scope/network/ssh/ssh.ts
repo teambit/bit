@@ -14,7 +14,7 @@ import {
   SSHInvalidResponse,
   OldClientVersion
 } from '../exceptions';
-import { BitIds, BitId } from '../../../bit-id';
+import { BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { ScopeDescriptor } from '../../scope';

@@ -2,7 +2,7 @@ import { isBitUrl, cleanBang } from '../utils';
 import ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import { Network } from '../scope/network/network';
 import Component from '../consumer/component/consumer-component';
 import { ListScopeResult } from '../consumer/component/components-list';

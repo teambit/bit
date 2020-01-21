@@ -36,7 +36,7 @@ import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { pathNormalizeToLinux, sortObject, isValidIdChunk } from '../utils';
+import { pathNormalizeToLinux, sortObject } from '../utils';
 import { ModelComponent, Version, Lane } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -74,8 +74,6 @@ import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import LaneId from '../lane-id/lane-id';
 import snapModelComponents from '../scope/component-ops/snap-model-component';
-import { LaneComponent } from '../scope/models/lane';
-import WorkspaceLane from './bit-map/workspace-lane';
 
 type ConsumerProps = {
   projectPath: string;

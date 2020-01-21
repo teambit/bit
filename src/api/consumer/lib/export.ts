@@ -19,11 +19,10 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { NodeModuleLinker } from '../../../links';
 import BitMap from '../../../consumer/bit-map/bit-map';
 import GeneralError from '../../../error/general-error';
-import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_LANE } from '../../../constants';
+import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK } from '../../../constants';
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
-import LaneId from '../../../lane-id/lane-id';
 import { Lane } from '../../../scope/models';
 import {
   updateLanesAfterExport,
