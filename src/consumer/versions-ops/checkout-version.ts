@@ -2,6 +2,7 @@ import * as path from 'path';
 import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
+import createLane from '../lanes/create-lane';
 import ConsumerComponent from '../component';
 import { COMPONENT_ORIGINS, DEFAULT_LANE } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
@@ -165,7 +166,7 @@ the lane already exists. please switch to the lane and merge`);
   };
   if (opts.remoteLaneScope) {
     await throwIfLaneExists();
-    await consumer.createNewLane(opts.localLaneName as string, opts.laneComponents);
+    await createLane(consumer, opts.localLaneName as string, opts.laneComponents);
     if (opts.addTrackingInfo) {
       // otherwise, it is tracked already
       consumer.scope.lanes.trackLane({

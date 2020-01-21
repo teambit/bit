@@ -1,4 +1,5 @@
 import { Consumer, loadConsumer } from '../../../consumer';
+import createLane from '../../../consumer/lanes/create-lane';
 import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import GeneralError from '../../../error/general-error';
@@ -13,7 +14,7 @@ export default async function switchAction(switchProps: SwitchProps): Promise<Ap
   const consumer: Consumer = await loadConsumer();
   let results;
   if (switchProps.create) {
-    await consumer.createNewLane(switchProps.laneName);
+    await createLane(consumer, switchProps.laneName);
     consumer.scope.lanes.setCurrentLane(switchProps.laneName);
     results = { added: switchProps.laneName };
   } else {
