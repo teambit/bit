@@ -37,6 +37,7 @@ import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { ComponentLogs } from '../../models/model-component';
 import { LaneData } from '../../lanes/lanes';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -513,13 +514,13 @@ export default class SSH implements Network {
   }
 
   async fetch(
-    ids: BitIds,
+    ids: Array<BitId | RemoteLaneId>,
     noDeps = false,
     idsAreLanes = false,
     context?: Record<string, any>
   ): Promise<CompsAndLanesObjects> {
     let options = '';
-    const idsStr = ids.serialize();
+    const idsStr = ids.map(id => id.toString());
     if (noDeps) options = '--no-dependencies';
     if (idsAreLanes) options += ' --lanes';
     return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {

@@ -11,6 +11,7 @@ import DependencyGraph from '../scope/graph/scope-graph';
 import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import { ComponentLogs } from '../scope/models/model-component';
 import { LaneData } from '../scope/lanes/lanes';
+import { RemoteLaneId } from '../lane-id/lane-id';
 
 /**
  * @ctx bit, primary, remote
@@ -77,14 +78,14 @@ export default class Remote {
   }
 
   fetch(
-    bitIds: BitIds,
+    ids: BitId[] | RemoteLaneId[],
     withoutDeps: boolean,
     context?: Record<string, any>,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
     idsAreLanes = false
   ): Promise<CompsAndLanesObjects> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then(network => network.fetch(bitIds, withoutDeps, idsAreLanes, context));
+    return this.connect(strategiesNames).then(network => network.fetch(ids, withoutDeps, idsAreLanes, context));
   }
 
   latestVersions(

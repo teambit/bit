@@ -7,18 +7,21 @@ import ScopeComponentsImporter from '../../../scope/component-ops/scope-componen
 import ComponentObjects from '../../../scope/component-objects';
 import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
 import LaneObjects from '../../../scope/lane-objects';
+import { RemoteLaneId } from '../../../lane-id/lane-id';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export default async function fetch(
   path: string,
-  ids: string[],
+  ids: string[], // can be Bit ids or Lane ids
   noDependencies = false,
   idsAreLanes = false,
   headers: Record<string, any> | null | undefined
 ): Promise<CompsAndLanesObjects> {
-  const bitIds: BitIds = BitIds.deserialize(ids);
+  const bitIds: BitIds = idsAreLanes ? new BitIds() : BitIds.deserialize(ids);
+  const laneIds: RemoteLaneId[] = idsAreLanes ? ids.map(id => RemoteLaneId.parse(id)) : [];
 
+  // @todo: should add "laneIds" to args?
   const args = { path, bitIds, noDependencies };
   // This might be undefined in case of fork process like during bit test command
   if (HooksManagerInstance) {
@@ -30,9 +33,10 @@ export default async function fetch(
   let lanesObjects: LaneObjects[] = [];
   if (idsAreLanes) {
     const lanes = await scope.listLanes();
-    const lanesToFetch = bitIds.map(bitId => {
-      const laneToFetch = lanes.find(lane => lane.name === bitId.name);
-      if (!laneToFetch) throw new Error(`lane ${bitId.name} was not found in scope ${scope.name}`);
+    const lanesToFetch = laneIds.map(laneId => {
+      const laneToFetch = lanes.find(lane => lane.name === laneId.name);
+      // @todo: throw LaneNotFound, make sure it shows correctly on the client using ssh
+      if (!laneToFetch) throw new Error(`lane ${laneId.name} was not found in scope ${scope.name}`);
       return laneToFetch;
     });
     lanesObjects = await Promise.all(

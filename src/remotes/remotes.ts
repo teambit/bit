@@ -1,3 +1,4 @@
+import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import Remote from './remote';
@@ -9,6 +10,7 @@ import Scope from '../scope/scope';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';
 import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
+import { RemoteLaneId } from '../lane-id/lane-id';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -37,7 +39,7 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   async fetch(
-    ids: BitId[],
+    ids: BitId[] | RemoteLaneId[],
     thisScope: Scope,
     withoutDeps = false,
     context?: Record<string, any>,
@@ -45,18 +47,18 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<CompsAndLanesObjects> {
     // TODO - Transfer the fetch logic into the ssh module,
     // in order to close the ssh connection in the end of the multifetch instead of one fetch
-    const groupedIds = this._groupByScopeName(ids);
+    const groupedIds = groupArray(ids, 'scope');
     const promises = [];
     forEach(groupedIds, (scopeIds, scopeName) => {
       promises.push(
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.resolve(scopeName, thisScope).then(remote =>
-          remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context, undefined, idsAreLanes)
+          remote.fetch(scopeIds, withoutDeps, context, undefined, idsAreLanes)
         )
       );
     });
 
-    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) on a remote`);
+    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) (idsAreLane: ${idsAreLanes}) on a remote`);
     const manyCompsAndLanesObjects: CompsAndLanesObjects[] = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
 

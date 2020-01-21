@@ -152,10 +152,7 @@ export default class ScopeComponentsImporter {
 
   async importLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    // @todo, this is very yuck. we currently only fetch bit-ids, so we kind of convert the lane-id to bit-id :(
-    const ids = new BitIds(...remoteLaneIds.map(id => new BitId({ scope: id.scope, name: id.name })));
-    const compsAndLanesObjects = await remotes.fetch(ids, this.scope, undefined, undefined, true);
-
+    const compsAndLanesObjects = await remotes.fetch(remoteLaneIds, this.scope, undefined, undefined, true);
     const laneObjects = await Promise.all(compsAndLanesObjects.laneObjects.map(l => l.toObjectsAsync()));
     const lanes = laneObjects.map(l => l.lane);
     await Promise.all(lanes.map(lane => this.scope.objects.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
