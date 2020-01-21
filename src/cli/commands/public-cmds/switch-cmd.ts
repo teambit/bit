@@ -7,7 +7,7 @@ import { MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merg
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import GeneralError from '../../../error/general-error';
-import { isLaneEnabled, throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Switch extends Command {
   name = 'switch <lane>';
