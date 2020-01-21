@@ -23,9 +23,13 @@ import { COMPONENT_ORIGINS, PRE_EXPORT_HOOK, POST_EXPORT_HOOK, DEFAULT_LANE } fr
 import ManyComponentsWriter from '../../../consumer/component-ops/many-components-writer';
 import * as packageJsonUtils from '../../../consumer/component/package-json-utils';
 import { forkComponentsPrompt } from '../../../prompts';
-import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
+import LaneId from '../../../lane-id/lane-id';
 import { Lane } from '../../../scope/models';
-import WorkspaceLane from '../../../consumer/bit-map/workspace-lane';
+import {
+  updateLanesAfterExport,
+  getLaneCompIdsToExport,
+  isUserTryingToExportLanes
+} from '../../../consumer/lanes/export-lanes';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -98,7 +102,7 @@ async function exportComponents({
     defaultScope,
     lanesObjects
   });
-  if (lanesObjects) await updateLanes(consumer, lanesObjects);
+  if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', exported.length);
@@ -111,34 +115,6 @@ async function exportComponents({
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
   return { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes: lanesObjects || [] };
-}
-
-async function updateLanes(consumer: Consumer, lanes: Lane[]) {
-  const lanesToUpdate = lanes.filter(l => l.remoteLaneId);
-  // lanes that don't have remoteLaneId should not be updated. it happens when updating to a
-  // different remote with no intention to save the remote.
-  if (!lanesToUpdate.length) return;
-  const currentLane = consumer.getCurrentLaneId();
-  const workspaceLanesToUpdate: WorkspaceLane[] = [];
-  lanesToUpdate.forEach(lane => {
-    const remoteLaneId = lane.remoteLaneId as RemoteLaneId;
-    consumer.scope.lanes.trackLane({
-      localLane: lane.name,
-      remoteLane: remoteLaneId.name,
-      remoteScope: remoteLaneId.scope as string
-    });
-    const isCurrentLane = lane.name === currentLane.name;
-    if (isCurrentLane) {
-      consumer.bitMap.addLane(remoteLaneId);
-    }
-    const workspaceLane = isCurrentLane
-      ? (consumer.bitMap.workspaceLane as WorkspaceLane) // bitMap.workspaceLane is empty only when is on master
-      : WorkspaceLane.load(lane.name, consumer.scope.path);
-    if (!isCurrentLane) workspaceLanesToUpdate.push(workspaceLane);
-    consumer.bitMap.updateLanesProperty(workspaceLane, remoteLaneId);
-    workspaceLane.reset();
-  });
-  await Promise.all(workspaceLanesToUpdate.map(l => l.write()));
 }
 
 function _updateIdsOnBitMap(bitMap: BitMap, componentsIds: BitIds): { updatedIds: BitId[]; nonExistOnBitMap: BitIds } {
@@ -163,33 +139,6 @@ async function getComponentsToExport(
   lanes: boolean
 ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; lanesObjects?: Lane[] }> {
   const componentsList = new ComponentsList(consumer);
-  const getLaneNames = async (): Promise<string[]> => {
-    const lanesObj = await consumer.scope.listLanes();
-    const laneNames = lanesObj.map(lane => lane.name);
-    laneNames.push(DEFAULT_LANE);
-    return laneNames;
-  };
-  const laneNames = await getLaneNames();
-  const idsFromWorkspaceAndScope = await componentsList.listAllIdsFromWorkspaceAndScope();
-  const currentLaneId = consumer.getCurrentLaneId();
-  const isUserTryingToExportLanes = () => {
-    if (lanes) return true;
-    if (!ids.length) {
-      // if no ids entered, when a user checked out to a lane, we should export the lane
-      return !currentLaneId.isDefault();
-    }
-    if (ids.every(id => !laneNames.includes(id))) {
-      // if none of the ids is lane, then user is not trying to export lanes
-      return false;
-    }
-    // some or all ids are lane names, if all are not ids, user is trying to export lanes
-    return ids.every(id => {
-      if (laneNames.includes(id) && idsFromWorkspaceAndScope.hasWithoutScopeAndVersionAsString(id)) {
-        throw new GeneralError(`the id ${id} is both, a component-name and a lane-name`);
-      }
-      return laneNames.includes(id);
-    });
-  };
   const idsHaveWildcard = hasWildcard(ids);
   const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds; missingScope: BitId[] } => {
     if (remote) return { idsToExport: bitIds, missingScope: [] };
@@ -206,34 +155,8 @@ async function getComponentsToExport(
       throw new GeneralError('the operation has been canceled');
     }
   };
-  if (isUserTryingToExportLanes()) {
-    // @todo: stop guessing what the user wants and always ask for "--lanes"
-    const laneIds = ids.length ? ids.map(laneName => new LaneId({ name: laneName })) : [currentLaneId];
-    const nonExistingLanes: string[] = [];
-    const lanesObjects: Lane[] = [];
-    await Promise.all(
-      laneIds.map(async laneId => {
-        const laneObject = await consumer.scope.loadLane(laneId);
-        if (laneObject) {
-          lanesObjects.push(laneObject);
-        } else if (!laneId.isDefault()) {
-          nonExistingLanes.push(laneId.name);
-        }
-      })
-    );
-    if (nonExistingLanes.length) {
-      throw new GeneralError(
-        `unable to export the following lanes ${nonExistingLanes.join(', ')}. they don't exist or are empty`
-      );
-    }
-    loader.start(BEFORE_LOADING_COMPONENTS);
-    const compsToExportP = lanesObjects.map(async (laneObject: Lane | null) => {
-      // null in case of default-lane
-      return includeNonStaged
-        ? componentsList.listNonNewComponentsIds()
-        : componentsList.listExportPendingComponentsIds(laneObject);
-    });
-    const componentsToExport: BitIds = BitIds.fromArray(R.flatten(await Promise.all(compsToExportP)));
+  if (isUserTryingToExportLanes(consumer, ids, lanes)) {
+    const { componentsToExport, lanesObjects } = await getLaneCompIdsToExport(consumer, ids, includeNonStaged);
     await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);

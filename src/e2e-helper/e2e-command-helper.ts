@@ -179,7 +179,7 @@ export default class CommandHelper {
     return result;
   }
   exportLane(laneName: string, scope: string = this.scopes.remote, assert = true) {
-    const result = this.runCmd(`bit export ${scope} ${laneName} --force`);
+    const result = this.runCmd(`bit export ${scope} ${laneName} --force --lanes`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
