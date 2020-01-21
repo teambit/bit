@@ -2,8 +2,9 @@ import glob from 'glob';
 import * as path from 'path';
 import fs from 'fs-extra';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { ensureAndWriteJson, generateRandomStr } from './e2e-helper';
+import { ensureAndWriteJson } from './e2e-helper';
 import ScopesData from './e2e-scopes';
+import { generateRandomStr } from '../utils';
 
 export default class FsHelper {
   scopes: ScopesData;
