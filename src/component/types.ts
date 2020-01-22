@@ -29,3 +29,6 @@ export interface Author {
    */
   email?: string;
 }
+
+// TODO: implement
+export interface PackageDependencies {}

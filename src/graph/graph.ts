@@ -5,7 +5,7 @@ import { Graph as GraphLib } from 'graphlib/lib';
 // TODO: you should not use it from here. please remove this file once it's available from a correct source
 export class Graph<N, E> {
   graph: GraphLib;
-  constructor(directed: boolean = true, multigraph: boolean = true) {
+  constructor(directed = true, multigraph = true) {
     this.graph = new GraphLib({ directed: directed, multigraph: multigraph, compound: true });
     this.graph.setDefaultEdgeLabel({});
   }

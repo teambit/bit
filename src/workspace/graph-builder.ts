@@ -8,8 +8,8 @@ import { ModelComponent } from '../scope/models';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 
 // TODO: Change to component graph
-export async function buildGraph(consumer: Consumer): Promise<Graph> {
-  const graph = new Graph();
+export async function buildGraph(consumer: Consumer): Promise<Graph<Component, any>> {
+  const graph = new Graph<Component, any>();
   const componentsList = new ComponentsList(consumer);
   // const allModelComponents: ModelComponent[] = await consumer.scope.list();
   const workspaceComponents: ConsumerComponent[] = await componentsList.getFromFileSystem();
@@ -49,11 +49,12 @@ export async function buildGraph(consumer: Consumer): Promise<Graph> {
   return graph;
 }
 
-function _addDependenciesToGraph(node: Component, graph: Graph): void {
+// TODO: change the Graph type to a concrete graph with correct node/edge types
+function _addDependenciesToGraph(node: Component, graph: Graph<any, any>): void {
   const idStr = node.id.toString();
   // save the full BitId of a string id to be able to retrieve it later with no confusion
   DEPENDENCIES_TYPES.forEach(depType => {
-    component[depType].get().forEach(dependency => {
+    node[depType].get().forEach(dependency => {
       const depIdStr = dependency.id.toString();
       // if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
       graph.setEdge(idStr, depIdStr, [depType]);

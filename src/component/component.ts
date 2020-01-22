@@ -53,7 +53,7 @@ export default class Component {
     legacyConsumerComponent?: ConsumerComponent,
     legacyModelComponent?: ModelComponent,
     repository?: Repository
-  ): Component {
+  ): Promise<Component> {
     let current;
     const tags: TagMap = new TagMap();
     const snaps: Array<Snap> = [];
@@ -64,8 +64,9 @@ export default class Component {
       R.forEachObjIndexed(async (versionRef, versionId) => {
         const version = await legacyModelComponent.loadVersion(versionId, repository);
         const snap = Snap.fromVersionModel(version);
-        snaps.push(snap);
-        tags.set(versionId, snap);
+        // TODO: Uncomment those lines when the Snap.fromVersionModel is implemented
+        // snaps.push(snap);
+        // tags.set(versionId, snap);
       }, legacyModelComponent.versions);
     }
     return new Component(componentId, tags, snaps, current);
@@ -132,12 +133,19 @@ export default class Component {
   /**
    * examine difference between two components.
    */
-  diff(other: Component): Difference {}
+  diff(other: Component): any | undefined {
+    // TODO: remove the | undefined from return type when implement
+    // TODO: add exact type when implement
+    return undefined;
+  }
 
   /**
    * merge two different components
    */
-  merge(other: Component): Component {}
+  merge(other: Component): Component | undefined {
+    // TODO: remove the | undefined from return type when implement
+    return undefined;
+  }
 
   /**
    * write a component to a given file system.

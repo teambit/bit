@@ -8,7 +8,8 @@ import { buildGraph } from './graph-builder';
  * API of the Bit Workspace
  */
 export default class Workspace {
-  _graph?: Graph;
+  // TODO: add a concrete graph types
+  _graph?: Graph<any, any>;
 
   constructor(
     /**
@@ -40,7 +41,8 @@ export default class Workspace {
     return this.consumer;
   }
 
-  async getGraph(): Graph {
+  // TODO: add a concrete graph types
+  async getGraph(): Promise<Graph<any, any>> {
     if (this._graph) {
       return this._graph;
     }

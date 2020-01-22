@@ -78,18 +78,19 @@ export default class Snap {
       skipAutoTag
     };
 
-    if (all || scope || idHasWildcard) {
-      return tagAllAction({
-        ...params,
-        scope,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        includeImported,
-        idWithWildcard: id
-      });
-    }
-    return tagAction({
-      ...params,
-      id
-    });
+    return;
+    // if (all || scope || idHasWildcard) {
+    //   return tagAllAction({
+    //     ...params,
+    //     scope,
+    //     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    //     includeImported,
+    //     idWithWildcard: id
+    //   });
+    // }
+    // return tagAction({
+    //   ...params,
+    //   id
+    // });
   }
 }

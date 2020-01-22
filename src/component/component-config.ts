@@ -1,4 +1,5 @@
 import { PathLinux } from 'utils/path';
+import { PackageDependencies } from './types';
 
 /**
  * in-memory represnentation of the component configuration.

@@ -21,7 +21,10 @@ export default class ComponentState {
    * @returns {ComponentState}
    * @memberof ComponentState
    */
-  static fromLegacyConsumerComponent(consumerComponent: ConsumerComponent): ComponentState {}
+  static fromLegacyConsumerComponent(consumerComponent: ConsumerComponent): ComponentState | undefined {
+    // TODO: remove the | undefined when implementing
+    return undefined;
+  }
 
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed here.

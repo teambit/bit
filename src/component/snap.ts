@@ -45,7 +45,10 @@ export default class Snap extends ComponentState {
    * @returns {Snap}
    * @memberof Snap
    */
-  static fromVersionModel(version: Version): Snap {}
+  static fromVersionModel(version: Version): Snap | undefined {
+    // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
+    return undefined;
+  }
 
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed here.
