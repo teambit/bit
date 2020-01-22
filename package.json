@@ -111,7 +111,7 @@
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
     "graphviz": "0.0.9",
-    "group-array": "^0.3.4",
+    "group-array": "^1.0.0",
     "ignore": "^3.3.7",
     "ink": "^2.6.0",
     "inquirer": "^6.5.0",
