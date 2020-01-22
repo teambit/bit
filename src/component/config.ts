@@ -14,6 +14,6 @@ export default class Config {
     /**
      * configured extensions
      */
-    extensions: Extension[]
+    readonly extensions: Extension[]
   ) {}
 }

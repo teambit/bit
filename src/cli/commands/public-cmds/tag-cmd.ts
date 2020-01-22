@@ -147,7 +147,8 @@ export default class Tag extends Command {
           );
           if (autoTag.length) {
             const autoTagComp = autoTag.map(a => a.component.toBitIdWithLatestVersion().toString());
-            componentOutput += `\n       ${AUTO_TAGGED_MSG}: ${autoTagComp.join(', ')}`;
+            componentOutput += `\n       ${AUTO_TAGGED_MSG}:
+            ${autoTagComp.join('\n            ')}`;
           }
           return componentOutput;
         })

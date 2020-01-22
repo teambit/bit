@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2247](https://github.com/teambit/bit/issues/2247) improve auto-tag output
+
 ## [[14.7.2] - 2020-01-12](https://github.com/teambit/bit/releases/tag/v14.7.2)
 
 ### New

@@ -1,10 +1,9 @@
+import commander from 'commander';
+import R from 'ramda';
 import { Command } from './command';
 import CommandRegistry from './registry';
-import commander from 'commander';
-import { render } from 'ink';
-import { execAction, register } from '../cli/command-registry';
-import R from 'ramda';
-import registerCommands from 'cli/command-registry-builder';
+import { register } from '../cli/command-registry';
+
 export default class Paper {
   constructor(
     /**
@@ -33,7 +32,8 @@ export default class Paper {
    *
    */
   async run(): Promise<void> {
-    Object.entries(this.commands).reduce(function(acc, [key, paperCommand]) {
+    /* eslint-disable */
+    Object.entries(this.commands).reduce(function(acc, [_key, paperCommand]) {
       register(paperCommand as any, acc);
       return acc;
     }, commander);

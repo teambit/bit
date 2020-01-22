@@ -1,6 +1,6 @@
 import { buildRegistry } from '../cli';
 import BitCli from './cli.api';
-import { Paper, Command } from '../paper';
+import { Paper } from '../paper';
 import { Bit } from '../bit';
 import { LegacyCommand } from './legacy-command';
 
