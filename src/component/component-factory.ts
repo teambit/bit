@@ -1,4 +1,7 @@
 import { Capsule as CapsuleOrchestrator } from '../capsule';
+import ConsumerComponent from '../consumer/component';
+import Component from './component';
+import State from './state';
 
 export default class ComponentFactory {
   constructor(
@@ -8,6 +11,8 @@ export default class ComponentFactory {
     private capsuleOrchestrator: CapsuleOrchestrator
   ) {}
 
+  create() {}
+
   /**
    * instantiate a component object from a legacy `ComponentVersions` type object.
    */
@@ -16,5 +21,8 @@ export default class ComponentFactory {
   /**
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */
-  fromConsumerComponent() {}
+  fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
+    // const state = new State();
+    // return new Component(legacyComponent.id, );
+  }
 }

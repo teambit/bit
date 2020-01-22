@@ -1,16 +1,11 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope';
-import { BitIds } from '../bit-id';
-import { Graph } from '../graph/graph';
-import { buildGraph } from './graph-builder';
+import { Component, ComponentFactory, ComponentID } from '../component';
 
 /**
  * API of the Bit Workspace
  */
 export default class Workspace {
-  // TODO: add a concrete graph types
-  _graph?: Graph<any, any>;
-
   constructor(
     /**
      * private access to the legacy consumer instance.
@@ -20,37 +15,34 @@ export default class Workspace {
     /**
      * access to the Workspace's `Scope` instance
      */
-    readonly scope: Scope = consumer.scope
+    readonly scope: Scope = consumer.scope,
+
+    /**
+     * access to the `ComponentProvider` instance
+     */
+    private componentFactory: ComponentFactory
   ) {}
 
+  /**
+   * Workspace's configuration
+   */
   get config() {
     return this.consumer.config;
   }
 
+  /**
+   * root path of the Workspace.
+   */
   get path() {
     return this.consumer.getPath();
   }
 
   /**
-   * This should be removed
-   * TODO: temp until we expose all needed functionalities
-   * @readonly
-   * @memberof Workspace
+   * get a component from scope
+   * @param id
    */
-  get _consumer() {
-    return this.consumer;
-  }
-
-  // TODO: add a concrete graph types
-  async getGraph(): Promise<Graph<any, any>> {
-    if (this._graph) {
-      return this._graph;
-    }
-    this._graph = await buildGraph(this.consumer);
-    return this._graph;
-  }
-
-  loadComponentsForCapsule(ids: BitIds) {
-    return this.consumer.loadComponentsForCapsule(ids);
+  async get(id: ComponentID): Promise<Component> {
+    const legacyComponent = await this.consumer.loadComponent(id);
+    return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 }

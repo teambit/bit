@@ -1,6 +1,7 @@
 import Extension from './extension';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
+import { ExtensionLoadError } from './exceptions';
 
 async function asyncForEach(array, callback) {
   // eslint-disable-next-line no-plusplus
@@ -31,7 +32,11 @@ export default class Harmony {
       })
     );
 
-    await extension.run(dependencies, this);
+    try {
+      await extension.run(dependencies, this);
+    } catch (err) {
+      throw new ExtensionLoadError(extension, err);
+    }
   }
 
   async run() {

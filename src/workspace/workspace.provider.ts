@@ -1,12 +1,17 @@
 import { Scope } from '../scope/scope.api';
 import Workspace from './workspace';
+import { ComponentProvider } from '../component';
 
-export type WorkspaceDeps = [Scope];
+export type WorkspaceDeps = [Scope, ComponentProvider];
 
-export default async function provideWorkspace(config: {}, [scope]: WorkspaceDeps) {
+export type WorkspaceConfig = {
+  /**
+   * default scope for the Workspace, defaults to none.
+   */
+  defaultScope: string;
+};
+
+export default async function provideWorkspace(config: WorkspaceConfig, [scope, component]: WorkspaceDeps) {
   const consumer = scope.consumer;
-  if (consumer) {
-    return new Workspace(consumer);
-  }
-  return undefined;
+  return new Workspace(consumer, scope, component);
 }

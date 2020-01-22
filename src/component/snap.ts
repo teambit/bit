@@ -1,23 +1,37 @@
-import { Hash } from 'crypto';
-import ComponentConfig from './component-config';
-import ComponentState from './component-state';
-import { Author } from './types';
-import { Version } from '../scope/models';
+import ComponentConfig from './config';
+import ComponentFS from './component-fs';
+import { DependencyGraph } from './dependency-graph';
+import Component from './component';
+import State from './state';
+
+export type Hash = string;
+
+export type Author = {
+  /**
+   * author full name (for example: "Ran Mizrahi")
+   */
+  name: string;
+
+  /**
+   * author email in a proper format (e.g. "ran@bit.dev")
+   */
+  email: string;
+};
 
 /**
  * `Snap` represents a sealed state of the component in the working tree.
  */
-export default class Snap extends ComponentState {
+export default class Snap {
   constructor(
     /**
-     * configuration of the component.
+     * date time of the snap.
      */
-    readonly config: ComponentConfig,
+    readonly timestamp: Date,
 
     /**
-     * hash of the component `Snap`.
+     * parent snap
      */
-    hash: Hash,
+    readonly parent: Snap,
 
     /**
      * author of the component `Snap`.
@@ -30,32 +44,23 @@ export default class Snap extends ComponentState {
     readonly message: string,
 
     /**
-     * Snap date.
+     * component state
      */
-    readonly date: Date
-  ) {
-    super(config);
-  }
+    readonly state: State
+  ) {}
 
   /**
-   * Get a snap representation by a version from the scope
-   *
-   * @static
-   * @param {Version} version
-   * @returns {Snap}
-   * @memberof Snap
+   * hash of the snap.
    */
-  static fromVersionModel(version: Version): Snap | undefined {
+  get hash() {
     // eslint-disable-line @typescript-eslint/no-unused-vars
-    // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
-    return undefined;
+    return this.state.hash;
   }
 
   /**
-   * dependency graph of the component current. ideally package dependencies would be also placed here.
+   * create a snap from a component
    */
-  get dependencyGraph() {
-    // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
-    return undefined;
+  static create(component: Component, author: Author, message = '') {
+    return new Snap(new Date(), component.head, author, message, component.state);
   }
 }
