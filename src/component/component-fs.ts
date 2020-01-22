@@ -1,4 +1,5 @@
 import { MemoryFS } from '@teambit/any-fs';
+import { AbstractVinyl } from '../consumer/component/sources';
 
 /**
  * The virtual component filesystem
@@ -13,5 +14,14 @@ export default class ComponentFS extends MemoryFS {
 
   toObject() {}
 
-  toString() {}
+  toJSON() {}
+
+  static fromVinyls(files: AbstractVinyl[]) {
+    const fs = new MemoryFS();
+    files.forEach(file => {
+      fs.writeFileSync(file.path, file.contents);
+    });
+
+    return fs;
+  }
 }

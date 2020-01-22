@@ -41,8 +41,9 @@ export default class Workspace {
    * get a component from scope
    * @param id
    */
-  async get(id: ComponentID): Promise<Component> {
-    const legacyComponent = await this.consumer.loadComponent(id);
+  async get(id: string): Promise<Component> {
+    const componentId = this.consumer.getParsedId(id);
+    const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 }

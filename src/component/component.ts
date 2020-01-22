@@ -4,7 +4,7 @@ import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
 import TagMap from './tag-map';
-import { BitId as ComponentID } from '../bit-id';
+import ComponentID from './id';
 import State from './state';
 import Tag from './tag';
 import Snap, { Author } from './snap';
@@ -20,19 +20,19 @@ export default class Component {
     readonly id: ComponentID,
 
     /**
-     * head version of the component. represented as an
+     * head version of the component. can be `null` for new components.
      */
-    readonly head: Snap,
-
-    /**
-     * list of all component tags
-     */
-    readonly tags: TagMap = new TagMap(),
+    readonly head: Snap | null = null,
 
     /**
      * state of the component.
      */
-    readonly state: State = head.state
+    readonly state: State,
+
+    /**
+     * list of all component tags
+     */
+    readonly tags: TagMap = new TagMap()
   ) {}
 
   /**
@@ -76,7 +76,15 @@ export default class Component {
    * determines whether this component is modified in the workspace.
    */
   isModified() {
+    if (!this.head) return true;
     return this.state.hash !== this.head.hash;
+  }
+
+  /**
+   * determines whether this component is new.
+   */
+  isNew() {
+    return this.head === null;
   }
 
   /**

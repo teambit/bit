@@ -1,6 +1,13 @@
 import { PathLinux } from '../utils/path';
 
-export type PackageDependencies = {};
+export type PackageDependencies = {
+  devDependencies: Dependencies;
+  dependencies: Dependencies;
+};
+
+export type Dependencies = {
+  [name: string]: string;
+};
 
 /**
  * in-memory represnentation of the component configuration.
