@@ -72,7 +72,7 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
-import LaneId, { LocalLaneId } from '../lane-id/lane-id';
+import { LocalLaneId } from '../lane-id/lane-id';
 import snapModelComponents from '../scope/component-ops/snap-model-component';
 
 type ConsumerProps = {
@@ -647,19 +647,7 @@ export default class Consumer {
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    const { components } = await this.loadComponents(ids);
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
-    if (!ignoreUnresolvedDependencies) {
-      const componentsWithMissingDeps = components.filter(component => {
-        return Boolean(component.issues);
-      });
-      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
-    }
-    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    const components = await this._loadComponentsForSnapOrTag();
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
@@ -702,21 +690,10 @@ export default class Consumer {
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
-    logger.debug(`snapping the following components: ${ids.toString()}`);
-    Analytics.addBreadCrumb('snap', `snapping the following components: ${Analytics.hashData(ids)}`);
-    const { components } = await this.loadComponents(ids);
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't snap anything
-    if (!ignoreUnresolvedDependencies) {
-      const componentsWithMissingDeps = components.filter(component => {
-        return Boolean(component.issues);
-      });
-      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
-    }
-    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
-    if (areComponentsMissingFromScope) {
-      throw new ComponentsPendingImport();
-    }
+    logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
+      components: ids.toString()
+    });
+    const components = await this._loadComponentsForSnapOrTag(ids, ignoreUnresolvedDependencies);
 
     const { taggedComponents, autoTaggedResults } = await snapModelComponents({
       consumerComponents: components,
@@ -736,6 +713,24 @@ export default class Consumer {
     await this.updateComponentsVersions(allComponents);
 
     return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
+  }
+
+  async _loadComponentsForSnapOrTag(ids: BitIds, ignoreUnresolvedDependencies: boolean): Promise<Component[]> {
+    const { components } = await this.loadComponents(ids);
+    // go through the components list to check if there are missing dependencies
+    // if there is at least one we won't tag/snap anything
+    if (!ignoreUnresolvedDependencies) {
+      const componentsWithMissingDeps = components.filter(component => {
+        return Boolean(component.issues);
+      });
+      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
+    }
+
+    return components;
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
