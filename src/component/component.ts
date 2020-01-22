@@ -6,7 +6,6 @@ import ComponentFS from './component-fs';
 import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
-import Tag from './tag';
 import Snap, { Author } from './snap';
 
 /**

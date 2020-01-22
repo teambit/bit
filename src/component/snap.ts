@@ -61,6 +61,6 @@ export default class Snap {
    * create a snap from a component
    */
   static create(component: Component, author: Author, message = '') {
-    return new Snap(new Date(), [component.head], author, message, component.state);
+    return new Snap(new Date(), component.head ? [component.head] : [], author, message, component.state);
   }
 }
