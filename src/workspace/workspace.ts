@@ -39,6 +39,16 @@ export default class Workspace {
   }
 
   /**
+   * list all components in the workspace
+   */
+  list() {}
+
+  /**
+   * provides status of all components in the workspace.
+   */
+  status() {}
+
+  /**
    * get a component from scope
    * @param id
    */

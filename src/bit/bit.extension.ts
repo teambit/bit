@@ -8,7 +8,7 @@ import { PipesExt } from '../pipes';
 
 export default Extension.instantiate({
   name: 'Bit',
-  dependencies: [WorkspaceExt, ScopeExt, CapsuleExt, SnapExt, PipesExt],
+  dependencies: [WorkspaceExt, ScopeExt, CapsuleExt],
   config: {},
   provider: provideBit
 });

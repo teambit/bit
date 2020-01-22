@@ -4,7 +4,7 @@ import { WorkspaceExt } from '../workspace';
 
 export default Extension.instantiate({
   name: 'Capsule',
-  dependencies: [WorkspaceExt],
+  dependencies: [],
   config: {},
   provider: capsuleProvider
 });

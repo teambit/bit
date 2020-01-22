@@ -23,6 +23,13 @@ export default class ComponentID {
   }
 
   /**
+   * serialize the component ID.
+   */
+  toString() {
+    return this.legacyComponentId.toString();
+  }
+
+  /**
    * generate a component ID from a string.
    */
   static fromString(idStr: string) {

@@ -20,11 +20,7 @@ export const DEPENDENCIES_TYPES_UI_MAP = {
 };
 
 export default class Dependencies {
-  dependencies: Dependency[];
-
-  constructor(dependencies: Dependency[] = []) {
-    this.dependencies = dependencies;
-  }
+  constructor(readonly dependencies: Dependency[] = []) {}
 
   serialize(): Record<string, any>[] {
     return this.dependencies.map(dep => Object.assign({}, dep, { id: dep.id.toString() }));

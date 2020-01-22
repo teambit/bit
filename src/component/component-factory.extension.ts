@@ -1,5 +1,5 @@
 import { Extension } from '../harmony';
-import { CapsuleExt } from '../capsule';
+import CapsuleExt from '../environment/capsule.extension';
 import componentProvider from './component.provider';
 
 export default Extension.instantiate({

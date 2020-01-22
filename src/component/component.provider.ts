@@ -1,5 +1,5 @@
-import { Capsule } from '../capsule';
 import { ComponentFactory } from '../component';
+import Capsule from '../environment/capsule-builder';
 
 type ComponentDeps = [Capsule];
 type ComponentConfig = {};

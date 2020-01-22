@@ -6,6 +6,6 @@ export default class LoadExtensionError extends Error {
   }
 
   toString() {
-    return `failed to load extension: ${this.extension.name} with error: ${this.err}`;
+    return `failed to load extension: ${this.extension.name} with error: ${this.err.stack}`;
   }
 }

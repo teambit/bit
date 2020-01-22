@@ -1,7 +1,7 @@
 import Config from './config';
 import ComponentFS from './component-fs';
-import { DependencyGraph } from './dependency-graph';
 import ConsumerComponent from '../consumer/component';
+import { ComponentGraph } from './component-graph';
 
 export default class State {
   constructor(
@@ -18,8 +18,12 @@ export default class State {
     /**
      * dependency graph of the component current. ideally package dependencies would be also placed here.
      */
-    readonly dependencyGraph: DependencyGraph
+    readonly dependencies: Dependencies
   ) {}
+
+  get graph() {
+    return new ComponentGraph();
+  }
 
   /**
    * calculate the hash of this state
@@ -30,10 +34,11 @@ export default class State {
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
     const extensions = [];
+
     return new State(
       new Config(consumerComponent.mainFile, extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
-      new DependencyGraph()
+      consumerComponent.dependencies
     );
   }
 }

@@ -7,9 +7,10 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
+import Capsule from '../environment/capsule-builder';
 
 /**
- * in-memory representation of a component. (initial concept)
+ * in-memory representation of a component.
  */
 export default class Component {
   constructor(
@@ -31,7 +32,9 @@ export default class Component {
     /**
      * list of all component tags
      */
-    readonly tags: TagMap = new TagMap()
+    readonly tags: TagMap = new TagMap(),
+
+    private capsuleOrchestrator: Capsule
   ) {}
 
   /**
@@ -49,18 +52,30 @@ export default class Component {
   }
 
   /**
-   * dependency graph of the component current. ideally package dependencies would be also placed here.
+   * dependency graph of the component current. ideally package dependencies would be also placed
+   * here through an external extension.
    */
-  get dependencyGraph() {
-    return this.state.dependencyGraph;
+  get graph() {
+    return this.state.graph;
   }
+
+  /**
+   * isolates the component in a capsule.
+   */
+  async capsule() {
+    const id = this.id.toString();
+    const capsules = await this.capsuleOrchestrator.isolateComponents([id]);
+    return capsules[id];
+  }
+
   /**
    * record component changes in the `Scope`.
    */
   snap(author: Author, message = '') {
     if (!this.isModified()) throw new NothingToSnap();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const snap = Snap.create(this, author, message);
+
+    return new Component(this.id, snap, snap.state, this.tags, this.capsuleOrchestrator);
   }
 
   /**

@@ -1,11 +1,9 @@
-import { Workspace } from '../workspace';
 import CapsuleBuilder from './capsule-builder';
 
-export type CapsuleDeps = [Workspace];
+export type CapsuleDeps = [];
 
 export type CapsuleConfig = {};
 
-export default async function provideCapsule(config: CapsuleConfig, [workspace]: CapsuleDeps) {
-  const builder = new CapsuleBuilder(workspace.path);
-  return builder;
+export default async function provideCapsule(config: CapsuleConfig, []: CapsuleDeps) {
+  return new CapsuleBuilder('any');
 }
