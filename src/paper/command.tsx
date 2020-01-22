@@ -30,7 +30,7 @@ export interface Command {
    *
    */
   options: PaperOptions;
-
+  commands?: Command[]
   help?: string;
   longHelp?:string;
 

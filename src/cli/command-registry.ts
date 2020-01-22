@@ -14,8 +14,8 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
-import { LegacyCommand } from './legacy-command';
 import { render as inkRender } from 'ink';
+// import { } from '../paper/'
 didYouMean.returnFirstMatch = true;
 
 export function logErrAndExit(msg: Error | string, commandName: string) {
@@ -141,17 +141,17 @@ function createOptStr(alias, name) {
   return `--${name}`;
 }
 
-function register(command: Command, commanderCmd) {
+export function register(command: Command, commanderCmd) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)
     .alias(command.alias);
 
   if (command.remoteOp) {
-    command.opts.push(['', TOKEN_FLAG, 'authentication token']);
+    (command.opts || (command as any).options).push(['', TOKEN_FLAG, 'authentication token']);
   }
 
-  command.opts.forEach(([alias, name, description]) => {
+  (command.opts || (command as any).options).forEach(([alias, name, description]) => {
     concrete.option(createOptStr(alias, name), description);
   });
 

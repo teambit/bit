@@ -3,8 +3,9 @@ import { BitCli } from '../cli';
 import CommandRegistry from './registry';
 import commander from 'commander';
 import { render } from 'ink';
-import { execAction } from '../cli/command-registry';
+import { execAction, register } from '../cli/command-registry';
 import R from 'ramda';
+import registerCommands from 'cli/command-registry-builder';
 export default class Paper {
   constructor(
     /**
@@ -33,24 +34,9 @@ export default class Paper {
    *
    */
   async run(): Promise<void> {
-    // TODO: Implement this to wrap the legacy CLI (code smell)
-    Object.entries(this.commands).reduce(function(accum, [key, paperCommand]) {
-      const commanderCMD = accum
-        .command(paperCommand.name)
-        .description(paperCommand.description)
-        .alias(paperCommand.alias);
-
-      paperCommand.options.forEach(function(opt) {
-        commanderCMD.option(opt[0], opt[1], opt[2]);
-      });
-
-      commanderCMD.action(async function(args) {
-        console.log('args', args);
-        console.log(arguments);
-        const toRender = await execAction(paperCommand, commanderCMD, args);
-      });
-
-      return accum;
+    Object.entries(this.commands).reduce(function(acc, [key, paperCommand]) {
+      register(paperCommand as any, acc);
+      return acc;
     }, commander);
     const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
     commander.packageManagerArgs = packageManagerArgs;
