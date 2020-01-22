@@ -1,6 +1,10 @@
 import { Command } from './command';
 import CommandRegistry from './registry';
-
+import commander from 'commander';
+import { render } from 'ink';
+import { execAction, register } from '../cli/command-registry';
+import R from 'ramda';
+import registerCommands from 'cli/command-registry-builder';
 export default class Paper {
   constructor(
     /**
@@ -28,8 +32,13 @@ export default class Paper {
    * execute commands registered to `Paper` and the legacy bit cli.
    *
    */
-  run() {
-    // TODO: Implement this to wrap the legacy CLI (code smell)
-    throw new Error('Paper.run is not implemented.');
+  async run(): Promise<void> {
+    Object.entries(this.commands).reduce(function(acc, [key, paperCommand]) {
+      register(paperCommand as any, acc);
+      return acc;
+    }, commander);
+    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
+    commander.packageManagerArgs = packageManagerArgs;
+    commander.parse(params);
   }
 }

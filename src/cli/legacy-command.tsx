@@ -1,33 +1,30 @@
-import Cmd, { CommandOption, CommandOptions } from '../cli/command';
-import { Command } from '../paper/command';
-import { render, Color } from 'ink';
-import React from 'react';
+import { Command, PaperOptions } from "../paper/command";
+import LegacyInterface from './command'
+import React from 'react'
+import defaultErrorHandler from "./default-error-handler";
+import { Color } from "ink";
 
-/**
- * Legacy Commands is paper command wrapper in order to be run by the legacy command registry.
- *
- */
-export class LegacyCommand extends Cmd {
-  constructor(private paperCommand: Command) {
-    super();
-    this.name = paperCommand.name;
-    this.description = paperCommand.description;
-    this.opts = paperCommand.options;
-    this.alias = paperCommand.alias;
+export class LegacyCommand implements Command{
+  alias: string;
+  name: string;
+  description: string;
+  options: PaperOptions;
+
+  constructor(private cmd: LegacyInterface) {
+    this.name = cmd.name;
+    this.description = cmd.description;
+    this.options = cmd.opts;
+    this.alias = cmd.alias;
   }
 
-  async action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
-    if (opts.json) {
-      const json = await this.paperCommand.json!(params, opts)
-      console.log(JSON.stringify(json,null, 2))
-    } else {
-      const element = await this.paperCommand.render(params, opts)
-      render(element)
+  async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
+    let report:string | null = null
+    try {
+      const data = await this.cmd.action(params, options, [] )
+      report = this.cmd.report && this.cmd.report(data, params, options)
+    } catch(e) {
+      report = defaultErrorHandler(e) || e.message
     }
+    return <Color>{report}</Color>
   }
-
-  report(data: any, params: any, opts: { [key: string]: any }): string {
-    return '';
-  }
-
 }
