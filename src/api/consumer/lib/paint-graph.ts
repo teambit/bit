@@ -8,7 +8,7 @@ import getRemoteByName from '../../../remotes/get-remote-by-name';
 
 export default (async function paintGraph(id: string, options: Record<string, any>): Promise<string> {
   const { image, remote, layout, allVersions } = options;
-  const consumer: Consumer | null = await loadConsumerIfExist();
+  const consumer = await loadConsumerIfExist();
   if (!consumer && !remote) throw new ConsumerNotFound();
   const getBitId = (): BitId | undefined => {
     if (!id) return undefined;

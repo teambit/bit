@@ -1,4 +1,4 @@
-export interface OneComponentPersistOptions {
+export interface PersistOptions {
   message?: string;
   version?: string;
   force?: boolean;
@@ -7,7 +7,7 @@ export interface OneComponentPersistOptions {
 export interface ComponentToPersist {
   // TODO: change to real component instance
   component: any;
-  persistOptions: OneComponentPersistOptions;
+  persistOptions: PersistOptions;
 }
 
 export interface PersistComponentsGeneralOptions {

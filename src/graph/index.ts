@@ -1,3 +1,2 @@
-export * from './edge';
-export { default as Graph } from './graph';
-export * from './vertex';
+// eslint-disable-next-line import/prefer-default-export
+export { Graph } from './graph';

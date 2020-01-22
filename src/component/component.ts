@@ -15,7 +15,7 @@ import Snap, { Author } from './snap';
 export default class Component {
   constructor(
     /**
-     * component ID represented by the `ComponentID` type.
+     * component ID represented by the `ComponentId` type.
      */
     readonly id: ComponentID,
 
@@ -39,7 +39,7 @@ export default class Component {
    * component configuration which is later generated to a component `package.json` and `bit.json`.
    */
   get config(): ComponentConfig {
-    return this.state.config;
+    return this.config;
   }
 
   /**
@@ -55,7 +55,6 @@ export default class Component {
   get dependencyGraph() {
     return this.state.dependencyGraph;
   }
-
   /**
    * record component changes in the `Scope`.
    */

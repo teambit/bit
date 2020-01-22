@@ -51,30 +51,30 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | null | undefined> {
+  async get(bitId: BitId): Promise<ModelComponent | undefined> {
     const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | null | undefined = await this._findComponent(component);
+    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (!foundComponent.versions[bitId.version]) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
-        return null;
+        return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-        return null;
+        return undefined;
       }
     }
 
     return foundComponent;
   }
 
-  async _findComponent(component: ModelComponent): Promise<ModelComponent | null | undefined> {
+  async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
@@ -86,10 +86,10 @@ export default class SourceRepository {
       logger.error(`findComponent got an error ${err}`);
     }
     logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
+    return undefined;
   }
 
-  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | null | undefined> {
+  async _findComponentBySymlink(symlink: Symlink): Promise<ModelComponent | undefined> {
     const realComponentId: BitId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
     const foundComponent = await this.objects().load(realModelComponent.hash());

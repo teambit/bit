@@ -1,6 +1,6 @@
 import Container from './container';
 import Extension from './extension';
-import { Graph } from '../graph';
+import { Graph } from '../r-graph';
 import { ExtensionProvider, ProviderFn } from './extension.provider';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
@@ -51,6 +51,8 @@ export default class Harmony {
   }
 
   static load(extension: Extension<any, any>) {
-    return new Harmony(DependencyGraph.fromRoot(extension));
+    let graph: DependencyGraph | null = null;
+    graph = DependencyGraph.fromRoot(extension);
+    return new Harmony(graph!);
   }
 }

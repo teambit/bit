@@ -22,7 +22,8 @@ export default Extension.instantiate<Config, PipesDeps>({
         ['j', 'json', 'hey']
       ],
       render: async () => {
-        return <Color green>Hi!</Color>
+        throw new Error('SEE ME!')
+        // return <Color green>Hi!</Color>
       }
     })
     return pipes

@@ -9,7 +9,7 @@ export class Scope {
     /**
      * legacy consumer
      */
-    readonly consumer: Consumer
+    readonly consumer?: Consumer
   ) {}
 
   // TODO: support lanes / other kind of objects

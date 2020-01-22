@@ -414,7 +414,7 @@ export default class Scope {
     return this.objects.loadRawObject(new Ref(hash));
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<ModelComponent | null | undefined> {
+  async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
     return this.sources.get(id);
   }
 

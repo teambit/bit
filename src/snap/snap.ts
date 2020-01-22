@@ -1,7 +1,6 @@
 import { SnapOptions } from './types';
 import { Scope } from '../scope/scope.api';
-import { Workspace } from 'workspace';
-import { BitId as ComponentId } from 'bit-id';
+import { Workspace } from '../workspace';
 import GeneralError from '../error/general-error';
 import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 import hasWildcard from '../utils/string/has-wildcard';
@@ -78,18 +77,18 @@ export default class Snap {
       skipAutoTag
     };
 
-    if (all || scope || idHasWildcard) {
-      return tagAllAction({
-        ...params,
-        scope,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        includeImported,
-        idWithWildcard: id
-      });
-    }
-    return tagAction({
-      ...params,
-      id
-    });
+    // if (all || scope || idHasWildcard) {
+    //   return tagAllAction({
+    //     ...params,
+    //     scope,
+    //     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    //     includeImported,
+    //     idWithWildcard: id
+    //   });
+    // }
+    // return tagAction({
+    //   ...params,
+    //   id
+    // });
   }
 }

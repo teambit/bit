@@ -1,5 +1,5 @@
 import CommandRegistry from './command-registry';
-import Command from './command';
+
 export default class BitCli {
   constructor(
     /**

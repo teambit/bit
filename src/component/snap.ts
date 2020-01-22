@@ -19,7 +19,7 @@ export type Author = {
 };
 
 /**
- * `Snap` represents the state of the component in the working tree.
+ * `Snap` represents a sealed state of the component in the working tree.
  */
 export default class Snap {
   constructor(

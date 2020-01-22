@@ -30,7 +30,7 @@ export default (async function getScopeComponent({
     return { component };
   }
 
-  const consumer: Consumer | null = await loadConsumerIfExist();
+  const consumer: Consumer | undefined = await loadConsumerIfExist();
   const remote = await getRemoteByName(bitId.scope as string, consumer);
   loader.start(BEFORE_REMOTE_SHOW);
   const component = await remote.show(bitId);

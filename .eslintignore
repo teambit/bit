@@ -1,6 +1,12 @@
 node_modules
 e2e/fixtures
 
+# A temp file should be required from outside (via npm) so no point to fix it
+src/graph/graph.ts
+
+# Should be replaced by an external graph - no point to fix it
+src/r-graph/toposort.ts
+
 # files that are not in use, so no point fixing them
 src/cli/commands/public-cmds/search-cmd.ts
 src/git-hooks/exceptions/index.ts
