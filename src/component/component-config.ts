@@ -9,5 +9,8 @@ export default class ComponentConfig {
   /**
    * all extensions configured on the component current head.
    */
-  get extensions() {}
+  get extensions() {
+    // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
+    return undefined;
+  }
 }
