@@ -17,7 +17,8 @@
     "outDir": "./dist"
   },
   "include": [
-    "src"
+    "src",
+    "e2e"
   ],
   "exclude": [
     "components",

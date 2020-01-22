@@ -1,8 +1,8 @@
 import { Scope } from '../scope/scope.api';
 import Workspace from './workspace';
-import { ComponentProvider } from '../component';
+import { ComponentFactory } from '../component';
 
-export type WorkspaceDeps = [Scope, ComponentProvider];
+export type WorkspaceDeps = [Scope, ComponentFactory];
 
 export type WorkspaceConfig = {
   /**
@@ -13,5 +13,8 @@ export type WorkspaceConfig = {
 
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component]: WorkspaceDeps) {
   const consumer = scope.consumer;
-  return new Workspace(consumer, scope, component);
+  if (consumer) {
+    return new Workspace(consumer, scope, component);
+  }
+  return undefined;
 }

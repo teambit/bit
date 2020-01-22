@@ -25,7 +25,5 @@ export default class ComponentFactory {
   fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
     console.log(legacyComponent);
     return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy());
-    // const state = new State();
-    // return new Component(legacyComponent.id, );
   }
 }

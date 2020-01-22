@@ -1,4 +1,4 @@
-import ComponentConfig from './component-config';
+import ComponentConfig from './config';
 import ConsumerComponent from '../consumer/component';
 
 /**

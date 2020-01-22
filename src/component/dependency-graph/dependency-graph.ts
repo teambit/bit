@@ -1,6 +1,5 @@
 import { Graph } from '../../graph';
-import Component from '../component';
 
-export type Depedency = {};
-
-export default class ComponentGraph {}
+export type Dependency = {};
+// TODO: add concrete types
+export default class ComponentGraph extends Graph<any, any> {}

@@ -1,6 +1,3 @@
-import ComponentConfig from './config';
-import ComponentFS from './component-fs';
-import { DependencyGraph } from './dependency-graph';
 import Component from './component';
 import State from './state';
 

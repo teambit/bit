@@ -59,12 +59,14 @@ export default class Component {
    */
   snap(author: Author, message = '') {
     if (!this.isModified()) throw new NothingToSnap();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const snap = Snap.create(this, author, message);
   }
 
   /**
    * tag a component `Snap` with a semantic version. we follow SemVer specs as defined [here](https://semver.org/)).
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   tag(version: SemVer) {
     // const snap = this.snap();
     // const tag = new Tag(version, snap);
@@ -89,6 +91,7 @@ export default class Component {
   /**
    * checkout the component to a different version in its working tree.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   checkout(version: SemVer) {
     // const version = this.tags.get(version);
   }
@@ -108,6 +111,7 @@ export default class Component {
    * @param path root path to write the component
    * @param fs instance of any fs to use.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   write(path: string, fs?: AnyFS) {}
 
   /**

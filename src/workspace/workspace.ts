@@ -1,5 +1,6 @@
 import { Consumer } from '../consumer';
-import { Scope } from '../scope';
+import { Scope } from '../scope/scope.api';
+
 import { Component, ComponentFactory, ComponentID } from '../component';
 
 /**
@@ -15,7 +16,7 @@ export default class Workspace {
     /**
      * access to the Workspace's `Scope` instance
      */
-    readonly scope: Scope = consumer.scope,
+    readonly scope: Scope,
 
     /**
      * access to the `ComponentProvider` instance

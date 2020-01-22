@@ -5,6 +5,7 @@ export interface Command {
    * Name of command with arguments:
    * <> for mandatory arguments.
    * [] for optional arguments.
+   * 'bit add <path>'
    */
   name: string;
 
@@ -29,6 +30,9 @@ export interface Command {
    *
    */
   options: PaperOptions;
+  commands?: Command[]
+  help?: string;
+  longHelp?:string;
 
   /**
    * Main command handler which is called when invoking commands
