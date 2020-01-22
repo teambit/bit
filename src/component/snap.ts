@@ -31,7 +31,7 @@ export default class Snap {
     /**
      * parent snap
      */
-    readonly parent: Snap,
+    readonly parents: Snap[],
 
     /**
      * author of the component `Snap`.
@@ -60,6 +60,6 @@ export default class Snap {
    * create a snap from a component
    */
   static create(component: Component, author: Author, message = '') {
-    return new Snap(new Date(), component.head, author, message, component.state);
+    return new Snap(new Date(), [component.head], author, message, component.state);
   }
 }

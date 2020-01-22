@@ -97,13 +97,12 @@ function execAction(command, concrete, args) {
           code = res.__code;
         }
         const msg = command.report(data, relevantArgs, flags);
-        return command instanceof LegacyCommand
-          ? logger.exitAfterFlush(code, command.name)
-          : process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, command.name));
+        // return command instanceof LegacyCommand
+        //   ? logger.exitAfterFlush(code, command.name)
+        //   : process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, command.name));
       });
     })
     .catch(err => {
-      console.log('command-registry.catch');
       logger.error(
         `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
           err,
@@ -114,6 +113,7 @@ function execAction(command, concrete, args) {
       const errorHandled = defaultHandleError(err) || command.handleError(err);
 
       if (command.private) return serializeErrAndExit(err, command.name);
+      console.error(err);
       if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
       return logErrAndExit(err, command.name);
     });
