@@ -72,7 +72,7 @@ import ComponentsPendingImport from './component-ops/exceptions/components-pendi
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
-import LaneId from '../lane-id/lane-id';
+import LaneId, { LocalLaneId } from '../lane-id/lane-id';
 import snapModelComponents from '../scope/component-ops/snap-model-component';
 
 type ConsumerProps = {
@@ -190,13 +190,12 @@ export default class Consumer {
     return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
   }
 
-  getCurrentLaneId(): LaneId {
-    return new LaneId({ name: this.scope.lanes.getCurrentLaneName() || DEFAULT_LANE });
+  getCurrentLaneId(): LocalLaneId {
+    return LocalLaneId.from(this.scope.lanes.getCurrentLaneName() || DEFAULT_LANE);
   }
 
   async getCurrentLaneObject(): Promise<Lane | null> {
-    const laneId = this.getCurrentLaneId();
-    return this.scope.loadLane(laneId);
+    return this.scope.lanes.getCurrentLaneObject();
   }
 
   async cleanTmpFolder() {
@@ -608,8 +607,8 @@ export default class Consumer {
         return status;
       }
 
-      const lane = await this.scope.loadLane(this.getCurrentLaneId());
-      status.staged = await componentFromModel.isLocallyChangedOnLane(this.scope.objects, lane);
+      const lane = await this.getCurrentLaneObject();
+      status.staged = await componentFromModel.isLocallyChanged(lane, this.scope.objects);
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();
       if (!componentFromFileSystem.id.hasVersion()) {

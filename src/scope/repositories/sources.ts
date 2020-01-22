@@ -572,7 +572,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // @ts-ignore
       throw new ComponentNeedsUpdate(component.id(), existingComponentHead.toString());
     }
-    const locallyChanged = existingComponent.isLocallyChanged();
+    // @todo lanes: should we pass the local lane to `isLocallyChanged`?
+    const locallyChanged = await existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const repo: Repository = this.objects();

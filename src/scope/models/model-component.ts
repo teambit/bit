@@ -890,20 +890,19 @@ export default class Component extends BitObject {
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  isLocallyChanged(): boolean {
+  async isLocallyChanged(lane?: Lane | null, repo?: Repository): Promise<boolean> {
+    if (lane) {
+      if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
+      await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
+      await this.setDivergeData(repo);
+      return this.isLocalAhead();
+    }
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     // todo: travel the parents to check whether local changes were done.
     return false;
-  }
-
-  async isLocallyChangedOnLane(repo: Repository, lane?: Lane | null): Promise<boolean> {
-    if (!lane) return this.isLocallyChanged();
-    await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
-    await this.setDivergeData(repo);
-    return this.isLocalAhead();
   }
 
   static parse(contents: string): Component {
