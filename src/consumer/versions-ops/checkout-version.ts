@@ -147,14 +147,14 @@ export async function saveCheckedOutLaneInfo(
 ) {
   const saveRemoteLaneToBitmap = () => {
     if (opts.remoteLaneScope) {
-      consumer.bitMap.addLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
+      consumer.bitMap.setRemoteLane(RemoteLaneId.from(opts.remoteLaneName as string, opts.remoteLaneScope));
       // add versions to lane
     } else {
       const trackData = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(opts.localLaneName as string);
       if (!trackData) {
         return; // the lane was never exported
       }
-      consumer.bitMap.addLane(RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope));
+      consumer.bitMap.setRemoteLane(RemoteLaneId.from(trackData.remoteLane, trackData.remoteScope));
     }
   };
   const throwIfLaneExists = async () => {

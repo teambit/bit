@@ -12,6 +12,7 @@ import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Import extends Command {
   name = 'import [ids...]';
@@ -29,7 +30,7 @@ export default class Import extends Command {
     [
       'o',
       'objects',
-      "(deprecated. use 'bit fetch' instead) import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
+      "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
@@ -56,9 +57,13 @@ export default class Import extends Command {
       'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ],
-    ['', 'skip-lane', 'when checked out to a lane, do not import the component into the lane, save it on master'],
     ['', 'dependencies', 'EXPERIMENTAL. import all dependencies and write them to the workspace'],
-    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag']
+    ['', 'dependents', 'EXPERIMENTAL. import component dependents to allow auto-tag updating them upon tag'],
+    [
+      '',
+      'skip-lane',
+      'EXPERIMENTAL. when checked out to a lane, do not import the component into the lane, save it on master'
+    ]
   ];
   loader = true;
   migration = true;
@@ -107,6 +112,7 @@ export default class Import extends Command {
     },
     packageManagerArgs: string[]
   ): Promise<any> {
+    if (skipLane) throwForUsingLaneIfDisabled();
     if (tester && compiler) {
       throw new GeneralError('you cant use tester and compiler flags combined');
     }

@@ -8,6 +8,7 @@ import { EjectResults } from '../../../consumer/component-ops/eject-components';
 import ejectTemplate from '../../templates/eject-template';
 import GeneralError from '../../../error/general-error';
 import { Lane } from '../../../scope/models';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Export extends Command {
   name = 'export [remote] [id...]';
@@ -39,11 +40,7 @@ export default class Export extends Command {
       'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    [
-      'l',
-      'lanes',
-      'ensure the ids argument are lane names in case of ambiguity between a component name and a lane name'
-    ]
+    ['l', 'lanes', 'EXPERIMENTAL. export lanes']
   ];
   loader = true;
   migration = true;
@@ -61,6 +58,7 @@ export default class Export extends Command {
       lanes = false
     }: any
   ): Promise<any> {
+    if (lanes) throwForUsingLaneIfDisabled();
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';

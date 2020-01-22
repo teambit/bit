@@ -79,7 +79,7 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
-  saveOnLane?: boolean;
+  saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;

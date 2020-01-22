@@ -4,6 +4,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { lane } from '../../../api/consumer';
 import { LaneResults } from '../../../api/consumer/lib/lane';
 import { LaneData } from '../../../scope/lanes/lanes';
+import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Lane extends Command {
   name = 'lane [name]';
@@ -39,6 +40,7 @@ export default class Lane extends Command {
       json: boolean;
     }
   ): Promise<any> {
+    throwForUsingLaneIfDisabled();
     return lane({
       name,
       remote,

@@ -25,7 +25,7 @@ export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) 
     });
     const isCurrentLane = lane.name === currentLane.name;
     if (isCurrentLane) {
-      consumer.bitMap.addLane(remoteLaneId);
+      consumer.bitMap.setRemoteLane(remoteLaneId);
     }
     const workspaceLane = isCurrentLane
       ? (consumer.bitMap.workspaceLane as WorkspaceLane) // bitMap.workspaceLane is empty only when is on master

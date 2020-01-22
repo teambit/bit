@@ -31,9 +31,9 @@ export default class Merge extends Command {
   name = 'merge [values...]';
   description = `merge changes of different component versions
   bit merge <version> [ids...] => merge changes of the given version into the checked out version
-  bit merge [ids...] => merge changes of the remote head into local, optionally use '--abort' or '--resolve'
-  bit merge <lane> --lane => merge given lane into current lane
-  bit merge <remote> <lane> --lane => merge given remote-lane into current lane
+  bit merge [ids...] => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'
+  bit merge <lane> --lane => EXPERIMENTAL. merge given lane into current lane
+  bit merge <remote> <lane> --lane => EXPERIMENTAL. merge given remote-lane into current lane
   ${WILDCARD_HELP('merge 0.0.1')}`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -41,8 +41,8 @@ export default class Merge extends Command {
     ['', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
-    ['', 'abort', 'in case of an unresolved merge, revert to the state before the merge began'],
-    ['', 'resolve', 'mark an unresolved merge as resolved and create a new snap with the changes'],
+    ['', 'abort', 'EXPERIMENTAL. in case of an unresolved merge, revert to the state before the merge began'],
+    ['', 'resolve', 'EXPERIMENTAL. mark an unresolved merge as resolved and create a new snap with the changes'],
     ['l', 'lane', 'EXPERIMENTAL. merge lanes'],
     [
       '',
@@ -78,7 +78,7 @@ export default class Merge extends Command {
       message: string;
     }
   ): Promise<ApplyVersionResults> {
-    if (lane || existing || noSnap || message) throwForUsingLaneIfDisabled();
+    if (lane || existing || noSnap || message || abort || resolve) throwForUsingLaneIfDisabled();
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');

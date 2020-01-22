@@ -790,24 +790,11 @@ export default class BitMap {
     if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       throw new Error('updateComponentId should not manipulate Nested components');
     }
-    if (this.workspaceLane) {
-      if (updateScopeOnly) {
-        // this code is executed when exporting and a user is on a lane.
-        if (oldId.hasScope()) {
-          // @todo:
-          // user has changed the scope (forked) on a lane. on master it was different scope.
-          // since we don't support same name different scope for imported/authored, we must
-          // replace the current entry. this is done already in the next lines.
-        } else {
-          // this is a new component and the user exported it when on a lane. we should change the id
-          // on .bitmap as well. not only on the workspace-lane. this is done already in the next lines.
-        }
-      } else {
-        // this code is executed when snapping/tagging and user is on a lane.
-        // change the version only on the lane, not on .bitmap
-        this.workspaceLane.addEntry(newId);
-        componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
-      }
+    if (this.workspaceLane && !updateScopeOnly) {
+      // this code is executed when snapping/tagging and user is on a lane.
+      // change the version only on the lane, not on .bitmap
+      this.workspaceLane.addEntry(newId);
+      componentMap.defaultVersion = componentMap.defaultVersion || oldId.version;
     }
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
@@ -895,7 +882,7 @@ export default class BitMap {
     return allChanges;
   }
 
-  addLane(remoteLane: RemoteLaneId) {
+  setRemoteLane(remoteLane: RemoteLaneId) {
     this.remoteLaneName = remoteLane;
     this.hasChanged = true;
   }
