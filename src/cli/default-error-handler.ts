@@ -242,8 +242,8 @@ once your changes are merged with the new remote version, you can tag and export
     MergeConflictOnRemote,
     err => {
       let output = '';
-      if (err.idsAndVersionsWithConflicts.length) {
-        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersionsWithConflicts
+      if (err.idsAndVersions.length) {
+        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
           .map(i => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
           .join(', ')} to the remote scope.
   to resolve this conflict and merge your remote and local changes, please do the following:

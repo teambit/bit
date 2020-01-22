@@ -352,8 +352,7 @@ export default class SSH implements Network {
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 131: {
-        const idsWithConflicts =
-          parsedError && parsedError.idsAndVersionsWithConflicts ? parsedError.idsAndVersionsWithConflicts : [];
+        const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
         const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
         return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
       }
