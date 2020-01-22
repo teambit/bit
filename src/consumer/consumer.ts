@@ -640,14 +640,14 @@ export default class Consumer {
     releaseType: semver.ReleaseType,
     force: boolean | null | undefined,
     verbose: boolean | null | undefined,
-    ignoreUnresolvedDependencies: boolean | null | undefined,
+    ignoreUnresolvedDependencies: boolean,
     ignoreNewestVersion: boolean,
     skipTests = false,
     skipAutoTag: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    const components = await this._loadComponentsForSnapOrTag();
+    const components = await this._loadComponentsForSnapOrTag(ids, ignoreUnresolvedDependencies);
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
