@@ -1,5 +1,5 @@
 import { Consumer } from '../consumer';
-import { ComponentToPersist, PersistOptions } from './types';
+import { PersistOptions } from './types';
 import { BitIds as ComponentsIds } from '../bit-id';
 import { Component } from '../component';
 
@@ -20,7 +20,7 @@ export class Scope {
    * @param {ComponentsIds} componentsIds list of ids to fetch
    * @memberof Scope
    */
-  fetch(ids: ComponentsIds) {}
+  fetch(ids: ComponentsIds) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
    * This function will get a component and sealed it's current state into the scope
@@ -30,6 +30,6 @@ export class Scope {
    * @memberof Scope
    */
   persist(components: Component[], options: PersistOptions) {
-    console.log('im persistComponents');
+    // eslint-disable-line @typescript-eslint/no-unused-vars
   }
 }

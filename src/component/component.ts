@@ -1,6 +1,5 @@
 import R from 'ramda';
 import { FS as AnyFS } from '@teambit/any-fs';
-import { SemVer } from 'semver';
 import ComponentConfig from './component-config';
 import ComponentFS from './component-fs';
 import TagMap from './tag-map';
@@ -62,9 +61,10 @@ export default class Component {
     }
     if (legacyModelComponent && repository) {
       R.forEachObjIndexed(async (versionRef, versionId) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const version = await legacyModelComponent.loadVersion(versionId, repository);
-        const snap = Snap.fromVersionModel(version);
         // TODO: Uncomment those lines when the Snap.fromVersionModel is implemented
+        // const snap = Snap.fromVersionModel(version);
         // snaps.push(snap);
         // tags.set(versionId, snap);
       }, legacyModelComponent.versions);
@@ -134,6 +134,7 @@ export default class Component {
    * examine difference between two components.
    */
   diff(other: Component): any | undefined {
+    // eslint-disable-line @typescript-eslint/no-unused-vars
     // TODO: remove the | undefined from return type when implement
     // TODO: add exact type when implement
     return undefined;
@@ -143,6 +144,7 @@ export default class Component {
    * merge two different components
    */
   merge(other: Component): Component | undefined {
+    // eslint-disable-line @typescript-eslint/no-unused-vars
     // TODO: remove the | undefined from return type when implement
     return undefined;
   }
@@ -152,7 +154,7 @@ export default class Component {
    * @param path root path to write the component
    * @param fs instance of any fs to use.
    */
-  write(path: string, fs?: AnyFS) {}
+  write(path: string, fs?: AnyFS) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /**
    * transforms the component to a legacy `ComponentObjects` object. please do not use this method.

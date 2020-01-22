@@ -1,10 +1,6 @@
-import Container from './container';
 import Extension from './extension';
-import { Graph } from '../r-graph';
-import { ExtensionProvider, ProviderFn } from './extension.provider';
 import DependencyGraph from './dependency-graph/dependency-graph';
 import { AnyExtension } from './types';
-import { fromExtensions } from './dependency-graph/from-extension';
 
 async function asyncForEach(array, callback) {
   // eslint-disable-next-line no-plusplus
@@ -46,8 +42,7 @@ export default class Harmony {
   }
 
   static load(extension: Extension<any, any>) {
-    let graph: DependencyGraph | null = null;
-    graph = DependencyGraph.fromRoot(extension);
-    return new Harmony(graph!);
+    const graph = DependencyGraph.fromRoot(extension);
+    return new Harmony(graph);
   }
 }

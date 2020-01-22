@@ -32,8 +32,6 @@ export default class Snap {
     skipAutoTag,
     snapAllInScope
   }: SnapOptions) {
-    console.log('im snapping a component');
-
     if (!id && !all && !snapAllInScope) {
       throw new GeneralError('missing id. to tag all components, please use --all flag');
     }
@@ -43,8 +41,10 @@ export default class Snap {
       );
     }
     releaseType = releaseType || DEFAULT_BIT_RELEASE_TYPE;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const includeImported = snapAllInScope && all;
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const idHasWildcard = hasWildcard(id);
 
     // TODO:
@@ -65,6 +65,7 @@ export default class Snap {
     // Persist components using the scope.api
     // Update the bitmap using a workspace api with the persist results
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const params = {
       message,
       exactVersion, // TODO: Take an exact version from another extension by the comp and releaseType

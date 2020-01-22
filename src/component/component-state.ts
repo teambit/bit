@@ -1,4 +1,3 @@
-import { Hash } from 'crypto';
 import ComponentConfig from './component-config';
 import ConsumerComponent from '../consumer/component';
 
@@ -21,6 +20,7 @@ export default class ComponentState {
    * @returns {ComponentState}
    * @memberof ComponentState
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static fromLegacyConsumerComponent(consumerComponent: ConsumerComponent): ComponentState | undefined {
     // TODO: remove the | undefined when implementing
     return undefined;

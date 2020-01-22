@@ -2,8 +2,6 @@ import 'reflect-metadata';
 import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
-import capsuleOrchessrator from './capsule/orchestrator/orchestrator';
-import { Bit } from './bit';
 import { BitCliExt } from './cli';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';

@@ -70,7 +70,8 @@ export default class ComponentCapsule extends Capsule<Exec, Volume> {
     this.container.on(event, fn);
   }
 
-  async terminal(shell: string = process.env.SHELL || '/bin/sh') {
+  // async terminal(shell: string = process.env.SHELL || '/bin/sh') {
+  async terminal() {
     return this.container.terminal();
   }
 

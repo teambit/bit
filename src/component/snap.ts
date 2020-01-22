@@ -46,6 +46,7 @@ export default class Snap extends ComponentState {
    * @memberof Snap
    */
   static fromVersionModel(version: Version): Snap | undefined {
+    // eslint-disable-line @typescript-eslint/no-unused-vars
     // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
     return undefined;
   }

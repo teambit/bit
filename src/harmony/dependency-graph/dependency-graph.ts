@@ -1,4 +1,4 @@
-import { Graph, VertexId, Vertex, Edge } from '../../r-graph';
+import { Graph } from '../../r-graph';
 import { AnyExtension } from '../types';
 import { fromExtension, fromExtensions } from './from-extension';
 

@@ -103,7 +103,6 @@ function execAction(command, concrete, args) {
       });
     })
     .catch(err => {
-      console.log('command-registry.catch');
       logger.error(
         `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
           err,

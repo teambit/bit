@@ -221,8 +221,7 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultScope,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      overrides,
-      run
+      overrides
     } = object;
 
     return new WorkspaceConfig({

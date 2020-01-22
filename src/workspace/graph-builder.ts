@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { Graph } from '../graph';
 import { Component } from '../component';
 import ConsumerComponent from '../consumer/component';

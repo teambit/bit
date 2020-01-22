@@ -62,12 +62,7 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   static fromPlainObject(object: Record<string, any>): ComponentConfig {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { env, lang, bindingPrefix, extensions, overrides, run } = object;
+    const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentConfig({
       compiler: R.prop('compiler', env),

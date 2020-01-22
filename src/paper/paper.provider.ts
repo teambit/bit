@@ -7,6 +7,6 @@ export type PaperConfig = {
 
 export type PaperDeps = [];
 
-export async function providePaper(config: PaperConfig) {
+export async function providePaper() {
   return new Paper(new CommandRegistry([]));
 }
