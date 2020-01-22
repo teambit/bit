@@ -30,6 +30,10 @@ export default class State {
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
     const extensions = [];
-    return new State(new Config(consumerComponent.mainFile, extensions), new ComponentFS(), new DependencyGraph());
+    return new State(
+      new Config(consumerComponent.mainFile, extensions),
+      ComponentFS.fromVinyls(consumerComponent.files),
+      new DependencyGraph()
+    );
   }
 }
