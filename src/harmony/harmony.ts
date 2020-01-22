@@ -46,6 +46,8 @@ export default class Harmony {
   }
 
   static load(extension: Extension<any, any>) {
-    return new Harmony(DependencyGraph.fromRoot(extension));
+    let graph: DependencyGraph | null = null;
+    graph = DependencyGraph.fromRoot(extension);
+    return new Harmony(graph!);
   }
 }
