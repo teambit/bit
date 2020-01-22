@@ -1,13 +1,5 @@
+import { Extension } from '../harmony';
 import { PathLinux } from '../utils/path';
-
-export type PackageDependencies = {
-  devDependencies: Dependencies;
-  dependencies: Dependencies;
-};
-
-export type Dependencies = {
-  [name: string]: string;
-};
 
 /**
  * in-memory represnentation of the component configuration.
@@ -20,15 +12,8 @@ export default class Config {
     readonly main: PathLinux,
 
     /**
-     * version package dependencies.
+     * configured extensions
      */
-    readonly packageDependencies: PackageDependencies
+    extensions: Extension[]
   ) {}
-
-  /**
-   * all extensions configured on the component current head.
-   */
-  get extensions() {
-    return [];
-  }
 }

@@ -23,7 +23,6 @@ export default class ComponentFactory {
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */
   fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
-    console.log(legacyComponent);
-    return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy());
+    return new Component(ComponentID.fromLegacy(legacyComponent.id), null, State.fromLegacy(legacyComponent));
   }
 }

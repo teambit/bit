@@ -5,6 +5,10 @@ import { AbstractVinyl } from '../consumer/component/sources';
  * The virtual component filesystem
  */
 export default class ComponentFS extends MemoryFS {
+  constructor() {
+    super({});
+  }
+
   /**
    * hash to represent all contents within this filesystem volume.
    */
