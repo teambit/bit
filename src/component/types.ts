@@ -31,4 +31,5 @@ export interface Author {
 }
 
 // TODO: implement
-export interface PackageDependencies {}
+// export interface PackageDependencies {}
+export type PackageDependencies = {};

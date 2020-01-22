@@ -94,7 +94,7 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
-      capsules.map(capsule => {
+      capsules.forEach(capsule => {
         const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
         const packageJson = JSON.parse(pjsonString);
@@ -113,6 +113,7 @@ export default class CapsuleBuilder {
       // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
     } catch (e) {
       console.log(e);
+      return Promise.resolve();
     }
   }
 

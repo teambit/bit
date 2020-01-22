@@ -1,6 +1,6 @@
 import { Consumer } from '../consumer';
 import { ComponentToPersist, PersistOptions } from './types';
-import { BitIds as ComponentsIds } from 'bit-id';
+import { BitIds as ComponentsIds } from '../bit-id';
 import { Component } from '../component';
 
 // eslint-disable-next-line import/prefer-default-export

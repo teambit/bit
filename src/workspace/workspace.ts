@@ -1,6 +1,6 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope';
-import { BitIds } from 'bit-id';
+import { BitIds } from '../bit-id';
 import { Graph } from '../graph/graph';
 import { buildGraph } from './graph-builder';
 

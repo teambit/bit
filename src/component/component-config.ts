@@ -1,4 +1,4 @@
-import { PathLinux } from 'utils/path';
+import { PathLinux } from '../utils/path';
 import { PackageDependencies } from './types';
 
 /**

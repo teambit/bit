@@ -1,5 +1,6 @@
-export type SemverBumpType = 'patch' | 'minor' | 'major';
 import { ReleaseType } from 'semver';
+
+export type SemverBumpType = 'patch' | 'minor' | 'major';
 
 export type SnapOptions = {
   id?: string;

@@ -6,7 +6,6 @@ import Capsule from '../environment/capsule-builder';
 import { AnyExtension } from '../harmony/types';
 import { BitIds as ComponentIds, BitId as ComponentId } from '../bit-id';
 import { Harmony } from '../harmony';
-import { EventEmitter } from 'events';
 
 export default class Bit {
   constructor(

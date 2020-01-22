@@ -1,5 +1,5 @@
-import ComponentConfig from './component-config';
 import { Hash } from 'crypto';
+import ComponentConfig from './component-config';
 import ConsumerComponent from '../consumer/component';
 
 /**
