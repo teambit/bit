@@ -18,10 +18,6 @@ BPromise.config({
 // loudRejection();
 HooksManager.init();
 
-// const defaultExtensions: ExtensionProvider<any, any>[] = [
-//   Paper
-// ];
-
 Harmony.load(BitCliExt)
   .run()
   .then(() => {})
@@ -29,9 +25,3 @@ Harmony.load(BitCliExt)
     const handledError = defaultHandleError(err);
     logErrAndExit(handledError || err, process.argv[1] || '');
   });
-
-// BitCli.load(Harmony.load(PaperExt))
-//   .then(async () => {
-//     // if (capsuleOrchestrator) await capsuleOrchestrator.buildPools();
-//   })
-//   .catch(err => console.error('loud rejected:', err));

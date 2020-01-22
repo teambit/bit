@@ -1,24 +1,18 @@
 import CommandRegistry from './command-registry';
 import Command from './command';
+import { Paper } from 'paper';
 export default class BitCli {
   constructor(
     /**
      * bit's legacy command registry
      */
-    readonly commandRegistry: CommandRegistry
+    readonly paper: Paper
   ) {}
-
-  /**
-   * register a new command to bit's legacy component registry.
-   */
-  registerCommand() {
-    this.commandRegistry.registerCommands();
-  }
 
   /**
    * execute bit's cli
    */
   run() {
-    this.commandRegistry.run();
+    return this.paper.run();
   }
 }

@@ -8,14 +8,14 @@ import Command from './command';
 import { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
+import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand, render } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
 import { LegacyCommand } from './legacy-command';
-
+import { render as inkRender } from 'ink';
 didYouMean.returnFirstMatch = true;
 
 export function logErrAndExit(msg: Error | string, commandName: string) {
@@ -54,8 +54,8 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
   return options;
 }
 
-function execAction(command, concrete, args) {
-  const flags = getOpts(concrete, command.opts);
+export function execAction(command, concrete, args) {
+  const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
   Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
@@ -88,22 +88,13 @@ function execAction(command, concrete, args) {
   migrateWrapper(command.migration)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .then(() => {
-      return command.action(relevantArgs, flags, packageManagerArgs).then(res => {
+      return command.render(relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
-        let data = res;
-        let code = 0;
-        if (res && res.__code !== undefined) {
-          data = res.data;
-          code = res.__code;
-        }
-        const msg = command.report(data, relevantArgs, flags);
-        return command instanceof LegacyCommand
-          ? logger.exitAfterFlush(code, command.name)
-          : process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, command.name));
+        inkRender(res);
+        return logger.exitAfterFlush(0, command.name);
       });
     })
     .catch(err => {
-      console.log('command-registry.catch');
       logger.error(
         `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
           err,

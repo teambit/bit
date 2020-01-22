@@ -1,7 +1,10 @@
 import { Command } from './command';
 import { BitCli } from '../cli';
 import CommandRegistry from './registry';
-
+import commander from 'commander';
+import { render } from 'ink';
+import { execAction } from '../cli/command-registry';
+import R from 'ramda';
 export default class Paper {
   constructor(
     /**
@@ -29,8 +32,28 @@ export default class Paper {
    * execute commands registered to `Paper` and the legacy bit cli.
    *
    */
-  run() {
+  async run(): Promise<void> {
     // TODO: Implement this to wrap the legacy CLI (code smell)
-    throw new Error('Paper.run is not implemented.');
+    Object.entries(this.commands).reduce(function(accum, [key, paperCommand]) {
+      const commanderCMD = accum
+        .command(paperCommand.name)
+        .description(paperCommand.description)
+        .alias(paperCommand.alias);
+
+      paperCommand.options.forEach(function(opt) {
+        commanderCMD.option(opt[0], opt[1], opt[2]);
+      });
+
+      commanderCMD.action(async function(args) {
+        console.log('args', args);
+        console.log(arguments);
+        const toRender = await execAction(paperCommand, commanderCMD, args);
+      });
+
+      return accum;
+    }, commander);
+    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
+    commander.packageManagerArgs = packageManagerArgs;
+    commander.parse(params);
   }
 }
