@@ -23,6 +23,10 @@ export default class AbstractVinyl extends Vinyl {
     return new AbstractVinyl(vinyl);
   }
 
+  get relativeDir() {
+    return this.dirname.replace(this.cwd, '');
+  }
+
   // Update the base path and keep the relative value to be the same
   updatePaths({ newBase, newRelative, newCwd }: { newBase?: string; newRelative?: string; newCwd?: string }) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
