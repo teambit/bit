@@ -90,8 +90,9 @@ export function execAction(command, concrete, args) {
     .then(() => {
       return command.render(relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
+        const code = (res && res.__code) || 0;
         inkRender(res);
-        return logger.exitAfterFlush(0, command.name);
+        return logger.exitAfterFlush(code, command.name);
       });
     })
     .catch(err => {
