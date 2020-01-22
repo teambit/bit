@@ -1,8 +1,8 @@
+import { Color } from 'ink';
+import React from 'react';
 import { Command, PaperOptions } from "../paper/command";
-import LegacyInterface from './command'
-import React from 'react'
+import LegacyInterface from './command';
 import defaultErrorHandler from "./default-error-handler";
-import { Color } from "ink";
 
 export class LegacyCommand implements Command{
   alias: string;

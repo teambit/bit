@@ -22,5 +22,6 @@ Harmony.load(BitCliExt)
   .then(() => {})
   .catch(err => {
     const handledError = defaultHandleError(err);
+    console.error(err);
     logErrAndExit(handledError || err, process.argv[1] || '');
   });

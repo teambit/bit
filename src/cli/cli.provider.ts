@@ -3,6 +3,7 @@ import BitCli from './cli.api';
 import { Paper, Command } from '../paper';
 import { Bit } from '../bit';
 import { LegacyCommand } from './legacy-command';
+
 export type BitCLIDeps = [Paper, Bit];
 
 export async function CLIProvider(config: {}, [paper, bit]: BitCLIDeps) {

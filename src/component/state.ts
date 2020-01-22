@@ -29,10 +29,6 @@ export default class State {
   }
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
-    return new State(
-      new Config(consumerComponent.mainFile, consumerComponent.packageDependencies),
-      new ComponentFS(),
-      new DependencyGraph()
-    );
+    return new State(new Config('consumerComponent.mainFile', {}), new ComponentFS({}), new DependencyGraph());
   }
 }
