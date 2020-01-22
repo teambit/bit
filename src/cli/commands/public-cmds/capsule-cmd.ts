@@ -40,7 +40,8 @@ export class CapsuleSSH extends Command {
     return sshIntoCapsule(capsule);
   }
 
-  report(capsuleListByWorkspace: ListResults[]): string {
+  // report(capsuleListByWorkspace: ListResults[]): string {
+  report(): string {
     return '';
   }
 }

@@ -1,4 +1,3 @@
-import { Observable } from 'rxjs';
 import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';
 import Capsule from '../environment/capsule-builder';

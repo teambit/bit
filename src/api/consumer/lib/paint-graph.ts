@@ -1,7 +1,7 @@
 import { Graph } from 'graphviz';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import VisualDependencyGraph from '../../../scope/graph/vizgraph';
-import { Consumer, loadConsumerIfExist } from '../../../consumer';
+import { loadConsumerIfExist } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import ConsumerNotFound from '../../../consumer/exceptions/consumer-not-found';
 import getRemoteByName from '../../../remotes/get-remote-by-name';

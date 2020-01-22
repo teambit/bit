@@ -5,7 +5,7 @@ import os from 'os';
 import hash from 'object-hash';
 import v4 from 'uuid';
 import filenamify from 'filenamify';
-import { BitId, BitIds } from '../bit-id';
+import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../capsule/orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../capsule/orchestrator/types';
 import Consumer from '../consumer/consumer';
@@ -17,7 +17,6 @@ import { ComponentWithDependencies, loadScope } from '../scope';
 import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
-import { Workspace } from '../workspace';
 import { loadConsumerIfExist } from '../consumer';
 
 export type Options = {
@@ -112,7 +111,8 @@ export default class CapsuleBuilder {
       return Promise.resolve();
       // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
     } catch (e) {
-      console.log(e);
+      // TODO: think if we really need to log it here or write it to logger or throw it
+      console.log(e); // eslint-disable-line no-console
       return Promise.resolve();
     }
   }

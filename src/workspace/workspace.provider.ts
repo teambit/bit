@@ -1,4 +1,3 @@
-import { loadConsumer, Consumer } from '../consumer';
 import { Scope } from '../scope/scope.api';
 import Workspace from './workspace';
 import { ComponentProvider } from '../component';

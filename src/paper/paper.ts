@@ -1,5 +1,4 @@
 import { Command } from './command';
-import { BitCli } from '../cli';
 import CommandRegistry from './registry';
 
 export default class Paper {

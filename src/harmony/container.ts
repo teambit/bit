@@ -1,5 +1,4 @@
 import Extension from './extension';
-import { mapToObject } from '../utils';
 
 export default class Container {
   constructor(private instances = new Map()) {}

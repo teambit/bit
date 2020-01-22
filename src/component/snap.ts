@@ -53,6 +53,7 @@ export default class Snap {
    * hash of the snap.
    */
   get hash() {
+    // eslint-disable-line @typescript-eslint/no-unused-vars
     return this.state.hash;
   }
 

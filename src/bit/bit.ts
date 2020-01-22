@@ -1,4 +1,4 @@
-import { Observable, from, ReplaySubject } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 import { CapsuleOptions } from '../capsule/orchestrator/types';
 import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';

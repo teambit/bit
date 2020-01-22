@@ -1,4 +1,4 @@
-import { buildRegistry, CommandRegistry } from '../cli';
+import { buildRegistry } from '../cli';
 import BitCli from './cli.api';
 import { Paper } from '../paper';
 import { Bit } from '../bit';
