@@ -403,7 +403,7 @@ describe('bit show command', function() {
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
-        expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
+        expect(showCmd).to.throw('no previous versions to compare\n');
       });
     });
     describe('when the component is AUTHORED', () => {

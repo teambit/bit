@@ -27,8 +27,6 @@ export default class Checkout extends Command {
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['r', 'reset', 'remove local changes'],
     ['a', 'all', 'all components'],
-    ['', 'new-lane-name <name>', 'name a local lane differently than the remote lane'],
-    ['', 'existing', 'relevant for lanes. checkout only components in a lane that exist in the workspace'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     [
@@ -56,8 +54,6 @@ export default class Checkout extends Command {
       all = false,
       verbose = false,
       skipNpmInstall = false,
-      existing = false,
-      newLaneName,
       ignorePackageJson = false,
       conf,
       ignoreDist = false
@@ -70,8 +66,6 @@ export default class Checkout extends Command {
       all?: boolean;
       verbose?: boolean;
       skipNpmInstall?: boolean;
-      existing?: boolean;
-      newLaneName?: string;
       ignorePackageJson?: boolean;
       conf?: string;
       ignoreDist?: boolean;
@@ -85,9 +79,7 @@ export default class Checkout extends Command {
       verbose,
       isLane: false,
       skipNpmInstall,
-      existingOnWorkspaceOnly: existing,
       ignoreDist,
-      newLaneName,
       ignorePackageJson,
       writeConfig: !!conf
     };

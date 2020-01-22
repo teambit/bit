@@ -36,7 +36,7 @@ export type CheckoutProps = {
   ignoreDist: boolean;
   // @todo: aggregate all the following props into one object "lanes"
   isLane: boolean;
-  existingOnWorkspaceOnly: boolean;
+  existingOnWorkspaceOnly?: boolean;
   localLaneName?: string;
   remoteLaneScope?: string;
   remoteLaneName?: string;
