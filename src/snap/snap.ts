@@ -58,7 +58,7 @@ export default class Snap {
     // throw an error about missing components from scope (need to import first)
     // Check for missing deps and throw error about it (unless used with ignoreUnresolvedDependencies / ignoreMissingDependencies)
     // Check for newest version of comps and throw error about it unless used with ignoreNewestVersion
-    // Pass the component/s and releaseType and exact version to some version extension
+    // Pass the component/s and releaseType and exact version to our automatic-versionsing extension
     //   version validation (validate it's a valid semver if exact version was provided)
     //   get the next version according to head and releaseType
     // Add the extension config (need to think how) (maybe the extension loader extension is also registered to tag hook)

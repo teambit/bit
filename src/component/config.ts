@@ -5,7 +5,7 @@ export type PackageDependencies = {};
 /**
  * in-memory represnentation of the component configuration.
  */
-export default class ComponentConfig {
+export default class Config {
   constructor(
     /**
      * version main file

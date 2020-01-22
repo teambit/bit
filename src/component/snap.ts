@@ -1,10 +1,22 @@
-import ComponentConfig from './component-config';
+import ComponentConfig from './config';
 import ComponentFS from './component-fs';
 import { DependencyGraph } from './dependency-graph';
+import Component from './component';
+import State from './state';
 
-export type Hash = {};
+export type Hash = string;
 
-export type Author = {};
+export type Author = {
+  /**
+   * author full name (for example: "Ran Mizrahi")
+   */
+  name: string;
+
+  /**
+   * author email in a proper format (e.g. "ran@bit.dev")
+   */
+  email: string;
+};
 
 /**
  * `Snap` represents the state of the component in the working tree.
@@ -12,14 +24,14 @@ export type Author = {};
 export default class Snap {
   constructor(
     /**
-     * hash of the component `Snap`.
+     * date time of the snap.
      */
-    hash: Hash,
+    readonly timestamp: Date,
 
     /**
-     * configuration of the component.
+     * parent snap
      */
-    readonly config: ComponentConfig,
+    readonly parent: Snap,
 
     /**
      * author of the component `Snap`.
@@ -29,20 +41,25 @@ export default class Snap {
     /**
      * message added by the `Snap` author.
      */
-    readonly message: string
+    readonly message: string,
+
+    /**
+     * component state
+     */
+    readonly state: State
   ) {}
 
   /**
-   * dependency graph of the component current. ideally package dependencies would be also placed here.
+   * hash of the snap.
    */
-  get dependencyGraph() {
-    return new DependencyGraph();
+  get hash() {
+    return this.state.hash;
   }
 
   /**
-   * in-memory representation of the component current filesystem.
+   * create a snap from a component
    */
-  get filesystem(): ComponentFS {
-    return new ComponentFS();
+  static create(component: Component, author: Author, message = '') {
+    return new Snap(new Date(), component.head, author, message, component.state);
   }
 }

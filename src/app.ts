@@ -5,6 +5,7 @@ import HooksManager from './hooks';
 import capsuleOrchessrator from './capsule/orchestrator/orchestrator';
 import { Bit } from './bit';
 import { BitCliExt } from './cli';
+import defaultErrorHandler from './cli/default-error-handler';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -25,7 +26,7 @@ Harmony.load(BitCliExt)
   .run()
   .then(() => {})
   .catch(err => {
-    console.error(err, err.stack);
+    throw err;
   });
 
 // BitCli.load(Harmony.load(PaperExt))

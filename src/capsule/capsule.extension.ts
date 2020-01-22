@@ -4,5 +4,7 @@ export default Extension.instantiate({
   name: 'CapsuleOrchestrator',
   dependencies: [],
   config: {},
-  provider: async () => {}
+  provider: async () => {
+    return {};
+  }
 });

@@ -1,6 +1,9 @@
 import { Capsule } from '../capsule';
+import { ComponentFactory } from '../component';
 
 type ComponentDeps = [Capsule];
 type ComponentConfig = {};
 
-export default function componentProvider(config: ComponentConfig, [capsule]: ComponentDeps) {}
+export default async function componentProvider(config: ComponentConfig, [capsule]: ComponentDeps) {
+  return new ComponentFactory(capsule);
+}

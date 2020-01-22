@@ -1,10 +1,13 @@
-import { FS as AnyFS } from '@teambit/any-fs';
 import { SemVer } from 'semver';
-import ComponentConfig from './component-config';
+import { FS as AnyFS } from '@teambit/any-fs';
+import { NothingToSnap } from './exceptions';
+import ComponentConfig from './config';
 import ComponentFS from './component-fs';
 import TagMap from './tag-map';
 import { BitId as ComponentID } from '../bit-id';
-import Snap from './snap';
+import State from './state';
+import Tag from './tag';
+import Snap, { Author } from './snap';
 
 /**
  * in-memory representation of a component. (initial concept)
@@ -24,73 +27,75 @@ export default class Component {
     /**
      * list of all component tags
      */
-    readonly tags: TagMap = new TagMap()
+    readonly tags: TagMap = new TagMap(),
+
+    /**
+     * state of the component.
+     */
+    readonly state: State = head.state
   ) {}
 
   /**
    * component configuration which is later generated to a component `package.json` and `bit.json`.
    */
   get config(): ComponentConfig {
-    return this.current.config;
-  }
-
-  private _current: Snap = this.head;
-
-  /**
-   * current version of the component in the file system.
-   */
-  get current() {
-    return this._current;
+    return this.state.config;
   }
 
   /**
    * in-memory representation of the component current filesystem.
    */
   get filesystem(): ComponentFS {
-    return new ComponentFS();
+    return this.state.filesystem;
   }
 
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
   get dependencyGraph() {
-    return this.current.dependencyGraph;
+    return this.state.dependencyGraph;
   }
 
   /**
    * record component changes in the `Scope`.
    */
-  snap() {}
+  snap(author: Author, message = '') {
+    if (!this.isModified()) throw new NothingToSnap();
+    const snap = Snap.create(this, author, message);
+  }
 
   /**
    * tag a component `Snap` with a semantic version. we follow SemVer specs as defined [here](https://semver.org/)).
    */
-  tag() {}
+  tag(version: SemVer) {
+    // const snap = this.snap();
+    // const tag = new Tag(version, snap);
+    // this.tags.set(tag);
+  }
 
   /**
    * determines whether this component is modified in the workspace.
    */
-  isModified() {}
-
-  /**
-   * returns an object representing (diff?) all modifications applied on a component.
-   */
-  modifications() {}
+  isModified() {
+    return this.state.hash !== this.head.hash;
+  }
 
   /**
    * checkout the component to a different version in its working tree.
    */
-  checkout() {}
+  checkout(version: SemVer) {
+    // const version = this.tags.get(version);
+  }
 
   /**
    * examine difference between two components.
    */
-  diff(other: Component): Difference {}
+  // diff(other: Component): Difference {}
 
   /**
    * merge two different components
    */
-  merge(other: Component): Component {}
+  // merge(other: Component): Component {}
 
   /**
    * write a component to a given file system.
