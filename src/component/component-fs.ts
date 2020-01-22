@@ -6,7 +6,7 @@ import { AbstractVinyl } from '../consumer/component/sources';
  */
 export default class ComponentFS extends MemoryFS {
   constructor() {
-    super({});
+    super();
   }
 
   /**
