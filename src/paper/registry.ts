@@ -1,5 +1,4 @@
 import { Command } from './command';
-import { composeDependencyPath } from 'utils/bit/compose-component-path';
 
 export default class CommandRegistry {
   constructor(
@@ -24,4 +23,3 @@ export default class CommandRegistry {
     return cmd.name.split(' ')[0].trim();
   }
 }
-const cmd: Command = {} as Command;

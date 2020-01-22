@@ -1,7 +1,5 @@
-import CommandRegistry from './command-registry';
+import { Paper } from '../paper';
 
-import Command from './command';
-import { Paper } from 'paper';
 export default class BitCli {
   constructor(
     /**

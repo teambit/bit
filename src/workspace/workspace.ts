@@ -1,7 +1,7 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope/scope.api';
 
-import { Component, ComponentFactory, ComponentID } from '../component';
+import { Component, ComponentFactory } from '../component';
 
 /**
  * API of the Bit Workspace

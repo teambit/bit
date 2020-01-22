@@ -9,7 +9,7 @@ import Command from './command';
 import { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
-import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand, render } from '../utils';
+import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
@@ -106,7 +106,6 @@ export function execAction(command, concrete, args) {
       const errorHandled = defaultHandleError(err) || command.handleError(err);
 
       if (command.private) return serializeErrAndExit(err, command.name);
-      console.error(err);
       if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
       return logErrAndExit(err, command.name);
     });
