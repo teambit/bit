@@ -4,8 +4,8 @@ import { BitId as ComponentId } from '../bit-id';
 export default class Serve {
   constructor(private watcher: Watch) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   serve(componentId: ComponentId) {
-    // eslint-disable-line @typescript-eslint/no-unused-vars
     const observable = this.watcher.watch();
     observable.subscribe(() => {});
   }

@@ -14,8 +14,8 @@ export default class Capsule {
   /**
    * create a new capsule from a component.
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   create(component: Component, config: CreateConfig) {
-    // eslint-disable-line @typescript-eslint/no-unused-vars
     // @ts-ignore
     component.write();
   }

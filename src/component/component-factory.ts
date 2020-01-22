@@ -1,7 +1,6 @@
 import { Capsule as CapsuleOrchestrator } from '../capsule';
 import ConsumerComponent from '../consumer/component';
 import Component from './component';
-import State from './state';
 
 export default class ComponentFactory {
   constructor(
@@ -21,8 +20,11 @@ export default class ComponentFactory {
   /**
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */
-  fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  fromLegacyComponent(legacyComponent: ConsumerComponent): Component | undefined {
     // const state = new State();
     // return new Component(legacyComponent.id, );
+    // TODO: remove the undefined from return value once implemented
+    return undefined;
   }
 }

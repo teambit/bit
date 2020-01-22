@@ -633,6 +633,5 @@ export default (err: Error): string | null | undefined => {
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
   err.message = errorMessage;
   logger.error(`user gets the following error: ${errorMessage}`);
-  console.log('hey im here');
   return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
 };
