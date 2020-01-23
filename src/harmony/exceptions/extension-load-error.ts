@@ -1,7 +1,17 @@
 import Extension from '../extension';
 
 export default class LoadExtensionError extends Error {
-  constructor(private extension: Extension, private err: Error) {
+  constructor(
+    /**
+     * failed extension
+     */
+    private extension: Extension,
+
+    /**
+     * extension error
+     */
+    private err: Error
+  ) {
     super();
   }
 

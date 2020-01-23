@@ -1,4 +1,5 @@
 import { Command } from './command';
+import { CommandExistsError } from './exceptions';
 
 export default class CommandRegistry {
   constructor(
@@ -14,11 +15,15 @@ export default class CommandRegistry {
   register(command: Command) {
     const key = CommandRegistry.getID(command);
     if (this.commands[key]) {
-      throw new Error('Command already exists');
+      throw new CommandExistsError();
     }
     this.commands[key] = command;
     return this;
   }
+
+  /**
+   * return a command unique ID.
+   */
   static getID(cmd: Command): string {
     return cmd.name.split(' ')[0].trim();
   }

@@ -1,5 +1,5 @@
 import commander from 'commander';
-import R from 'ramda';
+import { splitWhen, equals } from 'ramda';
 import { Command } from './command';
 import CommandRegistry from './registry';
 import { register } from '../cli/command-registry';
@@ -37,7 +37,8 @@ export default class Paper {
       register(paperCommand as any, acc);
       return acc;
     }, commander);
-    const [params, packageManagerArgs] = R.splitWhen(R.equals('--'), process.argv);
+
+    const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
     commander.packageManagerArgs = packageManagerArgs;
     commander.parse(params);
   }

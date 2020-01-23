@@ -55,7 +55,7 @@ export default class Component {
    * dependency graph of the component current. ideally package dependencies would be also placed
    * here through an external extension.
    */
-  get graph() {
+  async graph() {
     return this.state.graph;
   }
 
