@@ -20,9 +20,20 @@ export class Graph<N, E> {
    * type EdgeData = { depType: 'peer' | 'dev' | 'regular', semDist?: 1 | 2 | 3 }
    * let g = new Graph<NodeData, EdgeData>()
    */
-  constructor(directed = true, multigraph = true) {
+  constructor(
+    directed = true,
+    multigraph = true,
+    readonly initialNodes?: Node<N>[],
+    readonly initialEdges?: Edge<E>[]
+  ) {
     this.graph = new GraphLib({ directed: directed, multigraph: multigraph, compound: true });
     this.graph.setDefaultEdgeLabel({});
+    if (initialNodes) {
+      initialNodes.forEach(node => this.setNode(node.key, node.value));
+    }
+    if (initialEdges) {
+      initialEdges.forEach(edge => this.setEdge(edge.sourceKey, edge.targetKey, edge.data));
+    }
   }
 
   /**
@@ -32,6 +43,10 @@ export class Graph<N, E> {
    */
   setNode(key: string, value: N) {
     return this.graph.setNode(key, value);
+  }
+
+  setNodes(nodes: Node<N>[]) {
+    nodes.forEach(node => this.setNode(node.key, node.value));
   }
 
   /**
@@ -173,6 +188,10 @@ export class Graph<N, E> {
    */
   setEdge<T>(sourceKey: string, tragetKey: string, data: T) {
     return this.graph.setEdge(sourceKey, tragetKey, data);
+  }
+
+  setEdges(edges: Edge<E>[]) {
+    edges.forEach(edge => this.setEdge(edge.sourceKey, edge.targetKey, edge.data));
   }
 
   /**
@@ -518,3 +537,41 @@ function arrangeLayers(layers: string[][], order: 'fromSource' | 'fromLastLeaf')
   });
   return order === 'fromSource' ? finalLayers.reverse() : finalLayers;
 }
+
+export type NodeId = string;
+
+export class Node<N> {
+  constructor(readonly key: NodeId, readonly value: N) {}
+
+  static fromObject<N>(object: { key: NodeId; value: N }) {
+    return new Node(object.key, object.value);
+  }
+}
+
+/**
+ * A single directed edge consisting of a source id, target id,
+ * and the data associated with the edge.
+ *
+ * @tparam ED type of the edge attribute
+ *
+ * @param srcId The vertex id of the source vertex
+ * @param dstId The vertex id of the target vertex
+ * @param attr The attribute associated with the edge
+ */
+export class Edge<ED> {
+  constructor(readonly sourceKey: NodeId, readonly targetKey: NodeId, readonly data: ED) {}
+
+  static fromObject<ED>(object: RawEdge<ED>) {
+    return new Edge(object.sourceKey, object.targetKey, object.data);
+  }
+
+  get id(): string {
+    return `${this.sourceKey}_${this.targetKey}`;
+  }
+}
+
+export type RawEdge<ED> = {
+  sourceKey: NodeId;
+  targetKey: NodeId;
+  data: ED;
+};
