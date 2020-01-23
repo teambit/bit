@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { v4 } from 'uuid';
 import { ReleaseType } from 'semver';
 import * as RA from 'ramda-adjunct';
 import pMapSeries from 'p-map-series';
@@ -21,6 +22,7 @@ import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { sha1 } from '../../utils';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency) => {
@@ -31,6 +33,12 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
   };
   componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
+  });
+}
+
+function setHashes(componentsToTag: Component[]): void {
+  componentsToTag.forEach(componentToTag => {
+    componentToTag.version = sha1(v4());
   });
 }
 
@@ -119,7 +127,7 @@ function validateDirManipulation(components: Component[]): void {
   components.forEach(component => validateComponent(component));
 }
 
-export default (async function tagModelComponent({
+export default async function tagModelComponent({
   consumerComponents,
   scope,
   message,
@@ -130,19 +138,23 @@ export default (async function tagModelComponent({
   ignoreNewestVersion = false,
   skipTests = false,
   verbose = false,
-  skipAutoTag
+  skipAutoTag,
+  resolveUnmerged,
+  isSnap = false
 }: {
   consumerComponents: Component[];
   scope: Scope;
   message: string;
-  exactVersion: string | null | undefined;
-  releaseType: ReleaseType;
+  exactVersion?: string | null | undefined;
+  releaseType?: ReleaseType;
   force: boolean | null | undefined;
   consumer: Consumer;
-  ignoreNewestVersion: boolean;
+  ignoreNewestVersion?: boolean;
   skipTests: boolean;
   verbose?: boolean;
   skipAutoTag: boolean;
+  resolveUnmerged: boolean;
+  isSnap: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
@@ -169,7 +181,7 @@ export default (async function tagModelComponent({
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
 
   // check for each one of the components whether it is using an old version
-  if (!ignoreNewestVersion) {
+  if (!ignoreNewestVersion && !isSnap) {
     const newestVersionsP = componentsToBuildAndTest.map(async component => {
       if (component.componentFromModel) {
         // otherwise it's a new component, so this check is irrelevant
@@ -225,7 +237,7 @@ export default (async function tagModelComponent({
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
 
   // go through all components and find the future versions for them
-  await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
+  isSnap ? setHashes(componentsToTag) : await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
@@ -264,7 +276,8 @@ export default (async function tagModelComponent({
       flattenedTesterDependencies,
       message,
       lane,
-      specsResults: testResult ? testResult.specs : undefined
+      specsResults: testResult ? testResult.specs : undefined,
+      resolveUnmerged
     });
     return consumerComponent;
   };
@@ -273,8 +286,8 @@ export default (async function tagModelComponent({
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
+  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents, isSnap);
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedResults };
-});
+}

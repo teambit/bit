@@ -144,7 +144,6 @@ export async function exportMany({
       return new ComponentObjects(componentBuffer, objectsBuffer);
     });
     const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
-    // const manyLanesObjects = await Promise.all(lanesObjects.map(lane => lane.collectObjects(scope.objects)));
     const manyLanesObjects = await Promise.all(
       lanes.map(async lane => {
         lane.components.forEach(c => {

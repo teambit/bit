@@ -73,7 +73,6 @@ import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import { LocalLaneId } from '../lane-id/lane-id';
-import snapModelComponents from '../scope/component-ops/snap-model-component';
 
 type ConsumerProps = {
   projectPath: string;
@@ -695,7 +694,7 @@ export default class Consumer {
     });
     const components = await this._loadComponentsForSnapOrTag(ids, ignoreUnresolvedDependencies);
 
-    const { taggedComponents, autoTaggedResults } = await snapModelComponents({
+    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       message,
@@ -704,8 +703,9 @@ export default class Consumer {
       skipTests,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
-      skipAutoSnap,
-      resolveUnmerged
+      skipAutoTag: skipAutoSnap,
+      resolveUnmerged,
+      isSnap: true
     });
 
     const autoTaggedComponents = autoTaggedResults.map(r => r.component);
