@@ -544,6 +544,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * truth should be the remote scope from where the import fetches the component.
    * When the same component has different versions in the remote and the local, it merges the two
    * by calling this.mergeTwoComponentsObjects().
+   *
+   * when dealing with lanes, exporting/importing lane's components, this function doesn't do much
+   * if any. that's because the head is not saved on the ModelComponent but on the lane object.
+   * to rephrase with other words,
+   * this function merges an incoming modelComponent with an existing modelComponent, so if all
+   * changes where done on a lane, this function will not do anything because modelComponent
+   * hasn't changed.
    */
   async merge(
     { component, objects }: ComponentTree,
@@ -588,8 +595,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       const componentHead = component.getSnapHead();
       if (componentHead) {
         // when importing (local), do not override the head
-        if (!local || !existingHeadIsMissingInIncomingComponent) mergedComponent.setSnapHead(componentHead);
-        else mergedComponent.laneHeadRemote = componentHead;
+        if (!local || !existingHeadIsMissingInIncomingComponent) {
+          mergedComponent.setSnapHead(componentHead);
+        }
+        if (local) mergedComponent.remoteHead = componentHead;
       }
 
       this.put({ component: mergedComponent, objects });
@@ -627,7 +636,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     local: boolean
   ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
     const repo = this.objects();
-    const addObjects = () => objects.forEach(obj => repo.add(obj));
     const existingLane = await this.scope.loadLane(lane.toLaneId());
     if (!existingLane) {
       repo.add(lane);
@@ -671,7 +679,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       })
     );
     repo.add(existingLane);
-    addObjects();
+    objects.forEach(obj => repo.add(obj));
     return mergeResults;
   }
 }

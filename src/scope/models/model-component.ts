@@ -92,6 +92,7 @@ export default class Component extends BitObject {
   snaps: SnapModel;
   laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
+  remoteHead?: Ref | null;
   private divergeData;
 
   constructor(props: ComponentProps) {
@@ -178,7 +179,7 @@ export default class Component extends BitObject {
    * head. (it also means that we can do do fast-forward and no need for snap-merge).
    */
   async _loadDivergeData(repo: Repository, throws = true): Promise<DivergeResult> {
-    const remoteHead = this.laneHeadRemote;
+    const remoteHead = this.laneHeadRemote || this.remoteHead;
     const localHead = this.laneHeadLocal || this.getSnapHead();
     const emptyResults = {
       snapsOnRemoteOnly: [],
@@ -298,6 +299,7 @@ export default class Component extends BitObject {
     remoteLaneId = laneId,
     remoteName = this.scope
   ) {
+    // @todo: this doesn't take into account a case when local and remote have different names.
     this.setLaneHeadLocal(lane);
     if (remoteName) {
       // otherwise, it was never exported, so no remote head
@@ -893,11 +895,12 @@ export default class Component extends BitObject {
       await this.setDivergeData(repo);
       return this.isLocalAhead();
     }
+    // when on master, no need to traverse the parents because local snaps/tags are saved in the
+    // component object and retrieved by `this.getLocalVersions()`.
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
-    // todo: travel the parents to check whether local changes were done.
     return false;
   }
 

@@ -24,7 +24,7 @@ import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject, BitRawObject } from './objects';
-import SourcesRepository from './repositories/sources';
+import SourcesRepository, { ComponentTree } from './repositories/sources';
 import Consumer from '../consumer/consumer';
 import loader from '../cli/loader';
 import { MigrationResult } from '../migration/migration-helper';
@@ -399,7 +399,7 @@ export default class Scope {
       'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
       { id: objects.component.id().toString() }
     );
-    return this.sources.merge(objects).then(() => this.objects.persist());
+    return this.mergeModelComponent(objects).then(() => this.objects.persist());
   }
 
   /**
@@ -415,17 +415,7 @@ export default class Scope {
       `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
     );
     await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
-      componentObjects
-        .toObjectsAsync()
-        .then(objects => this.sources.merge(objects))
-        .then(({ mergedComponent }) =>
-          this.objects.remoteLanes.addEntry(
-            mergedComponent.scope as string,
-            new LaneId({ name: DEFAULT_LANE }),
-            mergedComponent.toBitId(),
-            mergedComponent.laneHeadRemote || mergedComponent.getSnapHead()
-          )
-        )
+      componentObjects.toObjectsAsync().then(objects => this.mergeModelComponent(objects))
     );
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
@@ -442,6 +432,19 @@ export default class Scope {
     );
     if (persist) await this.objects.persist();
     return nonLaneIds;
+  }
+
+  async mergeModelComponent(componentTree: ComponentTree) {
+    const { mergedComponent } = await this.sources.merge(componentTree);
+    if (mergedComponent.remoteHead) {
+      // when importing a component, save the remote head into the remote master ref file
+      await this.objects.remoteLanes.addEntry(
+        mergedComponent.scope as string,
+        new LaneId({ name: DEFAULT_LANE }),
+        mergedComponent.toBitId(),
+        mergedComponent.remoteHead
+      );
+    }
   }
 
   getObject(hash: string): Promise<BitObject> {
