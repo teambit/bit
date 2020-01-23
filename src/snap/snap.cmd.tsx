@@ -1,7 +1,6 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../paper';
-import { PaperOptions } from 'paper/command';
+import { Command, PaperOptions } from '../paper';
 import GeneralError from '../error/general-error';
 import { SnapOptions } from './types';
 import Snap from './snap';
@@ -11,6 +10,8 @@ export class SnapCommand implements Command {
   public name = 'snap [id] [version]';
   public description = 'snap command';
   public alias = '';
+  public group = '';
+  public summery = '';
   public options: PaperOptions = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],

@@ -15,6 +15,7 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
+import { LegacyCommand } from './legacy-command';
 // import { } from '../paper/'
 didYouMean.returnFirstMatch = true;
 
@@ -88,7 +89,8 @@ export function execAction(command, concrete, args) {
   migrateWrapper(command.migration)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .then(() => {
-      return command.render(relevantArgs, flags, packageManagerArgs).then(res => {
+      const commandMain = flags.json && command instanceof LegacyCommand ? 'json' : 'render';
+      return command[commandMain](relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
         const code = (res && res.__code) || 0;
         inkRender(res);
