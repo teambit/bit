@@ -146,7 +146,6 @@
     "ora": "^4.0.2",
     "p-event": "^4.1.0",
     "p-map-series": "^1.0.0",
-    "p-progress": "^0.4.1",
     "p-series": "^2.1.0",
     "package-json-validator": "^0.6.3",
     "pad-right": "^0.2.2",
