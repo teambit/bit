@@ -1,5 +1,5 @@
 import { Capsule, Exec, Console, State } from '@teambit/capsule';
-import { Volume } from '@teambit/any-fs';
+import { NodeFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
@@ -7,7 +7,7 @@ import BitId from '../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 import loader from '../cli/loader';
 
-export default class ComponentCapsule extends Capsule<Exec, Volume> {
+export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
   private _bitId: BitId;
   private _new = false;
@@ -19,7 +19,7 @@ export default class ComponentCapsule extends Capsule<Exec, Volume> {
     /**
      * the capsule's file system.
      */
-    readonly fs: Volume,
+    readonly fs: NodeFS,
     /**
      * console for controlling process streams as stdout, stdin and stderr.
      */
