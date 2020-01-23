@@ -8,8 +8,12 @@ import ScopeComponentsImporter from '../../../scope/component-ops/scope-componen
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { DEFAULT_LANE } from '../../../constants';
+import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 
-export default async function switchAction(switchProps: SwitchProps): Promise<ApplyVersionResults> {
+export default async function switchAction(
+  switchProps: SwitchProps,
+  checkoutProps: CheckoutProps
+): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
   let results;
@@ -19,7 +23,7 @@ export default async function switchAction(switchProps: SwitchProps): Promise<Ap
     results = { added: switchProps.laneName };
   } else {
     await populateSwitchProps(consumer, switchProps);
-    results = await switchLanes(consumer, switchProps);
+    results = await switchLanes(consumer, switchProps, checkoutProps);
   }
 
   await consumer.onDestroy();

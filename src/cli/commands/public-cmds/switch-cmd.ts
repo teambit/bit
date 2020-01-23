@@ -8,6 +8,7 @@ import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-versio
 import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import GeneralError from '../../../error/general-error';
 import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
+import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 
 export default class Switch extends Command {
   name = 'switch <lane>';
@@ -76,16 +77,22 @@ export default class Switch extends Command {
       create,
       laneName: lane,
       remoteScope: remote,
-      merge: Boolean(merge),
+      existingOnWorkspaceOnly: !getAll,
+      newLaneName: as
+    };
+    const checkoutProps: CheckoutProps = {
       mergeStrategy,
       verbose,
       skipNpmInstall,
       ignorePackageJson,
-      existingOnWorkspaceOnly: !getAll,
       ignoreDist,
-      newLaneName: as
+      isLane: true,
+      promptMergeOptions: false,
+      writeConfig: false,
+      reset: false,
+      all: false
     };
-    return switchAction(switchProps).then(results => ({ ...results, lane, create, json }));
+    return switchAction(switchProps, checkoutProps).then(results => ({ ...results, lane, create, json }));
   }
 
   report({
