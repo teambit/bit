@@ -27,7 +27,7 @@ const inputsWithDefaultsNoCompiler = [
   }
 ];
 
-describe.only('run bit init - interactive', function() {
+describe('run bit init - interactive', function() {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
