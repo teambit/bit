@@ -1,5 +1,5 @@
 import { Capsule, Exec } from '@teambit/capsule';
-import { FS as AnyFS } from '@teambit/any-fs';
+import { AnyFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import sub from 'subleveldown';
 import fs from 'fs-extra';

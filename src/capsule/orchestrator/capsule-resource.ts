@@ -1,5 +1,5 @@
 import { Capsule, Exec } from '@teambit/capsule';
-import { FS as AnyFS } from '@teambit/any-fs';
+import { AnyFS } from '@teambit/any-fs';
 import { Resource } from './resource-pool';
 import { ResourceEvents } from './resource-pool/resource';
 

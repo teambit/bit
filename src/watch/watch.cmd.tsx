@@ -6,7 +6,8 @@ export default class ServeCommand implements Command {
   name = 'watch [id...]';
   description = 'watch a set of components';
   alias = '';
-
+  group = ''
+  summery = ''
   options = []
 
   async render() {

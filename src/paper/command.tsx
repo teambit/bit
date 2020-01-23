@@ -10,14 +10,30 @@ export interface Command {
   name: string;
 
   /**
-   * The description of the command. Will be seen in bit help and command help.
-   * Examples:
-   *  1. `bit`
-   *  2. `bit add --help`
+   * The description of the command. Will be seen in bit command help .
+   *  `bit add --help`
    */
   description: string;
 
   /**
+   * should turn on Loader
+   */
+  loader?: boolean
+
+  /**
+   * Description of the command in commands summery
+   * `bit -h`
+   * `bit`
+   */
+  summery: string;
+
+  /**
+   *  allow grouping of commands to hint summery renderer
+   */
+
+  group:string
+
+   /**
    * command alias (for example: 't' for 'tag')
    */
   alias: string;
@@ -31,8 +47,6 @@ export interface Command {
    */
   options: PaperOptions;
   commands?: Command[]
-  help?: string;
-  longHelp?:string;
 
   /**
    * Main command handler which is called when invoking commands

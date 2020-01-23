@@ -1,5 +1,5 @@
 import { Capsule, ContainerFactory, Exec, State } from '@teambit/capsule';
-import { FS as AnyFS, Volume } from '@teambit/any-fs';
+import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { EventEmitter } from 'events';
 import { ResourceFactory, Resource } from './resource-pool';
 import CapsuleResource from './capsule-resource';
@@ -21,7 +21,7 @@ export default class CapsuleFactory<T extends Capsule<Exec, AnyFS>> extends Even
   }
 
   async create(config: BitContainerConfig): Promise<Resource<T>> {
-    const capsule: T = await this.createFn(this.bitContainerFactory, new Volume(), config);
+    const capsule: T = await this.createFn(this.bitContainerFactory, new NodeFS(), config);
     await capsule.start();
     return new CapsuleResource(capsule, config);
   }

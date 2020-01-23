@@ -3,7 +3,6 @@ import ConsumerComponent from '../consumer/component';
 import Component from './component';
 import State from './state';
 import ComponentID from './id';
-import ComponentGraph from './component-graph/component-graph';
 
 export default class ComponentFactory {
   constructor(
