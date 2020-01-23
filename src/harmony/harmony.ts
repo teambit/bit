@@ -1,5 +1,5 @@
 import Extension from './extension';
-import DependencyGraph from './dependency-graph/dependency-graph';
+import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
 
@@ -12,10 +12,10 @@ async function asyncForEach(array, callback) {
 }
 
 export default class Harmony {
-  constructor(private graph: DependencyGraph) {}
+  constructor(private graph: ExtensionGraph) {}
 
   get extensions() {
-    return this.graph.vertices.map(vertex => vertex.attr);
+    return Object.values(this.graph.getNodeInfo(this.graph.nodes()));
   }
 
   async load(extensions: AnyExtension[]) {
@@ -47,7 +47,7 @@ export default class Harmony {
   }
 
   static load(extension: Extension<any, any>) {
-    const graph = DependencyGraph.fromRoot(extension);
+    const graph = ExtensionGraph.fromRootExtension(extension);
     return new Harmony(graph);
   }
 }
