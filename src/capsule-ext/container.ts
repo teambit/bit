@@ -6,7 +6,7 @@ import execa from 'execa';
 import os from 'os';
 import v4 from 'uuid';
 import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
-import { FS as AnyFS, Volume } from '@teambit/any-fs';
+import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { Stream } from 'stream';
 import ContainerExec from './container-exec';
 
@@ -21,7 +21,7 @@ export interface BitContainerConfig extends ContainerFactoryOptions {
 }
 
 export default class FsContainer implements Container<Exec, AnyFS> {
-  fs: Volume = new Volume();
+  fs: AnyFS = new NodeFS();
 
   id = 'FS Container';
   path: string;
@@ -80,6 +80,21 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     const result = await subprocessP;
     exec.setStatus(result.exitCode);
     return exec;
+  }
+
+  execP(execOptions: BitExecOption): Promise<string> {
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise(async (resolve, reject) => {
+      let hasError = false;
+      const exec = await this.exec(execOptions);
+      exec.stdout.on('error', () => {
+        hasError = true;
+      });
+      exec.on('close', () => {
+        if (hasError) reject(exec.stderr.getContents!(exec.stderr.size).toString());
+        resolve(exec.stdout.getContents!(exec.stdout.size).toString());
+      });
+    });
   }
 
   async terminal() {

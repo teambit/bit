@@ -1,5 +1,5 @@
 import { SemVer } from 'semver';
-import { FS as AnyFS } from '@teambit/any-fs';
+import { AnyFS } from '@teambit/any-fs';
 import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
