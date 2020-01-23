@@ -4,6 +4,7 @@ export type CapsuleDeps = [];
 
 export type CapsuleConfig = {};
 
-export default async function provideCapsule(config: CapsuleConfig, []: CapsuleDeps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default async function provideCapsule(config: CapsuleConfig) {
   return new CapsuleBuilder('any');
 }

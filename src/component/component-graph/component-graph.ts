@@ -7,5 +7,6 @@ export type Dependency = {
 
 // TODO: add concrete types
 export default class ComponentGraph extends Graph<Component, Dependency> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static resolve(component) {}
 }
