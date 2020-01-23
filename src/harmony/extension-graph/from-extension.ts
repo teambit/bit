@@ -1,25 +1,25 @@
 import { AnyExtension } from '../types';
-import { Vertex, Edge } from '../../r-graph';
+import { Node, Edge } from '../../graph';
 
 /**
  * build vertices and edges from the given extension
  */
 export function fromExtension(extension: AnyExtension) {
-  const vertices: { [id: string]: Vertex<AnyExtension> } = {};
+  const nodes: { [id: string]: Node<AnyExtension> } = {};
   let edges: Edge<string>[] = [];
   // extension.
 
   function iterate(root: AnyExtension) {
     const id = root.name;
-    if (vertices[id]) return;
+    if (nodes[id]) return;
 
-    vertices[id] = new Vertex<AnyExtension>(id, root);
+    nodes[id] = new Node<AnyExtension>(id, root);
 
     const newEdges = root.dependencies.map((dep: AnyExtension) => {
       return Edge.fromObject({
-        srcId: id,
-        dstId: dep.name,
-        attr: 'dependency'
+        sourceKey: id,
+        targetKey: dep.name,
+        data: 'dependency'
       });
     });
 
@@ -33,7 +33,7 @@ export function fromExtension(extension: AnyExtension) {
   iterate(extension);
 
   return {
-    vertices: Object.values(vertices),
+    nodes: Object.values(nodes),
     edges
   };
 }
@@ -47,10 +47,10 @@ export function fromExtensions(extensions: AnyExtension[]) {
   return perExtension.reduce(
     (acc, subgraph) => {
       acc.edges = acc.edges.concat(subgraph.edges);
-      acc.vertices = acc.vertices.concat(subgraph.vertices);
+      acc.nodes = acc.nodes.concat(subgraph.nodes);
 
       return acc;
     },
-    { vertices: [], edges: [] }
+    { nodes: [], edges: [] }
   );
 }
