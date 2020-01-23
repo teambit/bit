@@ -1,4 +1,4 @@
-import { Graph } from '../../graph';
+import { Graph } from 'cleargraph';
 import Component from '../component';
 
 export type Dependency = {

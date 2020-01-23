@@ -1,4 +1,4 @@
-import { Graph } from '../graph';
+import { Graph } from 'cleargraph';
 import { Component } from '../component';
 import ConsumerComponent from '../consumer/component';
 import { Consumer } from '../consumer';
