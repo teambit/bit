@@ -34,14 +34,22 @@ export default class CommandHelper {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
-    const featuresTogglePrefix =
-      isBitCommand && this.featuresToggle ? `${ENV_VAR_FEATURE_TOGGLE}=${this.featuresToggle} ` : '';
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix() : '';
     cmd = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  _getFeatureToggleCmdPrefix(): string {
+    if (!this.featuresToggle) return '';
+    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${this.featuresToggle}`;
+    if (process.platform === 'win32') {
+      return `set "${featureToggleStr}" && `;
+    }
+    return `${featureToggleStr} `;
   }
 
   listRemoteScope(raw = true, options = '') {

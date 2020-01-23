@@ -116,11 +116,7 @@ export default class Component extends BitObject {
 
   getRef(version: string): Ref | null {
     if (isHash(version)) {
-      // if (!this.snaps.head) return null; // in case the component is on another lane, the head is empty!
       return new Ref(version);
-      // @todo: should we check whether the ref really exists?
-      // if (this.snaps.head.toString() === versionOrHash) return new Ref(versionOrHash);
-      // throw new Error('todo: go through all parents and find the ref!');
     }
     return this.versions[version];
   }
