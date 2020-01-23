@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { Consumer } from '../..';
 import { BitId, BitIds } from '../../../bit-id';
-import LaneId from '../../../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../../../lane-id/lane-id';
 import { Version, Lane } from '../../../scope/models';
 import threeWayMerge, { MergeResultsThreeWay } from './three-way-merge';
 import { Ref } from '../../../scope/objects';
@@ -26,7 +26,7 @@ import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
 import logger from '../../../logger/logger';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 
-type ComponentStatus = {
+export type ComponentStatus = {
   componentFromFS?: Component | null;
   componentFromModel?: Version;
   id: BitId;
@@ -34,18 +34,22 @@ type ComponentStatus = {
   mergeResults?: MergeResultsThreeWay | null;
 };
 
-export async function mergeComponents(
+/**
+ * when user is on master, it merges the remote master components into local.
+ * when user is on a lane, it merges the remote lane components into the local lane.
+ */
+export async function mergeComponentsFromRemote(
   consumer: Consumer,
   bitIds: BitId[],
   mergeStrategy: MergeStrategy,
-  laneId: LaneId,
   noSnap: boolean,
   snapMessage: string
 ): Promise<ApplyVersionResults> {
-  const localLane = laneId.isDefault() ? null : await consumer.scope.loadLane(laneId);
-  const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(laneId.name);
-  if (!laneId.isDefault() && !remoteTrackedLane) {
-    throw new Error(`unable to find a remote tracked to the local lane "${laneId.name}"`);
+  const localLaneId = consumer.getCurrentLaneId();
+  const localLaneObject = await consumer.getCurrentLaneObject();
+  const remoteTrackedLane = consumer.scope.lanes.getRemoteTrackedDataByLocalLane(localLaneId.name);
+  if (!localLaneId.isDefault() && !remoteTrackedLane) {
+    throw new Error(`unable to find a remote tracked to the local lane "${localLaneId.name}"`);
   }
   const allComponentsStatus = await getAllComponentsStatus();
 
@@ -54,8 +58,8 @@ export async function mergeComponents(
     mergeStrategy,
     allComponentsStatus,
     remoteName: remoteTrackedLane ? remoteTrackedLane.remoteScope : null,
-    laneId,
-    localLane,
+    laneId: localLaneId,
+    localLane: localLaneObject,
     noSnap,
     snapMessage
   });
@@ -65,15 +69,21 @@ export async function mergeComponents(
     try {
       const componentsStatus = await Promise.all(
         bitIds.map(async bitId => {
-          const remoteLaneId = remoteTrackedLane ? LaneId.from(remoteTrackedLane.remoteLane) : laneId;
-          const remoteName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
-          const remoteHead = await consumer.scope.objects.remoteLanes.getRef(remoteName as string, remoteLaneId, bitId);
-          const otherLaneName = `${remoteName}/${remoteLaneId.name}`;
+          const remoteLaneName = remoteTrackedLane ? remoteTrackedLane.remoteLane : localLaneId.name;
+          const remoteScopeName = remoteTrackedLane ? remoteTrackedLane.remoteScope : bitId.scope;
+          const remoteLaneId = RemoteLaneId.from(remoteLaneName, remoteScopeName as string);
+          const remoteHead = await consumer.scope.objects.remoteLanes.getRef(remoteLaneId, bitId);
+          const remoteLaneIdStr = remoteLaneId.toString();
           if (!remoteHead)
             throw new GeneralError(
-              `unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${otherLaneName}"`
+              `unable to find a remote head of "${bitId.toStringWithoutVersion()}" in "${remoteLaneIdStr}"`
             );
-          return getComponentStatus(consumer, bitId.changeVersion(remoteHead.toString()), localLane, otherLaneName);
+          return getComponentStatus(
+            consumer,
+            bitId.changeVersion(remoteHead.toString()),
+            localLaneObject,
+            remoteLaneIdStr
+          );
         })
       );
       await tmp.clear();
@@ -85,7 +95,7 @@ export async function mergeComponents(
   }
 }
 
-async function merge({
+export async function merge({
   consumer,
   mergeStrategy,
   allComponentsStatus,
@@ -142,78 +152,7 @@ async function merge({
   return { components: componentsResults, failedComponents, mergeSnapResults };
 }
 
-export async function mergeLanes({
-  consumer,
-  mergeStrategy,
-  laneName,
-  remoteName,
-  noSnap,
-  snapMessage,
-  existingOnWorkspaceOnly
-}: {
-  consumer: Consumer;
-  mergeStrategy: MergeStrategy;
-  laneName: string;
-  remoteName: string | null;
-  noSnap: boolean;
-  snapMessage: string;
-  existingOnWorkspaceOnly: boolean;
-}): Promise<ApplyVersionResults> {
-  const currentLaneId = consumer.getCurrentLaneId();
-  if (!remoteName && laneName === currentLaneId.name) {
-    throw new GeneralError(`unable to switch to lane "${laneName}", you're already checked out to this lane`);
-  }
-  const localLaneId = consumer.getCurrentLaneId();
-  const localLane = currentLaneId.isDefault() ? null : await consumer.scope.loadLane(localLaneId);
-  const laneId = new LaneId({ name: laneName });
-  let bitIds: BitId[];
-  let otherLane: Lane | null;
-  let remoteLane;
-  let otherLaneName: string;
-  if (remoteName) {
-    remoteLane = await consumer.scope.objects.remoteLanes.getRemoteLane(remoteName, laneId);
-    if (!remoteLane.length) {
-      throw new GeneralError(
-        `unable to switch to "${laneName}" of "${remoteName}", the remote lane was not found or not fetched locally`
-      );
-    }
-    bitIds = await consumer.scope.objects.remoteLanes.getRemoteBitIds(remoteName, laneId);
-    otherLaneName = `${remoteName}/${laneId.name}`;
-  } else {
-    otherLane = await consumer.scope.loadLane(laneId);
-    if (!otherLane) throw new GeneralError(`unable to switch to "${laneName}", the lane was not found`);
-    bitIds = otherLane.components.map(c => c.id.changeVersion(c.head.toString()));
-    otherLaneName = laneId.name;
-  }
-  const allComponentsStatus = await getAllComponentsStatus();
-
-  return merge({
-    consumer,
-    mergeStrategy,
-    allComponentsStatus,
-    remoteName,
-    laneId,
-    localLane,
-    noSnap,
-    snapMessage
-  });
-
-  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
-    const tmp = new Tmp(consumer.scope);
-    try {
-      const componentsStatus = await Promise.all(
-        bitIds.map(bitId => getComponentStatus(consumer, bitId, localLane, otherLaneName, existingOnWorkspaceOnly))
-      );
-      await tmp.clear();
-      return componentsStatus;
-    } catch (err) {
-      await tmp.clear();
-      throw err;
-    }
-  }
-}
-
-async function getComponentStatus(
+export async function getComponentStatus(
   consumer: Consumer,
   id: BitId,
   localLane: Lane | null,
@@ -252,10 +191,8 @@ async function getComponentStatus(
     return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // const baseComponent: Version = await modelComponent.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const component = await consumer.loadComponent(existingBitMapId);
   const componentModificationStatus = await consumer.getComponentStatusById(component.id);
-  // let mergeResults: MergeResultsThreeWay | null | undefined;
   if (componentModificationStatus.modified) {
     throw new GeneralError(
       `unable to merge ${id.toStringWithoutVersion()}, the component is modified, please snap/tag it first`

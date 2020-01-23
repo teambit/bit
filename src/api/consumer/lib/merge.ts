@@ -2,11 +2,11 @@ import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import { MergeStrategy, ApplyVersionResults, mergeVersion } from '../../../consumer/versions-ops/merge-version';
 import {
-  mergeComponents,
-  mergeLanes,
+  mergeComponentsFromRemote,
   resolveMerge,
   abortMerge
 } from '../../../consumer/versions-ops/merge-version/merge-snaps';
+import { mergeLanes } from '../../../consumer/lanes/merge-lanes';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
@@ -45,7 +45,7 @@ export default async function merge(
   } else if (!BitId.isValidVersion(firstValue)) {
     const bitIds = getComponentsToMerge(consumer, values);
     // @todo: version could be the lane only or remote/lane
-    mergeResults = await mergeComponents(consumer, bitIds, mergeStrategy, consumer.getCurrentLaneId(), noSnap, message);
+    mergeResults = await mergeComponentsFromRemote(consumer, bitIds, mergeStrategy, noSnap, message);
   } else {
     const version = firstValue;
     const ids = R.tail(values);

@@ -34,7 +34,7 @@ import findDuplications from '../../utils/array/find-duplications';
 import HeadNotFound from '../exceptions/head-not-found';
 import ParentNotFound from '../exceptions/parent-not-found';
 import { Lane } from '.';
-import LaneId from '../../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type State = {
@@ -297,13 +297,16 @@ export default class Component extends BitObject {
     laneId: LaneId,
     lane: Lane | null,
     remoteLaneId = laneId,
-    remoteName = this.scope
+    remoteScopeName = this.scope
   ) {
     // @todo: this doesn't take into account a case when local and remote have different names.
     this.setLaneHeadLocal(lane);
-    if (remoteName) {
+    if (remoteScopeName) {
       // otherwise, it was never exported, so no remote head
-      this.laneHeadRemote = await repo.remoteLanes.getRef(remoteName, remoteLaneId, this.toBitId());
+      this.laneHeadRemote = await repo.remoteLanes.getRef(
+        RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
+        this.toBitId()
+      );
     }
   }
 

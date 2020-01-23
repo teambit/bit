@@ -184,12 +184,12 @@ export async function exportMany({
       })
     );
     const currentLane = scope.lanes.getCurrentLaneName();
-    const defaultLane = new LaneId({ name: DEFAULT_LANE });
     if (currentLane === DEFAULT_LANE && !lanes.length) {
       // all exported from master
-      await scope.objects.remoteLanes.loadRemoteLane(remoteNameStr, defaultLane);
+      const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
+      await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
       componentsAndObjects.forEach(({ component }) => {
-        scope.objects.remoteLanes.addEntry(remoteNameStr, defaultLane, component.toBitId(), component.getSnapHead());
+        scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getSnapHead());
       });
     }
 

@@ -46,7 +46,7 @@ import { PathOsBasedAbsolute } from '../utils/path';
 import { BitIdStr } from '../bit-id/bit-id';
 import { IndexType, ComponentItem } from './objects/components-index';
 import Lane from './models/lane';
-import LaneId from '../lane-id/lane-id';
+import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import CompsAndLanesObjects from './comps-and-lanes-objects';
 import { ComponentLogs } from './models/model-component';
 import Lanes from './lanes/lanes';
@@ -439,8 +439,7 @@ export default class Scope {
     if (mergedComponent.remoteHead) {
       // when importing a component, save the remote head into the remote master ref file
       await this.objects.remoteLanes.addEntry(
-        mergedComponent.scope as string,
-        new LaneId({ name: DEFAULT_LANE }),
+        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
         mergedComponent.toBitId(),
         mergedComponent.remoteHead
       );
