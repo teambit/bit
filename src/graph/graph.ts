@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { Graph as GraphLib } from 'graphlib/lib';
-import { isAcyclic, topsort } from 'graphlib/lib/alg';
+import { isAcyclic, topsort, findCycles } from 'graphlib/lib/alg';
 
 // TODO: This was copied here temporary since it's not yet available to be consumed via bit/npm
 // TODO: you should not use it from here. please remove this file once it's available from a correct source
@@ -485,6 +485,14 @@ export class Graph<N, E> {
    */
   toposort(): string[] {
     return topsort(this.graph);
+  }
+
+  /**This function returns all nodes in the graph that are part of a cycle.
+   * As there may be more than one cycle in a graph this function return an array of these cycles, where each cycle is itself
+   * represented by an array of ids for each node involved in that cycle.
+   */
+  findCycles() {
+    return findCycles(this.graph);
   }
 
   setGraphLabel(label: string) {
