@@ -17,46 +17,33 @@ import { VersionNotFound, HeadNotFound, ParentNotFound } from '../exceptions';
 type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
 
 /**
+ * by default it starts the traverse from the head or lane-head, unless "startFrom" is passed.
  * if versionObjects passed, use it instead of loading from the repo.
  */
-/* eslint-disable no-dupe-class-members */
-export async function getAllVersionsInfo({
-  modelComponent,
-  repo,
-  throws
-}: {
-  modelComponent: ModelComponent;
-  repo?: Repository;
-  throws?: boolean;
-}): Promise<VersionInfo[]>;
-export async function getAllVersionsInfo({
-  modelComponent,
-  throws,
-  versionObjects
-}: {
-  modelComponent: ModelComponent;
-  throws?: boolean;
-  versionObjects?: Version[];
-}): Promise<VersionInfo[]>;
 export async function getAllVersionsInfo({
   modelComponent,
   repo,
   throws = true,
-  versionObjects
+  versionObjects,
+  startFrom
 }: {
   modelComponent: ModelComponent;
   repo?: Repository;
   throws?: boolean;
   versionObjects?: Version[];
+  startFrom?: Ref | null;
 }): Promise<VersionInfo[]> {
-  /* eslint-enable no-dupe-class-members */
   const results: VersionInfo[] = [];
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
     if (versionObjects) return versionObjects.find(v => v.hash().isEqual(ref));
     if (repo) return (await ref.load(repo)) as Version;
     throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
   };
-  const laneHead = modelComponent.laneHeadLocal || modelComponent.getSnapHead();
+  const getRefToStartFrom = () => {
+    if (typeof startFrom !== 'undefined') return startFrom;
+    return modelComponent.laneHeadLocal || modelComponent.getSnapHead();
+  };
+  const laneHead = getRefToStartFrom();
   if (laneHead) {
     const headInfo: VersionInfo = { ref: laneHead, tag: modelComponent.getTagOfRefIfExists(laneHead) };
     const head = await getVersionObj(laneHead);
@@ -132,13 +119,19 @@ export async function getAllVersionHashesByVersionsObjects(
 export async function getAllVersionHashes(
   modelComponent: ModelComponent,
   repo: Repository,
-  throws = true
+  throws = true,
+  startFrom?: Ref | null
 ): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws });
+  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws, startFrom });
   return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
 }
 
-export async function hasVersionByRef(modelComponent: ModelComponent, ref: Ref, repo: Repository): Promise<boolean> {
-  const allVersionHashes = await getAllVersionHashes(modelComponent, repo);
+export async function hasVersionByRef(
+  modelComponent: ModelComponent,
+  ref: Ref,
+  repo: Repository,
+  startFrom?: Ref | null
+): Promise<boolean> {
+  const allVersionHashes = await getAllVersionHashes(modelComponent, repo, true, startFrom);
   return allVersionHashes.some(hash => hash.isEqual(ref));
 }

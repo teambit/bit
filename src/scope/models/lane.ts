@@ -135,9 +135,8 @@ export default class Lane extends BitObject {
           unmerged.push(component.id);
           return;
         }
-        // @todo: implement a better approach to find all children from a tip
-        modelComponent.resetLocalAndRemoteHeads();
-        const headExist = await hasVersionByRef(modelComponent, component.head, scope.objects);
+        const startTraverseFrom = modelComponent.getSnapHead() || null; // it's important to have it as null and not as undefined, see hasVersionByRef
+        const headExist = await hasVersionByRef(modelComponent, component.head, scope.objects, startTraverseFrom);
         if (headExist) merged.push(component.id);
         else unmerged.push(component.id);
       })
