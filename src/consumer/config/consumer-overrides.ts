@@ -168,7 +168,7 @@ export default class ConsumerOverrides {
   ): boolean {
     // seems like R.equals does a great job here. it compares objects by values (not by reference).
     // also it disregards the keys order.
-    return R.equals(overridesA, overridesB);
+    return R.equals(overridesA || {}, overridesB || {});
   }
 
   findExactMatch(bitId: BitId): string | null | undefined {
