@@ -181,8 +181,8 @@ export default class Repository {
       if (err.code === 'ENOENT') {
         const bitObjects: BitObject[] = await this.list();
         const scopeIndex = ScopeIndex.create(this.scopePath);
-        scopeIndex.addMany(bitObjects);
-        await scopeIndex.write();
+        const added = scopeIndex.addMany(bitObjects);
+        if (added) await scopeIndex.write();
         return scopeIndex;
       }
       throw err;
