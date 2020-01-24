@@ -51,8 +51,6 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type SnapModel = { head?: Ref };
-
 export type ComponentLogs = { [key: number]: { message: string; date: string; hash: string } | null | undefined };
 
 export type ComponentProps = {
@@ -68,7 +66,7 @@ export type ComponentProps = {
   local?: boolean; // get deleted after export
   state?: State; // get deleted after export
   scopesList?: ScopeListItem[];
-  snaps?: SnapModel;
+  head?: Ref;
 };
 
 const VERSION_ZERO = '0.0.0';
@@ -87,10 +85,10 @@ export default class Component extends BitObject {
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
-  snaps: SnapModel;
+  head?: Ref;
+  remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
   laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
-  remoteHead?: Ref | null;
   private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
@@ -105,7 +103,7 @@ export default class Component extends BitObject {
     this.local = props.local;
     this.state = props.state || {};
     this.scopesList = props.scopesList || [];
-    this.snaps = props.snaps || {};
+    this.head = props.head;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -121,20 +119,20 @@ export default class Component extends BitObject {
   }
 
   getSnapHeadStr(): string | null {
-    return this.snaps.head ? this.snaps.head.toString() : null;
+    return this.head ? this.head.toString() : null;
   }
 
   getSnapHead(): Ref | undefined {
-    return this.snaps.head;
+    return this.head;
   }
 
   hasSnapHead() {
-    return Boolean(this.snaps.head);
+    return Boolean(this.head);
   }
 
   setSnapHead(snapHead: Ref | undefined) {
     if (!isLaneEnabled()) return;
-    this.snaps.head = snapHead;
+    this.head = snapHead;
   }
 
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
@@ -252,17 +250,17 @@ export default class Component extends BitObject {
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
-    // backward compatibility. components created before v15 have master without snaps.head
+    // backward compatibility. components created before v15 have master without head
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
   /**
    * a user can be checked out to a lane, in which case, `this.laneHeadLocal` and `this.laneHeadRemote`
    * may be populated.
-   * `this.snaps.head` may not be populated, e.g. when a component was created on
+   * `this.head` may not be populated, e.g. when a component was created on
    * this lane and never got snapped on master.
-   * it's impossible that `this.snaps.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
-   * on master, which goes to this.snaps.head OR on a lane, which goes to this.laneHeadLocal.
+   * it's impossible that `this.head.isEqual(this.laneHeadLocal)`, because when snapping it's either
+   * on master, which goes to this.head OR on a lane, which goes to this.laneHeadLocal.
    */
   async latestIncludeRemote(repo: Repository): Promise<string> {
     const latestLocally = this.latest();
@@ -456,7 +454,7 @@ export default class Component extends BitObject {
     if (!isEmpty(this.state)) componentObject.state = this.state;
     const snapHeadStr = this.getSnapHeadStr();
     // @ts-ignore
-    if (snapHeadStr) componentObject.snaps = { head: snapHeadStr };
+    if (snapHeadStr) componentObject.head = snapHeadStr;
 
     return componentObject;
   }
@@ -607,7 +605,7 @@ export default class Component extends BitObject {
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head
   refs(): Ref[] {
     const versions = Object.values(this.versions);
-    if (this.snaps.head) versions.push(this.snaps.head);
+    if (this.head) versions.push(this.head);
     return versions;
   }
 
@@ -665,7 +663,7 @@ export default class Component extends BitObject {
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
     // @todo: this doesn't make sense when creating a new lane locally.
-    // the laneHeadRemote is not set. it needs to be compare to the snaps.head
+    // the laneHeadRemote is not set. it needs to be compare to the head
     if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
@@ -687,11 +685,6 @@ export default class Component extends BitObject {
   }
 
   static parse(contents: string): Component {
-    function snaps(thisSnaps) {
-      if (!thisSnaps) return null;
-      thisSnaps.head = new Ref(thisSnaps.head);
-      return thisSnaps;
-    }
     const rawComponent = JSON.parse(contents);
     return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
@@ -703,7 +696,7 @@ export default class Component extends BitObject {
       local: rawComponent.local,
       state: rawComponent.state,
       scopesList: rawComponent.remotes,
-      snaps: snaps(rawComponent.snaps)
+      head: rawComponent.head ? Ref.from(rawComponent.head) : null
     });
   }
 

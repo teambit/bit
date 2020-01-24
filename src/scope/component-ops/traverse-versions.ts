@@ -76,8 +76,8 @@ export async function getAllVersionsInfo({
     if (head) await addParentsRecursively(head);
   }
   // backward compatibility.
-  // components created before v15, might not have snaps.head.
-  // even if they do have snaps.head (as a result of tag/snap after v15), they
+  // components created before v15, might not have head.
+  // even if they do have head (as a result of tag/snap after v15), they
   // have old versions without parents and new versions with parents
   await Promise.all(
     Object.keys(modelComponent.versions).map(async version => {

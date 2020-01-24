@@ -31,10 +31,9 @@ describe('bit snap command', function() {
     });
     it('should save the snap head in the component object', () => {
       const foo = helper.command.catComponent('bar/foo');
-      expect(foo).to.have.property('snaps');
-      expect(foo.snaps).to.have.property('head');
-      expect(foo.snaps.head).to.be.a('string');
-      expect(foo.snaps.head.length).to.equal(HASH_SIZE);
+      expect(foo).to.have.property('head');
+      expect(foo.head).to.be.a('string');
+      expect(foo.head.length).to.equal(HASH_SIZE);
     });
     it('should save the snap hash as a version in .bitmap file', () => {
       const listScope = helper.command.listLocalScopeParsed();
@@ -58,7 +57,7 @@ describe('bit snap command', function() {
       it('should change the snap head to the newly created version', () => {
         const barFoo = helper.command.catComponent('bar/foo');
         const hash = barFoo.versions['0.0.1'];
-        expect(barFoo.snaps.head).to.equal(hash);
+        expect(barFoo.head).to.equal(hash);
       });
       describe('then snap and tag again', () => {
         let secondTagOutput;
@@ -72,7 +71,7 @@ describe('bit snap command', function() {
         it('should change the snap head to the newly created version', () => {
           const barFoo = helper.command.catComponent('bar/foo');
           const hash = barFoo.versions['0.0.2'];
-          expect(barFoo.snaps.head).to.equal(hash);
+          expect(barFoo.head).to.equal(hash);
         });
       });
     });
@@ -101,10 +100,10 @@ describe('bit snap command', function() {
       helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
-      firstSnap = compAfterSnap1.snaps.head;
+      firstSnap = compAfterSnap1.head;
       helper.command.snapComponent('bar/foo -f');
       const compAfterSnap2 = helper.command.catComponent('bar/foo');
-      secondSnap = compAfterSnap2.snaps.head;
+      secondSnap = compAfterSnap2.head;
       beforeUntagScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('untag the head snap', () => {
@@ -113,7 +112,7 @@ describe('bit snap command', function() {
       });
       it('should change the head to the first snap', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(compAfterUntag.snaps.head).to.equal(firstSnap);
+        expect(compAfterUntag.head).to.equal(firstSnap);
       });
       it('should remove the snap from the state.versions array', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
@@ -133,7 +132,7 @@ describe('bit snap command', function() {
       });
       it('should not change the head', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');
-        expect(compAfterUntag.snaps.head).to.equal(secondSnap);
+        expect(compAfterUntag.head).to.equal(secondSnap);
       });
       it('should remove the snap from the state.versions array', () => {
         const compAfterUntag = helper.command.catComponent('bar/foo');

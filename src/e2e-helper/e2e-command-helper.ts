@@ -171,7 +171,7 @@ export default class CommandHelper {
   }
   getSnapHead(id: string) {
     const comp = this.catComponent(id);
-    return comp.snaps.head;
+    return comp.head;
   }
   getHeadOfLane(laneName: string, componentName: string) {
     const lane = this.catLane(laneName);
