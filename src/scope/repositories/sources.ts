@@ -660,14 +660,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         modelComponent.laneHeadLocal = existingComponent.head;
         await modelComponent.setDivergeData(repo);
         const divergeResults = modelComponent.getDivergeData();
-        if (modelComponent.isTrueMergePending()) {
+        if (divergeResults.isDiverged()) {
           if (local) {
             // do not update the local lane. later, suggest to snap-merge.
             return { mergedComponent: modelComponent, mergedVersions: [] };
           }
           return new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString());
         }
-        if (modelComponent.isRemoteAhead()) {
+        if (divergeResults.isRemoteAhead()) {
           existingComponent.head = component.head;
           return {
             mergedComponent: modelComponent,

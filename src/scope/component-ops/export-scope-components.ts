@@ -22,7 +22,7 @@ import LaneObjects from '../lane-objects';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import GeneralError from '../../error/general-error';
 import replacePackageName from '../../utils/string/replace-package-name';
-import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
+import { RemoteLaneId } from '../../lane-id/lane-id';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future

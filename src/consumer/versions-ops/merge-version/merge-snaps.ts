@@ -25,6 +25,7 @@ import { UnmergedComponent } from '../../../scope/lanes/unmerged-components';
 import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
 import logger from '../../../logger/logger';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
+import { getDivergeData } from '../../../scope/component-ops/get-diverge-data';
 
 export type ComponentStatus = {
   componentFromFS?: Component | null;
@@ -207,26 +208,23 @@ export async function getComponentStatus(
       );
     }
   }
-  modelComponent.laneHeadRemote = new Ref(id.version as string);
-  await modelComponent.setDivergeData(repo);
-  const divergeResult = modelComponent.getDivergeData();
-  const isTrueMerge = modelComponent.isTrueMergePending();
-  if (!isTrueMerge) {
-    if (modelComponent.isLocalAhead()) {
+  const otherLaneHead = new Ref(version);
+  const divergeData = await getDivergeData(repo, modelComponent, otherLaneHead);
+  if (!divergeData.isDiverged()) {
+    if (divergeData.isLocalAhead()) {
       // do nothing!
       return returnFailure(`component ${component.id.toString()} is ahead, nothing to merge`);
     }
-    if (modelComponent.isRemoteAhead()) {
+    if (divergeData.isRemoteAhead()) {
       // just override with the model data
       return { componentFromFS: component, componentFromModel: componentOnLane, id, mergeResults: null };
     }
     // we know that localHead and remoteHead are set, so if none of them is ahead they must be equal
     return returnFailure(`component ${component.id.toString()} is already merged`);
   }
-  const baseSnap = divergeResult.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+  const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
   const baseComponent: Version = await modelComponent.loadVersion(baseSnap.toString(), repo);
-  const remoteHead: Ref = modelComponent.laneHeadRemote as Ref;
-  const currentComponent: Version = await modelComponent.loadVersion(remoteHead.toString(), repo);
+  const currentComponent: Version = await modelComponent.loadVersion(otherLaneHead.toString(), repo);
   // threeWayMerge expects `otherComponent` to be Component and `currentComponent` to be Version
   // since it doesn't matter whether we take the changes from base to current or the changes from
   // base to other, here we replace the two. the result is going to be the same.
@@ -236,7 +234,7 @@ export async function getComponentStatus(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     otherLabel: `${currentlyUsedVersion} (local)`,
     currentComponent, // this is actually the other
-    currentLabel: `${remoteHead.toString()} (${otherLaneName})`,
+    currentLabel: `${otherLaneHead.toString()} (${otherLaneName})`,
     baseComponent
   });
   return { componentFromFS: component, id, mergeResults };

@@ -128,7 +128,7 @@ export default class ImportComponents {
 
   _throwForDivergedHistory() {
     if (this.options.merge || this.options.objectsOnly) return;
-    const divergedComponents = this.divergeData.filter(modelComponent => modelComponent.isTrueMergePending());
+    const divergedComponents = this.divergeData.filter(modelComponent => modelComponent.getDivergeData().isDiverged());
     if (divergedComponents.length) {
       const divergeData = divergedComponents.map(modelComponent => ({
         id: modelComponent.id(),

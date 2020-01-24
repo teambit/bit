@@ -1,6 +1,6 @@
 import * as semver from 'semver';
 import { v4 } from 'uuid';
-import { equals, forEachObjIndexed, isEmpty, clone, difference } from 'ramda';
+import { equals, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
@@ -25,6 +25,7 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
+import { getDivergeData } from '../component-ops/get-diverge-data';
 import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
@@ -36,6 +37,7 @@ import ParentNotFound from '../exceptions/parent-not-found';
 import { Lane } from '.';
 import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
+import { DivergeData } from '../component-ops/diverge-data';
 
 type State = {
   versions?: {
@@ -52,7 +54,6 @@ export type ScopeListItem = { url: string; name: string; date: string };
 
 export type SnapModel = { head?: Ref };
 
-export type DivergeResult = { snapsOnLocalOnly: Ref[]; snapsOnRemoteOnly: Ref[]; commonSnapBeforeDiverge: Ref | null };
 export type ComponentLogs = { [key: number]: { message: string; date: string; hash: string } | null | undefined };
 
 export type ComponentProps = {
@@ -93,7 +94,7 @@ export default class Component extends BitObject {
   laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   remoteHead?: Ref | null;
-  private divergeData;
+  private divergeData?: DivergeData;
 
   constructor(props: ComponentProps) {
     super();
@@ -173,123 +174,17 @@ export default class Component extends BitObject {
     }
   }
 
-  /**
-   * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
-   * traverse by the local head, if it finds the remote head, no need to traverse by the remote
-   * head. (it also means that we can do do fast-forward and no need for snap-merge).
-   */
-  async _loadDivergeData(repo: Repository, throws = true): Promise<DivergeResult> {
-    const remoteHead = this.laneHeadRemote || this.remoteHead;
-    const localHead = this.laneHeadLocal || this.getSnapHead();
-    const emptyResults = {
-      snapsOnRemoteOnly: [],
-      snapsOnLocalOnly: [],
-      commonSnapBeforeDiverge: null
-    };
-    if (!remoteHead) {
-      if (localHead) {
-        const allVersions = await this.getAllVersionsInfo({ repo });
-        const allLocalHashes = allVersions.map(v => v.ref);
-        return {
-          snapsOnRemoteOnly: [],
-          snapsOnLocalOnly: allLocalHashes,
-          commonSnapBeforeDiverge: null
-        };
-      }
-      return emptyResults;
-    }
-    if (!localHead) {
-      // @todo: this is happening when there a remote head and no local head, not sure this state
-      // is even possible, maybe it is when fetching a remote before merging locally?
-      return emptyResults;
-    }
-
-    if (remoteHead.isEqual(localHead)) {
-      // no diverge they're the same
-      return emptyResults;
-    }
-
-    const snapsOnLocal: Ref[] = [];
-    const snapsOnRemote: Ref[] = [];
-    let remoteHeadExistsLocally = false;
-    let localHeadExistsRemotely = false;
-    let commonSnapBeforeDiverge: Ref;
-    const addParentsRecursively = async (version: Version, snaps: Ref[], isLocal: boolean) => {
-      if (isLocal && version.hash().isEqual(remoteHead)) {
-        remoteHeadExistsLocally = true;
-        return;
-      }
-      if (!isLocal && version.hash().isEqual(localHead)) {
-        localHeadExistsRemotely = true;
-        return;
-      }
-      if (!isLocal && !commonSnapBeforeDiverge) {
-        const snapExistLocally = snapsOnLocal.find(snap => snap.isEqual(version.hash()));
-        if (snapExistLocally) commonSnapBeforeDiverge = snapExistLocally;
-      }
-      snaps.push(version.hash());
-      await Promise.all(
-        version.parents.map(async parent => {
-          const parentVersion = (await parent.load(repo)) as Version;
-          if (parentVersion) {
-            await addParentsRecursively(parentVersion, snaps, isLocal);
-          } else if (throws) {
-            throw new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
-          }
-        })
-      );
-    };
-    const localVersion = (await repo.load(localHead)) as Version;
-    await addParentsRecursively(localVersion, snapsOnLocal, true);
-    if (remoteHeadExistsLocally)
-      return { snapsOnRemoteOnly: [], snapsOnLocalOnly: snapsOnLocal, commonSnapBeforeDiverge: remoteHead };
-    const remoteVersion = (await repo.load(remoteHead)) as Version;
-    await addParentsRecursively(remoteVersion, snapsOnRemote, false);
-    if (localHeadExistsRemotely)
-      return { snapsOnRemoteOnly: snapsOnRemote, snapsOnLocalOnly: [], commonSnapBeforeDiverge: localHead };
-    // @ts-ignore
-    if (!commonSnapBeforeDiverge)
-      throw new Error(
-        `fatal: local and remote of ${this.id()} could not possibly diverged as they don't have any snap in common`
-      );
-    return {
-      snapsOnRemoteOnly: difference(snapsOnRemote, snapsOnLocal),
-      snapsOnLocalOnly: difference(snapsOnLocal, snapsOnRemote),
-      commonSnapBeforeDiverge
-    };
-  }
-
   async setDivergeData(repo: Repository, throws = true): Promise<void> {
     if (!this.divergeData) {
-      this.divergeData = await this._loadDivergeData(repo, throws);
+      const remoteHead = this.laneHeadRemote || this.remoteHead || null;
+      this.divergeData = await getDivergeData(repo, this, remoteHead, throws);
     }
-    return this.divergeData;
   }
 
-  getDivergeData(): DivergeResult {
+  getDivergeData(): DivergeData {
     if (!this.divergeData)
       throw new Error(`getDivergeData() expects divergeData to be populate, please use this.setDivergeData()`);
     return this.divergeData;
-  }
-
-  /**
-   * when a local and remote history have diverged, a true merge is needed.
-   * when a remote is ahead of the local, but local has no new commits, a fast-forward merge is possible.
-   * when a local is ahead of the remote, no merge is needed.
-   */
-  isTrueMergePending(): boolean {
-    const divergeData = this.getDivergeData();
-    return Boolean(divergeData.snapsOnLocalOnly.length && divergeData.snapsOnRemoteOnly.length);
-  }
-
-  isLocalAhead(): boolean {
-    const divergeData = this.getDivergeData();
-    return Boolean(divergeData.snapsOnLocalOnly.length);
-  }
-
-  isRemoteAhead(): boolean {
-    const divergeData = this.getDivergeData();
-    return Boolean(divergeData.snapsOnRemoteOnly.length);
   }
 
   async populateLocalAndRemoteHeads(
@@ -896,7 +791,7 @@ export default class Component extends BitObject {
       if (!repo) throw new Error('isLocallyChanged expects to get repo when lane was provided');
       await this.populateLocalAndRemoteHeads(repo, lane.toLaneId(), lane);
       await this.setDivergeData(repo);
-      return this.isLocalAhead();
+      return this.getDivergeData().isLocalAhead();
     }
     // when on master, no need to traverse the parents because local snaps/tags are saved in the
     // component object and retrieved by `this.getLocalVersions()`.

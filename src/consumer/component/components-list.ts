@@ -2,7 +2,7 @@ import * as path from 'path';
 import semver from 'semver';
 import R from 'ramda';
 import Version from '../../scope/models/version';
-import ModelComponent, { DivergeResult } from '../../scope/models/model-component';
+import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
 import { InvalidComponent } from '../component/consumer-component';
@@ -16,6 +16,7 @@ import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import { Lane } from '../../scope/models';
+import { DivergeData } from '../../scope/component-ops/diverge-data';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -26,7 +27,7 @@ export type ListScopeResult = {
   deprecated?: boolean;
 };
 
-export type DivergedComponent = { id: BitId; diverge: DivergeResult };
+export type DivergedComponent = { id: BitId; diverge: DivergeData };
 
 export default class ComponentsList {
   consumer: Consumer;
@@ -149,7 +150,7 @@ export default class ComponentsList {
           if (!modelComponent || componentsWithUnresolvedConflicts.hasWithoutScopeAndVersion(component.id)) return null;
           await modelComponent.setDivergeData(this.scope.objects);
           const divergedData = modelComponent.getDivergeData();
-          if (!modelComponent.isTrueMergePending()) return null;
+          if (!modelComponent.getDivergeData().isDiverged()) return null;
           return { id: modelComponent.toBitId(), diverge: divergedData };
         })
       )).filter(x => x) as DivergedComponent[];
