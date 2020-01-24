@@ -39,6 +39,9 @@ export class RemoteLaneId extends LaneId {
     if (!scope) throw new TypeError('RemoteLaneId expects to get scope');
     super({ name, scope });
   }
+  set scope(scope: string) {
+    this.scope = scope;
+  }
   static from(name: string, scope: string): RemoteLaneId {
     return new RemoteLaneId({ scope, name });
   }

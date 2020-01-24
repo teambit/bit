@@ -35,20 +35,20 @@ export default class RemoteLanes {
 
   async getRef(remoteLaneId: RemoteLaneId, bitId: BitId): Promise<Ref | null> {
     if (!remoteLaneId) throw new TypeError('getEntry expects to get remoteLaneId');
-    if (!this.remotes[remoteLaneId.scope as string] || !this.remotes[remoteLaneId.scope as string][remoteLaneId.name]) {
+    if (!this.remotes[remoteLaneId.scope] || !this.remotes[remoteLaneId.scope][remoteLaneId.name]) {
       await this.loadRemoteLane(remoteLaneId);
     }
-    const remoteLane = this.remotes[remoteLaneId.scope as string][remoteLaneId.name];
+    const remoteLane = this.remotes[remoteLaneId.scope][remoteLaneId.name];
     const existingComponent = remoteLane.find(n => n.id.isEqualWithoutVersion(bitId));
     if (!existingComponent) return null;
     return existingComponent.head;
   }
 
   async getRemoteLane(remoteLaneId: RemoteLaneId): Promise<LaneComponent[]> {
-    if (!this.remotes[remoteLaneId.scope as string] || !this.remotes[remoteLaneId.scope as string][remoteLaneId.name]) {
+    if (!this.remotes[remoteLaneId.scope] || !this.remotes[remoteLaneId.scope][remoteLaneId.name]) {
       await this.loadRemoteLane(remoteLaneId);
     }
-    return this.remotes[remoteLaneId.scope as string][remoteLaneId.name];
+    return this.remotes[remoteLaneId.scope][remoteLaneId.name];
   }
 
   async getRemoteBitIds(remoteLaneId: RemoteLaneId): Promise<BitId[]> {
@@ -57,7 +57,7 @@ export default class RemoteLanes {
   }
 
   async loadRemoteLane(remoteLaneId: RemoteLaneId) {
-    const remoteName = remoteLaneId.scope as string;
+    const remoteName = remoteLaneId.scope;
     const laneName = remoteLaneId.name;
     const remoteLanePath = this.composeRemoteLanePath(remoteName, laneName);
     try {

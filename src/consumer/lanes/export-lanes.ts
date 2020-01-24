@@ -21,7 +21,7 @@ export async function updateLanesAfterExport(consumer: Consumer, lanes: Lane[]) 
     consumer.scope.lanes.trackLane({
       localLane: lane.name,
       remoteLane: remoteLaneId.name,
-      remoteScope: remoteLaneId.scope as string
+      remoteScope: remoteLaneId.scope
     });
     const isCurrentLane = lane.name === currentLane.name;
     if (isCurrentLane) {
