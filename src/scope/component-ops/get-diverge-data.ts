@@ -3,6 +3,7 @@ import { Repository, Ref } from '../objects';
 import { ModelComponent, Version } from '../models';
 import { ParentNotFound } from '../exceptions';
 import { DivergeData } from './diverge-data';
+import { getAllVersionHashes } from './traverse-versions';
 
 /**
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
@@ -18,8 +19,7 @@ export async function getDivergeData(
   const localHead = modelComponent.laneHeadLocal || modelComponent.getSnapHead();
   if (!remoteHead) {
     if (localHead) {
-      const allVersions = await modelComponent.getAllVersionsInfo({ repo });
-      const allLocalHashes = allVersions.map(v => v.ref);
+      const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);
       return new DivergeData(allLocalHashes);
     }
     return new DivergeData();

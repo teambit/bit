@@ -9,6 +9,7 @@ import { DEFAULT_LANE } from '../../constants';
 import LaneObjects from '../lane-objects';
 import { Version } from '.';
 import { Scope } from '..';
+import { hasVersionByRef } from '../component-ops/traverse-versions';
 
 export type LaneProps = {
   name: string;
@@ -136,7 +137,7 @@ export default class Lane extends BitObject {
         }
         // @todo: implement a better approach to find all children from a tip
         modelComponent.resetLocalAndRemoteHeads();
-        const headExist = await modelComponent.hasVersionByRef(component.head, scope.objects);
+        const headExist = await hasVersionByRef(modelComponent, component.head, scope.objects);
         if (headExist) merged.push(component.id);
         else unmerged.push(component.id);
       })

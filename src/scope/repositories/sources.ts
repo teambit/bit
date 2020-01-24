@@ -20,6 +20,7 @@ import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import Lane from '../models/lane';
 import UnmergedComponents from '../lanes/unmerged-components';
 import GeneralError from '../../error/general-error';
+import { getAllVersionHashesByVersionsObjects, getAllVersionHashes } from '../component-ops/traverse-versions';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -562,7 +563,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore
     const versionObjects: Version[] = objects.filter(o => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
-    const allHashes = await component.getAllVersionHashesByVersionsObjects(versionObjects, false);
+    const allHashes = await getAllVersionHashesByVersionsObjects(component, versionObjects, false);
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.put({ component, objects });
@@ -584,7 +585,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const repo: Repository = this.objects();
-      const existingComponentHashes = await existingComponent.getAllVersionHashes(repo, false);
+      const existingComponentHashes = await getAllVersionHashes(existingComponent, repo, false);
       const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
       const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
         existingComponent,
@@ -649,7 +650,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         const existingComponent = existingLane ? existingLane.components.find(c => c.id.isEqual(component.id)) : null;
         if (!existingComponent) {
           modelComponent.laneHeadLocal = component.head;
-          const allVersions = await modelComponent.getAllVersionHashes(repo);
+          const allVersions = await getAllVersionHashes(modelComponent, repo);
           if (existingLane) existingLane.addComponent(component);
           return { mergedComponent: modelComponent, mergedVersions: allVersions.map(h => h.toString()) };
         }

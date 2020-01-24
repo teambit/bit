@@ -32,12 +32,11 @@ import { makeEnvFromModel } from '../../extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 import findDuplications from '../../utils/array/find-duplications';
-import HeadNotFound from '../exceptions/head-not-found';
-import ParentNotFound from '../exceptions/parent-not-found';
 import { Lane } from '.';
 import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import { DivergeData } from '../component-ops/diverge-data';
+import { getAllVersionsInfo, getAllVersionHashes } from '../component-ops/traverse-versions';
 
 type State = {
   versions?: {
@@ -71,8 +70,6 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   snaps?: SnapModel;
 };
-
-type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
 
 const VERSION_ZERO = '0.0.0';
 
@@ -152,7 +149,7 @@ export default class Component extends BitObject {
 
   async hasVersion(version: string, repo: Repository): Promise<boolean> {
     if (isTag(version)) return this.hasTag(version);
-    const allHashes = await this.getAllVersionHashes(repo, false);
+    const allHashes = await getAllVersionHashes(this, repo, false);
     return allHashes.some(hash => hash.toString() === version);
   }
 
@@ -284,8 +281,7 @@ export default class Component extends BitObject {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
     // either a user is on master or a lane, check whether the remote is ahead of the local
-    const allVersions = await this.getAllVersionsInfo({ repo });
-    const allLocalHashes = allVersions.map(v => v.ref);
+    const allLocalHashes = await getAllVersionHashes(this, repo, false);
     const isRemoteHeadExistsLocally = allLocalHashes.find(localHash => localHash.isEqual(remoteHead));
     if (isRemoteHeadExistsLocally) return latestLocally; // remote is behind
     return remoteHead.toString(); // remote is ahead
@@ -339,8 +335,8 @@ export default class Component extends BitObject {
   }
 
   async collectLogs(repo: Repository): Promise<ComponentLogs> {
-    const versionsInfo = await this.getAllVersionsInfo({ repo, throws: false });
-    return versionsInfo.reduce((acc, current: VersionInfo) => {
+    const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false });
+    return versionsInfo.reduce((acc, current) => {
       const log = current.version ? current.version.log : { message: '<no-data-available>' };
       acc[current.tag || current.ref.toString()] = log;
       return acc;
@@ -358,109 +354,6 @@ export default class Component extends BitObject {
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
     return Object.keys(this.versions).find(versionRef => this.versions[versionRef].isEqual(ref));
-  }
-
-  /**
-   * if versionObjects passed, use it instead of loading from the repo.
-   */
-  /* eslint-disable no-dupe-class-members */
-  async getAllVersionsInfo({ repo, throws }: { repo?: Repository; throws?: boolean }): Promise<VersionInfo[]>;
-  async getAllVersionsInfo({
-    throws,
-    versionObjects
-  }: {
-    throws?: boolean;
-    versionObjects?: Version[];
-  }): Promise<VersionInfo[]>;
-  async getAllVersionsInfo({
-    repo,
-    throws = true,
-    versionObjects
-  }: {
-    repo?: Repository;
-    throws?: boolean;
-    versionObjects?: Version[];
-  }): Promise<VersionInfo[]> {
-    /* eslint-enable no-dupe-class-members */
-    const results: VersionInfo[] = [];
-    const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
-      if (versionObjects) return versionObjects.find(v => v.hash().isEqual(ref));
-      if (repo) return (await ref.load(repo)) as Version;
-      throw new TypeError('getAllVersionsInfo expect to get either repo or versionObjects');
-    };
-    const laneHead = this.laneHeadLocal || this.getSnapHead();
-    if (laneHead) {
-      const headInfo: VersionInfo = { ref: laneHead, tag: this.getTagOfRefIfExists(laneHead) };
-      const head = await getVersionObj(laneHead);
-      if (head) {
-        headInfo.version = head;
-      } else {
-        headInfo.error = new HeadNotFound(this.id(), laneHead.toString());
-        if (throws) throw headInfo.error;
-      }
-      results.push(headInfo);
-
-      const addParentsRecursively = async (version: Version) => {
-        await Promise.all(
-          version.parents.map(async parent => {
-            const parentVersion = await getVersionObj(parent);
-            const versionInfo: VersionInfo = { ref: parent, tag: this.getTagOfRefIfExists(parent) };
-            if (parentVersion) {
-              versionInfo.version = parentVersion;
-              await addParentsRecursively(parentVersion);
-            } else {
-              versionInfo.error = versionInfo.tag
-                ? new VersionNotFound(versionInfo.tag)
-                : new ParentNotFound(this.id(), version.hash().toString(), parent.toString());
-              if (throws) throw versionInfo.error;
-            }
-            results.push(versionInfo);
-          })
-        );
-      };
-      if (head) await addParentsRecursively(head);
-    }
-    // backward compatibility.
-    // components created before v15, might not have snaps.head.
-    // even if they do have snaps.head (as a result of tag/snap after v15), they
-    // have old versions without parents and new versions with parents
-    await Promise.all(
-      Object.keys(this.versions).map(async version => {
-        if (!results.find(r => r.tag === version)) {
-          const ref = this.versions[version];
-          const versionObj = await getVersionObj(ref);
-          const versionInfo: VersionInfo = { ref, tag: version };
-          if (versionObj) versionInfo.version = versionObj;
-          else {
-            versionInfo.error = new VersionNotFound(version);
-            if (throws) throw versionInfo.error;
-          }
-          results.push(versionInfo);
-        }
-      })
-    );
-
-    return results;
-  }
-
-  async getAllVersionsObjects(repo: Repository, throws = true): Promise<Version[]> {
-    const allVersionsInfo = await this.getAllVersionsInfo({ repo, throws });
-    return allVersionsInfo.map(a => a.version).filter(a => a) as Version[];
-  }
-
-  async getAllVersionHashesByVersionsObjects(versionObjects: Version[], throws = true): Promise<Ref[]> {
-    const allVersionsInfo = await this.getAllVersionsInfo({ throws, versionObjects });
-    return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
-  }
-
-  async getAllVersionHashes(repo: Repository, throws = true): Promise<Ref[]> {
-    const allVersionsInfo = await this.getAllVersionsInfo({ repo, throws });
-    return allVersionsInfo.map(v => v.ref).filter(ref => ref) as Ref[];
-  }
-
-  async hasVersionByRef(ref: Ref, repo: Repository): Promise<boolean> {
-    const allVersionHashes = await this.getAllVersionHashes(repo);
-    return allVersionHashes.some(hash => hash.isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {

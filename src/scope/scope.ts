@@ -50,6 +50,7 @@ import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
 import CompsAndLanesObjects from './comps-and-lanes-objects';
 import { ComponentLogs } from './models/model-component';
 import Lanes from './lanes/lanes';
+import { getAllVersionHashes } from './component-ops/traverse-versions';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -493,7 +494,7 @@ export default class Scope {
     const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
-        const allRefs = await component.getAllVersionHashes(this.objects, false);
+        const allRefs = await getAllVersionHashes(component, this.objects, false);
         const loadedVersions = await Promise.all(
           allRefs.map(async ref => {
             const componentVersion = await component.loadVersion(ref.toString(), this.objects);
