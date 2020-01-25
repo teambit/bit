@@ -25,9 +25,8 @@ export async function getDivergeData(
     return new DivergeData();
   }
   if (!localHead) {
-    // @todo: this is happening when there a remote head and no local head, not sure this state
-    // is even possible, maybe it is when fetching a remote before merging locally?
-    return new DivergeData();
+    const allRemoteHashes = await getAllVersionHashes(modelComponent, repo, false, remoteHead);
+    return new DivergeData([], allRemoteHashes);
   }
 
   if (remoteHead.isEqual(localHead)) {

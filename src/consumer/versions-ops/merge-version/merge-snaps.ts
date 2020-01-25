@@ -189,7 +189,10 @@ export async function getComponentStatus(
   }
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
-    return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
+    // @todo: maybe this check is not needed as we check for diverge later on
+    if (localLane || modelComponent.hasSnapHead()) {
+      return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
+    }
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const component = await consumer.loadComponent(existingBitMapId);
