@@ -89,11 +89,15 @@ export function execAction(command, concrete, args) {
   migrateWrapper(command.migration)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .then(() => {
-      const commandMain = flags.json && !(command instanceof LegacyCommand) ? 'json' : 'render';
+      const commandMain = flags.json ? 'json' : 'render';
       return command[commandMain](relevantArgs, flags, packageManagerArgs).then(res => {
         loader.off();
         const code = (res && res.__code) || 0;
-        inkRender(res);
+        if (flags.json) {
+          console.log(JSON.stringify(res, null, 2));
+        } else {
+          inkRender(res);
+        }
         return logger.exitAfterFlush(code, command.name);
       });
     })
