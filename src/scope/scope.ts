@@ -573,6 +573,19 @@ export default class Scope {
     return componentVersion.toConsumer(this.objects);
   }
 
+  /**
+   * return undefined if component was not found
+   */
+  async getConsumerComponentIfExist(id: BitId): Promise<Component | undefined> {
+    const modelComponent: ModelComponent | undefined = await this.getModelComponentIfExist(id);
+    if (!modelComponent) return undefined;
+    // $FlowFixMe version must be set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const componentVersion = modelComponent.toComponentVersion(id.version);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return componentVersion.toConsumer(this.objects);
+  }
+
   async getVersionInstance(id: BitId): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);

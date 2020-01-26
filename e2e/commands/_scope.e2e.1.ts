@@ -16,7 +16,7 @@ describe('bit _scope command', function() {
       output = helper.general.runWithTryCatch(`bit _scope ${nonExistScopePath} ${header}`);
     });
     it('should throw ScopeNotFound error', () => {
-      expect(output).to.have.string('ScopeNotFound');
+      expect(output).to.have.string('scope not found');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { Color } from 'ink';
 import React from 'react';
-import { Command, PaperOptions } from "../paper/command";
+import { Command, PaperOptions, GenericObject } from "../paper/command";
 import LegacyInterface from './command';
 import defaultErrorHandler from "./default-error-handler";
 import allHelp from './templates/all-help';
@@ -33,11 +33,25 @@ export class LegacyCommand implements Command{
     })
   }
 
+  private async action(params: any, options: { [key: string]: any }): Promise<string> {
+    let report: string | null = null
+    const res = await this.cmd.action(params, options, [] )
+    let data = res;
+    if (res && res.data !== undefined) {
+      data = res.data;
+    }
+    report = this.cmd.report && this.cmd.report(data, params, options);
+    return report;
+  }
+
   async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
-    let report:string | null = null
-    const data = await this.cmd.action(params, options, [] )
-    report = this.cmd.report && this.cmd.report(data, params, options)
+    const report = await this.action(params, options)
     return <Color>{report}</Color>
+  }
+
+  async json(params: any, options: { [key: string]: any }): Promise<GenericObject> {
+    const report = await this.action(params, options)
+    return JSON.parse(report);
   }
 }
 

@@ -64,7 +64,7 @@ export default class Graph extends GraphLib {
             ? workspaceComponents.find(comp => comp.id.isEqual(id))
             : undefined;
           if (!componentFromWorkspace) {
-            const componentVersion = componentFromWorkspace || (await scope.getConsumerComponent(id));
+            const componentVersion = await scope.getConsumerComponentIfExist(id);
             if (componentVersion) {
               // a component might be in the scope with only the latest version (happens when it's a nested dep)
               graph.setNode(componentVersion.id.toString(), componentVersion);

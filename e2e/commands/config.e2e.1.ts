@@ -22,17 +22,17 @@ describe('bit config', function() {
     });
 
     it('should set the config correctly', () => {
-      expect(setOutput).to.be.equal('added configuration successfully\n');
+      expect(setOutput).to.have.string('added configuration successfully\n');
     });
 
     it('should get the config correctly', () => {
-      expect(getOutput).to.be.equal('conf.value\n');
+      expect(getOutput).to.have.string('conf.value\n');
     });
 
     it('should delete the config correctly', () => {
       const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(delOutput).to.be.equal('deleted successfully\n');
-      expect(confVal).to.be.equal('undefined\n');
+      expect(delOutput).to.have.string('deleted successfully\n');
+      expect(confVal).to.be.empty.string;
     });
   });
 
