@@ -49,6 +49,7 @@ function DefaultHelpRender(props: HelpProps) {
           </Box>
         );
       })}
+      <HelpFooter/>
     </Box>
   );
   return element;
@@ -63,6 +64,12 @@ function HelpHeader() {
   );
 }
 
+function HelpFooter() {
+  const m = `please use 'bit <command> --help' for more information and guides on specific commands.`
+  return <Box>
+    <Color grey>{m}</Color>
+  </Box>
+}
 function alignCommandName(name: string, sizeToAlign = 20) {
   return `${name}${new Array(sizeToAlign - name.length).join(' ')}`;
 }
