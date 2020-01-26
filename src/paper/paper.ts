@@ -36,7 +36,7 @@ export default class Paper {
    */
   async run(): Promise<void> {
     const args = process.argv.slice(2);
-    if (args[0] && ['-h', '--help'].includes(args[0])) {
+    if ((args[0] && ['-h', '--help'].includes(args[0])) || process.argv.length === 2) {
       Help()(this.commands, this.groups);
       return;
     }
