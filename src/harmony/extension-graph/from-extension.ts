@@ -1,5 +1,5 @@
-import { AnyExtension } from '../types';
 import { Node, Edge } from 'cleargraph';
+import { AnyExtension } from '../types';
 
 /**
  * build vertices and edges from the given extension
