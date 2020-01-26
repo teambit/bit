@@ -15,7 +15,6 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
-import { LegacyCommand } from './legacy-command';
 // import { } from '../paper/'
 didYouMean.returnFirstMatch = true;
 
@@ -94,6 +93,7 @@ export function execAction(command, concrete, args) {
         loader.off();
         const code = (res && res.__code) || 0;
         if (flags.json) {
+          // eslint-disable-next-line no-console
           console.log(JSON.stringify(res, null, 2));
         } else {
           inkRender(res);
