@@ -1717,4 +1717,19 @@ describe('workspace config', function() {
       });
     });
   });
+  describe('export a component with compiler then import', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.env.importDummyCompiler();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.importComponent('bar/foo');
+    });
+    it('should not add the component into the overrides of the workspace because nothing has changed', () => {
+      const bitJson = helper.bitJson.read();
+      expect(bitJson).to.not.have.property('overrides');
+    });
+  });
 });
