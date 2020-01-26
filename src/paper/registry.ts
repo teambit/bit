@@ -1,5 +1,6 @@
 import { Command } from './command';
-import { CommandExistsError } from './exceptions';
+// eslint-disable-next-line import/named
+import { AlreadyExistsError } from './exceptions';
 
 export default class CommandRegistry {
   constructor(
@@ -15,7 +16,7 @@ export default class CommandRegistry {
   register(command: Command) {
     const key = CommandRegistry.getID(command);
     if (this.commands[key]) {
-      throw new CommandExistsError();
+      throw new AlreadyExistsError('Command', key);
     }
     this.commands[key] = command;
     return this;
@@ -25,6 +26,10 @@ export default class CommandRegistry {
    * return a command unique ID.
    */
   static getID(cmd: Command): string {
-    return cmd.name.split(' ')[0].trim();
+    return getID(cmd.name);
   }
+}
+
+export function getID(cmd: string) {
+  return cmd.split(' ')[0].trim();
 }

@@ -25,7 +25,7 @@ export interface Command {
    * `bit -h`
    * `bit`
    */
-  summery: string;
+  shortDescription: string;
 
   /**
    *  allow grouping of commands to hint summery renderer
@@ -47,6 +47,11 @@ export interface Command {
    */
   options: PaperOptions;
   commands?: Command[]
+
+  /**
+   *  Should a command be exposed to the user.
+   */
+  private?:boolean
 
   /**
    * Main command handler which is called when invoking commands

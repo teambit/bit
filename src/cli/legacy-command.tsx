@@ -4,28 +4,32 @@ import { Command, PaperOptions } from "../paper/command";
 import LegacyInterface from './command';
 import defaultErrorHandler from "./default-error-handler";
 import allHelp from './templates/all-help';
+import { getID } from '../paper/registry';
+import { Paper } from '../paper';
 
 export class LegacyCommand implements Command{
   alias: string;
   name: string;
   description: string;
   options: PaperOptions;
-  summery: string;
+  shortDescription: string;
   group: string;
   loader?: boolean;
   commands: Command[];
-
-  constructor(private cmd: LegacyInterface) {
+  private?: boolean
+  constructor(private cmd: LegacyInterface, p:Paper) {
     this.name = cmd.name;
     this.description = cmd.description;
     this.options = cmd.opts;
     this.alias = cmd.alias;
-    const {summery, group} = findLegacyDetails(cmd.name)
-    this.summery = summery
+    const commandID = getID(cmd.name)
+    const {summery, group} = findLegacyDetails(commandID, p)
+    this.shortDescription = summery
     this.group = group
     this.loader = cmd.loader
+
     this.commands = cmd.commands.map((sub) => {
-      return new LegacyCommand(sub)
+      return new LegacyCommand(sub, p)
     })
   }
 
@@ -38,17 +42,17 @@ export class LegacyCommand implements Command{
 }
 
 
-export function findLegacyDetails(name:string) {
+export function findLegacyDetails(name:string, p:Paper) {
   let group = ''
   let summery = ''
   for (let i =0; i<allHelp.length; i+=1) {
     const index = allHelp[i].commands.findIndex((command)=>command.name === name)
     // eslint-disable-next-line no-bitwise
     if (~index) {
-      group = allHelp[i].title
+      group = allHelp[i].group
       summery = allHelp[i].commands[index].description
+      !p.groups[group] && p.registerGroup(group, allHelp[i].title)
     }
   }
-
   return {group, summery}
 }

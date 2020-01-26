@@ -1,1 +1,2 @@
-export * from './command-exists';
+export { AlreadyExistsError } from './already-exists';
+export { PaperError } from './paper-error';

@@ -33,6 +33,7 @@ export default class Isolate extends Command {
   ];
   loader = true;
   remoteOp = true;
+  private = true;
 
   action(
     [id, scopePath]: [string, string | null | undefined],

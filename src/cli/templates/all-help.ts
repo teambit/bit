@@ -2,6 +2,7 @@ import { BASE_WEB_DOMAIN } from '../../constants';
 
 const allCommands = [
   {
+    group: 'start',
     title: 'start a working area',
     commands: [
       {
@@ -11,6 +12,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'component',
     title: 'add, modify and control components',
     commands: [
       {
@@ -52,6 +54,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'collaborate',
     title: 'collaborate and share components',
     commands: [
       {
@@ -93,6 +96,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'discover',
     title: 'discover components',
     commands: [
       {
@@ -106,6 +110,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'info',
     title: 'examine component history and state',
     commands: [
       {
@@ -119,6 +124,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'env',
     title: 'component environment operations',
     commands: [
       {
@@ -149,6 +155,7 @@ const allCommands = [
     ]
   },
   {
+    group: 'general',
     title: 'general commands',
     commands: [
       {

@@ -11,7 +11,7 @@ export class SnapCommand implements Command {
   public description = 'snap command';
   public alias = '';
   public group = '';
-  public summery = '';
+  public shortDescription = '';
   public options: PaperOptions = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
