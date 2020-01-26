@@ -2,6 +2,8 @@ import Extension from './extension';
 import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
+import logger from '../logger/logger';
+import defaultHandleError from '../cli/default-error-handler';
 
 async function asyncForEach(array, callback) {
   // eslint-disable-next-line no-plusplus
@@ -35,7 +37,14 @@ export default class Harmony {
     try {
       await extension.run(dependencies, this);
     } catch (err) {
-      throw new ExtensionLoadError(extension, err);
+      logger.error(
+        `failed to load extension: ${extension.name} with error: ${err.stack}. Error serialized: ${JSON.stringify(
+          err,
+          Object.getOwnPropertyNames(err)
+        )}`
+      );
+      const msg = defaultHandleError(err);
+      throw new ExtensionLoadError(extension, err, msg);
     }
   }
 

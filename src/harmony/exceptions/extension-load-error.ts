@@ -1,6 +1,6 @@
 import Extension from '../extension';
 
-export default class LoadExtensionError extends Error {
+export default class ExtensionLoadError extends Error {
   constructor(
     /**
      * failed extension
@@ -10,12 +10,19 @@ export default class LoadExtensionError extends Error {
     /**
      * extension error
      */
-    private err: Error
+    private err: Error,
+
+    /**
+     * extension formatted / handled error message
+     */
+    private msg?: string
   ) {
     super();
   }
 
   toString() {
-    return `failed to load extension: ${this.extension.name} with error: ${this.err.stack}`;
+    return `failed to load extension: ${this.extension.name} with error:
+
+${this.msg || this.err.stack}`;
   }
 }
