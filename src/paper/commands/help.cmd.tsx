@@ -33,19 +33,21 @@ function DefaultHelpRender(props: HelpProps) {
       {Object.entries(props).map(function([name, group]) {
         return (
           <Box key={name} flexDirection="column">
-            {[
               <Text bold underline key={`group_${name}`}>
                 {group.description}
-              </Text>,
-              ...Object.entries(group.commands).map(function([command, description]) {
-                return (
-                  <Text key={command}>
-                    <Color blue>{alignCommandName(command)}</Color>
-                    {description}
-                  </Text>
-                );
-              })
-            ]}
+              </Text>
+              <Box flexDirection="column">
+              {
+                Object.entries(group.commands).map(function([command, description]) {
+                  return (
+                    <Text key={command}>
+                      <Color blue>{alignCommandName(command)}</Color>
+                      {description}
+                    </Text>
+                  );
+                })
+              }
+              </Box>
           </Box>
         );
       })}
