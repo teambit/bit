@@ -31,7 +31,11 @@ export class LegacyCommand implements Command{
 
   async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
     let report:string | null = null
-    const data = await this.cmd.action(params, options, [] )
+    const res = await this.cmd.action(params, options, [] )
+    let data = res;
+    if (res && res.data !== undefined) {
+      data = res.data;
+    }
     report = this.cmd.report && this.cmd.report(data, params, options)
     return <Color>{report}</Color>
   }
