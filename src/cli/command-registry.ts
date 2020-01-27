@@ -1,4 +1,3 @@
-import { render as inkRender } from 'ink';
 import { serializeError } from 'serialize-error';
 import R from 'ramda';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -15,7 +14,8 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
-// import { } from '../paper/'
+import { RenderWithExitContext } from './context';
+
 didYouMean.returnFirstMatch = true;
 
 export function logErrAndExit(msg: Error | string, commandName: string) {
@@ -54,7 +54,7 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
   return options;
 }
 
-export function execAction(command, concrete, args) {
+export function execAction(command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
@@ -85,36 +85,43 @@ export function execAction(command, concrete, args) {
     return Promise.resolve();
   };
 
-  migrateWrapper(command.migration)
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    .then(() => {
-      const commandMain = flags.json ? 'json' : 'render';
-      return command[commandMain](relevantArgs, flags, packageManagerArgs).then(res => {
+  return (
+    migrateWrapper(command.migration)
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      .then(() => {
+        const commandMain = flags.json ? 'json' : 'render';
+        return command[commandMain](relevantArgs, flags, packageManagerArgs);
+      })
+      .then(res => {
         loader.off();
-        const code = (res && res.__code) || 0;
         if (flags.json) {
+          const code = (res && res.__code) || 0;
           // eslint-disable-next-line no-console
           console.log(JSON.stringify(res, null, 2));
-        } else {
-          inkRender(res);
+          return code;
         }
+        const result = RenderWithExitContext({ Main: res });
+        return result;
+        // eslint-disable-next-line no-console
+      })
+      .then(function(code: number) {
         return logger.exitAfterFlush(code, command.name);
-      });
-    })
-    .catch(err => {
-      logger.error(
-        `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-          err,
-          Object.getOwnPropertyNames(err)
-        )}`
-      );
-      loader.off();
-      const errorHandled = defaultHandleError(err) || command.handleError(err);
+      })
+      .catch(err => {
+        logger.error(
+          `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+            err,
+            Object.getOwnPropertyNames(err)
+          )}`
+        );
+        loader.off();
+        const errorHandled = defaultHandleError(err) || command.handleError(err);
 
-      if (command.private) return serializeErrAndExit(err, command.name);
-      if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
-      return logErrAndExit(err, command.name);
-    });
+        if (command.private) return serializeErrAndExit(err, command.name);
+        if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
+        return logErrAndExit(err, command.name);
+      })
+  );
 }
 
 function serializeErrAndExit(err, commandName) {
@@ -125,7 +132,7 @@ function serializeErrAndExit(err, commandName) {
 
 // @TODO add help for subcommands
 function registerAction(command: Command, concrete) {
-  concrete.action((...args) => {
+  return concrete.action((...args) => {
     if (!empty(command.commands)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args);
@@ -280,3 +287,4 @@ export default class CommandRegistry {
     return this;
   }
 }
+process.on('exit', function() {});

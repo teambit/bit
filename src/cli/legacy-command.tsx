@@ -6,6 +6,7 @@ import defaultErrorHandler from "./default-error-handler";
 import allHelp from './templates/all-help';
 import { getID } from '../paper/registry';
 import { Paper } from '../paper';
+import { ExitContext } from './context';
 
 export class LegacyCommand implements Command{
   alias: string;
@@ -46,7 +47,7 @@ export class LegacyCommand implements Command{
 
   async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
     const report = await this.action(params, options)
-    return <Color>{report}</Color>
+    return <LegacyRender {...{out:report, code:0 }}></LegacyRender>
   }
 
   async json(params: any, options: { [key: string]: any }): Promise<GenericObject> {
@@ -69,4 +70,16 @@ export function findLegacyDetails(name:string, p:Paper) {
     }
   }
   return {group, summery}
+}
+
+export function LegacyRender(props:{out:string, code:number}){
+  return <ExitContext.Consumer>
+    {({exit})=> {
+      setTimeout(()=> {
+        exit(props.code)
+      }, 0)
+
+      return <Color>{props.out}</Color>
+    }}
+  </ExitContext.Consumer>
 }

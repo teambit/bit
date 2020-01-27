@@ -16,7 +16,6 @@ BPromise.config({
 
 // loudRejection();
 HooksManager.init();
-
 Harmony.load(BitCliExt)
   .run()
   .then(() => {})

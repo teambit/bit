@@ -34,7 +34,7 @@ export default class Paper {
    * execute commands registered to `Paper` and the legacy bit cli.
    *
    */
-  async run(): Promise<void> {
+  async run() {
     const args = process.argv.slice(2);
     if ((args[0] && ['-h', '--help'].includes(args[0])) || process.argv.length === 2) {
       Help()(this.commands, this.groups);
@@ -48,7 +48,7 @@ export default class Paper {
 
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
     commander.packageManagerArgs = packageManagerArgs;
-    commander.parse(params);
+    return commander.parseAsync(params);
   }
 
   registerGroup(name: string, description: string) {
