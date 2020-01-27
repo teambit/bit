@@ -75,6 +75,7 @@ type installArgs = {
   rootDir: string | null | undefined; // Used for yarn workspace
   installRootPackageJson: boolean;
   installPeerDependencies: boolean;
+  installProdPackagesOnly?: boolean;
   verbose: boolean;
 };
 
