@@ -54,7 +54,7 @@ export default class CapsuleBuilder {
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options,
     consumer?: Consumer
-  ): Promise<{ [bitId: string]: ComponentCapsule }> {
+  ): Promise<{ [componentId: string]: ComponentCapsule }> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());

@@ -4,5 +4,7 @@ export default Extension.instantiate({
   name: 'Watch',
   config: {},
   dependencies: [],
-  provider: async () => {}
+  provider: async () => {
+    return {};
+  }
 });

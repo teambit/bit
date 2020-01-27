@@ -1,7 +1,7 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope/scope.api';
-
 import { Component, ComponentFactory } from '../component';
+import ComponentsList from '../consumer/component/components-list';
 
 /**
  * API of the Bit Workspace
@@ -39,18 +39,24 @@ export default class Workspace {
   }
 
   /**
-   * list all components in the workspace
-   */
-  list() {}
-
-  /**
    * provides status of all components in the workspace.
    */
   status() {}
 
   /**
+   * list all workspace components.
+   */
+  async list() {
+    const componentList = new ComponentsList(this.consumer);
+    const consumerComponents = await componentList.getAuthoredAndImportedFromFS();
+    return consumerComponents.map(consumerComponent => {
+      return this.componentFactory.fromLegacyComponent(consumerComponent);
+    });
+  }
+
+  /**
    * get a component from scope
-   * @param id
+   * @param id component ID
    */
   async get(id: string): Promise<Component> {
     const componentId = this.consumer.getParsedId(id);

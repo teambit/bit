@@ -3,6 +3,7 @@ import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './cli';
+import { ComposerExt } from './composer';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 
@@ -17,7 +18,7 @@ BPromise.config({
 // loudRejection();
 HooksManager.init();
 
-Harmony.load(BitCliExt)
+Harmony.load([BitCliExt, ComposerExt])
   .run()
   .then(() => {})
   .catch(err => {

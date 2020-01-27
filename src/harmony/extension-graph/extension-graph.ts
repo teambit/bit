@@ -38,4 +38,9 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
 
     return new ExtensionGraph(true, false, nodes, edges);
   }
+
+  static from(extensions: AnyExtension[]) {
+    const { nodes, edges } = fromExtensions(extensions);
+    return new ExtensionGraph(true, false, nodes, edges);
+  }
 }

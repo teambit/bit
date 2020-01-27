@@ -9,6 +9,7 @@ HooksManager.init();
 
 export { Extension } from './harmony';
 export { Workspace } from './workspace';
+export { Paper } from './paper';
 export { Bit } from './bit';
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {

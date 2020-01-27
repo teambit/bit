@@ -239,7 +239,8 @@
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
     "typescript": "3.7.4",
-    "verdaccio": "^4.4.1"
+    "verdaccio": "^4.4.1",
+    "@teambit/composer": "file://../composer"
   },
   "files": [
     "/bin",
