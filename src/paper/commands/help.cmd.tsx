@@ -32,7 +32,7 @@ function DefaultHelpRender(props: HelpProps) {
       <HelpHeader />
       {Object.entries(props).map(function([name, group]) {
         return (
-          <Box key={name} flexDirection="column">
+          <Box key={name} flexDirection="column" marginBottom={1}>
               <Text bold underline key={`group_${name}`}>
                 {group.description}
               </Text>
@@ -41,6 +41,7 @@ function DefaultHelpRender(props: HelpProps) {
                 Object.entries(group.commands).map(function([command, description]) {
                   return (
                     <Text key={command}>
+                      {'  '}
                       <Color blue>{alignCommandName(command)}</Color>
                       {description}
                     </Text>
