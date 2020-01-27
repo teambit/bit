@@ -16,7 +16,8 @@ export async function installPackages(
   verbose: boolean, // true shows all messages, false shows only a successful message
   installRootPackageJson = false,
   silentPackageManagerResult = false, // don't shows packageManager results at all
-  installPeerDependencies = false // also install peer dependencies
+  installPeerDependencies = false, // also install peer dependencies
+  installProdPackagesOnly = false
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
   const packageManager = consumer.config.packageManager;
@@ -44,6 +45,7 @@ export async function installPackages(
     rootDir: consumer.getPath(),
     installRootPackageJson,
     installPeerDependencies,
+    installProdPackagesOnly,
     verbose
   });
 
@@ -65,7 +67,8 @@ export async function installNpmPackagesForComponents({
   componentsWithDependencies,
   verbose = false,
   silentPackageManagerResult = false,
-  installPeerDependencies = false
+  installPeerDependencies = false,
+  installProdPackagesOnly = false
 }: {
   consumer: Consumer;
   basePath: string | null | undefined;
@@ -73,10 +76,19 @@ export async function installNpmPackagesForComponents({
   verbose: boolean;
   silentPackageManagerResult?: boolean;
   installPeerDependencies: boolean;
+  installProdPackagesOnly?: boolean;
 }): Promise<any> {
   const componentDirsRelative = getAllRootDirectoriesFor(componentsWithDependencies);
   const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
-  return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
+  return installPackages(
+    consumer,
+    componentDirs,
+    verbose,
+    false,
+    silentPackageManagerResult,
+    installPeerDependencies,
+    installProdPackagesOnly
+  );
 }
 
 export function getAllRootDirectoriesFor(
