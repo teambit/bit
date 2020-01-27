@@ -41,7 +41,7 @@ export async function getAllVersionsInfo({
   };
   const getRefToStartFrom = () => {
     if (typeof startFrom !== 'undefined') return startFrom;
-    return modelComponent.laneHeadLocal || modelComponent.getSnapHead();
+    return modelComponent.laneHeadLocal || modelComponent.getHead();
   };
   const laneHead = getRefToStartFrom();
   if (laneHead) {

@@ -169,7 +169,7 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
-  getSnapHead(id: string) {
+  getHead(id: string) {
     const comp = this.catComponent(id);
     return comp.head;
   }

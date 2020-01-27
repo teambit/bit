@@ -111,9 +111,9 @@ export default class ScopeComponentsImporter {
         return versionId.changeVersion(version);
       });
       allIdsWithAllVersions.push(...removeNils(idsWithAllVersions));
-      const snapHead = versionDependencies.component.component.getSnapHead();
-      if (snapHead) {
-        allIdsWithAllVersions.push(versionId.changeVersion(snapHead.toString()));
+      const head = versionDependencies.component.component.getHead();
+      if (head) {
+        allIdsWithAllVersions.push(versionId.changeVersion(head.toString()));
       }
     });
     if (allDepsVersions) {
@@ -266,7 +266,12 @@ export default class ScopeComponentsImporter {
 
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this.scope, undefined, context)
+        .fetch(
+          left.map(def => def.id),
+          this.scope,
+          undefined,
+          context
+        )
         .then(compsAndLanesObjects => {
           logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
           return this.scope.writeManyComponentsToModel(compsAndLanesObjects, persist, ids);
@@ -365,7 +370,12 @@ export default class ScopeComponentsImporter {
         `getExternalOnes: ${left.length} left. Fetching them from a remote`
       );
       return remotes
-        .fetch(left.map(def => def.id), this.scope, true, context)
+        .fetch(
+          left.map(def => def.id),
+          this.scope,
+          true,
+          context
+        )
         .then(compsAndLanesObjects => {
           return this.scope.writeManyComponentsToModel(compsAndLanesObjects, undefined, ids);
         })

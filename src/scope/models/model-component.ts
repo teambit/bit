@@ -118,21 +118,21 @@ export default class Component extends BitObject {
     return this.versions[version];
   }
 
-  getSnapHeadStr(): string | null {
+  getHeadStr(): string | null {
     return this.head ? this.head.toString() : null;
   }
 
-  getSnapHead(): Ref | undefined {
+  getHead(): Ref | undefined {
     return this.head;
   }
 
-  hasSnapHead() {
+  hasHead() {
     return Boolean(this.head);
   }
 
-  setSnapHead(snapHead: Ref | undefined) {
+  setHead(head: Ref | undefined) {
     if (!isLaneEnabled()) return;
-    this.head = snapHead;
+    this.head = head;
   }
 
   listVersions(sort?: 'ASC' | 'DESC'): string[] {
@@ -241,12 +241,12 @@ export default class Component extends BitObject {
   }
 
   isEmpty() {
-    return empty(this.versions) && !this.hasSnapHead();
+    return empty(this.versions) && !this.hasHead();
   }
 
   latest(): string {
     if (this.isEmpty() && !this.laneHeadLocal) return VERSION_ZERO;
-    const head = this.laneHeadLocal || this.getSnapHead();
+    const head = this.laneHeadLocal || this.getHead();
     if (head) {
       return this.getTagOfRefIfExists(head) || head.toString();
     }
@@ -266,7 +266,7 @@ export default class Component extends BitObject {
     const latestLocally = this.latest();
     const remoteHead = this.laneHeadRemote;
     if (!remoteHead) return latestLocally;
-    if (!this.laneHeadLocal && !this.hasSnapHead()) {
+    if (!this.laneHeadLocal && !this.hasHead()) {
       return remoteHead.toString(); // user never merged the remote version, so remote is the latest
     }
     // either a user is on master or a lane, check whether the remote is ahead of the local
@@ -375,7 +375,7 @@ export default class Component extends BitObject {
       }
       const versionToAddRef = Ref.from(versionToAdd);
       const existingComponentInLane = lane.getComponentByName(this.toBitId());
-      const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getSnapHead();
+      const currentHead = (existingComponentInLane && existingComponentInLane.head) || this.getHead();
       if (currentHead && !currentHead.isEqual(versionToAddRef)) {
         version.addAsOnlyParent(currentHead);
       }
@@ -385,10 +385,10 @@ export default class Component extends BitObject {
       return versionToAdd;
     }
     // user on master
-    const snapHead = this.getSnapHead();
+    const head = this.getHead();
     if (
-      snapHead &&
-      snapHead.toString() !== versionToAdd && // happens with auto-snap
+      head &&
+      head.toString() !== versionToAdd && // happens with auto-snap
       !this.hasTag(versionToAdd)
     ) {
       // happens with auto-tag
@@ -397,9 +397,9 @@ export default class Component extends BitObject {
       // if this is a hash and it's the same hash as the current head, adding it as a parent
       // results in a parent and a version has the same hash.
       // @todo: fix it in a more elegant way
-      version.addAsOnlyParent(snapHead);
+      version.addAsOnlyParent(head);
     }
-    this.setSnapHead(version.hash());
+    this.setHead(version.hash());
     if (isTag(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
     }
@@ -452,9 +452,9 @@ export default class Component extends BitObject {
     if (this.local) componentObject.local = this.local;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
-    const snapHeadStr = this.getSnapHeadStr();
+    const headStr = this.getHeadStr();
     // @ts-ignore
-    if (snapHeadStr) componentObject.head = snapHeadStr;
+    if (headStr) componentObject.head = headStr;
 
     return componentObject;
   }

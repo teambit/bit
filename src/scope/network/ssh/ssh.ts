@@ -432,9 +432,6 @@ export default class SSH implements Network {
       return payload;
     });
   }
-  // push(componentObjects: ComponentObjects): Promise<string[]> {
-  //   return this.pushMany([componentObjects]);
-  // }
 
   describeScope(): Promise<ScopeDescriptor> {
     return this.exec('_scope')

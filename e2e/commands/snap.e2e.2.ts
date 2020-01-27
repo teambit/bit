@@ -153,12 +153,12 @@ describe('bit snap command', function() {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo');
-      firstSnap = helper.command.getSnapHead('bar/foo');
+      firstSnap = helper.command.getHead('bar/foo');
       helper.command.exportAllComponents();
       scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapComponent('bar/foo');
-      secondSnap = helper.command.getSnapHead('bar/foo');
+      secondSnap = helper.command.getHead('bar/foo');
       helper.command.exportAllComponents();
     });
     describe('when the local is behind the remote', () => {
@@ -221,7 +221,7 @@ describe('bit snap command', function() {
         helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
         helper.command.snapComponent('bar/foo');
-        localHead = helper.command.getSnapHead('bar/foo');
+        localHead = helper.command.getHead('bar/foo');
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should prevent exporting the component', () => {
@@ -235,7 +235,7 @@ describe('bit snap command', function() {
           helper.command.importComponent('bar/foo --objects');
         });
         it('should not change the head in the Component object', () => {
-          const currentHead = helper.command.getSnapHead('bar/foo');
+          const currentHead = helper.command.getHead('bar/foo');
           expect(localHead).to.equal(currentHead);
         });
         it('should write the head of the remote component', () => {
@@ -275,7 +275,7 @@ describe('bit snap command', function() {
           helper.scopeHelper.getClonedLocalScope(localScope);
           helper.command.importComponent('bar/foo --objects');
           beforeMergeScope = helper.scopeHelper.cloneLocalScope();
-          beforeMergeHead = helper.command.getSnapHead('bar/foo');
+          beforeMergeHead = helper.command.getHead('bar/foo');
         });
         describe('without --no-snap flag', () => {
           let mergeOutput;
@@ -305,7 +305,7 @@ describe('bit snap command', function() {
           });
           it('should update bitmap snap', () => {
             const bitMap = helper.bitMap.read();
-            const head = helper.command.getSnapHead('bar/foo');
+            const head = helper.command.getHead('bar/foo');
             expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
             expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@${beforeMergeHead}`);
           });
@@ -362,7 +362,7 @@ describe('bit snap command', function() {
             });
             it('should update bitmap snap', () => {
               const bitMap = helper.bitMap.read();
-              const head = helper.command.getSnapHead('bar/foo');
+              const head = helper.command.getHead('bar/foo');
               expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
               expect(bitMap).to.not.have.property(`${helper.scopes.remote}/bar/foo@${beforeMergeHead}`);
             });
@@ -396,7 +396,7 @@ describe('bit snap command', function() {
         });
         it('should update bitmap snap', () => {
           const bitMap = helper.bitMap.read();
-          const head = helper.command.getSnapHead('bar/foo');
+          const head = helper.command.getHead('bar/foo');
           expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
         });
       });
@@ -425,7 +425,7 @@ describe('bit snap command', function() {
           expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${localHead}`);
         });
         it('should not generate a new merge-snap', () => {
-          const head = helper.command.getSnapHead('bar/foo');
+          const head = helper.command.getHead('bar/foo');
           expect(head).to.equal(localHead);
         });
         it('bit status should show it as component with conflict and not as pending update or modified', () => {
@@ -515,7 +515,7 @@ describe('bit snap command', function() {
           });
           it('should update bitmap snap', () => {
             const bitMap = helper.bitMap.read();
-            const head = helper.command.getSnapHead('bar/foo');
+            const head = helper.command.getHead('bar/foo');
             expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
           });
         });
@@ -558,10 +558,10 @@ describe('bit snap command', function() {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponents();
-        firstSnap = helper.command.getSnapHead('bar/foo');
+        firstSnap = helper.command.getHead('bar/foo');
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
         helper.command.snapAllComponents();
-        secondSnap = helper.command.getSnapHead('bar/foo');
+        secondSnap = helper.command.getHead('bar/foo');
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('bit diff should show the differences', () => {
@@ -629,7 +629,7 @@ describe('bit snap command', function() {
       expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
       snapOutput = helper.command.snapComponent('utils/is-type');
-      isTypeHead = helper.command.getSnapHead('utils/is-type');
+      isTypeHead = helper.command.getHead('utils/is-type');
     });
     it('should auto snap the dependencies and the nested dependencies', () => {
       expect(snapOutput).to.have.string(AUTO_SNAPPED_MSG);
@@ -643,7 +643,7 @@ describe('bit snap command', function() {
     });
     it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
-      const isStringHead = helper.command.getSnapHead('utils/is-string');
+      const isStringHead = helper.command.getHead('utils/is-string');
       expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
       expect(barFoo.dependencies[0].id.version).to.equal(isStringHead);
 

@@ -185,11 +185,11 @@ async function getComponentStatus(consumer: Consumer, id: BitId, switchProps: Sw
   const isModified = await consumer.isComponentModified(baseComponent, component);
   let mergeResults: MergeResultsThreeWay | null | undefined;
   const isHeadSameAsMaster = () => {
-    const snapHead = modelComponent.getSnapHead();
-    if (!snapHead) return false;
+    const head = modelComponent.getHead();
+    if (!head) return false;
     if (!existingBitMapId.version) return false;
-    const tagVersion = modelComponent.getTagOfRefIfExists(snapHead);
-    const headVersion = tagVersion || snapHead.toString();
+    const tagVersion = modelComponent.getTagOfRefIfExists(head);
+    const headVersion = tagVersion || head.toString();
     return existingBitMapId.version === headVersion;
   };
   if (isModified) {

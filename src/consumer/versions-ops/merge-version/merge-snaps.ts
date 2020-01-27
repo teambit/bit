@@ -190,7 +190,7 @@ export async function getComponentStatus(
   const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
     // @todo: maybe this check is not needed as we check for diverge later on
-    if (localLane || modelComponent.hasSnapHead()) {
+    if (localLane || modelComponent.hasHead()) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is already merged`);
     }
   }
@@ -360,7 +360,7 @@ export async function applyVersion({
   } else {
     // this is master
     const modelComponent = await consumer.scope.getModelComponent(id);
-    modelComponent.setSnapHead(remoteHead);
+    modelComponent.setHead(remoteHead);
     consumer.scope.objects.add(modelComponent);
   }
 

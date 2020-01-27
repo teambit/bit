@@ -52,7 +52,7 @@ describe('bit lane command', function() {
     });
     it('bit log should show both snaps', () => {
       const log = helper.command.log('bar/foo');
-      const masterSnap = helper.command.getSnapHead('bar/foo');
+      const masterSnap = helper.command.getHead('bar/foo');
       const devSnap = helper.command.getHeadOfLane('dev', 'bar/foo');
       expect(log).to.have.string(masterSnap);
       expect(log).to.have.string(devSnap);
@@ -455,9 +455,9 @@ describe('bit lane command', function() {
         switchOutput = helper.command.switchLocalLane('lane-a');
       });
       it('should indicate that it switched to the new lane', () => {
-        expect(switchOutput).to.have.string(removeChalkCharacters(
-          'successfully set "lane-a" as the active lane'
-        ) as string);
+        expect(switchOutput).to.have.string(
+          removeChalkCharacters('successfully set "lane-a" as the active lane') as string
+        );
       });
       it('bit status should not show lane-b components as staged', () => {
         const statusParsed = helper.command.statusJson();
@@ -747,7 +747,7 @@ describe('bit lane command', function() {
       });
       it('should not remove the component from .bitmap', () => {
         const bitMap = helper.bitMap.read();
-        const head = helper.command.getSnapHead('bar/foo');
+        const head = helper.command.getHead('bar/foo');
         expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@${head}`);
       });
       it('should not delete the files from the filesystem', () => {

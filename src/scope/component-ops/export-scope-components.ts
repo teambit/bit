@@ -189,7 +189,7 @@ export async function exportMany({
       const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
       await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
       componentsAndObjects.forEach(({ component }) => {
-        scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getSnapHead());
+        scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getHead());
       });
     }
 
@@ -323,7 +323,10 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObj
     const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
     const idsAndVersionsWithConflicts = R.sortBy(R.prop('id'), idsAndVersions);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const idsOfNeedUpdateComps = R.sortBy(R.prop('id'), componentsNeedUpdate.map(c => ({ id: c.id, lane: c.lane })));
+    const idsOfNeedUpdateComps = R.sortBy(
+      R.prop('id'),
+      componentsNeedUpdate.map(c => ({ id: c.id, lane: c.lane }))
+    );
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -378,8 +381,8 @@ async function convertToCorrectScope(
             versions[version] = Ref.from(hashAfter);
           }
         });
-        if (componentsObjects.component.getSnapHeadStr() === hashBefore) {
-          componentsObjects.component.setSnapHead(Ref.from(hashAfter));
+        if (componentsObjects.component.getHeadStr() === hashBefore) {
+          componentsObjects.component.setHead(Ref.from(hashAfter));
         }
         versionsObjects.forEach(versionObj => {
           versionObj.parents = versionObj.parents.map(parent => {

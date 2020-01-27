@@ -16,7 +16,7 @@ export async function getDivergeData(
   remoteHead: Ref | null,
   throws = true
 ): Promise<DivergeData> {
-  const localHead = modelComponent.laneHeadLocal || modelComponent.getSnapHead();
+  const localHead = modelComponent.laneHeadLocal || modelComponent.getHead();
   if (!remoteHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);

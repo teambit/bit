@@ -135,7 +135,7 @@ export default class Lane extends BitObject {
           unmerged.push(component.id);
           return;
         }
-        const startTraverseFrom = modelComponent.getSnapHead() || null; // it's important to have it as null and not as undefined, see hasVersionByRef
+        const startTraverseFrom = modelComponent.getHead() || null; // it's important to have it as null and not as undefined, see hasVersionByRef
         const headExist = await hasVersionByRef(modelComponent, component.head, scope.objects, startTraverseFrom);
         if (headExist) merged.push(component.id);
         else unmerged.push(component.id);
