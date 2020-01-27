@@ -48,7 +48,8 @@ export default class Paper {
 
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
     commander.packageManagerArgs = packageManagerArgs;
-    return commander.parseAsync(params);
+    await commander.parseAsync(params);
+    return;
   }
 
   registerGroup(name: string, description: string) {

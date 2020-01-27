@@ -15,7 +15,7 @@ export async function CLIProvider(config: {}, [paper, bit]: BitCLIDeps) {
     return p;
   }, paper);
 
-  bit.onExtensionsLoaded.subscribe(async () => {
+  bit.onExtensionsLoaded.subscribe(() => {
     const pr = bitCLI.run();
     return pr;
   });

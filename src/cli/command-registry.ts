@@ -4,6 +4,8 @@ import R from 'ramda';
 import commander from 'commander';
 import chalk from 'chalk';
 import didYouMean from 'didyoumean';
+import { render } from 'ink';
+
 import Command from './command';
 import { Commands } from '../extensions/extension';
 import { migrate } from '../api/consumer';
@@ -14,7 +16,6 @@ import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import globalFlags from './global-flags';
-import { RenderWithExitContext } from './context';
 
 didYouMean.returnFirstMatch = true;
 
@@ -84,7 +85,6 @@ export function execAction(command, concrete, args): Promise<any> {
     }
     return Promise.resolve();
   };
-
   return (
     migrateWrapper(command.migration)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -92,7 +92,7 @@ export function execAction(command, concrete, args): Promise<any> {
         const commandMain = flags.json ? 'json' : 'render';
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })
-      .then(res => {
+      .then(async res => {
         loader.off();
         if (flags.json) {
           const code = (res && res.__code) || 0;
@@ -100,8 +100,9 @@ export function execAction(command, concrete, args): Promise<any> {
           console.log(JSON.stringify(res, null, 2));
           return code;
         }
-        const result = RenderWithExitContext({ Main: res });
-        return result;
+        const { waitUntilExit } = render(res);
+        await waitUntilExit();
+        return 0;
         // eslint-disable-next-line no-console
       })
       .then(function(code: number) {

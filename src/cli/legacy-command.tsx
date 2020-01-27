@@ -1,4 +1,4 @@
-import { Color } from 'ink';
+import { Color, AppContext } from 'ink';
 import React from 'react';
 import { Command, PaperOptions, GenericObject } from "../paper/command";
 import LegacyInterface from './command';
@@ -73,13 +73,13 @@ export function findLegacyDetails(name:string, p:Paper) {
 }
 
 export function LegacyRender(props:{out:string, code:number}){
-  return <ExitContext.Consumer>
+  return <AppContext.Consumer>
     {({exit})=> {
       setTimeout(()=> {
-        exit(props.code)
+        exit()
       }, 0)
 
       return <Color>{props.out}</Color>
     }}
-  </ExitContext.Consumer>
+  </AppContext.Consumer>
 }
