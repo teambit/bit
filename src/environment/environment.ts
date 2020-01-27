@@ -68,6 +68,7 @@ export default class Environment {
       installNpmPackages: !!opts.installNpmPackages, // convert to boolean
       installPeerDependencies: !!opts.installPeerDependencies, // convert to boolean
       addToRootPackageJson: false,
+      installProdPackagesOnly: opts.installProdPackagesOnly,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult

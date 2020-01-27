@@ -38,6 +38,7 @@ export interface IsolateOptions {
   installNpmPackages?: boolean; // Install the package dependencies
   keepExistingCapsule?: boolean; // Do not delete the capsule after using it (useful for incremental builds)
   installPeerDependencies?: boolean; // Install the peer package dependencies
+  installProdPackagesOnly?: boolean;
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
   silentPackageManagerResult?: boolean; // Print environment install result

@@ -87,6 +87,7 @@ const _installInOneDirectory = ({
   packageManagerArgs = [],
   packageManagerProcessOptions = {},
   dir,
+  installProdPackagesOnly = false,
   verbose = false
 }): Promise<PackageManagerResults> => {
   // Handle process options
@@ -114,14 +115,15 @@ const _installInOneDirectory = ({
     // we may want to use it later. For now, it print too much information
     // concretePackageManagerArgs.push('--verbose');
   }
+  if (installProdPackagesOnly) {
+    concretePackageManagerArgs.push('--production');
+  }
 
   fs.ensureDirSync(path.join(cwd, 'node_modules'));
   logger.debug(
-    `installing npm packages using ${packageManager} at ${cwd} with options:`,
-    concretePackageManagerProcessOptions,
-    `and args: ${concretePackageManagerArgs}`
+    `installing npm packages using ${packageManager} at ${cwd} with args: ${concretePackageManagerArgs} and options:`,
+    concretePackageManagerProcessOptions
   );
-
   // Set the shell to true to prevent problems with post install scripts when running as root
   const packageManagerClientName = packageManager;
   const childProcess = execa(
@@ -227,6 +229,7 @@ const _installInOneDirectoryWithPeerOption = async ({
   packageManagerProcessOptions = {},
   dir,
   installPeerDependencies = false,
+  installProdPackagesOnly = false,
   verbose = false
 }): Promise<PackageManagerResults | PackageManagerResults[]> => {
   const rootDirResults = await _installInOneDirectory({
@@ -237,6 +240,7 @@ const _installInOneDirectoryWithPeerOption = async ({
     dir,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     installPeerDependencies,
+    installProdPackagesOnly,
     verbose
   });
 
@@ -249,6 +253,7 @@ const _installInOneDirectoryWithPeerOption = async ({
       packageManagerArgs,
       packageManagerProcessOptions,
       dir,
+      installProdPackagesOnly,
       verbose
     });
     return [rootDirResults, peerResults];
@@ -269,6 +274,7 @@ const installAction = async ({
   rootDir,
   installRootPackageJson = false,
   installPeerDependencies = false,
+  installProdPackagesOnly = false,
   verbose = false
 }: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
@@ -281,6 +287,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir: rootDir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
   }
@@ -297,6 +304,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir: rootDir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
     if (Array.isArray(rootDirResults)) {
@@ -318,6 +326,7 @@ const installAction = async ({
       packageManagerProcessOptions,
       dir,
       installPeerDependencies,
+      installProdPackagesOnly,
       verbose
     });
 
