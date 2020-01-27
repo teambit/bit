@@ -1,8 +1,10 @@
 import { Scope } from '../scope/scope.api';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
+import { ListCmd } from './list.cmd';
+import { Paper } from '../paper';
 
-export type WorkspaceDeps = [Scope, ComponentFactory];
+export type WorkspaceDeps = [Scope, ComponentFactory, Paper];
 
 export type WorkspaceConfig = {
   /**
@@ -11,10 +13,13 @@ export type WorkspaceConfig = {
   defaultScope: string;
 };
 
-export default async function provideWorkspace(config: WorkspaceConfig, [scope, component]: WorkspaceDeps) {
+export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, paper]: WorkspaceDeps) {
   const consumer = scope.consumer;
   if (consumer) {
-    return new Workspace(consumer, scope, component);
+    const workspace = new Workspace(consumer, scope, component);
+    paper.register(new ListCmd(workspace));
+    return workspace;
   }
+
   return undefined;
 }

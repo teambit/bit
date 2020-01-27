@@ -13,7 +13,6 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": "./src",
     "outDir": "./dist"
   },
   "include": [

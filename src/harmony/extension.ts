@@ -1,4 +1,4 @@
-import { ProviderFn } from './extension.provider';
+import { ProviderFn } from './types';
 import Harmony from './harmony';
 
 export type ExtensionProps<Conf, Deps> = {

@@ -62,7 +62,7 @@ export default class Component {
   /**
    * isolates the component in a capsule.
    */
-  async capsule() {
+  async isolate() {
     const id = this.id.toString();
     const capsules = await this.capsuleOrchestrator.isolateComponents([id]);
     return capsules[id];

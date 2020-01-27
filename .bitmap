@@ -13,17 +13,5 @@
         "origin": "AUTHORED",
         "exported": true
     },
-    "wix/stylable": {
-        "files": [
-            {
-                "relativePath": "src/plugins/wix/stylable.js",
-                "test": false,
-                "name": "stylable.js"
-            }
-        ],
-        "mainFile": "src/plugins/wix/stylable.js",
-        "origin": "AUTHORED",
-        "exported": false
-    },
     "version": "14.7.2"
 }

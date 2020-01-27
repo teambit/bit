@@ -5,7 +5,8 @@ import { ExtensionLoadError } from './exceptions';
 import logger from '../logger/logger';
 import defaultHandleError from '../cli/default-error-handler';
 
-async function asyncForEach(array, callback) {
+// TODO: refactor to generics
+async function asyncForEach(array: any, callback: any) {
   // eslint-disable-next-line no-plusplus
   for (let index = 0; index < array.length; index++) {
     // eslint-disable-next-line no-await-in-loop
@@ -48,15 +49,21 @@ export default class Harmony {
     }
   }
 
+  /**
+   * execute harmony.
+   */
   async run() {
     const executionOrder = this.graph.byExecutionOrder();
-    await asyncForEach(executionOrder, async ext => {
+    await asyncForEach(executionOrder, async (ext: Extension) => {
       await this.runOne(ext);
     });
   }
 
-  static load(extension: Extension<any, any>) {
-    const graph = ExtensionGraph.fromRootExtension(extension);
+  /**
+   * load harmony from a root extension
+   */
+  static load(extensions: Extension<any, any>[]) {
+    const graph = ExtensionGraph.from(extensions);
     return new Harmony(graph);
   }
 }
