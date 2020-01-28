@@ -15,17 +15,42 @@ describe('bit link', function() {
 
   describe('author components', () => {
     describe('before export', () => {
-      let linkOutput;
+      let beforeLink;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
         helper.fixtures.addComponentUtilsIsType();
-        linkOutput = helper.command.runCmd('bit link');
+        beforeLink = helper.scopeHelper.cloneLocalScope();
       });
-      it('should create links while the paths do not have scope name (until export)', () => {
-        expect(linkOutput).to.have.string(path.normalize('node_modules/@bit/utils.is-type/utils/is-type.js'));
-        expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
+      describe('when scopeDefault is not set', () => {
+        let linkOutput;
+        before(() => {
+          linkOutput = helper.command.runCmd('bit link');
+        });
+        it('should create links although the paths do not have scope name (until export)', () => {
+          expect(linkOutput).to.have.string(path.normalize('node_modules/@bit/utils.is-type/utils/is-type.js'));
+          expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
+        });
+      });
+      describe('when scopeDefault is set', () => {
+        let linkOutput;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeLink);
+          const bitJson = helper.bitJson.read();
+          bitJson.defaultScope = helper.scopes.remote;
+          helper.bitJson.write(bitJson);
+          linkOutput = helper.command.runCmd('bit link');
+        });
+        it('should create links consist of the defaultScope', () => {
+          expect(linkOutput).to.have.string(
+            path.normalize(`node_modules/@bit/${helper.scopes.remote}.utils.is-type/utils/is-type.js`)
+          );
+          expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
+          expect(
+            path.join(helper.scopes.localPath, `node_modules/@bit/${helper.scopes.remote}.utils.is-type`)
+          ).to.be.a.directory();
+        });
       });
     });
     describe('after export', () => {
