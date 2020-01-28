@@ -53,17 +53,26 @@ export default class Harmony {
    * execute harmony.
    */
   async run() {
-    const executionOrder = this.graph.byExecutionOrder();
-    await asyncForEach(executionOrder, async (ext: Extension) => {
-      await this.runOne(ext);
-    });
+    try {
+      const executionOrder = this.graph.byExecutionOrder();
+      await asyncForEach(executionOrder, async (ext: Extension) => {
+        await this.runOne(ext);
+      });
+    } catch (e) {
+      console.log('got an error during running harmony');
+      console.log(e);
+    }
   }
 
   /**
    * load harmony from a root extension
    */
   static load(extensions: Extension<any, any>[]) {
-    const graph = ExtensionGraph.from(extensions);
-    return new Harmony(graph);
+    try {
+      const graph = ExtensionGraph.from(extensions);
+      return new Harmony(graph);
+    } catch (e) {
+      console.log('got an error during loading harmony', e);
+    }
   }
 }

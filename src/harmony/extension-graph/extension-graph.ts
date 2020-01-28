@@ -36,11 +36,11 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
   static fromRootExtension(extension: AnyExtension) {
     const { nodes, edges } = fromExtension(extension);
 
-    return new ExtensionGraph(true, false, nodes, edges);
+    return new ExtensionGraph(true, nodes, edges);
   }
 
   static from(extensions: AnyExtension[]) {
     const { nodes, edges } = fromExtensions(extensions);
-    return new ExtensionGraph(true, false, nodes, edges);
+    return new ExtensionGraph(true, nodes, edges);
   }
 }

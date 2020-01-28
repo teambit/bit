@@ -1,26 +1,22 @@
-import { Node, Edge } from 'cleargraph';
+import { ExtensionNode } from './extension-node';
+import { ExtensionEdge } from './extension-edge';
 import { AnyExtension } from '../types';
-
 /**
  * build vertices and edges from the given extension
  */
 export function fromExtension(extension: AnyExtension) {
-  const nodes: { [id: string]: Node<AnyExtension> } = {};
-  let edges: Edge<string>[] = [];
+  const nodes: { [id: string]: ExtensionNode } = {};
+  let edges: ExtensionEdge[] = [];
   // extension.
 
   function iterate(root: AnyExtension) {
     const id = root.name;
     if (nodes[id]) return;
 
-    nodes[id] = new Node<AnyExtension>(id, root);
+    nodes[id] = new ExtensionNode(id, root);
 
     const newEdges = root.dependencies.map((dep: AnyExtension) => {
-      return Edge.fromObject({
-        sourceKey: id,
-        targetKey: dep.name,
-        data: 'dependency'
-      });
+      return new ExtensionEdge(id, dep.name, 'dependency');
     });
 
     edges = edges.concat(newEdges);
