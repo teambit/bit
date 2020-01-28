@@ -56,7 +56,7 @@ export class LegacyCommand implements Command{
   }
 }
 
-
+// TODO: remove all help and move information to commands
 export function findLegacyDetails(name:string, p:Paper) {
   let group = ''
   let summery = ''

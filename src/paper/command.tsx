@@ -10,16 +10,9 @@ export interface Command {
   name: string;
 
   /**
-   * The description of the command. Will be seen in bit command help .
-   *  `bit add --help`
+   * command alias (for example: 't' for 'tag')
    */
-  description: string;
-
-  /**
-   * should turn on Loader
-   */
-  loader?: boolean
-
+  alias: string;
   /**
    * Description of the command in commands summery
    * `bit -h`
@@ -28,15 +21,26 @@ export interface Command {
   shortDescription: string;
 
   /**
-   *  allow grouping of commands to hint summery renderer
+   * The description of the command. Will be seen in bit command help .
+   *  `bit add --help`
    */
+  description: string;
 
+  /**
+   *  allow grouping of commands to hint summery renderer
+   *  Places in default automatic help
+   */
   group:string
 
-   /**
-   * command alias (for example: 't' for 'tag')
+  /**
+   *  Should a command be exposed to the user.
    */
-  alias: string;
+  private?:boolean
+
+  /**
+   * should turn on Loader
+   */
+  loader?: boolean
 
   /**
    * Array of command options where each element is a tuple.
@@ -46,12 +50,8 @@ export interface Command {
    *
    */
   options: PaperOptions;
-  commands?: Command[]
 
-  /**
-   *  Should a command be exposed to the user.
-   */
-  private?:boolean
+  commands?: Command[]
 
   /**
    * Main command handler which is called when invoking commands
@@ -59,16 +59,20 @@ export interface Command {
    * @param options - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
-  render: (params: any, options: { [key: string]: any }) => Promise<React.ReactElement>;
-  /**
+   render: (args: CLIArgs, flags: Flags ) => Promise<React.ReactElement>;
+
+   /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j' option is provided by user.
    * @param params  - arguments object as defined in name.
    * @param options - command flags as described in options.
    * @return a GenericObject to be rendered to string in the console.
    */
-  json?: (params: any, options: { [key: string]: any }) => GenericObject;
-}
 
+  json?: (args: CLIArgs, flags: Flags) => GenericObject;
+}
+export type Flags = {[flagName:string]: CLIArgs | boolean | undefined}
+export type CLIArgs =  Array<string | string[]>
 export type GenericObject = { [k: string]: any };
 export type PaperOptions = CommandOptions;
+

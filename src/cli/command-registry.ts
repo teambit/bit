@@ -89,6 +89,7 @@ export function execAction(command, concrete, args): Promise<any> {
     migrateWrapper(command.migration)
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
+        debugger;
         const commandMain = flags.json ? 'json' : 'render';
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })
