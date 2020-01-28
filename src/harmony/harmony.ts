@@ -53,15 +53,10 @@ export default class Harmony {
    * execute harmony.
    */
   async run() {
-    try {
-      const executionOrder = this.graph.byExecutionOrder();
-      await asyncForEach(executionOrder, async (ext: Extension) => {
-        await this.runOne(ext);
-      });
-    } catch (e) {
-      console.log('got an error during running harmony');
-      console.log(e);
-    }
+    const executionOrder = this.graph.byExecutionOrder();
+    await asyncForEach(executionOrder, async (ext: Extension) => {
+      await this.runOne(ext);
+    });
   }
 
   /**
