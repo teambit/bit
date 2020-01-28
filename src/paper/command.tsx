@@ -51,12 +51,16 @@ export interface Command {
    */
   options: PaperOptions;
 
+  /**
+   * sub commands for example:
+   * bit capsule list to list active capsules.
+   */
   commands?: Command[]
 
   /**
    * Main command handler which is called when invoking commands
-   * @param params  - arguments object as defined in name.
-   * @param options - command flags as described in options.
+   * @param args  - arguments object as defined in name.
+   * @param args - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
    render: (args: CLIArgs, flags: Flags ) => Promise<React.ReactElement>;

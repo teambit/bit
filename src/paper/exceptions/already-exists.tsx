@@ -7,6 +7,6 @@ export class AlreadyExistsError extends PaperError {
     super(`${type} ${name} already exists.`)
   }
   render(){
-    return Promise.resolve(<Color red>{this.message}</Color>)
+    return <Color red>{this.message}</Color>
   }
 }

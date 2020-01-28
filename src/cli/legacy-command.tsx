@@ -2,11 +2,9 @@ import { Color, AppContext } from 'ink';
 import React from 'react';
 import { Command, PaperOptions, GenericObject } from "../paper/command";
 import LegacyInterface from './command';
-import defaultErrorHandler from "./default-error-handler";
 import allHelp from './templates/all-help';
 import { getID } from '../paper/registry';
 import { Paper } from '../paper';
-import { ExitContext } from './context';
 
 export class LegacyCommand implements Command{
   alias: string;

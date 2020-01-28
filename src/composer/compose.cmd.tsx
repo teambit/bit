@@ -22,13 +22,13 @@ export default class ComposeCmd implements Command {
     return new Promise(async (resolve, reject) => {
       const components = await this.workspace.list();
       const capsules = await this.capsule.create(components);
-      
+
       start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
         map[componentId] = capsules[componentId].wrkDir;
         return map;
       }, {}));
 
-      // return <Color green>{component.id.toString()}</Color>  
+      // return <Color green>{component.id.toString()}</Color>
     });
   }
 }
