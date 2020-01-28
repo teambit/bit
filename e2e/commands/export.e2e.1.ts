@@ -591,6 +591,26 @@ describe('bit export command', function() {
           expect(output).to.not.have.string('the following component(s) were not exported');
         });
       });
+      describe('export with no remote and no flags when workspace config has defaultScope overridden for this component', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.bitJson.addKeyVal(undefined, 'defaultScope', 'my-general-remote');
+          helper.bitJson.addOverrides({ foo2: { defaultScope: helper.scopes.remote } });
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully both, the id with and without the scope', () => {
+          expect(output).to.have.string('exported the following 2 component');
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(2);
+          expect(remoteList[0].id).to.have.string('foo1');
+          expect(remoteList[1].id).to.have.string('foo2');
+        });
+        it('should not show a warning about ids with missing scope', () => {
+          expect(output).to.not.have.string('the following component(s) were not exported');
+        });
+      });
     });
     describe('some components were exported to one scope and other to another scope', () => {
       let localScopeBefore;

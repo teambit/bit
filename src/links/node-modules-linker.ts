@@ -111,7 +111,7 @@ export default class NodeModuleLinker {
       bindingPrefix,
       componentId,
       true,
-      this._getWorkspaceDefaultScope()
+      this._getDefaultScope(component)
     );
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -141,7 +141,10 @@ export default class NodeModuleLinker {
     await this._populateDependenciesAndMissingLinks(component);
   }
 
-  _getWorkspaceDefaultScope(): string | undefined | null {
+  _getDefaultScope(component?: Component): string | undefined | null {
+    if (component && component.overrides.defaultScope) {
+      return component.overrides.defaultScope;
+    }
     return this.consumer ? this.consumer.config.defaultScope : null;
   }
 
@@ -157,7 +160,7 @@ export default class NodeModuleLinker {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
       const dest = path.join(
-        getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true, this._getWorkspaceDefaultScope()),
+        getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true, this._getDefaultScope(component)),
         file
       );
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
@@ -192,7 +195,7 @@ export default class NodeModuleLinker {
         component.bindingPrefix,
         component.id.changeScope(null),
         true,
-        this._getWorkspaceDefaultScope()
+        this._getDefaultScope(component)
       );
       this.dataToPersist.removePath(new RemovePath(previousDest));
     }
@@ -290,12 +293,7 @@ export default class NodeModuleLinker {
     rootDir: PathOsBasedRelative,
     bindingPrefix: string
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(
-      bindingPrefix,
-      bitId,
-      true,
-      this._getWorkspaceDefaultScope()
-    );
+    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this._getDefaultScope());
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
@@ -312,7 +310,7 @@ export default class NodeModuleLinker {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(
-      getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true, this._getWorkspaceDefaultScope())
+      getNodeModulesPathOfComponent(component.bindingPrefix, component.id, true, this._getDefaultScope(component))
     );
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toVinylFile());
