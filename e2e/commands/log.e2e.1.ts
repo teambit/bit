@@ -12,7 +12,7 @@ describe('bit log', function() {
   describe('when a component does not have all versions in the scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.command.tagScope('2.0.0', 'new-tagging-message');

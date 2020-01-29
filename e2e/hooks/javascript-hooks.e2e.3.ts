@@ -3,6 +3,7 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
+import * as fixtures from '../../src/fixtures/fixtures';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 
 const helper = new Helper();
@@ -47,8 +48,7 @@ describe('javascript-hooks', function() {
   describe('import component with internals files', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile(path.join('utils', 'internals'), 'is-type.js', isTypeFixture);
+      helper.fs.createFile(path.join('utils', 'internals'), 'is-type.js', fixtures.isType);
       const isStringFixture =
         "const isType = require('./internals/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);

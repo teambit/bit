@@ -18,7 +18,7 @@ describe('capsule', function() {
     const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
@@ -48,7 +48,7 @@ describe('capsule', function() {
     const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
       fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
@@ -118,7 +118,7 @@ describe('capsule', function() {
     const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -133,7 +133,7 @@ describe('capsule', function() {
     const capsuleDir = helper.general.generateRandomTmpDirName();
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -419,7 +419,7 @@ describe('capsule', function() {
   describe('test in capsule', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.env.importDummyTester('capsule');
 
       helper.npm.installNpmPackage('chai', '4.1.2');

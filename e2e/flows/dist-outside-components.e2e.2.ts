@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
@@ -51,8 +52,7 @@ describe('dists file are written outside the components dir', function() {
      */
     before(() => {
       helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -115,16 +115,11 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     before(() => {
       helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
       helper.scopeHelper.reInitRemoteScope();
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringES6);
       helper.fixtures.addComponentUtilsIsString();
-      const fooBarFixture =
-        "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
-      helper.fixtures.createComponentBarFoo(fooBarFixture);
+      helper.fixtures.createComponentBarFoo(fixtures.barFooES6);
       helper.fixtures.addComponentBarFoo();
       clonedScope = helper.scopeHelper.cloneLocalScope();
     });
@@ -326,8 +321,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     before(() => {
       helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
       helper.scopeHelper.reInitRemoteScope();
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -384,8 +378,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.bitJson.write(bitJson);
 
-      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-      helper.fs.createFile('src/utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('src/utils', 'is-type.js', fixtures.isTypeES6);
       helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       const isStringFixture = `import isType from 'utils/is-type';
  export default function isString() { return isType() +  ' and got is-string'; };`;
@@ -446,8 +439,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           }
           helper.command.importComponent('utils/is-string');
 
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+          helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeES6);
           helper.fixtures.addComponentUtilsIsType();
           helper.command.tagAllComponents();
           helper.command.exportAllComponents();
