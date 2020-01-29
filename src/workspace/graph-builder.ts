@@ -7,7 +7,10 @@ import ComponentsList from '../consumer/component/components-list';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 
 // TODO: Change to component graph
+// @ts-ignore
 export async function buildGraph(consumer: Consumer): Promise<Graph<Component, any>> {
+  // TODO: fix me
+  // @ts-ignore
   const graph = new Graph<Component, any>();
   const componentsList = new ComponentsList(consumer);
   // const allModelComponents: ModelComponent[] = await consumer.scope.list();

@@ -66,6 +66,8 @@ const VERSION_ZERO = '0.0.0';
  * we can't rename the class as ModelComponent because old components are already saved in the model
  * with 'Component' in their headers. see object-registrar.types()
  */
+// TODO: FIX me .parser
+// @ts-ignore
 export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;

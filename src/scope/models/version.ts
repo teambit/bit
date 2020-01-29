@@ -83,6 +83,7 @@ export type VersionProps = {
 /**
  * Represent a version model in the scope
  */
+// @ts-ignore
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
