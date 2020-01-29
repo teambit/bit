@@ -9,5 +9,5 @@ import { Component } from '../component';
  * @interface ComponentHost
  */
 export default interface ComponentHost {
-  get: (id: string | ComponentID) => Promise<Component>;
+  get: (id: string | ComponentID) => Promise<Component | undefined>;
 }

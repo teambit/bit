@@ -3,6 +3,7 @@ import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { ListCmd } from './list.cmd';
 import { Paper } from '../paper';
+import { loadConsumerIfExist } from '../consumer';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Paper];
 
@@ -14,7 +15,7 @@ export type WorkspaceConfig = {
 };
 
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, paper]: WorkspaceDeps) {
-  const consumer = scope.consumer;
+  const consumer = await loadConsumerIfExist();
   if (consumer) {
     const workspace = new Workspace(consumer, scope, component);
     paper.register(new ListCmd(workspace));
