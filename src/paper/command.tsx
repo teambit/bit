@@ -12,25 +12,25 @@ export interface Command {
   /**
    * command alias (for example: 't' for 'tag')
    */
-  alias: string;
+  alias?: string;
   /**
    * Description of the command in commands summery
    * `bit -h`
    * `bit`
    */
-  shortDescription: string;
+  shortDescription?: string;
 
   /**
    * The description of the command. Will be seen in bit command help .
    *  `bit add --help`
    */
-  description: string;
+  description?: string;
 
   /**
    *  allow grouping of commands to hint summery renderer
    *  Places in default automatic help
    */
-  group:string
+  group?:string
 
   /**
    *  Should a command be exposed to the user.
@@ -49,7 +49,7 @@ export interface Command {
    * ['j', 'json', 'output json command']
    *
    */
-  options: PaperOptions;
+  options?: PaperOptions;
 
   /**
    * sub commands for example:

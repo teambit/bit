@@ -15,11 +15,25 @@ export default class Paper {
     private registry: CommandRegistry
   ) {}
 
+  private setDefaults(command: Command) {
+    const defaults = {
+      alias: '',
+      description: '',
+      shortDescription: '',
+      group: 'extensions',
+      options: [],
+      private: false,
+      loader: false,
+      commands: []
+    };
+    return Object.assign({}, defaults, command);
+  }
   /**
    * registers a new command in to `Paper`.
    */
   register(command: Command) {
-    this.registry.register(command);
+    const commandWithDefaults = this.setDefaults(command);
+    this.registry.register(commandWithDefaults);
     return this;
   }
 
