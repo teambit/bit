@@ -33,7 +33,7 @@ export class SnapCommand implements Command {
   constructor(private snapApi: Snap) {}
 
   render(
-    [id, version]: string[],
+    [id, version]: any,
     {
       message = '',
       all,
@@ -102,7 +102,8 @@ export class SnapCommand implements Command {
     };
 
     const snapResult = this.snapApi.snap(snapOptions);
-    // console.log('result', snapResult);
+    // eslint-disable-next-line no-console
+    console.log('result', snapResult);
     return Promise.resolve(<Color green>snap run finished</Color>);
   }
 }
