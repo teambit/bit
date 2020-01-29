@@ -2,7 +2,7 @@ import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';
 import Capsule from '../capsule/capsule';
 import Bit from './bit';
-import { Harmony } from '../harmony';
+import { Harmony } from '../../extensions/harmony';
 
 export type BitDeps = [Workspace, Scope, Capsule];
 

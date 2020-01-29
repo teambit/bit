@@ -1,4 +1,4 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../extensions/harmony';
 import componentGraphBuilderProvider from './component-graph-builder.provider';
 import { ComponentResolverExt } from '../component-resolver-ext';
 

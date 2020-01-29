@@ -1,4 +1,4 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../extensions/harmony';
 import CapsuleFactory from './capsule';
 
 export default Extension.instantiate({

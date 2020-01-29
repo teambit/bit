@@ -2,8 +2,8 @@
 'use strict'; // eslint-disable-line
 // require('v8-compile-cache');
 
-const constants = require('../dist/constants');
-const { printWarning } = require('../dist/logger/logger');
+const constants = require('../dist/src/constants');
+const { printWarning } = require('../dist/src/logger/logger');
 
 const MINIMUM_NODE_VERSION = '8.12.0';
 
@@ -76,12 +76,12 @@ function getCompatibilityStatus() {
 // }
 
 function loadCli() {
-  return require('../dist/app.js');
+  return require('../dist/src/app.js');
 }
 
 function promptAnalyticsIfNeeded(cb) {
   // this require is needed here because bit caches are not created yet and will cause exception
-  const { Analytics } = require('../dist/analytics/analytics');
+  const { Analytics } = require('../dist/src/analytics/analytics');
   return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2)).then(() => cb());
   // .catch(() => console.log(chalk.yellow('\noperation aborted')));
 }

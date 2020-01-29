@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 import * as BPromise from 'bluebird';
-import { Harmony } from './harmony';
+import { Harmony } from '../extensions/harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './cli';
 import { ComposerExt } from './composer';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
+import logger from './logger/logger';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -17,7 +18,7 @@ BPromise.config({
 
 // loudRejection();
 HooksManager.init();
-Harmony.load([BitCliExt, ComposerExt])
+Harmony.load([BitCliExt, ComposerExt], logger.logger)
   .run()
   .then(() => {})
   .catch(err => {

@@ -1,7 +1,7 @@
 import { CLIProvider } from './cli.provider';
 import { PaperExt } from '../paper';
 import { BitExt } from '../bit';
-import { Extension } from '../harmony';
+import { Extension } from '../../extensions/harmony';
 
 export default Extension.instantiate({
   name: 'BitCli',

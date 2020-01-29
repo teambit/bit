@@ -3,9 +3,9 @@ import { CapsuleOptions } from '../capsule/orchestrator/types';
 import { Workspace } from '../workspace';
 import { Scope } from '../scope/scope.api';
 import { Capsule } from '../capsule';
-import { AnyExtension } from '../harmony/types';
+import { AnyExtension } from '../../extensions/harmony/types';
 import { BitIds as ComponentIds, BitId as ComponentId } from '../bit-id';
-import { Harmony } from '../harmony';
+import { Harmony } from '../../extensions/harmony';
 
 export default class Bit {
   constructor(

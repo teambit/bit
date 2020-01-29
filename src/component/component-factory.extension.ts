@@ -1,4 +1,4 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../extensions/harmony';
 import { CapsuleExt } from '../capsule';
 import componentProvider from './component.provider';
 
