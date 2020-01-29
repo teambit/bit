@@ -1,10 +1,10 @@
 import { Extension } from '../harmony';
 import componentGraphBuilderProvider from './component-graph-builder.provider';
-import { BitExt } from '../bit';
+import { ComponentResolverExt } from '../component-resolver-ext';
 
 export default Extension.instantiate({
   name: 'ComponentGraphBuilder',
-  dependencies: [BitExt],
+  dependencies: [ComponentResolverExt],
   config: {},
   provider: componentGraphBuilderProvider
 });

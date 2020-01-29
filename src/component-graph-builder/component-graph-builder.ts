@@ -1,3 +1,3 @@
 export default class ComponentGraphBuilder {
-  constructor(ComponentHost) {}
+  constructor(readonly ComponentResolver) {}
 }
