@@ -74,11 +74,13 @@ export default class FsContainer implements Container<Exec, AnyFS> {
       shell: true,
       cwd
     });
+
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     subprocessP.stdout!.pipe(exec.stdout);
     subprocessP.stderr!.pipe(exec.stderr);
-    const result = await subprocessP;
-    exec.setStatus(result.exitCode);
+    subprocessP.on('close', function(statusCode) {
+      exec.setStatus(statusCode);
+    });
     return exec;
   }
 
