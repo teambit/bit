@@ -9,6 +9,16 @@ export default class ComponentID {
   ) {}
 
   /**
+   * An access to the legacy id. DO NOT USE THIS
+   *
+   * @readonly
+   * @memberof ComponentID
+   */
+  get _legacy() {
+    return this.legacyComponentId;
+  }
+
+  /**
    * resolves the version of the component ID.
    */
   get version() {

@@ -7,7 +7,8 @@ import BitId from '../../bit-id/bit-id';
 export default function getNodeModulesPathOfComponent(
   bindingPrefix: string | null | undefined,
   id: BitId,
-  allowNonScope = false
+  allowNonScope = false,
+  defaultScope?: string | null // if an id doesn't have a scope, use defaultScope if exists. applies only when allowNonScope is true
 ): PathOsBasedRelative {
   if (!id.scope && !allowNonScope) {
     throw new GeneralError(
@@ -19,6 +20,7 @@ export default function getNodeModulesPathOfComponent(
   bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-  const partsToJoin = id.scope ? [id.scope, name] : [name];
+  const scope = id.scope || defaultScope;
+  const partsToJoin = scope ? [scope, name] : [name];
   return path.join('node_modules', bindingPrefix, partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR));
 }

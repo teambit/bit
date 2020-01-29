@@ -40,6 +40,7 @@ export interface ManyComponentsWriterParams {
   installPeerDependencies?: boolean;
   addToRootPackageJson?: boolean;
   verbose?: boolean;
+  installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   capsuleWrkspaceMap?: { [key: string]: string };
 }
@@ -71,6 +72,7 @@ export default class ManyComponentsWriter {
   addToRootPackageJson: boolean;
   verbose: boolean; // prints npm results
   excludeRegistryPrefix: boolean;
+  installProdPackagesOnly?: boolean;
   dependenciesIdsCache: Record<string, any>;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   writtenComponents: Component[];
@@ -98,6 +100,7 @@ export default class ManyComponentsWriter {
     this.installNpmPackages = this._setBooleanDefault(params.installNpmPackages, true);
     this.addToRootPackageJson = this._setBooleanDefault(params.addToRootPackageJson, true);
     this.verbose = this._setBooleanDefault(params.verbose, false);
+    this.installProdPackagesOnly = this._setBooleanDefault(params.installProdPackagesOnly, false);
     this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -351,7 +354,8 @@ to move all component files to a different directory, run bit remove and then bi
       verbose: this.verbose, // $FlowFixMe
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       silentPackageManagerResult: this.silentPackageManagerResult,
-      installPeerDependencies: this.installPeerDependencies
+      installPeerDependencies: this.installPeerDependencies,
+      installProdPackagesOnly: this.installProdPackagesOnly
     });
   }
   async _getAllLinks(): Promise<DataToPersist> {

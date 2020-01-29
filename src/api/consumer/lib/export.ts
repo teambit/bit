@@ -63,13 +63,11 @@ async function exportComponents({
   force: boolean;
 }): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
-  const defaultScope = consumer.config.defaultScope;
-  const { idsToExport, missingScope } = await getComponentsToExport(
+  const { idsToExport, missingScope, idsWithFutureScope } = await getComponentsToExport(
     ids,
     consumer,
     remote,
     includeNonStaged,
-    defaultScope,
     force
   );
   if (R.isEmpty(idsToExport)) return { updatedIds: [], nonExistOnBitMap: [], missingScope, exported: [] };
@@ -81,7 +79,7 @@ async function exportComponents({
     includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
-    defaultScope
+    idsWithFutureScope
   });
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
   await linkComponents(updatedIds, consumer);
@@ -114,15 +112,21 @@ async function getComponentsToExport(
   consumer: Consumer,
   remote: string | null | undefined,
   includeNonStaged: boolean,
-  defaultScope: string | null | undefined,
   force: boolean
-): Promise<{ idsToExport: BitIds; missingScope: BitId[] }> {
+): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
-  const filterNonScopeIfNeeded = (bitIds: BitIds): { idsToExport: BitIds; missingScope: BitId[] } => {
-    if (remote) return { idsToExport: bitIds, missingScope: [] };
-    const [idsToExport, missingScope] = R.partition(id => id.hasScope() || defaultScope, bitIds);
-    return { idsToExport: BitIds.fromArray(idsToExport), missingScope };
+  const filterNonScopeIfNeeded = (
+    bitIds: BitIds
+  ): { idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds } => {
+    const idsWithFutureScope = getIdsWithFutureScope(bitIds, consumer, remote);
+    if (remote) return { idsToExport: bitIds, missingScope: [], idsWithFutureScope };
+    const [idsToExport, missingScope] = R.partition(id => {
+      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
+      if (!idWithFutureScope) throw new Error(`idsWithFutureScope is missing ${id.toString()}`);
+      return idWithFutureScope.hasScope();
+    }, bitIds);
+    return { idsToExport: BitIds.fromArray(idsToExport), missingScope, idsWithFutureScope };
   };
   const promptForFork = async (bitIds: BitIds | BitId[]) => {
     if (force || !remote) return;
@@ -165,6 +169,18 @@ async function getComponentsToExport(
   const idsToExport = await Promise.all(idsToExportP);
   await promptForFork(idsToExport);
   return filterNonScopeIfNeeded(BitIds.fromArray(idsToExport));
+}
+
+function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
+  const workspaceDefaultScope = consumer.config.defaultScope;
+  const idsArray = ids.map(id => {
+    if (remote) return id.changeScope(remote);
+    if (id.hasScope()) return id;
+    const overrides = consumer.config.overrides.getOverrideComponentData(id);
+    const componentDefaultScope = overrides ? overrides.defaultScope : null;
+    return id.changeScope(componentDefaultScope || workspaceDefaultScope || null);
+  });
+  return BitIds.fromArray(idsArray);
 }
 
 async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {

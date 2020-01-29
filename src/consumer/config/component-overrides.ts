@@ -108,6 +108,9 @@ export default class ComponentOverrides {
     );
     return this._filterForComponentWithValidVersion(allDeps);
   }
+  get defaultScope() {
+    return this.overrides.defaultScope;
+  }
 
   _filterForComponentWithValidVersion(deps: Record<string, any>): Record<string, any> {
     return Object.keys(deps).reduce((acc, current) => {

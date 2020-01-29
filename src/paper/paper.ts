@@ -15,10 +15,21 @@ export default class Paper {
     private registry: CommandRegistry
   ) {}
 
+  private setDefaults(command: Command) {
+    command.alias = command.alias || '';
+    command.description = command.description || '';
+    command.shortDescription = command.shortDescription || '';
+    command.group = command.group || 'extensions';
+    command.options = command.options || [];
+    command.private = command.private || false;
+    command.loader = command.loader || true;
+    command.commands = command.commands || [];
+  }
   /**
    * registers a new command in to `Paper`.
    */
   register(command: Command) {
+    this.setDefaults(command);
     this.registry.register(command);
     return this;
   }

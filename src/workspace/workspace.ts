@@ -1,12 +1,13 @@
 import { Consumer } from '../consumer';
 import { Scope } from '../scope/scope.api';
-import { Component, ComponentFactory } from '../component';
+import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../consumer/component/components-list';
+import { ComponentHost } from '../shared-types';
 
 /**
  * API of the Bit Workspace
  */
-export default class Workspace {
+export default class Workspace implements ComponentHost {
   constructor(
     /**
      * private access to the legacy consumer instance.
@@ -55,12 +56,12 @@ export default class Workspace {
   }
 
   /**
-   * get a component from scope
+   * get a component from workspace
    * @param id component ID
    */
-  async get(id: string): Promise<Component> {
-    const componentId = this.consumer.getParsedId(id);
-    const legacyComponent = await this.consumer.loadComponent(componentId);
+  async get(id: string | ComponentID): Promise<Component | undefined> {
+    const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
+    const legacyComponent = await this.consumer.loadComponent(componentId._legacy);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 }

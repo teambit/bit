@@ -12,25 +12,25 @@ export interface Command {
   /**
    * command alias (for example: 't' for 'tag')
    */
-  alias: string;
+  alias?: string;
   /**
    * Description of the command in commands summery
    * `bit -h`
    * `bit`
    */
-  shortDescription: string;
+  shortDescription?: string;
 
   /**
    * The description of the command. Will be seen in bit command help .
    *  `bit add --help`
    */
-  description: string;
+  description?: string;
 
   /**
    *  allow grouping of commands to hint summery renderer
    *  Places in default automatic help
    */
-  group:string
+  group?:string
 
   /**
    *  Should a command be exposed to the user.
@@ -49,7 +49,7 @@ export interface Command {
    * ['j', 'json', 'output json command']
    *
    */
-  options: PaperOptions;
+  options?: PaperOptions;
 
   /**
    * sub commands for example:
@@ -60,7 +60,7 @@ export interface Command {
   /**
    * Main command handler which is called when invoking commands
    * @param args  - arguments object as defined in name.
-   * @param args - command flags as described in options.
+   * @param flags - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
    render: (args: CLIArgs, flags: Flags ) => Promise<React.ReactElement>;
@@ -68,15 +68,15 @@ export interface Command {
    /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j' option is provided by user.
-   * @param params  - arguments object as defined in name.
-   * @param options - command flags as described in options.
+   * @param args  - arguments object as defined in name.
+   * @param flags - command flags as described in options.
    * @return a GenericObject to be rendered to string in the console.
    */
 
   json?: (args: CLIArgs, flags: Flags) => GenericObject;
 }
 export type Flags = {[flagName:string]: CLIArgs | boolean | undefined}
-export type CLIArgs =  Array<string | string[]>
+export type CLIArgs =  Array<Array<string> | string>
 export type GenericObject = { [k: string]: any };
 export type PaperOptions = CommandOptions;
 
