@@ -1,11 +1,12 @@
 import { Graph } from 'cleargraph';
 import { AnyExtension } from '../types';
 import { fromExtension, fromExtensions } from './from-extension';
+import { ExtensionEdgeData } from './extension-edge';
 
-export default class ExtensionGraph extends Graph<AnyExtension, string> {
+export default class ExtensionGraph extends Graph<AnyExtension, ExtensionEdgeData> {
   byExecutionOrder(): AnyExtension[] {
     const extensionsIds = this.toposort().reverse();
-    return Object.values(this.getNodeInfo(extensionsIds));
+    return Object.values(this.getNodeInfo(extensionsIds)) as AnyExtension[];
   }
 
   addExtensions(extensions: AnyExtension[]) {
