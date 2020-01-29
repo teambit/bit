@@ -59,7 +59,7 @@ export async function exportMany({
   includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
   changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
   codemod = false,
-  defaultScope
+  idsWithFutureScope
 }: {
   scope: Scope;
   ids: BitIds;
@@ -68,7 +68,7 @@ export async function exportMany({
   includeDependencies: boolean;
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
-  defaultScope: string | null | undefined;
+  idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   enrichContextFromGlobal(context);
@@ -165,7 +165,7 @@ export async function exportMany({
    * removing the ids participated in the circular.
    */
   async function sortAndGroupByScope(): Promise<{ scopeName: string; ids: BitIds }[]> {
-    const grouped = ids.toGroupByScopeName(defaultScope);
+    const grouped = ids.toGroupByScopeName(idsWithFutureScope);
     const groupedArrayFormat = Object.keys(grouped).map(scopeName => ({ scopeName, ids: grouped[scopeName] }));
     if (Object.keys(grouped).length <= 1) {
       return groupedArrayFormat;
@@ -183,7 +183,8 @@ export async function exportMany({
           return;
         }
       }
-      groupedArraySorted.push({ scopeName: id.scope || (defaultScope as string), ids: new BitIds(id) });
+      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id) as BitId;
+      groupedArraySorted.push({ scopeName: idWithFutureScope.scope as string, ids: new BitIds(id) });
     };
     if (cycles.length) {
       const cyclesWithMultipleScopes = cycles.filter(cycle => {

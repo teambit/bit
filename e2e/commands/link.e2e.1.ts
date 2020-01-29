@@ -52,6 +52,26 @@ describe('bit link', function() {
           ).to.be.a.directory();
         });
       });
+      describe('when scopeDefault is overridden for this component', () => {
+        let linkOutput;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeLink);
+          const bitJson = helper.bitJson.read();
+          bitJson.defaultScope = helper.scopes.remote;
+          helper.bitJson.write(bitJson);
+          helper.bitJson.addOverrides({ 'utils/is-type': { defaultScope: 'my-new-remote' } });
+          linkOutput = helper.command.runCmd('bit link');
+        });
+        it('should create links consist of the defaultScope', () => {
+          expect(linkOutput).to.have.string(
+            path.normalize('node_modules/@bit/my-new-remote.utils.is-type/utils/is-type.js')
+          );
+          expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
+          expect(
+            path.join(helper.scopes.localPath, `node_modules/@bit/my-new-remote.utils.is-type`)
+          ).to.be.a.directory();
+        });
+      });
     });
     describe('after export', () => {
       before(() => {
