@@ -1,9 +1,10 @@
 import React from 'react';
 import { start } from '@teambit/composer';
-import { Color } from 'ink';
+import { Color, AppContext } from 'ink';
 import { Command } from '../paper';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
+import { CLIArgs } from '../paper/command';
 
 export default class ComposeCmd implements Command {
   name = 'compose [id]';
@@ -18,17 +19,18 @@ export default class ComposeCmd implements Command {
     private capsule: Capsule
   ) {}
 
-  render([id]) {
-    return new Promise(async (resolve, reject) => {
-      const components = await this.workspace.list();
-      const capsules = await this.capsule.create(components);
+  async render([id]: CLIArgs) {
+    const components = await this.workspace.list();
+    const capsules = await this.capsule.create(components);
 
-      start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
-        map[componentId] = capsules[componentId].wrkDir;
-        return map;
-      }, {}));
+    start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
+      map[componentId] = capsules[componentId].wrkDir;
+      return map;
+    }, {}));
 
-      // return <Color green>{component.id.toString()}</Color>
-    });
+    return (
+    <AppContext.Consumer>
+      {({ exit }) => <Color green></Color>}
+    </AppContext.Consumer>)
   }
 }

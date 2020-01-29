@@ -4,6 +4,7 @@ import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './cli';
 import { ComposerExt } from './composer';
+import { CompilerExt } from './compiler';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 
@@ -17,8 +18,7 @@ BPromise.config({
 
 // loudRejection();
 HooksManager.init();
-
-Harmony.load([BitCliExt, ComposerExt])
+Harmony.load([BitCliExt, ComposerExt, CompilerExt])
   .run()
   .then(() => {})
   .catch(err => {

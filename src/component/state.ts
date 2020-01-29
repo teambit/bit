@@ -22,10 +22,6 @@ export default class State {
     readonly dependencies
   ) {}
 
-  get graph() {
-    return new ComponentGraph();
-  }
-
   /**
    * calculate the hash of this state
    */
