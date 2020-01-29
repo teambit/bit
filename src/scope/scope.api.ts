@@ -1,15 +1,16 @@
-import { Consumer } from '../consumer';
+import { default as LegacyScope } from './scope';
 import { PersistOptions } from './types';
 import { BitIds as ComponentsIds } from '../bit-id';
-import { Component } from '../component';
+import { Component, ComponentID } from '../component';
+import { ComponentHost } from '../shared-types';
 
 // eslint-disable-next-line import/prefer-default-export
-export class Scope {
+export class Scope implements ComponentHost {
   constructor(
     /**
-     * legacy consumer
+     * legacy scope
      */
-    readonly consumer?: Consumer
+    readonly legacyScope?: LegacyScope
   ) {}
 
   // TODO: support lanes / other kind of objects
@@ -28,4 +29,13 @@ export class Scope {
    * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
+
+  /**
+   * get a component from scope
+   * @param id component ID
+   */
+  async get(id: string | ComponentID): Promise<Component | undefined> {
+    const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
+    return undefined;
+  }
 }
