@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { Command, PaperOptions } from '../paper';
 import GeneralError from '../error/general-error';
@@ -100,7 +102,7 @@ export class SnapCommand implements Command {
     };
 
     const snapResult = this.snapApi.snap(snapOptions);
-    console.log('result', snapResult);
+    // console.log('result', snapResult);
     return Promise.resolve(<Color green>snap run finished</Color>);
   }
 }

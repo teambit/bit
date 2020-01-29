@@ -16,25 +16,22 @@ export default class Paper {
   ) {}
 
   private setDefaults(command: Command) {
-    const defaults = {
-      alias: '',
-      description: '',
-      shortDescription: '',
-      group: 'extensions',
-      options: [],
-      private: false,
-      loader: false,
-      commands: []
-    };
-    return Object.assign({}, defaults, command);
+    command.alias = command.alias || '';
+    command.description = command.description || '';
+    command.shortDescription = command.shortDescription || '';
+    command.group = command.group || 'extensions';
+    command.options = command.options || [];
+    command.private = command.private || false;
+    command.loader = command.loader || true;
+    command.commands = command.commands || [];
   }
   /**
    * registers a new command in to `Paper`.
    */
   register(command: Command) {
-    // const commandWithDefaults = this.setDefaults(command);
-    // this.registry.register(commandWithDefaults);
+    this.setDefaults(command);
     this.registry.register(command);
+    // this.registry.register(command);
     return this;
   }
 
