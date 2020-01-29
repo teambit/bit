@@ -1,7 +1,6 @@
 import Config from './config';
 import ComponentFS from './component-fs';
 import ConsumerComponent from '../consumer/component';
-import { ComponentGraph } from './component-graph';
 
 export default class State {
   constructor(
@@ -21,10 +20,6 @@ export default class State {
     // readonly dependencies: Dependencies
     readonly dependencies
   ) {}
-
-  get graph() {
-    return new ComponentGraph();
-  }
 
   /**
    * calculate the hash of this state
