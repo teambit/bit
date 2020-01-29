@@ -31,7 +31,6 @@ export default class Paper {
   register(command: Command) {
     this.setDefaults(command);
     this.registry.register(command);
-    // this.registry.register(command);
     return this;
   }
 
