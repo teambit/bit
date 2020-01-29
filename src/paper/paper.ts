@@ -32,8 +32,9 @@ export default class Paper {
    * registers a new command in to `Paper`.
    */
   register(command: Command) {
-    const commandWithDefaults = this.setDefaults(command);
-    this.registry.register(commandWithDefaults);
+    // const commandWithDefaults = this.setDefaults(command);
+    // this.registry.register(commandWithDefaults);
+    this.registry.register(command);
     return this;
   }
 
