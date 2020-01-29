@@ -98,9 +98,14 @@ export default class BitIds extends Array<BitId> {
     return this.map(id => id.toString()).join(', ');
   }
 
-  toGroupByScopeName(defaultScope?: string | null | undefined): { [scopeName: string]: BitIds } {
+  toGroupByScopeName(idsWithDefaultScope: BitIds): { [scopeName: string]: BitIds } {
     return this.reduce((acc, current) => {
-      const scopeName = current.scope || defaultScope;
+      const getScopeName = () => {
+        if (current.scope) return current.scope;
+        const idWithDefaultScope = idsWithDefaultScope.searchWithoutScopeAndVersion(current);
+        return idWithDefaultScope ? idWithDefaultScope.scope : null;
+      };
+      const scopeName = getScopeName();
       if (!scopeName) {
         throw new Error(`toGroupByScopeName() expect ids to have a scope name, got ${current.toString()}`);
       }

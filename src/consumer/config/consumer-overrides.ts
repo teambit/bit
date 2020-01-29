@@ -14,12 +14,13 @@ export type ConsumerOverridesOfComponent = {
   peerDependencies?: Record<string, any>;
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
+  defaultScope?: string; // default scope to export to
   [key: string]: any; // can be any package.json field
 };
 
 export type ConsumerOverridesConfig = { [key: string]: ConsumerOverridesOfComponent };
 export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
-export const overridesBitInternalFields = ['propagate', 'exclude', 'env'];
+export const overridesBitInternalFields = ['propagate', 'exclude', 'env', 'defaultScope'];
 export const nonPackageJsonFields = [...DEPENDENCIES_FIELDS, ...overridesBitInternalFields];
 
 export default class ConsumerOverrides {

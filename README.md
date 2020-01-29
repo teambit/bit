@@ -77,3 +77,4 @@ See [Contributing](CONTRIBUTING.md).
 ## License 💮
 
 Apache License, Version 2.0
+![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)

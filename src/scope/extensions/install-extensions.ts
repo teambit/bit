@@ -39,6 +39,7 @@ export default function installExtensions({
     writeConfig: false,
     installPeerDependencies: true,
     override: false,
+    installProdPackagesOnly: true,
     verbose,
     silentPackageManagerResult: true
   };
