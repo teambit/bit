@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
 import { Command} from '../command';
@@ -7,11 +9,11 @@ export function Help(Renderer = DefaultHelpRender){
     const help:HelpProps = Object.entries(commands)
       .filter(([_name, command]) => !command.private && !!command.shortDescription)
       .reduce(function(partialHelp, [id, command]) {
-        partialHelp[command.group] = partialHelp[command.group] || {
+        partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},
-          description: groups[command.group] || ''
+          description: groups[command.group!] || ''
         };
-        partialHelp[command.group].commands[id] = command.shortDescription;
+        partialHelp[command.group!].commands[id] = command.shortDescription;
         return partialHelp;
       }, {});
     return render(<Renderer {...help}/>);

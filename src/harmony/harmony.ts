@@ -63,11 +63,7 @@ export default class Harmony {
    * load harmony from a root extension
    */
   static load(extensions: Extension<any, any>[]) {
-    try {
-      const graph = ExtensionGraph.from(extensions);
-      return new Harmony(graph);
-    } catch (e) {
-      console.log('got an error during loading harmony', e);
-    }
+    const graph = ExtensionGraph.from(extensions);
+    return new Harmony(graph);
   }
 }

@@ -28,8 +28,8 @@ export default class Symlink extends BitObject {
     return new BitId({ scope: this.realScope, name: this.name });
   }
 
-  static parse(contents: string): Symlink {
-    const rawContent = JSON.parse(contents);
+  static parse(contents: Buffer): Symlink {
+    const rawContent = JSON.parse(contents.toString());
     if (rawContent.box) rawContent.name = `${rawContent.box}/${rawContent.name}`;
     return Symlink.from(rawContent);
   }
