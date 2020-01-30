@@ -4,7 +4,8 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
-const config = require('../../../api/consumer/lib/global-config');
+// const config = require('../../../api/consumer/lib/global-config');
+import * as config from '../../../api/consumer/lib/global-config';
 
 class ConfigSet extends Command {
   name = 'set <key> <val>';

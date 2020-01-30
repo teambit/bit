@@ -29,7 +29,7 @@
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-circleci-reporter ./e2e/bit-hub/*.ts",
     "clean": "rm -rf dist && rm -rf types",
-    "build": "babel src -d dist --verbose --extensions \".ts,.tsx\"",
+    "build": "run-s build:src",
     "build:types": "./scripts/build-types.bash",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
@@ -39,7 +39,7 @@
     "pkg:mac": "pkg bin/bit.js --targets node10-macos-x64 --out-path releases/mac --options --no-warnings --config package.json",
     "pkg:windows": "pkg bin/bit.js --targets node10-win-x64 --out-path releases/windows --options --no-warnings --config package.json",
     "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings --config package.json",
-    "watch": "babel --watch bin src -d dist --source-maps --verbose --extensions \".ts,.tsx\"",
+    "watch": "babel --watch src -d dist --verbose --extensions '.ts,.tsx'",
     "build-debug": "babel src -d dist --source-maps --extensions \".ts\"",
     "prepublishOnly": "npm run clean && npm run build && npm run build:types",
     "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
@@ -49,7 +49,10 @@
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
     "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
-    "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts"
+    "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts",
+    "build:ext": "tsc -p tsconfig.extensions.json",
+    "build:pjson": "cp package.json dist/",
+    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx\""
   },
   "pkg": {
     "assets": [
@@ -94,7 +97,7 @@
     "bluebird": "^3.5.3",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
-    "cleargraph": "0.0.4",
+    "cleargraph": "0.0.5",
     "cli-spinners": "^1.0.0",
     "commander": "^4.1.0",
     "comment-json": "^1.1.3",
@@ -141,6 +144,7 @@
     "mockery": "^2.0.0",
     "needle": "^2.0.0",
     "normalize-path": "^2.1.1",
+    "npm-run-all": "^4.1.5",
     "object-diff": "^0.0.4",
     "object-hash": "^1.3.1",
     "open": "^7.0.0",
@@ -239,8 +243,7 @@
     "tar": "^4.4.8",
     "type-coverage": "^2.3.0",
     "typescript": "3.7.4",
-    "verdaccio": "^4.4.1",
-    "@teambit/composer": "file://../composer"
+    "verdaccio": "^4.4.1"
   },
   "files": [
     "/bin",

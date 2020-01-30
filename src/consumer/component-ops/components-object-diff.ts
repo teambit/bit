@@ -7,7 +7,7 @@ import arrayDifference from 'array-difference';
 import Component from '../component/consumer-component';
 import { FieldsDiff } from './components-diff';
 import { Consumer } from '..';
-import EnvExtension from '../../extensions/env-extension';
+import EnvExtension from '../../legacy-extensions/env-extension';
 
 export function componentToPrintableForDiff(component: Component): Record<string, any> {
   const obj = {};

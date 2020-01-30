@@ -26,7 +26,7 @@ import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import { makeEnvFromModel } from '../../extensions/env-factory';
+import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 
@@ -66,6 +66,8 @@ const VERSION_ZERO = '0.0.0';
  * we can't rename the class as ModelComponent because old components are already saved in the model
  * with 'Component' in their headers. see object-registrar.types()
  */
+// TODO: FIX me .parser
+// @ts-ignore
 export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;

@@ -1,16 +1,16 @@
 import { getScopeComponent, addMany as addManyInternal, build, buildAll as buildAllApi } from './api/consumer/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
-import Extension from './extensions/extension';
+import Extension from './legacy-extensions/extension';
 import HooksManager from './hooks';
-import { BaseLoadArgsProps } from './extensions/base-extension';
+import { BaseLoadArgsProps } from './legacy-extensions/base-extension';
 
 HooksManager.init();
 
 export { Extension } from './harmony';
-export { Workspace } from './workspace';
-export { Paper } from './paper';
-export { Bit } from './bit';
+export { Workspace } from './extensions/workspace';
+export { Paper } from './extensions/paper';
+export { Bit } from './extensions/bit';
 
 export function show(scopePath: string, id: string, opts?: Record<string, any>) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

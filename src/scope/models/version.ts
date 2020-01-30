@@ -10,16 +10,16 @@ import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS }
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
-import { CompilerExtensionModel } from '../../extensions/compiler-extension';
-import { TesterExtensionModel } from '../../extensions/tester-extension';
-import ExtensionFile from '../../extensions/extension-file';
+import { CompilerExtensionModel } from '../../legacy-extensions/compiler-extension';
+import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
+import ExtensionFile from '../../legacy-extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import { EnvPackages } from '../../extensions/env-extension';
+import { EnvPackages } from '../../legacy-extensions/env-extension';
 
 type CiProps = {
   error: Record<string, any>;
@@ -83,6 +83,7 @@ export type VersionProps = {
 /**
  * Represent a version model in the scope
  */
+// @ts-ignore
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;

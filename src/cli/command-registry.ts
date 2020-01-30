@@ -7,7 +7,7 @@ import didYouMean from 'didyoumean';
 import { render } from 'ink';
 
 import Command from './command';
-import { Commands } from '../extensions/extension';
+import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
 import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
@@ -57,7 +57,7 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
 
 export function execAction(command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
-  const relevantArgs = args.slice(0, args.length - 1);
+  const relevantArgs = args; //args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
   Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
@@ -136,15 +136,14 @@ function registerAction(command: Command, concrete) {
   return concrete.action((...args) => {
     if (!empty(command.commands)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const subcommandName = parseSubcommandFromArgs(args);
+      const subcommandName = parseSubcommandFromArgs(args[1]);
       const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
 
-      args.shift();
-      if (subcommand) return execAction(subcommand, concrete, args);
+      args[1].shift();
+      if (subcommand) return execAction(subcommand, concrete, args[1]);
     }
-
     return execAction(command, concrete, args);
   });
 }

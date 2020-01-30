@@ -1,6 +1,6 @@
 // import { BitId as ComponentId } from '../bit-id';
-import { ComponentID } from '../component';
-import { Component } from '../component';
+import { ComponentID } from '../extensions/component';
+import { Component } from '../extensions/component';
 
 /**
  * An interface for components hosts

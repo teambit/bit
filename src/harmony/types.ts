@@ -1,10 +1,11 @@
+import { NodeData } from 'cleargraph';
 import Extension from './extension';
 import Harmony from './harmony';
 
 /**
  * type definition for the extension provider function.
  */
-export type ProviderFn<Conf = {}, Deps = []> = (config: Conf, deps: Deps, harmony: Harmony) => any;
+export type ProviderFn<Conf = {}, Deps = []> = (config: Conf, deps: AnyExtension[], harmony: Harmony) => any;
 
 /**
  * type definition for extension of type any. this type is indended for use inside Harmony

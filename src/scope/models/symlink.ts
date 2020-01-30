@@ -8,6 +8,8 @@ export type SymlinkProp = {
   realScope: string;
 };
 
+// TODO: fix me, parse
+// @ts-ignore
 export default class Symlink extends BitObject {
   scope: string;
   name: string;
