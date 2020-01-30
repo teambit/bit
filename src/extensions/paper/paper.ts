@@ -31,6 +31,8 @@ export default class Paper {
    */
   register(command: Command) {
     this.setDefaults(command);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    command.commands!.forEach(cmd => this.setDefaults(cmd));
     this.registry.register(command);
     return this;
   }
