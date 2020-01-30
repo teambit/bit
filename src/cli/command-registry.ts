@@ -137,7 +137,7 @@ function registerAction(command: Command, concrete) {
     // This is because there is a bug in commander that return the Command instance in a random place in the args
     // And we don't really need the command itself
     args = args.filter(arg => {
-      return arg.constructor.name !== 'Command';
+      return arg?.constructor?.name !== 'Command';
     });
     const acutalArgs = args[0] || [];
     if (!empty(command.commands)) {
