@@ -1,8 +1,8 @@
-import { Consumer } from '../consumer';
-import { Scope } from '../scope/scope.api';
-import { Component, ComponentFactory, ComponentID } from '../component';
-import ComponentsList from '../consumer/component/components-list';
-import { ComponentHost } from '../shared-types';
+import { Consumer } from '../../consumer';
+import { Scope } from '../../scope/scope.api';
+import { Component, ComponentFactory, ComponentID } from '../../component';
+import ComponentsList from '../../consumer/component/components-list';
+import { ComponentHost } from '../../shared-types';
 
 /**
  * API of the Bit Workspace

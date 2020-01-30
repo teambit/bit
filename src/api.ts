@@ -8,7 +8,7 @@ import { BaseLoadArgsProps } from './legacy-extensions/base-extension';
 HooksManager.init();
 
 export { Extension } from './harmony';
-export { Workspace } from './workspace';
+export { Workspace } from './extensions/workspace';
 export { Paper } from './extensions/paper';
 export { Bit } from './bit';
 

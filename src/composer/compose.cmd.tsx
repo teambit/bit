@@ -2,7 +2,7 @@ import React from 'react';
 // import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command } from '../extensions/paper';
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import { Capsule } from '../capsule';
 
 export default class ComposeCmd implements Command {

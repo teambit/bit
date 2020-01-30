@@ -1,6 +1,6 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../extensions/paper';
+import { Command } from '../paper';
 import Workspace from './workspace';
 
 export class ListCmd implements Command {

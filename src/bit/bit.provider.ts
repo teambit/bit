@@ -1,4 +1,4 @@
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import { Scope } from '../scope/scope.api';
 import Capsule from '../capsule/capsule';
 import Bit from './bit';
