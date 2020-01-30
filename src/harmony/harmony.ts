@@ -63,6 +63,7 @@ export default class Harmony {
   /**
    * load harmony from a root extension
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static load(extensions: Extension<any, any>[], logger: Logger) {
     const graph = ExtensionGraph.from(extensions);
     return new Harmony(graph);

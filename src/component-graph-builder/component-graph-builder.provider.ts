@@ -7,8 +7,8 @@ export type ComponentGraphBuilderConfig = {};
 
 export default async function provideComponentGraphBuilder(
   config: ComponentGraphBuilderConfig,
-  [ComponentResolver]: ComponentGraphBuilderDeps
+  [componentResolver]: ComponentGraphBuilderDeps
 ) {
-  const componentGraphBuilder = new ComponentGraphBuilder(ComponentResolver);
+  const componentGraphBuilder = new ComponentGraphBuilder(componentResolver);
   return componentGraphBuilder;
 }
