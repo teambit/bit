@@ -1,10 +1,7 @@
-import { Logger } from 'winston';
 import Extension from './extension';
 import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
-import { graph } from '../api/scope';
-//  TODO: Fix harmony dependency in bit logger
 
 // TODO: refactor to generics
 async function asyncForEach(array: any, callback: any) {

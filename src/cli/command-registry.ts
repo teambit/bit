@@ -57,7 +57,7 @@ function getOpts(c, opts: [[string, string, string]]): { [key: string]: boolean 
 
 export function execAction(command, concrete, args): Promise<any> {
   const flags = getOpts(concrete, command.options);
-  const relevantArgs = args; //args.slice(0, args.length - 1);
+  const relevantArgs = args; // args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
   Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
@@ -134,17 +134,22 @@ function serializeErrAndExit(err, commandName) {
 // @TODO add help for subcommands
 function registerAction(command: Command, concrete) {
   return concrete.action((...args) => {
+    // This is because there is a bug in commander that return the Command instance in a random place in the args
+    // And we don't really need the command itself
+    args = args.filter(arg => {
+      return arg?.constructor?.name !== 'Command';
+    });
+    const acutalArgs = args[0] || [];
     if (!empty(command.commands)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args[1]);
       const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
-
-      args[1].shift();
-      if (subcommand) return execAction(subcommand, concrete, args[1]);
+      acutalArgs.shift();
+      if (subcommand) return execAction(subcommand, concrete, acutalArgs);
     }
-    return execAction(command, concrete, args);
+    return execAction(command, concrete, acutalArgs);
   });
 }
 
