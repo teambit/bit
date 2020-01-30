@@ -114,7 +114,7 @@ describe('custom module resolutions', function() {
         before(() => {
           helper.extensions.importNpmPackExtension();
           packDir = path.join(helper.scopes.localPath, 'pack');
-          helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
+          helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d -j ${packDir}`);
         });
         it('should create the specified directory', () => {
           expect(packDir).to.be.a.path();
@@ -258,7 +258,7 @@ describe('custom module resolutions', function() {
           before(() => {
             helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
+            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d -j ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
@@ -353,7 +353,7 @@ describe('custom module resolutions', function() {
           before(() => {
             helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d ${packDir}`);
+            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -d -j ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
