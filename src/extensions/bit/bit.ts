@@ -12,7 +12,7 @@ export default class Bit {
     /**
      * Scope
      */
-    readonly scope: Scope,
+    readonly scope: Scope | undefined,
 
     /**
      * Workspace
