@@ -41,8 +41,8 @@ import MissingFilesFromComponent from './component/exceptions/missing-files-from
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import * as packageJsonUtils from './component/package-json-utils';
 import { Dependencies } from './component/dependencies';
-import CompilerExtension from '../extensions/compiler-extension';
-import TesterExtension from '../extensions/tester-extension';
+import CompilerExtension from '../legacy-extensions/compiler-extension';
+import TesterExtension from '../legacy-extensions/tester-extension';
 import { PathOsBased, PathRelative, PathAbsolute, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
@@ -65,12 +65,12 @@ import { Remotes } from '../remotes';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import makeEnv from '../extensions/env-factory';
-import EnvExtension from '../extensions/env-extension';
+import makeEnv from '../legacy-extensions/env-factory';
+import EnvExtension from '../legacy-extensions/env-extension';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
 import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
-import { EnvType } from '../extensions/env-extension-types';
+import { EnvType } from '../legacy-extensions/env-extension-types';
 import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 
 type ConsumerProps = {

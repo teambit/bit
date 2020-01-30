@@ -1,6 +1,6 @@
 import CommandRegistry from './command-registry';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
-import { Commands } from '../extensions/extension';
+import { Commands } from '../legacy-extensions/extension';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import ScopeList from './commands/private-cmds/_list-cmd';

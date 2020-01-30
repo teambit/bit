@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import * as BPromise from 'bluebird';
-import { Harmony } from '../extensions/harmony';
+import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './cli';
 import { ComposerExt } from './composer';

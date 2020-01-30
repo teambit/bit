@@ -26,7 +26,7 @@ import GeneralError from '../../error/general-error';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import { makeEnvFromModel } from '../../extensions/env-factory';
+import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import ShowDoctorError from '../../error/show-doctor-error';
 import ValidationError from '../../error/validation-error';
 

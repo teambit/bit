@@ -1,4 +1,4 @@
-import { Extension } from '../../extensions/harmony';
+import { Extension } from '../harmony';
 import { WatchExt } from '../watch';
 import { provideComposer } from './composer.provider';
 import { PaperExt } from '../paper';

@@ -7,7 +7,7 @@ import didYouMean from 'didyoumean';
 import { render } from 'ink';
 
 import Command from './command';
-import { Commands } from '../extensions/extension';
+import { Commands } from '../legacy-extensions/extension';
 import { migrate } from '../api/consumer';
 import defaultHandleError from './default-error-handler';
 import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';

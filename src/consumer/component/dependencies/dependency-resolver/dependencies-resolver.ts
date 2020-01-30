@@ -15,7 +15,7 @@ import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import { RelativePath } from '../dependency';
-import EnvExtension from '../../../../extensions/env-extension';
+import EnvExtension from '../../../../legacy-extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';

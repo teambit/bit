@@ -13,8 +13,8 @@ import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
-import ExtensionSchemaError from '../../src/extensions/exceptions/extension-schema-error';
-import ExtensionLoadError from '../../src/extensions/exceptions/extension-load-error';
+import ExtensionSchemaError from '../../src/legacy-extensions/exceptions/extension-schema-error';
+import ExtensionLoadError from '../../src/legacy-extensions/exceptions/extension-load-error';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 
 chai.use(require('chai-fs'));
