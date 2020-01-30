@@ -3,6 +3,7 @@ import Extension from './extension';
 import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
+import { graph } from '../api/scope';
 //  TODO: Fix harmony dependency in bit logger
 
 // TODO: refactor to generics
@@ -15,10 +16,15 @@ async function asyncForEach(array: any, callback: any) {
 }
 
 export default class Harmony {
-  constructor(private graph: ExtensionGraph, private logger?: Logger) {}
+  constructor(
+    /**
+     * extension graph
+     */
+    private graph: ExtensionGraph
+  ) {}
 
   get extensions() {
-    return Object.values(this.graph.getNodeInfo(this.graph.nodes()));
+    // return this.graph.
   }
 
   async load(extensions: AnyExtension[]) {
