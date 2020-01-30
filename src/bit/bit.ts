@@ -68,6 +68,8 @@ export default class Bit {
       const capsuleOptions: CapsuleOptions = {
         installPackages: true
       };
+
+      if (!extensionsIds.length) return [];
       const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(
         extensionsIds.map(ex => ex.toString()),
         capsuleOptions

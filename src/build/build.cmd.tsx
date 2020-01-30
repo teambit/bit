@@ -3,9 +3,10 @@ import { Color } from 'ink';
 import { Command } from '../paper';
 import { CLIArgs } from '../paper/command';
 import { Workspace } from '../workspace';
+import { Build } from './build';
 
-export class CompileCmd implements Command {
-  name = 'compile [id]';
+export class BuildCmd implements Command {
+  name = 'rebuild [id]';
   description = '';
   shortDescription = '';
   alias = '';
@@ -13,7 +14,8 @@ export class CompileCmd implements Command {
   options = [];
 
   constructor(
-    private workspace: Workspace
+    private workspace: Workspace,
+    private build: Build
   ) {}
 
   async render([id]: CLIArgs) {
@@ -21,6 +23,6 @@ export class CompileCmd implements Command {
     // const capsule = await component.isolate();
     
     
-    return <Color green>dadsad</Color>;
+    return <Color green>application</Color>;
   }
 }

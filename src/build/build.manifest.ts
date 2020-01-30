@@ -1,13 +1,13 @@
 import { Harmony, Extension } from '../harmony';
-import { Compiler } from './compiler';
+import { Build } from './build';
 import { PaperExt } from '../paper';
 import { WorkspaceExt } from '../workspace';
 
 export default Extension.instantiate({
-  name: 'Compiler',
+  name: 'Build',
   dependencies: [PaperExt, WorkspaceExt],
   config: {
-    foo: 'bar'
+    task: ''
   },
-  provider: Compiler.provide
+  provider: Build.provide
 });
