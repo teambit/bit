@@ -1,5 +1,5 @@
 import { CLIProvider } from './cli.provider';
-import { PaperExt } from '../paper';
+import { PaperExt } from '../extensions/paper';
 import { BitExt } from '../bit';
 import { Extension } from '../harmony';
 

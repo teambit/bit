@@ -2,7 +2,7 @@ import { Scope } from '../scope/scope.api';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { ListCmd } from './list.cmd';
-import { Paper } from '../paper';
+import { Paper } from '../extensions/paper';
 import { loadConsumerIfExist } from '../consumer';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Paper];

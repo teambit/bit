@@ -1,6 +1,6 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../paper';
+import { Command } from '../extensions/paper';
 
 export default class ServeCommand implements Command {
   name = 'watch [id...]';

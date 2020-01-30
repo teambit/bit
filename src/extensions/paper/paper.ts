@@ -2,7 +2,8 @@ import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
 import { Command } from './command';
 import CommandRegistry from './registry';
-import { register } from '../cli/command-registry';
+// TODO: remove this import - paper should not consume cli
+import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 

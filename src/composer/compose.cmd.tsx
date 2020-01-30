@@ -1,7 +1,7 @@
 import React from 'react';
 import { start } from '@teambit/composer';
 import { Color } from 'ink';
-import { Command } from '../paper';
+import { Command } from '../extensions/paper';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
 

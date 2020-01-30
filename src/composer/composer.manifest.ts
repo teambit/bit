@@ -1,7 +1,7 @@
 import { Extension } from '../harmony';
 import { WatchExt } from '../watch';
 import { provideComposer } from './composer.provider';
-import { PaperExt } from '../paper';
+import { PaperExt } from '../extensions/paper';
 import { WorkspaceExt } from '../workspace';
 import { CapsuleExt } from '../capsule';
 

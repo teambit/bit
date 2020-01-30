@@ -1,4 +1,4 @@
-import { Paper } from '../paper';
+import { Paper } from '../extensions/paper';
 
 export default class BitCli {
   constructor(
