@@ -1,5 +1,5 @@
 import ComponentGraphBuilder from './component-graph-builder';
-import { ComponentResolver } from '../component-resolver-ext';
+import { ComponentResolver } from '../component-resolver';
 
 export type ComponentGraphBuilderDeps = [ComponentResolver];
 

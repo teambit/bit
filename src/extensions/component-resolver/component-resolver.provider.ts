@@ -1,5 +1,5 @@
-import { Workspace } from '../extensions/workspace';
-import { Scope } from '../scope/scope.api';
+import { Workspace } from '../workspace';
+import { Scope } from '../../scope/scope.api';
 import ComponentResolver from './component-resolver';
 
 export type ComponentResolverDeps = [Workspace, Scope];
