@@ -453,9 +453,7 @@ describe('bit show command', function() {
     describe('with a consumer component', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         helper.command.tagComponent('utils/is-type');
         helper.command.tagComponent('utils/is-type', 'msg', '-f');
         helper.command.exportAllComponents();
@@ -509,9 +507,7 @@ describe('bit show command', function() {
     describe('with a scope component', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         helper.command.tagComponent('utils/is-type');
         helper.command.tagComponent('utils/is-type', 'msg', '-f');
         helper.command.exportAllComponents();
@@ -627,7 +623,7 @@ Circle.defaultProps = {
   describe('show with --dependents and --dependencies flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('bar-dep', 'bar.js');
       helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
       helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
@@ -746,7 +742,7 @@ Circle.defaultProps = {
     let show;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       show = helper.command.showComponentParsed('utils/is-string --dependents --dependencies');
     });
     it('should show all dependents and dependencies', () => {

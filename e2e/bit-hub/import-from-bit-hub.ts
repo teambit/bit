@@ -175,8 +175,7 @@ chai.use(require('chai-fs'));
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
       });
       it('should affect its dependent', () => {
         const result = helper.command.runCmd('node app.js');
@@ -219,8 +218,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
       });
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
         const isStringDir = path.join(helper.scopes.localPath, 'components', 'utils', 'is-string');

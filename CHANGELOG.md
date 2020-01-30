@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2267](https://github.com/teambit/bit/issues/2267) fix duplicate devDependencies
 - support overrides of the workspace defaultScope per components
 - use workspace defaultScope to generate node-modules links for pre-export components
 - [#2258](https://github.com/teambit/bit/issues/2258) don't install devDependencies packages upon extensions import

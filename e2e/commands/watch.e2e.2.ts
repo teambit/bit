@@ -16,7 +16,7 @@ describe('bit watch command', function() {
     let scopeAfterBuild;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.env.importDummyCompiler();
       helper.command.build();
       scopeAfterBuild = helper.scopeHelper.cloneLocalScope();

@@ -360,13 +360,7 @@ describe('bit status command', function() {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
       helper.command.tagAllComponents();
       output = helper.command.runCmd('bit status');
     });
@@ -386,9 +380,7 @@ describe('bit status command', function() {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
       helper.command.tagComponent('utils/is-type');
       helper.command.exportComponent('utils/is-type');
       helper.scopeHelper.reInitLocalScope();
@@ -411,9 +403,7 @@ describe('bit status command', function() {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
       helper.command.tagComponent('utils/is-type');
 
       const isStringInternalFixture =
