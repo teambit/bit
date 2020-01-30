@@ -1,6 +1,6 @@
 import { Extension } from '../harmony';
-import { WorkspaceExt } from '../workspace';
-import { PaperExt } from '../paper';
+import { WorkspaceExt } from '../extensions/workspace';
+import { PaperExt } from '../extensions/paper';
 
 type PipesDeps = [];
 type Config = {};

@@ -1,10 +1,10 @@
 import { Graph } from 'cleargraph';
-import { Component } from '../component';
-import ConsumerComponent from '../consumer/component';
-import { Consumer } from '../consumer';
-import ComponentsList from '../consumer/component/components-list';
+import { Component } from '../../component';
+import ConsumerComponent from '../../consumer/component';
+import { Consumer } from '../../consumer';
+import ComponentsList from '../../consumer/component/components-list';
 // import { ModelComponent } from '../scope/models';
-import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
 
 // TODO: Change to component graph
 // @ts-ignore

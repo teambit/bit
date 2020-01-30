@@ -1,8 +1,8 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../harmony';
 import workspaceProvider from './workspace.provider';
-import ScopeExt from '../scope/scope.extension';
-import { ComponentFactoryExt } from '../component';
-import { PaperExt } from '../paper';
+import ScopeExt from '../../scope/scope.extension';
+import { ComponentFactoryExt } from '../../component';
+import { PaperExt } from '../../extensions/paper';
 
 export default Extension.instantiate({
   name: 'Workspace',

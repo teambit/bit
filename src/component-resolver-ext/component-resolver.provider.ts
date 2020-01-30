@@ -1,4 +1,4 @@
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import { Scope } from '../scope/scope.api';
 import ComponentResolver from './component-resolver';
 

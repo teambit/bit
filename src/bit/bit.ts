@@ -1,6 +1,6 @@
 import { ReplaySubject } from 'rxjs';
 import { CapsuleOptions } from '../capsule/orchestrator/types';
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import { Scope } from '../scope/scope.api';
 import { Capsule } from '../capsule';
 import { AnyExtension } from '../harmony/types';

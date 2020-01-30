@@ -1,8 +1,8 @@
 import { Watch } from '../watch';
-import { Paper } from '../paper';
+import { Paper } from '../extensions/paper';
 import Serve from './composer';
 import ComposeCmd from './compose.cmd';
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import { Capsule } from '../capsule';
 
 export type ServeConfig = {};

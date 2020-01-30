@@ -1,6 +1,6 @@
 import { SnapOptions } from './types';
 import { Scope } from '../scope/scope.api';
-import { Workspace } from '../workspace';
+import { Workspace } from '../extensions/workspace';
 import GeneralError from '../error/general-error';
 import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 import hasWildcard from '../utils/string/has-wildcard';
