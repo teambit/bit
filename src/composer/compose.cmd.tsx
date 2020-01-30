@@ -1,5 +1,5 @@
 import React from 'react';
-import { start } from '@teambit/composer';
+// import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command } from '../paper';
 import { Workspace } from '../workspace';
@@ -18,17 +18,19 @@ export default class ComposeCmd implements Command {
     private capsule: Capsule
   ) {}
 
-  render([id]) {
-    return new Promise(async (resolve, reject) => {
-      const components = await this.workspace.list();
-      const capsules = await this.capsule.create(components);
+  async render() {
+    return <Color green>compose start</Color>;
 
-      start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
-        map[componentId] = capsules[componentId].wrkDir;
-        return map;
-      }, {}));
+    // return new Promise(async (resolve, reject) => {
+      // const components = await this.workspace.list();
+      // const capsules = await this.capsule.create(components);
+
+      // start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
+      //   map[componentId] = capsules[componentId].wrkDir;
+      //   return map;
+      // }, {}));
 
       // return <Color green>{component.id.toString()}</Color>
-    });
+    // });
   }
 }

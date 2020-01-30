@@ -8,11 +8,12 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Capsule from '../environment/capsule-builder';
+import { NodeData } from 'cleargraph';
 
 /**
  * in-memory representation of a component.
  */
-export default class Component {
+export default class Component implements NodeData {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
@@ -138,4 +139,16 @@ export default class Component {
    * transforms the component to a legacy `ConsumerComponent` object. please do not use this method.
    */
   toLegacyConsumerComponent() {}
+
+  /**
+   *
+   * Check if 2 components are equal
+   * @param {Component} component
+   * @returns {boolean}
+   * @memberof Component
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  equals(component: Component): boolean {
+    return true;
+  }
 }

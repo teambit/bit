@@ -1,7 +1,7 @@
-import { Graph } from 'cleargraph';
+import { Graph, EdgeData } from 'cleargraph';
 import Component from '../../component/component';
 
-export type Dependency = {
+export type Dependency = EdgeData & {
   type: 'dev' | 'peer' | 'regular';
 };
 
