@@ -1,11 +1,11 @@
 import { ReplaySubject } from 'rxjs';
-import { CapsuleOptions } from '../capsule/orchestrator/types';
-import { Workspace } from '../extensions/workspace';
-import { Scope } from '../scope/scope.api';
-import { Capsule } from '../capsule';
-import { AnyExtension } from '../harmony/types';
-import { BitIds as ComponentIds, BitId as ComponentId } from '../bit-id';
-import { Harmony } from '../harmony';
+import { CapsuleOptions } from '../../capsule/orchestrator/types';
+import { Workspace } from '../../extensions/workspace';
+import { Scope } from '../../scope';
+import { Capsule } from '../../capsule';
+import { AnyExtension } from '../../harmony/types';
+import { BitIds as ComponentIds, BitId as ComponentId } from '../../bit-id';
+import { Harmony } from '../../harmony';
 
 export default class Bit {
   constructor(

@@ -1,6 +1,6 @@
 import { CLIProvider } from './cli.provider';
 import { PaperExt } from '../extensions/paper';
-import { BitExt } from '../bit';
+import { BitExt } from '../extensions/bit';
 import { Extension } from '../harmony';
 
 export default Extension.instantiate({
