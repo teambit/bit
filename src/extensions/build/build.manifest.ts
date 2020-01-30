@@ -1,4 +1,4 @@
-import { Harmony, Extension } from '../harmony';
+import { Extension } from '../../harmony';
 import { Build } from './build';
 import { PaperExt } from '../paper';
 import { WorkspaceExt } from '../workspace';

@@ -4,5 +4,5 @@ export interface Compiler {
   /**
    * compiles given set of components.
    */
-  build(components: Component[]): CompilerResult;
+  build(components: Component[]);
 }

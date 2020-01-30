@@ -1,5 +1,6 @@
 import { ProviderFn } from './types';
 import Harmony from './harmony';
+import { AnyExtension } from '../../../brix/harmony/src/types';
 
 export type ExtensionProps<Conf, Deps> = {
   name: string;
@@ -22,7 +23,7 @@ export default class Extension<Conf = {}, Deps = []> {
     /**
      * list of extension dependencies which composed from references to `Extension` objects.
      */
-    readonly dependencies: Deps,
+    readonly dependencies: AnyExtension[],
 
     /**
      * default extension config. Can be from any type.

@@ -14,10 +14,10 @@ export class Build {
   // distribute by compiler.
   // execute all in order.
   // watch?
-  register(task: Task) {}
+  // register(task: Task) {}
 
-  static async provide(config: {}, [paper, workspace]: BuildDeps): Build {
-    const build = new Build(workspace);
+  static async provide(config: {}, [paper, workspace]: BuildDeps) {
+    const build = new Build();
     paper.register(new BuildCmd(workspace, build));
     return build;
   }
