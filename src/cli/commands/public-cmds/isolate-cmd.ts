@@ -73,7 +73,10 @@ export default class Isolate extends Command {
     return isolate(id, scopePath || process.cwd(), concreteOpts);
   }
 
-  report(directory: string): string {
+  report(directory: string, _params, options): string {
+    if (options.directory) {
+      return `capsule created at: ${options.directory}`;
+    }
     return directory;
   }
 }

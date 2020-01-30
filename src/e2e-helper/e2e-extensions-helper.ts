@@ -33,12 +33,12 @@ export default class ExtensionsHelper {
     this.bitJson.write(bitJson);
   }
 
-  importNpmPackExtension(id = 'global-remote/npm/pack@2.0.1') {
+  importNpmPackExtension(id = 'global-remote/npm/pack@2.0.2') {
     this.fixtures.ensureGlobalRemoteScope();
     this.scopeHelper.addGlobalRemoteScope();
     this.importAndConfigureExtension(id);
     // workaround to get the registry into the package.json file
-    const extensionFilePath = path.join(this.scopes.localPath, '.bit/components/npm/pack/global-remote/2.0.1/index.js');
+    const extensionFilePath = path.join(this.scopes.localPath, '.bit/components/npm/pack/global-remote/2.0.2/index.js');
     const extensionFile = fs.readFileSync(extensionFilePath).toString();
     const extensionFileIncludeRegistry = extensionFile.replace(
       'excludeRegistryPrefix: true',

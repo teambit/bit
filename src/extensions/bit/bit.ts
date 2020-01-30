@@ -72,18 +72,18 @@ export default class Bit {
       const capsuleOptions: CapsuleOptions = {
         installPackages: true
       };
+      return [];
+      // if (!extensionsIds.length) return [];
+      // const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(
+      //   extensionsIds.map(ex => ex.toString()),
+      //   capsuleOptions
+      // );
 
-      if (!extensionsIds.length) return [];
-      const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(
-        extensionsIds.map(ex => ex.toString()),
-        capsuleOptions
-      );
-
-      return Object.values(capsulesMap).map(capsule => {
-        const extPath = capsule.wrkDir;
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(extPath);
-      });
+      // return Object.values(capsulesMap).map(capsule => {
+      //   const extPath = capsule.wrkDir;
+      //   // eslint-disable-next-line global-require, import/no-dynamic-require
+      //   return require(extPath);
+      // });
     }
 
     return [];

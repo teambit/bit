@@ -109,7 +109,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/png');
+      helper.command.runCmd('bit add bar/png_fixture.png -m png_fixture.png -i bar/png');
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });

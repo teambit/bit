@@ -1,7 +1,6 @@
 import { Paper } from '../paper';
 import { BuildCmd } from './build.cmd';
 import { Workspace } from '../workspace';
-import { Component } from '../component';
 
 export type BuildDeps = [Paper, Workspace];
 
