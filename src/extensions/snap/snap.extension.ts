@@ -1,6 +1,6 @@
 import { Extension } from '../../harmony';
 import provideSnap from './snap.provider';
-import ScopeExt from '../../scope/scope.extension';
+import { ScopeExt } from '../scope';
 import { PaperExt } from '../../extensions/paper';
 import { WorkspaceExt } from '../../extensions/workspace';
 

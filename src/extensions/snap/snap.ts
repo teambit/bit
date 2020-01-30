@@ -1,5 +1,5 @@
 import { SnapOptions } from './types';
-import { Scope } from '../../scope/scope.api';
+import { Scope } from '../scope';
 import { Workspace } from '../../extensions/workspace';
 import GeneralError from '../../error/general-error';
 import { DEFAULT_BIT_RELEASE_TYPE } from '../../constants';

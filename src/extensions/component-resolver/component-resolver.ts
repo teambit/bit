@@ -1,5 +1,5 @@
 import { Workspace } from '../workspace';
-import { Scope } from '../../scope/scope.api';
+import { Scope } from '../scope';
 import { BitId as ComponentId } from '../../bit-id';
 import { Component } from '../../component';
 

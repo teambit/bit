@@ -1,6 +1,6 @@
 import { Extension } from '../../harmony';
 import { WorkspaceExt } from '../../extensions/workspace';
-import ScopeExt from '../../scope/scope.extension';
+import { ScopeExt } from '../scope';
 import { CapsuleExt } from '../../capsule';
 import provideBit from './bit.provider';
 

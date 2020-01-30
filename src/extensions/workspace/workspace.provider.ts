@@ -1,4 +1,4 @@
-import { Scope } from '../../scope/scope.api';
+import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../../component';
 import { ListCmd } from './list.cmd';

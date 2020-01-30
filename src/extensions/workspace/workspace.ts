@@ -1,5 +1,5 @@
 import { Consumer } from '../../consumer';
-import { Scope } from '../../scope/scope.api';
+import { Scope } from '../scope';
 import { Component, ComponentFactory, ComponentID } from '../../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';

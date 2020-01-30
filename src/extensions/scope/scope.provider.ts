@@ -1,6 +1,6 @@
-import { loadConsumerIfExist } from '../consumer';
-import { Scope } from './scope.api';
-import { loadScopeIfExist } from './scope-loader';
+import { loadConsumerIfExist } from '../../consumer';
+import { Scope } from './scope';
+import { loadScopeIfExist } from '../../scope/scope-loader';
 
 export type ScopeConfig = {};
 

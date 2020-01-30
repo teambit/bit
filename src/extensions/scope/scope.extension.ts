@@ -1,4 +1,4 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../harmony';
 import { provideScope } from './scope.provider';
 
 export default Extension.instantiate({

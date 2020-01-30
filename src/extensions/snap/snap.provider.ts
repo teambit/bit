@@ -1,5 +1,5 @@
 // import Snap from './snap';
-import { Scope } from '../../scope/scope.api';
+import { Scope } from '../scope';
 import { Workspace } from '../../extensions/workspace';
 import { Paper } from '../paper';
 
