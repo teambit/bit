@@ -3,7 +3,7 @@ import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './cli';
-import { ComposerExt } from './composer';
+import { ComposerExt } from './extensions/composer';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import logger from './logger/logger';

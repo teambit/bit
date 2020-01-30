@@ -1,4 +1,4 @@
-import { Extension } from '../harmony';
+import { Extension } from '../../harmony';
 
 export default Extension.instantiate({
   name: 'Watch',

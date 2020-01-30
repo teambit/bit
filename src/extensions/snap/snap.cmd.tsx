@@ -2,11 +2,11 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, PaperOptions } from '../extensions/paper';
-import GeneralError from '../error/general-error';
+import { Command, PaperOptions } from '../paper';
+import GeneralError from '../../error/general-error';
 import { SnapOptions } from './types';
 import Snap from './snap';
-import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
+import { DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
 
 export class SnapCommand implements Command {
   public name = 'snap [id] [version]';

@@ -1,7 +1,7 @@
 // import Snap from './snap';
-import { Scope } from '../scope/scope.api';
-import { Workspace } from '../extensions/workspace';
-import { Paper } from '../extensions/paper';
+import { Scope } from '../../scope/scope.api';
+import { Workspace } from '../../extensions/workspace';
+import { Paper } from '../paper';
 
 export type SnapDeps = [Paper, Workspace, Scope];
 
