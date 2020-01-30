@@ -10,7 +10,7 @@ export default class ExtensionLoadError extends Error {
     /**
      * extension error
      */
-    private err: Error,
+    private originalError: Error,
 
     /**
      * extension formatted / handled error message
@@ -23,6 +23,6 @@ export default class ExtensionLoadError extends Error {
   toString() {
     return `failed to load extension: ${this.extension.name} with error:
 
-${this.msg || this.err.stack}`;
+${this.msg || this.originalError.stack}`;
   }
 }

@@ -18,11 +18,10 @@ BPromise.config({
 
 // loudRejection();
 HooksManager.init();
-
 Harmony.load([BitCliExt, ComposerExt, BuildExt])
   .run()
   .then(() => {})
   .catch(err => {
-    const handledError = defaultHandleError(err);
+    const handledError = defaultHandleError(err.originalError);
     logErrAndExit(handledError || err, process.argv[1] || '');
   });
