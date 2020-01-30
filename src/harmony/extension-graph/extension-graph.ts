@@ -1,34 +1,38 @@
 import { Graph } from 'cleargraph';
 import { AnyExtension } from '../types';
 import { fromExtension, fromExtensions } from './from-extension';
-import { ExtensionEdgeData } from './extension-edge';
 
-export default class ExtensionGraph extends Graph<AnyExtension, ExtensionEdgeData> {
-  byExecutionOrder(): AnyExtension[] {
-    const extensionsIds = this.toposort().reverse();
-    return Object.values(this.getNodeInfo(extensionsIds)) as AnyExtension[];
+export default class DependencyGraph extends Graph<AnyExtension, string> {
+  private cache = new Map<string, AnyExtension>();
+
+  byExecutionOrder() {
+    return this.topologicallySort().map(vertex => vertex.attr);
   }
 
   addExtensions(extensions: AnyExtension[]) {
-    const { nodes, edges } = fromExtensions(extensions);
-    this.setNodes(nodes);
+    const { vertices, edges } = fromExtensions(extensions);
+    this.setVertices(vertices);
     this.setEdges(edges);
 
     return this;
   }
 
+  // :TODO refactor this asap
   getExtension(id: string) {
-    return this.node(id);
+    if (cachedVertex) return cachedVertex;
+
+    const res = this.vertices.find(vertex => vertex.id === id);
+    if (res) {
+      this.cache.set(res.id, res.attr);
+      return res.attr;
+    }
+
+    return null;
   }
 
-  static fromRootExtension(extension: AnyExtension) {
-    const { nodes, edges } = fromExtension(extension);
+  static fromRoot(extension: AnyExtension) {
+    const { vertices, edges } = fromExtension(extension);
 
-    return new ExtensionGraph(true, nodes, edges);
-  }
-
-  static from(extensions: AnyExtension[]) {
-    const { nodes, edges } = fromExtensions(extensions);
-    return new ExtensionGraph(true, nodes, edges);
+    return new DependencyGraph(edges, vertices);
   }
 }

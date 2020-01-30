@@ -1,4 +1,3 @@
-import { NodeData } from 'cleargraph';
 import Extension from './extension';
 import Harmony from './harmony';
 
