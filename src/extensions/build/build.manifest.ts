@@ -6,8 +6,6 @@ import { WorkspaceExt } from '../workspace';
 export default Extension.instantiate({
   name: 'Build',
   dependencies: [PaperExt, WorkspaceExt],
-  config: {
-    task: ''
-  },
+  config: {},
   provider: Build.provide
 });

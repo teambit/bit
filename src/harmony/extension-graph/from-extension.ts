@@ -1,35 +1,37 @@
-import { ExtensionNode } from './extension-node';
-import { ExtensionEdge } from './extension-edge';
+import { Vertex, Edge } from 'cleargraph';
 import { AnyExtension } from '../types';
+
 /**
  * build vertices and edges from the given extension
  */
 export function fromExtension(extension: AnyExtension) {
-  const nodes: { [id: string]: ExtensionNode } = {};
-  let edges: ExtensionEdge[] = [];
-  // extension.
+  const vertices: { [id: string]: Vertex<AnyExtension> } = {};
+  let edges: Edge<string>[] = [];
 
   function iterate(root: AnyExtension) {
     const id = root.name;
-    if (nodes[id]) return;
+    if (vertices[id]) return;
 
-    nodes[id] = new ExtensionNode(id, root);
+    vertices[id] = new Vertex<AnyExtension>(id, root);
 
-    const newEdges = root.dependencies.map((dep: AnyExtension) => {
-      return new ExtensionEdge(id, dep.name, { type: 'dependency' });
+    const newEdges = root.dependencies.map(dep => {
+      return Edge.fromObject({
+        srcId: id,
+        dstId: dep.name,
+        attr: 'dependency'
+      });
     });
 
     edges = edges.concat(newEdges);
 
-    root.dependencies.forEach((dep: AnyExtension) => {
-      iterate(dep);
-    });
+    // @ts-ignore
+    root.dependencies.forEach(dep => iterate(dep));
   }
 
   iterate(extension);
 
   return {
-    nodes: Object.values(nodes),
+    vertices: Object.values(vertices),
     edges
   };
 }
@@ -43,10 +45,10 @@ export function fromExtensions(extensions: AnyExtension[]) {
   return perExtension.reduce(
     (acc, subgraph) => {
       acc.edges = acc.edges.concat(subgraph.edges);
-      acc.nodes = acc.nodes.concat(subgraph.nodes);
+      acc.vertices = acc.vertices.concat(subgraph.vertices);
 
       return acc;
     },
-    { nodes: [], edges: [] }
+    { vertices: [], edges: [] }
   );
 }

@@ -20,8 +20,11 @@ export default class Harmony {
     private graph: ExtensionGraph
   ) {}
 
+  /**
+   * list all registered extensions
+   */
   get extensions() {
-    // return this.graph.
+    return this.graph.vertices.map(vertex => vertex.attr);
   }
 
   async load(extensions: AnyExtension[]) {
@@ -29,11 +32,11 @@ export default class Harmony {
     asyncForEach(extensions, async ext => this.runOne(ext));
   }
 
-  async runOne(extension: AnyExtension) {
+  private async runOne(extension: AnyExtension) {
     if (extension.instance) return;
     // create an index of all vertices in dependency graph
     const dependencies = await Promise.all(
-      extension.dependencies.map(async (ext: AnyExtension) => {
+      extension.dependencies.map(async ext => {
         return ext.instance;
       })
     );
@@ -58,7 +61,6 @@ export default class Harmony {
   /**
    * load harmony from a root extension
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static load(extensions: AnyExtension[]) {
     const graph = ExtensionGraph.from(extensions);
     return new Harmony(graph);

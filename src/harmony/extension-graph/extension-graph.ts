@@ -19,6 +19,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
 
   // :TODO refactor this asap
   getExtension(id: string) {
+    const cachedVertex = this.cache.get(id);
     if (cachedVertex) return cachedVertex;
 
     const res = this.vertices.find(vertex => vertex.id === id);
@@ -30,8 +31,20 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
     return null;
   }
 
+  /**
+   * build Harmony from a single extension.
+   */
   static fromRoot(extension: AnyExtension) {
     const { vertices, edges } = fromExtension(extension);
+
+    return new DependencyGraph(edges, vertices);
+  }
+
+  /**
+   * build Harmony from set of extensions
+   */
+  static from(extensions: AnyExtension[]) {
+    const { vertices, edges } = fromExtensions(extensions);
 
     return new DependencyGraph(edges, vertices);
   }

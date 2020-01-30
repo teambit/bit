@@ -2,18 +2,18 @@ import { ProviderFn } from './types';
 import Harmony from './harmony';
 import { AnyExtension } from '../../../brix/harmony/src/types';
 
-export type ExtensionProps<Conf, Deps> = {
+export type ExtensionProps<Conf> = {
   name: string;
   // TODO: changes from any to something meaningful
   dependencies: any[];
   config: Conf;
-  provider: ProviderFn<Conf, Deps>;
+  provider: ProviderFn<Conf>;
 };
 
 /**
  * harmony's extension definition. this can be used to define and extend `Harmony` applications.
  */
-export default class Extension<Conf = {}, Deps = []> {
+export default class Extension<Conf = {}> {
   constructor(
     /**
      * extension name.
@@ -34,7 +34,7 @@ export default class Extension<Conf = {}, Deps = []> {
      * extension provider is a function of config, dependencies and an instance of `Harmony`
      * which returns the extension instance.
      */
-    readonly provider: ProviderFn<Conf, Deps>
+    readonly provider: ProviderFn<Conf>
   ) {}
 
   private _instance = null;
@@ -60,7 +60,7 @@ export default class Extension<Conf = {}, Deps = []> {
     return Promise.resolve(this.instance);
   }
 
-  static instantiate<Conf = {}, Deps = []>(props: ExtensionProps<Conf, Deps>): Extension<Conf, Deps> {
+  static instantiate<Conf = {}, Deps = []>(props: ExtensionProps<Conf>): Extension<Conf> {
     return Object.assign(Object.create(Extension.prototype), props);
   }
 }
