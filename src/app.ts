@@ -18,9 +18,15 @@ BPromise.config({
 
 // loudRejection();
 HooksManager.init();
-Harmony.load([BitCliExt, ComposerExt, BuildExt])
+const harmony = Harmony.load([BitCliExt, ComposerExt, BuildExt]);
+harmony
   .run()
-  .then(() => {})
+  .then(() => {
+    const cli = harmony.get('BitCli');
+    // @ts-ignore
+    if (cli && cli.instance) return cli.instance.run([], harmony);
+    throw new Error('failed to load CLI');
+  })
   .catch(err => {
     const handledError = defaultHandleError(err.originalError);
     logErrAndExit(handledError || err, process.argv[1] || '');

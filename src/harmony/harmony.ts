@@ -27,6 +27,9 @@ export default class Harmony {
     return this.graph.vertices.map(vertex => vertex.attr);
   }
 
+  /**
+   * load extensions during Harmony runtime.
+   */
   async load(extensions: AnyExtension[]) {
     this.graph.addExtensions(extensions);
     asyncForEach(extensions, async ext => this.runOne(ext));
@@ -49,7 +52,14 @@ export default class Harmony {
   }
 
   /**
-   * execute harmony.
+   * get an extension from harmony.
+   */
+  get(id: string) {
+    return this.graph.getExtension(id);
+  }
+
+  /**
+   * execute harmony. applies providers of all extensions by execution order.
    */
   async run() {
     const executionOrder = this.graph.byExecutionOrder();

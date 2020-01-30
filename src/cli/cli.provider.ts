@@ -20,6 +20,7 @@ export async function CLIProvider(config: {}, [paper, bit]: BitCLIDeps) {
     }
     return acc;
   }, []);
+
   const legacyRegistry = buildRegistry(extensionsCommands);
   const bitCLI = new BitCli(paper);
   const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
@@ -29,9 +30,5 @@ export async function CLIProvider(config: {}, [paper, bit]: BitCLIDeps) {
     return p;
   }, paper);
 
-  bit.onExtensionsLoaded.subscribe(() => {
-    const pr = bitCLI.run();
-    return pr;
-  });
   return bitCLI;
 }
