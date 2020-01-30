@@ -120,7 +120,7 @@ describe('binary files', function() {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
-    it.only('should create a symlink or copy of the dependency file inside the component dir', () => {
+    it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
