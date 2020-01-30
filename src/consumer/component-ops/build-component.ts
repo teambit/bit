@@ -20,10 +20,10 @@ import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import { ComponentCapsule } from '../../capsule-ext';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-import { CompilerResults } from '../../extensions/compiler-api';
+import { CompilerResults } from '../../legacy-extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
 import Component from '../component/consumer-component';
-import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
+import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 
 type BuildResults = {
   builtFiles: Vinyl[];

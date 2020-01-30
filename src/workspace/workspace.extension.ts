@@ -1,4 +1,4 @@
-import { Extension } from '../../extensions/harmony';
+import { Extension } from '../harmony';
 import workspaceProvider from './workspace.provider';
 import ScopeExt from '../scope/scope.extension';
 import { ComponentFactoryExt } from '../component';

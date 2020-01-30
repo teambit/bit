@@ -23,7 +23,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import BitMap from '../bit-map/bit-map';
 import ConfigDir from '../bit-map/config-dir';
-import EnvExtension from '../../extensions/env-extension';
+import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
