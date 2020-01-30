@@ -61,8 +61,7 @@ describe('typescript', function() {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
           helper.scopeHelper.addRemoteScope();
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
@@ -220,8 +219,7 @@ describe('typescript', function() {
           const bitJson = helper.bitJson.read();
           bitJson.resolveModules = { modulesDirectories: ['src'] };
           helper.bitJson.write(bitJson);
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('src/utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from 'utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
@@ -308,8 +306,7 @@ describe('typescript', function() {
           bitJson.resolveModules = { aliases: { '@': 'src' } };
           helper.bitJson.write(bitJson);
 
-          const isTypeFixture = "export default function isType() { return 'got is-type'; };";
-          helper.fs.createFile('src/utils', 'is-type.ts', isTypeFixture);
+          helper.fs.createFile('src/utils', 'is-type.ts', fixtures.isTypeTS);
           helper.command.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
           const isStringFixture =
             "import isType from '@/utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";

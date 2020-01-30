@@ -58,9 +58,7 @@ describe('bit remove command', function() {
     let scopeBeforeRemoving;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
 
       const isStringFixture = "const a = require('./is-type');";
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
@@ -167,12 +165,9 @@ describe('bit remove command', function() {
     const componentName = 'utils/is-type';
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -213,15 +208,9 @@ describe('bit remove command', function() {
   describe('remove modified component', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
       helper.command.tagAllComponents();
-      helper.fs.createFile(
-        'utils',
-        'is-type.js',
-        "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
-      );
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
     });
     it('should not remove modified component ', () => {
       const output = helper.command.removeComponent('utils/is-type@0.0.1 -s');
@@ -256,21 +245,13 @@ describe('bit remove command', function() {
   describe.skip('remove versions from local scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
     });
     it('should not remove component version when component is modified', () => {
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
-      helper.fs.createFile(
-        'utils',
-        'is-string.js',
-        "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
-      );
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
       const output = helper.command.removeComponent('utils/is-string@0.0.1 -s');
       expect(output).to.have.string('error: unable to remove modified components');
       expect(output).to.have.string('utils/is-string@0.0.1');
@@ -310,23 +291,15 @@ describe('bit remove command', function() {
   describe.skip('remove versions from remote scope', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
 
-      helper.fs.createFile('copy', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('copy', 'is-type.js', fixtures.isType);
       helper.command.addComponent('copy/is-type.js', { i: 'copy/is-type' });
 
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
-      helper.fs.createFile(
-        'utils',
-        'is-string.js',
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };console.log('sdfsdfsdf')'"
-      );
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -367,9 +340,7 @@ describe('bit remove command', function() {
       helper2.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.remotePath);
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
 
       let isStringFixture = "const a = require('./is-type');";
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);

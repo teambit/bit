@@ -100,14 +100,11 @@ describe('bit export command', function() {
   describe('with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
       helper.command.exportComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent('utils/is-string');
@@ -123,14 +120,8 @@ describe('bit export command', function() {
   describe('with dependencies and export-all', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithTwoComponents();
       helper.command.tagComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
-      helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportAllComponents();
     });
@@ -197,12 +188,9 @@ describe('bit export command', function() {
   describe('after import with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -224,13 +212,10 @@ describe('bit export command', function() {
     let anotherScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixture);
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent('utils/is-type');
@@ -803,7 +788,7 @@ describe('bit export command', function() {
       let localScope;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        helper.fixtures.populateWorkspaceWithComponents();
+        helper.fixtures.populateWorkspaceWithThreeComponents();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
@@ -1171,7 +1156,7 @@ describe('bit export command', function() {
     let anotherRemotePath;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
