@@ -35,5 +35,11 @@ export default class ComponentResolver {
     return this.scope;
   }
 
-  async getComponent(id: ComponentId): Component {}
+  async getComponent(id: ComponentId): Promise<Component | undefined> {
+    if (!id) {
+      return undefined;
+    }
+    // TODO: implement
+    return undefined;
+  }
 }

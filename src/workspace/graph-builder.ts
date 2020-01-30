@@ -48,6 +48,8 @@ export async function buildGraph(consumer: Consumer): Promise<Graph<Component, a
   const allIds = graph.nodes();
   allIds.forEach(componentId => {
     const node = graph.node(componentId);
+    // TODO: this ts ignore should be removed once the graph.node will return ND instead of NodeData (probably v0.0.6)
+    // @ts-ignore
     _addDependenciesToGraph(node, graph);
   });
   return graph;
