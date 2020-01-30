@@ -1,5 +1,5 @@
 import { Graph, EdgeData } from 'cleargraph';
-import Component from '../../../component/component';
+import Component from '../../component/component';
 
 export type Dependency = EdgeData & {
   type: 'dev' | 'peer' | 'regular';

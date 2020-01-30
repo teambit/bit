@@ -1,4 +1,4 @@
-import { BitId } from '../bit-id';
+import { BitId } from '../../bit-id';
 
 export default class ComponentID {
   constructor(

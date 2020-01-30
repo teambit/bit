@@ -8,7 +8,7 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import Capsule from '../environment/capsule-builder';
+import Capsule from '../../environment/capsule-builder';
 
 /**
  * in-memory representation of a component.

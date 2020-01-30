@@ -1,6 +1,6 @@
 import capsuleOrchestrator from './orchestrator/orchestrator';
 import { CreateConfig, WorkspaceCapsules } from './types';
-import { Component } from '../component';
+import { Component } from '../extensions/component';
 import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
 import CapsuleBuilder from '../environment/capsule-builder';

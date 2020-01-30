@@ -1,7 +1,7 @@
 import { Extension } from '../../harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeExt } from '../scope';
-import { ComponentFactoryExt } from '../../component';
+import { ComponentFactoryExt } from '../component';
 import { PaperExt } from '../../extensions/paper';
 
 export default Extension.instantiate({

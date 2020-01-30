@@ -1,6 +1,6 @@
 import { Scope } from '../scope/';
 import Workspace from './workspace';
-import { ComponentFactory } from '../../component';
+import { ComponentFactory } from '../component';
 import { ListCmd } from './list.cmd';
 import { Paper } from '../../extensions/paper';
 import { loadConsumerIfExist } from '../../consumer';

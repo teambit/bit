@@ -1,5 +1,5 @@
-import { Extension } from '../harmony';
-import { PathLinux } from '../utils/path';
+import { Extension } from '../../harmony';
+import { PathLinux } from '../../utils/path';
 
 /**
  * in-memory represnentation of the component configuration.

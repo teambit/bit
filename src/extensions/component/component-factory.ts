@@ -1,5 +1,5 @@
-import Capsule from '../environment/capsule-builder';
-import ConsumerComponent from '../consumer/component';
+import Capsule from '../../environment/capsule-builder';
+import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
 import ComponentID from './id';

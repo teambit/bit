@@ -1,5 +1,5 @@
 import ComponentConfig from './config';
-import ConsumerComponent from '../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 
 /**
  * `Snap` represents the state of the component in the working tree.

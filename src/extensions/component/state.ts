@@ -1,6 +1,6 @@
 import Config from './config';
 import ComponentFS from './component-fs';
-import ConsumerComponent from '../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 
 export default class State {
   constructor(
