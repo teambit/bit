@@ -41,14 +41,6 @@ export default class Harmony {
     try {
       await extension.run(dependencies, this);
     } catch (err) {
-      this.logger &&
-        this.logger.error(
-          `failed to load extension: ${extension.name} with error: ${err.stack}. Error serialized: ${JSON.stringify(
-            err,
-            Object.getOwnPropertyNames(err)
-          )}`
-        );
-      // const msg = defaultHandleError(err);
       throw new ExtensionLoadError(extension, err);
     }
   }
