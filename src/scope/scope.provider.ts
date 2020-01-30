@@ -1,6 +1,6 @@
 import { loadConsumerIfExist } from '../consumer';
 import { Scope } from './scope.api';
-import loadScope from './scope-loader';
+import { loadScopeIfExist } from './scope-loader';
 
 export type ScopeConfig = {};
 
@@ -10,7 +10,10 @@ export async function provideScope() {
   if (consumer) {
     legacyScope = consumer.scope;
   } else {
-    legacyScope = loadScope();
+    legacyScope = loadScopeIfExist();
+  }
+  if (!legacyScope) {
+    return undefined;
   }
   return new Scope(legacyScope);
 }
