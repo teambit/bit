@@ -1,7 +1,7 @@
 // import { Graph, Vertex } from 'cleargraph';
 // import { Component } from '../component';
 // import ConsumerComponent from '../../consumer/component';
-import { Consumer } from '../../consumer';
+// import { Consumer } from '../../consumer';
 // import ComponentsList from '../../consumer/component/components-list';
 // import { ModelComponent } from '../scope/models';
 // import { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
@@ -10,48 +10,48 @@ import { Consumer } from '../../consumer';
 // TODO: Change to component graph
 // @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function buildGraph(consumer: Consumer): Promise<Graph<Component, any>> {
-  // TODO: fix me
-  // @ts-ignore
-  // const graph = new Graph<Component, any>();
-  // const componentsList = new ComponentsList(consumer);
-  // const allModelComponents: ModelComponent[] = await consumer.scope.list();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const workspaceComponents: ConsumerComponent[] = await componentsList.getFromFileSystem();
-  // const addNodesP = workspaceComponents.map(async (consumerComponent: ConsumerComponent) => {
-  //   const id = consumerComponent.id.toString();
-  //   const modelComponent = await consumer.scope.getModelComponentIfExist(consumerComponent.id);
-  //   const component = await Component.fromLegacy(
-  //     consumerComponent.id,
-  //     consumerComponent,
-  //     modelComponent,
-  //     consumer.scope.objects
-  //   );
-  //   return graph.setNode(id, component);
-  // });
-  // await Promise.all(addNodesP);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // const allModelComponents = await consumer.scope.list();
-  // const addModelsOnlyNodes = allModelComponents.map(async (modelComponent: ModelComponent) => {
-  //   const id = modelComponent.id();
-  //   if (graph.hasNode(id)) {
-  //     return Promise.resolve();
-  //   }
-  //   const component = await Component.fromLegacy(
-  //     modelComponent.toBitId(),
-  //     undefined,
-  //     modelComponent,
-  //     consumer.scope.objects
-  //   );
-  //   return graph.setNode(id, component);
-  // });
-  // await Promise.all(addModelsOnlyNodes);
-  // TODO: we should have a wat to get the nodes instead of the nodes keys
-  // const allComps = graph.vertices.map(vertex => vertex.attr);
-  // graph.setVertices()
-  // _addDependenciesToGraph(allComps, graph);
-  // return graph;
-}
+// export async function buildGraph(consumer: Consumer): Promise<Graph<Component, any>> {
+// TODO: fix me
+// @ts-ignore
+// const graph = new Graph<Component, any>();
+// const componentsList = new ComponentsList(consumer);
+// const allModelComponents: ModelComponent[] = await consumer.scope.list();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// const workspaceComponents: ConsumerComponent[] = await componentsList.getFromFileSystem();
+// const addNodesP = workspaceComponents.map(async (consumerComponent: ConsumerComponent) => {
+//   const id = consumerComponent.id.toString();
+//   const modelComponent = await consumer.scope.getModelComponentIfExist(consumerComponent.id);
+//   const component = await Component.fromLegacy(
+//     consumerComponent.id,
+//     consumerComponent,
+//     modelComponent,
+//     consumer.scope.objects
+//   );
+//   return graph.setNode(id, component);
+// });
+// await Promise.all(addNodesP);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// const allModelComponents = await consumer.scope.list();
+// const addModelsOnlyNodes = allModelComponents.map(async (modelComponent: ModelComponent) => {
+//   const id = modelComponent.id();
+//   if (graph.hasNode(id)) {
+//     return Promise.resolve();
+//   }
+//   const component = await Component.fromLegacy(
+//     modelComponent.toBitId(),
+//     undefined,
+//     modelComponent,
+//     consumer.scope.objects
+//   );
+//   return graph.setNode(id, component);
+// });
+// await Promise.all(addModelsOnlyNodes);
+// TODO: we should have a wat to get the nodes instead of the nodes keys
+// const allComps = graph.vertices.map(vertex => vertex.attr);
+// graph.setVertices()
+// _addDependenciesToGraph(allComps, graph);
+// return graph;
+// }
 
 // TODO: change the Graph type to a concrete graph with correct node/edge types
 // function _addDependenciesToGraph(node: Component, graph: Graph<any, any>): void {
