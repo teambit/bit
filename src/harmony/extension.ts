@@ -1,6 +1,6 @@
 import { ProviderFn } from './types';
 import Harmony from './harmony';
-import { AnyExtension } from '../../../brix/harmony/src/types';
+import { AnyExtension } from './types';
 
 export type ExtensionProps<Conf> = {
   name: string;

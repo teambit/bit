@@ -1,9 +1,7 @@
-import { Compiler } from '../compiler/compiler';
-
-export type TypeScriptDeps = [Compiler];
+export type TypeScriptDeps = [];
 
 export class TypeScript {
-  static async provide(config: {}, [compiler]: TypeScriptDeps) {
+  static async provide() {
     // compiler.
   }
 }

@@ -1,6 +1,5 @@
 import { SemVer } from 'semver';
 import { AnyFS } from '@teambit/any-fs';
-import { NodeData } from 'cleargraph';
 import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
@@ -13,7 +12,7 @@ import Capsule from '../../environment/capsule-builder';
 /**
  * in-memory representation of a component.
  */
-export default class Component implements NodeData {
+export default class Component {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
