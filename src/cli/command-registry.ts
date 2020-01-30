@@ -133,28 +133,19 @@ function serializeErrAndExit(err, commandName) {
 
 // @TODO add help for subcommands
 function registerAction(command: Command, concrete) {
-  return concrete.action((...args) => {
-    // This is because there is a bug in commander that return the Command instance in a random place in the args
-    // And we don't really need the command itself
-    args = args.filter(arg => {
-      if (arg && arg.constructor && arg.constructor.name === 'Command') {
-        return false;
-      }
-      return true;
-    });
-    // TODO: we wrap it with another unnecessary array because of the commands expect to get it like this
-    // we should fix it in all commands
-    const acutalArgs = [args[0]] || [[]];
+  concrete.action((...args) => {
     if (!empty(command.commands)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const subcommandName = parseSubcommandFromArgs(args[1]);
+      const subcommandName = parseSubcommandFromArgs(args);
       const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
-      acutalArgs.shift();
-      if (subcommand) return execAction(subcommand, concrete, acutalArgs);
+
+      args.shift();
+      if (subcommand) return execAction(subcommand, concrete, args);
     }
-    return execAction(command, concrete, acutalArgs);
+
+    return execAction(command, concrete, args);
   });
 }
 
