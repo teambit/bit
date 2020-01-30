@@ -1267,11 +1267,8 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      const isStringFixtureV2 =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      helper.fs.createFile('utils', 'is-string.js', isStringFixtureV2); // modify is-string
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
+      helper.fs.createFile('utils', 'is-string.js', fixtures.isStringV2); // modify is-string
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -1324,8 +1321,7 @@ console.log(barFoo.default());`;
       helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV1);
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagComponent('utils/is-type');
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
       helper.command.tagComponent('utils/is-type');
       helper.command.exportAllComponents();
 
@@ -1476,8 +1472,7 @@ console.log(barFoo.default());`;
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
 
-      const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // update component
+      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // update component
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
@@ -1545,8 +1540,7 @@ console.log(barFoo.default());`;
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('should not break the is-string component', () => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
 
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
@@ -1589,8 +1583,7 @@ console.log(barFoo.default());`;
         expect(bitMap[`${helper.scopes.remote}/utils/is-type@0.0.1`].origin).to.equal('IMPORTED');
       });
       it('changes of is-type in components directory should affect is-string', () => {
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
@@ -1660,10 +1653,8 @@ console.log(barFoo.default());`;
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
       // modify the component
-      const isStringModifiedFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
-      helper.fs.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
+      helper.fs.createFile(componentPath, 'is-string.js', fixtures.isStringV2);
       helper.command.tagComponent('utils/is-string');
       // export to scope B
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
@@ -1704,10 +1695,8 @@ console.log(barFoo.default());`;
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('utils/is-string');
       // modify the component
-      const isStringModifiedFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
-      helper.fs.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
+      helper.fs.createFile(componentPath, 'is-string.js', fixtures.isStringV2);
       helper.command.tagComponent('utils/is-string');
       helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`);
 
@@ -1834,10 +1823,8 @@ console.log(barFoo.default());`;
       helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.fs.createFile(path.join('src', 'utils'), 'is-string.js', fixtures.isString);
       helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
-      const fooBarFixture =
-        "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
-      helper.fixtures.createComponentBarFoo(fooBarFixture);
-      helper.fs.createFile(path.join('src', 'bar'), 'foo.js', fooBarFixture);
+      helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
+      helper.fs.createFile(path.join('src', 'bar'), 'foo.js', fixtures.barFooFixture);
       helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -2284,7 +2271,7 @@ console.log(barFoo.default());`;
     let scopeBeforeImport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('utils', 'bar-dep.js');
       helper.fs.createFile('bar', 'foo2.js', 'require("../utils/bar-dep");');
       helper.command.addComponent('utils/bar-dep.js');
@@ -2338,7 +2325,7 @@ console.log(barFoo.default());`;
   describe('component with different versions of the same dependent', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.fixtures.createComponentBarFoo("require('../utils/is-type.js')");
       helper.command.tagAllComponents();

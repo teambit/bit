@@ -282,6 +282,30 @@ chai.use(require('chai-fs'));
             expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/bar/foo@0.0.2`);
           });
         });
+        describe('multiple test files require the same package', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(afterImportScope);
+            const barFooDir = 'components/bar/foo/bar';
+            helper.fs.createFile(path.join(barFooDir, 'foo.js'), ''); // remove the prod dep
+            helper.fs.outputFile(
+              path.join(barFooDir, 'foo.spec.js'),
+              `require('@ci/${helper.scopes.remote}.utils.is-string');`
+            ); // add dev-dep
+            helper.fs.outputFile(
+              path.join(barFooDir, 'foo1.spec.js'),
+              `require('@ci/${helper.scopes.remote}.utils.is-string');`
+            ); // add another spec with same dep
+            helper.command.addComponent('-t components/bar/foo/bar/foo1.spec.js -i bar/foo');
+          });
+          it('bit show should not show the same devDependency twice', () => {
+            const show = helper.command.showComponentParsed('bar/foo');
+            expect(show.devDependencies).to.have.lengthOf(1);
+          });
+          it('bit tag should tag them successfully', () => {
+            const tag = helper.command.tagAllComponents();
+            expect(tag).to.have.string('1 component(s) tagged');
+          });
+        });
       });
     });
     describe('components with nested dependencies and compiler', () => {

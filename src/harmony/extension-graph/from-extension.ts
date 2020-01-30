@@ -16,7 +16,7 @@ export function fromExtension(extension: AnyExtension) {
     nodes[id] = new ExtensionNode(id, root);
 
     const newEdges = root.dependencies.map((dep: AnyExtension) => {
-      return new ExtensionEdge(id, dep.name, 'dependency');
+      return new ExtensionEdge(id, dep.name, { type: 'dependency' });
     });
 
     edges = edges.concat(newEdges);

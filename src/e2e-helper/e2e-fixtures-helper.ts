@@ -72,6 +72,7 @@ export default class FixtureHelper {
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
+
   /**
    * populates the local workspace with the following components:
    * 'bar/foo'         => requires a file from 'utils/is-string' component
@@ -79,13 +80,41 @@ export default class FixtureHelper {
    * 'utils/is-type'
    * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
    */
-  populateWorkspaceWithComponents() {
+  populateWorkspaceWithThreeComponents() {
     this.fs.createFile('utils', 'is-type.js', fixtures.isType);
     this.addComponentUtilsIsType();
     this.fs.createFile('utils', 'is-string.js', fixtures.isString);
     this.addComponentUtilsIsString();
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
+  }
+
+  /**
+   * @deprecated use populateWorkspaceWithThreeComponents()
+   */
+  populateWorkspaceWithComponents() {
+    this.populateWorkspaceWithThreeComponents();
+  }
+
+  /**
+   * populates the local workspace with the following components:
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'
+   * in other words, the dependency chain is: utils/is-string => utils/is-type
+   */
+  populateWorkspaceWithTwoComponents() {
+    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.fs.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+  }
+
+  /**
+   * populates the local workspace with the one component "utils/is-type".
+   */
+  populateWorkspaceWithUtilsIsType() {
+    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
   }
 
   /**

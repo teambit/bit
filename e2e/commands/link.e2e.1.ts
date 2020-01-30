@@ -18,9 +18,7 @@ describe('bit link', function() {
       let beforeLink;
       before(() => {
         helper.scopeHelper.reInitLocalScope();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         beforeLink = helper.scopeHelper.cloneLocalScope();
       });
       describe('when scopeDefault is not set', () => {
@@ -76,9 +74,7 @@ describe('bit link', function() {
     describe('after export', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
-        const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.fixtures.addComponentUtilsIsType();
+        helper.fixtures.populateWorkspaceWithUtilsIsType();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
@@ -199,9 +195,7 @@ console.log(isType());`;
   describe('component with dependency tree of 2', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -228,9 +222,7 @@ console.log(isType());`;
     before(() => {
       // is-type
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.fs.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.fixtures.addComponentUtilsIsType();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 

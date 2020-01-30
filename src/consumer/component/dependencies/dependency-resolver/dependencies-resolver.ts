@@ -768,10 +768,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           return;
         }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
-        const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, existingId);
-        if (!existingDependency) {
-          this.pushToDependenciesArray(currentComponentsDeps, fileType);
-        }
+        this._pushToDependenciesIfNotExist(existingId, currentComponentsDeps, fileType);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
@@ -908,32 +905,33 @@ either, use the ignore file syntax or change the require statement to have a mod
       );
       if (foundImportSource) {
         const dependencyId: BitId = importSourceMap[foundImportSource];
-        const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependencyId);
-        const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependencyId);
-        const existingCompilerDependency = this.getExistingDependency(
-          this.allDependencies.compilerDependencies,
-          dependencyId
-        );
-        const existingTesterDependency = this.getExistingDependency(
-          this.allDependencies.testerDependencies,
-          dependencyId
-        );
         const currentComponentDeps = {
           id: dependencyId,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           relativePaths: clonedDependencies.getById(dependencyId).relativePaths
         };
-        if (fileType.isTestFile && !existingDevDependency) {
-          this.allDependencies.devDependencies.push(currentComponentDeps);
-        } else if (fileType.isCompilerFile && !existingCompilerDependency) {
-          this.allDependencies.compilerDependencies.push(currentComponentDeps);
-        } else if (fileType.isTesterFile && !existingTesterDependency) {
-          this.allDependencies.testerDependencies.push(currentComponentDeps);
-        } else if (!fileType.isTestFile && !fileType.isCompilerFile && !fileType.isTesterFile && !existingDependency) {
-          this.allDependencies.dependencies.push(currentComponentDeps);
-        }
+        this._pushToDependenciesIfNotExist(dependencyId, currentComponentDeps, fileType);
       }
     });
+  }
+
+  private _pushToDependenciesIfNotExist(dependencyId: BitId, dependency: Dependency, fileType: FileType) {
+    const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependencyId);
+    const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependencyId);
+    const existingCompilerDependency = this.getExistingDependency(
+      this.allDependencies.compilerDependencies,
+      dependencyId
+    );
+    const existingTesterDependency = this.getExistingDependency(this.allDependencies.testerDependencies, dependencyId);
+    if (fileType.isTestFile && !existingDevDependency) {
+      this.allDependencies.devDependencies.push(dependency);
+    } else if (fileType.isCompilerFile && !existingCompilerDependency) {
+      this.allDependencies.compilerDependencies.push(dependency);
+    } else if (fileType.isTesterFile && !existingTesterDependency) {
+      this.allDependencies.testerDependencies.push(dependency);
+    } else if (!fileType.isTestFile && !fileType.isCompilerFile && !fileType.isTesterFile && !existingDependency) {
+      this.allDependencies.dependencies.push(dependency);
+    }
   }
 
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {

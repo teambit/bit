@@ -39,8 +39,7 @@ describe('auto tagging functionality', function() {
         helper.fixtures.addComponentUtilsIsString();
         helper.command.tagAllComponents();
 
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+        helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         const tagOutput = helper.command.tagComponent('utils/is-type');
@@ -63,8 +62,7 @@ describe('auto tagging functionality', function() {
       describe('auto-tagging after export', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(clonedScope);
-          const isTypeFixtureV3 = "module.exports = function isType() { return 'got is-type v3'; };";
-          helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV3); // modify is-type
+          helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV3); // modify is-type
           const tagOutput = helper.command.tagComponent('utils/is-type');
           expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
           expect(tagOutput).to.have.string('utils/is-string');
@@ -91,8 +89,7 @@ describe('auto tagging functionality', function() {
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         tagOutput = helper.command.tagComponent('utils/is-type');
@@ -216,8 +213,7 @@ describe('auto tagging functionality', function() {
         helper.fixtures.addComponentBarFoo();
         helper.command.tagAllComponents();
 
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
+        helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
@@ -292,8 +288,7 @@ describe('auto tagging functionality', function() {
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('utils/is-type');
 
-        const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
-        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
+        helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2); // modify is-type
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         tagOutput = helper.command.tagComponent('utils/is-type');
@@ -572,7 +567,7 @@ describe('auto tagging functionality', function() {
     let output: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateWorkspaceWithComponents();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
       helper.fs.outputFile('utils/is-type.js', fixtures.isTypeV2);
       // an intermediate step, make sure bit status shows components to be auto-tag.

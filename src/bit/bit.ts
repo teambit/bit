@@ -65,6 +65,10 @@ export default class Bit {
   private async resolveExtensions(): Promise<AnyExtension[]> {
     if (this.config && this.workspace) {
       const extensionsIds = await this.extensions();
+
+      if (!extensionsIds || !extensionsIds.length) {
+        return [];
+      }
       const capsuleOptions: CapsuleOptions = {
         installPackages: true
       };
