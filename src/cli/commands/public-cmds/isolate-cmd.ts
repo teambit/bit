@@ -75,7 +75,7 @@ export default class Isolate extends Command {
 
   report(directory: string, _params, options): string {
     if (options.directory) {
-      return options.directory;
+      return `capsule created at: ${options.directory}`;
     }
     return directory;
   }
