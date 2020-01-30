@@ -3,6 +3,8 @@ import Extension from './extension';
 import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
+import defaultHandleError, { findErrorDefinition } from '../cli/default-error-handler';
+
 //  TODO: Fix harmony dependency in bit logger
 
 // TODO: refactor to generics
@@ -45,8 +47,12 @@ export default class Harmony {
             Object.getOwnPropertyNames(err)
           )}`
         );
-      // const msg = defaultHandleError(err);
-      throw new ExtensionLoadError(extension, err);
+      const knownError = findErrorDefinition(err);
+      let msg;
+      if (knownError) {
+        msg = defaultHandleError(err);
+      }
+      throw new ExtensionLoadError(extension, err, msg);
     }
   }
 
