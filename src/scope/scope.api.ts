@@ -1,4 +1,4 @@
-import { default as LegacyScope } from './scope';
+import LegacyScope from './scope';
 import { PersistOptions } from './types';
 import { BitIds as ComponentsIds } from '../bit-id';
 import { Component, ComponentID } from '../component';
@@ -35,6 +35,7 @@ export class Scope implements ComponentHost {
    * @param id component ID
    */
   async get(id: string | ComponentID): Promise<Component | undefined> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
     return undefined;
   }

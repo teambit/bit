@@ -1,5 +1,6 @@
 import { SemVer } from 'semver';
 import { AnyFS } from '@teambit/any-fs';
+import { NodeData } from 'cleargraph';
 import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 import ComponentFS from './component-fs';
@@ -8,7 +9,6 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Capsule from '../environment/capsule-builder';
-import { NodeData } from 'cleargraph';
 
 /**
  * in-memory representation of a component.
