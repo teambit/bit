@@ -134,17 +134,18 @@ function serializeErrAndExit(err, commandName) {
 // @TODO add help for subcommands
 function registerAction(command: Command, concrete) {
   return concrete.action((...args) => {
+    args = args.filter(arg => arg);
+    const acutalArgs = args[1] || [];
     if (!empty(command.commands)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const subcommandName = parseSubcommandFromArgs(args[1]);
       const subcommand = command.commands.find(cmd => {
         return subcommandName === (parseCommandName(cmd.name) || cmd.alias);
       });
-
-      args[1].shift();
-      if (subcommand) return execAction(subcommand, concrete, args[1]);
+      acutalArgs.shift();
+      if (subcommand) return execAction(subcommand, concrete, acutalArgs);
     }
-    return execAction(command, concrete, args);
+    return execAction(command, concrete, acutalArgs);
   });
 }
 
