@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2260](https://github.com/teambit/bit/issues/2260) fix duplicate dependencies
 - [#2264](https://github.com/teambit/bit/issues/2264) fix generated dependencies links on capsule
 - [#2267](https://github.com/teambit/bit/issues/2267) fix duplicate devDependencies
 - support overrides of the workspace defaultScope per components
