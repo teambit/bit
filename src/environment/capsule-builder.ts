@@ -18,6 +18,7 @@ import { getManipulateDirForComponentWithDependencies } from '../consumer/compon
 import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
+import librarian from 'librarian';
 
 export type Options = {
   alwaysNew: boolean;
@@ -93,23 +94,8 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
-      capsules.forEach(capsule => {
-        const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
-        const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-        const packageJson = JSON.parse(pjsonString);
-        const bitBinPath = './node_modules/bit-bin';
-        const localBitBinPath = path.join(__dirname, '../..');
-        delete packageJson.dependencies['bit-bin'];
-        capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-        execa.sync('yarn', [], { cwd: capsule.wrkDir });
-        if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
-          capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
-        }
-
-        execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
-      });
-      return Promise.resolve();
-      // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
+      const workDirs = capsules.map(c => c.wrkDir);
+      await librarian.runMultipleInstalls(workDirs);
     } catch (e) {
       // TODO: think if we really need to log it here or write it to logger or throw it
       console.log(e); // eslint-disable-line no-console
