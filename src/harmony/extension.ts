@@ -13,7 +13,7 @@ export type ExtensionProps<Conf> = {
 /**
  * harmony's extension definition. this can be used to define and extend `Harmony` applications.
  */
-export default class Extension<Conf = {}> {
+export class Extension<Conf = {}> {
   constructor(
     /**
      * extension name.
@@ -49,10 +49,10 @@ export default class Extension<Conf = {}> {
   /**
    * initiate Harmony in run-time.
    */
-  async run(dependencies: any[], harmony: Harmony) {
+  async run<Conf>(dependencies: any[], harmony: Harmony<Conf>, config?: Conf) {
     if (!this.instance) {
       // @ts-ignore TODO: doron please fix (:
-      const instance = await this.provider(this.config, dependencies, harmony);
+      const instance = await this.provider(config || this.config, dependencies, harmony);
       this._instance = instance;
       return instance;
     }

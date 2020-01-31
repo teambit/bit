@@ -1,6 +1,6 @@
 import { ProviderFn } from './types';
 
-export type ExtensionManifest<Config> = {
+export interface ExtensionManifest<Config = {}> {
   /**
    * extension name.
    */
@@ -9,16 +9,16 @@ export type ExtensionManifest<Config> = {
   /**
    * default extension config. can be of any type.
    */
-  config: Config;
+  config?: Config;
 
   /**
    * array of extension dependencies.
    * these other extensions will be installed and resolved prior to this extension activation.
    */
-  dependencies: ExtensionManifest<any>[];
+  dependencies?: ExtensionManifest<any>[];
 
   /**
    * reference to the extension factory function.
    */
   provider: ProviderFn<Config>;
-};
+}

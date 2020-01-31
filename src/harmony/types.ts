@@ -1,4 +1,4 @@
-import Extension from './extension';
+import { Extension } from './extension';
 import Harmony from './harmony';
 
 /**
@@ -10,4 +10,4 @@ export type AnyExtension = Extension<any>;
 /**
  * type definition for the extension provider function.
  */
-export type ProviderFn<Conf = {}> = (config: Conf, deps: any, harmony: Harmony) => any;
+export type ProviderFn<Conf = {}> = (config: Conf, deps: any, harmony: Harmony<unknown>) => Promise<any>;

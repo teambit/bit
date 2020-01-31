@@ -55,7 +55,7 @@ export default class Bit {
 
   async loadExtensions() {
     const extensions = await this.resolveExtensions();
-    await this.harmony.load(extensions);
+    await this.harmony.set(extensions);
   }
 
   /**

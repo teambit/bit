@@ -1,9 +1,8 @@
-import { Extension } from '../../harmony';
 import { provideScope } from './scope.provider';
 
-export default Extension.instantiate({
+export default {
   name: 'Scope',
   dependencies: [],
   config: {},
   provider: provideScope
-});
+};

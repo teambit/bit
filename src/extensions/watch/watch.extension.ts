@@ -1,10 +1,8 @@
-import { Extension } from '../../harmony';
-
-export default Extension.instantiate({
+export default {
   name: 'Watch',
   config: {},
   dependencies: [],
   provider: async () => {
     return {};
   }
-});
+};

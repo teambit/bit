@@ -1,6 +1,7 @@
 import { Graph } from 'cleargraph';
 import { AnyExtension } from '../types';
 import { fromExtension, fromExtensions } from './from-extension';
+import { ExtensionManifest } from '../extension-manifest';
 
 export default class DependencyGraph extends Graph<AnyExtension, string> {
   private cache = new Map<string, AnyExtension>();
@@ -9,7 +10,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
     return this.topologicallySort().map(vertex => vertex.attr);
   }
 
-  addExtensions(extensions: AnyExtension[]) {
+  load(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
     this.setVertices(vertices);
     this.setEdges(edges);
@@ -34,7 +35,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   /**
    * build Harmony from a single extension.
    */
-  static fromRoot(extension: AnyExtension) {
+  static fromRoot(extension: ExtensionManifest) {
     const { vertices, edges } = fromExtension(extension);
 
     return new DependencyGraph(edges, vertices);
@@ -43,7 +44,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   /**
    * build Harmony from set of extensions
    */
-  static from(extensions: AnyExtension[]) {
+  static from(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
 
     return new DependencyGraph(edges, vertices);

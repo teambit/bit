@@ -1,7 +1,8 @@
-import Extension from './extension';
 import ExtensionGraph from './extension-graph/extension-graph';
 import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
+import { ConfigProps, Config } from './config';
+import { ExtensionManifest } from './extension-manifest';
 
 // TODO: refactor to generics
 async function asyncForEach(array: any, callback: any) {
@@ -12,13 +13,20 @@ async function asyncForEach(array: any, callback: any) {
   }
 }
 
-export default class Harmony {
+export default class Harmony<ConfProps> {
   constructor(
     /**
      * extension graph
      */
-    private graph: ExtensionGraph
+    private graph: ExtensionGraph,
+
+    /**
+     * harmony's config
+     */
+    readonly config: Config<ConfProps>
   ) {}
+
+  private running = false;
 
   /**
    * list all registered extensions
@@ -28,10 +36,10 @@ export default class Harmony {
   }
 
   /**
-   * load extensions during Harmony runtime.
+   * set extensions during Harmony runtime.
    */
-  async load(extensions: AnyExtension[]) {
-    this.graph.addExtensions(extensions);
+  async set(extensions: ExtensionManifest[]) {
+    this.graph.load(extensions);
     asyncForEach(extensions, async ext => this.runOne(ext));
   }
 
@@ -39,13 +47,13 @@ export default class Harmony {
     if (extension.instance) return;
     // create an index of all vertices in dependency graph
     const dependencies = await Promise.all(
-      extension.dependencies.map(async ext => {
-        return ext.instance;
+      extension.dependencies.map(async dep => {
+        return this.graph.getExtension(dep.name)?.instance;
       })
     );
 
     try {
-      await extension.run(dependencies, this);
+      await extension.run(dependencies, this, this.config.get(extension.name));
     } catch (err) {
       throw new ExtensionLoadError(extension, err);
     }
@@ -62,17 +70,33 @@ export default class Harmony {
    * execute harmony. applies providers of all extensions by execution order.
    */
   async run() {
+    // :TODO refactor to an exception
+    if (this.running) return;
+    this.running = true;
     const executionOrder = this.graph.byExecutionOrder();
-    await asyncForEach(executionOrder, async (ext: Extension) => {
+    await asyncForEach(executionOrder, async (ext: AnyExtension) => {
       await this.runOne(ext);
     });
+
+    this.running = false;
   }
 
   /**
-   * load harmony from a root extension
+   * load harmony from a root extensions
    */
-  static load(extensions: AnyExtension[]) {
+  static load<Conf>(extensions: ExtensionManifest[], config: ConfigProps<Conf>) {
     const graph = ExtensionGraph.from(extensions);
-    return new Harmony(graph);
+    return new Harmony(graph, new Config(config));
+  }
+
+  /**
+   * load all extensions and execute harmony.
+   */
+  static async run<Conf>(extension: ExtensionManifest, config: ConfigProps<Conf>) {
+    const graph = ExtensionGraph.fromRoot(extension);
+    const harmony = new Harmony<Conf>(graph, new Config(config));
+    await harmony.run();
+
+    return harmony;
   }
 }

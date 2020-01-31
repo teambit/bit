@@ -1,9 +1,8 @@
-import { Extension } from '../harmony';
 import { TypeScript } from './typescript';
 
-Extension.instantiate({
+export default {
   name: 'TypeScript',
   dependencies: [],
   config: {},
   provider: TypeScript.provide
-});
+};

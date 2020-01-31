@@ -1,4 +1,3 @@
-import { Extension } from '../../harmony';
 import { PathLinux } from '../../utils/path';
 
 /**
