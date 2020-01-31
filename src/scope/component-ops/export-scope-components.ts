@@ -98,7 +98,7 @@ export async function exportMany({
       bitIds.filter(id => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
     const componentsAndObjects = [];
-    const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
+    const getManyObject = async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
       componentAndObject.component.clearStateData();
       await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
@@ -119,8 +119,9 @@ export async function exportMany({
       const componentBuffer = await componentAndObject.component.compress();
       const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
       return new ComponentObjects(componentBuffer, objectsBuffer);
-    });
-    const manyObjects: ComponentObjects[] = await Promise.all(manyObjectsP);
+    };
+    const manyObjects: ComponentObjects[] = await pMapSeries(componentObjects, getManyObject);
+
     let exportedIds: string[];
     try {
       exportedIds = await remote.pushMany(manyObjects, context);
