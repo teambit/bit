@@ -5,6 +5,7 @@ import os from 'os';
 import hash from 'object-hash';
 import v4 from 'uuid';
 import filenamify from 'filenamify';
+import librarian from 'librarian';
 import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../capsule/orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../capsule/orchestrator/types';
@@ -18,7 +19,6 @@ import { getManipulateDirForComponentWithDependencies } from '../consumer/compon
 import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
-import librarian from 'librarian';
 
 export type Options = {
   alwaysNew: boolean;
@@ -96,6 +96,7 @@ export default class CapsuleBuilder {
     try {
       const workDirs = capsules.map(c => c.wrkDir);
       await librarian.runMultipleInstalls(workDirs);
+      return Promise.resolve();
     } catch (e) {
       // TODO: think if we really need to log it here or write it to logger or throw it
       console.log(e); // eslint-disable-line no-console
