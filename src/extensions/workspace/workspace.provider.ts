@@ -17,16 +17,16 @@ export type WorkspaceConfig = {
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, cli]: WorkspaceDeps) {
   // This is wrapped since there are cases when there is no workspace, or something in the workspace is invalid
   // Those will be handled later
-  try {
-    const consumer = await loadConsumerIfExist();
-    if (consumer) {
-      const workspace = new Workspace(consumer, scope, component);
-      cli.register(new ListCmd(workspace));
-      return workspace;
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
+  // try {
+  const consumer = await loadConsumerIfExist();
+  if (consumer) {
+    const workspace = new Workspace(consumer, scope, component);
+    cli.register(new ListCmd(workspace));
+    return workspace;
   }
+
+  return undefined;
+  // } catch {
+  //   return undefined;
+  // }
 }
