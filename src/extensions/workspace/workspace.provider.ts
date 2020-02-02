@@ -15,12 +15,18 @@ export type WorkspaceConfig = {
 };
 
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, paper]: WorkspaceDeps) {
-  const consumer = await loadConsumerIfExist();
-  if (consumer) {
-    const workspace = new Workspace(consumer, scope, component);
-    paper.register(new ListCmd(workspace));
-    return workspace;
-  }
+  // This is wrapped since there are cases when there is no workspace, or something in the workspace is invalid
+  // Those will be handled later
+  try {
+    const consumer = await loadConsumerIfExist();
+    if (consumer) {
+      const workspace = new Workspace(consumer, scope, component);
+      paper.register(new ListCmd(workspace));
+      return workspace;
+    }
 
-  return undefined;
+    return undefined;
+  } catch {
+    return undefined;
+  }
 }
