@@ -41,7 +41,7 @@ export default class Component {
    * component configuration which is later generated to a component `package.json` and `bit.json`.
    */
   get config(): ComponentConfig {
-    return this.config;
+    return this.state.config;
   }
 
   /**

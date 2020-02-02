@@ -1,12 +1,13 @@
 import React from 'react';
-// import { start } from '@teambit/composer';
+import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command } from '../paper';
 import { Workspace } from '../workspace';
 import { Capsule } from '../../capsule';
+import { Build } from '../build';
 
 export default class ComposeCmd implements Command {
-  name = 'compose [id]';
+  name = 'start [id]';
   description = 'start a dev environment for a workspace or a specific component'
   alias = 'c';
   group = 'development'
@@ -15,22 +16,25 @@ export default class ComposeCmd implements Command {
 
   constructor(
     private workspace: Workspace,
-    private capsule: Capsule
+    private build: Build
   ) {}
 
   async render() {
-    return <Color green>compose start</Color>;
+    // return <Color green>compose start</Color>;
+    return new Promise(async (resolve, reject) => {
+      const components = await this.workspace.list();
+      const resolved = await this.build.run('build', components);
+      
+      const data = resolved.reduce((map, component) => {
+        map[component.component.id.toString()] = component.capsule.wrkDir;
+        return map;
+      }, {});
 
-    // return new Promise(async (resolve, reject) => {
-      // const components = await this.workspace.list();
-      // const capsules = await this.capsule.create(components);
+      Object.keys(data).forEach(key => console.log(data[key].wrkDir));
 
-      // start(Object.keys(capsules).reduce((map: {[name: string]: string}, componentId: string) => {
-      //   map[componentId] = capsules[componentId].wrkDir;
-      //   return map;
-      // }, {}));
+      start(data);
 
-      // return <Color green>{component.id.toString()}</Color>
-    // });
+      return <Color green>das</Color>
+    });
   }
 }

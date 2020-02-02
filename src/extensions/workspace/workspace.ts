@@ -5,6 +5,8 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
+import { Capsule } from '../../capsule';
+import { ResolvedComponent } from './resolved-component';
 
 /**
  * API of the Bit Workspace
@@ -25,6 +27,8 @@ export default class Workspace implements ComponentHost {
      * access to the `ComponentProvider` instance
      */
     private componentFactory: ComponentFactory,
+
+    private capsule: Capsule,
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}
@@ -83,19 +87,29 @@ export default class Workspace implements ComponentHost {
   }
 
   /**
+   * fully load components, inclduing dependency resuoltion and prepare them for runtime.
+   */
+  async load(ids: string[]) {
+    const components = await this.getMany(ids);
+    const capsules = await this.capsule.create(components);
+
+    return components.map(component => new ResolvedComponent(component, capsules[component.id.toString()]));
+  }
+
+  /**
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: string | ComponentID): Promise<Component | undefined> {
-    const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
-    const legacyComponent = await this.consumer.loadComponent(componentId._legacy);
+  async get(id: string): Promise<Component | undefined> {
+    const componentId = this.consumer.getParsedId(id);
+    const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
   async getMany(ids: string[]) {
-    const componentIds = ids.map(id => ComponentID.fromString(id)._legacy);
+    const componentIds = ids.map(id => this.consumer.getParsedId(id));
     const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
     // @ts-ignore
-    return this.transformLegacyComponents(legacyComponents);
+    return this.transformLegacyComponents(legacyComponents.components);
   }
 }

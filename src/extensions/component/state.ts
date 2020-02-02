@@ -29,7 +29,10 @@ export default class State {
   }
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
-    const extensions = [];
+    let extensions = {};
+    if (consumerComponent.bitJson) {
+      extensions = consumerComponent.bitJson.extensions || {};
+    }
 
     return new State(
       new Config(consumerComponent.mainFile, extensions),

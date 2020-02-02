@@ -13,6 +13,8 @@ export default class Config {
     /**
      * configured extensions
      */
-    readonly extensions: Extension[]
+    readonly extensions: ExtensionConfig
   ) {}
 }
+
+export type ExtensionConfig = { [name: string]: any };

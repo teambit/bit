@@ -12,7 +12,7 @@ export default class CapsuleFactory {
      */
     private orchestrator: CapsuleOrchestrator,
 
-    readonly legacyBuilder: CapsuleBuilder
+    readonly builder: CapsuleBuilder
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export default class CapsuleFactory {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   create(components: Component[], config?: CreateConfig) {
-    return this.legacyBuilder.isolateComponents(components.map(component => component.id.toString()));
+    return this.builder.isolateComponents(components.map(component => component.id.toString()));
   }
 
   /**

@@ -4,8 +4,9 @@ import { ComponentFactory } from '../component';
 import { ListCmd } from './list.cmd';
 import { Paper } from '../../extensions/paper';
 import { loadConsumerIfExist } from '../../consumer';
+import { Capsule } from '../../capsule';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Paper];
+export type WorkspaceDeps = [Scope, ComponentFactory, Paper, Capsule];
 
 export type WorkspaceConfig = {
   /**
@@ -20,10 +21,13 @@ export type WorkspaceConfig = {
   components: string;
 };
 
-export default async function provideWorkspace<T>(config: WorkspaceConfig, [scope, component, paper]: WorkspaceDeps) {
+export default async function provideWorkspace<T>(
+  config: WorkspaceConfig,
+  [scope, component, paper, capsule]: WorkspaceDeps
+) {
   const consumer = await loadConsumerIfExist();
   if (consumer) {
-    const workspace = new Workspace(consumer, scope, component);
+    const workspace = new Workspace(consumer, scope, component, capsule);
     paper.register(new ListCmd(workspace));
     return workspace;
   }
