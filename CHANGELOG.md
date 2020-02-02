@@ -7,15 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.3] - 2020-02-02](https://github.com/teambit/bit/releases/tag/v14.7.3)
+
+### New
+
+- support overrides of the workspace defaultScope per components
+- use workspace defaultScope to generate node-modules links for pre-export components
+
+### Changes
+
+- [#2247](https://github.com/teambit/bit/issues/2247) improve auto-tag output
+
+### Bug fixes
+
 - fix "JavaScript heap out of memory" errors during `bit export`
 - [#2260](https://github.com/teambit/bit/issues/2260) fix duplicate dependencies
 - [#2264](https://github.com/teambit/bit/issues/2264) fix generated dependencies links on capsule
 - [#2267](https://github.com/teambit/bit/issues/2267) fix duplicate devDependencies
-- support overrides of the workspace defaultScope per components
-- use workspace defaultScope to generate node-modules links for pre-export components
 - [#2258](https://github.com/teambit/bit/issues/2258) don't install devDependencies packages upon extensions import
 - [#2255](https://github.com/teambit/bit/issues/2255) avoid adding unneeded overrides upon import
-- [#2247](https://github.com/teambit/bit/issues/2247) improve auto-tag output
 
 ## [[14.7.2] - 2020-01-12](https://github.com/teambit/bit/releases/tag/v14.7.2)
 
