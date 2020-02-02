@@ -1,9 +1,8 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../paper';
-import { CLIArgs } from '../paper/command';
 import { Workspace } from '../workspace';
 import { Build } from './build';
+import {Command, CLIArgs} from '../cli'
 
 export class RunCmd implements Command {
   name = 'run <pipeline> [...component]';

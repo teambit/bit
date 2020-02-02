@@ -1038,7 +1038,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): Dependency | null | undefined {
-    return dependencies.find(d => d.id.isEqual(id));
+    return dependencies.find(d => d.id.isEqualWithoutVersion(id));
   }
 
   getExistingDepRelativePaths(dependency: Dependency, relativePath: RelativePath) {

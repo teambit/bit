@@ -1,5 +1,5 @@
 import { ContainerFactoryOptions } from '@teambit/capsule';
-import BitId from '../../../bit-id/bit-id';
+import BitId from '../../../../bit-id/bit-id';
 
 export interface CapsuleOptions extends ContainerFactoryOptions {
   bitId?: BitId;

@@ -90,19 +90,20 @@ export function execAction(command, concrete, args): Promise<any> {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
         const commandMain = flags.json ? 'json' : 'render';
+        command.packageManagerArgs = packageManagerArgs;
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })
       .then(async res => {
         loader.off();
         if (flags.json) {
-          const code = (res && res.__code) || 0;
+          const code = res.code;
           // eslint-disable-next-line no-console
-          console.log(JSON.stringify(res, null, 2));
+          console.log(JSON.stringify(res.data, null, 2));
           return code;
         }
         const { waitUntilExit } = render(res);
         await waitUntilExit();
-        return 0;
+        return res.props.code;
         // eslint-disable-next-line no-console
       })
       .then(function(code: number) {

@@ -3,9 +3,9 @@ import { NodeFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer from './container';
-import BitId from '../bit-id/bit-id';
+import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
-import loader from '../cli/loader';
+import loader from '../../cli/loader';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;

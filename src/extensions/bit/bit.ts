@@ -1,8 +1,7 @@
 import { ReplaySubject } from 'rxjs';
-import { CapsuleOptions } from '../../capsule/orchestrator/types';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { Capsule } from '../../capsule';
+import { Capsule } from '../capsule';
 import { AnyExtension } from '../../harmony/types';
 import { BitIds as ComponentIds, BitId as ComponentId } from '../../bit-id';
 import { Harmony } from '../../harmony';
@@ -69,9 +68,9 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return [];
       }
-      const capsuleOptions: CapsuleOptions = {
-        installPackages: true
-      };
+      // const capsuleOptions: CapsuleOptions = {
+      //   installPackages: true
+      // };
       return [];
       // if (!extensionsIds.length) return [];
       // const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(

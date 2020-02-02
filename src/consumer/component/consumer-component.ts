@@ -71,7 +71,7 @@ import Isolator, { IsolateOptions } from '../../environment/isolator';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
-import { ComponentCapsule } from '../../capsule-ext';
+import { ComponentCapsule } from '../../extensions/capsule-ext';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 

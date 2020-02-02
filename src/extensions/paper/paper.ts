@@ -7,7 +7,7 @@ import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 
-export default class Paper {
+export class Paper {
   readonly groups: { [k: string]: string } = {};
   constructor(
     /**
@@ -61,6 +61,10 @@ export default class Paper {
     }, commander);
 
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
+    if (packageManagerArgs && packageManagerArgs.length) {
+      // Remove the -- delimiter
+      packageManagerArgs.shift();
+    }
     commander.packageManagerArgs = packageManagerArgs;
     commander.parse(params);
     return Promise.resolve();

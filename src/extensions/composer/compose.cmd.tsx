@@ -3,7 +3,6 @@ import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command } from '../paper';
 import { Workspace } from '../workspace';
-import { Capsule } from '../../capsule';
 import { Build } from '../build';
 
 export default class ComposeCmd implements Command {

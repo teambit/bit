@@ -180,13 +180,6 @@ describe('run bit init', function() {
       scopeJsonPath = path.join(helper.scopes.localPath, '.bit/scope.json');
       fs.removeSync(scopeJsonPath);
     });
-    describe('running any command other than bit init', () => {
-      it('should throw an exception ScopeJsonNotFound', () => {
-        const func = () => helper.command.runCmd('bit ls');
-        const error = new ScopeJsonNotFound(scopeJsonPath);
-        helper.general.expectToThrow(func, error);
-      });
-    });
     describe('running bit init', () => {
       let output;
       before(() => {

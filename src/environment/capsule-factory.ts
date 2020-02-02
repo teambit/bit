@@ -1,4 +1,4 @@
-import { ComponentCapsule, FsContainer } from '../capsule-ext';
+import { ComponentCapsule, FsContainer } from '../extensions/capsule-ext';
 
 export default (async function createCapsule(type = 'fs', dir?: string): Promise<ComponentCapsule> {
   function getContainerFactory() {

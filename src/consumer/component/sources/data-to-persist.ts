@@ -1,6 +1,6 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import { ComponentCapsule } from '../../../capsule-ext';
+import { ComponentCapsule } from '../../../extensions/capsule-ext';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -96,7 +96,7 @@ export default class DataToPersist {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const absPath = path.join(capsulePath, file.relative);
+      const absPath = path.join(capsulePath, file.path);
       try {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
         logger.debug(`skip file ${absPath}, it already exists`);

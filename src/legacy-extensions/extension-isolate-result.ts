@@ -5,7 +5,7 @@ import Isolator from '../environment/isolator';
 import ConsumerComponent from '../consumer/component';
 import { Dist, AbstractVinyl } from '../consumer/component/sources';
 import { getComponentsDependenciesLinks } from '../links/link-generator';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../extensions/capsule-ext';
 
 /**
  * This is a formal API for extension developers, changes in this API should result a major version.

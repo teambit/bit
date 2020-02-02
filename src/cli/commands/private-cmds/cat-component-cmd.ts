@@ -1,4 +1,4 @@
-import Command from '../../command';
+import Command, { CommandOption } from '../../command';
 import { catComponent } from '../../../api/scope';
 
 export default class CatComponent extends Command {
@@ -6,7 +6,8 @@ export default class CatComponent extends Command {
   description = 'cat a bit object by component-id';
   private = true;
   alias = 'cmp';
-  opts = [];
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  opts: CommandOption[] = [['j', 'json', 'show the output in JSON format']];
 
   action([id]: [string]): Promise<any> {
     return catComponent(id);

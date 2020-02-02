@@ -1,12 +1,11 @@
 import fs from 'fs-extra';
 import { EventEmitter } from 'events';
-import { ComponentCapsule } from '../../../capsule-ext';
+import { ComponentCapsule, BitContainerConfig } from '../../../capsule-ext';
 import ResourceFactory from './resource-factory';
 import Resource, { ResourceEvents } from './resource';
 import Repository from '../db/repository';
-import { BitContainerConfig } from '../../../capsule-ext/container';
 // eslint-disable-next-line import/no-named-as-default
-import Logger, { Logger as LTYPE } from '../../../logger/logger';
+import Logger, { Logger as LTYPE } from '../../../../logger/logger';
 import { CreateOptions } from '../types';
 
 /* export enum Events {

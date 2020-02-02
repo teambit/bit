@@ -1,7 +1,7 @@
 import { Paper } from '../paper';
 import { RunCmd } from './build.cmd';
 import { Workspace } from '../workspace';
-import { Capsule } from '../../capsule';
+import { Capsule } from '../capsule';
 import { Component } from '../component';
 import { TaskContext } from './task-context';
 import { ResolvedComponent } from '../workspace/resolved-component';
@@ -57,6 +57,7 @@ export class Build {
         console.log(`skipping component ${component.component.id.toString()}, it has no defined '${pipeline}'`);
       console.log(`building component ${component.component.id.toString()}...`);
 
+      // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
         if (this.tasks[elm]) return this.runTask(elm, new TaskContext(component));
         // should execute registered extension tasks as well

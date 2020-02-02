@@ -5,15 +5,22 @@ import { loadScopeIfExist } from '../../scope/scope-loader';
 export type ScopeConfig = {};
 
 export async function provideScope() {
-  const consumer = await loadConsumerIfExist();
-  let legacyScope;
-  if (consumer) {
-    legacyScope = consumer.scope;
-  } else {
-    legacyScope = loadScopeIfExist();
-  }
-  if (!legacyScope) {
+  // This is wrapped since there are cases when there is no scope, or something in the scope is invalid
+  // Those will be handled later
+  try {
+    const consumer = await loadConsumerIfExist();
+    let legacyScope;
+    if (consumer) {
+      legacyScope = consumer.scope;
+    } else {
+      legacyScope = await loadScopeIfExist();
+    }
+    if (!legacyScope) {
+      return undefined;
+    }
+
+    return new Scope(legacyScope);
+  } catch {
     return undefined;
   }
-  return new Scope(legacyScope);
 }

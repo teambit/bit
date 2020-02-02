@@ -3,7 +3,7 @@ import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { EventEmitter } from 'events';
 import { ResourceFactory, Resource } from './resource-pool';
 import CapsuleResource from './capsule-resource';
-import { BitContainerConfig } from '../../capsule-ext/container';
+import { BitContainerConfig } from '../../capsule-ext';
 
 export default class CapsuleFactory<T extends Capsule<Exec, AnyFS>> extends EventEmitter implements ResourceFactory<T> {
   constructor(

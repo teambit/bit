@@ -2,9 +2,9 @@
 import _ from 'lodash';
 import Command from '../../command';
 import { capsuleIsolate, sshIntoCapsule } from '../../../api/consumer';
-import { ComponentCapsule } from '../../../capsule-ext';
-import capsuleOrchestrator from '../../../capsule/orchestrator/orchestrator';
-import { ListResults } from '../../../capsule/orchestrator/types';
+import { ComponentCapsule } from '../../../extensions/capsule-ext';
+import capsuleOrchestrator from '../../../extensions/capsule/orchestrator/orchestrator';
+import { ListResults } from '../../../extensions/capsule/orchestrator/types';
 import { render } from '../../../utils';
 
 export class CapsuleList extends Command {

@@ -1,16 +1,16 @@
 import { Watch } from '../watch';
-import { Paper } from '../paper';
 import Serve from './composer';
 import ComposeCmd from './compose.cmd';
 import { Workspace } from '../workspace';
-import { Capsule } from '../../capsule';
+import { BitCli } from '../cli';
 import { Build } from '../build';
 
 export type ServeConfig = {};
 
-export type ServeDeps = [Watch, Paper, Workspace, Build];
+export type ServeDeps = [Watch, BitCli, Workspace, Build];
 
-export async function provideComposer(config: ServeConfig, [watch, paper, workspace, build]: ServeDeps) {
-  paper.register(new ComposeCmd(workspace, build));
+export async function provideComposer(config: ServeConfig, [watch, cli, workspace, build]: ServeDeps) {
+  // @ts-ignore
+  cli.register(new ComposeCmd(workspace, build));
   return new Serve(watch);
 }

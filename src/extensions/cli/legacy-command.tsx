@@ -1,10 +1,10 @@
 import { Color, AppContext } from 'ink';
 import React from 'react';
-import { Command, PaperOptions, GenericObject } from "../extensions/paper/command";
-import LegacyInterface from './command';
-import allHelp from './templates/all-help';
-import { getID } from '../extensions/paper/registry';
-import { Paper } from '../extensions/paper';
+import { Command, PaperOptions, GenericObject } from "../paper/command";
+import LegacyInterface from '../../cli/command';
+import allHelp from '../../cli/templates/all-help';
+import { getID } from '../paper/registry';
+import { Paper } from '../paper';
 
 export class LegacyCommand implements Command{
   alias: string;
@@ -15,7 +15,8 @@ export class LegacyCommand implements Command{
   group: string;
   loader?: boolean;
   commands: Command[];
-  private?: boolean
+  private?: boolean;
+  migration?: boolean;
   constructor(private cmd: LegacyInterface, p:Paper) {
     this.name = cmd.name;
     this.description = cmd.description;
@@ -26,31 +27,40 @@ export class LegacyCommand implements Command{
     this.shortDescription = summery
     this.group = group
     this.loader = cmd.loader
+    this.migration = cmd.migration
 
     this.commands = cmd.commands.map((sub) => {
       return new LegacyCommand(sub, p)
     })
   }
 
-  private async action(params: any, options: { [key: string]: any }): Promise<string> {
+  private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
+
     let report: string | null = null
-    const res = await this.cmd.action(params, options, [] )
+    //  packageManagerArgs is injected here for legacy reasons.
+    const res = await this.cmd.action(params, options, (this as any).packageManagerArgs || [])
     let data = res;
     if (res && res.data !== undefined) {
       data = res.data;
     }
     report = this.cmd.report && this.cmd.report(data, params, options);
-    return report;
+    return {
+      code: res?.__code || 0,
+      report
+    }
   }
 
   async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
-    const report = await this.action(params, options)
-    return <LegacyRender {...{out:report, code:0 }}></LegacyRender>
+    const actionResult = await this.action(params, options)
+    return <LegacyRender {...{out: actionResult.report, code: actionResult.code }}></LegacyRender>
   }
 
-  async json(params: any, options: { [key: string]: any }): Promise<GenericObject> {
-    const report = await this.action(params, options)
-    return JSON.parse(report);
+  async json(params: any, options: { [key: string]: any } ): Promise<GenericObject> {
+    const actionResult = await this.action(params, options)
+    return {
+      data: JSON.parse(actionResult.report),
+      code: actionResult.code
+    }
   }
 }
 
@@ -80,4 +90,9 @@ export function LegacyRender(props:{out:string, code:number}){
       return <Color>{props.out}</Color>
     }}
   </AppContext.Consumer>
+}
+
+type ActionResult = {
+  code: number,
+  report: string
 }
