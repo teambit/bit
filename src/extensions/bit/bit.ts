@@ -69,9 +69,9 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return [];
       }
-      const capsuleOptions: CapsuleOptions = {
-        installPackages: true
-      };
+      // const capsuleOptions: CapsuleOptions = {
+      //   installPackages: true
+      // };
       return [];
       // if (!extensionsIds.length) return [];
       // const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(

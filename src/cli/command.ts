@@ -17,7 +17,7 @@ export default class Cmd {
   remoteOp?: boolean; // Used for adding the token option globally
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  action(params: any, opts: { [key: string]: any }, packageManagerArgs: string[]): Promise<any> {
+  action(params: any, opts: { [key: string]: any }, packageManagerArgs?: string[]): Promise<any> {
     console.log('"action" method not implemented on this command'); // eslint-disable-line no-console
     return new Promise(resolve => resolve({}));
   }
