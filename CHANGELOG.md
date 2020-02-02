@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.7.3-dev.1 - 2020-01-12]
+## [[14.7.3] - 2020-02-02](https://github.com/teambit/bit/releases/tag/v14.7.3)
 
 ### New
 
