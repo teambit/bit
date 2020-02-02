@@ -43,13 +43,13 @@ export class LegacyCommand implements Command{
     return report;
   }
 
-  async render(params: any, options: { [key: string]: any }, packageManagerArgs: string[]): Promise<React.ReactElement> {
-    const report = await this.action(params, options, packageManagerArgs)
+  async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
+    const report = await this.action(params, options, [])
     return <LegacyRender {...{out:report, code:0 }}></LegacyRender>
   }
 
-  async json(params: any, options: { [key: string]: any }, packageManagerArgs: string[]): Promise<GenericObject> {
-    const report = await this.action(params, options, packageManagerArgs)
+  async json(params: any, options: { [key: string]: any } ): Promise<GenericObject> {
+    const report = await this.action(params, options, [])
     return JSON.parse(report);
   }
 }
