@@ -32,7 +32,7 @@ export class LegacyCommand implements Command{
     })
   }
 
-  private async action(params: any, options: { [key: string]: any }): Promise<string> {
+  private async action(params: any, options: { [key: string]: any }): Promise<ActionResult> {
 
     let report: string | null = null
     //  packageManagerArgs is injected here for legacy reasons.
@@ -42,17 +42,23 @@ export class LegacyCommand implements Command{
       data = res.data;
     }
     report = this.cmd.report && this.cmd.report(data, params, options);
-    return report;
+    return {
+      code: res?.__code || 0,
+      report
+    }
   }
 
   async render(params: any, options: { [key: string]: any }): Promise<React.ReactElement> {
-    const report = await this.action(params, options)
-    return <LegacyRender {...{out:report, code:0 }}></LegacyRender>
+    const actionResult = await this.action(params, options)
+    return <LegacyRender {...{out: actionResult.report, code: actionResult.code }}></LegacyRender>
   }
 
   async json(params: any, options: { [key: string]: any } ): Promise<GenericObject> {
-    const report = await this.action(params, options)
-    return JSON.parse(report);
+    const actionResult = await this.action(params, options)
+    return {
+      data: JSON.parse(actionResult.report),
+      code: actionResult.code
+    }
   }
 }
 
@@ -82,4 +88,9 @@ export function LegacyRender(props:{out:string, code:number}){
       return <Color>{props.out}</Color>
     }}
   </AppContext.Consumer>
+}
+
+type ActionResult = {
+  code: number,
+  report: string
 }
