@@ -1,6 +1,6 @@
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
-import { CapsuleExt } from '../../capsule';
+import { CapsuleExt } from '../capsule';
 import provideBit from './bit.provider';
 import { BuildExt } from '../build';
 import { ComposerExt } from '../composer';

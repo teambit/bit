@@ -1,10 +1,10 @@
 import { Build } from './build';
-import { PaperExt } from '../paper';
+import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
-import { CapsuleExt } from '../../capsule';
+import { CapsuleExt } from '../capsule';
 
 export default {
   name: 'Build',
-  dependencies: [PaperExt, WorkspaceExt, CapsuleExt],
+  dependencies: [BitCliExt, WorkspaceExt, CapsuleExt],
   provider: Build.provide
 };

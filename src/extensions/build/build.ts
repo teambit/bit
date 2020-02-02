@@ -84,10 +84,10 @@ export class Build {
     return this.tasks[name](context);
   }
 
-  static async provide(config: {}, [paper, workspace, capsule]: BuildDeps) {
+  static async provide(config: {}, [cli, workspace, capsule]: BuildDeps) {
     const build = new Build(workspace, capsule);
     // @ts-ignore
-    paper.register(new RunCmd(build));
+    cli.register(new RunCmd(build));
     return build;
   }
 }

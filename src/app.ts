@@ -3,10 +3,9 @@ import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
-import { ComposerExt } from './extensions/composer';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
-import { BuildExt } from './extensions/build';
+import { BitExt } from './extensions/bit';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -25,15 +24,16 @@ const config = {
   }
 };
 
-Harmony.run(BitCliExt, config)
-  .then(harmony => {
+const harmony = Harmony.load([BitCliExt, BitExt], config);
+harmony
+  .run()
+  .then(() => {
     const cli = harmony.get('BitCli');
     // @ts-ignore
     if (cli && cli.instance) return cli.instance.run([], harmony);
     throw new Error('failed to load CLI');
   })
   .catch(err => {
-    // console.log(err);
     const handledError = defaultHandleError(err.originalError);
     logErrAndExit(handledError || err, process.argv[1] || '');
   });

@@ -633,6 +633,7 @@ export default (err: Error): string | undefined => {
     unmount();
     return undefined;
   }
+
   const errorDefinition = findErrorDefinition(err);
   sendToAnalyticsAndSentry(err);
   if (!errorDefinition) {
