@@ -19,6 +19,8 @@ export default class ComposeCmd implements Command {
     private build: Build
   ) {}
 
+  // TODO: remove this ts-ignore
+  // @ts-ignore
   async render() {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async () => {
