@@ -52,6 +52,7 @@ import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-js
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
+import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
@@ -407,6 +408,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     PathOutsideConsumer,
     err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
   ],
+  [ConfigKeyNotFound, err => `unable to find a key "${chalk.bold(err.key)}" in your bit config`],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 

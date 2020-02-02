@@ -3,6 +3,7 @@ import R from 'ramda';
 import Config from '../../../global-config/config';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import ConfigKeyNotFound from '../lib/exceptions/config-key-not-found';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
@@ -52,10 +53,13 @@ export async function get(key: string): Promise<string | null | undefined> {
   if (!R.isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
-    return gitVal;
+    if (!R.isNil(gitVal)) {
+      return gitVal;
+    }
+    throw new ConfigKeyNotFound(key);
     // Ignore error from git config get
   } catch (err) {
-    return undefined;
+    throw new ConfigKeyNotFound(key);
   }
 }
 
