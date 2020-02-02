@@ -1,7 +1,7 @@
 import { Build } from './build';
 import { PaperExt } from '../paper';
 import { WorkspaceExt } from '../workspace';
-import { CapsuleExt } from '../../capsule';
+import { CapsuleExt } from '../capsule';
 
 export default {
   name: 'Build',

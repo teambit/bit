@@ -1,4 +1,4 @@
-import Extension from '../extension';
+import { Extension } from '../extension';
 
 export default class ExtensionLoadError extends Error {
   constructor(

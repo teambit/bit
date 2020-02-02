@@ -547,7 +547,7 @@ function formatComponentSpecsFailed(id, specsResults) {
 
 export function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
-    return err instanceof ErrorType || err.name === ErrorType.name; // in some cases, such as forked process, the received err is serialized.
+    return err instanceof ErrorType || (err && err.name === ErrorType.name); // in some cases, such as forked process, the received err is serialized.
   });
   return error;
 }

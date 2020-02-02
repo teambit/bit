@@ -5,7 +5,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
-import { Capsule } from '../../capsule';
+import { Capsule } from '../capsule';
 import { ResolvedComponent } from './resolved-component';
 
 /**

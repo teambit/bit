@@ -1,13 +1,12 @@
 import { buildRegistry } from '../../cli';
 import { BitCli } from './cli';
 import { Paper } from '../paper';
-import { Bit } from '../bit';
 import { LegacyCommand } from './legacy-command';
 import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 
-export type BitCLIDeps = [Paper, Bit];
+export type BitCLIDeps = [Paper];
 
-export async function CLIProvider(config: {}, [paper, bit]: BitCLIDeps) {
+export async function CLIProvider(config: {}, [paper]: BitCLIDeps) {
   // const legacyExtensions = await legacyLoadExtensions();
   // // Make sure to register all the hooks actions in the global hooks manager
   // legacyExtensions.forEach(extension => {

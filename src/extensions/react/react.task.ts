@@ -1,5 +1,4 @@
 import { TaskContext } from '../build';
-import { ComponentCapsule } from '../../capsule-ext';
 
 const tsconfig = {
   compilerOptions: {
