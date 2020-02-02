@@ -2,7 +2,7 @@ import { buildRegistry } from '../../cli';
 import { BitCli } from './cli';
 import { Paper } from '../paper';
 import { LegacyCommand } from './legacy-command';
-import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+// import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 
 export type BitCLIDeps = [Paper];
 

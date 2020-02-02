@@ -1,6 +1,6 @@
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
-import { Component, ComponentFactory, ComponentID } from '../component';
+import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds } from '../../bit-id';

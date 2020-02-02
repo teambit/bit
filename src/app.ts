@@ -3,10 +3,8 @@ import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
-import { ComposerExt } from './extensions/composer';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
-import { BuildExt } from './extensions/build';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 

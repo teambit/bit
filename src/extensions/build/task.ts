@@ -1,3 +1,3 @@
-import { Component } from '../component';
+// import { Component } from '../component';
 
-function task() {}
+// function task() {}

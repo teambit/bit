@@ -23,11 +23,16 @@ const tsconfig = {
 
 export async function reactTask(context: TaskContext) {
   const capsule = context.component.capsule;
+  // TODO: output using logger
+  // eslint-disable-next-line no-console
   console.log(capsule.wrkDir);
   capsule.fs.writeFileSync(`${capsule.wrkDir}/tsconfig.json`, JSON.stringify(tsconfig));
   const exec = await capsule.exec({ command: ['tsc', '-d', '-p', './tsconfig.json'] });
+  // TODO: output using logger
+  // eslint-disable-next-line no-console
   exec.stdout.on('data', chunk => console.log(chunk.toString()));
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const promise = new Promise(resolve => {
     exec.stdout.on('close', () => resolve());
   });
