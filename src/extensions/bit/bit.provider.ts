@@ -1,6 +1,6 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import Capsule from '../../capsule/capsule';
+import Capsule from '../capsule/capsule';
 import Bit from './bit';
 import { Harmony } from '../../harmony';
 

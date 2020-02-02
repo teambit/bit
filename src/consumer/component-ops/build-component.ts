@@ -18,7 +18,7 @@ import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
 import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
-import { ComponentCapsule } from '../../capsule-ext';
+import { ComponentCapsule } from '../../extensions/capsule-ext';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { CompilerResults } from '../../legacy-extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';

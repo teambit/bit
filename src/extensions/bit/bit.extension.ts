@@ -1,7 +1,7 @@
 import { Extension } from '../../harmony';
 import { WorkspaceExt } from '../../extensions/workspace';
 import { ScopeExt } from '../scope';
-import { CapsuleExt } from '../../capsule';
+import { CapsuleExt } from '../capsule';
 import provideBit from './bit.provider';
 
 export default Extension.instantiate({

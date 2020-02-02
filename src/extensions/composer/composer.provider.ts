@@ -2,7 +2,7 @@ import { Watch } from '../watch';
 import Serve from './composer';
 import ComposeCmd from './compose.cmd';
 import { Workspace } from '../workspace';
-import { Capsule } from '../../capsule';
+import { Capsule } from '../capsule';
 import { BitCli } from '../cli';
 
 export type ServeConfig = {};

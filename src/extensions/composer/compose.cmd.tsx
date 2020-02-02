@@ -3,7 +3,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command } from '../paper';
 import { Workspace } from '../workspace';
-import { Capsule } from '../../capsule';
+import { Capsule } from '../capsule';
 
 export default class ComposeCmd implements Command {
   name = 'compose [id]';
