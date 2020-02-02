@@ -53,7 +53,10 @@ export class LegacyCommand implements Command{
 
   async json(params: any, options: { [key: string]: any }, packageManagerArgs?: string[]): Promise<GenericObject> {
     const actionResult = await this.action(params, options, packageManagerArgs)
-    return JSON.parse(actionResult.report);
+    return {
+      data: JSON.parse(actionResult.report),
+      code: actionResult.code
+    }
   }
 }
 
