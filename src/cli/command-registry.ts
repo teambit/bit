@@ -95,14 +95,14 @@ export function execAction(command, concrete, args): Promise<any> {
       .then(async res => {
         loader.off();
         if (flags.json) {
-          const code = (res && res.__code) || 0;
+          const code = res.props.code;
           // eslint-disable-next-line no-console
           console.log(JSON.stringify(res, null, 2));
           return code;
         }
         const { waitUntilExit } = render(res);
         await waitUntilExit();
-        return 0;
+        return res.props.code;
         // eslint-disable-next-line no-console
       })
       .then(function(code: number) {

@@ -32,7 +32,7 @@ export class LegacyCommand implements Command{
     })
   }
 
-  private async action(params: any, options: { [key: string]: any }, packageManagerArgs: string[]): Promise<string> {
+  private async action(params: any, options: { [key: string]: any }, packageManagerArgs?: string[]): Promise<ActionResult> {
     let report: string | null = null
     const res = await this.cmd.action(params, options, packageManagerArgs)
     let data = res;
@@ -40,17 +40,20 @@ export class LegacyCommand implements Command{
       data = res.data;
     }
     report = this.cmd.report && this.cmd.report(data, params, options);
-    return report;
+    return {
+      code: res.__code || 0,
+      report
+    }
   }
 
-  async render(params: any, options: { [key: string]: any }, packageManagerArgs: string[]): Promise<React.ReactElement> {
-    const report = await this.action(params, options, packageManagerArgs)
-    return <LegacyRender {...{out:report, code:0 }}></LegacyRender>
+  async render(params: any, options: { [key: string]: any }, packageManagerArgs?: string[]): Promise<React.ReactElement> {
+    const actionResult = await this.action(params, options, packageManagerArgs)
+    return <LegacyRender {...{out: actionResult.report, code: actionResult.code }}></LegacyRender>
   }
 
-  async json(params: any, options: { [key: string]: any }, packageManagerArgs: string[]): Promise<GenericObject> {
-    const report = await this.action(params, options, packageManagerArgs)
-    return JSON.parse(report);
+  async json(params: any, options: { [key: string]: any }, packageManagerArgs?: string[]): Promise<GenericObject> {
+    const actionResult = await this.action(params, options, packageManagerArgs)
+    return JSON.parse(actionResult.report);
   }
 }
 
@@ -80,4 +83,9 @@ export function LegacyRender(props:{out:string, code:number}){
       return <Color>{props.out}</Color>
     }}
   </AppContext.Consumer>
+}
+
+type ActionResult = {
+  code: number,
+  report: string
 }
