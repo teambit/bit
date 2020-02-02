@@ -10,10 +10,11 @@ export async function provideScope() {
   if (consumer) {
     legacyScope = consumer.scope;
   } else {
-    legacyScope = loadScopeIfExist();
+    legacyScope = await loadScopeIfExist();
   }
   if (!legacyScope) {
     return undefined;
   }
+
   return new Scope(legacyScope);
 }

@@ -756,13 +756,22 @@ export default class Scope {
     groupName: string | null | undefined
   ): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
+    const scopeJson = Scope.ensureScopeJson(path, name, groupName);
+    const repository = Repository.create({ scopePath: path, scopeJson });
+    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
+  }
+
+  static ensureScopeJson(
+    path: PathOsBasedAbsolute,
+    name?: string | null | undefined,
+    groupName?: string | null | undefined
+  ): ScopeJson {
     if (!name) name = currentDirName();
     if (name === CURRENT_UPSTREAM) {
       throw new GeneralError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
-    const repository = Repository.create({ scopePath: path, scopeJson });
-    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
+    return scopeJson;
   }
 
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
@@ -780,7 +789,14 @@ export default class Scope {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
 
-    const scopeJson = await ScopeJson.loadFromFile(getScopeJsonPath(scopePath));
+    const scopeJsonPath = getScopeJsonPath(scopePath);
+    const scopeJsonExist = fs.existsSync(scopeJsonPath);
+    let scopeJson;
+    if (scopeJsonExist) {
+      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+    } else {
+      scopeJson = Scope.ensureScopeJson(scopePath);
+    }
     const objects = await Repository.load({ scopePath, scopeJson });
     return new Scope({ path: scopePath, scopeJson, objects });
   }
