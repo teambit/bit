@@ -62,19 +62,21 @@ export interface Command {
    * Main command handler which is called when invoking commands
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
+   * @param packageManagerArgs - flags to pass to a package manager.
    * @return - JSX element which is rendered with ink
    */
-   render: (args: CLIArgs, flags: Flags ) => Promise<React.ReactElement>;
+   render: (args: CLIArgs, flags: Flags, packageManagerArgs?: string[] ) => Promise<React.ReactElement>;
 
    /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j' option is provided by user.
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
+   * @param packageManagerArgs - flags to pass to a package manager.
    * @return a GenericObject to be rendered to string in the console.
    */
 
-  json?: (args: CLIArgs, flags: Flags) => GenericObject;
+  json?: (args: CLIArgs, flags: Flags, packageManagerArgs?: string[]) => GenericObject;
 }
 export type Flags = {[flagName:string]: CLIArgs | boolean | undefined}
 export type CLIArgs =  Array<Array<string> | string>

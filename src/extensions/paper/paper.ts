@@ -61,6 +61,10 @@ export default class Paper {
     }, commander);
 
     const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
+    if (packageManagerArgs && packageManagerArgs.length) {
+      // Remove the -- delimiter
+      packageManagerArgs.shift();
+    }
     commander.packageManagerArgs = packageManagerArgs;
     commander.parse(params);
     return Promise.resolve();
