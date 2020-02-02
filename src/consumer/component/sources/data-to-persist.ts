@@ -96,7 +96,7 @@ export default class DataToPersist {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const absPath = path.join(capsulePath, file.relative);
+      const absPath = path.join(capsulePath, file.path);
       try {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
         logger.debug(`skip file ${absPath}, it already exists`);

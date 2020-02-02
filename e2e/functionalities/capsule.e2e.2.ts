@@ -432,4 +432,21 @@ describe('capsule', function() {
       expect(output).to.have.string('tests passed');
     });
   });
+  // validates https://github.com/teambit/bit/issues/2264
+  describe('component with a dependency that has the same file name', () => {
+    const capsuleDir = helper.general.generateRandomTmpDirName();
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('foo.js', 'require("./utils/foo");');
+      helper.fs.outputFile('utils/foo.js', '');
+      helper.command.addComponent('foo.js');
+      helper.command.addComponent('utils/foo.js');
+      // notice how both components have the same filename: "foo.js".
+      helper.command.runCmd(`bit isolate foo --use-capsule --directory ${capsuleDir}`);
+    });
+    it('should generate the link file to the dependency', () => {
+      const link = path.join(capsuleDir, 'utils/foo.js');
+      expect(link).to.be.a.file();
+    });
+  });
 });
