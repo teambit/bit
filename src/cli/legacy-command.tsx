@@ -41,7 +41,7 @@ export class LegacyCommand implements Command{
     }
     report = this.cmd.report && this.cmd.report(data, params, options);
     return {
-      code: res.__code || 0,
+      code: res?.__code || 0,
       report
     }
   }
