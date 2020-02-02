@@ -7,7 +7,7 @@ import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
 
-export default class Paper {
+export class Paper {
   readonly groups: { [k: string]: string } = {};
   constructor(
     /**

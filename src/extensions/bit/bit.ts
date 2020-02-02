@@ -1,5 +1,4 @@
 import { ReplaySubject } from 'rxjs';
-import { CapsuleOptions } from '../../capsule/orchestrator/types';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../../capsule';

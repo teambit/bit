@@ -1,6 +1,6 @@
-import { Paper } from '../extensions/paper';
+import { Paper, Command } from '../paper';
 
-export default class BitCli {
+export class BitCli {
   constructor(
     /**
      * bit's legacy command registry
@@ -13,5 +13,9 @@ export default class BitCli {
    */
   run() {
     return this.paper.run();
+  }
+
+  register(command: Command) {
+    return this.paper.register(command);
   }
 }

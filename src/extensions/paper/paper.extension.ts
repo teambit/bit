@@ -2,7 +2,7 @@
 import { providePaper, PaperConfig, PaperDeps } from './paper.provider';
 import { Extension } from '../../harmony';
 
-export default Extension.instantiate<PaperConfig, PaperDeps>({
+export const PaperExt = Extension.instantiate<PaperConfig, PaperDeps>({
   name: 'Paper',
   dependencies: [],
   config: {
