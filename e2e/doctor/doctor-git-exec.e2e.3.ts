@@ -35,7 +35,13 @@ describe('bit doctor - git exec validation', function() {
   describe('with wrong git path', () => {
     let parsedOutput;
     before(() => {
-      const oldGitPath = helper.config.getGitPath();
+      let oldGitPath;
+      try {
+        oldGitPath = helper.config.getGitPath();
+      } catch {
+        // eslint-disable-next-line no-console
+        console.log('no old git path to restore');
+      }
       // Set the git path to a place where there is no git (the local scope)
       helper.config.setGitPath(helper.scopes.localPath);
       const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });

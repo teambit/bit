@@ -30,7 +30,7 @@ describe('bit config', function() {
       expect(getOutput).to.have.string('conf.value\n');
     });
 
-    it.only('should delete the config correctly', () => {
+    it('should delete the config correctly', () => {
       expect(delOutput).to.have.string('deleted successfully\n');
       const getConfigCmd = () => helper.command.runCmd('bit config get conf.key');
       const error = new ConfigKeyNotFound('conf.key');
@@ -71,7 +71,7 @@ describe('bit config', function() {
     //   const confVal = helper.command.runCmd('bit config get conf.key');
     //   expect(confVal).to.be.equal('git-system-val\n');
     // });
-    it.only('should return empty string if not exists both in git and bit', () => {
+    it('should return empty string if not exists both in git and bit', () => {
       const getConfigCmd = () => helper.command.runCmd('bit config get nonExistsKey');
       const error = new ConfigKeyNotFound('nonExistsKey');
       helper.general.expectToThrow(getConfigCmd, error);

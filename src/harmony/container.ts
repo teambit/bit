@@ -1,4 +1,4 @@
-import Extension from './extension';
+import { Extension } from './extension';
 
 export default class Container {
   constructor(private instances = new Map()) {}

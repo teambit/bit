@@ -26,7 +26,7 @@ export default class Bit {
     /**
      * private reference to the instance of Harmony.
      */
-    private harmony: Harmony
+    private harmony: Harmony<unknown>
   ) {}
 
   /**

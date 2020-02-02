@@ -1,5 +1,5 @@
 // import { BitId as ComponentId } from '../bit-id';
-import { ComponentID } from '../extensions/component';
+// import { ComponentID } from '../extensions/component';
 import { Component } from '../extensions/component';
 
 /**
@@ -9,5 +9,5 @@ import { Component } from '../extensions/component';
  * @interface ComponentHost
  */
 export default interface ComponentHost {
-  get: (id: string | ComponentID) => Promise<Component | undefined>;
+  get: (id: string) => Promise<Component | undefined>;
 }

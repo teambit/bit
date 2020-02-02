@@ -45,6 +45,7 @@ export class Build {
     return {};
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async run(pipeline: string, components?: Component[], options?: Options) {
     const componentsToBuild = components || (await this.getComponentsForBuild(components));
     // check if config is sufficent before building capsules and resolving deps.
@@ -53,8 +54,13 @@ export class Build {
     const promises = resolvedComponents.map(async component => {
       const capsule = component.capsule;
       const pipe = this.getConfig(component)[pipeline];
-      if (!Array.isArray(pipe))
+      if (!Array.isArray(pipe)) {
+        // TODO: throw error
+        // eslint-disable-next-line no-console
         console.log(`skipping component ${component.component.id.toString()}, it has no defined '${pipeline}'`);
+      }
+      // TODO: use logger for this
+      // eslint-disable-next-line no-console
       console.log(`building component ${component.component.id.toString()}...`);
 
       // eslint-disable-next-line consistent-return
@@ -62,6 +68,7 @@ export class Build {
         if (this.tasks[elm]) return this.runTask(elm, new TaskContext(component));
         // should execute registered extension tasks as well
         const exec = await capsule.exec({ command: elm.split(' ') });
+        // eslint-disable-next-line no-console
         exec.stdout.on('data', chunk => console.log(chunk.toString()));
 
         const promise = new Promise(resolve => {
