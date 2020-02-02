@@ -86,6 +86,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Remote(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatObject(),
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatComponent(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
