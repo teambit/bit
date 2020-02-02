@@ -27,7 +27,8 @@ const inputsWithDefaultsNoCompiler = [
   }
 ];
 
-describe('run bit init - interactive', function() {
+// TODO: reenable those tests once paper support streaming correctly
+describe.skip('run bit init - interactive', function() {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
