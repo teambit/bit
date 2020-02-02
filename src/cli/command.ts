@@ -14,6 +14,7 @@ export default class Cmd {
   private?: boolean;
   loader?: boolean;
   skipWorkspace?: boolean;
+  migration?: boolean;
   remoteOp?: boolean; // Used for adding the token option globally
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

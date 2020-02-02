@@ -15,7 +15,8 @@ export class LegacyCommand implements Command{
   group: string;
   loader?: boolean;
   commands: Command[];
-  private?: boolean
+  private?: boolean;
+  migration?: boolean;
   constructor(private cmd: LegacyInterface, p:Paper) {
     this.name = cmd.name;
     this.description = cmd.description;
@@ -26,6 +27,7 @@ export class LegacyCommand implements Command{
     this.shortDescription = summery
     this.group = group
     this.loader = cmd.loader
+    this.migration = cmd.migration
 
     this.commands = cmd.commands.map((sub) => {
       return new LegacyCommand(sub, p)
