@@ -30,7 +30,7 @@ describe('bit config', function() {
       expect(getOutput).to.have.string('conf.value\n');
     });
 
-    it.only('should delete the config correctly', () => {
+    it('should delete the config correctly', () => {
       expect(delOutput).to.have.string('deleted successfully\n');
       const getConfigCmd = () => helper.command.runCmd('bit config get conf.key');
       const error = new ConfigKeyNotFound('conf.key');
