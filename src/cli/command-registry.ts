@@ -90,6 +90,7 @@ export function execAction(command, concrete, args): Promise<any> {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       .then(() => {
         const commandMain = flags.json ? 'json' : 'render';
+        command.packageManagerArgs = packageManagerArgs;
         return command[commandMain](relevantArgs, flags, packageManagerArgs);
       })
       .then(async res => {
