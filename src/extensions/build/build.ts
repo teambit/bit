@@ -1,8 +1,8 @@
-import { Paper } from '../paper';
 import { BuildCmd } from './build.cmd';
 import { Workspace } from '../workspace';
+import { BitCli } from '../cli';
 
-export type BuildDeps = [Paper, Workspace];
+export type BuildDeps = [BitCli, Workspace];
 
 export class Build {
   private tasks = [];
