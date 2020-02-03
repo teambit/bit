@@ -40,11 +40,23 @@ export default class Harmony<ConfProps> {
    */
   async set(extensions: ExtensionManifest[]) {
     this.graph.load(extensions);
-    // Re-run everything after loading (can't just runOne for extension args since they are manifest not instances)
-    // TODO: improve this by only running new extensions
-    // But it's not very important since it's already cached by extension.instance
+    // TODO: change this once byExecutionOrder can get an entry points or having some way to get subgraph then run the
+    // byExecutionOrder only on a subgraph
     const executionOrder = this.graph.byExecutionOrder();
-    await asyncForEach(executionOrder, async (ext: AnyExtension) => {
+    const newExtensionsNames = extensions.map(ext => ext.name);
+    const filteredExecutionOrder = executionOrder.filter(ext => newExtensionsNames.includes(ext.name));
+
+    // TODO: remove this logic once cleargraph toposort will return also nodes without edges
+    const filteredExecutionOrderNames = filteredExecutionOrder.map(ext => ext.name);
+    newExtensionsNames.forEach(newExtName => {
+      if (!filteredExecutionOrderNames.includes(newExtName)) {
+        const newExtToRun = this.graph.getExtension(newExtName);
+        if (newExtToRun) {
+          filteredExecutionOrder.push(newExtToRun);
+        }
+      }
+    });
+    await asyncForEach(filteredExecutionOrder, async (ext: AnyExtension) => {
       await this.runOne(ext);
     });
   }
