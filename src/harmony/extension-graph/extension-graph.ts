@@ -23,7 +23,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
     const cachedVertex = this.cache.get(id);
     if (cachedVertex) return cachedVertex;
 
-    const res = this.vertex(id);
+    const res = this.vertices.find(vertex => vertex.id === id);
     if (res) {
       this.cache.set(res.id, res.attr);
       return res.attr;

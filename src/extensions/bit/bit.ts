@@ -1,9 +1,9 @@
 import { ReplaySubject } from 'rxjs';
-import { filter } from 'ramda';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../capsule';
 import { AnyExtension } from '../../harmony/types';
+import { BitIds as ComponentIds, BitId as ComponentId } from '../../bit-id';
 import { Harmony } from '../../harmony';
 
 export default class Bit {
@@ -36,11 +36,10 @@ export default class Bit {
     return '1.0.0';
   }
 
-  async extensions(): Promise<string[]> {
+  async extensions(): Promise<ComponentId[]> {
     if (!this.config) return Promise.resolve([]);
-    let rawExtensions = this.config.extensions || {};
-    rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
-    return Object.keys(rawExtensions);
+
+    return ComponentIds.deserializeObsolete(Object.keys(this.config.extensions));
   }
 
   public onExtensionsLoaded = new ReplaySubject();
@@ -69,15 +68,21 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return [];
       }
-      const extensionsComponents = await this.workspace.getMany(extensionsIds);
-      const capsulesMap = await this.capsule.create(extensionsComponents);
+      // const capsuleOptions: CapsuleOptions = {
+      //   installPackages: true
+      // };
+      return [];
+      // if (!extensionsIds.length) return [];
+      // const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(
+      //   extensionsIds.map(ex => ex.toString()),
+      //   capsuleOptions
+      // );
 
-      return Object.values(capsulesMap).map(capsule => {
-        const extPath = capsule.wrkDir;
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        const mod = require(extPath);
-        return mod;
-      });
+      // return Object.values(capsulesMap).map(capsule => {
+      //   const extPath = capsule.wrkDir;
+      //   // eslint-disable-next-line global-require, import/no-dynamic-require
+      //   return require(extPath);
+      // });
     }
 
     return [];

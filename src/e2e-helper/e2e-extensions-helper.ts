@@ -26,17 +26,17 @@ export default class ExtensionsHelper {
     this.fixtures = fixtures;
   }
 
-  importAndConfigureLegacyExtension(id: string) {
+  importAndConfigureExtension(id: string) {
     this.command.importExtension(id);
     const bitJson = this.bitJson.read();
-    bitJson.extensions = { [id]: { __legacy: true } };
+    bitJson.extensions = { [id]: {} };
     this.bitJson.write(bitJson);
   }
 
   importNpmPackExtension(id = 'global-remote/npm/pack@2.0.2') {
     this.fixtures.ensureGlobalRemoteScope();
     this.scopeHelper.addGlobalRemoteScope();
-    this.importAndConfigureLegacyExtension(id);
+    this.importAndConfigureExtension(id);
     // workaround to get the registry into the package.json file
     const extensionFilePath = path.join(this.scopes.localPath, '.bit/components/npm/pack/global-remote/2.0.2/index.js');
     const extensionFile = fs.readFileSync(extensionFilePath).toString();

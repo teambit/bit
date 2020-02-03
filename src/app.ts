@@ -3,7 +3,7 @@ import * as BPromise from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
-import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
+import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
 import HarmonyError from './harmony/exceptions/harmony-error';
@@ -35,9 +35,8 @@ try {
       throw new Error('failed to load CLI');
     })
     .catch(err => {
-      const errorHandlerExist = findErrorDefinition(err.originalError);
-      const handledError = errorHandlerExist ? defaultHandleError(err.originalError) : err;
-      logErrAndExit(handledError, process.argv[1] || '');
+      const handledError = defaultHandleError(err.originalError);
+      logErrAndExit(handledError || err, process.argv[1] || '');
     });
   // Catching errors from the load phase
 } catch (err) {
