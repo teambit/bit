@@ -1,5 +1,5 @@
 import { Watch } from '../watch';
-import Serve from './composer';
+import Composer from './composer';
 import ComposeCmd from './compose.cmd';
 import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
@@ -12,5 +12,5 @@ export type ServeDeps = [Watch, BitCli, Workspace, Build];
 export async function provideComposer(config: ServeConfig, [watch, cli, workspace, build]: ServeDeps) {
   // @ts-ignore
   cli.register(new ComposeCmd(workspace, build));
-  return new Serve(watch);
+  return new Composer(watch);
 }

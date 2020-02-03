@@ -45,6 +45,8 @@ export class Build {
     return {};
   }
 
+  async watch() {}
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async run(pipeline: string, components?: Component[], options?: Options) {
     const componentsToBuild = components || (await this.getComponentsForBuild(components));
