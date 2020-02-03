@@ -27,7 +27,7 @@ export class RunCmd implements Command {
 
   async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
-    await this.build.run(pipeline as string, components as any[], { parallelism: parallelismN });
+    await this.build.run(pipeline as string, undefined, { parallelism: parallelismN });
 
     return <Color green>application</Color>;
   }
