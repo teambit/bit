@@ -39,6 +39,8 @@ export class Extension<Conf = {}> {
 
   private _instance = null;
 
+  private _loaded = false;
+
   /**
    * returns the instance of the extension
    */
@@ -47,13 +49,22 @@ export class Extension<Conf = {}> {
   }
 
   /**
+   * returns an indication of the extension already loaded (the provider run)
+   * We don't rely on the instance since an extension provider might return null
+   */
+  get loaded() {
+    return this._loaded;
+  }
+
+  /**
    * initiate Harmony in run-time.
    */
   async run<Conf>(dependencies: any[], harmony: Harmony<Conf>, config?: Conf) {
-    if (!this.instance) {
+    if (!this.loaded) {
       // @ts-ignore TODO: doron please fix (:
       const instance = await this.provider(config || this.config, dependencies, harmony);
       this._instance = instance;
+      this._loaded = true;
       return instance;
     }
 
