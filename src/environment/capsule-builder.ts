@@ -1,10 +1,10 @@
 import path from 'path';
-import execa from 'execa';
 import R from 'ramda';
 import os from 'os';
 import hash from 'object-hash';
 import v4 from 'uuid';
 import filenamify from 'filenamify';
+import librarian from 'librarian';
 import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../extensions/capsule/orchestrator/orchestrator';
 import { CapsuleOptions, CreateOptions } from '../extensions/capsule/orchestrator/types';
@@ -93,23 +93,9 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
-      capsules.forEach(capsule => {
-        const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
-        const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-        const packageJson = JSON.parse(pjsonString);
-        const bitBinPath = './node_modules/bit-bin';
-        const localBitBinPath = path.join(__dirname, '../..');
-        delete packageJson.dependencies['bit-bin'];
-        capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-        execa.sync('yarn', [], { cwd: capsule.wrkDir });
-        if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
-          capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
-        }
-
-        execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
-      });
+      const workDirs = capsules.map(c => c.wrkDir);
+      await librarian.runMultipleInstalls(workDirs);
       return Promise.resolve();
-      // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
     } catch (e) {
       // TODO: think if we really need to log it here or write it to logger or throw it
       console.log(e); // eslint-disable-line no-console
