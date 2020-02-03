@@ -91,7 +91,7 @@ class BitLogger {
   }
 
   async exitAfterFlush(code = 0, commandName: string) {
-    await Analytics.sendData();
+    // await Analytics.sendData();
     let level;
     let msg;
     if (code === 0) {
