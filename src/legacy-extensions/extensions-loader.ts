@@ -1,5 +1,5 @@
 import * as path from 'path';
-import R from 'ramda';
+import R, { filter } from 'ramda';
 import fs from 'fs-extra';
 import Extension from './extension';
 import { LoadArgsProps } from './extension';
@@ -73,6 +73,8 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.config.extensions || {};
+      // Only load legacy extensions here
+      rawExtensions = filter(ext => ext.__legacy, rawExtensions);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumerPath = consumer.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
