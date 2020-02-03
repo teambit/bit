@@ -1,4 +1,5 @@
 import { ReplaySubject } from 'rxjs';
+import { filter } from 'ramda';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../capsule';
@@ -36,10 +37,11 @@ export default class Bit {
     return '1.0.0';
   }
 
-  async extensions(): Promise<ComponentId[]> {
+  async extensions(): Promise<string[]> {
     if (!this.config) return Promise.resolve([]);
-
-    return ComponentIds.deserializeObsolete(Object.keys(this.config.extensions));
+    let rawExtensions = this.config.extensions || {};
+    rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
+    return Object.keys(rawExtensions);
   }
 
   public onExtensionsLoaded = new ReplaySubject();
@@ -68,21 +70,15 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return [];
       }
-      // const capsuleOptions: CapsuleOptions = {
-      //   installPackages: true
-      // };
-      return [];
-      // if (!extensionsIds.length) return [];
-      // const capsulesMap = await this.capsule.legacyBuilder.isolateComponents(
-      //   extensionsIds.map(ex => ex.toString()),
-      //   capsuleOptions
-      // );
+      const extensionsComponents = await this.workspace.getMany(extensionsIds);
+      const capsulesMap = await this.capsule.create(extensionsComponents);
 
-      // return Object.values(capsulesMap).map(capsule => {
-      //   const extPath = capsule.wrkDir;
-      //   // eslint-disable-next-line global-require, import/no-dynamic-require
-      //   return require(extPath);
-      // });
+      return Object.values(capsulesMap).map(capsule => {
+        const extPath = capsule.wrkDir;
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const mod = require(extPath);
+        return mod;
+      });
     }
 
     return [];
