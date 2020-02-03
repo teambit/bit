@@ -1,12 +1,10 @@
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { ListCmd } from './list.cmd';
 import { loadConsumerIfExist } from '../../consumer';
 import { Capsule } from '../capsule';
-import { BitCli } from '../cli';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, BitCli, Capsule];
+export type WorkspaceDeps = [Scope, ComponentFactory, Capsule];
 
 export type WorkspaceConfig = {
   /**
