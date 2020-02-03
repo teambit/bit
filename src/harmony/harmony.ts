@@ -40,11 +40,17 @@ export default class Harmony<ConfProps> {
    */
   async set(extensions: ExtensionManifest[]) {
     this.graph.load(extensions);
-    asyncForEach(extensions, async ext => this.runOne(ext));
+    // Re-run everything after loading (can't just runOne for extension args since they are manifest not instances)
+    // TODO: improve this by only running new extensions
+    // But it's not very important since it's already cached by extension.instance
+    const executionOrder = this.graph.byExecutionOrder();
+    await asyncForEach(executionOrder, async (ext: AnyExtension) => {
+      await this.runOne(ext);
+    });
   }
 
   private async runOne(extension: AnyExtension) {
-    if (extension.instance) return;
+    if (extension.loaded) return;
     // create an index of all vertices in dependency graph
     const dependencies = await Promise.all(
       extension.dependencies.map(async dep => {
