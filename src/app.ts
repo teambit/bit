@@ -6,6 +6,7 @@ import { BitCliExt } from './extensions/cli';
 import defaultHandleError from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
+import HarmonyError from './harmony/exceptions/harmony-error';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -23,17 +24,22 @@ const config = {
     components: '*'
   }
 };
-
-const harmony = Harmony.load([BitCliExt, BitExt], config);
-harmony
-  .run()
-  .then(() => {
-    const cli = harmony.get('BitCli');
-    // @ts-ignore
-    if (cli && cli.instance) return cli.instance.run([], harmony);
-    throw new Error('failed to load CLI');
-  })
-  .catch(err => {
-    const handledError = defaultHandleError(err.originalError);
-    logErrAndExit(handledError || err, process.argv[1] || '');
-  });
+try {
+  const harmony = Harmony.load([BitCliExt, BitExt], config);
+  harmony
+    .run()
+    .then(() => {
+      const cli = harmony.get('BitCli');
+      // @ts-ignore
+      if (cli && cli.instance) return cli.instance.run([], harmony);
+      throw new Error('failed to load CLI');
+    })
+    .catch(err => {
+      const handledError = defaultHandleError(err.originalError);
+      logErrAndExit(handledError || err, process.argv[1] || '');
+    });
+  // Catching errors from the load phase
+} catch (err) {
+  const handledError = err instanceof HarmonyError ? err.toString() : err;
+  logErrAndExit(handledError, process.argv[1] || '');
+}
