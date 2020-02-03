@@ -18,9 +18,8 @@ export default class ExtensionPotentialCircular extends HarmonyError {
   }
 
   toString() {
-    return `failed to load extensions' dependencies.
-The dependencies for ${chalk.bold(this.extension.name)} are not loaded.
-This might be a result of wrong import or a circular dependencies
-The following dependencies did loaded correctly: ${chalk.bold(this.validDeps.join(', '))}`;
+    return `Failed to load the dependencies for extension ${chalk.bold(this.extension.name)}. 
+This may result from a wrong import or from circular dependencies in imports. 
+The following dependencies succeeded loading: ${chalk.bold(this.validDeps.join(', '))}`;
   }
 }
