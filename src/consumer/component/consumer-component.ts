@@ -77,7 +77,7 @@ export type customResolvedPath = { destinationPath: PathLinux; importSource: str
 
 export type InvalidComponent = { id: BitId; error: Error };
 
-export type ExtensionData = { id: string; data: { [key: string]: any } };
+export type ExtensionData = { id: string; data?: { [key: string]: any }; config?: { [key: string]: any } };
 
 export type ComponentProps = {
   name: string;
@@ -987,6 +987,9 @@ export default class Component {
   addExtensionValue(extensionId: string, key: string, value: any): void {
     const existingExtension = this.extensions.find(e => e.id === extensionId);
     if (existingExtension) {
+      if (!existingExtension.data) {
+        existingExtension.data = {};
+      }
       existingExtension.data[key] = value;
     } else {
       const extension = { id: extensionId, data: { [key]: value } };
@@ -996,8 +999,8 @@ export default class Component {
 
   getExtensionValue(extensionId: string, key: string): any {
     const existingExtension = this.extensions.find(e => e.id === extensionId);
-    if (!existingExtension) return null;
-    return existingExtension.data[key];
+    if (!existingExtension) return undefined;
+    return existingExtension.data ? existingExtension.data[key] : undefined;
   }
 
   /**
@@ -1266,7 +1269,7 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
-    const extensions = componentFromModel ? componentFromModel.extensions : null;
+    const extensions = componentConfig?.extensions ?? componentFromModel?.extensions;
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
