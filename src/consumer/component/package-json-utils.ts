@@ -20,6 +20,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
+import CapsulePaths from '../../environment/capsule-paths';
 
 /**
  * Add components as dependencies to root package.json
@@ -108,17 +109,18 @@ export function preparePackageJsonToWrite(
   override? = true,
   writeBitDependencies? = false,
   excludeRegistryPrefix?: boolean,
-  capsuleWrkspaceMap?: { [key: string]: string }
+  capsulePaths?: CapsulePaths
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
       let packageDependency;
-      if (capsuleWrkspaceMap && capsuleWrkspaceMap[dep.id.toString()]) {
+      const devCapsulePath = capsulePaths && capsulePaths.getPathIgnoreScopeAndVersion(dep.id);
+      if (capsulePaths && devCapsulePath) {
         const relative = path.relative(
-          capsuleWrkspaceMap[component.id.toString()],
-          capsuleWrkspaceMap[dep.id.toString()]
+          capsulePaths.getPathIgnoreScopeAndVersion(component.id) as string,
+          devCapsulePath
         );
         packageDependency = `file:${relative}`;
       } else {
