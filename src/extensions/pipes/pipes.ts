@@ -38,8 +38,9 @@ export class Pipes {
   }
 
   getConfig(component: ResolvedComponent) {
-    if (component.component.config.extensions.run) {
-      return component.component.config.extensions.run;
+    debugger;
+    if (component.component.config.extensions.Pipes) {
+      return component.component.config.extensions.Pipes;
     }
 
     return {};
