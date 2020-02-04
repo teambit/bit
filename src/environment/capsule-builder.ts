@@ -18,6 +18,7 @@ import { getManipulateDirForComponentWithDependencies } from '../consumer/compon
 import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
+import CapsulePaths from './capsule-paths';
 
 export type Options = {
   alwaysNew: boolean;
@@ -42,11 +43,12 @@ export default class CapsuleBuilder {
     private orch: CapsuleOrchestrator = orchestrator
   ) {}
 
-  private _buildCapsuleMap(capsules: ComponentCapsule[]) {
-    return capsules.reduce(function(acc, cur) {
-      acc[cur.bitId.toString()] = cur.wrkDir;
-      return acc;
-    }, {});
+  private _buildCapsulePaths(capsules: ComponentCapsule[]): CapsulePaths {
+    const capsulePaths = capsules.map(componentCapsule => ({
+      id: componentCapsule.bitId,
+      path: componentCapsule.wrkDir
+    }));
+    return new CapsulePaths(...capsulePaths);
   }
 
   async isolateComponents(
@@ -79,7 +81,7 @@ export default class CapsuleBuilder {
       return acc;
     }, {});
 
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsuleMap(capsules), bitCapsulesObject);
+    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), bitCapsulesObject);
     if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
     return bitCapsulesObject;
   }
@@ -128,7 +130,7 @@ export default class CapsuleBuilder {
   async isolateComponentsInCapsules(
     components: Component[],
     graph: Graph,
-    capsuleMappingForPackageJson: { [componentId: string]: string },
+    capsulePaths: CapsulePaths,
     capsuleObject: { [componentId: string]: ComponentCapsule }
   ) {
     const writeToPath = '.';
@@ -162,7 +164,7 @@ export default class CapsuleBuilder {
       excludeRegistryPrefix: false,
       silentPackageManagerResult: false,
       isolated: true,
-      capsuleWrkspaceMap: capsuleMappingForPackageJson
+      capsulePaths
     };
     // componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
