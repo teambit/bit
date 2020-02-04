@@ -36,6 +36,13 @@ export default class Harmony<ConfProps> {
   }
 
   /**
+   * list all registered extensions ids
+   */
+  get extensionsIds() {
+    return this.graph.vertices.map(vertex => vertex.id);
+  }
+
+  /**
    * set extensions during Harmony runtime.
    */
   async set(extensions: ExtensionManifest[]) {
