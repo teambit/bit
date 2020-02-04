@@ -3,7 +3,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Build } from '../build';
+import { Pipes } from '../pipes';
 import { Flags } from '../paper/command';
 
 export default class ComposeCmd implements Command {
@@ -16,7 +16,7 @@ export default class ComposeCmd implements Command {
 
   constructor(
     private workspace: Workspace,
-    private build: Build
+    private pipes: Pipes
   ) {}
 
   // TODO: remove this ts-ignore
@@ -25,7 +25,7 @@ export default class ComposeCmd implements Command {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async () => {
       const components = await this.workspace.list();
-      const resolved = await this.build.run('build', components);
+      const resolved = await this.pipes.run('build', components);
 
       const data = resolved.reduce((map, component) => {
         map[component.component.id.toString()] = component.capsule.wrkDir;

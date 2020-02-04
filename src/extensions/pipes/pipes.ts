@@ -1,5 +1,5 @@
 import { Paper } from '../paper';
-import { RunCmd } from './build.cmd';
+import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
 import { Component } from '../component';
@@ -14,7 +14,7 @@ export type Options = {
 
 export type TaskFn = (context: TaskContext) => void;
 
-export class Build {
+export class Pipes {
   private tasks = {};
 
   constructor(
@@ -92,7 +92,7 @@ export class Build {
   }
 
   static async provide(config: {}, [cli, workspace, capsule]: BuildDeps) {
-    const build = new Build(workspace, capsule);
+    const build = new Pipes(workspace, capsule);
     // @ts-ignore
     cli.register(new RunCmd(build));
     return build;
