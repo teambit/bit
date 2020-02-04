@@ -21,6 +21,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import BitMap from '../bit-map';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
 import { BitId } from '../../bit-id';
+import CapsulePaths from '../../environment/capsule-paths';
 
 export interface ManyComponentsWriterParams {
   consumer?: Consumer;
@@ -42,7 +43,7 @@ export interface ManyComponentsWriterParams {
   verbose?: boolean;
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
-  capsuleWrkspaceMap?: { [key: string]: string };
+  capsulePaths?: CapsulePaths;
 }
 
 /**
@@ -81,7 +82,7 @@ export default class ManyComponentsWriter {
   isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath?: string;
-  capsuleWrkspaceMap?: { [key: string]: string };
+  capsulePaths?: CapsulePaths;
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
@@ -105,7 +106,7 @@ export default class ManyComponentsWriter {
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
-    this.capsuleWrkspaceMap = params.capsuleWrkspaceMap;
+    this.capsulePaths = params.capsulePaths;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -222,7 +223,7 @@ export default class ManyComponentsWriter {
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
-      capsuleWrkspaceMap: this.capsuleWrkspaceMap,
+      capsulePaths: this.capsulePaths,
       ...this._getDefaultWriteParams(),
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
@@ -303,7 +304,7 @@ export default class ManyComponentsWriter {
           origin: COMPONENT_ORIGINS.NESTED,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           existingComponentMap: componentMap,
-          capsuleWrkspaceMap: this.capsuleWrkspaceMap
+          capsulePaths: this.capsulePaths
         });
         return componentWriter.populateComponentsFilesToWrite();
       });
@@ -368,7 +369,7 @@ to move all component files to a different directory, run bit remove and then bi
       createNpmLinkFiles: this.createNpmLinkFiles,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       writePackageJson: this.writePackageJson,
-      capsuleMap: this.capsuleWrkspaceMap
+      capsuleMap: this.capsulePaths
     });
   }
   _getComponentRootDir(bitId: BitId): PathOsBasedRelative {

@@ -27,6 +27,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
+import CapsulePaths from '../../environment/capsule-paths';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -43,7 +44,7 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
-  capsuleWrkspaceMap?: { [key: string]: string };
+  capsulePaths?: CapsulePaths;
 };
 
 export default class ComponentWriter {
@@ -61,7 +62,7 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | null | undefined;
   existingComponentMap: ComponentMap | null | undefined;
   excludeRegistryPrefix: boolean;
-  capsuleWrkspaceMap?: { [key: string]: string };
+  capsulePaths?: CapsulePaths;
   constructor({
     component,
     writeToPath,
@@ -76,7 +77,7 @@ export default class ComponentWriter {
     writeBitDependencies = false,
     deleteBitDirContent,
     existingComponentMap,
-    capsuleWrkspaceMap,
+    capsulePaths,
     excludeRegistryPrefix = false
   }: ComponentWriterProps) {
     this.component = component;
@@ -93,7 +94,7 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
-    this.capsuleWrkspaceMap = capsuleWrkspaceMap;
+    this.capsulePaths = capsulePaths;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -182,7 +183,7 @@ export default class ComponentWriter {
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsuleWrkspaceMap
+        this.capsulePaths
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
