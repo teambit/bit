@@ -87,7 +87,7 @@ export default class Workspace implements ComponentHost {
   }
 
   /**
-   * fully load components, inclduing dependency resuoltion and prepare them for runtime.
+   * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: string[]) {
     const components = await this.getMany(ids);

@@ -48,9 +48,9 @@ export class Pipes {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async run(pipeline: string, components?: Component[], options?: Options) {
     const componentsToBuild = components || (await this.getComponentsForBuild(components));
-    // check if config is sufficent before building capsules and resolving deps.
+    // check if config is sufficient before building capsules and resolving deps.
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
-    // add parrlalism and execute by graph order (use gilad's graph builder once we have it)
+    // add parallelism and execute by graph order (use gilad's graph builder once we have it)
     const promises = resolvedComponents.map(async component => {
       const capsule = component.capsule;
       const pipe = this.getConfig(component)[pipeline];
