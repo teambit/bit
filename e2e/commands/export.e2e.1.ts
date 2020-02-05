@@ -600,6 +600,7 @@ describe('bit export command', function() {
     describe('some components were exported to one scope and other to another scope', () => {
       let localScopeBefore;
       let remoteScopeBefore;
+      let anotherRemoteScopeBefore;
       let anotherRemote;
       let anotherRemotePath;
       before(() => {
@@ -618,6 +619,7 @@ describe('bit export command', function() {
         helper.command.tagScope('2.0.0');
         localScopeBefore = helper.scopeHelper.cloneLocalScope();
         remoteScopeBefore = helper.scopeHelper.cloneRemoteScope();
+        anotherRemoteScopeBefore = helper.scopeHelper.cloneScope(anotherRemotePath);
       });
       describe('export with no ids, no remote and no flags', () => {
         let output;
@@ -644,7 +646,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           output = helper.command.exportToCurrentScope('foo1 foo2');
         });
         it('should export successfully all ids, each to its own remote', () => {
@@ -667,7 +669,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.command.tagScope('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
@@ -686,7 +688,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.fs.outputFile('foo2.js', "require('./foo1');");
           helper.command.tagScope('3.0.0');
@@ -704,7 +706,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
 
           helper.command.tagScope('3.0.0');
@@ -727,7 +729,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js', '');
           helper.command.addComponent('foo3.js');
           helper.command.tagAllComponents();
@@ -748,7 +750,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js');
           helper.command.addComponent('foo3.js');
           helper.command.tagAllComponents();
@@ -769,7 +771,7 @@ describe('bit export command', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeExportScope);
             helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-            helper.scopeHelper.reInitRemoteScope(anotherRemotePath);
+            helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
             helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
             output = helper.command.export();
           });
