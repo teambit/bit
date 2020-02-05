@@ -133,7 +133,7 @@ export async function exportMany({
 
       const componentBuffer = await componentAndObject.component.compress();
       const getObjectsBuffer = () => {
-        if (allVersions || didConvertScope || didChangeDists) {
+        if (allVersions || includeDependencies || didConvertScope || didChangeDists) {
           return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
         }
         return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);

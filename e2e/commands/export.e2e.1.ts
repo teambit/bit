@@ -829,7 +829,7 @@ describe('bit export command', function() {
             helper.scopeHelper.reInitRemoteScope(forkScopePath);
             helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
             helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.export('--all-versions');
 
             helper.command.export(`${forkScope} utils/is-string --include-dependencies`);
             const forkScopeList = helper.command.listScopeParsed(forkScope);
@@ -854,7 +854,7 @@ describe('bit export command', function() {
             helper.fs.createFile('utils', 'is-string.js', ''); // remove the is-type dependency
             helper.fs.createFile('utils', 'is-type.js', ''); // add another version for is-type
             helper.command.tagAllComponents();
-            helper.command.exportAllComponents();
+            helper.command.export('--all-versions');
 
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
