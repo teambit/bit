@@ -34,7 +34,13 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
   componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
     // TODO: in case there are core extensions they should be excluded here
-    oneComponentToTag.extensions.forEach(extension => updateDependencyVersion(extension, 'extensionId'));
+    oneComponentToTag.extensions.forEach(extension => {
+      // For core extensions there won't be an extensionId but name
+      // We only want to add version to external extensions not core extensions
+      if (extension.extensionId) {
+        updateDependencyVersion(extension, 'extensionId');
+      }
+    });
   });
 }
 

@@ -79,8 +79,9 @@ export type InvalidComponent = { id: BitId; error: Error };
 
 // TODO: Change id to bitId
 export type ExtensionData = {
-  id?: string;
-  extensionId?: BitId;
+  id?: string; // Here for backward compatibility. don't use it
+  extensionId?: BitId; // Used to store external extensions
+  name?: string; // Used to store core extensions
   data?: { [key: string]: any };
   config?: { [key: string]: any };
 };
@@ -1278,9 +1279,12 @@ export default class Component {
     const extensions: ExtensionData[] = [];
     if (componentConfig) {
       R.forEachObjIndexed((extConfig, extName) => {
-        const extensionId = consumer.getParsedId(extName);
-        // Do not put the extension inside the extension itself
-        if (id.name !== extensionId.name) {
+        const extensionId = consumer.getParsedIdIfExist(extName);
+        // Store config for core extensions
+        if (!extensionId) {
+          extensions.push({ name: extName, config: extConfig });
+          // Do not put the extension inside the extension itself
+        } else if (id.name !== extensionId.name) {
           extensions.push({ extensionId, config: extConfig });
         }
       }, componentConfig.extensions);
