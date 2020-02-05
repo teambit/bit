@@ -77,7 +77,13 @@ export type customResolvedPath = { destinationPath: PathLinux; importSource: str
 
 export type InvalidComponent = { id: BitId; error: Error };
 
-export type ExtensionData = { id: string; data?: { [key: string]: any }; config?: { [key: string]: any } };
+// TODO: Change id to bitId
+export type ExtensionData = {
+  id?: string;
+  extensionId?: BitId;
+  data?: { [key: string]: any };
+  config?: { [key: string]: any };
+};
 
 export type ComponentProps = {
   name: string;
@@ -1269,7 +1275,16 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
-    const extensions = componentConfig?.extensions ?? componentFromModel?.extensions;
+    const extensions: ExtensionData[] = [];
+    if (componentConfig) {
+      R.forEachObjIndexed((extConfig, extName) => {
+        const extensionId = consumer.getParsedId(extName);
+        // Do not put the extension inside the extension itself
+        if (id.name !== extensionId.name) {
+          extensions.push({ extensionId, config: extConfig });
+        }
+      }, componentConfig.extensions);
+    }
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
