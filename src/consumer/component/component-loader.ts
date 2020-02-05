@@ -11,6 +11,7 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import { Dependency } from './dependencies';
 
 export default class ComponentLoader {
   _componentsCache: Record<string, any> = {}; // cache loaded components
@@ -125,7 +126,9 @@ export default class ComponentLoader {
     const loadDependencies = async () => {
       const addExtensionsAsDevDependencies = componentToMutate => {
         // TODO: in case there are core extensions they should be excluded here
-        componentToMutate.extensions.forEach(ext => componentToMutate.devDependencies.add(ext.extensionId));
+        componentToMutate.extensions.forEach(ext =>
+          componentToMutate.devDependencies.add(new Dependency(ext.extensionId, []))
+        );
       };
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(
