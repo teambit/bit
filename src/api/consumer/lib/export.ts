@@ -32,6 +32,7 @@ export default (async function exportAction(params: {
   eject: boolean;
   includeDependencies: boolean;
   setCurrentScope: boolean;
+  allVersions: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
@@ -52,6 +53,7 @@ async function exportComponents({
   setCurrentScope,
   includeNonStaged,
   codemod,
+  allVersions,
   force
 }: {
   ids: string[];
@@ -60,6 +62,7 @@ async function exportComponents({
   setCurrentScope: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
+  allVersions: boolean;
   force: boolean;
 }): Promise<{ updatedIds: BitId[]; nonExistOnBitMap: BitId[]; missingScope: BitId[]; exported: BitId[] }> {
   const consumer: Consumer = await loadConsumer();
@@ -79,6 +82,7 @@ async function exportComponents({
     includeDependencies,
     changeLocallyAlthoughRemoteIsDifferent: setCurrentScope,
     codemod,
+    allVersions,
     idsWithFutureScope
   });
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);

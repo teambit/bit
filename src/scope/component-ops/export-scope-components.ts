@@ -59,6 +59,7 @@ export async function exportMany({
   includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
   changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
   codemod = false,
+  allVersions,
   idsWithFutureScope
 }: {
   scope: Scope;
@@ -68,6 +69,7 @@ export async function exportMany({
   includeDependencies: boolean;
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
+  allVersions: boolean;
   idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
@@ -131,7 +133,7 @@ export async function exportMany({
 
       const componentBuffer = await componentAndObject.component.compress();
       const getObjectsBuffer = () => {
-        if (didConvertScope || didChangeDists) {
+        if (allVersions || didConvertScope || didChangeDists) {
           return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
         }
         return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);

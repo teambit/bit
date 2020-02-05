@@ -36,6 +36,7 @@ export default class Export extends Command {
       'rewire',
       'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
     ],
+    ['', 'all-versions', 'export not only staged versions but all of them'],
     ['f', 'force', 'force changing a component remote without asking for a confirmation']
   ];
   loader = true;
@@ -49,6 +50,7 @@ export default class Export extends Command {
       includeDependencies = false,
       setCurrentScope = false,
       all = false,
+      allVersions = false,
       force = false,
       rewire = false
     }: any
@@ -74,6 +76,7 @@ export default class Export extends Command {
       includeDependencies,
       setCurrentScope,
       includeNonStaged: all,
+      allVersions,
       codemod: rewire,
       force
     }).then(results => ({
