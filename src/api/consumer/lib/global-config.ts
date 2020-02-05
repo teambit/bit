@@ -56,8 +56,6 @@ export async function get(key: string): Promise<string | null | undefined> {
     if (!R.isNil(gitVal)) {
       return gitVal;
     }
-    throw new ConfigKeyNotFound(key);
-    // Ignore error from git config get
   } catch (err) {
     throw new ConfigKeyNotFound(key);
   }

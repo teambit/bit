@@ -95,7 +95,7 @@ export default class CapsuleBuilder {
 
   async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
-      capsules.forEach(capsule => {
+      capsules.forEach(async capsule => {
         const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
         const packageJson = JSON.parse(pjsonString);
@@ -103,7 +103,7 @@ export default class CapsuleBuilder {
         const localBitBinPath = path.join(__dirname, '../..');
         delete packageJson.dependencies['bit-bin'];
         capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-        execa.sync('yarn', [], { cwd: capsule.wrkDir });
+        execa.sync('npm', ['install'], { cwd: capsule.wrkDir });
         if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
           capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
         }
@@ -156,7 +156,7 @@ export default class CapsuleBuilder {
       writeBitDependencies: true,
       createNpmLinkFiles: false,
       saveDependenciesAsComponents: false,
-      writeDists: true,
+      writeDists: false,
       installNpmPackages: false,
       installPeerDependencies: false,
       addToRootPackageJson: false,

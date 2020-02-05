@@ -21,10 +21,12 @@ export default class ComposeCmd implements Command {
 
   // TODO: remove this ts-ignore
   // @ts-ignore
-  async render() {
+  async render([id]: CLIArgs) {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async () => {
-      const components = await this.workspace.list();
+      // @ts-ignore
+      const components = id ? await this.workspace.get(id) : await this.workspace.list();
+      // const components = await this.workspace.get('base/card');
       const resolved = await this.build.run('build', components);
 
       const data = resolved.reduce((map, component) => {

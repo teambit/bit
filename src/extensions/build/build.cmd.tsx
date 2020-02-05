@@ -29,6 +29,6 @@ export class RunCmd implements Command {
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
     await this.build.run(pipeline as string, undefined, { parallelism: parallelismN });
 
-    return <Color green>application</Color>;
+    return <div />;
   }
 }

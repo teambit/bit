@@ -45,6 +45,10 @@ export class Build {
     return {};
   }
 
+  resolveTask(name: string) {
+    return this.tasks[name];
+  }
+
   async watch() {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,7 +71,7 @@ export class Build {
 
       // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
-        if (this.tasks[elm]) return this.runTask(elm, new TaskContext(component));
+        if (this.resolveTask(elm)) return this.runTask(elm, new TaskContext(component));
         // should execute registered extension tasks as well
         const exec = await capsule.exec({ command: elm.split(' ') });
         // eslint-disable-next-line no-console

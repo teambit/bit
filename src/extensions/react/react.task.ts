@@ -17,7 +17,8 @@ const tsconfig = {
     noEmit: false,
     sourceMap: true,
     outDir: './dist',
-    jsx: 'react'
+    jsx: 'react',
+    preserveSymlinks: true
   }
 };
 
