@@ -134,8 +134,11 @@ export async function exportMany({
       const componentBuffer = await componentAndObject.component.compress();
       const getObjectsBuffer = () => {
         if (allVersions || includeDependencies || didConvertScope || didChangeDists) {
+          // only when really needed (e.g. fork or version changes), collect all versions objects
           return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
         }
+        // when possible prefer collecting only new/local versions. the server has already
+        // the rest, so no point of sending them.
         return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
       };
       const objectsBuffer = await getObjectsBuffer();
