@@ -1,4 +1,4 @@
-import { TaskContext } from '../build';
+import { TaskContext } from '../pipes';
 
 const tsconfig = {
   compilerOptions: {

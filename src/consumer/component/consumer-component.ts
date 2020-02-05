@@ -77,7 +77,14 @@ export type customResolvedPath = { destinationPath: PathLinux; importSource: str
 
 export type InvalidComponent = { id: BitId; error: Error };
 
-export type ExtensionData = { id: string; data: { [key: string]: any } };
+// TODO: Change id to bitId
+export type ExtensionData = {
+  id?: string; // Here for backward compatibility. don't use it
+  extensionId?: BitId; // Used to store external extensions
+  name?: string; // Used to store core extensions
+  data?: { [key: string]: any };
+  config?: { [key: string]: any };
+};
 
 export type ComponentProps = {
   name: string;
@@ -987,6 +994,9 @@ export default class Component {
   addExtensionValue(extensionId: string, key: string, value: any): void {
     const existingExtension = this.extensions.find(e => e.id === extensionId);
     if (existingExtension) {
+      if (!existingExtension.data) {
+        existingExtension.data = {};
+      }
       existingExtension.data[key] = value;
     } else {
       const extension = { id: extensionId, data: { [key]: value } };
@@ -996,8 +1006,8 @@ export default class Component {
 
   getExtensionValue(extensionId: string, key: string): any {
     const existingExtension = this.extensions.find(e => e.id === extensionId);
-    if (!existingExtension) return null;
-    return existingExtension.data[key];
+    if (!existingExtension) return undefined;
+    return existingExtension.data ? existingExtension.data[key] : undefined;
   }
 
   /**
@@ -1266,7 +1276,19 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
-    const extensions = componentFromModel ? componentFromModel.extensions : null;
+    const extensions: ExtensionData[] = [];
+    if (componentConfig) {
+      R.forEachObjIndexed((extConfig, extName) => {
+        const extensionId = consumer.getParsedIdIfExist(extName);
+        // Store config for core extensions
+        if (!extensionId) {
+          extensions.push({ name: extName, config: extConfig });
+          // Do not put the extension inside the extension itself
+        } else if (id.name !== extensionId.name) {
+          extensions.push({ extensionId, config: extConfig });
+        }
+      }, componentConfig.extensions);
+    }
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);

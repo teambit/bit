@@ -1,5 +1,5 @@
 import { ReplaySubject } from 'rxjs';
-import { filter } from 'ramda';
+import { filter, difference } from 'ramda';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../capsule';
@@ -70,7 +70,9 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return [];
       }
-      const extensionsComponents = await this.workspace.getMany(extensionsIds);
+      const allRegisteredExtensionIds = this.harmony.extensionsIds;
+      const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+      const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
       const capsulesMap = await this.capsule.create(extensionsComponents);
 
       return Object.values(capsulesMap).map(capsule => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Color } from 'ink';
 import { Workspace } from '../workspace';
-import { Build } from './build';
+import { Pipes } from './pipes';
 import {Command, CLIArgs} from '../cli'
 import { Flags } from '../paper/command';
 
@@ -18,7 +18,7 @@ export class RunCmd implements Command {
   ];
 
   constructor(
-    private build: Build
+    private pipes: Pipes
   ) {}
 
   // json([id]: CLIArgs) {
@@ -27,7 +27,7 @@ export class RunCmd implements Command {
 
   async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
-    await this.build.run(pipeline as string, undefined, { parallelism: parallelismN });
+    await this.pipes.run(pipeline as string, undefined, { parallelism: parallelismN });
 
     return <div />;
   }

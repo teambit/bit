@@ -3,8 +3,7 @@ import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Build } from '../build';
-import { Flags } from '../paper/command';
+import { Pipes } from '../pipes';
 
 export default class ComposeCmd implements Command {
   name = 'start [id]';
@@ -16,7 +15,7 @@ export default class ComposeCmd implements Command {
 
   constructor(
     private workspace: Workspace,
-    private build: Build
+    private pipes: Pipes
   ) {}
 
   // TODO: remove this ts-ignore
@@ -27,7 +26,7 @@ export default class ComposeCmd implements Command {
       // @ts-ignore
       const components = id ? await this.workspace.get(id) : await this.workspace.list();
       // const components = await this.workspace.get('base/card');
-      const resolved = await this.build.run('build', components);
+      const resolved = await this.pipes.run('build', components);
 
       const data = resolved.reduce((map, component) => {
         map[component.component.id.toString()] = component.capsule.wrkDir;
