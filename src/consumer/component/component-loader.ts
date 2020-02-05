@@ -123,6 +123,10 @@ export default class ComponentLoader {
       return component;
     }
     const loadDependencies = async () => {
+      const addExtensionsAsDevDependencies = componentToMutate => {
+        // TODO: in case there are core extensions they should be excluded here
+        componentToMutate.extensions.forEach(ext => componentToMutate.devDependencies.add(ext.extensionId));
+      };
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(
         bitDir,
@@ -130,6 +134,7 @@ export default class ComponentLoader {
         this.cacheProjectAst
       );
       updateDependenciesVersions(this.consumer, component);
+      addExtensionsAsDevDependencies(component);
     };
     await loadDependencies();
     return component;
