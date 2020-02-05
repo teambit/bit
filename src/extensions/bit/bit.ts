@@ -38,10 +38,10 @@ export default class Bit {
   }
 
   async extensions(): Promise<string[]> {
-    // if (!this.config) return Promise.resolve([]);
-    // let rawExtensions = this.config.extensions || {};
-    // rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
-    return Object.keys({});
+    if (!this.config) return Promise.resolve([]);
+    let rawExtensions = this.config.extensions || {};
+    rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
+    return Object.keys(rawExtensions);
   }
 
   public onExtensionsLoaded = new ReplaySubject();

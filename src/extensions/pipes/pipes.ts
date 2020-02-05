@@ -38,7 +38,7 @@ export class Pipes {
   }
 
   getConfig(component: ResolvedComponent) {
-    if (component.component.config.extensions.Pipes) {
+    if (component.component.config.extensions.pipes) {
       return component.component.config.extensions.pipes;
     }
 
@@ -63,7 +63,7 @@ export class Pipes {
       if (!Array.isArray(pipe)) {
         // TODO: throw error
         // eslint-disable-next-line no-console
-        console.log(`skipping component ${component.component.id.toString()}, it has no defined '${pipeline}'`);
+        console.log(`skipping component ${component.component.id.toString()}. it has no defined '${pipeline}'`);
       }
       // TODO: use logger for this
       // eslint-disable-next-line no-console

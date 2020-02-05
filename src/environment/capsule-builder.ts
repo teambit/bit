@@ -108,6 +108,9 @@ export default class CapsuleBuilder {
           capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
         }
 
+        if (!capsule.fs.existsSync(path.join(capsule.wrkDir, 'node_modules'))) {
+          capsule.fs.mkdirSync(path.join(capsule.wrkDir, 'node_modules'));
+        }
         execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
       });
       return Promise.resolve();
