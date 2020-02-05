@@ -190,6 +190,7 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.7.9",
     "@types/open": "^6.2.1",
+    "@types/ssh2": "^0.5.39",
     "@types/vinyl": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^2.15.0",
     "@typescript-eslint/parser": "^2.15.0",

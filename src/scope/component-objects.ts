@@ -37,7 +37,22 @@ export default class ComponentObjects {
     return result;
   }
 
+  /**
+   * _put:
+   * until v14.7.3, the client was sending all its components with one JSON.stringify call.
+   * Due to performance issue, this has been changed to send each componentAndObjects separately.
+   * The delimiter between the each componentAndObjects instance is one space.
+   *
+   * _fetch:
+   * still using the old method, will probably need to switch as well.
+   */
   static manyFromString(str: string): ComponentObjects[] {
+    if (str.includes(' ')) {
+      return str
+        .split(' ')
+        .filter(s => s.length > 1)
+        .map(componentObject => ComponentObjects.fromString(componentObject));
+    }
     return JSON.parse(str).map(componentObject => ComponentObjects.fromString(componentObject));
   }
 

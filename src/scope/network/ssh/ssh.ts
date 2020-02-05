@@ -1,5 +1,5 @@
 /* eslint max-classes-per-file: 0 */
-import SSH2 from 'ssh2';
+import SSH2, { Channel } from 'ssh2';
 import R from 'ramda';
 import * as os from 'os';
 import merge from 'lodash.merge';
@@ -69,6 +69,7 @@ export const DEFAULT_READ_STRATEGIES: SSHConnectionStrategyName[] = [
   'user-password'
 ];
 export default class SSH implements Network {
+  // @ts-ignore
   connection: SSH2 | null | undefined;
   path: string;
   username: string;
@@ -211,7 +212,7 @@ export default class SSH implements Network {
     authFailedMsg: string
   ): Promise<SSH> {
     const connectWithConfigP = () => {
-      const conn = new SSH2();
+      const conn = new SSH2.Client();
       return new Promise((resolve, reject) => {
         conn
           .on('error', err => {
@@ -268,33 +269,49 @@ export default class SSH implements Network {
       context = context || {};
       context.sshUsername = this._sshUsername;
     }
+    // No need to use packCommand on the payload in case of put command
+    // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
+    // inside pushMany function here
+    const cmd = this.buildCmd(
+      commandName,
+      absolutePath(this.path || ''),
+      commandName === '_put' ? null : payload,
+      context
+    );
+    if (!this.connection) {
+      throw new Error('ssh connection is not defined');
+    }
     // eslint-disable-next-line consistent-return
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
-      // No need to use packCommand on the payload in case of put command
-      // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
-      // inside pushMany function here
-      const cmd = this.buildCmd(
-        commandName,
-        absolutePath(this.path || ''),
-        commandName === '_put' ? null : payload,
-        context
-      );
-      if (!this.connection) {
-        err = 'ssh connection is not defined';
-        logger.error('ssh', err);
-        return reject(err);
-      }
       // eslint-disable-next-line consistent-return
-      this.connection.exec(cmd, (error, stream) => {
+      this.connection.exec(cmd, (error, stream: Channel) => {
         if (error) {
           logger.error('ssh, exec returns an error: ', error);
           return reject(error);
         }
         if (commandName === '_put') {
-          stream.stdin.write(payload);
-          stream.stdin.end();
+          let current = -1;
+          const packets = payload.map(componentAndObject => componentAndObject.toString());
+          const writeIntoSocket = () => {
+            current += 1;
+
+            if (current === packets.length) {
+              stream.end();
+              return;
+            }
+
+            const nextPacket = `${packets[current]} `;
+            const canContinue = stream.write(nextPacket);
+
+            // wait until stream drains to continue
+            if (canContinue) writeIntoSocket();
+            else stream.once('drain', writeIntoSocket);
+          };
+          logger.debug(`ssh, _put going to write ${packets.length} packets (components) into remote`);
+          writeIntoSocket();
+          logger.debug('ssh, _put finished writing into the remote socket');
         }
         stream
           .on('data', response => {
@@ -376,7 +393,7 @@ export default class SSH implements Network {
   pushMany(manyComponentObjects: ComponentObjects[], context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', ComponentObjects.manyToString(manyComponentObjects), context).then((data: string) => {
+    return this.exec('_put', manyComponentObjects, context).then((data: string) => {
       const { payload, headers } = this._unpack(data);
       checkVersionCompatibility(headers.version);
       return payload.ids;
