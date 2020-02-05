@@ -292,9 +292,7 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
-  async collectRaw(repo: Repository, versions?: string[]): Promise<Buffer[]> {
-    if (!versions) return super.collectRaw(repo);
-
+  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<Buffer[]> {
     const collectRefs = async (): Promise<Ref[]> => {
       const refsCollection: Ref[] = [];
 
@@ -315,8 +313,8 @@ export default class Component extends BitObject {
     return Promise.all(refs.map(ref => ref.loadRaw(repo)));
   }
 
-  collectObjects(repo: Repository, versions?: string[]): Promise<ComponentObjects> {
-    return Promise.all([this.asRaw(repo), this.collectRaw(repo, versions)])
+  collectObjects(repo: Repository): Promise<ComponentObjects> {
+    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
       .catch(err => {
         if (err.code === 'ENOENT') {

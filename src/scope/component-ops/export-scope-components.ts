@@ -129,12 +129,15 @@ export async function exportMany({
         componentsAndObjects.push(componentAndObjectCloned);
       }
 
-      if (didConvertScope || didChangeDists) {
-        const componentBuffer = await componentAndObject.component.compress();
-        const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
-        return new ComponentObjects(componentBuffer, objectsBuffer);
-      }
-      return componentAndObject.component.collectObjects(scope.objects, localVersions);
+      const componentBuffer = await componentAndObject.component.compress();
+      const getObjectsBuffer = () => {
+        if (didConvertScope || didChangeDists) {
+          return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+        }
+        return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
+      };
+      const objectsBuffer = await getObjectsBuffer();
+      return new ComponentObjects(componentBuffer, objectsBuffer);
     };
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
     const manyObjects: ComponentObjects[] = await pMapSeries(componentObjects, processComponentObjects);
@@ -306,7 +309,7 @@ async function convertToCorrectScope(
 ): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
-  const hasVersionsChanged = await Promise.all(
+  const haveVersionsChanged = await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
       const hashBefore = objectVersion.hash().toString();
       const didCodeMod = codemod ? await _replaceSrcOfVersionIfNeeded(objectVersion) : false;
@@ -331,10 +334,11 @@ async function convertToCorrectScope(
       return didCodeMod || didDependencyChange;
     })
   );
+  const hasComponentChanged = remoteScope !== componentsObjects.component.scope;
   componentsObjects.component.scope = remoteScope;
 
-  // return true if one of the component has changed
-  return hasVersionsChanged.some(x => x);
+  // return true if one of the versions has changed or the component itself
+  return haveVersionsChanged.some(x => x) || hasComponentChanged;
 
   function changeDependencyScope(version: Version): boolean {
     let hasChanged = false;
