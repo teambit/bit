@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2300](https://github.com/teambit/bit/issues/2300) improve `bit export` performance by pushing new tags only
+
 ## [[14.7.3] - 2020-02-02](https://github.com/teambit/bit/releases/tag/v14.7.3)
 
 ### New
