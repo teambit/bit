@@ -1,11 +1,14 @@
 import graphLib, { Graph } from 'graphlib';
 import R from 'ramda';
 import Component from '../../consumer/component/consumer-component';
-import Dependencies from '../../consumer/component/dependencies/dependencies';
+import Dependencies, { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
+import loadFlattenedDependenciesForCapsule from '../../consumer/component-ops/load-flattened-dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
 import { BitId } from '../../bit-id';
+import { Consumer } from '../../consumer';
+import { Dependency } from '../../consumer/component/dependencies';
 
 export type AllDependenciesGraphs = {
   graphDeps: Graph;
@@ -58,6 +61,31 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
       graph.setEdge(idStr, depIdStr);
     });
   });
+  return graph;
+}
+
+export async function buildOneGraphForComponents(components: Component[], consumer: Consumer): Promise<Graph> {
+  const graph = new Graph();
+  const componentsWithDeps = await Promise.all(
+    components.map(component => loadFlattenedDependenciesForCapsule(consumer, component))
+  );
+  const addComponentWithDeps = (componentWithDeps: ComponentWithDependencies) => {
+    const componentsArr = [componentWithDeps.component, ...componentWithDeps.allDependencies];
+    componentsArr.forEach((component: Component) => {
+      const bitId = component.id.changeVersion(null);
+      const idStr = bitId.toString();
+      if (!graph.hasNode(idStr)) graph.setNode(idStr, bitId);
+      DEPENDENCIES_TYPES.forEach(depType => {
+        component[depType].get().forEach((dependency: Dependency) => {
+          const depId = dependency.id.changeVersion(null);
+          const depIdStr = depId.toString();
+          if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, depId);
+          graph.setEdge(idStr, depIdStr, depType);
+        });
+      });
+    });
+  };
+  componentsWithDeps.forEach(compWithDep => addComponentWithDeps(compWithDep));
   return graph;
 }
 
