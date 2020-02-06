@@ -59,6 +59,7 @@ export async function exportMany({
   includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
   changeLocallyAlthoughRemoteIsDifferent = false, // by default only if remote stays the same the component is changed from staged to exported
   codemod = false,
+  allVersions,
   idsWithFutureScope
 }: {
   scope: Scope;
@@ -68,6 +69,7 @@ export async function exportMany({
   includeDependencies: boolean;
   changeLocallyAlthoughRemoteIsDifferent: boolean;
   codemod: boolean;
+  allVersions: boolean;
   idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
@@ -100,9 +102,21 @@ export async function exportMany({
     const componentsAndObjects = [];
     const processComponentObjects = async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects(scope.objects);
+      const localVersions = componentAndObject.component.getLocalVersions();
       componentAndObject.component.clearStateData();
-      await convertToCorrectScope(scope, componentAndObject, remoteNameStr, includeDependencies, bitIds, codemod);
-      await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
+      const didConvertScope = await convertToCorrectScope(
+        scope,
+        componentAndObject,
+        remoteNameStr,
+        includeDependencies,
+        bitIds,
+        codemod
+      );
+      const didChangeDists = await changePartialNamesToFullNamesInDists(
+        scope,
+        componentAndObject.component,
+        componentAndObject.objects
+      );
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
 
@@ -116,8 +130,18 @@ export async function exportMany({
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         componentsAndObjects.push(componentAndObjectCloned);
       }
+
       const componentBuffer = await componentAndObject.component.compress();
-      const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+      const getObjectsBuffer = () => {
+        if (allVersions || includeDependencies || didConvertScope || didChangeDists) {
+          // only when really needed (e.g. fork or version changes), collect all versions objects
+          return Promise.all(componentAndObject.objects.map(obj => obj.compress()));
+        }
+        // when possible prefer collecting only new/local versions. the server has already
+        // the rest, so no point of sending them.
+        return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
+      };
+      const objectsBuffer = await getObjectsBuffer();
       return new ComponentObjects(componentBuffer, objectsBuffer);
     };
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
@@ -287,16 +311,19 @@ async function convertToCorrectScope(
   fork: boolean,
   exportingIds: BitIds,
   codemod: boolean
-): Promise<void> {
+): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versionsObjects: Version[] = componentsObjects.objects.filter(object => object instanceof Version);
-  await Promise.all(
+  const haveVersionsChanged = await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
       const hashBefore = objectVersion.hash().toString();
-      if (codemod) await _replaceSrcOfVersionIfNeeded(objectVersion);
-      changeDependencyScope(objectVersion);
+      const didCodeMod = codemod ? await _replaceSrcOfVersionIfNeeded(objectVersion) : false;
+      const didDependencyChange = changeDependencyScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
+        if (!didCodeMod && !didDependencyChange) {
+          throw new Error('hash should not be changed if there was not any dependency scope changes nor codemod');
+        }
         logger.debugAndAddBreadCrumb(
           'scope._convertToCorrectScope',
           `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
@@ -309,18 +336,29 @@ async function convertToCorrectScope(
           }
         });
       }
+      return didCodeMod || didDependencyChange;
     })
   );
+  const hasComponentChanged = remoteScope !== componentsObjects.component.scope;
   componentsObjects.component.scope = remoteScope;
 
-  function changeDependencyScope(version: Version): void {
+  // return true if one of the versions has changed or the component itself
+  return haveVersionsChanged.some(x => x) || hasComponentChanged;
+
+  function changeDependencyScope(version: Version): boolean {
+    let hasChanged = false;
     version.getAllDependencies().forEach(dependency => {
-      dependency.id = getIdWithUpdatedScope(dependency.id);
+      const updatedScope = getIdWithUpdatedScope(dependency.id);
+      if (!updatedScope.isEqual(dependency.id)) {
+        hasChanged = true;
+        dependency.id = updatedScope;
+      }
     });
     version.flattenedDependencies = getBitIdsWithUpdatedScope(version.flattenedDependencies);
     version.flattenedDevDependencies = getBitIdsWithUpdatedScope(version.flattenedDevDependencies);
     version.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(version.flattenedCompilerDependencies);
     version.flattenedTesterDependencies = getBitIdsWithUpdatedScope(version.flattenedTesterDependencies);
+    return hasChanged;
   }
 
   function getIdWithUpdatedScope(dependencyId: BitId): BitId {
@@ -342,7 +380,8 @@ async function convertToCorrectScope(
     const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
     return BitIds.fromArray(updatedIds);
   }
-  async function _replaceSrcOfVersionIfNeeded(version: Version) {
+  async function _replaceSrcOfVersionIfNeeded(version: Version): Promise<boolean> {
+    let hasVersionChanged = false;
     const files = [...version.files, ...(version.dists || [])];
     await Promise.all(
       files.map(async file => {
@@ -350,10 +389,12 @@ async function convertToCorrectScope(
         if (newFileObject) {
           file.file = newFileObject.hash();
           componentsObjects.objects.push(newFileObject);
+          hasVersionChanged = true;
         }
         return null;
       })
     );
+    return hasVersionChanged;
   }
   async function _createNewFileIfNeeded(
     version: Version,
@@ -395,24 +436,29 @@ async function changePartialNamesToFullNamesInDists(
   scope: Scope,
   component: ModelComponent,
   objects: BitObject[]
-): Promise<void> {
+): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versions: Version[] = objects.filter(object => object instanceof Version);
-  await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
+  const haveVersionsChanged = await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
 
-  async function _replaceDistsOfVersionIfNeeded(version: Version) {
+  return haveVersionsChanged.some(x => x);
+
+  async function _replaceDistsOfVersionIfNeeded(version: Version): Promise<boolean> {
     const dists = version.dists;
-    if (!dists) return;
-    await Promise.all(
+    if (!dists) return false;
+    const hasDistsChanged = await Promise.all(
       dists.map(async dist => {
         const newDistObject = await _createNewDistIfNeeded(version, dist);
         if (newDistObject) {
           dist.file = newDistObject.hash();
           objects.push(newDistObject);
+          return true;
         }
-        return null;
+        return false;
       })
     );
+    // return true if one of the dists has changed
+    return hasDistsChanged.some(x => x);
   }
 
   async function _createNewDistIfNeeded(
