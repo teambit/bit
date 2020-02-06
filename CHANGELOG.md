@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.5-dev.1] - 2020-02-06]
+
 - [#2211](https://github.com/teambit/bit/issues/2211) fix bit export to not export non-staged dependencies
 - [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
 
