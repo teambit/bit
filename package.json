@@ -180,6 +180,7 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-typescript": "^7.7.7",
     "@babel/register": "^7.4.4",
+    "@types/bluebird": "^3.5.29",
     "@types/chai": "^4.2.5",
     "@types/chai-arrays": "^1.0.3",
     "@types/chai-fs": "^2.0.2",

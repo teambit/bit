@@ -1,4 +1,4 @@
-import * as Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
@@ -8,8 +8,8 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 
 // removing this, default to longStackTraces also when env is `development`, which impacts the
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-Promise.config({
-  longStackTraces: process.env.BLUEBIRD_DEBUG
+Bluebird.config({
+  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG)
 });
 
 loudRejection();

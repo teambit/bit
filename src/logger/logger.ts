@@ -5,7 +5,7 @@ import format from 'string-format';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import winston, { Logger } from 'winston';
 import * as path from 'path';
-import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG, CFG_LOG_JSON_FORMAT, CFG_NO_WARNINGS, CFG_LOG_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 
@@ -15,10 +15,12 @@ const extensionsLoggers = new Map();
 
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
+const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
+
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
   format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
-  level: 'debug',
+  level: logLevel,
   maxsize: 10 * 1024 * 1024, // 10MB
   maxFiles: 10,
   // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
@@ -60,6 +62,15 @@ class BitLogger {
 
   constructor(logger: Logger) {
     this.logger = logger;
+    logger.on('error', err => {
+      // eslint-disable-next-line no-console
+      console.log('got an error from the logger', err);
+    });
+  }
+
+  silly(...args: any[]) {
+    // @ts-ignore
+    this.logger.silly(...args);
   }
 
   debug(...args: any[]) {
