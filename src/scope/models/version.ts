@@ -352,6 +352,12 @@ export default class Version extends BitObject {
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
         flattenedCompilerDependencies: this.flattenedCompilerDependencies.map(dep => dep.serialize()),
         flattenedTesterDependencies: this.flattenedTesterDependencies.map(dep => dep.serialize()),
+        extensions: this.extensions.map(ext => {
+          if (ext.extensionId) {
+            ext.extensionId.serialize();
+          }
+          return ext;
+        }),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -359,8 +365,7 @@ export default class Version extends BitObject {
         testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
-        packageJsonChangedProps: this.packageJsonChangedProps,
-        extensions: this.extensions
+        packageJsonChangedProps: this.packageJsonChangedProps
       },
       val => !!val
     );
@@ -457,6 +462,19 @@ export default class Version extends BitObject {
         test: file.test
       };
     };
+    // @ts-ignore
+    const _getExtensions = (exts = []): ExtensionData[] => {
+      if (exts.length) {
+        const newExts = exts.map((extension: any) => {
+          if (extension.extensionId) {
+            extension.extensionId = new BitId(extension.extensionId);
+          }
+          return extension;
+        });
+        return newExts;
+      }
+      return [];
+    };
 
     return new Version({
       mainFile,
@@ -491,7 +509,7 @@ export default class Version extends BitObject {
       customResolvedPaths,
       overrides,
       packageJsonChangedProps,
-      extensions
+      extensions: _getExtensions(extensions)
     });
   }
 
