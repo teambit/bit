@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2211](https://github.com/teambit/bit/issues/2211) fix bit export to not export non-staged dependencies
+- [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
+
 ## [[14.7.4] - 2020-02-06](https://github.com/teambit/bit/releases/tag/v14.7.4)
 
 - [#2300](https://github.com/teambit/bit/issues/2300) improve `bit export` performance by pushing new tags only
