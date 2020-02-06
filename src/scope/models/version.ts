@@ -353,10 +353,13 @@ export default class Version extends BitObject {
         flattenedCompilerDependencies: this.flattenedCompilerDependencies.map(dep => dep.serialize()),
         flattenedTesterDependencies: this.flattenedTesterDependencies.map(dep => dep.serialize()),
         extensions: this.extensions.map(ext => {
-          if (ext.extensionId) {
-            ext.extensionId.serialize();
+          const extensionClone = R.clone(ext);
+          if (extensionClone.extensionId) {
+            // TODO: fix the types of extensions. after this it should be an object not an object id
+            // @ts-ignore
+            extensionClone.extensionId = ext.extensionId.serialize();
           }
-          return ext;
+          return extensionClone;
         }),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
