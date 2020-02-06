@@ -21,16 +21,17 @@ export interface BitContainerConfig extends ContainerFactoryOptions {
 }
 
 export default class FsContainer implements Container<Exec, AnyFS> {
-  fs: AnyFS = new NodeFS();
-
   id = 'FS Container';
-  path: string;
-  config: any;
-  constructor(config?: BitContainerConfig) {
-    this.config = config;
-    this.path = _.get(config, 'wrkDir');
-    if (!this.path) this.path = this.generateDefaultTmpDir();
+
+  get path() {
+    let p = _.get(this.config, 'wrkDir');
+    if (!p) p = this.generateDefaultTmpDir();
+    return p;
   }
+
+  fs: AnyFS = new NodeFS(this.path);
+
+  constructor(readonly config: any) {}
 
   public getPath() {
     return this.path;

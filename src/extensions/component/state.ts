@@ -28,6 +28,8 @@ export default class State {
     return '';
   }
 
+  dependencyGraph() {}
+
   static fromLegacy(consumerComponent: ConsumerComponent) {
     let extensions = {};
     if (consumerComponent.bitJson) {

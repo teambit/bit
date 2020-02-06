@@ -56,7 +56,7 @@ export default class Component {
    * here through an external extension.
    */
   async graph() {
-    return this.state.dependencies;
+    return this.state.dependencyGraph();
   }
 
   /*

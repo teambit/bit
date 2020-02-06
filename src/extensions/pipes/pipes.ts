@@ -49,7 +49,7 @@ export class Pipes {
     return this.tasks[name];
   }
 
-  async watch() {}
+  watch() {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async run(pipeline: string, components?: Component[], options?: Options) {

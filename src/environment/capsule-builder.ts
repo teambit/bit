@@ -96,7 +96,7 @@ export default class CapsuleBuilder {
   async installpackages(capsules: ComponentCapsule[]): Promise<void> {
     try {
       capsules.forEach(async capsule => {
-        const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+        const packageJsonPath = 'package.json';
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
         const packageJson = JSON.parse(pjsonString);
         const bitBinPath = './node_modules/bit-bin';
@@ -104,13 +104,15 @@ export default class CapsuleBuilder {
         delete packageJson.dependencies['bit-bin'];
         capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
         execa.sync('npm', ['install'], { cwd: capsule.wrkDir });
-        if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
-          capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
+
+        if (capsule.fs.existsSync(bitBinPath)) {
+          capsule.fs.unlinkSync(bitBinPath);
         }
 
-        if (!capsule.fs.existsSync(path.join(capsule.wrkDir, 'node_modules'))) {
-          capsule.fs.mkdirSync(path.join(capsule.wrkDir, 'node_modules'));
+        if (!capsule.fs.existsSync('./node_modules')) {
+          capsule.fs.mkdirSync('./node_modules');
         }
+
         execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
       });
       return Promise.resolve();

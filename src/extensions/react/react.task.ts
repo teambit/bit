@@ -1,4 +1,5 @@
 import { TaskContext } from '../pipes';
+import ExtensionGetDynamicPackagesError from '../../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
 
 const tsconfig = {
   compilerOptions: {
@@ -26,20 +27,29 @@ export async function reactTask(context: TaskContext) {
   const capsule = context.component.capsule;
   // TODO: output using logger
   // eslint-disable-next-line no-console
-  console.log(capsule.wrkDir);
-  capsule.fs.writeFileSync(`${capsule.wrkDir}/tsconfig.json`, JSON.stringify(tsconfig));
-  const exec = await capsule.exec({ command: ['tsc', '-d', '-p', './tsconfig.json'] });
+  // console.log(capsule.wrkDir);
+  // capsule.fs.writeFileSync(`${capsule.wrkDir}/tsconfig.json`, JSON.stringify(tsconfig));
+  // const exec = await capsule.exec({ command: ['tsc', '-d', '-p', './tsconfig.json'] });
   // TODO: output using logger
   // eslint-disable-next-line no-console
-  exec.stdout.on('data', chunk => console.log(chunk.toString()));
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const promise = new Promise(resolve => {
-    exec.stdout.on('close', () => resolve());
+  const hi = await capsule.run(() => {
+    // console.log(process.cwd());
+    // return 'hi there from capsule:' + process.cwd();
   });
+  // console.log(hi);
+  // capsule.run(() => {
+  //   console.log(process.cwd) // prints capsule.wrkdir
+  // deps?
+  // });
+  // exec.stdout.on('data', chunk => console.log(chunk.toString()));
 
-  // save dists? add new dependencies? change component main file? add further configs?
-  const packageJson = JSON.parse(capsule.fs.readFileSync(`${capsule.wrkDir}/package.json`).toString());
-  packageJson.main = './dist';
-  capsule.fs.writeFileSync(`${capsule.wrkDir}/package.json`, JSON.stringify(packageJson));
+  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const promise = new Promise(resolve => {
+  //   exec.stdout.on('close', () => resolve());
+  // });
+
+  // // save dists? add new dependencies? change component main file? add further configs?
+  // const packageJson = JSON.parse(capsule.fs.readFileSync(`${capsule.wrkDir}/package.json`).toString());
+  // packageJson.main = './dist';
+  // capsule.fs.writeFileSync(`${capsule.wrkDir}/package.json`, JSON.stringify(packageJson));
 }

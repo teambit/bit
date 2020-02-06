@@ -29,7 +29,7 @@ export default class ComponentState {
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
-  get dependencyGraph() {
+  dependencyGraph() {
     // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
     return undefined;
   }
