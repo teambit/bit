@@ -73,7 +73,7 @@ export default class Bit {
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const capsulesMap = await this.capsule.create(extensionsComponents);
+      const capsulesMap = await this.capsule.create(extensionsComponents, { packageManager: 'npm' });
 
       return Object.values(capsulesMap).map(capsule => {
         const extPath = capsule.wrkDir;

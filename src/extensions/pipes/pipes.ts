@@ -5,6 +5,7 @@ import { Capsule } from '../capsule';
 import { Component } from '../component';
 import { TaskContext } from './task-context';
 import { ResolvedComponent } from '../workspace/resolved-component';
+import { BitId } from '../../bit-id';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
@@ -46,8 +47,8 @@ export class Pipes {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async run(pipeline: string, components?: Component[], options?: Options) {
-    const componentsToBuild = components || (await this.getComponentsForBuild(components));
+  async run(pipeline: string, components?: string[], options?: Options) {
+    const componentsToBuild = await this.getComponentsForBuild(components);
     // check if config is sufficient before building capsules and resolving deps.
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
     // add parallelism and execute by graph order (use gilad's graph builder once we have it)
