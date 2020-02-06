@@ -181,21 +181,25 @@ export default class ScopeHelper {
   }
 
   cloneRemoteScope() {
+    return this.cloneScope(this.scopes.remotePath);
+  }
+
+  cloneScope(scopePath: string) {
     const clonedScope = generateRandomStr();
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
-    if (this.debugMode) console.log(`cloning a scope from ${this.scopes.remotePath} to ${clonedScopePath}`);
-    fs.copySync(this.scopes.remotePath, clonedScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${scopePath} to ${clonedScopePath}`);
+    fs.copySync(scopePath, clonedScopePath);
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope = true) {
-    if (deleteCurrentScope) {
-      fs.removeSync(this.scopes.remotePath);
-    } else {
-      this.getNewBareScope();
-    }
-    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.scopes.remotePath}`);
-    fs.copySync(clonedScopePath, this.scopes.remotePath);
+  getClonedScope(clonedScopePath: string, scopePath: string) {
+    fs.removeSync(scopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${scopePath}`);
+    fs.copySync(clonedScopePath, scopePath);
+  }
+
+  getClonedRemoteScope(clonedScopePath: string) {
+    return this.getClonedScope(clonedScopePath, this.scopes.remotePath);
   }
 }
