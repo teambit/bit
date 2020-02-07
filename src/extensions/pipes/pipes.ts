@@ -1,3 +1,4 @@
+import path from 'path';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
@@ -5,6 +6,8 @@ import { Capsule } from '../capsule';
 import { Component } from '../component';
 import { TaskContext } from './task-context';
 import { ResolvedComponent } from '../workspace/resolved-component';
+import { ExtensionManifest } from '../../harmony';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
@@ -16,6 +19,8 @@ export type TaskFn = (context: TaskContext) => void;
 
 export class Pipes {
   private tasks = {};
+
+  private scripts = {};
 
   constructor(
     /**
@@ -45,8 +50,34 @@ export class Pipes {
     return {};
   }
 
-  resolveTask(name: string) {
-    return this.tasks[name];
+  resolveScript(def: string) {
+    const [extension, task] = def.split(':');
+    if (!this.scripts[extension]) return undefined;
+    const relativePath = this.scripts[extension][task || 'default'];
+    const moduleName = componentIdToPackageName(this.workspace.consumer.getParsedId(extension), '@bit');
+    return path.join(moduleName, path.relative('', relativePath));
+  }
+
+  getScript(extension: ExtensionManifest, name?: string) {
+    const extensionScripts = this.scripts[extension.name];
+    if (!extensionScripts) throw new Error();
+    if (name && !extensionScripts[name]) throw new Error(`no registered script for ${name}`);
+    return extensionScripts[name || 'default'];
+  }
+
+  registerScript(extension: ExtensionManifest, name: string, path: string) {
+    if (this.scripts[extension.name]) {
+      this.scripts[extension.name][name] = path;
+    }
+
+    this.scripts[extension.name] = { [name]: path };
+    return this;
+  }
+
+  runScript(script: string, component: ResolvedComponent) {
+    const capsule = component.capsule;
+    capsule.run(script);
+    // console.log(script);
   }
 
   watch() {}
@@ -71,7 +102,9 @@ export class Pipes {
 
       // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
-        if (this.resolveTask(elm)) return this.runTask(elm, new TaskContext(component));
+        // if (this.resolveScript(elm)) return this.runTask(elm, new TaskContext(component));
+        const script = this.resolveScript(elm);
+        if (script) return this.runScript(script, component);
         // should execute registered extension tasks as well
         const exec = await capsule.exec({ command: elm.split(' ') });
         // eslint-disable-next-line no-console

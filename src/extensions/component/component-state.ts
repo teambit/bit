@@ -1,5 +1,6 @@
 import ComponentConfig from './config';
 import ConsumerComponent from '../../consumer/component';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 /**
  * `Snap` represents the state of the component in the working tree.
@@ -30,7 +31,6 @@ export default class ComponentState {
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
   dependencyGraph() {
-    // TODO: implement. - it's returning undefined because of lint doesn't allow empty getters
-    return undefined;
+    return buildOneGraphForComponents();
   }
 }

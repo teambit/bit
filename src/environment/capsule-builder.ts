@@ -171,7 +171,7 @@ export default class CapsuleBuilder {
       isolated: true,
       capsulePaths
     };
-    // componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
+    componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter._populateComponentsFilesToWriteCapsule();
     componentsWithDependencies.forEach(componentWithDependencies => {
