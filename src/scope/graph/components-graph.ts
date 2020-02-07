@@ -6,7 +6,7 @@ import loadFlattenedDependenciesForCapsule from '../../consumer/component-ops/lo
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import { Dependency } from '../../consumer/component/dependencies';
 
@@ -64,28 +64,37 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
   return graph;
 }
 
-export async function buildOneGraphForComponents(components: Component[], consumer: Consumer): Promise<Graph> {
+/**
+ * returns one graph that includes all dependencies types. each edge has a label of the dependency
+ * type. the nodes content is the Component object.
+ */
+export async function buildOneGraphForComponents(ids: BitId[], consumer: Consumer): Promise<Graph> {
   const graph = new Graph();
+  const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
   const componentsWithDeps = await Promise.all(
     components.map(component => loadFlattenedDependenciesForCapsule(consumer, component))
   );
-  const addComponentWithDeps = (componentWithDeps: ComponentWithDependencies) => {
-    const componentsArr = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-    componentsArr.forEach((component: Component) => {
-      const bitId = component.id.changeVersion(null);
-      const idStr = bitId.toString();
-      if (!graph.hasNode(idStr)) graph.setNode(idStr, bitId);
-      DEPENDENCIES_TYPES.forEach(depType => {
-        component[depType].get().forEach((dependency: Dependency) => {
-          const depId = dependency.id.changeVersion(null);
-          const depIdStr = depId.toString();
-          if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, depId);
-          graph.setEdge(idStr, depIdStr, depType);
-        });
+  const allComponents: Component[] = R.flatten(componentsWithDeps.map(c => [c.component, ...c.allDependencies]));
+
+  // set vertices
+  allComponents.forEach(component => {
+    const idStr = component.id.toStringWithoutVersion();
+    if (!graph.hasNode(idStr)) graph.setNode(idStr, component);
+  });
+
+  // set edges
+  allComponents.forEach((component: Component) => {
+    DEPENDENCIES_TYPES.forEach(depType => {
+      component[depType].get().forEach((dependency: Dependency) => {
+        const depIdStr = dependency.id.toStringWithoutVersion();
+        graph.setEdge(component.id.toStringWithoutVersion(), depIdStr, depType);
       });
     });
-  };
-  componentsWithDeps.forEach(compWithDep => addComponentWithDeps(compWithDep));
+  });
+
+  // uncomment to print the graph content
+  // console.log('graph', graphLib.json.write(graph))
+
   return graph;
 }
 
