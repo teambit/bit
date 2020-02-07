@@ -79,6 +79,8 @@ In some cases, you might get very helpful info by prefixing Bit command with `BI
 
 To print the log messages on the console, prefix your command with `BIT_LOG=<debug-level>`, e.g. `BIT_LOG=error`.
 
+The log level written to the log file is by default "debug". To change it, run `bit config set log_level <level>`, e.g. `bit config set log_level silly`.
+
 ### Lint
 
 Run eslint and tsc (for type checking)

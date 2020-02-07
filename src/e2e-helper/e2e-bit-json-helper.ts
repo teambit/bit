@@ -27,6 +27,9 @@ export default class BitJsonHelper {
     bitJson.overrides = overrides;
     this.write(bitJson);
   }
+  addDefaultScope(scope = this.scopes.remote) {
+    this.addKeyVal(undefined, 'defaultScope', scope);
+  }
   getEnvByType(bitJson: Record<string, any>, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];
     const env = R.path(basePath, bitJson);

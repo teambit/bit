@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support configuring the logger level by running `bit config set log_level <level>`.
+- [#2268](https://github.com/teambit/bit/issues/2268) prevent logger from holding the terminal once a command is completed
+
+## [[14.7.5-dev.1] - 2020-02-06]
+
+- [#2211](https://github.com/teambit/bit/issues/2211) fix bit export to not export non-staged dependencies
+- [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
+
 ## [[14.7.4] - 2020-02-06](https://github.com/teambit/bit/releases/tag/v14.7.4)
 
 - [#2300](https://github.com/teambit/bit/issues/2300) improve `bit export` performance by pushing new tags only

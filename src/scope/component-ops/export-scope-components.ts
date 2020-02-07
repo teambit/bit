@@ -81,9 +81,15 @@ export async function exportMany({
   }
   const remotes: Remotes = await getScopeRemotes(scope);
   if (remoteName) {
+    logger.debugAndAddBreadCrumb('export-scope-components', 'export all ids to one remote');
     return exportIntoRemote(remoteName, ids);
   }
+  logger.debugAndAddBreadCrumb('export-scope-components', 'export ids to multiple remotes');
   const groupedByScope = await sortAndGroupByScope();
+  const groupedByScopeString = groupedByScope
+    .map(item => `scope "${item.scopeName}": ${item.ids.toString()}`)
+    .join(', ');
+  logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   const results = await pMapSeries(groupedByScope, result => exportIntoRemote(result.scopeName, result.ids));
   return {
     exported: BitIds.uniqFromArray(R.flatten(results.map(r => r.exported))),
@@ -189,6 +195,15 @@ export async function exportMany({
    * 3) it's possible to have circle dependencies inside the same scope, and non-circle
    * dependencies between the different scopes. in this case, the toposort should be done after
    * removing the ids participated in the circular.
+   *
+   * once the sort is done, it returns an array of { scopeName: string; ids: BitIds }.
+   * keep in mind that this array might have multiple items with the same scopeName, that's totally
+   * valid and it will cause multiple round-trip to the same scope. there is no other way around
+   * it.
+   * the sort is done after eliminating circles, so it's possible to execute topsort. once the
+   * components are topological sorted, they are added one by one to the results array. If the last
+   * item in the array has the same scope as the currently inserted component, it can be added to
+   * the same scope group. otherwise, a new item needs to be added to the array with the new scope.
    */
   async function sortAndGroupByScope(): Promise<{ scopeName: string; ids: BitIds }[]> {
     const grouped = ids.toGroupByScopeName(idsWithFutureScope);
@@ -209,8 +224,13 @@ export async function exportMany({
           return;
         }
       }
-      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id) as BitId;
-      groupedArraySorted.push({ scopeName: idWithFutureScope.scope as string, ids: new BitIds(id) });
+      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
+      if (idWithFutureScope) {
+        groupedArraySorted.push({ scopeName: idWithFutureScope.scope as string, ids: new BitIds(id) });
+      }
+      // otherwise, it's in the graph, but not in the idWithFutureScope array. this is probably just a
+      // dependency of one of the pending-export ids, and that dependency is not supposed to be
+      // export, so just ignore it.
     };
     if (cycles.length) {
       const cyclesWithMultipleScopes = cycles.filter(cycle => {

@@ -1,4 +1,5 @@
 import * as path from 'path';
+import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import { ComponentCapsule } from '../../../extensions/capsule-ext';
 import AbstractVinyl from './abstract-vinyl';
@@ -6,6 +7,7 @@ import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
 import RemovePath from './remove-path';
 import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
+import { CONCURRENT_IO_LIMIT as concurrency } from '../../../constants';
 
 export default class DataToPersist {
   files: AbstractVinyl[];
@@ -161,10 +163,10 @@ export default class DataToPersist {
     return dataToPersist;
   }
   async _persistFilesToFS() {
-    return Promise.all(this.files.map(file => file.write()));
+    return Bluebird.map(this.files, file => file.write(), { concurrency });
   }
   async _persistSymlinksToFS() {
-    return Promise.all(this.symlinks.map(symlink => symlink.write()));
+    return Bluebird.map(this.symlinks, symlink => symlink.write(), { concurrency });
   }
   async _deletePathsFromFS() {
     const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter(p => p.removeItsDirIfEmpty).map(p => p.path);
@@ -172,7 +174,7 @@ export default class DataToPersist {
     if (pathWithRemoveItsDirIfEmptyEnabled.length) {
       await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
     }
-    return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
+    return Bluebird.map(restPaths, removePath => removePath.persistToFS(), { concurrency });
   }
   _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the

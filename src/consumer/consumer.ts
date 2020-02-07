@@ -72,6 +72,7 @@ import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
 import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
+import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 
 type ConsumerProps = {
   projectPath: string;
@@ -240,7 +241,7 @@ export default class Consumer {
     const bitmapVersion = this.bitMap.version || '0.10.9';
 
     if (semver.gte(bitmapVersion, BIT_VERSION)) {
-      logger.debug('bit.map version is up to date');
+      logger.silly('bit.map version is up to date');
       return {
         run: false
       };
@@ -711,34 +712,19 @@ export default class Consumer {
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
-    // Temp fix to support old components before the migration has been running
-    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
-    const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
-    const componentName = withoutPrefix.includes('/')
-      ? withoutPrefix.substr(0, withoutPrefix.indexOf('/')) // the part after the first slash is the path inside the package
-      : withoutPrefix;
-    const pathSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
-    if (pathSplit.length < 2) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
-    // since the dynamic namespaces feature introduced, the require statement doesn't have a fixed
-    // number of separators.
-    // also, a scope name may or may not include a dot. depends whether it's on bitHub or self hosted.
-    // we must check against BitMap to get the correct scope and name of the id.
-    if (pathSplit.length === 2) {
-      return new BitId({ scope: pathSplit[0], name: pathSplit[1] });
+    const prefix = requirePath.includes('node_modules') ? 'node_modules/' : '';
+    const withoutPrefix = prefix ? requirePath.substr(requirePath.indexOf(prefix) + prefix.length) : requirePath;
+
+    if (!withoutPrefix.includes('/')) {
+      throw new GeneralError(
+        'getComponentIdFromNodeModulesPath expects the path to have at least one slash for the scoped package, such as @bit/'
+      );
     }
-    const mightBeScope = R.head(pathSplit);
-    const mightBeName = R.tail(pathSplit).join('/');
-    const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
-    const allBitIds = this.bitMap.getAllBitIds();
-    if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
-    // only bit hub has the concept of having the username in the scope name.
-    if (bindingPrefix !== 'bit' && bindingPrefix !== '@bit') return mightBeId;
-    // pathSplit has 3 or more items. the first two are the scope, the rest is the name.
-    // for example "user.scopeName.utils.is-string" => scope: user.scopeName, name: utils/is-string
-    const scope = pathSplit.splice(0, 2).join('.');
-    const name = pathSplit.join('/');
-    return new BitId({ scope, name });
+    const packageSplitBySlash = withoutPrefix.split('/');
+    // the part after the second slash is the path inside the package, just ignore it.
+    // (e.g. @bit/my-scope.my-name/internal-path.js).
+    const packageName = `${packageSplitBySlash[0]}/${packageSplitBySlash[1]}`;
+    return packageNameToComponentId(this, packageName, bindingPrefix);
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
