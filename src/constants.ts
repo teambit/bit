@@ -215,6 +215,8 @@ export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
 export const CFG_LOG_JSON_FORMAT = 'log_json_format';
 
+export const CFG_LOG_LEVEL = 'log_level';
+
 export const CFG_NO_WARNINGS = 'no_warnings';
 
 export const CFG_INTERACTIVE = 'interactive';
@@ -407,3 +409,5 @@ export const DEPENDENCIES_FIELDS = ['dependencies', 'devDependencies', 'peerDepe
 const MISSING_DEPS_SPACE_COUNT = 10;
 export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
+
+export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time

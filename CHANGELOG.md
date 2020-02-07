@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support configuring the logger level by running `bit config set log_level <level>`.
+- [#2268](https://github.com/teambit/bit/issues/2268) prevent logger from holding the terminal once a command is completed
+
 ## [[14.7.5-dev.1] - 2020-02-06]
 
 - [#2211](https://github.com/teambit/bit/issues/2211) fix bit export to not export non-staged dependencies
