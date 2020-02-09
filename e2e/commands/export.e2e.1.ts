@@ -641,6 +641,39 @@ describe('bit export command', function() {
           expect(output).to.have.string(`${anotherRemote}/foo2`);
         });
       });
+      // fixes https://github.com/teambit/bit/issues/2308
+      // here, the component foo1 has a new dependency "bar", this dependency has been exported
+      // already, so we expect "bit export" to not attempt to export it.
+      describe('export with no ids, no remote and no flags when a dependency is from another collection', () => {
+        let output;
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localScopeBefore);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
+          helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
+          const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
+          helper.scopeHelper.addRemoteScope(scopePath);
+          helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+          helper.fs.outputFile('bar.js', '');
+          helper.command.addComponent('bar.js');
+          helper.fs.outputFile('foo1.js', 'require("./bar");');
+          helper.command.tagAllComponents();
+          helper.command.exportComponent('bar', scopeName);
+          output = helper.command.runCmd('bit export');
+        });
+        it('should export successfully all ids, each to its own remote', () => {
+          const remoteList = helper.command.listRemoteScopeParsed();
+          expect(remoteList).to.have.lengthOf(1);
+          expect(remoteList[0].id).to.have.string('foo1');
+
+          const anotherRemoteListJson = helper.command.runCmd(`bit list ${anotherRemote} --json`);
+          const anotherRemoteList = JSON.parse(anotherRemoteListJson);
+          expect(anotherRemoteList).to.have.lengthOf(1);
+          expect(anotherRemoteList[0].id).to.have.string('foo2');
+        });
+        it('should not export the dependency that was not intended to be exported', () => {
+          expect(output).to.not.have.string('bar');
+        });
+      });
       describe('export with ids, no remote and the flag --last-scope', () => {
         let output;
         before(() => {
