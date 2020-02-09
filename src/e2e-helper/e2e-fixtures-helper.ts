@@ -89,6 +89,15 @@ export default class FixtureHelper {
     this.addComponentBarFoo();
   }
 
+  populateWorkspaceWithThreeComponentsAndModulePath() {
+    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.fs.createFile('utils', 'is-string.js', fixtures.isStringModulePath(this.scopes.remote));
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooModulePath(this.scopes.remote));
+    this.addComponentBarFoo();
+  }
+
   /**
    * @deprecated use populateWorkspaceWithThreeComponents()
    */
