@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { TaskContext } from '../pipes';
 
 const tsconfig = {
@@ -26,15 +27,28 @@ export async function reactTask(context: TaskContext) {
   // TODO: output using logger
   // eslint-disable-next-line no-console
   console.log(capsule.wrkDir);
+  // eslint-disable-next-line import/no-dynamic-require
+  // eslint-disable-next-line global-require
+  const pathToPackageJSON = join(capsule.wrkDir, 'package.json');
+  const currentPakcageJsonFile = JSON.parse(capsule.fs.readFileSync(pathToPackageJSON, 'utf-8'));
+  currentPakcageJsonFile.devDependencies = currentPakcageJsonFile.devDependencies || {};
+  Object.assign(currentPakcageJsonFile.devDependencies, { typescript: '3.7.4' }); // make sure we have the tsc executable
+  currentPakcageJsonFile.scripts = currentPakcageJsonFile.scripts || {};
+  Object.assign(currentPakcageJsonFile.scripts, {
+    tsc: 'tsc -d -p ./tsconfig.json'
+  });
+  capsule.fs.writeFileSync(pathToPackageJSON, JSON.stringify(currentPakcageJsonFile, undefined, 2));
   capsule.fs.writeFileSync(`${capsule.wrkDir}/tsconfig.json`, JSON.stringify(tsconfig));
-  const exec = await capsule.exec({ command: ['tsc', '-d', '-p', './tsconfig.json'] });
+
+  const exec = await capsule.execNode('tsc', []);
+  //   `tsc -d -p ./tsconfig.json`
   // TODO: output using logger
   // eslint-disable-next-line no-console
-  exec.stdout.on('data', chunk => console.log(chunk.toString()));
+  exec.stdout.on('data', (chunk: any) => console.log(chunk.toString()));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const promise = new Promise(resolve => {
-    exec.stdout.on('close', () => resolve());
+    exec.on('close', () => resolve());
   });
 
   // save dists? add new dependencies? change component main file? add further configs?

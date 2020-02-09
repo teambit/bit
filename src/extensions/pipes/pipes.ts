@@ -1,16 +1,20 @@
+import { Graph } from 'graphlib';
+import PQueue from 'p-queue';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
-import { Component } from '../component';
 import { TaskContext } from './task-context';
 import { ResolvedComponent } from '../workspace/resolved-component';
-import { BitId } from '../../bit-id';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { Consumer } from '../../consumer';
+import { Component } from '../component';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
 export type Options = {
   parallelism: number;
+  topologicalSort: boolean;
 };
 
 export type TaskFn = (context: TaskContext) => void;
@@ -28,7 +32,7 @@ export class Pipes {
   ) {}
 
   async getComponentsForBuild(components?: string[]) {
-    if (components) return this.workspace.getMany(components);
+    if (components && components.length > 0) return this.workspace.getMany(components);
     const modified = await this.workspace.modified();
     const newComps = await this.workspace.newComponents();
     return modified.concat(newComps);
@@ -46,13 +50,23 @@ export class Pipes {
     return {};
   }
 
+  getWalker(comps: ResolvedComponent[], options: Options) {
+    return options.topologicalSort ? getTopoWalker(comps, this.workspace.consumer) : getArrayWalker(comps, options);
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async run(pipeline: string, components?: string[], options?: Options) {
     const componentsToBuild = await this.getComponentsForBuild(components);
     // check if config is sufficient before building capsules and resolving deps.
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
     // add parallelism and execute by graph order (use gilad's graph builder once we have it)
-    const promises = resolvedComponents.map(async component => {
+    const opts = options || {
+      parallelism: 4,
+      topologicalSort: true
+    };
+    const walk = await this.getWalker(resolvedComponents, opts);
+    const promises = await walk(async resolved => {
+      const component = resolved.component;
       const capsule = component.capsule;
       const pipe = this.getConfig(component)[pipeline];
       if (!Array.isArray(pipe)) {
@@ -79,9 +93,9 @@ export class Pipes {
         // save dists? add new dependencies? change component main file? add further configs?
         await promise;
       });
-    });
-
-    return Promise.all(promises).then(() => resolvedComponents);
+    }, new PQueue({ concurrency: options?.parallelism }));
+    return promises;
+    // return Promise.all(promises).then(() => resolvedComponents);
   }
 
   private runCommand() {}
@@ -98,4 +112,33 @@ export class Pipes {
     cli.register(new RunCmd(build));
     return build;
   }
+}
+
+async function getTopoWalker(comps: ResolvedComponent[], consumer: Consumer) {
+  const graph = await buildOneGraphForComponents(
+    comps.map(comp => comp.component.id._legacy),
+    consumer
+  );
+  const getSources = (cache: ResolvedComponent[], src: Graph) =>
+    src
+      .sources()
+      .map(id => cache.find(comp => comp.component.id.toString() === id) as ResolvedComponent)
+      .filter(val => val);
+
+  return async function walk(v: (Component) => Promise<any>, q: PQueue) {
+    debugger;
+    if (!graph.nodes().length) {
+      return Promise.resolve();
+    }
+    const sources = getSources(comps, graph);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _level = await Promise.all(sources.map(src => q.add(() => v(src.component))));
+    sources.forEach(src => graph.removeNode(src.component.id.toString()));
+    return walk(v, q);
+  };
+}
+
+function getArrayWalker(comps: ResolvedComponent[], options: Options) {
+  options;
+  return comps.map;
 }

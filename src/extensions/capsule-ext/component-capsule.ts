@@ -89,14 +89,15 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
 
   async execNode(executable: string, args: any) {
     // TODO: better
-    const loaderPrefix = this.bitId.toString() ? `isolating ${this.bitId.toString()}` : '';
-    const log = message => (this.bitId.toString() ? loader.setText(`${loaderPrefix}: ${message}`) : {});
-    const { patchFileSystem } = librarian.api();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const onScriptRun = async () => {
-      // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
-      return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
-    };
+    // const loaderPrefix = this.bitId.toString() ? `isolating ${this.bitId.toString()}` : '';
+    // const log = message => (this.bitId.toString() ? loader.setText(`${loaderPrefix}: ${message}`) : {});
+    // const { patchFileSystem } = librarian.api();
+    // // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // const onScriptRun = async () => {
+    //   // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
+    //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
+    // };
+    return librarian.runModule(executable, { args, cwd: this.wrkDir });
   }
 
   outputFile(file: string, data: any, options: any): Promise<any> {

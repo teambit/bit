@@ -20,7 +20,7 @@ export default class CapsuleFactory {
    * create a new capsule from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(components: Component[], config: CapsuleOptions = { packageManager: 'librarian' }) {
+  create(components: Component[], config?: CapsuleOptions) {
     return this.builder.isolateComponents(
       components.map(component => component.id.toString()),
       config

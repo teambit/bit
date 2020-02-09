@@ -87,7 +87,7 @@ export async function buildOneGraphForComponents(ids: BitId[], consumer: Consume
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
         const depIdStr = dependency.id.toStringWithoutVersion();
-        graph.setEdge(component.id.toStringWithoutVersion(), depIdStr, depType);
+        graph.setEdge(depIdStr, component.id.toStringWithoutVersion(), depType);
       });
     });
   });

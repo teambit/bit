@@ -98,6 +98,7 @@ export default class CapsuleBuilder {
   }
 
   async installpackages(capsules: ComponentCapsule[], packageManager: SupportedPackageManagers): Promise<void> {
+    // something[packageManager].install(capsules) TODO
     if (packageManager === 'librarian') {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }

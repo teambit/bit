@@ -16,7 +16,7 @@ export default class Workspace implements ComponentHost {
     /**
      * private access to the legacy consumer instance.
      */
-    private consumer: Consumer,
+    readonly consumer: Consumer,
 
     /**
      * access to the Workspace's `Scope` instance
