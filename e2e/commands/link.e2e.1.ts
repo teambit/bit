@@ -50,7 +50,7 @@ describe('bit link', function() {
           ).to.be.a.directory();
         });
       });
-      describe('when scopeDefault is overridden for this component', () => {
+      describe('when defaultScope is overridden for this component', () => {
         let linkOutput;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeLink);

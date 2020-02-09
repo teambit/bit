@@ -9,7 +9,7 @@ import { BaseExtensionModel } from './base-extension';
 import Repository from '../scope/objects/repository';
 
 export default (async function makeEnv(envType: EnvType, props: EnvLoadArgsProps): Promise<EnvExtension> {
-  logger.debug(`env-factory, create ${envType}`);
+  logger.silly(`env-factory, create ${envType}`);
   props.envType = envType;
   props.throws = true;
   const envExtensionProps: EnvExtensionProps = await EnvExtension.load(props);
@@ -26,7 +26,7 @@ export async function makeEnvFromModel(
   modelObject: string | BaseExtensionModel,
   repository: Repository
 ): Promise<EnvExtension | null | undefined> {
-  logger.debug(`env-factory, create ${envType} from model`);
+  logger.silly(`env-factory, create ${envType} from model`);
   if (!modelObject) return undefined;
   const actualObject =
     typeof modelObject === 'string'
