@@ -294,6 +294,27 @@ export default class Component extends BitObject {
     return versionRef.loadSync(repository, throws);
   }
 
+  async collectVersionsObjects(repo: Repository, versions: string[]): Promise<Buffer[]> {
+    const collectRefs = async (): Promise<Ref[]> => {
+      const refsCollection: Ref[] = [];
+
+      async function addRefs(object: BitObject) {
+        const refs = object.refs();
+        const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
+        refsCollection.push(...refs);
+        await Promise.all(objs.map(obj => addRefs(obj)));
+      }
+
+      const versionsRefs = versions.map(version => this.versions[version]);
+      refsCollection.push(...versionsRefs);
+      const versionsObjects = await Promise.all(versions.map(version => this.versions[version].load(repo)));
+      await Promise.all(versionsObjects.map(versionObject => addRefs(versionObject)));
+      return refsCollection;
+    };
+    const refs = await collectRefs();
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
+  }
+
   collectObjects(repo: Repository): Promise<ComponentObjects> {
     return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
       .then(([rawComponent, objects]) => new ComponentObjects(rawComponent, objects))
@@ -436,7 +457,7 @@ export default class Component extends BitObject {
   }
 
   validateBeforePersisting(componentStr: string): void {
-    logger.debug(`validating component object: ${this.hash().hash} ${this.id()}`);
+    logger.silly(`validating component object: ${this.hash().hash} ${this.id()}`);
     const component = Component.parse(componentStr);
     component.validate();
   }
