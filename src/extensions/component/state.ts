@@ -33,7 +33,8 @@ export default class State {
   static fromLegacy(consumerComponent: ConsumerComponent) {
     let extensions = {};
     if (consumerComponent.bitJson) {
-      extensions = consumerComponent.bitJson.extensions || {};
+      // @ts-ignore
+      extensions = consumerComponent.overrides.overrides.extensions || consumerComponent.bitJson.extensions || {};
     }
 
     return new State(

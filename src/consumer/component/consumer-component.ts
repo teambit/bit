@@ -1230,6 +1230,7 @@ export default class Component {
     const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
     const overridesFromConsumer = isNotNested ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
+
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
