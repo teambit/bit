@@ -68,7 +68,11 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
  * returns one graph that includes all dependencies types. each edge has a label of the dependency
  * type. the nodes content is the Component object.
  */
-export async function buildOneGraphForComponents(ids: BitId[], consumer: Consumer): Promise<Graph> {
+export async function buildOneGraphForComponents(
+  ids: BitId[],
+  consumer: Consumer,
+  direction: 'normal' | 'reverse' = 'normal'
+): Promise<Graph> {
   const graph = new Graph();
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
   const componentsWithDeps = await Promise.all(
@@ -87,7 +91,11 @@ export async function buildOneGraphForComponents(ids: BitId[], consumer: Consume
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
         const depIdStr = dependency.id.toStringWithoutVersion();
-        graph.setEdge(depIdStr, component.id.toStringWithoutVersion(), depType);
+        if (direction === 'normal') {
+          graph.setEdge(component.id.toStringWithoutVersion(), depIdStr, depType);
+        } else {
+          graph.setEdge(depIdStr, component.id.toStringWithoutVersion(), depType);
+        }
       });
     });
   });

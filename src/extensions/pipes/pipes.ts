@@ -9,12 +9,12 @@ import { ResolvedComponent } from '../workspace/resolved-component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { Consumer } from '../../consumer';
 import { Component } from '../component';
+import { getTopologicalWalker } from './component-walker';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
-export type Options = {
-  parallelism: number;
-  topologicalSort: boolean;
+export type PipeOptions = {
+  concurrency: number;
 };
 
 export type TaskFn = (context: TaskContext) => void;
@@ -50,21 +50,16 @@ export class Pipes {
     return {};
   }
 
-  getWalker(comps: ResolvedComponent[], options: Options) {
-    return options.topologicalSort ? getTopoWalker(comps, this.workspace.consumer) : getArrayWalker(comps, options);
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async run(pipeline: string, components?: string[], options?: Options) {
+  async run(pipeline: string, components?: string[], options?: PipeOptions) {
     const componentsToBuild = await this.getComponentsForBuild(components);
     // check if config is sufficient before building capsules and resolving deps.
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
     // add parallelism and execute by graph order (use gilad's graph builder once we have it)
     const opts = options || {
-      parallelism: 4,
-      topologicalSort: true
+      concurrency: 4
     };
-    const walk = await this.getWalker(resolvedComponents, opts);
+    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace.consumer);
     const promises = await walk(async resolved => {
       const component = resolved.component;
       const capsule = resolved.capsule;
@@ -93,7 +88,7 @@ export class Pipes {
         // save dists? add new dependencies? change component main file? add further configs?
         await promise;
       });
-    }, new PQueue({ concurrency: options?.parallelism }));
+    });
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }
@@ -112,34 +107,4 @@ export class Pipes {
     cli.register(new RunCmd(build));
     return build;
   }
-}
-
-async function getTopoWalker(comps: ResolvedComponent[], consumer: Consumer) {
-  const graph = await buildOneGraphForComponents(
-    comps.map(comp => comp.component.id._legacy),
-    consumer
-  );
-  const getSources = (cache: ResolvedComponent[], src: Graph) =>
-    src
-      .sources()
-      .map(id => cache.find(comp => comp.component.id.toString() === id) as ResolvedComponent)
-      .filter(val => val);
-
-  return async function walk(v: (Component) => Promise<any>, q: PQueue) {
-    if (!graph.nodes().length) {
-      return Promise.resolve();
-    }
-    const sources = getSources(comps, graph);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _level = await Promise.all(sources.map(src => q.add(() => v(src))));
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    sources.forEach(src => graph.removeNode(src.component.id.toString()));
-    return walk(v, q);
-  };
-}
-
-function getArrayWalker(comps: ResolvedComponent[], options: Options) {
-  options;
-  return comps.map;
 }
