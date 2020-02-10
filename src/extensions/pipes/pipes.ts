@@ -42,9 +42,9 @@ export class Pipes {
     this.tasks[name] = taskFn;
   }
 
-  getConfig(component: ResolvedComponent) {
-    if (component.component.config.extensions.Pipes) {
-      return component.component.config.extensions.Pipes;
+  getConfig(component: Component) {
+    if (component.config.extensions.Pipes) {
+      return component.config.extensions.Pipes;
     }
 
     return {};
@@ -67,20 +67,20 @@ export class Pipes {
     const walk = await this.getWalker(resolvedComponents, opts);
     const promises = await walk(async resolved => {
       const component = resolved.component;
-      const capsule = component.capsule;
+      const capsule = resolved.capsule;
       const pipe = this.getConfig(component)[pipeline];
       if (!Array.isArray(pipe)) {
         // TODO: throw error
         // eslint-disable-next-line no-console
-        console.log(`skipping component ${component.component.id.toString()}, it has no defined '${pipeline}'`);
+        console.log(`skipping component ${component.id.toString()}, it has no defined '${pipeline}'`);
       }
       // TODO: use logger for this
       // eslint-disable-next-line no-console
-      console.log(`building component ${component.component.id.toString()}...`);
+      console.log(`building component ${component.id.toString()}...`);
 
       // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
-        if (this.tasks[elm]) return this.runTask(elm, new TaskContext(component));
+        if (this.tasks[elm]) return this.runTask(elm, new TaskContext(resolved));
         // should execute registered extension tasks as well
         const exec = await capsule.exec({ command: elm.split(' ') });
         // eslint-disable-next-line no-console
@@ -126,13 +126,14 @@ async function getTopoWalker(comps: ResolvedComponent[], consumer: Consumer) {
       .filter(val => val);
 
   return async function walk(v: (Component) => Promise<any>, q: PQueue) {
-    debugger;
     if (!graph.nodes().length) {
       return Promise.resolve();
     }
     const sources = getSources(comps, graph);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _level = await Promise.all(sources.map(src => q.add(() => v(src.component))));
+    const _level = await Promise.all(sources.map(src => q.add(() => v(src))));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     sources.forEach(src => graph.removeNode(src.component.id.toString()));
     return walk(v, q);
   };
