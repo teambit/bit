@@ -12,6 +12,11 @@ export interface ExtensionManifest<Config = {}> {
   config?: Config;
 
   /**
+   * register actions the component handles.
+   */
+  actions?: { [action: string]: (component: any) => void };
+
+  /**
    * array of extension dependencies.
    * these other extensions will be installed and resolved prior to this extension activation.
    */

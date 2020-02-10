@@ -6,6 +6,6 @@ export const ReactExtension: ExtensionManifest = {
   name: 'react',
   dependencies: [PipesExt],
   provider: async (config: {}, [pipes]: [Pipes]) => {
-    pipes.registerTask('react', reactTask);
+    // pipes.registerTask('react', reactTask);
   }
 };

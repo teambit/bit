@@ -7,7 +7,6 @@ import { BitIds } from '../../bit-id';
 import ConsumerComponent from '../../consumer/component';
 import { Capsule } from '../capsule';
 import { ResolvedComponent } from './resolved-component';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 /**
  * API of the Bit Workspace
@@ -85,13 +84,6 @@ export default class Workspace implements ComponentHost {
     const consumerComponents = await this.componentList.listNewComponents(true);
     // @ts-ignore
     return this.transformLegacyComponents(consumerComponents);
-  }
-
-  graph(components: Component[]) {
-    return buildOneGraphForComponents(
-      components.map(component => component),
-      this.consumer
-    );
   }
 
   /**

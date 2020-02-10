@@ -1,34 +1,35 @@
-import path from 'path';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
-import { Capsule } from '../capsule';
 import { Component } from '../component';
-import { TaskContext } from './task-context';
+import { ActionNotFound, ExtensionNotFound, ActionsNotDefined } from './exceptions';
 import { ResolvedComponent } from '../workspace/resolved-component';
-import { ExtensionManifest } from '../../harmony';
+import { Harmony, Extension } from '../../harmony';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { ComponentCapsule } from '../capsule-ext';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
 export type Options = {
+  /**
+   * set number of concurrent processes to use for executing actions.
+   */
   parallelism: number;
 };
 
-export type TaskFn = (context: TaskContext) => void;
+/**
+ * name of the default action of an extension.
+ */
+const DEFAULT_ACTION = 'default';
 
 export class Pipes {
-  private tasks = {};
-
-  private scripts = {};
-
   constructor(
     /**
      * Bit's workspace
      */
     private workspace: Workspace,
 
-    private capsule: Capsule
+    private harmony: Harmony<unknown>
   ) {}
 
   async getComponentsForBuild(components?: string[]) {
@@ -36,10 +37,6 @@ export class Pipes {
     const modified = await this.workspace.modified();
     const newComps = await this.workspace.newComponents();
     return modified.concat(newComps);
-  }
-
-  registerTask(name: string, taskFn: TaskFn) {
-    this.tasks[name] = taskFn;
   }
 
   getConfig(component: ResolvedComponent) {
@@ -50,34 +47,54 @@ export class Pipes {
     return {};
   }
 
-  resolveScript(def: string) {
-    const [extension, task] = def.split(':');
-    if (!this.scripts[extension]) return undefined;
-    const relativePath = this.scripts[extension][task || 'default'];
-    const moduleName = componentIdToPackageName(this.workspace.consumer.getParsedId(extension), '@bit');
-    return path.join(moduleName, path.relative('', relativePath));
-  }
-
-  getScript(extension: ExtensionManifest, name?: string) {
-    const extensionScripts = this.scripts[extension.name];
-    if (!extensionScripts) throw new Error();
-    if (name && !extensionScripts[name]) throw new Error(`no registered script for ${name}`);
-    return extensionScripts[name || 'default'];
-  }
-
-  registerScript(extension: ExtensionManifest, name: string, path: string) {
-    if (this.scripts[extension.name]) {
-      this.scripts[extension.name][name] = path;
+  private getAction(extension: Extension, action?: string) {
+    if (!extension.manifest.actions) {
+      throw new ActionsNotDefined();
     }
 
-    this.scripts[extension.name] = { [name]: path };
-    return this;
+    if (!extension.manifest.actions[action || DEFAULT_ACTION]) {
+      throw new ActionNotFound();
+    }
+
+    return extension.manifest.actions[action || DEFAULT_ACTION];
   }
 
-  runScript(script: string, component: ResolvedComponent) {
-    const capsule = component.capsule;
-    capsule.run(script);
-    // console.log(script);
+  /**
+   * resolve an action from an extension.
+   */
+  resolve(def: string) {
+    const [id, action] = def.split(':');
+    const extension = this.harmony.get(id);
+    if (!extension) throw new ExtensionNotFound();
+
+    return this.getAction(extension, action);
+  }
+
+  // resolveScript(def: string) {
+  //   const [extension, task] = def.split(':');
+  //   if (!this.scripts[extension]) return undefined;
+  //   const relativePath = this.scripts[extension][task || 'default'];
+  //   const moduleName = componentIdToPackageName(this.workspace.consumer.getParsedId(extension), '@bit');
+  //   return path.join(moduleName, path.relative('', relativePath));
+  // }
+
+  // runScript(script: string, component: ResolvedComponent) {
+  //   const capsule = component.capsule;
+  //   capsule.run(script);
+  //   // console.log(script);
+  // }
+
+  private async executeCommand(capsule: ComponentCapsule, command: string) {
+    const exec = await capsule.exec({ command: command.split(' ') });
+    // eslint-disable-next-line no-console
+    exec.stdout.on('data', chunk => console.log(chunk.toString()));
+
+    const promise = new Promise(resolve => {
+      exec.stdout.on('close', () => resolve());
+    });
+
+    // save dists? add new dependencies? change component main file? add further configs?
+    await promise;
   }
 
   watch() {}
@@ -100,38 +117,21 @@ export class Pipes {
       // eslint-disable-next-line no-console
       console.log(`building component ${component.component.id.toString()}...`);
 
-      // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
-        // if (this.resolveScript(elm)) return this.runTask(elm, new TaskContext(component));
-        const script = this.resolveScript(elm);
-        if (script) return this.runScript(script, component);
-        // should execute registered extension tasks as well
-        const exec = await capsule.exec({ command: elm.split(' ') });
-        // eslint-disable-next-line no-console
-        exec.stdout.on('data', chunk => console.log(chunk.toString()));
-
-        const promise = new Promise(resolve => {
-          exec.stdout.on('close', () => resolve());
-        });
-
-        // save dists? add new dependencies? change component main file? add further configs?
-        await promise;
+        const action = this.resolve(elm);
+        if (action) return action(component);
+        return this.executeCommand(capsule, elm);
       });
     });
 
     return Promise.all(promises).then(() => resolvedComponents);
   }
 
-  private runCommand() {}
-
-  private async runTask(name: string, context: TaskContext) {
-    // we need to set task as dev dependency, install and run. stdout, stderr return.
-    // use the old compiler api to make everything work.
-    return this.tasks[name](context);
-  }
-
-  static async provide(config: {}, [cli, workspace, capsule]: BuildDeps) {
-    const build = new Pipes(workspace, capsule);
+  /**
+   * provides a new instance of Actions.
+   */
+  static async provide(config: {}, [cli, workspace]: BuildDeps, harmony: Harmony<unknown>) {
+    const build = new Pipes(workspace, harmony);
     // @ts-ignore
     cli.register(new RunCmd(build));
     return build;

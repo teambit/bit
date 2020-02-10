@@ -31,6 +31,6 @@ export default class ComponentState {
    * dependency graph of the component current. ideally package dependencies would be also placed here.
    */
   dependencyGraph() {
-    return buildOneGraphForComponents();
+    // return buildOneGraphForComponents();
   }
 }

@@ -1,6 +1,7 @@
 import { ProviderFn } from './types';
 import Harmony from './harmony';
 import { AnyExtension } from './types';
+import { ExtensionManifest } from './extension-manifest';
 
 export type ExtensionProps<Conf> = {
   name: string;
@@ -16,25 +17,9 @@ export type ExtensionProps<Conf> = {
 export class Extension<Conf = {}> {
   constructor(
     /**
-     * extension name.
+     * manifest of the extension.
      */
-    readonly name: string,
-
-    /**
-     * list of extension dependencies which composed from references to `Extension` objects.
-     */
-    readonly dependencies: AnyExtension[],
-
-    /**
-     * default extension config. Can be from any type.
-     */
-    readonly config: Conf,
-
-    /**
-     * extension provider is a function of config, dependencies and an instance of `Harmony`
-     * which returns the extension instance.
-     */
-    readonly provider: ProviderFn<Conf>
+    readonly manifest: ExtensionManifest
   ) {}
 
   private _instance = null;
@@ -46,6 +31,22 @@ export class Extension<Conf = {}> {
    */
   get instance() {
     return this._instance;
+  }
+
+  get name() {
+    return this.manifest.name;
+  }
+
+  get config() {
+    return this.manifest.config || {};
+  }
+
+  get dependencies() {
+    return this.manifest.dependencies || [];
+  }
+
+  get provider() {
+    return this.manifest.provider;
   }
 
   /**
@@ -62,16 +63,12 @@ export class Extension<Conf = {}> {
   async run<Conf>(dependencies: any[], harmony: Harmony<Conf>, config?: Conf) {
     if (!this.loaded) {
       // @ts-ignore TODO: doron please fix (:
-      const instance = await this.provider(config || this.config, dependencies, harmony);
+      const instance = await this.provider(config || this.manifest.config, dependencies, harmony);
       this._instance = instance;
       this._loaded = true;
       return instance;
     }
 
     return Promise.resolve(this.instance);
-  }
-
-  static instantiate<Conf = {}, Deps = []>(props: ExtensionProps<Conf>): Extension<Conf> {
-    return Object.assign(Object.create(Extension.prototype), props);
   }
 }

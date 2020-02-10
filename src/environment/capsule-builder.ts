@@ -103,7 +103,12 @@ export default class CapsuleBuilder {
         const localBitBinPath = path.join(__dirname, '../..');
         delete packageJson.dependencies['bit-bin'];
         capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-        execa.sync('npm', ['install'], { cwd: capsule.wrkDir });
+        try {
+          execa.sync('npm', ['install'], { cwd: capsule.wrkDir, stdout: process.stdout });
+        } catch (err) {
+          console.log(`failed to install packages in capsule: ${capsule.wrkDir}`);
+          console.log(err.stderr);
+        }
 
         if (capsule.fs.existsSync(bitBinPath)) {
           capsule.fs.unlinkSync(bitBinPath);

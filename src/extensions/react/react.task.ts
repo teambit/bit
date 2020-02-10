@@ -32,10 +32,10 @@ export async function reactTask(context: TaskContext) {
   // const exec = await capsule.exec({ command: ['tsc', '-d', '-p', './tsconfig.json'] });
   // TODO: output using logger
   // eslint-disable-next-line no-console
-  const hi = await capsule.run(() => {
-    // console.log(process.cwd());
-    // return 'hi there from capsule:' + process.cwd();
-  });
+  // const hi = await capsule.run(() => {
+  // console.log(process.cwd());
+  // return 'hi there from capsule:' + process.cwd();
+  // });
   // console.log(hi);
   // capsule.run(() => {
   //   console.log(process.cwd) // prints capsule.wrkdir
