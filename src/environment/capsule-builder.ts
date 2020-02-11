@@ -86,7 +86,11 @@ export default class CapsuleBuilder {
     return bitCapsulesObject;
   }
 
-  async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
+  async createCapsule(
+    bitId: BitId,
+    capsuleOptions?: CapsuleOptions,
+    orchestrationOptions?: Options
+  ): Promise<ComponentCapsule> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);

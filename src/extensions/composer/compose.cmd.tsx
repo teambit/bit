@@ -1,5 +1,5 @@
 import React from 'react';
-import { start } from '@teambit/composer';
+// import { start } from '@teambit/composer';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
@@ -34,7 +34,7 @@ export default class ComposeCmd implements Command {
       }, {});
 
       // eslint-disable-next-line no-console
-      start(data);
+      // start(data);
 
       return <Color green>das</Color>
     });
