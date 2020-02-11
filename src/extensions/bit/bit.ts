@@ -73,10 +73,10 @@ export default class Bit {
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const capsulesMap = await this.capsule.create(extensionsComponents);
+      const capsuleList = await this.capsule.create(extensionsComponents);
 
-      return Object.values(capsulesMap).map(capsule => {
-        const extPath = capsule.wrkDir;
+      return capsuleList.map(({ value }) => {
+        const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
         return mod;
