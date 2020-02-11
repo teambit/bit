@@ -131,7 +131,7 @@ export default class DependencyGraph {
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
-
+    debugger;
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
       this._addDependenciesToGraph(id, graph, component);

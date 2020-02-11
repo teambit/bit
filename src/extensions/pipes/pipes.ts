@@ -54,6 +54,7 @@ export class Pipes {
   async run(pipeline: string, components?: string[], options?: PipeOptions) {
     const componentsToBuild = await this.getComponentsForBuild(components);
     // check if config is sufficient before building capsules and resolving deps.
+
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
     // add parallelism and execute by graph order (use gilad's graph builder once we have it)
     const opts = options || {

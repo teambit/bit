@@ -16,7 +16,11 @@ export type CacheWalk = {
 
 export async function getTopologicalWalker(input: ResolvedComponent[], concurrency: number, workspace: Workspace) {
   const graph = await createSubGraph(input, workspace.consumer);
-  const comps = await workspace.load(graph.nodes());
+  debugger;
+  const rawComponents = await workspace.getMany(graph.nodes());
+  debugger;
+  const comps = await workspace.load(rawComponents.map(comp => comp.id.toString()));
+  debugger;
   const cache: CacheWalk = comps.reduce((accum, comp) => {
     accum[comp.component.id.toString()] = {
       state: 'init',
