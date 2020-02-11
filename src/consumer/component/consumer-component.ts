@@ -1000,7 +1000,7 @@ export default class Component {
   }
 
   addExtensionValue(extensionId: string, key: string, value: any): void {
-    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
     if (existingExtension) {
       if (!existingExtension.data) {
         existingExtension.data = {};
@@ -1013,7 +1013,7 @@ export default class Component {
   }
 
   getExtensionValue(extensionId: string, key: string): any {
-    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
     if (!existingExtension) return undefined;
     return existingExtension.data ? existingExtension.data[key] : undefined;
   }
