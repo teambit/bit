@@ -198,6 +198,7 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
   extensions: ExtensionData[] = [];
+  _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -669,6 +670,7 @@ export default class Component {
     const testerFilePath = tester.filePath;
 
     const run = async (component: Component, cwd?: PathOsBased) => {
+      cwd = component._capsuleDir || cwd;
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
         Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');

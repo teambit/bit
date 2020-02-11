@@ -21,9 +21,9 @@ export class Compile {
     // eslint-disable-next-line no-console
     componentsAndCapsules.map(c => console.log(c.capsule.wrkDir));
     await this.populateDists(componentsAndCapsules, { verbose, noCache });
-    const buildResults = await this.buildAll(componentsAndCapsules);
+    const compileResults = await this.buildAll(componentsAndCapsules);
     this.workspace.consumer.onDestroy();
-    return buildResults;
+    return { compileResults, componentsAndCapsules };
   }
 
   private async getComponentsAndCapsules(componentsIds: string[]): Promise<ComponentsAndCapsules[]> {

@@ -6,10 +6,11 @@ import { PipesExt } from '../pipes';
 import { ComposerExt } from '../composer';
 import { ReactExtension } from '../react/react.manifest';
 import CompileExt from '../compile/compile.manifest';
+import TestExt from '../test/test.manifest';
 
 export default {
   name: 'Bit',
-  dependencies: [WorkspaceExt, ScopeExt, CapsuleExt, PipesExt, CompileExt, ComposerExt, ReactExtension],
+  dependencies: [WorkspaceExt, ScopeExt, CapsuleExt, PipesExt, CompileExt, TestExt, ComposerExt, ReactExtension],
   config: {},
   provider: provideBit
 };
