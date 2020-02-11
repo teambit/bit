@@ -59,7 +59,7 @@ export class Pipes {
     const opts = options || {
       concurrency: 4
     };
-    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace.consumer);
+    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
     const promises = await walk(async resolved => {
       const component = resolved.component;
       const capsule = resolved.capsule;
@@ -89,6 +89,7 @@ export class Pipes {
         await promise;
       });
     });
+    debugger;
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }
@@ -102,9 +103,8 @@ export class Pipes {
   }
 
   static async provide(config: {}, [cli, workspace, capsule]: BuildDeps) {
-    const build = new Pipes(workspace, capsule);
-    // @ts-ignore
-    cli.register(new RunCmd(build));
-    return build;
+    const pipes = new Pipes(workspace, capsule);
+    cli.register(new RunCmd(pipes));
+    return pipes;
   }
 }
