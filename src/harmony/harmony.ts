@@ -3,6 +3,7 @@ import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
 import { ConfigProps, Config } from './config';
 import { ExtensionManifest } from './extension-manifest';
+import { extname } from 'path';
 
 // TODO: refactor to generics
 async function asyncForEach(array: any, callback: any) {
@@ -42,10 +43,14 @@ export default class Harmony<ConfProps> {
     return this.graph.vertices.map(vertex => vertex.id);
   }
 
+  setExtensionConfig(extensionId: string, config: any) {
+    this.config.set(extensionId, config);
+  }
+
   /**
    * set extensions during Harmony runtime.
    */
-  async set(extensions: ExtensionManifest[]) {
+  async set(extensions: ExtensionManifest[], config: ConfigProps<any>) {
     this.graph.load(extensions);
     // TODO: change this once byExecutionOrder can get an entry points or having some way to get subgraph then run the
     // byExecutionOrder only on a subgraph
@@ -56,6 +61,7 @@ export default class Harmony<ConfProps> {
     // TODO: remove this logic once cleargraph toposort will return also nodes without edges
     const filteredExecutionOrderNames = filteredExecutionOrder.map(ext => ext.name);
     newExtensionsNames.forEach(newExtName => {
+      this.config.set(newExtName, config[newExtName]);
       if (!filteredExecutionOrderNames.includes(newExtName)) {
         const newExtToRun = this.graph.getExtension(newExtName);
         if (newExtToRun) {

@@ -37,11 +37,11 @@ export default class Bit {
     return '1.0.0';
   }
 
-  async extensions(): Promise<string[]> {
-    if (!this.config) return Promise.resolve([]);
+  async extensions(): Promise<{ [extensionId: string]: any }> {
+    if (!this.config) return Promise.resolve({});
     let rawExtensions = this.config.extensions || {};
     rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
-    return Object.keys(rawExtensions);
+    return rawExtensions;
   }
 
   public onExtensionsLoaded = new ReplaySubject();
@@ -55,34 +55,46 @@ export default class Bit {
   }
 
   async loadExtensions() {
-    const extensions = await this.resolveExtensions();
-    await this.harmony.set(extensions);
+    const { extensionsManifests, extensionsConfig } = await this.resolveExtensions();
+    await this.harmony.set(extensionsManifests, extensionsConfig);
   }
 
   /**
    * load all of bit's extensions.
    * :TODO must be refactored by @gilad
    */
-  private async resolveExtensions(): Promise<AnyExtension[]> {
+  private async resolveExtensions(): Promise<{
+    extensionsManifests: AnyExtension[];
+    extensionsConfig: { [extensionId: string]: any };
+  }> {
+    const result = {
+      extensionsManifests: [],
+      extensionsConfig: {}
+    };
     if (this.config && this.workspace) {
-      const extensionsIds = await this.extensions();
+      const extensionsConfig = await this.extensions();
+      const extensionsIds = Object.keys(extensionsConfig);
 
       if (!extensionsIds || !extensionsIds.length) {
-        return [];
+        return result;
       }
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+      // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
       const capsulesMap = await this.capsule.create(extensionsComponents);
 
-      return Object.values(capsulesMap).map(capsule => {
+      const manifests = Object.values(capsulesMap).map(capsule => {
         const extPath = capsule.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
         return mod;
       });
+      // @ts-ignore
+      result.extensionsManifests = manifests;
+      result.extensionsConfig = extensionsConfig;
     }
 
-    return [];
+    return result;
   }
 }
