@@ -20,7 +20,7 @@ export default class ComponentFS extends MemoryFS {
   static fromVinyls(files: AbstractVinyl[]) {
     const fs = new ComponentFS();
     files.forEach(file => {
-      fs.mkdirpSync(file.relativeDir);
+      fs.mkdirpSync(`/${file.relativeDir}`);
       fs.writeFileSync(`/${file.relative}`, eol.auto(file.contents));
     });
 
