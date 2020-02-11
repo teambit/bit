@@ -5,6 +5,7 @@ import { ResolvedComponent } from '../workspace/resolved-component';
 import { Consumer } from '../../consumer';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import { Workspace } from '../workspace';
+import { BitId } from '../../bit-id';
 
 export type CacheWalk = {
   [k: string]: {
@@ -13,9 +14,9 @@ export type CacheWalk = {
   };
 };
 
-export async function getTopologicalWalker(comps: ResolvedComponent[], concurrency: number, workspace: Workspace) {
-  const graph = await createSubGraph(comps, consumer);
-  // const actualComps =
+export async function getTopologicalWalker(input: ResolvedComponent[], concurrency: number, workspace: Workspace) {
+  const graph = await createSubGraph(input, workspace.consumer);
+  const comps = await workspace.load(graph.nodes());
   const cache: CacheWalk = comps.reduce((accum, comp) => {
     accum[comp.component.id.toString()] = {
       state: 'init',

@@ -89,7 +89,6 @@ export class Pipes {
         await promise;
       });
     });
-    debugger;
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }

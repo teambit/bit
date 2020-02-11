@@ -26,7 +26,6 @@ export class RunCmd implements Command {
   // }
 
   async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
-    debugger
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
     const actualComps = typeof components === 'string' ? [components]: components
     await this.pipes.run(pipeline as string, actualComps, { concurrency: parallelismN});
