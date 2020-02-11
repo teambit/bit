@@ -20,7 +20,7 @@ export default class InstallCmd implements Command {
   async render() {
     try {
       const components = await this.workspace.list();
-      const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()))
+      const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
       return <Color green>Successfully installed {isolatedEnvs.length} components</Color>
     } catch (e) {
       return <Color red>Failed to install: {e.message}</Color>
