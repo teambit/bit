@@ -4,7 +4,6 @@ import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../capsule';
 import { AnyExtension } from '../../harmony/types';
-import { BitIds as ComponentIds, BitId as ComponentId } from '../../bit-id';
 import { Harmony } from '../../harmony';
 
 export default class Bit {

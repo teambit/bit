@@ -3,7 +3,6 @@ import { AnyExtension } from './types';
 import { ExtensionLoadError } from './exceptions';
 import { ConfigProps, Config } from './config';
 import { ExtensionManifest } from './extension-manifest';
-import { extname } from 'path';
 
 // TODO: refactor to generics
 async function asyncForEach(array: any, callback: any) {
