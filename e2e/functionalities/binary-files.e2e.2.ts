@@ -138,8 +138,9 @@ describe('binary files', function() {
   });
   describe('import a PNG file as a dependency with custom-resolve-modules', () => {
     let destPngFile;
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let npmCiRegistry;
     before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       npmCiRegistry.setCiScopeInBitJson();

@@ -391,8 +391,9 @@ describe('custom module resolutions', function() {
     });
   });
   describe('using custom module directory when a component uses an internal file of another component', () => {
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let npmCiRegistry;
     before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.read();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
