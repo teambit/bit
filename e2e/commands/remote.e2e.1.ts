@@ -5,7 +5,10 @@ import { ScopeNotFound } from '../../src/scope/exceptions';
 
 describe('bit remote command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

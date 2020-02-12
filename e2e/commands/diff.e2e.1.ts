@@ -14,7 +14,10 @@ const successDiffMessage = 'showing diff for';
 
 describe('bit diff command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const barFooFile = path.join('bar', 'foo.js');
   before(() => {
     helper.scopeHelper.reInitLocalScope();

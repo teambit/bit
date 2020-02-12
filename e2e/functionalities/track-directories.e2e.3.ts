@@ -7,7 +7,10 @@ import * as fixtures from '../../src/fixtures/fixtures';
 //  track directories functionality = add/rename files to rootDir or trackDir
 describe('track directories functionality', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

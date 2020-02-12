@@ -13,7 +13,10 @@ chai.use(require('chai-fs'));
 
 describe('bit eject command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   describe('local component', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();

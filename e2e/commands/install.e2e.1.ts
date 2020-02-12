@@ -17,7 +17,10 @@ describe('run bit install', function() {
     this.skip;
   } else {
     this.timeout(0);
-    const helper = new Helper();
+    let helper: Helper;
+    before(() => {
+      helper = new Helper();
+    });
     after(() => {
       helper.scopeHelper.destroy();
     });

@@ -9,7 +9,10 @@ chai.use(require('chai-fs'));
 
 describe('workspace config', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -673,8 +676,9 @@ describe('workspace config', function() {
           expect(status).to.not.have.string('modified components');
         });
         describe('importing the component', () => {
-          const barRoot = path.join(helper.scopes.localPath, 'components/bar/');
+          let barRoot;
           before(() => {
+            barRoot = path.join(helper.scopes.localPath, 'components/bar/');
             helper.command.exportAllComponents();
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();

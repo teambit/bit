@@ -11,7 +11,10 @@ chai.use(require('chai-fs'));
 
 describe('environments with dependencies', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const compilerId = 'compilers/webpack';
   let scopeBeforeTagging;
   before(() => {
@@ -200,10 +203,12 @@ describe('environments with dependencies', function() {
           });
         });
         describe('importing with --conf flag', () => {
-          const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
-          const linkFile = path.join(componentDir, 'base.config.js');
-          const configurationFile = path.join(componentDir, 'dev.config.js');
+          let linkFile;
+          let configurationFile;
           before(() => {
+            const componentDir = path.join(helper.scopes.localPath, 'components/bar/foo');
+            linkFile = path.join(componentDir, 'base.config.js');
+            configurationFile = path.join(componentDir, 'dev.config.js');
             helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
             helper.command.importComponent('bar/foo --conf');
           });
