@@ -339,6 +339,7 @@ async function convertToCorrectScope(
       const hashBefore = objectVersion.hash().toString();
       const didCodeMod = codemod ? await _replaceSrcOfVersionIfNeeded(objectVersion) : false;
       const didDependencyChange = changeDependencyScope(objectVersion);
+      changeExtensionsScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
         if (!didCodeMod && !didDependencyChange) {
@@ -378,6 +379,20 @@ async function convertToCorrectScope(
     version.flattenedDevDependencies = getBitIdsWithUpdatedScope(version.flattenedDevDependencies);
     version.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(version.flattenedCompilerDependencies);
     version.flattenedTesterDependencies = getBitIdsWithUpdatedScope(version.flattenedTesterDependencies);
+    return hasChanged;
+  }
+
+  function changeExtensionsScope(version: Version): boolean {
+    let hasChanged = false;
+    version.extensions.forEach(ext => {
+      if (ext.extensionId) {
+        const updatedScope = getIdWithUpdatedScope(ext.extensionId);
+        if (!updatedScope.isEqual(ext.extensionId)) {
+          hasChanged = true;
+          ext.extensionId = updatedScope;
+        }
+      }
+    });
     return hasChanged;
   }
 

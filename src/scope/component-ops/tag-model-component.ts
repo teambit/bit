@@ -5,7 +5,7 @@ import pMapSeries from 'p-map-series';
 import { Scope } from '..';
 import Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import Component from '../../consumer/component/consumer-component';
+import Component, { ExtensionData } from '../../consumer/component/consumer-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -23,14 +23,24 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency: Dependency) => {
-    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
+  const updateDependencyVersion = (dependency: Dependency | ExtensionData, idFieldName = 'id') => {
+    const foundDependency = componentsToTag.find(component =>
+      component.id.isEqualWithoutVersion(dependency[idFieldName])
+    );
     if (foundDependency) {
-      dependency.id = dependency.id.changeVersion(foundDependency.version);
+      dependency[idFieldName] = dependency[idFieldName].changeVersion(foundDependency.version);
     }
   };
   componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
+    // TODO: in case there are core extensions they should be excluded here
+    oneComponentToTag.extensions.forEach(extension => {
+      // For core extensions there won't be an extensionId but name
+      // We only want to add version to external extensions not core extensions
+      if (extension.extensionId) {
+        updateDependencyVersion(extension, 'extensionId');
+      }
+    });
   });
 }
 
