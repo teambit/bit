@@ -10,14 +10,17 @@ chai.use(require('chai-fs'));
 
 (supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_WEB_DOMAIN}`, function() {
   this.timeout(0);
-  const helper = new Helper();
-  const bitsrcTester = new BitsrcTester();
-  const barFooDir = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
+  let helper: Helper;
+  let bitsrcTester;
+  let barFooDir;
   let scopeName;
   let scopeId;
   let componentTestId;
   let scopeAfterExport;
   before(() => {
+    helper = new Helper();
+    bitsrcTester = new BitsrcTester();
+    barFooDir = path.join(helper.scopes.localPath, 'components', 'bar', 'foo');
     return bitsrcTester
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())

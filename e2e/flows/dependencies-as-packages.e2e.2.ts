@@ -13,8 +13,11 @@ chai.use(require('chai-fs'));
   'installing dependencies as packages (not as components)',
   function() {
     this.timeout(0);
-    let helper = new Helper();
+    let helper;
     let npmCiRegistry;
+    before(() => {
+      helper = new Helper();
+    });
     after(() => {
       helper.scopeHelper.destroy();
     });

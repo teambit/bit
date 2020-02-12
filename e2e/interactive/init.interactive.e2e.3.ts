@@ -29,7 +29,10 @@ const inputsWithDefaultsNoCompiler = [
 
 describe('run bit init - interactive', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

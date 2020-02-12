@@ -9,13 +9,15 @@ chai.use(require('chai-fs'));
 
 describe('dists file are written outside the components dir', function() {
   this.timeout(0);
-  const helper = new Helper();
-  const appJsFixture = `const barFoo = require('${helper.general.getRequireBitPath(
-    'bar',
-    'foo'
-  )}'); console.log(barFoo.default());`;
+  let helper: Helper;
+  let appJsFixture;
   let scopeWithCompiler;
   before(() => {
+    helper = new Helper();
+    appJsFixture = `const barFoo = require('${helper.general.getRequireBitPath(
+      'bar',
+      'foo'
+    )}'); console.log(barFoo.default());`;
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.env.importCompiler();
     scopeWithCompiler = helper.scopeHelper.cloneLocalScope();
@@ -505,7 +507,10 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
 
 describe('dist-outside-components when no compiler has been set up', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

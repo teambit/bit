@@ -10,10 +10,12 @@ import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-const helper = new Helper();
-
 describe('typescript', function() {
   this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -57,6 +59,8 @@ describe('typescript', function() {
          * components/.dependencies/utils/is-type/scope-name/version-number/dist/utils/is-type.js (compiled version)
          */
         let localConsumerFiles;
+        let isStringPath;
+        let isTypePath;
         before(() => {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.scopeHelper.getClonedLocalScope(scopeWithTypescriptCompiler);
@@ -77,16 +81,10 @@ describe('typescript', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
           localConsumerFiles = helper.fs.getConsumerFiles('*.{js,ts,json}');
+
+          isStringPath = path.join('components', '.dependencies', 'utils', 'is-string', helper.scopes.remote, '0.0.1');
+          isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
         });
-        const isStringPath = path.join(
-          'components',
-          '.dependencies',
-          'utils',
-          'is-string',
-          helper.scopes.remote,
-          '0.0.1'
-        );
-        const isTypePath = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
         it('should keep the original directory structure of the main component', () => {
           const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.ts');
           expect(localConsumerFiles).to.include(expectedLocation);

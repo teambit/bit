@@ -6,7 +6,10 @@ import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd'
 
 describe('typescript components with link files', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
