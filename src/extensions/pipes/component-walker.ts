@@ -5,7 +5,6 @@ import { ResolvedComponent } from '../workspace/resolved-component';
 import { Consumer } from '../../consumer';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import { Workspace } from '../workspace';
-import { BitId } from '../../bit-id';
 
 export type CacheWalk = {
   [k: string]: {
