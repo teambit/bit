@@ -29,7 +29,6 @@ type BuildResults = {
   builtFiles: Vinyl[];
   mainDist?: string;
   packageJson?: Record<string, any>;
-  shouldBuildUponDependenciesChanges?: boolean;
 };
 
 export default (async function buildComponent({
@@ -102,7 +101,7 @@ export default (async function buildComponent({
     directory,
     verbose: !!verbose
   });
-  const { builtFiles, mainDist, packageJson, shouldBuildUponDependenciesChanges } = compilerResults;
+  const { builtFiles, mainDist, packageJson } = compilerResults;
   builtFiles.forEach(file => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
@@ -120,9 +119,6 @@ export default (async function buildComponent({
   if (packageJson && !R.isEmpty(packageJson)) {
     await _updateComponentPackageJson(component, packageJson);
     component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
-  }
-  if (shouldBuildUponDependenciesChanges) {
-    component.addExtensionValue(component.compiler.name, 'shouldBuildUponDependenciesChanges', true);
   }
   return component.dists;
 });
@@ -253,12 +249,6 @@ async function _isNeededToReBuild(
   if (!consumer) return false;
   const componentStatus = await consumer.getComponentStatusById(component.id);
   if (componentStatus.modified) return true;
-  const shouldBuildUponDependenciesChanges = component.getExtensionValue(
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    component.compiler.name,
-    'shouldBuildUponDependenciesChanges'
-  );
-  if (!shouldBuildUponDependenciesChanges) return false;
   const areDependenciesChangedP = component.dependencies.getAllIds().map(async dependencyId => {
     const dependencyStatus = await consumer.getComponentStatusById(dependencyId);
     return dependencyStatus.modified;

@@ -21,4 +21,8 @@ export class Config<T> {
   get(name: string) {
     return this.props[name];
   }
+
+  set(name: string, config: T) {
+    this.props[name] = config;
+  }
 }

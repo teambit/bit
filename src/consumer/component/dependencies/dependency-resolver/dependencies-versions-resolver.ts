@@ -2,13 +2,14 @@ import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
 import { BitId } from '../../../../bit-id';
-import Component from '../../../component/consumer-component';
+import Component, { ExtensionData } from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
 import { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
 import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
+import Dependency from '../dependency';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -36,49 +37,72 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   updateDependencies(component.devDependencies);
   updateDependencies(component.compilerDependencies);
   updateDependencies(component.testerDependencies);
+  updateExtensions(component.extensions);
 
-  function updateDependencies(dependencies: Dependencies) {
-    dependencies.get().forEach(dependency => {
-      const id = dependency.id;
-      // $FlowFixMe component.componentFromModel is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
-      const idFromPackageJson = getIdFromPackageJson(id);
-      const idFromBitMap = getIdFromBitMap(id);
-      const idFromComponentConfig = getIdFromComponentConfig(id);
-      const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
+  function resolveVersion(id: BitId): string | undefined {
+    // $FlowFixMe component.componentFromModel is set
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
+    const idFromPackageJson = getIdFromPackageJson(id);
+    const idFromBitMap = getIdFromBitMap(id);
+    const idFromComponentConfig = getIdFromComponentConfig(id);
+    const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
 
-      // get from packageJson when it was changed from the model or when there is no model.
-      const getFromPackageJsonIfChanged = () => {
-        if (!idFromPackageJson) return null;
-        if (!idFromModel) return idFromPackageJson;
-        if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
-        return null;
-      };
-      const getFromComponentConfig = () => idFromComponentConfig || null;
-      const getFromBitMap = () => idFromBitMap || null;
-      const getFromModel = () => idFromModel || null;
-      const getFromPackageJson = () => idFromPackageJson || null;
-      const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
-      const strategies: Function[] = [
-        getFromComponentConfig,
-        getFromDependentPackageJson,
-        getFromPackageJsonIfChanged,
-        getFromBitMap,
-        getFromModel,
-        getFromPackageJson
-      ];
+    // get from packageJson when it was changed from the model or when there is no model.
+    const getFromPackageJsonIfChanged = () => {
+      if (!idFromPackageJson) return null;
+      if (!idFromModel) return idFromPackageJson;
+      if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
+      return null;
+    };
+    const getFromComponentConfig = () => idFromComponentConfig || null;
+    const getFromBitMap = () => idFromBitMap || null;
+    const getFromModel = () => idFromModel || null;
+    const getFromPackageJson = () => idFromPackageJson || null;
+    const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
+    const strategies: Function[] = [
+      getFromComponentConfig,
+      getFromDependentPackageJson,
+      getFromPackageJsonIfChanged,
+      getFromBitMap,
+      getFromModel,
+      getFromPackageJson
+    ];
 
-      for (const strategy of strategies) {
-        const strategyId = strategy();
-        if (strategyId) {
-          dependency.id = dependency.id.changeVersion(strategyId.version);
-          logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
-          return;
-        }
+    for (const strategy of strategies) {
+      const strategyId = strategy();
+      if (strategyId) {
+        logger.debug(
+          `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
+        );
+        return strategyId.version;
       }
-    });
+    }
+    return undefined;
   }
+
+  function updateDependency(dependency: Dependency) {
+    const resolvedVersion = resolveVersion(dependency.id);
+    if (resolvedVersion) {
+      dependency.id = dependency.id.changeVersion(resolvedVersion);
+    }
+  }
+  function updateDependencies(dependencies: Dependencies) {
+    dependencies.get().forEach(updateDependency);
+  }
+
+  function updateExtension(extension: ExtensionData) {
+    if (extension.extensionId) {
+      const resolvedVersion = resolveVersion(extension.extensionId);
+      if (resolvedVersion) {
+        extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
+      }
+    }
+  }
+  function updateExtensions(extensions: ExtensionData[]) {
+    extensions.forEach(updateExtension);
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): BitId | null | undefined {
     if (!componentFromModel) return null;

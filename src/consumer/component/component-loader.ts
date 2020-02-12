@@ -11,6 +11,7 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
+import { Dependency } from './dependencies';
 
 export default class ComponentLoader {
   _componentsCache: Record<string, any> = {}; // cache loaded components
@@ -123,12 +124,24 @@ export default class ComponentLoader {
       return component;
     }
     const loadDependencies = async () => {
+      const addExtensionsAsDevDependencies = componentToMutate => {
+        // TODO: in case there are core extensions they should be excluded here
+        componentToMutate.extensions.forEach(ext => {
+          const extId = ext.extensionId;
+          // For core extensions there won't be an extensionId but name
+          // We only want to add external extensions to the dev deps
+          if (extId) {
+            componentToMutate.devDependencies.add(new Dependency(extId, []));
+          }
+        });
+      };
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(
         bitDir,
         this.cacheResolvedDependencies,
         this.cacheProjectAst
       );
+      addExtensionsAsDevDependencies(component);
       updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
