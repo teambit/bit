@@ -1,8 +1,9 @@
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
+
+import { Capsule } from '../capsule';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { Capsule } from '../capsule';
 import { AnyExtension } from '../../harmony/types';
 import { Harmony } from '../../harmony';
 
@@ -81,7 +82,7 @@ export default class Bit {
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const capsuleList = await this.capsule.create(extensionsComponents);
+      const capsuleList = await this.capsule.create(extensionsComponents, { packageManager: 'npm' });
 
       const manifests = capsuleList.map(({ value }) => {
         const extPath = value.wrkDir;
