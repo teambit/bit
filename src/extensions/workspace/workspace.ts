@@ -3,9 +3,9 @@ import { Scope } from '../scope';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
-import { BitIds } from '../../bit-id';
-import ConsumerComponent from '../../consumer/component';
+import { BitIds, BitId } from '../../bit-id';
 import { Capsule } from '../capsule';
+import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 
 /**
@@ -88,8 +88,10 @@ export default class Workspace implements ComponentHost {
 
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
+   * @todo: remove the string option, use only BitId
+   * fully load components, inclduing dependency resuoltion and prepare them for runtime.
    */
-  async load(ids: string[]) {
+  async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
     const capsules = await this.capsule.create(components);
 
@@ -97,17 +99,21 @@ export default class Workspace implements ComponentHost {
   }
 
   /**
+   * @todo: remove the string option, use only BitId
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: string): Promise<Component | undefined> {
-    const componentId = this.consumer.getParsedId(id);
+  async get(id: string | BitId): Promise<Component | undefined> {
+    const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
 
-  async getMany(ids: string[]) {
-    const componentIds = ids.map(id => this.consumer.getParsedId(id));
+  /**
+   * @todo: remove the string option, use only BitId
+   */
+  async getMany(ids: Array<BitId | string>) {
+    const componentIds = ids.map(id => (typeof id === 'string' ? this.consumer.getParsedId(id) : id));
     const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
     // @ts-ignore
     return this.transformLegacyComponents(legacyComponents.components);

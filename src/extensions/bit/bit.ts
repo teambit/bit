@@ -1,8 +1,9 @@
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
+
+import { Capsule } from '../capsule';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { Capsule } from '../capsule';
 import { AnyExtension } from '../../harmony/types';
 import { BitIds as ComponentIds, BitId as ComponentId } from '../../bit-id';
 import { Harmony } from '../../harmony';
@@ -75,8 +76,8 @@ export default class Bit {
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
       const capsulesMap = await this.capsule.create(extensionsComponents, { packageManager: 'npm' });
 
-      return Object.values(capsulesMap).map(capsule => {
-        const extPath = capsule.wrkDir;
+      return capsulesMap.map(({ value }) => {
+        const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
         return mod;
