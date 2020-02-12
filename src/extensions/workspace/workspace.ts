@@ -93,7 +93,7 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const capsules = await this.capsule.create(components);
+    const capsules = await this.capsule.create(components, { workspace: this.path });
     const capsulesMap = capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;

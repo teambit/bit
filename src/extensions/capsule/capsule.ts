@@ -27,10 +27,6 @@ export default class CapsuleFactory {
     );
   }
 
-  // load(components: Component, config: CapsuleOptions) {
-  //   this.orchestrator.acquire
-  // }
-
   /**
    * list all of the existing workspace capsules.
    */
