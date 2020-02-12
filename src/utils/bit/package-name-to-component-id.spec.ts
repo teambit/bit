@@ -80,4 +80,26 @@ describe('packageNameToComponentId', function() {
       });
     });
   });
+  describe('with no-scope', () => {
+    it('should return bitId when id has no dot', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'foo' })) };
+      const result = packageNameToComponentId(consumer, '@bit/foo', '@bit');
+      expect(result.scope).to.be.null;
+      expect(result.name).to.equal('foo');
+    });
+    it('should return bitId with id has one dot', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'bar/foo' })) };
+      const result = packageNameToComponentId(consumer, '@bit/bar.foo', '@bit');
+      expect(result.scope).to.be.null;
+      expect(result.name).to.equal('bar/foo');
+    });
+    it('should throw when there is no dot and is not on bitmap', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds() };
+      const func = () => packageNameToComponentId(consumer, '@bit/foo', '@bit');
+      expect(func).to.throw();
+    });
+  });
 });
