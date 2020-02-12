@@ -47,7 +47,7 @@ export async function reactTask(context: TaskContext) {
   exec.stdout.on('data', (chunk: any) => console.log(chunk.toString()));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const promise = new Promise(resolve => {
+  await new Promise(resolve => {
     exec.on('close', () => resolve());
   });
 

@@ -6,6 +6,8 @@ import FsContainer from './container';
 import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 import loader from '../../cli/loader';
+import capsuleFactory from '../../environment/capsule-factory';
+import { async } from 'rxjs/internal/scheduler/async';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;

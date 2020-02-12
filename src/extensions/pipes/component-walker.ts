@@ -41,15 +41,6 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
 
     const seedersPromises = seeders.map(seed => {
       const id = seed.component.id.toString();
-      if (
-        (() => {
-          // check if component activity is cached.
-
-          return false;
-        })()
-      ) {
-        return Promise.resolve();
-      }
       cache[id].state = q.add(() => visitor(seed));
       // eslint-disable-next-line promise/catch-or-return
       ((cache[id].state as any) as Promise<any>).then(res => {
@@ -66,7 +57,7 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
 }
 
 export async function createSubGraph(components: ResolvedComponent[], consumer: Consumer) {
-  const g = await DependencyGraph.buildGraphFromWorkspace(consumer);
+  const g = await DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
   const shouldStay = uniq(
     flatten(
       components.map(comp => {
