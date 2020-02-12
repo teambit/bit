@@ -1,5 +1,5 @@
 import ExtensionGraph from './extension-graph/extension-graph';
-import { AnyExtension } from './types';
+import { AnyExtension } from './index';
 import { ExtensionLoadError } from './exceptions';
 import { ConfigProps, Config } from './config';
 import { ExtensionManifest } from './extension-manifest';
@@ -32,14 +32,14 @@ export default class Harmony<ConfProps> {
    * list all registered extensions
    */
   get extensions() {
-    return this.graph.vertices.map(vertex => vertex.attr);
+    return this.graph.nodes.map(vertex => vertex.attr);
   }
 
   /**
    * list all registered extensions ids
    */
   get extensionsIds() {
-    return this.graph.vertices.map(vertex => vertex.id);
+    return this.graph.nodes.map(vertex => vertex.id);
   }
 
   setExtensionConfig(extensionId: string, config: any) {

@@ -3,7 +3,7 @@ import { filter, difference } from 'ramda';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { Capsule } from '../capsule';
-import { AnyExtension } from '../../harmony/types';
+import { AnyExtension } from '../../harmony';
 import { Harmony } from '../../harmony';
 
 export default class Bit {
