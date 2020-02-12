@@ -94,8 +94,12 @@ export default class Workspace implements ComponentHost {
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
     const capsules = await this.capsule.create(components);
-
-    return components.map(component => new ResolvedComponent(component, capsules[component.id.toString()]));
+    const capsulesMap = capsules.reduce((accum, curr) => {
+      accum[curr.id.toString()] = curr.value;
+      return accum;
+    }, {});
+    const ret = components.map(component => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
+    return ret;
   }
 
   /**
