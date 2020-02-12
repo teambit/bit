@@ -34,7 +34,8 @@ const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
   writeDists: true,
   writeBitDependencies: true,
   installPackages: true,
-  packageManager: 'librarian'
+  packageManager: 'librarian',
+  workspace: 'string'
 };
 
 const DEFAULT_OPTIONS = {
@@ -92,7 +93,7 @@ export default class CapsuleBuilder {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
-    return this.orch.getCapsule(this.workspace, config, orchOptions);
+    return this.orch.getCapsule(capsuleOptions?.workspace || this.workspace, config, orchOptions);
   }
 
   async installpackages(capsules: ComponentCapsule[], packageManager: SupportedPackageManagers): Promise<void> {
@@ -193,7 +194,7 @@ export default class CapsuleBuilder {
       manyComponentsWriter.writtenComponents.map(async c => {
         const capsule = capsuleList.getValue(c.id);
         if (!capsule) return;
-        await c.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: false });
+        await c.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
     return manyComponentsWriter.writtenComponents;
@@ -210,7 +211,7 @@ export default class CapsuleBuilder {
   private _generateResourceConfig(bitId: BitId, capsuleOptions: CapsuleOptions, options: Options): CreateOptions {
     const dirName = filenamify(bitId.toString(), { replacement: '_' });
     const wrkDir = this._generateWrkDir(dirName, capsuleOptions, options);
-    return {
+    const ret = {
       resourceId: `${bitId.toString()}_${hash(wrkDir)}`,
       options: Object.assign(
         {},
@@ -221,5 +222,6 @@ export default class CapsuleBuilder {
         capsuleOptions
       )
     };
+    return ret;
   }
 }

@@ -9,6 +9,7 @@ export interface CapsuleOptions extends ContainerFactoryOptions {
   writeBitDependencies?: boolean;
   installPackages?: boolean;
   packageManager?: SuppoertedPackageMannagers;
+  workspace?: string;
 }
 
 export type SuppoertedPackageMannagers = 'npm' | 'librarian' | 'yarn' | 'pnpm';
