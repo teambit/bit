@@ -20,9 +20,9 @@ import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
 import CapsulePaths from './capsule-paths';
 import { SuppoertedPackageMannagers as SupportedPackageManagers } from '../extensions/capsule/orchestrator/types/capsule-options';
+import CapsuleList from './capsule-list';
 
 const librarian = require('librarian');
-import CapsuleList from './capsule-list';
 
 export type Options = {
   alwaysNew: boolean;
