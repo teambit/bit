@@ -76,3 +76,12 @@ export async function createSubGraph(components: ResolvedComponent[], consumer: 
     return accum;
   }, g);
 }
+/**
+ *
+ *
+ * TODO - qballer
+ * cache capsules to reuse - DONE
+   cache script execution - ~~~~~
+   proper output.
+   stream execution for parsing
+ */
