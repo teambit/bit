@@ -34,7 +34,10 @@ chai.use(require('chai-string'));
 
 describe('envs', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const compilerId = 'compilers/new-babel';
   const testerId = 'testers/new-mocha';
   let authorScopeBeforeExport;
@@ -1191,9 +1194,10 @@ describe('envs', function() {
           });
         });
         describe('attach - detach envs', () => {
-          const compId = `${helper.scopes.remote}/comp/my-comp@0.0.2`;
+          let compId;
           let componentModel;
           before(() => {
+            compId = `${helper.scopes.remote}/comp/my-comp@0.0.2`;
             helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
           });
           describe('changing envs of imported component', () => {
@@ -1313,9 +1317,10 @@ describe('envs', function() {
           });
         });
         describe('change envs files', () => {
-          const compilerFile = path.join(helper.scopes.localPath, compilerFilesFolder, '.babelrc');
           describe('change a compiler file', () => {
+            let compilerFile;
             before(() => {
+              compilerFile = path.join(helper.scopes.localPath, compilerFilesFolder, '.babelrc');
               helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
               helper.fs.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
             });
@@ -1382,14 +1387,20 @@ describe('envs', function() {
       });
       describe('with custom ejectedEnvsDirectory', () => {
         const ejectedEnvsDirectory = 'custom-envs-config';
-        let envFilesFolder = path.join(ejectedEnvsDirectory);
-        let envFilesFullFolder = path.join(helper.scopes.localPath, envFilesFolder);
-        let compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
-        const compilerFilesFullFolder = path.join(envFilesFullFolder, COMPILER_ENV_TYPE);
-        let testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
-        const testerFilesFullFolder = path.join(envFilesFullFolder, TESTER_ENV_TYPE);
-
+        let envFilesFolder;
+        let envFilesFullFolder;
+        let compilerFilesFolder;
+        let compilerFilesFullFolder;
+        let testerFilesFolder;
+        let testerFilesFullFolder;
         before(() => {
+          envFilesFolder = path.join(ejectedEnvsDirectory);
+          envFilesFullFolder = path.join(helper.scopes.localPath, envFilesFolder);
+          compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
+          compilerFilesFullFolder = path.join(envFilesFullFolder, COMPILER_ENV_TYPE);
+          testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
+          testerFilesFullFolder = path.join(envFilesFullFolder, TESTER_ENV_TYPE);
+
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
@@ -1538,7 +1549,10 @@ describe('envs', function() {
 
 describe('envs with relative paths', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   before(() => {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     helper.env.importCompiler();
@@ -1594,7 +1608,10 @@ describe('envs with relative paths', function() {
 
 describe('add an env with an invalid env name', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   let numOfObjectsBeforeTagging;
   before(() => {
     helper.scopeHelper.reInitLocalScope();

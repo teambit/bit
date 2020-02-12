@@ -9,7 +9,10 @@ chai.use(require('chai-fs'));
 
 describe('custom module resolutions', function() {
   this.timeout(0);
-  let helper = new Helper();
+  let helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

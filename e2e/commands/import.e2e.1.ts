@@ -19,7 +19,10 @@ chai.use(require('chai-string'));
 
 describe('bit import', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
 
   after(() => {
     helper.scopeHelper.destroy();
@@ -103,10 +106,13 @@ describe('bit import', function() {
     });
 
     describe('when the default component directory already exist', () => {
-      const componentFileLocation = path.join(helper.scopes.localPath, 'components/global/simple/simple.js');
-      const componentDir = path.join(helper.scopes.localPath, 'components/global/simple');
+      let componentFileLocation;
+      let componentDir;
       describe('when the destination is an existing empty directory', () => {
         before(() => {
+          componentFileLocation = path.join(helper.scopes.localPath, 'components/global/simple/simple.js');
+          componentDir = path.join(helper.scopes.localPath, 'components/global/simple');
+
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.ensureDirSync(componentDir);
@@ -118,8 +124,9 @@ describe('bit import', function() {
       });
       describe('when the destination directory is not empty', () => {
         let output;
-        const existingFile = path.join(componentDir, 'my-file.js');
+        let existingFile;
         before(() => {
+          existingFile = path.join(componentDir, 'my-file.js');
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           fs.outputFileSync(existingFile, 'console.log()');
@@ -205,8 +212,9 @@ describe('bit import', function() {
         });
       });
       describe('as imported', () => {
-        const componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
+        let componentFileLocation;
         before(() => {
+          componentFileLocation = path.join(helper.scopes.localPath, 'my-custom-location/simple.js');
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
         });
@@ -231,8 +239,9 @@ describe('bit import', function() {
         });
         describe('when the destination directory is not empty', () => {
           let output;
-          const existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
+          let existingFile;
           before(() => {
+            existingFile = path.join(helper.scopes.localPath, 'my-custom-location/my-file.js');
             helper.scopeHelper.reInitLocalScope();
             helper.scopeHelper.addRemoteScope();
             fs.ensureDirSync(path.join(helper.scopes.localPath, 'my-custom-location'));
@@ -1086,6 +1095,8 @@ describe('bit import', function() {
      * components/.dependencies/utils/is-type/scope-name/version-number/dist/utils/is-type.js (compiled version)
      */
     let localConsumerFiles;
+    let isStringLocation;
+    let isTypeLocation;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.env.importCompiler();
@@ -1101,16 +1112,10 @@ describe('bit import', function() {
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       localConsumerFiles = helper.fs.getConsumerFiles();
+
+      isStringLocation = path.join('components', '.dependencies', 'utils', 'is-string', helper.scopes.remote, '0.0.1');
+      isTypeLocation = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
     });
-    const isStringLocation = path.join(
-      'components',
-      '.dependencies',
-      'utils',
-      'is-string',
-      helper.scopes.remote,
-      '0.0.1'
-    );
-    const isTypeLocation = path.join('components', '.dependencies', 'utils', 'is-type', helper.scopes.remote, '0.0.1');
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);

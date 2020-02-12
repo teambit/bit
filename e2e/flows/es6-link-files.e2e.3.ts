@@ -7,7 +7,10 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('es6 components with link files', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

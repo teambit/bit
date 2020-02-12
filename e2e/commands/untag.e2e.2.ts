@@ -5,7 +5,10 @@ import * as fixtures from '../../src/fixtures/fixtures';
 
 describe('bit untag command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

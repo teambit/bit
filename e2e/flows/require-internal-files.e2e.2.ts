@@ -7,7 +7,10 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('component that requires another component internal (not main) file', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const npmCiRegistry = new NpmCiRegistry(helper);
   after(() => {
     helper.scopeHelper.destroy();
