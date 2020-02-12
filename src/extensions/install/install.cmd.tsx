@@ -1,6 +1,7 @@
 import React from 'react';
 import { Color } from 'ink';
-import { Command, FailedToInstall } from '../paper';
+import { Command } from '../paper';
+import { FailedToInstall } from './failed-to-install'
 import { Workspace } from '../workspace';
 
 export default class InstallCmd implements Command {
