@@ -19,6 +19,7 @@ import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
 import CapsulePaths from './capsule-paths';
+import CapsuleList from './capsule-list';
 
 export type Options = {
   alwaysNew: boolean;
@@ -46,7 +47,7 @@ export default class CapsuleBuilder {
   private _buildCapsulePaths(capsules: ComponentCapsule[]): CapsulePaths {
     const capsulePaths = capsules.map(componentCapsule => ({
       id: componentCapsule.bitId,
-      path: componentCapsule.wrkDir
+      value: componentCapsule.wrkDir
     }));
     return new CapsulePaths(...capsulePaths);
   }
@@ -56,7 +57,7 @@ export default class CapsuleBuilder {
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options,
     consumer?: Consumer
-  ): Promise<{ [componentId: string]: ComponentCapsule }> {
+  ): Promise<CapsuleList> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
@@ -76,14 +77,11 @@ export default class CapsuleBuilder {
       R.map((component: Component) => this.createCapsule(component.id, actualCapsuleOptions, orchOptions), components)
     );
 
-    const bitCapsulesObject: { [componentId: string]: ComponentCapsule } = capsules.reduce(function(acc, cur) {
-      acc[cur.bitId.toString()] = cur;
-      return acc;
-    }, {});
+    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), bitCapsulesObject);
+    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
     if (actualCapsuleOptions.installPackages) await this.installpackages(capsules);
-    return bitCapsulesObject;
+    return capsuleList;
   }
 
   async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
@@ -131,7 +129,7 @@ export default class CapsuleBuilder {
     components: Component[],
     graph: Graph,
     capsulePaths: CapsulePaths,
-    capsuleObject: { [componentId: string]: ComponentCapsule }
+    capsuleList: CapsuleList
   ) {
     const writeToPath = '.';
     const componentsWithDependencies = components.map(component => {
@@ -184,7 +182,7 @@ export default class CapsuleBuilder {
     // write data to capsule
     await Promise.all(
       manyComponentsWriter.writtenComponents.map(async c => {
-        const capsule = capsuleObject[c.id.toString()];
+        const capsule = capsuleList.getValue(c.id);
         if (!capsule) return;
         await c.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: false });
       })
