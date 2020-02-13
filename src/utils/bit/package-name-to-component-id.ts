@@ -84,6 +84,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
   function _handleTwoOrMoreDotsCase(): BitId {
     const idWithScopeWithDot = createBitIdAssumeScopeHasDot(nameSplit);
     if (allBitIds.searchWithoutVersion(idWithScopeWithDot)) return idWithScopeWithDot;
+    if (allBitIds.searchWithoutVersion(idWithoutScope)) return idWithoutScope;
     if (allBitIds.searchWithoutVersion(idWithScopeWithoutDot)) return idWithScopeWithoutDot;
 
     // it's not on .bitmap, we can't determine whether it's option #2 or option #3.
