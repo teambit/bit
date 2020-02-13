@@ -39,6 +39,15 @@ import GeneralError from '../../error/general-error';
  * above. if we can't find the component on .bitmap, we know that it can't be option #1, so it
  * can be option #2 or #3. we check the binding-prefix, it it's not @bit, it's probably self-hosted
  * so we go with option #2. otherwise, it's probably on bit.dev, so we go with option #3.
+ *
+ * one more thing. theoretically, there could be a conflict in the following case:
+ * component 1: { scope: foo, name: bar }.
+ * component 2: { scope: null, name: foo/bar }.
+ * since it's valid to have these two components on the workspace, these two generate the same
+ * package-name: `@bit/bar.foo`. as such, how do we know to determine the bitId from the
+ * package-name? fortunately, when you have this component 1, you're unable to `bit add` this
+ * component 2. when you specify bit add --id foo/bar, it actually adds the files to component 1,
+ * assuming you used the entire name of the component 1 including the scope.
  */
 // eslint-disable-next-line import/prefer-default-export
 export function packageNameToComponentId(consumer: Consumer, packageName: string, bindingPrefix: string): BitId {
