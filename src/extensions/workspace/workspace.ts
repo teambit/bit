@@ -4,8 +4,8 @@ import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import ConsumerComponent from '../../consumer/component';
 import { Capsule } from '../capsule';
+import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 
 /**
@@ -16,7 +16,7 @@ export default class Workspace implements ComponentHost {
     /**
      * private access to the legacy consumer instance.
      */
-    private consumer: Consumer,
+    readonly consumer: Consumer,
 
     /**
      * access to the Workspace's `Scope` instance
@@ -87,14 +87,19 @@ export default class Workspace implements ComponentHost {
   }
 
   /**
+   * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
    * fully load components, inclduing dependency resuoltion and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const capsules = await this.capsule.create(components);
-
-    return components.map(component => new ResolvedComponent(component, capsules[component.id.toString()]));
+    const capsules = await this.capsule.create(components, { workspace: this.path });
+    const capsulesMap = capsules.reduce((accum, curr) => {
+      accum[curr.id.toString()] = curr.value;
+      return accum;
+    }, {});
+    const ret = components.map(component => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
+    return ret;
   }
 
   /**

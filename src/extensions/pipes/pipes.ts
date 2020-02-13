@@ -1,15 +1,20 @@
+import { Graph } from 'graphlib';
+import PQueue from 'p-queue';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
-import { Component } from '../component';
 import { TaskContext } from './task-context';
 import { ResolvedComponent } from '../workspace/resolved-component';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { Consumer } from '../../consumer';
+import { Component } from '../component';
+import { getTopologicalWalker } from './component-walker';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
 
-export type Options = {
-  parallelism: number;
+export type PipeOptions = {
+  concurrency: number;
 };
 
 export type TaskFn = (context: TaskContext) => void;
@@ -27,7 +32,7 @@ export class Pipes {
   ) {}
 
   async getComponentsForBuild(components?: string[]) {
-    if (components) return this.workspace.getMany(components);
+    if (components && components.length > 0) return this.workspace.getMany(components);
     const modified = await this.workspace.modified();
     const newComps = await this.workspace.newComponents();
     return modified.concat(newComps);
@@ -37,35 +42,41 @@ export class Pipes {
     this.tasks[name] = taskFn;
   }
 
-  getConfig(component: ResolvedComponent) {
-    if (component.component.config.extensions.Pipes) {
-      return component.component.config.extensions.Pipes;
+  getConfig(component: Component) {
+    if (component.config.extensions.Pipes) {
+      return component.config.extensions.Pipes;
     }
 
     return {};
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async run(pipeline: string, components?: Component[], options?: Options) {
-    const componentsToBuild = components || (await this.getComponentsForBuild(components));
-    // check if config is sufficent before building capsules and resolving deps.
+  async run(pipeline: string, components?: string[], options?: PipeOptions) {
+    const componentsToBuild = await this.getComponentsForBuild(components);
+    // check if config is sufficient before building capsules and resolving deps.
+
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
-    // add parrlalism and execute by graph order (use gilad's graph builder once we have it)
-    const promises = resolvedComponents.map(async component => {
-      const capsule = component.capsule;
+    // add parallelism and execute by graph order (use gilad's graph builder once we have it)
+    const opts = options || {
+      concurrency: 4
+    };
+    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
+    const promises = await walk(async resolved => {
+      const component = resolved.component;
+      const capsule = resolved.capsule;
       const pipe = this.getConfig(component)[pipeline];
       if (!Array.isArray(pipe)) {
         // TODO: throw error
         // eslint-disable-next-line no-console
-        console.log(`skipping component ${component.component.id.toString()}, it has no defined '${pipeline}'`);
+        console.log(`skipping component ${component.id.toString()}, it has no defined '${pipeline}'`);
       }
       // TODO: use logger for this
       // eslint-disable-next-line no-console
-      console.log(`building component ${component.component.id.toString()}...`);
+      console.log(`building component ${component.id.toString()}...`);
 
       // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
-        if (this.tasks[elm]) return this.runTask(elm, new TaskContext(component));
+        if (this.tasks[elm]) return this.runTask(elm, new TaskContext(resolved));
         // should execute registered extension tasks as well
         const exec = await capsule.exec({ command: elm.split(' ') });
         // eslint-disable-next-line no-console
@@ -79,8 +90,8 @@ export class Pipes {
         await promise;
       });
     });
-
-    return Promise.all(promises).then(() => resolvedComponents);
+    return promises;
+    // return Promise.all(promises).then(() => resolvedComponents);
   }
 
   private runCommand() {}
@@ -92,9 +103,8 @@ export class Pipes {
   }
 
   static async provide(config: {}, [cli, workspace, capsule]: BuildDeps) {
-    const build = new Pipes(workspace, capsule);
-    // @ts-ignore
-    cli.register(new RunCmd(build));
-    return build;
+    const pipes = new Pipes(workspace, capsule);
+    cli.register(new RunCmd(pipes));
+    return pipes;
   }
 }

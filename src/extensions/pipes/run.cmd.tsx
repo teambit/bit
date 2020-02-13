@@ -3,7 +3,7 @@ import { Color } from 'ink';
 import { Workspace } from '../workspace';
 import { Pipes } from './pipes';
 import {Command, CLIArgs} from '../cli'
-import { Flags } from '../paper/command';
+import { Flags, PaperOptions } from '../paper/command';
 
 export class RunCmd implements Command {
   name = 'run <pipeline> [component...]';
@@ -13,7 +13,7 @@ export class RunCmd implements Command {
   group = '';
 
   // @ts-ignore
-  options = [
+  options:PaperOptions = [
     ['p', 'parallelism', 'specify the number of concurrent build processes for Bit to run. default value depends on the operating system and the number of available CPU cores.']
   ];
 
@@ -27,7 +27,8 @@ export class RunCmd implements Command {
 
   async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
-    await this.pipes.run(pipeline as string, undefined, { parallelism: parallelismN });
+    const actualComps = typeof components === 'string' ? [components]: components
+    await this.pipes.run(pipeline as string, actualComps, { concurrency: parallelismN});
 
     return <Color green>application</Color>;
   }
