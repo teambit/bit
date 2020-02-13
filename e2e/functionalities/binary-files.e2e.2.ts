@@ -11,7 +11,10 @@ chai.use(require('chai-fs'));
 
 describe('binary files', function() {
   this.timeout(0);
-  let helper = new Helper();
+  let helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -135,8 +138,9 @@ describe('binary files', function() {
   });
   describe('import a PNG file as a dependency with custom-resolve-modules', () => {
     let destPngFile;
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let npmCiRegistry;
     before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
 
       npmCiRegistry.setCiScopeInBitJson();

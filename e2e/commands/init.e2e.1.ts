@@ -17,7 +17,10 @@ chai.use(require('chai-fs'));
 
 describe('run bit init', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
