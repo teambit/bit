@@ -60,7 +60,7 @@ export class Pipes {
     const opts = options || {
       concurrency: 4
     };
-    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
+    const { walk, cache } = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
     const promises = await walk(async resolved => {
       const component = resolved.component;
       const capsule = resolved.capsule;
@@ -90,6 +90,10 @@ export class Pipes {
         await promise;
       });
     });
+    const results = Object.values(cache)
+      .map(item => item.state)
+      .filter(item => item !== 'init');
+    console.log('results:', results);
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }

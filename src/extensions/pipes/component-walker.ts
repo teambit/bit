@@ -30,7 +30,7 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
       .filter(src => cache[src].state === 'init')
       .map(src => cache[src].resolvedComponent);
 
-  return function walk(visitor: (comp: ResolvedComponent) => Promise<any>) {
+  function walk(visitor: (comp: ResolvedComponent) => Promise<any>) {
     if (!graph.nodes().length) {
       return Promise.resolve([]);
     }
@@ -41,18 +41,22 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
     const seedersPromises = seeders.map(seed => {
       const id = seed.component.id.toString();
       cache[id].state = q.add(() => visitor(seed));
+
       // eslint-disable-next-line promise/catch-or-return
       ((cache[id].state as any) as Promise<any>).then(res => {
         // should cache activity
         graph.removeNode(id);
         const sources = get(cache, graph);
-        return sources.length || !q.pending ? walk(visitor) : Promise.resolve([]);
+        return sources.length || (!q.pending && graph.nodes().length)
+          ? Promise.all([Promise.resolve(res), walk(visitor)])
+          : Promise.resolve([res]);
       });
 
       return (cache[id].state as any) as Promise<any>;
     });
     return Promise.all(seedersPromises);
-  };
+  }
+  return { walk, cache };
 }
 
 export async function createSubGraph(components: ResolvedComponent[], consumer: Consumer) {
@@ -77,11 +81,9 @@ export async function createSubGraph(components: ResolvedComponent[], consumer: 
   }, g);
 }
 /**
- *
- *
  * TODO - qballer
  * cache capsules to reuse - DONE
-   cache script execution - ~~~~~
+   cache script execution -
    proper output.
    stream execution for parsing
  */
