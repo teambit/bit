@@ -4,7 +4,10 @@ import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match
 
 describe('component id with wildcard', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

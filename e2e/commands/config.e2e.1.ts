@@ -4,7 +4,10 @@ import ConfigKeyNotFound from '../../src/api/consumer/lib/exceptions/config-key-
 
 describe('bit config', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
 
   after(() => {
     helper.scopeHelper.destroy();

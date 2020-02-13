@@ -24,7 +24,10 @@ describe('isType before hook describe', () => {
 
 describe('bit test command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   let clonedScopePath;
   before(() => {
     helper.scopeHelper.reInitLocalScope();

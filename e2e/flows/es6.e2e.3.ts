@@ -3,7 +3,10 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('es6 components', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

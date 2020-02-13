@@ -3,10 +3,12 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
-const helper = new Helper();
-
 describe('angular', function() {
   this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

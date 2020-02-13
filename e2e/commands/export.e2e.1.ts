@@ -9,7 +9,10 @@ chai.use(require('chai-fs'));
 
 describe('bit export command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const createFile = (dir, name) => {
     const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;
     fs.outputFileSync(path.join(helper.scopes.localPath, dir, `${name}.js`), componentFixture);
