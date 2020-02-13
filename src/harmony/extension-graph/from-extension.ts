@@ -1,5 +1,5 @@
-import { Vertex, Edge } from 'cleargraph';
-import { AnyExtension } from '../types';
+import { Node, Edge } from 'cleargraph';
+import { AnyExtension } from '../index';
 import { ExtensionManifest } from '../extension-manifest';
 import { extensionFactory } from '../factory';
 import ExtensionPotentialCircular from '../exceptions/extension-potential-circular';
@@ -8,7 +8,7 @@ import ExtensionPotentialCircular from '../exceptions/extension-potential-circul
  * build vertices and edges from the given extension
  */
 export function fromExtension(extension: ExtensionManifest) {
-  const vertices: { [id: string]: Vertex<AnyExtension> } = {};
+  const vertices: { [id: string]: Node<AnyExtension> } = {};
   let edges: Edge<string>[] = [];
 
   function iterate(root: ExtensionManifest) {
@@ -20,11 +20,11 @@ export function fromExtension(extension: ExtensionManifest) {
     if (instance.dependencies.length > validDeps.length) {
       throw new ExtensionPotentialCircular(instance, validDeps);
     }
-    vertices[id] = new Vertex<AnyExtension>(id, instance);
+    vertices[id] = new Node<AnyExtension>(id, instance);
     const newEdges = instance.dependencies.map(dep => {
       return Edge.fromObject({
-        srcId: id,
-        dstId: dep.name,
+        sourceId: id,
+        targetId: dep.name,
         attr: 'dependency'
       });
     });

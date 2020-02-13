@@ -4,7 +4,10 @@ import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/validate-git-exe
 
 describe('bit doctor - git exec validation', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
 
   after(() => {
     helper.scopeHelper.destroy();

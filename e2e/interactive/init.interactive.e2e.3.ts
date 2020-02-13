@@ -30,7 +30,10 @@ const inputsWithDefaultsNoCompiler = [
 // TODO: reenable those tests once paper support streaming correctly
 describe.skip('run bit init - interactive', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

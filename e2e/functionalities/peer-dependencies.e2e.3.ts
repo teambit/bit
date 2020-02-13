@@ -6,7 +6,10 @@ import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/st
 
 describe('peer-dependencies functionality', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
