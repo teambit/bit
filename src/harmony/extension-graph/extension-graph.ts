@@ -7,7 +7,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   private cache = new Map<string, AnyExtension>();
 
   byExecutionOrder() {
-    return this.toposort().map(vertex => vertex.attr);
+    return this.toposort(true).map(vertex => vertex.attr);
   }
 
   load(extensions: ExtensionManifest[]) {
