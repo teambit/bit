@@ -26,6 +26,15 @@ export default class ExtensionsHelper {
     this.fixtures = fixtures;
   }
 
+  configureExtension(id: string, config: any) {
+    const bitJson = this.bitJson.read();
+    if (!bitJson.extensions) {
+      bitJson.extensions = {};
+    }
+    bitJson.extensions[id] = config;
+    this.bitJson.write(bitJson);
+  }
+
   importAndConfigureLegacyExtension(id: string) {
     this.command.importExtension(id);
     const bitJson = this.bitJson.read();
