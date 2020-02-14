@@ -291,6 +291,18 @@ describe('bit build', function() {
             expect(packageJson).to.have.property('dynamicValue');
             expect(packageJson.dynamicValue).equal('dist/bar/foo.js');
           });
+          describe('isolating into a capsule', () => {
+            let capsuleDir;
+            before(() => {
+              capsuleDir = helper.general.generateRandomTmpDirName();
+              helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
+            });
+            it('should update the package.json in the capsule', () => {
+              const capsulePackageJson = helper.packageJson.read(capsuleDir);
+              expect(capsulePackageJson).to.have.property('dynamicValue');
+              expect(capsulePackageJson.dynamicValue).equal('dist/bar/foo.js');
+            });
+          });
           describe('importing when the dist is outside the components dir', () => {
             before(() => {
               // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
