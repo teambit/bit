@@ -11,7 +11,10 @@ chai.use(assertArrays);
 
 describe('bit build', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -70,12 +73,18 @@ describe('bit build', function() {
         });
       });
       describe('when there is nothing modified', () => {
-        const distFolder = path.join('dist');
-        const distFolderFullPath = path.join(helper.scopes.localPath, 'dist');
-        const compilerFolder = path.join('.bit', 'components', 'compilers');
-        const compilerFolderFullPath = path.join(helper.scopes.localPath, '.bit', 'components', 'compilers');
-        const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
+        let distFolder;
+        let distFolderFullPath;
+        let compilerFolder;
+        let compilerFolderFullPath;
+        let distFileFullPath;
         before(() => {
+          distFolder = path.join('dist');
+          distFolderFullPath = path.join(helper.scopes.localPath, 'dist');
+          compilerFolder = path.join('.bit', 'components', 'compilers');
+          compilerFolderFullPath = path.join(helper.scopes.localPath, '.bit', 'components', 'compilers');
+          distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
+
           helper.command.tagAllComponents();
           const output = helper.command.status();
           // Make sure there is no modified components

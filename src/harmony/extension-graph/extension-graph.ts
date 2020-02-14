@@ -1,5 +1,5 @@
 import { Graph } from 'cleargraph';
-import { AnyExtension } from '../types';
+import { AnyExtension } from '../index';
 import { fromExtension, fromExtensions } from './from-extension';
 import { ExtensionManifest } from '../extension-manifest';
 
@@ -7,12 +7,12 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   private cache = new Map<string, AnyExtension>();
 
   byExecutionOrder() {
-    return this.topologicallySort().map(vertex => vertex.attr);
+    return this.toposort(true).map(vertex => vertex.attr);
   }
 
   load(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
-    this.setVertices(vertices);
+    this.setNodes(vertices);
     this.setEdges(edges);
 
     return this;
@@ -23,7 +23,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
     const cachedVertex = this.cache.get(id);
     if (cachedVertex) return cachedVertex;
 
-    const res = this.vertex(id);
+    const res = this.node(id);
     if (res) {
       this.cache.set(res.id, res.attr);
       return res.attr;
@@ -38,7 +38,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   static fromRoot(extension: ExtensionManifest) {
     const { vertices, edges } = fromExtension(extension);
 
-    return new DependencyGraph(edges, vertices);
+    return new DependencyGraph(vertices, edges);
   }
 
   /**
@@ -47,6 +47,6 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   static from(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
 
-    return new DependencyGraph(edges, vertices);
+    return new DependencyGraph(vertices, edges);
   }
 }

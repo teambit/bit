@@ -6,7 +6,10 @@ import { OVERRIDE_COMPONENT_PREFIX } from '../../src/constants';
 
 describe('dependencies versions resolution', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

@@ -116,10 +116,10 @@ export function preparePackageJsonToWrite(
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
       let packageDependency;
-      const devCapsulePath = capsulePaths && capsulePaths.getPathIgnoreScopeAndVersion(dep.id);
+      const devCapsulePath = capsulePaths && capsulePaths.getValueIgnoreScopeAndVersion(dep.id);
       if (capsulePaths && devCapsulePath) {
         const relative = path.relative(
-          capsulePaths.getPathIgnoreScopeAndVersion(component.id) as string,
+          capsulePaths.getValueIgnoreScopeAndVersion(component.id) as string,
           devCapsulePath
         );
         packageDependency = `file:${relative}`;

@@ -1,6 +1,5 @@
 import { ProviderFn } from './types';
 import Harmony from './harmony';
-import { AnyExtension } from './types';
 import { ExtensionManifest } from './extension-manifest';
 
 export type ExtensionProps<Conf> = {

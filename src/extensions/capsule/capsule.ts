@@ -1,9 +1,10 @@
 import capsuleOrchestrator from './orchestrator/orchestrator';
-import { CreateConfig, WorkspaceCapsules } from './types';
+import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
 import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
 import CapsuleBuilder from '../../environment/capsule-builder';
+import { CapsuleOptions } from './orchestrator/types';
 
 export default class CapsuleFactory {
   constructor(
@@ -19,9 +20,16 @@ export default class CapsuleFactory {
    * create a new capsule from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(components: Component[], config?: CreateConfig) {
-    return this.builder.isolateComponents(components.map(component => component.id.toString()));
+  create(components: Component[], config?: CapsuleOptions) {
+    return this.builder.isolateComponents(
+      components.map(component => component.id.toString()),
+      config
+    );
   }
+
+  // load(components: Component, config: CapsuleOptions) {
+  //   this.orchestrator.acquire
+  // }
 
   /**
    * list all of the existing workspace capsules.

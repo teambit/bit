@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import * as BPromise from 'bluebird';
+import Bluebird from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
@@ -12,7 +12,7 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 
 // removing this, default to longStackTraces also when env is `development`, which impacts the
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-BPromise.config({
+Bluebird.config({
   longStackTraces: true
 });
 

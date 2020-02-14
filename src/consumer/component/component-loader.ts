@@ -141,6 +141,7 @@ export default class ComponentLoader {
         this.cacheResolvedDependencies,
         this.cacheProjectAst
       );
+      addExtensionsAsDevDependencies(component);
       updateDependenciesVersions(this.consumer, component);
       addExtensionsAsDevDependencies(component);
     };

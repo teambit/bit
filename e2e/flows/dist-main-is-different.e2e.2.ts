@@ -14,7 +14,10 @@ chai.use(require('chai-fs'));
  */
 describe('mainFile of the dist is different than the source', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   let npmCiRegistry;
   after(() => {
     helper.scopeHelper.destroy();

@@ -108,7 +108,7 @@ export default class DependencyGraph {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false): Promise<Graph> {
+  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
@@ -126,15 +126,14 @@ export default class DependencyGraph {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;
         }
-        this._addDependenciesToGraph(id, graph, version);
+        this._addDependenciesToGraph(id, graph, version, reverse);
       });
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
-
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
-      this._addDependenciesToGraph(id, graph, component);
+      this._addDependenciesToGraph(id, graph, component, reverse);
     });
     return graph;
   }
@@ -156,7 +155,7 @@ export default class DependencyGraph {
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
+  static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component, reverse = false): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
@@ -164,7 +163,11 @@ export default class DependencyGraph {
       component[depType].get().forEach(dependency => {
         const depIdStr = dependency.id.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
-        graph.setEdge(idStr, depIdStr, depType);
+        if (reverse) {
+          graph.setEdge(depIdStr, idStr, depType);
+        } else {
+          graph.setEdge(idStr, depIdStr, depType);
+        }
       });
     });
   }

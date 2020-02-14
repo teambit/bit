@@ -914,6 +914,14 @@ export default class Component {
       devDependencies: this.devDependencies.serialize(),
       compilerDependencies: this.compilerDependencies.serialize(),
       testerDependencies: this.testerDependencies.serialize(),
+      extensions: this.extensions.map(ext => {
+        const res = Object.assign({}, ext);
+        if (res.extensionId) {
+          // @ts-ignore
+          res.extensionId = res.extensionId.toString();
+        }
+        return res;
+      }),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies,
@@ -994,7 +1002,7 @@ export default class Component {
   }
 
   addExtensionValue(extensionId: string, key: string, value: any): void {
-    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
     if (existingExtension) {
       if (!existingExtension.data) {
         existingExtension.data = {};
@@ -1007,7 +1015,7 @@ export default class Component {
   }
 
   getExtensionValue(extensionId: string, key: string): any {
-    const existingExtension = this.extensions.find(e => e.id === extensionId);
+    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
     if (!existingExtension) return undefined;
     return existingExtension.data ? existingExtension.data[key] : undefined;
   }

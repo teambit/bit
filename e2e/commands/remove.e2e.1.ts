@@ -9,7 +9,10 @@ const assert = chai.assert;
 
 describe('bit remove command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
@@ -334,9 +337,9 @@ describe('bit remove command', function() {
     });
   });
   describe('delete components with same file hash', () => {
-    const helper2 = new Helper();
-
+    let helper2;
     before(() => {
+      helper2 = new Helper();
       helper2.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.remotePath);
