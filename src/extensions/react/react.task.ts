@@ -41,7 +41,7 @@ export async function reactTask(context: TaskContext) {
   capsule.fs.writeFileSync('package.json', JSON.stringify(currentPakcageJsonFile, undefined, 2));
   capsule.fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfig));
 
-  const exec = await capsule.execNode('tsc', []);
+  const exec = await capsule.execNode('tsc -d', []);
   //   `tsc -d -p ./tsconfig.json`
   // TODO: output using logger
   // eslint-disable-next-line no-console

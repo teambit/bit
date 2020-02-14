@@ -68,7 +68,7 @@ export default class Component {
     return capsules[id];
   }
 
-  get capsule() {}
+  capsule() {}
 
   /**
    * record component changes in the `Scope`.

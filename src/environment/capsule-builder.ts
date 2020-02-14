@@ -84,8 +84,11 @@ export default class CapsuleBuilder {
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
-    if (actualCapsuleOptions.installPackages)
-      await this.installpackages(capsules, actualCapsuleOptions.packageManager!);
+    if (actualCapsuleOptions.installPackages) {
+      const installation = await this.installpackages(capsules, actualCapsuleOptions.packageManager!);
+      console.log(installation);
+    }
+
     return capsuleList;
   }
 
@@ -103,6 +106,7 @@ export default class CapsuleBuilder {
   async installpackages(capsules: ComponentCapsule[], packageManager: SupportedPackageManagers): Promise<void> {
     // something[packageManager].install(capsules) TODO
     if (packageManager === 'librarian') {
+      const logFn = l => console.log(`[librarian] ${l}`);
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     try {
