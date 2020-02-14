@@ -19,7 +19,7 @@ export class Test {
     const bitIds = await this.getBitIds(componentsIds, all);
     const bitIdsStr = bitIds.map(i => i.toString());
     const compileResults = await this.compile.compile(bitIdsStr, { verbose, noCache: false });
-    const componentsAndCapsules = compileResults.componentsAndCapsules;
+    const componentsAndCapsules = compileResults.components;
     componentsAndCapsules.forEach(c => {
       c.consumerComponent._capsuleDir = c.capsule.wrkDir;
     });
