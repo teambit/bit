@@ -85,8 +85,7 @@ export default class CapsuleBuilder {
 
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
     if (actualCapsuleOptions.installPackages) {
-      const installation = await this.installpackages(capsules, actualCapsuleOptions.packageManager!);
-      console.log(installation);
+      await this.installpackages(capsules, actualCapsuleOptions.packageManager!);
     }
 
     return capsuleList;
