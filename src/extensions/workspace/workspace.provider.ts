@@ -1,7 +1,7 @@
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { loadConsumerIfExist } from '../../consumer';
+import { loadConsumer } from '../../consumer';
 import { Capsule } from '../capsule';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Capsule];
@@ -22,7 +22,7 @@ export type WorkspaceConfig = {
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, capsule]: WorkspaceDeps) {
   // This is wrapped since there are cases when there is no workspace, or something in the workspace is invalid
   // Those will be handled later
-  const consumer = await loadConsumerIfExist();
+  const consumer = await loadConsumer();
   if (consumer) {
     const workspace = new Workspace(consumer, scope, component, capsule);
     return workspace;

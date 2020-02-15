@@ -8,6 +8,7 @@ import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 import loader from '../../cli/loader';
 import capsuleFactory from '../../environment/capsule-factory';
+import { realpathSync } from 'fs';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -52,7 +53,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   }
 
   get wrkDir(): string {
-    return this._wrkDir;
+    return realpathSync(this._wrkDir);
   }
 
   // implement this to handle capsules ids.
@@ -100,7 +101,8 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
     // };
     const logFn = l => console.log(`[librarian] ${l}`);
-    return librarian.runModule(executable, { args, cwd: this.wrkDir, log: logFn });
+    // console.log(args, this.wrkDir);
+    return librarian.runModule(executable, { args, cwd: this.wrkDir });
   }
 
   outputFile(file: string, data: any, options: any): Promise<any> {
