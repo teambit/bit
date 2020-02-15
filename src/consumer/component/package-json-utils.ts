@@ -109,8 +109,7 @@ export function preparePackageJsonToWrite(
   override? = true,
   writeBitDependencies? = false,
   excludeRegistryPrefix?: boolean,
-  capsulePaths?: CapsulePaths,
-  consumer?: Consumer
+  capsulePaths?: CapsulePaths
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
@@ -126,13 +125,6 @@ export function preparePackageJsonToWrite(
         packageDependency = `file:${relative}`;
       } else {
         packageDependency = getPackageDependency(bitMap, dep.id, component.id);
-      }
-      // const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
-      if (consumer && consumer.config.defaultScope) {
-        const id = dep.id.changeScope(consumer.config.defaultScope);
-        const packageName = componentIdToPackageName(id, component.bindingPrefix || npmRegistryName());
-        acc[packageName] = packageDependency;
-        return acc;
       }
 
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
