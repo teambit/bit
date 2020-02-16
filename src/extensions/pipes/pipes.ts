@@ -1,13 +1,8 @@
-import { Graph } from 'graphlib';
-import PQueue from 'p-queue';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
 import { TaskContext } from './task-context';
-import { ResolvedComponent } from '../workspace/resolved-component';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
-import { Consumer } from '../../consumer';
 import { Component } from '../component';
 import { getTopologicalWalker } from './component-walker';
 
@@ -73,7 +68,6 @@ export class Pipes {
       // TODO: use logger for this
       // eslint-disable-next-line no-console
       console.log(`building component ${component.id.toString()}...`);
-
       // eslint-disable-next-line consistent-return
       pipe.forEach(async (elm: string) => {
         if (this.tasks[elm]) return this.runTask(elm, new TaskContext(resolved));
@@ -83,17 +77,14 @@ export class Pipes {
         exec.stdout.on('data', chunk => console.log(chunk.toString()));
 
         const promise = new Promise(resolve => {
-          exec.stdout.on('close', () => resolve());
+          // eslint-disable-next-line no-sequences
+          exec.stdout.on('close', info => resolve(info));
         });
 
         // save dists? add new dependencies? change component main file? add further configs?
         await promise;
       });
     });
-    const results = Object.values(cache)
-      .map(item => item.state)
-      .filter(item => item !== 'init');
-    console.log('results:', results);
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }
