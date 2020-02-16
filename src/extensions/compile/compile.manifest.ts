@@ -3,10 +3,7 @@ import { WorkspaceExt } from '../workspace';
 import { provideCompile } from './compile.provider';
 
 export default {
-  name: '@compile',
-  actions: {
-    default: () => console.log('hi there')
-  },
+  name: 'compile',
   dependencies: [BitCliExt, WorkspaceExt],
   provider: provideCompile
 };
