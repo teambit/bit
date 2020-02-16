@@ -3,7 +3,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Pipes } from '../pipes';
+import { Scripts } from '../scripts';
 
 export default class ComposeCmd implements Command {
   name = 'start [id]';
@@ -15,7 +15,7 @@ export default class ComposeCmd implements Command {
 
   constructor(
     private workspace: Workspace,
-    private pipes: Pipes
+    private pipes: Scripts
   ) {}
 
   // TODO: remove this ts-ignore

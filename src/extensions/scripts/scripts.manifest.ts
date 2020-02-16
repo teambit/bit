@@ -1,9 +1,9 @@
-import { Pipes } from './pipes';
+import { Scripts } from './scripts';
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
 
 export default {
-  name: 'pipes',
+  name: 'scripts',
   dependencies: [BitCliExt, WorkspaceExt],
-  provider: Pipes.provide
+  provider: Scripts.provide
 };

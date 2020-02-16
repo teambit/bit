@@ -36,6 +36,10 @@ export class Extension<Conf = {}> {
     return this.manifest.name;
   }
 
+  // get version() {
+  // return this.manifest.version;
+  // }
+
   get config() {
     return this.manifest.config || {};
   }
@@ -55,6 +59,13 @@ export class Extension<Conf = {}> {
   get loaded() {
     return this._loaded;
   }
+
+  /**
+   * hash representing the component version and name.
+   */
+  // get hash() {
+  // return sha1(`${this.name}@${this.version}`);
+  // }
 
   /**
    * initiate Harmony in run-time.

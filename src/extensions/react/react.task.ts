@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { TaskContext } from '../pipes';
+import { TaskContext } from '../scripts';
 import ExtensionGetDynamicPackagesError from '../../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
 
 const tsconfig = {

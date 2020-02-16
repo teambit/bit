@@ -1,7 +1,7 @@
+// :TODO make sure React is not an unused variable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Color } from 'ink';
-import { Workspace } from '../workspace';
-import { Pipes } from './pipes';
+import { Scripts } from './scripts';
 import {Command, CLIArgs} from '../cli'
 import { Flags, PaperOptions } from '../paper/command';
 
@@ -18,7 +18,7 @@ export class RunCmd implements Command {
   ];
 
   constructor(
-    private pipes: Pipes
+    private scripts: Scripts
   ) {}
 
   // json([id]: CLIArgs) {
@@ -28,7 +28,7 @@ export class RunCmd implements Command {
   async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
     const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
     const actualComps = typeof components === 'string' ? [components]: components
-    await this.pipes.run(pipeline as string, actualComps, { concurrency: parallelismN});
+    await this.scripts.run(pipeline as string, actualComps, { concurrency: parallelismN});
 
     return <div />;
   }

@@ -1,11 +1,11 @@
 import { ExtensionManifest } from '../../harmony';
-import { PipesExt, Pipes } from '../pipes';
+import { ScriptsExt, Scripts } from '../scripts';
 import { reactTask } from './react.task';
 
 export const ReactExtension: ExtensionManifest = {
   name: 'react',
-  dependencies: [PipesExt],
-  provider: async (config: {}, [pipes]: [Pipes]) => {
-    pipes.registerTask('react', reactTask);
+  dependencies: [ScriptsExt],
+  provider: async (config: {}, [pipes]: [Scripts]) => {
+    // pipes.register('react', reactTask);
   }
 };

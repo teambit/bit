@@ -29,7 +29,7 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     return p;
   }
 
-  fs: AnyFS = new NodeFS(this.path);
+  fs: NodeFS = new NodeFS(this.path);
 
   constructor(readonly config: any) {}
 
