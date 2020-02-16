@@ -38,6 +38,7 @@ export class ScriptRegistry {
     if (!extension) throw new ExtensionNotFound();
     if (!this.scripts[extension.name]) this.scripts[extension.name] = {};
 
+    // :TODO fix this ugly hack
     const packageName = componentIdToPackageName(BitId.parse(extension.name), '@bit');
     const path = resolve(`/${packageName}`, modulePath);
 
