@@ -30,15 +30,6 @@ export default class ExtensionsHelper {
     this.fs = fsHelper;
   }
 
-  configureExtension(id: string, config: any) {
-    const bitJson = this.bitJson.read();
-    if (!bitJson.extensions) {
-      bitJson.extensions = {};
-    }
-    bitJson.extensions[id] = config;
-    this.bitJson.write(bitJson);
-  }
-
   importAndConfigureLegacyExtension(id: string) {
     this.command.importExtension(id);
     const bitJson = this.bitJson.read();
@@ -71,7 +62,7 @@ export default class ExtensionsHelper {
     this.bitJson.write(bitJson);
   }
 
-  createNewComponentExtension(name = 'foo-ext', content?: string) {
+  createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
     if (!content) {
       content = `
       module.exports = {
@@ -79,13 +70,13 @@ export default class ExtensionsHelper {
         dependencies: [],
         config: {},
         provider: async (config) => {
-          console.log('hi there from an extension, got config:', config)
+          console.log(\`hi there from an extension, got config: ${JSON.stringify(config)}\`)
         }
       };
       `;
     }
     this.fs.outputFile('foo-ext.js', content);
     this.command.addComponent('foo-ext.js', { i: name });
-    this.addExtensionToWorkspaceConfig(name);
+    this.addExtensionToWorkspaceConfig(name, config);
   }
 }
