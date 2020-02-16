@@ -1,5 +1,4 @@
 import { ComponentCapsule } from '../capsule-ext';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export class Script {
   constructor(
@@ -36,8 +35,6 @@ export class Script {
   static raw(cmd: string) {
     return new Script(cmd);
   }
-
-  private async executeModule(capsule: ComponentCapsule) {}
 
   private async executeCmd(capsule: ComponentCapsule) {
     const exec = await capsule.exec({ command: this.executable.split(' ') });
