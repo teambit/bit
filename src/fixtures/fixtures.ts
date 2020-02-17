@@ -35,6 +35,8 @@ export const isStringTS =
   "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
 export const isStringModulePath = remoteScope =>
   `const isType = require('@bit/${remoteScope}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
+export const isStringModulePathNoScope =
+  "const isType = require('@bit/utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 export const barFooFixture =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
 export const barFooFixtureV2 =
@@ -53,6 +55,8 @@ describe('foo', () => {
 });`;
 export const barFooModulePath = remoteScope =>
   `const isString = require('@bit/${remoteScope}.utils.is-string'); module.exports = function foo() { return isString() + ' and got foo'; };`;
+export const barFooModulePathNoScope =
+  "const isString = require('@bit/utils.is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
 export const appPrintIsType = "const isType = require('./components/utils/is-type'); console.log(isType());";
 export const appPrintIsTypeCapsule = "const isType = require('.'); console.log(isType());";
 export const appPrintIsString = "const isString = require('./components/utils/is-string'); console.log(isString());";

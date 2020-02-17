@@ -1208,4 +1208,39 @@ describe('bit export command', function() {
       expect(list).to.have.lengthOf(1);
     });
   });
+  describe('export after re-creating the remote', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithUtilsIsType();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitRemoteScope();
+    });
+    describe('export without any flag', () => {
+      it('should show a message that nothing to export', () => {
+        const output = helper.command.exportAllComponents();
+        expect(output).to.have.string('nothing to export');
+      });
+    });
+    describe('export with --all flag', () => {
+      before(() => {
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.export(`${helper.scopes.remote} ${helper.scopes.remote}/* --all`);
+      });
+      it('should export them successfully', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
+    describe('export with --all flag', () => {
+      before(() => {
+        helper.scopeHelper.reInitRemoteScope();
+        helper.command.export(`${helper.scopes.remote} ${helper.scopes.remote}/* --all-versions`);
+      });
+      it('should export them successfully', () => {
+        const list = helper.command.listRemoteScopeParsed();
+        expect(list).to.have.lengthOf(1);
+      });
+    });
+  });
 });

@@ -275,14 +275,10 @@ export default class ComponentWriter {
     if (!isReplaceNeeded) {
       return packageJsonChangedProps;
     }
-    if (!this.component.dists || !this.component.dists.distsRootDir) {
-      throw new Error(
-        `package.json has a dynamic value ${COMPONENT_DIST_PATH_TEMPLATE}, however, the dist root is not set`
-      );
-    }
+    const distRootDir = this.component.dists.getDistDir(this.consumer, this.writeToPath || '.');
     const distRelativeToPackageJson = getPathRelativeRegardlessCWD(
       path.dirname(packageJson.filePath), // $FlowFixMe
-      this.component.dists.distsRootDir
+      distRootDir
     );
     return Object.keys(packageJsonChangedProps).reduce((acc, key) => {
       const val = packageJsonChangedProps[key].replace(COMPONENT_DIST_PATH_TEMPLATE, distRelativeToPackageJson);
