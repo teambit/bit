@@ -63,8 +63,8 @@ export class Scripts {
    */
   pipe(raw: string[]) {
     const scripts = raw.map(elm => {
-      const [name, bare] = elm.split(':');
-      const script = this.registry.get(name, bare);
+      const [extensionName, scriptName] = elm.split(':');
+      const script = this.registry.get(extensionName, scriptName);
       if (script) return script;
       return Script.raw(elm);
     });
