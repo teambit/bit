@@ -102,7 +102,7 @@ export default class CapsuleBuilder {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     try {
-      capsules.forEach(capsule => {
+      capsules.forEach(async capsule => {
         const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
         const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
         const packageJson = JSON.parse(pjsonString);
@@ -111,11 +111,13 @@ export default class CapsuleBuilder {
         delete packageJson.dependencies['bit-bin'];
         capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
         execa.sync('yarn', [], { cwd: capsule.wrkDir });
-        if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
-          capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
-        }
+        capsule.fs.exists(path.join(capsule.wrkDir, bitBinPath), bitBinExists => {
+          if (bitBinExists) {
+            capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
+          }
 
-        execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+          execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+        });
       });
 
       return Promise.resolve();
