@@ -14,7 +14,7 @@ export class RunCmd implements Command {
 
   // @ts-ignore
   options:PaperOptions = [
-    ['p', 'parallelism', 'specify the number of concurrent build processes for Bit to run. default value depends on the operating system and the number of available CPU cores.']
+    ['c', 'concurrency', 'specify the number of concurrent build processes for Bit to run. default value depends on the operating system and the number of available CPU cores.']
   ];
 
   constructor(
@@ -25,10 +25,10 @@ export class RunCmd implements Command {
 
   // }
 
-  async render([pipeline, components]: CLIArgs, { parallelism }: Flags) {
-    const parallelismN = (parallelism && typeof parallelism === 'string') ? Number.parseInt(parallelism) : 5;
+  async render([pipeline, components]: CLIArgs, { concurrency }: Flags) {
+    const concurrencyN = (concurrency && typeof concurrency === 'string') ? Number.parseInt(concurrency) : 5;
     const actualComps = typeof components === 'string' ? [components]: components
-    await this.scripts.run(pipeline as string, actualComps, { concurrency: parallelismN});
+    await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN});
 
     return <div />;
   }
