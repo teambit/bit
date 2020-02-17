@@ -56,7 +56,6 @@ export class Script {
   private async executeModule(capsule: ComponentCapsule) {
     const containerScriptName = join(capsule.wrkDir, `__bit-run-container.js`);
     const pathToTask = this.modulePath!.startsWith('/') ? this.modulePath!.slice(1) : this.modulePath;
-    console.log('path to task- ', pathToTask);
     const containerScript = `
       const userTask = require('${pathToTask}')
       const toExecute = userTask['default']
