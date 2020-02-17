@@ -1,5 +1,5 @@
 import { ComponentFactory } from '../component';
-import Graph from './graph';
+import { Graph } from './graph';
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
 
