@@ -10,12 +10,12 @@
 
 ![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
-[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev](https://bit.dev)
+[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/docs/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs)
 
 ## What is Bit? 🤔
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for collaborating on isolated components across projects and repositories.  
-Use Bit to distribute discrete components from a design library or a project into a standalone reusable package and utilize it across applications.  
+Bit is an [open-source](https://github.com/teambit/bit) cli tool for collaborating on isolated components across projects and repositories.
+Use Bit to distribute discrete components from a design library or a project into a standalone reusable package and utilize it across applications.
 You can set up your own server for components collaboration, or use the [bit.dev cloud](#bitdev-cloud-%EF%B8%8F) hosting for private and public components sharing.
 
 ## Why Bit? 🎖️
@@ -26,15 +26,15 @@ You can set up your own server for components collaboration, or use the [bit.dev
 
 ## Installation 🚪
 
-Using npm: 
+Using npm:
 
 ```bash
 npm install bit-bin --global
 ```
 
-Using yarn: 
+Using yarn:
 ```bash
-yarn global add bit-bin  
+yarn global add bit-bin
 ```
 
 Bit cli requires node 8.12 and above. Check other [installation](https://docs.bit.dev/docs/installation) methods.
@@ -43,7 +43,7 @@ Bit cli requires node 8.12 and above. Check other [installation](https://docs.bi
 
 ## bit.dev cloud 🌩️
 
-Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and showcase for your components. 
+Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and showcase for your components.
 <p align="center">
  <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
