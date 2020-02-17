@@ -164,8 +164,7 @@ export default class ComponentWriter {
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsulePaths,
-        this.consumer
+        this.capsulePaths
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);

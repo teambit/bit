@@ -27,6 +27,7 @@ const config = {
 };
 
 try {
+  // @ts-ignore Ran, please fix. this happens because graph.manifest has a dependency ComponentFactory which is not an extension
   const harmony = Harmony.load([BitCliExt, BitExt], config);
   harmony
     .run()

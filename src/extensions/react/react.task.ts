@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { TaskContext } from '../scripts';
+// import { TaskContext } from '../scripts';
 import ExtensionGetDynamicPackagesError from '../../legacy-extensions/exceptions/extension-get-dynamic-packages-error';
 
 const tsconfig = {
@@ -24,7 +24,8 @@ const tsconfig = {
   }
 };
 
-export async function reactTask(context: TaskContext) {
+// @todo: Ran, what's the type of context?
+export async function reactTask(context: any) {
   const capsule = context.component.capsule;
   // TODO: output using logger
   // eslint-disable-next-line no-console
