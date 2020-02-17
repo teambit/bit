@@ -11,7 +11,7 @@ export default class CapsuleFactory {
     /**
      * instance of the capsule orchestrator.
      */
-    private orchestrator: CapsuleOrchestrator,
+    readonly orchestrator: CapsuleOrchestrator,
 
     readonly builder: CapsuleBuilder
   ) {}
@@ -26,11 +26,6 @@ export default class CapsuleFactory {
       config
     );
   }
-
-  // load(components: Component, config: CapsuleOptions) {
-  //   this.orchestrator.acquire
-  // }
-
   /**
    * list all of the existing workspace capsules.
    */

@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { Exec } from '@teambit/capsule';
 import { ComponentCapsule } from '../capsule-ext';
-
+import { join } from 'path';
 export class Script {
   constructor(
     /**
@@ -18,8 +20,8 @@ export class Script {
    * @param capsule capsule to execute on
    */
   async run(capsule: ComponentCapsule) {
-    if (this.modulePath) return capsule.run(this.modulePath);
-    return this.executeCmd(capsule);
+    // if (this.modulePath) return capsule.run(this.modulePath);
+    return this.modulePath ? this.executeModule(capsule) : this.executeCmd(capsule);
   }
 
   /**
@@ -36,8 +38,11 @@ export class Script {
     return new Script(cmd);
   }
 
-  private async executeCmd(capsule: ComponentCapsule) {
-    const exec = await capsule.exec({ command: this.executable.split(' ') });
+  private async executeCmd(capsule: ComponentCapsule, executable = '') {
+    const command = (executable || this.executable).split(' ');
+    const exec: Exec = executable
+      ? await capsule.execNode(command[0], command.slice(1))
+      : await capsule.exec({ command });
     // eslint-disable-next-line no-console
     exec.stdout.on('data', chunk => console.log(chunk.toString()));
     // eslint-disable-next-line no-console
@@ -46,5 +51,22 @@ export class Script {
     return new Promise(resolve => {
       exec.on('close', () => resolve());
     });
+  }
+
+  private async executeModule(capsule: ComponentCapsule) {
+    const containerScriptName = `__bit-run-container.js`;
+    const containerScript = `
+      const userTask = require('${join(this.executable, this.modulePath!)}')
+      const toExecute = userTask['default']
+      if (typeof toExecute === 'function') {
+        toExecute()
+      }
+    `;
+    try {
+      await capsule.fs.promises.writeFile(containerScriptName, containerScript);
+      await this.executeCmd(capsule, containerScriptName);
+    } finally {
+      await capsule.fs.promises.unlink(containerScriptName);
+    }
   }
 }
