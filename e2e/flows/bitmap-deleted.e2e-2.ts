@@ -7,7 +7,10 @@ chai.use(require('chai-fs'));
 
 describe('user deleted only .bitmap file leaving the objects in place', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

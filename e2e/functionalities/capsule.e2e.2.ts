@@ -10,13 +10,17 @@ chai.use(require('chai-fs'));
 
 describe('capsule', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('new components with dependencies (untagged)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -32,8 +36,9 @@ describe('capsule', function() {
     });
   });
   describe('new components with package dependencies (untagged)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithComponentsAndPackages();
       helper.command.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
@@ -45,8 +50,9 @@ describe('capsule', function() {
     });
   });
   describe('tagged components with dependencies (before export)', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
@@ -59,8 +65,9 @@ describe('capsule', function() {
     });
   });
   describe('components with peer packages', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.npm.installNpmPackage('left-pad', '1.3.0');
       helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
@@ -81,8 +88,9 @@ describe('capsule', function() {
     });
   });
   describe('components with peer packages of the dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.npm.installNpmPackage('left-pad', '1.3.0');
       helper.packageJson.create({ peerDependencies: { 'left-pad': '1.3.0' } });
@@ -115,8 +123,9 @@ describe('capsule', function() {
     });
   });
   describe('exported components with dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
@@ -130,8 +139,9 @@ describe('capsule', function() {
     });
   });
   describe('imported components with dependencies', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.command.tagAllComponents();
@@ -434,8 +444,9 @@ describe('capsule', function() {
   });
   // validates https://github.com/teambit/bit/issues/2264
   describe('component with a dependency that has the same file name', () => {
-    const capsuleDir = helper.general.generateRandomTmpDirName();
+    let capsuleDir;
     before(() => {
+      capsuleDir = helper.general.generateRandomTmpDirName();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('foo.js', 'require("./utils/foo");');
       helper.fs.outputFile('utils/foo.js', '');

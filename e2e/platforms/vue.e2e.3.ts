@@ -6,7 +6,10 @@ chai.use(require('chai-fs'));
 
 describe('support vue files', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
 
   after(() => {
     helper.scopeHelper.destroy();

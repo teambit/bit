@@ -9,7 +9,10 @@ chai.use(require('chai-fs'));
 
 describe('dev-dependencies functionality', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

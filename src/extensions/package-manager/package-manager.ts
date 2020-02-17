@@ -30,7 +30,13 @@ function linkBitBinInCapsule(capsule) {
     capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
   }
   try {
-    execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+    capsule.fs.exists(path.join(capsule.wrkDir, bitBinPath), bitBinExists => {
+      if (bitBinExists) {
+        capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
+      }
+
+      execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+    });
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }

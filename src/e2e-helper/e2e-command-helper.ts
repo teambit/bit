@@ -64,9 +64,9 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string, cwd?: string): Record<string, any> {
+  catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
     const result = this.runCmd(`bit cat-component ${id} -j`, cwd);
-    return JSON.parse(result);
+    return parse ? JSON.parse(result) : result;
   }
   addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)

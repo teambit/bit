@@ -25,7 +25,10 @@ function sortComponentsArrayByComponentId(componentsArray) {
 }
 
 describe('bit add many programmatically', function() {
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   const components = [
     {
       componentPaths: ['add_many_test_files/a.js'],

@@ -147,7 +147,7 @@ export default class CapsuleBuilder {
     };
     // componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
-    await manyComponentsWriter._populateComponentsFilesToWriteCapsule();
+    await manyComponentsWriter._populateComponentsFilesToWrite();
     componentsWithDependencies.forEach(componentWithDependencies => {
       const links = getComponentLinks({
         component: componentWithDependencies.component,

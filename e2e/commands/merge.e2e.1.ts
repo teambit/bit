@@ -15,7 +15,10 @@ const successOutput = 'successfully merged components';
 
 describe('bit merge command', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
   });

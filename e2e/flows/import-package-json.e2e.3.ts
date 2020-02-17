@@ -11,7 +11,10 @@ chai.use(require('chai-fs'));
 
 describe('component with package.json as a file of the component', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });

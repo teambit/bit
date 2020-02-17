@@ -7,7 +7,10 @@ chai.use(require('chai-fs'));
 
 describe('scope with a symlink object reference to a non-exist component', function() {
   this.timeout(0);
-  const helper = new Helper();
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+  });
   after(() => {
     helper.scopeHelper.destroy();
   });
