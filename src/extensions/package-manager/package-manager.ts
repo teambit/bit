@@ -1,8 +1,8 @@
 import path from 'path';
 import execa from 'execa';
+import librarian from 'librarian';
 import { Paper, Command } from '../paper';
 import { ComponentCapsule } from '../capsule-ext';
-import librarian from 'librarian';
 
 export type installOpts = {
   packageManager?: string;
@@ -43,7 +43,8 @@ export default class PackageManager {
     const packageManager = opts.packageManager || this.packageManager;
     if (packageManager === 'librarian') {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
-    } else if (packageManager === 'yarn') {
+    }
+    if (packageManager === 'yarn') {
       capsules.forEach(capsule => {
         deleteBitBinFromPkgJson(capsule);
         execa.sync('yarn', [], { cwd: capsule.wrkDir });
@@ -58,5 +59,6 @@ export default class PackageManager {
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
+    return null;
   }
 }
