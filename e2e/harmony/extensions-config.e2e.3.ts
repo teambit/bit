@@ -7,7 +7,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('harmony extension config', function() {
+describe.only('harmony extension config', function() {
   this.timeout(0);
   const helper = new Helper();
 
@@ -68,6 +68,9 @@ describe('harmony extension config', function() {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.command.tagAllComponents();
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
+          console.log('herererererre-------------1');
+          console.log(componentModelStr);
+          console.log('herererererre-------------');
           const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
