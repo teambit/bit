@@ -1,5 +1,4 @@
 import path from 'path';
-import execa from 'execa';
 import { flatten, filter, uniq, concat, map } from 'ramda';
 import os from 'os';
 import hash from 'object-hash';
@@ -21,8 +20,6 @@ import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
 import CapsulePaths from './capsule-paths';
 import CapsuleList from './capsule-list';
-
-const librarian = require('librarian');
 
 export type Options = {
   alwaysNew: boolean;
