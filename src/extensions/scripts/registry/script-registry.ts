@@ -15,7 +15,12 @@ export class ScriptRegistry {
     /**
      * instance of harmony.
      */
-    private harmony: Harmony<unknown>
+    private harmony: Harmony<unknown>,
+
+    /**
+     * :TODO remove this ugly hack as well.
+     */
+    private defaultScope: string = ''
   ) {}
 
   private scripts = {};
@@ -39,7 +44,8 @@ export class ScriptRegistry {
     if (!this.scripts[extension.name]) this.scripts[extension.name] = {};
 
     // :TODO fix this ugly hack
-    const packageName = componentIdToPackageName(BitId.parse(extension.name), '@bit');
+    const id = BitId.parse(`${this.defaultScope}/${extension.name}`);
+    const packageName = componentIdToPackageName(id, '@bit');
     const path = resolve(`/${packageName}`, modulePath);
 
     this.scripts[extension.name][name || DEFAULT_SCRIPT] = Script.module(path, 'node');
