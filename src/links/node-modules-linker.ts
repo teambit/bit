@@ -142,8 +142,8 @@ export default class NodeModuleLinker {
   }
 
   _getDefaultScope(component?: Component): string | undefined | null {
-    if (component && component.overrides.defaultScope) {
-      return component.overrides.defaultScope;
+    if (component) {
+      return component.defaultScope;
     }
     return this.consumer ? this.consumer.config.defaultScope : null;
   }

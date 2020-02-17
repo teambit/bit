@@ -9,9 +9,8 @@ import BitId from '../../bit-id/bit-id';
 export default function componentIdToPackageName(
   id: BitId,
   bindingPrefix: string | null | undefined,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  withPrefix? = true,
-  defaultScope?: string | null // if an id doesn't have a scope, use defaultScope if exists
+  defaultScope?: string | null, // if an id doesn't have a scope, use defaultScope if exists
+  withPrefix = true
 ): string {
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);

@@ -220,7 +220,7 @@ export default class Isolator {
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
       const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
       const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
-      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
       acc[packageName] = locationAsUnixFormat;
       return acc;
     }, {});

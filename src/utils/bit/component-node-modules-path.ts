@@ -15,6 +15,6 @@ export default function getNodeModulesPathOfComponent(
       `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
     );
   }
-  const packageName = componentIdToPackageName(id, bindingPrefix, true, defaultScope);
+  const packageName = componentIdToPackageName(id, bindingPrefix, defaultScope);
   return path.join('node_modules', packageName);
 }
