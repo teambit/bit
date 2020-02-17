@@ -70,7 +70,7 @@ export default class ExtensionsHelper {
         dependencies: [],
         config: {},
         provider: async (config) => {
-          console.log(\`hi there from an extension, got config: ${JSON.stringify(config)}\`)
+          console.log(\`hi there from an extension, got config: \${JSON.stringify(config)}\`)
         }
       };
       `;
