@@ -10,6 +10,74 @@ describe('packageNameToComponentId', function() {
     // @ts-ignore
     consumer = new Consumer({ projectPath: '', config: {} });
   });
+  describe('when a packageName has no dots', () => {
+    it('should return bitId with no-scope when it is on bitmap', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'foo' })) };
+      const result = packageNameToComponentId(consumer, '@bit/foo', '@bit');
+      expect(result.scope).to.be.null;
+      expect(result.name).to.equal('foo');
+    });
+    it('should throw when is not on bitmap', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds() };
+      const func = () => packageNameToComponentId(consumer, '@bit/foo', '@bit');
+      expect(func).to.throw();
+    });
+  });
+  describe('when a packageName has one dot', () => {
+    it('should return bitId with no-scope when it is on bitmap this way', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'bar/foo' })) };
+      const result = packageNameToComponentId(consumer, '@bit/bar.foo', '@bit');
+      expect(result.scope).to.be.null;
+      expect(result.name).to.equal('bar/foo');
+    });
+    it('should return bitId with scope and name when it is on bitmap this way', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ scope: 'bar', name: 'foo' })) };
+      const result = packageNameToComponentId(consumer, '@bit/bar.foo', '@bit');
+      expect(result.scope).to.equal('bar');
+      expect(result.name).to.equal('foo');
+    });
+    it('should return bitId with scope and name when it is not on bitmap as it cannot be new component', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds() };
+      const result = packageNameToComponentId(consumer, '@bit/bar.foo', '@bit');
+      expect(result.scope).to.equal('bar');
+      expect(result.name).to.equal('foo');
+    });
+  });
+  describe('when a packageName has two dots', () => {
+    it('should return bitId with no-scope when it is on bitmap this way', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'foo/bar/qux' })) };
+      const result = packageNameToComponentId(consumer, '@bit/foo.bar.qux', '@bit');
+      expect(result.scope).to.be.null;
+      expect(result.name).to.equal('foo/bar/qux');
+    });
+    it('should return bitId with scope without dot and name when it is on bitmap this way', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ scope: 'foo', name: 'bar/qux' })) };
+      const result = packageNameToComponentId(consumer, '@bit/foo.bar.qux', '@bit');
+      expect(result.scope).to.equal('foo');
+      expect(result.name).to.equal('bar/qux');
+    });
+    it('should return bitId with scope with dot and name when it is on bitmap this way', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ scope: 'foo.bar', name: 'qux' })) };
+      const result = packageNameToComponentId(consumer, '@bit/foo.bar.qux', '@bit');
+      expect(result.scope).to.equal('foo.bar');
+      expect(result.name).to.equal('qux');
+    });
+    it('should return bitId with scope with dot and name when it is not on bitmap', () => {
+      // @ts-ignore
+      consumer.bitMap = { getAllBitIds: () => new BitIds() };
+      const result = packageNameToComponentId(consumer, '@bit/foo.bar.qux', '@bit');
+      expect(result.scope).to.equal('foo.bar');
+      expect(result.name).to.equal('qux');
+    });
+  });
   it('should parse the path correctly when a component is not in bitMap and has one dot', () => {
     const result = packageNameToComponentId(consumer, '@bit/remote.comp', '@bit');
     expect(result.scope).to.equal('remote');

@@ -118,25 +118,6 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWriteForCapsule(): Promise<Record<string, any>> {
-    if (!this.component.files || !this.component.files.length) {
-      throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
-    }
-    this.component.dataToPersist = new DataToPersist();
-    this._updateFilesBasePaths();
-    this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
-    this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
-    this._determineWhetherToDeleteComponentDirContent();
-    await this._handlePreviouslyNestedCurrentlyImportedCase();
-    this._determineWhetherToWriteConfig();
-    this._updateComponentRootPathAccordingToBitMap();
-    this._updateBitMapIfNeeded();
-    await this._updateConsumerConfigIfNeeded();
-    this._determineWhetherToWritePackageJson();
-    await this.populateFilesToWriteToComponentDir();
-    return this.component;
-  }
-
   async populateComponentsFilesToWrite(): Promise<Record<string, any>> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
@@ -295,14 +276,10 @@ export default class ComponentWriter {
     if (!isReplaceNeeded) {
       return packageJsonChangedProps;
     }
-    if (!this.component.dists || !this.component.dists.distsRootDir) {
-      throw new Error(
-        `package.json has a dynamic value ${COMPONENT_DIST_PATH_TEMPLATE}, however, the dist root is not set`
-      );
-    }
+    const distRootDir = this.component.dists.getDistDir(this.consumer, this.writeToPath || '.');
     const distRelativeToPackageJson = getPathRelativeRegardlessCWD(
       path.dirname(packageJson.filePath), // $FlowFixMe
-      this.component.dists.distsRootDir
+      distRootDir
     );
     return Object.keys(packageJsonChangedProps).reduce((acc, key) => {
       const val = packageJsonChangedProps[key].replace(COMPONENT_DIST_PATH_TEMPLATE, distRelativeToPackageJson);

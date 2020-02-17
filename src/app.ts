@@ -14,6 +14,7 @@ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from 
 // performance dramatically. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
 Bluebird.config({
   longStackTraces: true
+  // longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG)
 });
 
 // loudRejection();

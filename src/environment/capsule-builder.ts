@@ -1,5 +1,4 @@
 import path from 'path';
-import execa from 'execa';
 import { flatten, filter, uniq, concat, map } from 'ramda';
 import os from 'os';
 import hash from 'object-hash';
@@ -7,6 +6,7 @@ import v4 from 'uuid';
 import filenamify from 'filenamify';
 import { BitId } from '../bit-id';
 import orchestrator, { CapsuleOrchestrator } from '../extensions/capsule/orchestrator/orchestrator';
+import { PackageManager } from '../extensions/package-manager';
 import { CapsuleOptions, CreateOptions } from '../extensions/capsule/orchestrator/types';
 import Consumer from '../consumer/consumer';
 import { ComponentCapsule } from '../extensions/capsule-ext';
@@ -19,10 +19,7 @@ import Graph from '../scope/graph/graph';
 import Component from '../consumer/component';
 import { loadConsumerIfExist } from '../consumer';
 import CapsulePaths from './capsule-paths';
-import { SuppoertedPackageMannagers as SupportedPackageManagers } from '../extensions/capsule/orchestrator/types/capsule-options';
 import CapsuleList from './capsule-list';
-
-const librarian = require('librarian');
 
 export type Options = {
   alwaysNew: boolean;
@@ -34,7 +31,6 @@ const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
   writeDists: true,
   writeBitDependencies: true,
   installPackages: true,
-  packageManager: 'librarian',
   workspace: 'string'
 };
 
@@ -45,6 +41,7 @@ const DEFAULT_OPTIONS = {
 export default class CapsuleBuilder {
   constructor(
     private workspace: string,
+    private packageManagerInstance: PackageManager,
     private queue: Queue = new Queue(),
     private orch: CapsuleOrchestrator = orchestrator
   ) {}
@@ -85,9 +82,12 @@ export default class CapsuleBuilder {
 
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
     if (actualCapsuleOptions.installPackages) {
-      await this.installpackages(capsules, actualCapsuleOptions.packageManager!);
+      if (actualCapsuleOptions.packageManager) {
+        await this.packageManagerInstance.runInstall(capsules, { packageManager: actualCapsuleOptions.packageManager });
+      } else {
+        await this.packageManagerInstance.runInstall(capsules);
+      }
     }
-
     return capsuleList;
   }
 
@@ -100,48 +100,6 @@ export default class CapsuleBuilder {
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
     return this.orch.getCapsule(capsuleOptions?.workspace || this.workspace, config, orchOptions);
-  }
-
-  async installpackages(capsules: ComponentCapsule[], packageManager: SupportedPackageManagers): Promise<void> {
-    // something[packageManager].install(capsules) TODO
-    if (packageManager === 'librarian') {
-      const logFn = l => console.log(`[librarian] ${l}`);
-      return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
-    }
-    try {
-      capsules.forEach(async capsule => {
-        const packageJsonPath = 'package.json';
-        const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-        const packageJson = JSON.parse(pjsonString);
-        const bitBinPath = './node_modules/bit-bin';
-        const localBitBinPath = path.join(__dirname, '../..');
-        delete packageJson.dependencies['bit-bin'];
-        capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-        try {
-          execa.sync('npm', ['install'], { cwd: capsule.wrkDir, stdout: process.stdout });
-        } catch (err) {
-          console.log(`failed to install packages in capsule: ${capsule.wrkDir}`);
-          console.log(err.stderr);
-        }
-
-        if (capsule.fs.existsSync(bitBinPath)) {
-          capsule.fs.unlinkSync(bitBinPath);
-        }
-
-        if (!capsule.fs.existsSync('./node_modules')) {
-          capsule.fs.mkdirSync('./node_modules');
-        }
-
-        execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
-      });
-
-      return Promise.resolve();
-      // await Promise.all(capsules.map(capsule => this.limit(() => capsule.exec({ command: `yarn`.split(' ') }))));
-    } catch (e) {
-      // TODO: think if we really need to log it here or write it to logger or throw it
-      console.log(e); // eslint-disable-line no-console
-      return Promise.resolve();
-    }
   }
 
   _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
@@ -193,7 +151,7 @@ export default class CapsuleBuilder {
     };
     componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
-    await manyComponentsWriter._populateComponentsFilesToWriteCapsule();
+    await manyComponentsWriter._populateComponentsFilesToWrite();
     componentsWithDependencies.forEach(componentWithDependencies => {
       const links = getComponentLinks({
         component: componentWithDependencies.component,

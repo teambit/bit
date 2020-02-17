@@ -1288,7 +1288,7 @@ export default class Component {
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
     const extensions: ExtensionData[] = [];
-    if (componentConfig) {
+    if (bitJson) {
       R.forEachObjIndexed((extConfig, extName) => {
         const extensionId = consumer.getParsedIdIfExist(extName);
         // Store config for core extensions
@@ -1298,7 +1298,7 @@ export default class Component {
         } else if (id.name !== extensionId.name) {
           extensions.push({ extensionId, config: extConfig });
         }
-      }, componentConfig.extensions);
+      }, bitJson.extensions);
     }
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
