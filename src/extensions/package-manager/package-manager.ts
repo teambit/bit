@@ -9,7 +9,7 @@ export type installOpts = {
 };
 
 function deleteBitBinFromPkgJson(capsule) {
-  const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+  const packageJsonPath = 'package.json';
   const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
   const packageJson = JSON.parse(pjsonString);
   delete packageJson.dependencies['bit-bin'];
