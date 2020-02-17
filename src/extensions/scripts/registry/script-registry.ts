@@ -20,7 +20,7 @@ export class ScriptRegistry {
     /**
      * :TODO remove this ugly hack as well.
      */
-    private defaultScope: string = ''
+    private defaultScope?: string
   ) {}
 
   private scripts = {};
@@ -44,7 +44,10 @@ export class ScriptRegistry {
     if (!this.scripts[extension.name]) this.scripts[extension.name] = {};
 
     // :TODO fix this ugly hack
-    const id = BitId.parse(`${this.defaultScope}/${extension.name}`);
+    let id = BitId.parse(extension.name);
+    if (this.defaultScope) {
+      id = BitId.parse(`${this.defaultScope}/${extension.name}`);
+    }
     const packageName = componentIdToPackageName(id, '@bit');
     const path = resolve(`/${packageName}`, modulePath);
 
