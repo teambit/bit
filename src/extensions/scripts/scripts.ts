@@ -95,7 +95,7 @@ export class Scripts {
    */
   static async provide(config: {}, [cli, workspace]: BuildDeps, harmony: Harmony<unknown>) {
     const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
-    const scripts = new Scripts(workspace, new Registry(harmony, defaultScope));
+    const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));
     return scripts;
   }

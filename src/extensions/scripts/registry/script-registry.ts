@@ -20,7 +20,7 @@ export class ScriptRegistry {
     /**
      * :TODO remove this ugly hack as well.
      */
-    private defaultScope?: string
+    private defaultScope: string | null
   ) {}
 
   private scripts = {};
