@@ -4,13 +4,9 @@ import { Workspace } from '../workspace';
 import { Capsule } from '../capsule';
 import { TaskContext } from './task-context';
 import { Component } from '../component';
-import { getTopologicalWalker } from './component-walker';
+import { PipeOptions, getTopologicalWalker } from './walker';
 
 export type BuildDeps = [Paper, Workspace, Capsule];
-
-export type PipeOptions = {
-  concurrency: number;
-};
 
 export type TaskFn = (context: TaskContext) => void;
 
@@ -46,20 +42,26 @@ export class Pipes {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async run(pipeline: string, components?: string[], options?: PipeOptions) {
+  async run(pipeline: string | TaskFn[], components?: string[], options?: Partial<PipeOptions>) {
     const componentsToBuild = await this.getComponentsForBuild(components);
     // check if config is sufficient before building capsules and resolving deps.
 
     const resolvedComponents = await this.workspace.load(componentsToBuild.map(comp => comp.id.toString()));
     // add parallelism and execute by graph order (use gilad's graph builder once we have it)
-    const opts = options || {
-      concurrency: 4
+    const opts: PipeOptions = {
+      ...{
+        concurrency: 4,
+        traverse: 'both',
+        caching: true
+      },
+      ...options
     };
-    const { walk, cache } = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
+
+    const { walk, cache } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
     const promises = await walk(async resolved => {
       const component = resolved.component;
       const capsule = resolved.capsule;
-      const pipe = this.getConfig(component)[pipeline];
+      const pipe = typeof pipeline === 'string' ? this.getConfig(component)[pipeline] : pipeline;
       if (!Array.isArray(pipe)) {
         // TODO: throw error
         // eslint-disable-next-line no-console
@@ -88,8 +90,6 @@ export class Pipes {
     return promises;
     // return Promise.all(promises).then(() => resolvedComponents);
   }
-
-  private runCommand() {}
 
   private async runTask(name: string, context: TaskContext) {
     // we need to set task as dev dependency, install and run. stdout, stderr return.

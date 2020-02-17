@@ -1,10 +1,11 @@
 import { Graph } from 'graphlib';
 import PQueue from 'p-queue';
 import { flatten, uniq } from 'ramda';
-import { ResolvedComponent } from '../workspace/resolved-component';
-import { Consumer } from '../../consumer';
-import DependencyGraph from '../../scope/graph/scope-graph';
-import { Workspace } from '../workspace';
+import { ResolvedComponent } from '../../workspace/resolved-component';
+import { Consumer } from '../../../consumer';
+import DependencyGraph from '../../../scope/graph/scope-graph';
+import { Workspace } from '../../workspace';
+import { PipeOptions } from './pipe-options';
 
 export type CacheWalk = {
   [k: string]: {
@@ -12,9 +13,16 @@ export type CacheWalk = {
     resolvedComponent: ResolvedComponent;
   };
 };
-
-export async function getTopologicalWalker(input: ResolvedComponent[], concurrency: number, workspace: Workspace) {
-  const graph = await createSubGraph(input, workspace.consumer);
+export function getGraph(consumer: Consumer) {
+  return DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
+}
+export async function getTopologicalWalker(
+  input: ResolvedComponent[],
+  options: PipeOptions,
+  workspace: Workspace,
+  getGraphFn = getGraph
+) {
+  const graph = await createSubGraph(input, workspace.consumer, options, getGraphFn);
   const comps = await workspace.load(graph.nodes());
   const cache: CacheWalk = comps.reduce((accum, comp) => {
     accum[comp.component.id.toString()] = {
@@ -24,11 +32,11 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
     return accum;
   }, {} as CacheWalk);
 
-  const q = new PQueue({ concurrency });
-  const get = (c: CacheWalk, g: Graph, action: 'sources' | 'nodes' = 'sources') =>
+  const q = new PQueue({ concurrency: options.concurrency });
+  const get = (ref: CacheWalk, g: Graph, action: 'sources' | 'nodes' = 'sources') =>
     g[action]()
-      .filter(src => cache[src].state === 'init')
-      .map(src => cache[src].resolvedComponent);
+      .filter(src => ref[src].state === 'init')
+      .map(src => ref[src].resolvedComponent);
 
   function walk(visitor: (comp: ResolvedComponent) => Promise<any>) {
     if (!graph.nodes().length) {
@@ -42,6 +50,7 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
       const id = seed.component.id.toString();
       cache[id].state = q
         .add(() => visitor(seed))
+        .catch(r => r)
         .then(res => {
           // should cache activity
           graph.removeNode(id);
@@ -57,15 +66,26 @@ export async function getTopologicalWalker(input: ResolvedComponent[], concurren
   return { walk, cache };
 }
 
-export async function createSubGraph(components: ResolvedComponent[], consumer: Consumer) {
-  const g = await DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
+export async function createSubGraph(
+  components: ResolvedComponent[],
+  consumer: Consumer,
+  options: PipeOptions,
+  getGraphFn = getGraph
+) {
+  const g = await getGraphFn(consumer);
   const shouldStay = uniq(
     flatten(
       components.map(comp => {
         const id = comp.component.id.toString();
         const base = [id];
-        const pre = g.predecessors(id) || [];
-        const post = g.successors(id) || [];
+        let pre: string[] = [];
+        let post: string[] = [];
+        if (options.traverse === 'both' || options.traverse === 'dependencies') {
+          pre = g.predecessors(id) || [];
+        }
+        if (options.traverse === 'both' || options.traverse === 'dependents') {
+          post = g.successors(id) || [];
+        }
         return base.concat(post).concat(pre);
       })
     )
@@ -84,4 +104,11 @@ export async function createSubGraph(components: ResolvedComponent[], consumer: 
    cache script execution -
    proper output.
    stream execution for parsing
+   {
+      a: ['b','c']
+      b: ['c']
+      c: []
+   },
+   const {mockSpace, mockComponents} = createTestSuite()
+   fake visitor which returns an array of processes.
  */
