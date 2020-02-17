@@ -70,8 +70,10 @@ describe.only('harmony extension config', function() {
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
           console.log('herererererre-------------1');
           console.log(componentModelStr);
-          console.log('herererererre-------------');
+          console.log('herererererre-------------2');
           const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          console.log(componentModelStrWithoutExtString);
+          console.log('herererererre-------------3');
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging with the component', () => {
