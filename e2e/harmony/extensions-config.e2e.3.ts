@@ -68,12 +68,7 @@ describe.only('harmony extension config', function() {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.command.tagAllComponents();
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-          console.log('herererererre-------------1');
-          console.log(componentModelStr);
-          console.log('herererererre-------------2');
           const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
-          console.log(componentModelStrWithoutExtString);
-          console.log('herererererre-------------3');
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging with the component', () => {
@@ -101,6 +96,11 @@ describe.only('harmony extension config', function() {
           helper.command.tagComponent('bar/foo');
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
           const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          console.log('herererererre-------------1');
+          console.log(componentModelStr);
+          console.log('herererererre-------------2');
+          console.log(componentModelStrWithoutExtString);
+          console.log('herererererre-------------3');
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging the extension before component', () => {
@@ -133,6 +133,11 @@ describe.only('harmony extension config', function() {
             helper.command.exportAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+            console.log('2222herererererre-------------1');
+            console.log(componentModelStr);
+            console.log('herererererre-------------2');
+            console.log(componentModelStrWithoutExtString);
+            console.log('herererererre-------------3');
             componentModel = JSON.parse(componentModelStrWithoutExtString);
           });
           it('should update extension scope in the component when exporting together', () => {
