@@ -8,11 +8,12 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Capsule from '../../environment/capsule-builder';
+import { Serializable } from 'cleargraph';
 
 /**
  * in-memory representation of a component.
  */
-export default class Component {
+export default class Component implements Serializable {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
@@ -49,6 +50,14 @@ export default class Component {
    */
   get filesystem(): ComponentFS {
     return this.state.filesystem;
+  }
+
+  toString(): string {
+    return JSON.stringify({
+      id: this.id,
+      head: this.head
+      //TODO - laly add stringify of this.state and this.tags
+    });
   }
 
   /**

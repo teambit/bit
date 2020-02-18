@@ -1,2 +1,2 @@
-export { default as ComponentGraphBuilder } from './component-graph-builder';
-export { default as ComponentGraphBuilderExt } from './component-graph-builder.manifest';
+export { default as Graph } from './graph';
+export { default as GraphExt } from './graph.manifest';
