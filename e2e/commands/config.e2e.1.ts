@@ -75,7 +75,8 @@ describe('bit config', function() {
     // });
     it('should return undefined if not exists both in git and bit', () => {
       const confVal = helper.command.runCmd('bit config get nonExistsKey');
-      expect(confVal).to.be.equal('');
+
+      expect(confVal).to.be.oneOf(['\n', '', 'undefined\n']);
     });
   });
 });
