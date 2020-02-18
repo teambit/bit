@@ -33,7 +33,7 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
       throw new ShowDoctorError(`rootDir is missing from an imported component ${component.id.toString()}`);
     }
     const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix, component.defaultScope);
     acc[packageName] = locationAsUnixFormat;
     return acc;
   }, {});
@@ -91,7 +91,8 @@ export async function changeDependenciesToRelativeSyntax(
         if (dependencyPackageValue) {
           const packageName = componentIdToPackageName(
             dependency.id,
-            dependencyComponent.bindingPrefix || npmRegistryName()
+            dependencyComponent.bindingPrefix,
+            dependencyComponent.defaultScope
           );
           acc[packageName] = dependencyPackageValue;
         }
@@ -127,7 +128,7 @@ export function preparePackageJsonToWrite(
         packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       }
       // const packageDependency = getPackageDependency(bitMap, dep.id, component.id);
-      const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
+      const packageName = componentIdToPackageName(dep.id, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
       return acc;
     }, {});
