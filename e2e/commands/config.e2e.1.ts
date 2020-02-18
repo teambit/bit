@@ -36,7 +36,7 @@ describe('bit config', function() {
     it('should delete the config correctly', () => {
       const confVal = helper.command.runCmd('bit config get conf.key');
       expect(delOutput).to.be.equal('deleted successfully\n');
-      expect(confVal).to.be.equal('undefined\n');
+      expect(confVal).to.not.have.string('conf.value');
     });
   });
 
@@ -75,7 +75,7 @@ describe('bit config', function() {
     // });
     it('should return undefined if not exists both in git and bit', () => {
       const confVal = helper.command.runCmd('bit config get nonExistsKey');
-      expect(confVal).to.be.equal('undefined\n');
+      expect(confVal).to.be.equal('');
     });
   });
 });
