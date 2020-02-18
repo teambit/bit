@@ -25,4 +25,14 @@ export class Config<T> {
   set(name: string, config: T) {
     this.props[name] = config;
   }
+
+  /**
+   * Assign config for multiple extensions
+   *
+   * @param {ConfigProps<T>} props
+   * @memberof Config
+   */
+  assign(props: ConfigProps<T>) {
+    Object.assign(this.props, props);
+  }
 }
