@@ -20,3 +20,4 @@ export class InsightsCmd implements Command {
     return <Color green>{graph.toString()}</Color>;
   }
 }
+  

@@ -65,7 +65,7 @@ export default class Component implements Serializable {
    * here through an external extension.
    */
   async graph() {
-    return this.state.dependencies;
+    return this.state.dependencyGraph();
   }
 
   /*
@@ -76,6 +76,8 @@ export default class Component implements Serializable {
     const capsules = await this.capsuleOrchestrator.isolateComponents([id]);
     return capsules[id];
   }
+
+  capsule() {}
 
   /**
    * record component changes in the `Scope`.

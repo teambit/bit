@@ -22,15 +22,11 @@ export type WorkspaceConfig = {
 export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, capsule]: WorkspaceDeps) {
   // This is wrapped since there are cases when there is no workspace, or something in the workspace is invalid
   // Those will be handled later
-  try {
-    const consumer = await loadConsumerIfExist();
-    if (consumer) {
-      const workspace = new Workspace(consumer, scope, component, capsule);
-      return workspace;
-    }
-
-    return undefined;
-  } catch {
-    return undefined;
+  const consumer = await loadConsumerIfExist();
+  if (consumer) {
+    const workspace = new Workspace(consumer, scope, component, capsule);
+    return workspace;
   }
+
+  return undefined;
 }

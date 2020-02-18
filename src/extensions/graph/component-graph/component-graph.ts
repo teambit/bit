@@ -1,15 +1,27 @@
 import { Graph } from 'cleargraph';
 import Component from '../../component/component';
 import { Dependency } from '../index';
+import { ComponentFactory } from '../../component';
 import { Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
-import { ModelComponent } from '../../../scope/models';
+import { ModelComponent, Version } from '../../../scope/models';
+import Capsule from '../../../environment/capsule-builder';
+import ConsumerComponent from '../../../consumer/component';
+import { BitId } from '../../../bit-id';
 
-export default class ComponentGraph extends Graph<Component, Dependency> {
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
+export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
+
+export class ComponentGraph extends Graph<Component, Dependency> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  static async buildFromWorkspace(
+    consumer: Consumer,
+    componentFactory: ComponentFactory,
+    onlyLatest = false,
+    reverse = false
+  ): Promise<Graph<Component, Dependency>> {
     const componentsList = new ComponentsList(consumer);
-    const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
-    const graph = new Graph();
+    const workspaceComponents: ConsumerComponent[] = await componentsList.getFromFileSystem();
+    const graph = new Graph<Component, Dependency>();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const buildGraphP = allModelComponents.map(async modelComponent => {
       const latestVersion = modelComponent.latest();
@@ -29,10 +41,43 @@ export default class ComponentGraph extends Graph<Component, Dependency> {
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
-    workspaceComponents.forEach((component: Component) => {
+    console.log(workspaceComponents);
+    workspaceComponents.forEach((component: ConsumerComponent) => {
       const id = component.id;
       this._addDependenciesToGraph(id, graph, component, reverse);
     });
     return graph;
   }
+
+  static _addDependenciesToGraph(
+    id: BitId,
+    graph: Graph<Component, Dependency>,
+    component: Version | Component,
+    reverse = false
+  ): void {
+    const idStr = id.toString();
+    // save the full BitId of a string id to be able to retrieve it later with no confusion
+    if (!graph.hasNode(idStr)) graph.setNode(new Node(idStr, id));
+    DEPENDENCIES_TYPES.forEach(depType => {
+      component[depType].get().forEach(dependency => {
+        const depIdStr = dependency.id.toString();
+        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
+        if (reverse) {
+          graph.setEdge(depIdStr, idStr, depType);
+        } else {
+          graph.setEdge(idStr, depIdStr, depType);
+        }
+      });
+    });
+  }
+}
+
+function buildFromLegacyGraph(legacyGraph: GLG, componentFactory: ComponentFactory) {
+  console.log(legacyGraph);
+  let newGraph: ComponentGraph = new ComponentGraph();
+  legacyGraph.nodes().forEach((node: string) => {
+    debugger;
+    let NodeContent = legacyGraph.node(node);
+    newGraph.setNode(componentFactory.fromRawComponent({ id: node, content: NodeContent }));
+  });
 }

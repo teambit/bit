@@ -145,7 +145,11 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
     }
-    const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
+    const dependencyIdAsPackage = componentIdToPackageName(
+      componentId,
+      component.bindingPrefix,
+      component.defaultScope
+    );
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component

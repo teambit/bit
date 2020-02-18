@@ -111,6 +111,7 @@ export type ComponentProps = {
   testerPackageDependencies?: Record<string, any> | null | undefined;
   customResolvedPaths?: customResolvedPath[] | null | undefined;
   overrides: ComponentOverrides;
+  defaultScope: string | null;
   packageJsonFile?: PackageJsonFile | null | undefined;
   packageJsonChangedProps?: { [key: string]: any } | null | undefined;
   files: SourceFile[];
@@ -182,6 +183,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   issues: { [label: keyof typeof componentIssuesLabels]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
+  defaultScope: string | null;
   origin: ComponentOrigin;
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -198,6 +200,7 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | null | undefined;
   extensions: ExtensionData[] = [];
+  _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -241,6 +244,7 @@ export default class Component {
     testerPackageDependencies,
     componentFromModel,
     overrides,
+    defaultScope,
     packageJsonFile,
     packageJsonChangedProps,
     docs,
@@ -279,6 +283,7 @@ export default class Component {
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
+    this.defaultScope = defaultScope;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
     this.docs = docs || [];
@@ -669,6 +674,7 @@ export default class Component {
     const testerFilePath = tester.filePath;
 
     const run = async (component: Component, cwd?: PathOsBased) => {
+      cwd = component._capsuleDir || cwd;
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
         Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');
@@ -1238,6 +1244,7 @@ export default class Component {
     const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
     const overridesFromConsumer = isNotNested ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
+
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
@@ -1285,7 +1292,7 @@ export default class Component {
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
     const extensions: ExtensionData[] = [];
-    if (componentConfig) {
+    if (bitJson) {
       R.forEachObjIndexed((extConfig, extName) => {
         const extensionId = consumer.getParsedIdIfExist(extName);
         // Store config for core extensions
@@ -1295,7 +1302,7 @@ export default class Component {
         } else if (id.name !== extensionId.name) {
           extensions.push({ extensionId, config: extConfig });
         }
-      }, componentConfig.extensions);
+      }, bitJson.extensions);
     }
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
@@ -1306,6 +1313,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
+    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
 
     return new Component({
       name: id.name,
@@ -1332,6 +1340,7 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       overrides,
+      defaultScope,
       packageJsonFile,
       packageJsonChangedProps,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -1,13 +1,11 @@
+import { realpathSync } from 'fs';
 import { Capsule, Exec, Console, State } from '@teambit/capsule';
 import { NodeFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
-import { async } from 'rxjs/internal/scheduler/async';
 import FsContainer from './container';
 import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
-import loader from '../../cli/loader';
-import capsuleFactory from '../../environment/capsule-factory';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -52,7 +50,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   }
 
   get wrkDir(): string {
-    return this._wrkDir;
+    return realpathSync(this._wrkDir);
   }
 
   // implement this to handle capsules ids.
@@ -99,6 +97,8 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     //   // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
     //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
     // };
+    const logFn = l => console.log(`[librarian] ${l}`);
+    // console.log(args, this.wrkDir);
     return librarian.runModule(executable, { args, cwd: this.wrkDir });
   }
 

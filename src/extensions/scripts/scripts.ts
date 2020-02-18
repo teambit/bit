@@ -2,25 +2,21 @@ import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Pipe } from './pipe';
-import { getTopologicalWalker } from './component-walker';
+import { getTopologicalWalker } from './walker';
 import { ExtensionManifest, Harmony } from '../../harmony';
 import { ScriptRegistry as Registry } from './registry';
 import { Script } from './script';
+import { ScriptsOptions } from './scripts-options';
 
 export type BuildDeps = [Paper, Workspace];
-
-export type ScriptsOptions = {
-  /**
-   * number of concurrency build processes.
-   */
-  concurrency?: number;
-};
 
 /**
  * default options
  */
-const DEFAULT_OPTIONS = {
-  concurrency: 4
+const DEFAULT_OPTIONS: ScriptsOptions = {
+  concurrency: 4,
+  caching: true,
+  traverse: 'both'
 };
 
 export class Scripts {
@@ -72,17 +68,19 @@ export class Scripts {
     return new Pipe(scripts);
   }
 
-  async run(pipeline: string, components?: string[], options?: ScriptsOptions) {
+  async run(pipeline: string, components?: string[], options?: Partial<ScriptsOptions>) {
     const resolvedComponents = await this.buildComponents(components);
     // :TODO check if component config is sufficient before building capsules and resolving deps.
     const opts = Object.assign(DEFAULT_OPTIONS, options);
-    const walk = await getTopologicalWalker(resolvedComponents, opts.concurrency, this.workspace);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
 
     return walk(async ({ component, capsule }) => {
       const config = component.config.extensions.scripts || {};
       // :TODO move both logs to a proper api for reporting missing pipes
       // eslint-disable-next-line no-console
       if (!config[pipeline])
+        // eslint-disable-next-line no-console
         return console.warn(`script pipe "${pipeline}" was not defined for component: ${component.id.toString()}`);
       const pipe = this.pipe(config[pipeline]);
       // eslint-disable-next-line no-console
@@ -96,7 +94,8 @@ export class Scripts {
    * provider method for the scripts extension.
    */
   static async provide(config: {}, [cli, workspace]: BuildDeps, harmony: Harmony<unknown>) {
-    const scripts = new Scripts(workspace, new Registry(harmony));
+    const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
+    const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));
     return scripts;
   }

@@ -75,8 +75,8 @@ export default class Export extends Command {
       eject,
       includeDependencies,
       setCurrentScope,
-      includeNonStaged: all,
-      allVersions,
+      includeNonStaged: all || allVersions,
+      allVersions: allVersions || all,
       codemod: rewire,
       force
     }).then(results => ({

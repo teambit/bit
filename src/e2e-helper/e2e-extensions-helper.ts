@@ -62,7 +62,7 @@ export default class ExtensionsHelper {
     this.bitJson.write(bitJson);
   }
 
-  createNewComponentExtension(name = 'foo-ext', content?: string) {
+  createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
     if (!content) {
       content = `
       module.exports = {
@@ -70,13 +70,13 @@ export default class ExtensionsHelper {
         dependencies: [],
         config: {},
         provider: async (config) => {
-          console.log('hi there from an extension, got config:', config)
+          console.log(\`hi there from an extension, got config: \${JSON.stringify(config)}\`)
         }
       };
       `;
     }
     this.fs.outputFile('foo-ext.js', content);
     this.command.addComponent('foo-ext.js', { i: name });
-    this.addExtensionToWorkspaceConfig(name);
+    this.addExtensionToWorkspaceConfig(name, config);
   }
 }

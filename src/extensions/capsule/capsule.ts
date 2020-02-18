@@ -5,13 +5,16 @@ import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
 import CapsuleBuilder from '../../environment/capsule-builder';
 import { CapsuleOptions } from './orchestrator/types';
+import { PackageManager } from '../package-manager';
+
+export type CapsuleFactoryDeps = [PackageManager];
 
 export default class CapsuleFactory {
   constructor(
     /**
      * instance of the capsule orchestrator.
      */
-    private orchestrator: CapsuleOrchestrator,
+    readonly orchestrator: CapsuleOrchestrator,
 
     readonly builder: CapsuleBuilder
   ) {}
@@ -26,11 +29,6 @@ export default class CapsuleFactory {
       config
     );
   }
-
-  // load(components: Component, config: CapsuleOptions) {
-  //   this.orchestrator.acquire
-  // }
-
   /**
    * list all of the existing workspace capsules.
    */
@@ -46,8 +44,8 @@ export default class CapsuleFactory {
     return '';
   }
 
-  static async provide() {
+  static async provide(config: any, [packageManager]: any) {
     await capsuleOrchestrator.buildPools();
-    return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any'));
+    return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
   }
 }
