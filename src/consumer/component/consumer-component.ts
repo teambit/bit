@@ -111,6 +111,7 @@ export type ComponentProps = {
   testerPackageDependencies?: Record<string, any> | null | undefined;
   customResolvedPaths?: customResolvedPath[] | null | undefined;
   overrides: ComponentOverrides;
+  defaultScope: string | null;
   packageJsonFile?: PackageJsonFile | null | undefined;
   packageJsonChangedProps?: { [key: string]: any } | null | undefined;
   files: SourceFile[];
@@ -182,6 +183,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   issues: { [label: keyof typeof componentIssuesLabels]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
+  defaultScope: string | null;
   origin: ComponentOrigin;
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -241,6 +243,7 @@ export default class Component {
     testerPackageDependencies,
     componentFromModel,
     overrides,
+    defaultScope,
     packageJsonFile,
     packageJsonChangedProps,
     docs,
@@ -279,6 +282,7 @@ export default class Component {
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
+    this.defaultScope = defaultScope;
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
     this.docs = docs || [];
@@ -1306,6 +1310,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
+    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
 
     return new Component({
       name: id.name,
@@ -1332,6 +1337,7 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       overrides,
+      defaultScope,
       packageJsonFile,
       packageJsonChangedProps,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
