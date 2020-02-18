@@ -1,8 +1,9 @@
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { loadConsumerIfExist } from '../../consumer';
+import { loadConsumerIfExist, loadConsumer } from '../../consumer';
 import { Capsule } from '../capsule';
+import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Capsule];
 
@@ -26,14 +27,14 @@ export default async function provideWorkspace(config: WorkspaceConfig, [scope, 
   // open bit init --reset.
   // keep in mind that here is the first place where the consumer is loaded.
   try {
-    const consumer = await loadConsumerIfExist();
+    const consumer = await loadConsumer();
     if (consumer) {
       const workspace = new Workspace(consumer, scope, component, capsule);
       return workspace;
     }
-
-    return undefined;
-  } catch {
-    return undefined;
+  } catch (err) {
+    if (err instanceof ConsumerNotFound) throw err;
+    return undefined; // can be from bit init --reset, return undefined and the init command will take care of that
   }
+  return undefined;
 }

@@ -83,7 +83,7 @@
     "@babel/preset-react": "^7.7.4",
     "@babel/runtime": "^7.4.5",
     "@teambit/any-fs": "0.0.5",
-    "@teambit/capsule": "0.0.11",
+    "@teambit/capsule": "0.0.12",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
     "@types/react": "^16.9.17",
