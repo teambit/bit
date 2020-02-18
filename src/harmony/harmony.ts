@@ -42,8 +42,19 @@ export default class Harmony<ConfProps> {
     return this.graph.nodes.map(vertex => vertex.id);
   }
 
+  /**
+   * Set config for specific extension
+   *
+   * @param {string} extensionId
+   * @param {*} config
+   * @memberof Harmony
+   */
   setExtensionConfig(extensionId: string, config: any) {
     this.config.set(extensionId, config);
+  }
+
+  setExtensionsConfig(config: ConfigProps<ConfProps>) {
+    this.config.assign(config);
   }
 
   /**
