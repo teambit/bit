@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import ConfigKeyNotFound from '../../src/api/consumer/lib/exceptions/config-key-not-found';
 
 describe('bit config', function() {
   this.timeout(0);
