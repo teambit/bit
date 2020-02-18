@@ -44,7 +44,7 @@ export class TestCmd implements Command {
     return <AppContext.Consumer>
     {({exit})=> {
       setTimeout(()=> {
-        exit()
+        exit() // @todo: fix the code once test is ready.
       }, 0)
 
       return <Color>{output}</Color>
@@ -57,6 +57,7 @@ export class TestCmd implements Command {
     const testResults = await this.test.test(components, { all, verbose });
     return {
       data: testResults,
+      // @todo: fix the code once test is ready.
       code: 0
     }
   }

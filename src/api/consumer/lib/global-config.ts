@@ -53,13 +53,10 @@ export async function get(key: string): Promise<string | null | undefined> {
   if (!R.isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
-    if (!R.isNil(gitVal)) {
-      return gitVal;
-    }
-    throw new ConfigKeyNotFound(key);
+    return gitVal;
     // Ignore error from git config get
   } catch (err) {
-    throw new ConfigKeyNotFound(key);
+    return undefined;
   }
 }
 

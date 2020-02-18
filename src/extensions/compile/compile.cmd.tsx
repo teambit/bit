@@ -36,6 +36,7 @@ export class CompileCmd implements Command {
     const compileResults = await this.compile.compile(components, { verbose, noCache });
     return {
       data: compileResults,
+      // @todo: fix the code once compile is ready.
       code: 0
     }
   }
