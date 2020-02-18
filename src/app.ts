@@ -3,6 +3,7 @@ import Bluebird from 'bluebird';
 import { Harmony } from './harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
+import { WorkspaceConfigExt } from './extensions/workspace-config';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
@@ -26,7 +27,7 @@ const config = {
   }
 };
 try {
-  const harmony = Harmony.load([BitCliExt, BitExt], config);
+  const harmony = Harmony.load([WorkspaceConfigExt, BitCliExt, BitExt], config);
   harmony
     .run()
     .then(() => {
