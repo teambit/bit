@@ -7,17 +7,14 @@ export default class Watch extends WatchComponents {
     super(true);
   }
 
-  private watcher: WatchComponents | null = null;
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async _handleChange(path: string, isNew: boolean): Promise<any> {
     return '';
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  watch(componentIds: ComponentId[] = []) {
-    // if (watcher) return this.
-    // this.watcher = this.legacyWatcher.watchAll();
+  async watch(componentIds: ComponentId[] = []) {
+    await this.watchAll();
 
     return new Observable(subscriber => {
       subscriber.next();

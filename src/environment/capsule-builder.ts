@@ -91,7 +91,11 @@ export default class CapsuleBuilder {
     return capsuleList;
   }
 
-  async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
+  async createCapsule(
+    bitId: BitId,
+    capsuleOptions?: CapsuleOptions,
+    orchestrationOptions?: Options
+  ): Promise<ComponentCapsule> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
@@ -135,7 +139,7 @@ export default class CapsuleBuilder {
       writeBitDependencies: true,
       createNpmLinkFiles: false,
       saveDependenciesAsComponents: false,
-      writeDists: true,
+      writeDists: false,
       installNpmPackages: false,
       installPeerDependencies: false,
       addToRootPackageJson: false,
@@ -145,7 +149,7 @@ export default class CapsuleBuilder {
       isolated: true,
       capsulePaths
     };
-    // componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
+    componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter._populateComponentsFilesToWrite();
     componentsWithDependencies.forEach(componentWithDependencies => {

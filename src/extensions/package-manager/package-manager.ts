@@ -1,7 +1,6 @@
 import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
-import { Paper, Command } from '../paper';
 import { ComponentCapsule } from '../capsule-ext';
 
 export type installOpts = {
@@ -9,7 +8,7 @@ export type installOpts = {
 };
 
 function deleteBitBinFromPkgJson(capsule) {
-  const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+  const packageJsonPath = 'package.json';
   const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
   const packageJson = JSON.parse(pjsonString);
   delete packageJson.dependencies['bit-bin'];
@@ -22,21 +21,17 @@ function linkBitBinInCapsule(capsule) {
   // if there are no deps, sometimes the node_modules folder is not created
   // and we need it in order to perform the linking
   try {
-    capsule.fs.mkdirSync(path.join(capsule.wrkDir, 'node_modules'));
+    capsule.fs.mkdirSync('node_modules');
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
-  if (capsule.fs.existsSync(path.join(capsule.wrkDir, bitBinPath))) {
-    capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
-  }
-  try {
-    capsule.fs.exists(path.join(capsule.wrkDir, bitBinPath), bitBinExists => {
-      if (bitBinExists) {
-        capsule.fs.unlinkSync(path.join(capsule.wrkDir, bitBinPath));
-      }
 
-      execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
-    });
+  if (capsule.fs.existsSync(bitBinPath)) {
+    capsule.fs.unlinkSync(bitBinPath);
+  }
+
+  try {
+    execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
