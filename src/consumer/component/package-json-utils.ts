@@ -127,7 +127,6 @@ export function preparePackageJsonToWrite(
       } else {
         packageDependency = getPackageDependency(bitMap, dep.id, component.id);
       }
-
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
       return acc;
