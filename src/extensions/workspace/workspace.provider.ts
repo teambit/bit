@@ -1,9 +1,8 @@
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
-import { loadConsumerIfExist, loadConsumer } from '../../consumer';
+import { loadConsumerIfExist } from '../../consumer';
 import { Capsule } from '../capsule';
-import { ConsumerNotFound } from '../../consumer/exceptions';
 
 export type WorkspaceDeps = [Scope, ComponentFactory, Capsule];
 
@@ -26,15 +25,17 @@ export default async function provideWorkspace(config: WorkspaceConfig, [scope, 
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
   // open bit init --reset.
   // keep in mind that here is the first place where the consumer is loaded.
+  // an unresolved issue here is when running tasks, such as "bit run build" outside of a consumer.
+  // we'll have to fix this asap.
   try {
-    const consumer = await loadConsumer();
+    const consumer = await loadConsumerIfExist();
     if (consumer) {
       const workspace = new Workspace(consumer, scope, component, capsule);
       return workspace;
     }
-  } catch (err) {
-    if (err instanceof ConsumerNotFound) throw err;
-    return undefined; // can be from bit init --reset, return undefined and the init command will take care of that
+
+    return undefined;
+  } catch {
+    return undefined;
   }
-  return undefined;
 }
