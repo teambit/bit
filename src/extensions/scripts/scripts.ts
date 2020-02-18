@@ -8,7 +8,7 @@ import { ScriptRegistry as Registry } from './registry';
 import { Script } from './script';
 import { ScriptsOptions } from './scripts-options';
 
-export type BuildDeps = [Paper, Workspace];
+export type ScriptDeps = [Paper, Workspace];
 
 /**
  * default options
@@ -93,7 +93,7 @@ export class Scripts {
   /**
    * provider method for the scripts extension.
    */
-  static async provide(config: {}, [cli, workspace]: BuildDeps, harmony: Harmony<unknown>) {
+  static async provide(config: {}, [cli, workspace]: ScriptDeps, harmony: Harmony<unknown>) {
     const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
     const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));

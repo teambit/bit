@@ -97,8 +97,6 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     //   // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
     //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
     // };
-    const logFn = l => console.log(`[librarian] ${l}`);
-    // console.log(args, this.wrkDir);
     return librarian.runModule(executable, { args, cwd: this.wrkDir });
   }
 

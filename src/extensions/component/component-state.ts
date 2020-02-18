@@ -1,6 +1,5 @@
 import ComponentConfig from './config';
 import ConsumerComponent from '../../consumer/component';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 /**
  * `Snap` represents the state of the component in the working tree.
