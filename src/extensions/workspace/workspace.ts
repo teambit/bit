@@ -1,5 +1,6 @@
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
+import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
@@ -19,6 +20,11 @@ export default class Workspace implements ComponentHost {
     readonly consumer: Consumer,
 
     /**
+     * Workspace's configuration
+     */
+    readonly config: WorkspaceConfig,
+
+    /**
      * access to the Workspace's `Scope` instance
      */
     readonly scope: Scope,
@@ -32,13 +38,6 @@ export default class Workspace implements ComponentHost {
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}
-
-  /**
-   * Workspace's configuration
-   */
-  get config() {
-    return this.consumer.config;
-  }
 
   /**
    * root path of the Workspace.
