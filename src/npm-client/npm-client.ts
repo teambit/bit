@@ -67,7 +67,7 @@ type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'npm' | 'yarn';
+  packageManager: 'librarian' | 'npm' | 'yarn';
   packageManagerArgs: string[];
   packageManagerProcessOptions: Record<string, any>;
   useWorkspaces: boolean;

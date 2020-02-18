@@ -12,7 +12,6 @@ import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Commit from './commands/public-cmds/tag-cmd';
 import Import from './commands/public-cmds/import-cmd';
-import Install from './commands/public-cmds/install-cmd';
 import ClearCache from './commands/public-cmds/clear-cache-cmd';
 import Config from './commands/public-cmds/config-cmd';
 import Remote from './commands/public-cmds/remote-cmd';
@@ -72,8 +71,6 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Commit(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Import(),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      new Install(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Export(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
