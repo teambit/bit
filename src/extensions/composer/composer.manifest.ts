@@ -2,11 +2,11 @@ import { WatchExt } from '../watch';
 import { provideComposer } from './composer.provider';
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
-import { PipesExt } from '../pipes';
+import { ScriptsExt } from '../scripts';
 
 export default {
   name: 'Composer',
-  dependencies: [WatchExt, BitCliExt, WorkspaceExt, PipesExt],
+  dependencies: [WatchExt, BitCliExt, WorkspaceExt, ScriptsExt],
   config: {},
   provider: provideComposer
 };

@@ -26,6 +26,7 @@ const config = {
     components: '*'
   }
 };
+
 try {
   const harmony = Harmony.load([WorkspaceConfigExt, BitCliExt, BitExt], config);
   harmony

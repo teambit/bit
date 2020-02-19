@@ -335,6 +335,13 @@ describe('bit test command', function() {
       const output = helper.command.testComponent('utils/is-type');
       expect(output).to.have.string('tests passed');
     });
+    // @todo: make it work once test extension is ready
+    it.skip('should be able to test using the test extension', () => {
+      helper.fs.deletePath('dist');
+      helper.env.importCompiler();
+      const output = helper.command.runCmd('bit run-test utils/is-type');
+      expect(output).to.have.string('tests passed');
+    });
   });
   describe('bit component with no tester', function() {
     before(() => {

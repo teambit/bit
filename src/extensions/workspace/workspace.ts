@@ -34,7 +34,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    private capsule: Capsule,
+    readonly capsule: Capsule,
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}

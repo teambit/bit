@@ -7,6 +7,11 @@ export interface ExtensionManifest<Config = {}> {
   name: string;
 
   /**
+   * version of the extension
+   */
+  // version: string;
+
+  /**
    * default extension config. can be of any type.
    */
   config?: Config;

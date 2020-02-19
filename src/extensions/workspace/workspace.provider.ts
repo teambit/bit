@@ -24,8 +24,13 @@ export default async function provideWorkspace(
   config: WorkspaceCoreConfig,
   [workspaceConfig, scope, component, capsule]: WorkspaceDeps
 ) {
-  // This is wrapped since there are cases when there is no workspace, or something in the workspace is invalid
-  // Those will be handled later
+  // don't use loadConsumer() here because the consumer might not be available.
+  // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
+  // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
+  // open bit init --reset.
+  // keep in mind that here is the first place where the consumer is loaded.
+  // an unresolved issue here is when running tasks, such as "bit run build" outside of a consumer.
+  // we'll have to fix this asap.
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {

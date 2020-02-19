@@ -18,7 +18,9 @@ export default class State {
      * dependency graph of the component current. ideally package dependencies would be also placed here.
      */
     // readonly dependencies: Dependencies
-    readonly dependencies
+    readonly dependencies,
+
+    readonly _consumer: ConsumerComponent
   ) {}
 
   /**
@@ -28,16 +30,20 @@ export default class State {
     return '';
   }
 
+  dependencyGraph() {}
+
   static fromLegacy(consumerComponent: ConsumerComponent) {
     let extensions = {};
     if (consumerComponent.bitJson) {
-      extensions = consumerComponent.bitJson.extensions || {};
+      // @ts-ignore
+      extensions = consumerComponent.overrides.overrides.extensions || consumerComponent.bitJson.extensions || {};
     }
 
     return new State(
       new Config(consumerComponent.mainFile, extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
-      consumerComponent.dependencies
+      consumerComponent.dependencies,
+      consumerComponent
     );
   }
 }
