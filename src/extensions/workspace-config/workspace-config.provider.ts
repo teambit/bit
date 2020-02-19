@@ -1,5 +1,6 @@
 import { Harmony } from '../../harmony';
-import WorkspaceConfig from './workspace-config';
+// import WorkspaceConfig from './workspace-config';
+import { getConsumerInfo } from '../../consumer/consumer-locator';
 
 export type WorkspaceConfigDeps = [];
 
@@ -10,7 +11,12 @@ export default async function provideWorkspaceConfig(
   _deps: WorkspaceConfigDeps,
   harmony: Harmony<unknown>
 ) {
-  const config = new WorkspaceConfig();
-  // harmony.setExtensionsConfig(config.getCoreExtensionsConfig());
-  return config;
+  // Using the getConsumerInfo since it is doing propagation until it finds the config
+  const workspaceInfo = await getConsumerInfo(process.cwd());
+  if (workspaceInfo && workspaceInfo.consumerConfig) {
+    const config = workspaceInfo.consumerConfig;
+    harmony.setExtensionsConfig(config.getCoreExtensionsConfig());
+    return config;
+  }
+  return undefined;
 }

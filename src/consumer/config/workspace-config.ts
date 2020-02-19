@@ -248,6 +248,14 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async load(dirPath: string): Promise<WorkspaceConfig> {
+    const res = await this.loadIfExist(dirPath);
+    if (!res) {
+      throw new BitConfigNotFound();
+    }
+    return res;
+  }
+
+  static async loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
     const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
     const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
 
@@ -260,7 +268,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
-    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
+    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) return undefined;
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const workspaceConfig = this.fromPlainObject(config);
@@ -270,6 +278,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     workspaceConfig.packageJsonObject = packageJsonFile;
     return workspaceConfig;
   }
+
   static async loadBitJson(bitJsonPath: string): Promise<Record<string, any> | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);

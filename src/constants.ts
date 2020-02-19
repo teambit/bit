@@ -38,6 +38,8 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
+export const BIT_JSONC = 'bit.jsonc';
+
 export const GIT_IGNORE = '.gitignore';
 
 export const BIT_MAP = '.bitmap';
