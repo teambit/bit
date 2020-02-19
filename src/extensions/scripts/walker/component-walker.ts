@@ -9,7 +9,8 @@ import { ScriptsOptions } from '../scripts-options';
 
 export type CacheWalk = {
   [k: string]: {
-    state: Promise<any> | 'init';
+    init: boolean;
+    state: Promise<any>;
     resolvedComponent: ResolvedComponent;
   };
 };
@@ -17,16 +18,17 @@ export function getGraph(consumer: Consumer) {
   return DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
 }
 export async function getTopologicalWalker(
-  input: ResolvedComponent[],
+  seedComponents: ResolvedComponent[],
   options: ScriptsOptions,
   workspace: Workspace,
   getGraphFn = getGraph
 ) {
-  const graph = await createSubGraph(input, workspace.consumer, options, getGraphFn);
+  const graph = await createSubGraph(seedComponents, workspace.consumer, options, getGraphFn);
   const comps = await workspace.load(graph.nodes());
   const reporter: CacheWalk = comps.reduce((accum, comp) => {
     accum[comp.component.id.toString()] = {
-      state: 'init',
+      init: true,
+      state: Promise.resolve(),
       resolvedComponent: comp
     };
     return accum;
@@ -35,7 +37,7 @@ export async function getTopologicalWalker(
   const q = new PQueue({ concurrency: options.concurrency });
   const get = (ref: CacheWalk, g: Graph, action: 'sources' | 'nodes' = 'sources') =>
     g[action]()
-      .filter(src => ref[src].state === 'init')
+      .filter(src => ref[src].init)
       .map(src => ref[src].resolvedComponent);
 
   function walk(visitor: (comp: ResolvedComponent) => Promise<any>) {
@@ -48,9 +50,9 @@ export async function getTopologicalWalker(
 
     const seedersPromises = seeders.map(seed => {
       const id = seed.component.id.toString();
-      reporter[id].state = q
-        .add(() => visitor(seed))
-        .catch(r => r)
+      reporter[id].init = false;
+      reporter[id].state = reporter[id].state
+        .then(() => q.add(() => visitor(seed)))
         .then(res => {
           // should cache activity
           graph.removeNode(id);
@@ -99,7 +101,7 @@ export async function createSubGraph(
   }, g);
 }
 /**
- * TODO - qballer
+ * TODO
  * cache capsules to reuse - DONE
    cache script execution -
    proper output.
