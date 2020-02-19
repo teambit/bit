@@ -1,7 +1,5 @@
-import React from 'react'
-
+import React from 'react';
 
 export abstract class PaperError extends Error {
-  abstract render(): React.ReactElement
+  abstract render(): React.ReactElement;
 }
-
