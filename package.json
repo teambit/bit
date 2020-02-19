@@ -39,7 +39,7 @@
     "pkg:mac": "pkg bin/bit.js --targets node10-macos-x64 --out-path releases/mac --options --no-warnings --config package.json",
     "pkg:windows": "pkg bin/bit.js --targets node10-win-x64 --out-path releases/windows --options --no-warnings --config package.json",
     "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings --config package.json",
-    "watch": "babel --watch src -d dist --verbose --source-maps --extensions '.ts,.tsx'",
+    "watch": "babel --watch src -d dist --verbose --source-maps --extensions '.ts,.tsx' --copy-files",
     "build-debug": "babel src -d dist --source-maps --extensions \".ts\"",
     "prepublishOnly": "npm run clean && npm run build && npm run build:types",
     "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
@@ -52,10 +52,11 @@
     "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts",
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
-    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx\""
+    "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.jsonc\" --copy-files"
   },
   "pkg": {
     "assets": [
+      "dist/extensions/workspace-config/workspace-template.jsonc",
       "dist/analytics/analytics-sender.js",
       "dist/specs-runner/worker.js"
     ]
