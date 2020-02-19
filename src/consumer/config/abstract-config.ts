@@ -212,21 +212,27 @@ export default class AbstractConfig {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
   }): Promise<JSONFile[]> {
+    const vinyl = await this.toVinyl({ workspaceDir, componentDir });
+    return [vinyl];
+  }
+
+  async toVinyl({
+    workspaceDir,
+    componentDir = '.'
+  }: {
+    workspaceDir: PathOsBasedAbsolute;
+    componentDir?: PathOsBasedRelative;
+  }): Promise<JSONFile> {
     const plainObject = this.toPlainObject();
     const JsonFiles = [];
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      JsonFiles.push(packageJsonFile.toVinylFile());
+      return packageJsonFile.toVinylFile();
     }
-    if (this.writeToBitJson) {
-      const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
-      const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      JsonFiles.push(JSONFile.load(params));
-    }
-    return JsonFiles;
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+    const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
+    return JSONFile.load(params);
   }
 
   static composeBitJsonPath(bitPath: PathOsBased): PathOsBased {

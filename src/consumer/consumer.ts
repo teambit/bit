@@ -9,7 +9,8 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import WorkspaceConfig from './config/workspace-config';
+import LegacyWorkspaceConfig from './config/workspace-config';
+import { WorkspaceConfig } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -75,7 +76,7 @@ import { packageNameToComponentId } from '../utils/bit/package-name-to-component
 
 type ConsumerProps = {
   projectPath: string;
-  config: WorkspaceConfig;
+  config: LegacyWorkspaceConfig;
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
@@ -100,7 +101,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  config: WorkspaceConfig;
+  config: LegacyWorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
@@ -775,7 +776,7 @@ export default class Consumer {
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
+    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
@@ -795,14 +796,14 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = WorkspaceConfig.reset(projectPath, resetHard);
+    const configP = LegacyWorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, configP]);
   }
 
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const config = await WorkspaceConfig.ensure(consumerPath);
+    const config = await LegacyWorkspaceConfig.ensure(consumerPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,
@@ -831,7 +832,7 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
+      consumerInfo.consumerConfig = await LegacyWorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

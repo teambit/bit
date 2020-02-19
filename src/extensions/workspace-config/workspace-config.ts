@@ -3,9 +3,10 @@ import * as fs from 'fs-extra';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import { BIT_JSONC } from '../../constants';
-import { PathOsBased } from '../../utils/path';
-import { throws } from 'assert';
+import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
+import DataToPersist from '../../consumer/component/sources/data-to-persist';
+import { AbstractVinyl } from '../../consumer/component/sources';
 
 interface WorkspaceConfigProps {}
 
@@ -53,11 +54,37 @@ export default class WorkspaceConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static create(data: WorkspaceConfigProps) {
+  static create(props: WorkspaceConfigProps, dirPath?: PathOsBasedAbsolute) {
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
     const template = parse(templateStr);
-    const merged = assign(template, data);
-    return new WorkspaceConfig(merged, undefined);
+    const merged = assign(template, props);
+    const instance = new WorkspaceConfig(merged, undefined);
+    if (dirPath) {
+      instance.path = this.composeBitJsoncPath(dirPath);
+    }
+    return instance;
+  }
+
+  /**
+   * Ensure the given directory has a workspace config
+   * Load if existing and create new if not
+   *
+   * @static
+   * @param {PathOsBasedAbsolute} dirPath
+   * @param {WorkspaceConfigProps} [workspaceConfigProps={} as any]
+   * @returns {Promise<WorkspaceConfig>}
+   * @memberof WorkspaceConfig
+   */
+  static async ensure(
+    dirPath: PathOsBasedAbsolute,
+    workspaceConfigProps: WorkspaceConfigProps = {} as any
+  ): Promise<WorkspaceConfig> {
+    let workspaceConfig = await this.loadIfExist(dirPath);
+    if (workspaceConfig) {
+      return workspaceConfig;
+    }
+    workspaceConfig = this.create(workspaceConfigProps, dirPath);
+    return workspaceConfig;
   }
 
   /**
@@ -99,6 +126,30 @@ export default class WorkspaceConfig {
     } catch (e) {
       throw new InvalidConfigFile(bitJsoncPath);
     }
+  }
+
+  async write({ workspaceDir }: { workspaceDir: PathOsBasedAbsolute }): Promise<void> {
+    if (this.data) {
+      const file = await this.toVinyl(workspaceDir);
+      const dataToPersist = new DataToPersist();
+      if (file) {
+        dataToPersist.addFile(file);
+        return dataToPersist.persistAllToFS();
+      }
+    }
+    this.legacyConfig?.write({ workspaceDir });
+  }
+
+  private async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
+    if (this.data) {
+      const jsonStr = stringify(this.data, undefined, 2);
+      console.log(jsonStr);
+      const base = workspaceDir;
+      const fullPath = workspaceDir ? WorkspaceConfig.composeBitJsoncPath(workspaceDir) : this.path;
+      const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
+      return jsonFile;
+    }
+    return this.legacyConfig?.toVinyl({ workspaceDir });
   }
 
   /**
