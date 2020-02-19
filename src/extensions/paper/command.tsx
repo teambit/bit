@@ -31,17 +31,17 @@ export interface Command {
    *  allow grouping of commands to hint summery renderer
    *  Places in default automatic help
    */
-  group?:string
+  group?: string;
 
   /**
    *  Should a command be exposed to the user.
    */
-  private?:boolean
+  private?: boolean;
 
   /**
    * should turn on Loader
    */
-  loader?: boolean
+  loader?: boolean;
 
   /**
    * Array of command options where each element is a tuple.
@@ -56,7 +56,7 @@ export interface Command {
    * sub commands for example:
    * bit capsule list to list active capsules.
    */
-  commands?: Command[]
+  commands?: Command[];
 
   /**
    * Main command handler which is called when invoking commands
@@ -64,9 +64,9 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
-   render: (args: CLIArgs, flags: Flags ) => Promise<React.ReactElement>;
+  render: (args: CLIArgs, flags: Flags) => Promise<React.ReactElement>;
 
-   /**
+  /**
    * Optional handler to provide a raw result of the command.
    * Will be go called if '-j' option is provided by user.
    * @param args  - arguments object as defined in name.
@@ -76,8 +76,7 @@ export interface Command {
 
   json?: (args: CLIArgs, flags: Flags) => GenericObject;
 }
-export type Flags = {[flagName:string]: CLIArgs | boolean | undefined}
-export type CLIArgs =  Array<Array<string> | string>
+export type Flags = { [flagName: string]: CLIArgs | boolean | undefined };
+export type CLIArgs = Array<Array<string> | string>;
 export type GenericObject = { [k: string]: any };
 export type PaperOptions = CommandOptions;
-

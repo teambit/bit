@@ -7,16 +7,13 @@ import { Scripts } from '../scripts';
 
 export default class ComposeCmd implements Command {
   name = 'start [id]';
-  description = 'start a dev environment for a workspace or a specific component'
+  description = 'start a dev environment for a workspace or a specific component';
   alias = 'c';
-  group = 'development'
-  shortDescription = ''
-  options = []
+  group = 'development';
+  shortDescription = '';
+  options = [];
 
-  constructor(
-    private workspace: Workspace,
-    private pipes: Scripts
-  ) {}
+  constructor(private workspace: Workspace, private pipes: Scripts) {}
 
   // TODO: remove this ts-ignore
   // @ts-ignore
@@ -36,7 +33,7 @@ export default class ComposeCmd implements Command {
       // eslint-disable-next-line no-console
       // start(data);
 
-      return <Color green>das</Color>
+      return <Color green>das</Color>;
     });
   }
 }

@@ -252,7 +252,7 @@
     "/dist"
   ],
   "lint-staged": {
-    "*.{ts,js,css}": [
+    "*.{ts,js,css,tsx}": [
       "prettier --write",
       "git add"
     ]
