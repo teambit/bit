@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import { BIT_JSONC } from '../../constants';
@@ -8,7 +9,14 @@ import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { AbstractVinyl } from '../../consumer/component/sources';
 
-interface WorkspaceConfigProps {}
+interface WorkspaceConfigProps {
+  $schema: string;
+  $schemaVersion: string;
+  // TODO: define type somehow
+  workspace: {};
+  // TODO: define type somehow
+  components: {};
+}
 
 export default class WorkspaceConfig {
   _path?: string;
@@ -21,6 +29,24 @@ export default class WorkspaceConfig {
 
   set path(configPath: PathOsBased) {
     this._path = configPath;
+  }
+
+  // TODO: define type somehow
+  /**
+   * Return only the configs that are workspace related (without components configs or schema definition)
+   *
+   * @readonly
+   * @memberof WorkspaceConfig
+   */
+  get workspaceConfig() {
+    if (this.data) {
+      return this.data.workspace;
+    }
+    // legacy configs
+    return {
+      defaultScope: this.legacyConfig?.defaultScope,
+      componentsDefaultDirectory: this.legacyConfig?.componentsDefaultDirectory
+    };
   }
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config
@@ -157,5 +183,14 @@ export default class WorkspaceConfig {
    *
    * @memberof WorkspaceConfig
    */
-  getCoreExtensionsConfig(): { [extensionName: string]: any } {}
+  getCoreExtensionsConfig(): { [extensionName: string]: any } {
+    const workspaceConfig = this.workspaceConfig;
+    // TODO: take it somehow from harmony that should get it by the workspace extension manifest
+    const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory'];
+    const workspaceExtProps = pick(workspaceExtPropNames, workspaceConfig);
+
+    const result = omit(workspaceExtPropNames, workspaceConfig);
+    result.workspace = workspaceExtProps;
+    return result;
+  }
 }
