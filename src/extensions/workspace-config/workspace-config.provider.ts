@@ -16,7 +16,6 @@ export default async function provideWorkspaceConfig(
   if (workspaceInfo && workspaceInfo.consumerConfig) {
     const config = workspaceInfo.consumerConfig;
     const coreExtensionsConfig = config.getCoreExtensionsConfig();
-    console.log(coreExtensionsConfig);
     harmony.setExtensionsConfig(coreExtensionsConfig);
     return config;
   }

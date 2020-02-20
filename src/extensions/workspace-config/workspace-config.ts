@@ -23,8 +23,8 @@ export default class WorkspaceConfig {
 
   constructor(private data?: WorkspaceConfigProps, private legacyConfig?: LegacyWorkspaceConfig) {}
 
-  get path(): PathOsBased | undefined {
-    return this._path || this.legacyConfig?.path;
+  get path(): PathOsBased {
+    return this._path || this.legacyConfig?.path || '';
   }
 
   set path(configPath: PathOsBased) {
@@ -129,6 +129,14 @@ export default class WorkspaceConfig {
     return fs.pathExists(this.composeBitJsoncPath(dirPath));
   }
 
+  /**
+   * Load the workspace configuration if it's exist
+   *
+   * @static
+   * @param {PathOsBased} dirPath
+   * @returns {(Promise<WorkspaceConfig | undefined>)}
+   * @memberof WorkspaceConfig
+   */
   static async loadIfExist(dirPath: PathOsBased): Promise<WorkspaceConfig | undefined> {
     const jsoncExist = await this.pathHasBitJsonc(dirPath);
     if (jsoncExist) {
@@ -188,7 +196,6 @@ export default class WorkspaceConfig {
     // TODO: take it somehow from harmony that should get it by the workspace extension manifest
     const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory'];
     const workspaceExtProps = pick(workspaceExtPropNames, workspaceConfig);
-
     const result = omit(workspaceExtPropNames, workspaceConfig);
     result.workspace = workspaceExtProps;
     return result;
