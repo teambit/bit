@@ -6,7 +6,7 @@ import DependencyGraph from '../../../scope/graph/scope-graph';
 import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
 import { createExecutionReporter } from './execution-reporter';
-import { createSubGraph } from './sub-graph';
+import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 
 type Visitor = (component: ResolvedComponent, componentReporter: any) => Promise<any>;
 
@@ -44,10 +44,19 @@ export async function getTopologicalWalker(
       const seederPromise = q
         .add(() => visitor(component, componentReporter).catch(e => e))
         .then(res => {
-          reporter.setResult(seed, res); // -> setRecursive
+          // this seems like a code smell.
+          // should reporter be encapsulated in graph ?
+          reporter.setResult(seed, res);
           graph.removeNode(seed);
+          if (res instanceof Error) {
+            const liabilities = getNeighborsByDirection(seed, graph);
+            liabilities.forEach(element => {
+              graph.removeNode(element);
+            });
+            reporter.setResults(liabilities, new Error(`failed due to ${seed}`));
+          }
 
-          const sources = getSeeders(graph);
+          const sources = getSources(graph);
 
           return sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
         })
@@ -67,9 +76,9 @@ export async function getTopologicalWalker(
 
 /**
  * TODO
- * cache capsules to reuse - DONE
-   cache script execution -
+ *
    proper output.
+   cache script execution -
    stream execution for parsing
    {
       a: ['b','c']

@@ -12,10 +12,10 @@ export function createSubGraph(components: ResolvedComponent[], options: Scripts
         let pre: string[] = [];
         let post: string[] = [];
         if (options.traverse === 'both' || options.traverse === 'dependencies') {
-          pre = getParentsOrChildren(id, graph, 'successors');
+          pre = getNeighborsByDirection(id, graph, 'successors');
         }
         if (options.traverse === 'both' || options.traverse === 'dependents') {
-          post = getParentsOrChildren(id, graph);
+          post = getNeighborsByDirection(id, graph);
         }
         return base.concat(post).concat(pre);
       })
@@ -30,7 +30,11 @@ export function createSubGraph(components: ResolvedComponent[], options: Scripts
   }, graph);
 }
 
-export function getParentsOrChildren(id: string, g: Graph, direction: 'predecessors' | 'successors' = 'predecessors') {
+export function getNeighborsByDirection(
+  id: string,
+  g: Graph,
+  direction: 'predecessors' | 'successors' = 'predecessors'
+): string[] {
   const parents = g[direction](id) || [];
-  return parents.concat(parents.map(pre => flatten(getParentsOrChildren(pre, g, direction))));
+  return parents.concat(parents.map(pre => flatten(getNeighborsByDirection(pre, g, direction))));
 }

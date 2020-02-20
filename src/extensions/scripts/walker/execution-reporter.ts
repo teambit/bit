@@ -38,6 +38,9 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
     setResult(seed: string, result: any[] | Error) {
       state[seed].result = result;
     },
+    setResults(seeds: string[], result: any[] | Error) {
+      seeds.map(seed => this.setResult(seed, result));
+    },
     createUserReporter() {
       userReporter = userReporter || _creatUserReporter(state);
       return userReporter;
