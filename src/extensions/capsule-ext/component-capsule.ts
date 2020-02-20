@@ -55,7 +55,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
 
   // implement this to handle capsules ids.
   get id(): string {
-    return '';
+    return this._bitId.toString();
   }
 
   get containerId(): string {
