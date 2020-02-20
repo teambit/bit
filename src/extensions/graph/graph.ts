@@ -4,6 +4,7 @@ import { InsightsCmd } from './insights.cmd';
 import LegacyGraph from '../../scope/graph/scope-graph';
 import { Workspace } from '../workspace';
 import { ComponentGraph } from './component-graph';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 export type GraphDeps = [ComponentFactory, BitCli, Workspace];
 
@@ -21,9 +22,8 @@ export class Graph {
   ) {}
 
   async build() {
-    // const legacyGraph = await LegacyGraph.buildGraphFromWorkspace(this.workspace.consumer);
-    return ComponentGraph.buildFromWorkspace(this.workspace.consumer, this.componentFactory);
-    // return legacyGraph.isDirected();
+    const Graph = await ComponentGraph.buildFromWorkspace(this.workspace.consumer, this.componentFactory);
+    return Graph;
   }
 
   static async provide(config: {}, [componentFactory, cli, workspace]: GraphDeps) {

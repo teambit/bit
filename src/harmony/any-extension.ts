@@ -1,4 +1,3 @@
-import { Serializable } from 'cleargraph';
 import { Extension } from './index';
 
 /**
@@ -6,7 +5,7 @@ import { Extension } from './index';
  * where extension generics type relevance is low.
  */
 
-export class AnyExtension extends Extension<any> implements Serializable {
+export class AnyExtension extends Extension<any> {
   toString(): string {
     return JSON.stringify(this.config);
   }

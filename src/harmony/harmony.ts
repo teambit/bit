@@ -32,14 +32,14 @@ export default class Harmony<ConfProps> {
    * list all registered extensions
    */
   get extensions() {
-    return this.graph.nodes.map(vertex => vertex.attr);
+    return this.graph.nodes;
   }
 
   /**
    * list all registered extensions ids
    */
   get extensionsIds() {
-    return this.graph.nodes.map(vertex => vertex.id);
+    return [...this.graph.nodesMap().keys()];
   }
 
   setExtensionConfig(extensionId: string, config: any) {

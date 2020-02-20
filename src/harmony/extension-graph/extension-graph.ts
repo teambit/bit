@@ -3,11 +3,11 @@ import { AnyExtension } from '../index';
 import { fromExtension, fromExtensions } from './from-extension';
 import { ExtensionManifest } from '../extension-manifest';
 
-export default class DependencyGraph extends Graph<AnyExtension, string> {
+export default class ExtensionGraph extends Graph<AnyExtension, string> {
   private cache = new Map<string, AnyExtension>();
 
   byExecutionOrder() {
-    return this.toposort(true).map(vertex => vertex.attr);
+    return this.toposort(true);
   }
 
   load(extensions: ExtensionManifest[]) {
@@ -38,7 +38,7 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
   static fromRoot(extension: ExtensionManifest) {
     const { vertices, edges } = fromExtension(extension);
 
-    return new DependencyGraph(vertices, edges);
+    return new ExtensionGraph(vertices, edges);
   }
 
   /**
@@ -46,7 +46,10 @@ export default class DependencyGraph extends Graph<AnyExtension, string> {
    */
   static from(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
-
-    return new DependencyGraph(vertices, edges);
+    let vertexArray: { id: string; node: AnyExtension }[] = [];
+    vertices.forEach(vertex => {
+      vertexArray.push({ id: vertex.name, node: vertex });
+    });
+    return new ExtensionGraph(vertexArray, edges);
   }
 }
