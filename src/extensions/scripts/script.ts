@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 // import { join } from 'path';
+import { join } from 'path';
+import { writeFileSync } from 'fs';
 import { Exec } from '@teambit/capsule';
 import { ComponentCapsule } from '../capsule-ext';
 
@@ -48,7 +50,6 @@ export class Script {
       : await capsule.exec({ command });
     // eslint-disable-next-line no-console
 
-    //
     return exec;
   }
 
@@ -71,7 +72,7 @@ export class Script {
       })
     `;
     try {
-      await capsule.fs.promises.writeFile(containerScriptName, containerScript, { encoding: 'utf8' });
+      writeFileSync(join(capsule.wrkDir, containerScriptName), containerScript, { encoding: 'utf8' });
       return this.executeCmd(capsule, containerScriptName);
     } finally {
       capsule.fs.unlinkSync(containerScriptName);
