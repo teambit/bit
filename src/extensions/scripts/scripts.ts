@@ -68,6 +68,12 @@ export class Scripts {
     return new Pipe(scripts);
   }
 
+  /**
+   * execute a pipeline on a set of components.
+   * @param pipeline name of the pipeline to execute.
+   * @param components set of components to act on.
+   * @param options execution options.
+   */
   async run(pipeline: string, components?: string[], options?: Partial<ScriptsOptions>) {
     const resolvedComponents = await this.buildComponents(components);
     // :TODO check if component config is sufficient before building capsules and resolving deps.
