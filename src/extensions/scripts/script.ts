@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { join } from 'path';
+// import { join } from 'path';
 import { Exec } from '@teambit/capsule';
 import { ComponentCapsule } from '../capsule-ext';
 
@@ -42,16 +42,12 @@ export class Script {
   private async executeCmd(capsule: ComponentCapsule, executable = '') {
     const command = (executable || this.executable).split(' ');
     const exec: Exec = executable
-      ? await capsule.execNode(command[0], command.slice(1))
+      ? await capsule.execNode(command[0], { args: command.slice(1), stdio: [] })
       : await capsule.exec({ command });
     // eslint-disable-next-line no-console
-    exec.stdout.on('data', chunk => console.log(chunk.toString()));
-    // eslint-disable-next-line no-console
-    exec.stderr.on('data', chunk => console.error(chunk.toString()));
 
-    return new Promise(resolve => {
-      exec.on('close', () => resolve());
-    });
+    //
+    return exec;
   }
 
   private async executeModule(capsule: ComponentCapsule) {
@@ -60,13 +56,21 @@ export class Script {
     const containerScript = `
       const userTask = require('${pathToTask}')
       const toExecute = userTask['default']
+      let mainTaskResult = null
       if (typeof toExecute === 'function') {
         toExecute()
+        .then(function (result) {
+          mainTaskResult = result
+        })
       }
+      process.on('beforeExit', function(code) {
+        const toSend = mainTaskResult || {exitCode:code}
+        process.send && process.send(toSend)
+      })
     `;
     try {
       capsule.fs.writeFileSync(containerScriptName, containerScript);
-      await this.executeCmd(capsule, containerScriptName);
+      return this.executeCmd(capsule, containerScriptName);
     } finally {
       capsule.fs.unlinkSync(containerScriptName);
     }

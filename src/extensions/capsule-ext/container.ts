@@ -73,7 +73,8 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     const exec = new ContainerExec();
     const subprocessP = execa.command(execOptions.command.join(' '), {
       shell: true,
-      cwd
+      cwd,
+      stdio: ['ipc']
     });
 
     /* eslint-disable @typescript-eslint/no-non-null-assertion */

@@ -5,10 +5,10 @@ import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
-import { createExecutionReporter } from './execution-reporter';
+import { createExecutionReporter, PipeReporter } from './execution-reporter';
 import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 
-type Visitor = (component: ResolvedComponent, componentReporter: any) => Promise<any>;
+type Visitor = (component: ResolvedComponent, pipeReporter: PipeReporter) => Promise<any | { statusCode: number }>;
 
 export function getGraph(consumer: Consumer) {
   return DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
@@ -40,7 +40,7 @@ export async function getTopologicalWalker(
     const seeders = getSeeders(graph).map(seed => {
       const component = reporter.getResolvedComponent(seed);
       const componentReporter = reporter.getSingleComponentReporter(seed);
-      reporter.sendToQueue(seed);
+      reporter.sentToQueue(seed);
       const seederPromise = q
         .add(() => visitor(component, componentReporter).catch(e => e))
         .then(res => {
@@ -49,16 +49,16 @@ export async function getTopologicalWalker(
           reporter.setResult(seed, res);
           graph.removeNode(seed);
           if (res instanceof Error) {
-            const liabilities = getNeighborsByDirection(seed, graph);
-            liabilities.forEach(element => {
+            const dependents = getNeighborsByDirection(seed, graph);
+            dependents.forEach(element => {
               graph.removeNode(element);
             });
-            reporter.setResults(liabilities, new Error(`failed due to ${seed}`));
+            reporter.setResults(dependents, new Error(`failed due to ${seed}`));
           }
 
           const sources = getSources(graph);
 
-          return sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
+          sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
         })
         .catch(err => {
           reporter.setResult(seed, err);

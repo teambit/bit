@@ -69,13 +69,14 @@ export class Scripts {
   }
 
   async run(pipeline: string, components?: string[], options?: Partial<ScriptsOptions>) {
+    console.log('yp');
     const resolvedComponents = await this.buildComponents(components);
     // :TODO check if component config is sufficient before building capsules and resolving deps.
     const opts = Object.assign(DEFAULT_OPTIONS, options);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
-
-    return walk(async ({ component, capsule }) => {
+    console.log('before walk');
+    return walk(async ({ component, capsule }, pipeReporter) => {
       const config = component.config.extensions.scripts || {};
       // :TODO move both logs to a proper api for reporting missing pipes
       // eslint-disable-next-line no-console
@@ -84,9 +85,9 @@ export class Scripts {
         return console.warn(`script pipe "${pipeline}" was not defined for component: ${component.id.toString()}`);
       const pipe = this.pipe(config[pipeline]);
       // eslint-disable-next-line no-console
-      console.log(`building component ${component.id.toString()}...`);
+      // console.log(`building component ${component.id.toString()}...`);
 
-      return pipe.run(capsule);
+      return pipe.run(capsule, pipeReporter);
     });
   }
 

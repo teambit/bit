@@ -1,11 +1,17 @@
+import { Writable } from 'stream';
 import { ResolvedComponent } from '../../workspace/resolved-component';
+
+export type PipeReporter = {
+  out: Writable;
+  err: Writable;
+};
 
 type ExecutionState = {
   [k: string]: {
     component: ResolvedComponent;
     sentToQueue: boolean;
     result: null | any;
-    reporter: any;
+    reporter: PipeReporter;
   };
 };
 
@@ -15,8 +21,13 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
       component: curr,
       sentToQueue: false,
       result: null,
-      reporter: {}
+      reporter: {
+        out: new Writable(),
+        err: new Writable()
+      }
     };
+
+    process.stderr;
     return accum;
   }, {} as ExecutionState);
 
@@ -32,7 +43,7 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
     getSingleComponentReporter(seed: string) {
       return state[seed].reporter;
     },
-    sendToQueue(seed: string) {
+    sentToQueue(seed: string) {
       state[seed].sentToQueue = true;
     },
     setResult(seed: string, result: any[] | Error) {
@@ -51,3 +62,5 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
 function _creatUserReporter(state: ExecutionState) {
   return {};
 }
+
+process.stdout;
