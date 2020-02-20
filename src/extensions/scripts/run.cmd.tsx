@@ -31,8 +31,20 @@ export class RunCmd implements Command {
   async render([pipeline, components]: CLIArgs, { concurrency }: Flags) {
     const concurrencyN = concurrency && typeof concurrency === 'string' ? Number.parseInt(concurrency) : 5;
     const actualComps = typeof components === 'string' ? [components] : components;
-    await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN });
-
-    return <div />;
+    const execute = await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN });
+    const results = await execute.run();
+    // todo
+    return (
+      <div>
+        ------------------------------------------------
+        {results.map(res => (
+          <div key={res.component.component.id._legacy.toString()}>
+            <div>{res.component.component.id._legacy.toString()}</div>
+            <div>started:{res.started}</div>
+            ------------------------------------------------
+          </div>
+        ))}
+      </div>
+    );
   }
 }

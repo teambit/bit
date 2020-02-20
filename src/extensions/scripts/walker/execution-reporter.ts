@@ -31,8 +31,6 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
     return accum;
   }, {} as ExecutionState);
 
-  let userReporter;
-
   return {
     shouldExecute(seed: string) {
       return !state[seed].sentToQueue && !state[seed].result;
@@ -53,14 +51,21 @@ export function createExecutionReporter(comps: ResolvedComponent[]) {
       seeds.map(seed => this.setResult(seed, result));
     },
     createUserReporter() {
-      userReporter = userReporter || _creatUserReporter(state);
-      return userReporter;
+      return _creatUserReporter(state);
     }
   };
 }
 
 function _creatUserReporter(state: ExecutionState) {
-  return {};
+  return {
+    getResults: () => {
+      return Object.values(state).map(obj => ({
+        component: obj.component,
+        result: obj.result,
+        started: obj.sentToQueue
+      }));
+    }
+  };
 }
 
 process.stdout;

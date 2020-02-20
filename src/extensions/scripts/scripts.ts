@@ -69,14 +69,14 @@ export class Scripts {
   }
 
   async run(pipeline: string, components?: string[], options?: Partial<ScriptsOptions>) {
-    console.log('yp');
     const resolvedComponents = await this.buildComponents(components);
     // :TODO check if component config is sufficient before building capsules and resolving deps.
     const opts = Object.assign(DEFAULT_OPTIONS, options);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
-    console.log('before walk');
-    return walk(async ({ component, capsule }, pipeReporter) => {
+
+    const visitor = async ({ component, capsule }, pipeReporter) => {
+      debugger;
       const config = component.config.extensions.scripts || {};
       // :TODO move both logs to a proper api for reporting missing pipes
       // eslint-disable-next-line no-console
@@ -88,8 +88,17 @@ export class Scripts {
       // console.log(`building component ${component.id.toString()}...`);
 
       return pipe.run(capsule, pipeReporter);
-    });
+    };
+    return {
+      async run() {
+        await walk(visitor);
+        return reporter.createUserReporter().getResults();
+      },
+      reporter: reporter.createUserReporter()
+    };
   }
+  // add API for compile extension
+  // should support custom map of component and scripts.
 
   /**
    * provider method for the scripts extension.

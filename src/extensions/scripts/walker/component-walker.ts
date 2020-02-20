@@ -42,7 +42,11 @@ export async function getTopologicalWalker(
       const componentReporter = reporter.getSingleComponentReporter(seed);
       reporter.sentToQueue(seed);
       const seederPromise = q
-        .add(() => visitor(component, componentReporter).catch(e => e))
+        .add(() =>
+          visitor(component, componentReporter).catch(e => {
+            return e;
+          })
+        )
         .then(res => {
           // this seems like a code smell.
           // should reporter be encapsulated in graph ?
