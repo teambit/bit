@@ -5,11 +5,11 @@ import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
 import { Scripts } from '../scripts';
 
-export type ServeConfig = {};
+export type ComposerConfig = {};
 
-export type ServeDeps = [Watch, BitCli, Workspace, Scripts];
+export type ComposerDeps = [Watch, BitCli, Workspace, Scripts];
 
-export async function provideComposer(config: ServeConfig, [watch, cli, workspace, scripts]: ServeDeps) {
+export async function provideComposer(config: ComposerConfig, [watch, cli, workspace, scripts]: ComposerDeps) {
   // @ts-ignore
   cli.register(new ComposeCmd(workspace, scripts));
   return new Composer(watch);

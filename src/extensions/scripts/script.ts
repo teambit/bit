@@ -55,7 +55,7 @@ export class Script {
   }
 
   private async executeModule(capsule: ComponentCapsule) {
-    const containerScriptName = join(capsule.wrkDir, `__bit-run-container.js`);
+    const containerScriptName = '__bit-run-container.js';
     const pathToTask = this.modulePath!.startsWith('/') ? this.modulePath!.slice(1) : this.modulePath;
     const containerScript = `
       const userTask = require('${pathToTask}')
@@ -65,10 +65,10 @@ export class Script {
       }
     `;
     try {
-      await capsule.fs.promises.writeFile(containerScriptName, containerScript);
+      capsule.fs.writeFileSync(containerScriptName, containerScript);
       await this.executeCmd(capsule, containerScriptName);
     } finally {
-      await capsule.fs.promises.unlink(containerScriptName);
+      capsule.fs.unlinkSync(containerScriptName);
     }
   }
 }

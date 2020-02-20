@@ -143,7 +143,6 @@ export default class ComponentLoader {
       );
       addExtensionsAsDevDependencies(component);
       updateDependenciesVersions(this.consumer, component);
-      addExtensionsAsDevDependencies(component);
     };
     await loadDependencies();
     return component;
