@@ -1,40 +1,50 @@
-type ReporterCache = { [id: string]: Reporter };
+import { ResolvedComponent } from '../../workspace/resolved-component';
 
-export type Reporter = {
-  pipe: Promise<number | 'Propagation'>;
-  stdout: any;
-  stderr: any;
+type ExecutionState = {
+  [k: string]: {
+    component: ResolvedComponent;
+    sentToQueue: boolean;
+    result: null | any;
+    reporter: any;
+  };
 };
 
-export type FailStatus = 'Dependency';
+export function createExecutionReporter(comps: ResolvedComponent[]) {
+  const state: ExecutionState = comps.reduce((accum, curr) => {
+    accum[curr.component.id._legacy.toString()] = {
+      component: curr,
+      sentToQueue: false,
+      result: null,
+      reporter: {}
+    };
+    return accum;
+  }, {} as ExecutionState);
 
-export class ExecutionReporter {
-  constructor(private cache: ReporterCache = {}) {}
+  let userReporter;
 
-  keys() {
-    return Object.keys(this.cache);
-  }
+  return {
+    shouldExecute(seed: string) {
+      return !state[seed].sentToQueue && !state[seed].result;
+    },
+    getResolvedComponent(seed: string) {
+      return state[seed].component;
+    },
+    getSingleComponentReporter(seed: string) {
+      return state[seed].reporter;
+    },
+    sendToQueue(seed: string) {
+      state[seed].sentToQueue = true;
+    },
+    setResult(seed: string, result: any[] | Error) {
+      state[seed].result = result;
+    },
+    createUserReporter() {
+      userReporter = userReporter || _creatUserReporter(state);
+      return userReporter;
+    }
+  };
+}
 
-  values() {
-    return Object.values(this.cache);
-  }
-
-  get(componentId: string) {
-    return this.cache[componentId];
-  }
-
-  set(componentId: string, value: Reporter) {
-    this.cache[componentId] = value;
-    return this;
-  }
-
-  all() {
-    return Promise.all(Object.values(this.cache).map(val => val.pipe));
-  }
-
-  mapEntries(visit: ([k, obj]: [string, Reporter]) => any[]) {
-    Object.entries(this.cache).map(([key, obj]) => {
-      return visit([key, obj]);
-    });
-  }
+function _creatUserReporter(state: ExecutionState) {
+  return {};
 }

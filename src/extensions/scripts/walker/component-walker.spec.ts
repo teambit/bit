@@ -7,7 +7,7 @@ import { ResolvedComponent } from '../../workspace/resolved-component';
 import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
 
-describe.only('component-walker', () => {
+describe('component-walker', () => {
   it('sanity', async function() {
     const testCase: GraphTestCase = {
       graph: {
