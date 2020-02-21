@@ -40,7 +40,8 @@ export class Pipe {
       });
       exec.on('message', msg => {
         console.log('Got Message from ChildProcess', msg);
-        if (msg && !('exitCode' in msg)) message = msg;
+        // this is the return value of the script function running on the capsule
+        message = msg;
       });
       exec.stdout.on('data', data => {
         console.log('Got stdout from ChildProcess', data.toString());

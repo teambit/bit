@@ -58,19 +58,21 @@ export class Script {
     const containerScriptName = '__bit-run-container.js';
     const pathToTask = this.modulePath!.startsWith('/') ? this.modulePath!.slice(1) : this.modulePath;
     const containerScript = `
-      const userTask = require('${pathToTask}')
-      const toExecute = userTask.default
-      let mainTaskResult = null
-      if (typeof toExecute === 'function') {
-        toExecute()
-        .then(function (result) {
-          mainTaskResult = result
-        })
-      }
-      process.on('beforeExit', function(code) {
-        const toSend = mainTaskResult || {exitCode:code}
-        process.send && process.send(toSend)
-      })
+const userTask = require('${pathToTask}')
+const toExecute = userTask.default || userTask;
+if (typeof toExecute !== 'function') {
+  throw new Error('script "${pathToTask}" has no default function to run');
+}
+const getPromiseResults = () => {
+  const executed = toExecute();
+  return executed && executed.then ? executed : Promise.resolve(executed);
+};
+getPromiseResults().then(userTaskResult => {
+  process.on('beforeExit', (code) => {
+    const toSend = userTaskResult || { exitCode: code };
+    process.send && process.send(toSend);
+  });
+});
     `;
     try {
       capsule.fs.writeFileSync(containerScriptName, containerScript, { encoding: 'utf8' });
