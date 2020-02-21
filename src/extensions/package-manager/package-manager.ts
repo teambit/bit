@@ -91,13 +91,13 @@ export default class PackageManager {
       pipeOutput(child);
       await child;
       return null;
-    } else if (packageManager === 'npm') {
+    }
+    if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
       pipeOutput(child);
       await child;
       return null;
-    } else {
-      throw new Error(`unsupported package manager ${packageManager}`);
     }
+    throw new Error(`unsupported package manager ${packageManager}`);
   }
 }

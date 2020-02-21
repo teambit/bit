@@ -6,8 +6,6 @@ export type PMConfig = {
   packageManager: string;
 };
 
-export type PMDeps = [];
-
-export async function providePackageManager(config: PMConfig, []: PMDeps) {
+export async function providePackageManager(config: PMConfig) {
   return new PackageManager(config.packageManager);
 }

@@ -20,7 +20,7 @@ export default class ScopeHelper {
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
-  packageManager: string = 'npm';
+  packageManager = 'npm';
   constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
