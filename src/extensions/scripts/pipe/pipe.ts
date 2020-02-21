@@ -1,4 +1,5 @@
 import pMapSeries from 'p-map-series';
+import pEvent from 'p-event';
 import { Script } from '../script';
 import { ComponentCapsule } from '../../capsule-ext';
 import { PipeReporter } from '../walker/execution-reporter';
@@ -19,7 +20,10 @@ export class Pipe {
     // should perform caching -> SHOULD BE series and nor Promise.all
     const results = pMapSeries(this.scripts, async script => {
       const exec = await script.run(capsule);
-      return this.runExec(exec);
+      const messageResult = await pEvent(exec, 'message');
+      // qballer, execResult has the childProcess you can pipe.
+      const execResult = await this.waitForProcessToExit(exec);
+      return messageResult;
     });
 
     // exec.stdout.pipe(reporter.out);
@@ -29,7 +33,7 @@ export class Pipe {
     return results;
   }
 
-  runExec(exec) {
+  waitForProcessToExit(exec) {
     // eslint-disable-next-line prefer-rest-params
     return new Promise((resolve, reject) => {
       exec.stdout.on('close', () => {
@@ -38,11 +42,6 @@ export class Pipe {
       });
       exec.stdout.on('data', data => {
         console.log('Got stdout from ChildProcess', data.toString());
-      });
-      // @ts-ignore
-      exec.on('message', msg => {
-        console.log('Got Message from childProcess', msg);
-        return resolve(msg);
       });
       exec.stdout.on('error', err => {
         return reject(err);
