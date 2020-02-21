@@ -62,7 +62,7 @@ export default class ScopeHelper {
 
   initWorkspace(workspacePath?: string) {
     // return this.command.runCmd('bit init -N', workspacePath);
-    return this.command.runCmd('bit init', workspacePath);
+    return this.command.runCmd('bit init -p npm', workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {

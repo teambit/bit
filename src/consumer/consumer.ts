@@ -803,6 +803,7 @@ export default class Consumer {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const config = await WorkspaceConfig.ensure(consumerPath);
+    config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,
