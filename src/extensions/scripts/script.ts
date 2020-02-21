@@ -25,7 +25,6 @@ export class Script {
   async run(capsule: ComponentCapsule) {
     // if (this.modulePath) return capsule.run(this.modulePath);
     console.log('script.run');
-    debugger;
     return this.modulePath ? this.executeModule(capsule) : this.executeCmd(capsule);
   }
 
@@ -45,10 +44,12 @@ export class Script {
 
   private async executeCmd(capsule: ComponentCapsule, executable = '') {
     const command = (executable || this.executable).split(' ');
+    // const exec: Exec = executable
+    //   ? await capsule.execNode(command[0], { args: command.slice(1), stdio: ['ipc'] })
+    //   : await capsule.exec({ command });
     const exec: Exec = executable
-      ? await capsule.execNode(command[0], { args: command.slice(1), stdio: ['ipc'] })
+      ? await capsule.execNode(command[0], command.slice(1))
       : await capsule.exec({ command });
-    // eslint-disable-next-line no-console
 
     return exec;
   }
@@ -72,10 +73,10 @@ export class Script {
       })
     `;
     try {
-      writeFileSync(join(capsule.wrkDir, containerScriptName), containerScript, { encoding: 'utf8' });
+      capsule.fs.writeFileSync(containerScriptName, containerScript, { encoding: 'utf8' });
       return this.executeCmd(capsule, containerScriptName);
     } finally {
-      capsule.fs.unlinkSync(containerScriptName);
+      // capsule.fs.unlinkSync(containerScriptName);
     }
   }
 }

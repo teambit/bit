@@ -76,7 +76,6 @@ export class Scripts {
     const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
 
     const visitor = async ({ component, capsule }, pipeReporter) => {
-      debugger;
       const config = component.config.extensions.scripts || {};
       // :TODO move both logs to a proper api for reporting missing pipes
       // eslint-disable-next-line no-console
