@@ -7,6 +7,8 @@ import { ExtensionManifest, Harmony } from '../../harmony';
 import { ScriptRegistry as Registry } from './registry';
 import { Script } from './script';
 import { ScriptsOptions } from './scripts-options';
+import { ResolvedComponent } from '../workspace/resolved-component';
+import { IdsAndScripts } from './ids-and-scripts';
 
 export type ScriptDeps = [Paper, Workspace];
 
@@ -96,8 +98,26 @@ export class Scripts {
       reporter: reporter.createUserReporter()
     };
   }
-  // add API for compile extension
-  // should support custom map of component and scripts.
+
+  async runMultiple(
+    idsAndScripts: IdsAndScripts,
+    resolvedComponents: ResolvedComponent[],
+    options?: Partial<ScriptsOptions>
+  ) {
+    const opts = Object.assign(DEFAULT_OPTIONS, options);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
+    const visitor = async ({ component, capsule }: ResolvedComponent, pipeReporter) => {
+      const scriptsNames = idsAndScripts.getValueIgnoreVersion(component.id._legacy);
+      if (!scriptsNames) return null;
+      // @todo: fix this mess. it's only a POC.
+      const scripts = scriptsNames.map(s => this.registry.get(s));
+      const pipe = new Pipe(scripts);
+      return pipe.run(capsule, pipeReporter);
+    };
+    await walk(visitor);
+    return reporter.createUserReporter().getResults();
+  }
 
   /**
    * provider method for the scripts extension.
