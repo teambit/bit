@@ -41,6 +41,7 @@ export class RunCmd implements Command {
           <div key={res.component.component.id._legacy.toString()}>
             <div>{res.component.component.id._legacy.toString()}</div>
             <div>started:{res.started}</div>
+            <div>result:{res.result}</div>
             ------------------------------------------------
           </div>
         ))}

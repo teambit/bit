@@ -38,18 +38,17 @@ export class Pipe {
         return resolve(arguments[0]);
       });
       exec.stdout.on('data', data => {
-        console.log('Got Data', data.toString());
+        console.log('Got stdout from ChildProcess', data.toString());
       });
       // @ts-ignore
-      exec.stdout.on('message', msg => {
-        console.log('Got Message', msg);
+      exec.on('message', msg => {
+        console.log('Got Message from childProcess', msg);
+        return resolve(msg);
       });
       exec.stdout.on('error', err => {
-        console.log('Got Error', err);
         return reject(err);
       });
       exec.stderr.on('error', err => {
-        console.log('Got Error', err);
         return reject(err);
       });
     });

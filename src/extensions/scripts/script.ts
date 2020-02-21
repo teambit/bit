@@ -48,7 +48,7 @@ export class Script {
     //   ? await capsule.execNode(command[0], { args: command.slice(1), stdio: ['ipc'] })
     //   : await capsule.exec({ command });
     const exec: Exec = executable
-      ? await capsule.execNode(command[0], command.slice(1))
+      ? await capsule.execNode(command[0], { args: command.slice(1), stdio: [null, null, null, 'ipc'] })
       : await capsule.exec({ command });
 
     return exec;
