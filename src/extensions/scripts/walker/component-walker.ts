@@ -62,7 +62,7 @@ export async function getTopologicalWalker(
 
           const sources = getSources(graph);
 
-          sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
+          return sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
         })
         .catch(err => {
           reporter.setResult(seed, err);

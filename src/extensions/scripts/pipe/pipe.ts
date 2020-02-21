@@ -1,3 +1,4 @@
+import pMapSeries from 'p-map-series';
 import { Script } from '../script';
 import { ComponentCapsule } from '../../capsule-ext';
 import { PipeReporter } from '../walker/execution-reporter';
@@ -16,12 +17,10 @@ export class Pipe {
    */
   async run(capsule: ComponentCapsule, reporter: PipeReporter) {
     // should perform caching -> SHOULD BE series and nor Promise.all
-    const results = await Promise.all(
-      this.scripts.map(async script => {
-        const exec = await script.run(capsule);
-        return this.runExec(exec);
-      })
-    );
+    const results = pMapSeries(this.scripts, async script => {
+      const exec = await script.run(capsule);
+      return this.runExec(exec);
+    });
 
     // exec.stdout.pipe(reporter.out);
     // exec.stderr.pipe(reporter.err);

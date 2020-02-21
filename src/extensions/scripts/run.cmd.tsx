@@ -33,6 +33,14 @@ export class RunCmd implements Command {
     const actualComps = typeof components === 'string' ? [components] : components;
     const execute = await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN });
     const results = await execute.run();
+    const formatResult = result => {
+      if (!result) return '';
+      try {
+        return JSON.stringify(result, undefined, 2);
+      } catch (err) {
+        return result.toString();
+      }
+    };
     // todo
     return (
       <div>
@@ -41,7 +49,7 @@ export class RunCmd implements Command {
           <div key={res.component.component.id._legacy.toString()}>
             <div>{res.component.component.id._legacy.toString()}</div>
             <div>started:{res.started}</div>
-            <div>result:{res.result}</div>
+            <div>result:{formatResult(res.result)}</div>
             ------------------------------------------------
           </div>
         ))}
