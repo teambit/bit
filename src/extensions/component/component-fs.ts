@@ -1,3 +1,4 @@
+import path from 'path';
 import { MemoryFS } from '@teambit/any-fs';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { eol } from '../../utils';
@@ -20,7 +21,9 @@ export default class ComponentFS extends MemoryFS {
   static fromVinyls(files: AbstractVinyl[]) {
     const fs = new ComponentFS();
     files.forEach(file => {
-      fs.mkdirpSync(`/${file.relativeDir}`);
+      let dirPath = file.relativeDir;
+      if (!dirPath.startsWith('/')) dirPath = path.join('/', dirPath);
+      fs.mkdirpSync(dirPath);
       fs.writeFileSync(`/${file.relative}`, eol.auto(file.contents));
     });
 

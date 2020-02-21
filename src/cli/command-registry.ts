@@ -110,16 +110,15 @@ export function execAction(command, concrete, args): Promise<any> {
         return logger.exitAfterFlush(code, command.name);
       })
       .catch(err => {
-        logger
-          .error
-          // `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-          //   err,
-          //   Object.getOwnPropertyNames(err)
-          // )}`
-          ();
+        logger.error`got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+          err,
+          Object.getOwnPropertyNames(err)
+        )}`;
         loader.off();
         const errorHandled = defaultHandleError(err) || command.handleError(err);
         if (command.private) return serializeErrAndExit(err, command.name);
+        // uncomment this to see the entire error object on the console
+        // console.log(err);
         if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
         return logErrAndExit(err, command.name);
       })

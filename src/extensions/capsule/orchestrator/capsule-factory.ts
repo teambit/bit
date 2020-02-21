@@ -21,7 +21,8 @@ export default class CapsuleFactory<T extends Capsule<Exec, AnyFS>> extends Even
   }
 
   async create(config: BitContainerConfig): Promise<Resource<T>> {
-    const capsule: T = await this.createFn(this.bitContainerFactory, new NodeFS(), config);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const capsule: T = await this.createFn(this.bitContainerFactory, new NodeFS(config.wrkDir!), config);
     await capsule.start();
     return new CapsuleResource(capsule, config);
   }

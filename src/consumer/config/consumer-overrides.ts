@@ -11,6 +11,7 @@ import { DEPENDENCIES_FIELDS } from '../../constants';
 export type ConsumerOverridesOfComponent = {
   dependencies?: Record<string, any>;
   devDependencies?: Record<string, any>;
+  extensions?: Record<string, any>;
   peerDependencies?: Record<string, any>;
   env?: Record<string, any>;
   propagate?: boolean; // whether propagate to a more general rule,
@@ -20,7 +21,7 @@ export type ConsumerOverridesOfComponent = {
 
 export type ConsumerOverridesConfig = { [key: string]: ConsumerOverridesOfComponent };
 export const overridesForbiddenFields = ['name', 'main', 'version', 'bit'];
-export const overridesBitInternalFields = ['propagate', 'exclude', 'env', 'defaultScope'];
+export const overridesBitInternalFields = ['propagate', 'exclude', 'env', 'defaultScope', 'extensions'];
 export const nonPackageJsonFields = [...DEPENDENCIES_FIELDS, ...overridesBitInternalFields];
 
 export default class ConsumerOverrides {

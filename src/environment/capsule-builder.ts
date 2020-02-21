@@ -1,5 +1,5 @@
 import path from 'path';
-import { flatten, filter, uniq, concat, map } from 'ramda';
+import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import os from 'os';
 import hash from 'object-hash';
 import v4 from 'uuid';
@@ -80,18 +80,31 @@ export default class CapsuleBuilder {
 
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
+    const before = await getPackageJSONInCapsules(capsules);
+
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+
+    const after = await getPackageJSONInCapsules(capsules);
+
+    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
+
     if (actualCapsuleOptions.installPackages) {
       if (actualCapsuleOptions.packageManager) {
-        await this.packageManagerInstance.runInstall(capsules, { packageManager: actualCapsuleOptions.packageManager });
+        await this.packageManagerInstance.runInstall(toInstall, {
+          packageManager: actualCapsuleOptions.packageManager
+        });
       } else {
-        await this.packageManagerInstance.runInstall(capsules);
+        await this.packageManagerInstance.runInstall(toInstall);
       }
     }
     return capsuleList;
   }
 
-  async createCapsule(bitId: BitId, capsuleOptions?: CapsuleOptions, orchestrationOptions?: Options) {
+  async createCapsule(
+    bitId: BitId,
+    capsuleOptions?: CapsuleOptions,
+    orchestrationOptions?: Options
+  ): Promise<ComponentCapsule> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
@@ -135,7 +148,7 @@ export default class CapsuleBuilder {
       writeBitDependencies: true,
       createNpmLinkFiles: false,
       saveDependenciesAsComponents: false,
-      writeDists: true,
+      writeDists: false,
       installNpmPackages: false,
       installPeerDependencies: false,
       addToRootPackageJson: false,
@@ -145,7 +158,7 @@ export default class CapsuleBuilder {
       isolated: true,
       capsulePaths
     };
-    // componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
+    componentsWithDependencies.map(cmp => this._manipulateDir(cmp));
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter._populateComponentsFilesToWrite();
     componentsWithDependencies.forEach(componentWithDependencies => {
@@ -162,10 +175,10 @@ export default class CapsuleBuilder {
     });
     // write data to capsule
     await Promise.all(
-      manyComponentsWriter.writtenComponents.map(async c => {
-        const capsule = capsuleList.getValue(c.id);
+      manyComponentsWriter.writtenComponents.map(async componentToWrite => {
+        const capsule = capsuleList.getValue(componentToWrite.id);
         if (!capsule) return;
-        await c.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
+        await componentToWrite.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
     return manyComponentsWriter.writtenComponents;
@@ -195,4 +208,21 @@ export default class CapsuleBuilder {
     };
     return ret;
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function getPackageJSONInCapsules(capsules: ComponentCapsule[]) {
+  const resolvedJsons = await Promise.all(
+    capsules.map(async capsule => {
+      const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+      let capsuleJson: any = null;
+      try {
+        capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
+        return JSON.parse(capsuleJson);
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
+      return capsuleJson;
+    })
+  );
+  return resolvedJsons;
 }
