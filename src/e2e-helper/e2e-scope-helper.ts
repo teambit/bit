@@ -20,6 +20,7 @@ export default class ScopeHelper {
   cache: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
+  packageManager: string = 'npm';
   constructor(debugMode: boolean, scopes: ScopesData, commandHelper: CommandHelper, fsHelper: FsHelper) {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
@@ -51,6 +52,10 @@ export default class ScopeHelper {
     fs.emptyDirSync(this.scopes.localPath);
   }
 
+  usePackageManager(packageManager: string) {
+    this.packageManager = packageManager;
+  }
+
   reInitLocalScope() {
     this.cleanLocalScope();
     this.initLocalScope();
@@ -62,7 +67,7 @@ export default class ScopeHelper {
 
   initWorkspace(workspacePath?: string) {
     // return this.command.runCmd('bit init -N', workspacePath);
-    return this.command.runCmd('bit init -p npm', workspacePath);
+    return this.command.runCmd(`bit init -p ${this.packageManager}`, workspacePath);
   }
 
   async initInteractive(inputs: InteractiveInputs) {

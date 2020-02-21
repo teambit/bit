@@ -43,7 +43,7 @@ export default class InstallCmd implements Command {
       await this.packageManager.runInstallInFolder(process.cwd(), {
         packageManager: packageManagerName
       })
-      return <Color green>Successfully installed {isolatedEnvs.length} components</Color>
+      return <Color green>Successfully installed {isolatedEnvs.length} component(s)</Color>
     } catch (e) {
       throw new FailedToInstall(e.message)
     }
