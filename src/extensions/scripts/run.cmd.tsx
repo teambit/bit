@@ -33,6 +33,7 @@ export class RunCmd implements Command {
     const actualComps = typeof components === 'string' ? [components] : components;
     const execute = await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN });
     const results = await execute.run();
+    // @todo: this is hack to easily show the results
     const formatResult = result => {
       if (!result) return '';
       try {

@@ -86,7 +86,7 @@ export class Scripts {
         return console.warn(`script pipe "${pipeline}" was not defined for component: ${component.id.toString()}`);
       const pipe = this.pipe(config[pipeline]);
       // eslint-disable-next-line no-console
-      // console.log(`building component ${component.id.toString()}...`);
+      console.log(`building component ${component.id.toString()}...`);
 
       return pipe.run(capsule, pipeReporter);
     };
@@ -99,6 +99,11 @@ export class Scripts {
     };
   }
 
+  /**
+   * run different scripts for different ids.
+   * an example is the compile extension. it can't run the same specific compiler script for all
+   * components as they may differ in their compiler settings.
+   */
   async runMultiple(
     idsAndScripts: IdsAndScripts,
     resolvedComponents: ResolvedComponent[],

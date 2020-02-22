@@ -67,5 +67,3 @@ function _creatUserReporter(state: ExecutionState) {
     }
   };
 }
-
-process.stdout;

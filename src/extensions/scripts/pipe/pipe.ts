@@ -25,7 +25,7 @@ export class Pipe {
 
     // exec.stdout.pipe(reporter.out);
     // exec.stderr.pipe(reporter.err);
-    // TODO: qballer - fix piping, not urgent for david.
+    // TODO: qballer - fix piping
 
     return results;
   }
