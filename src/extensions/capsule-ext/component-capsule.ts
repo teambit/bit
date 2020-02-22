@@ -3,7 +3,7 @@ import { Capsule, Exec, Console, State } from '@teambit/capsule';
 import { NodeFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
-import FsContainer from './container';
+import FsContainer, { BitExecOption } from './container';
 import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
 
@@ -97,9 +97,11 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     //   // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
     //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
     // };
-    return librarian.runModule(executable, { args, cwd: this.wrkDir });
+    return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
   }
-
+  async typedExec(opts: BitExecOption) {
+    return this.container.exec(opts);
+  }
   outputFile(file: string, data: any, options: any): Promise<any> {
     return this.container.outputFile(file, data, options);
   }
