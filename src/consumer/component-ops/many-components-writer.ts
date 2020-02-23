@@ -149,9 +149,11 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer && this.consumer.config.overrides.hasChanged) {
-      const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
-      dataToPersist.addManyFiles(jsonFiles);
+    if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
+      const jsonFile = await this.consumer.config.toVinyl(this.consumer.getPath());
+      if (jsonFile) {
+        dataToPersist.addFile(jsonFile);
+      }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addBasePath(this.basePath);

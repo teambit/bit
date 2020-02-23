@@ -249,7 +249,7 @@ export default class WorkspaceConfig {
     this.legacyConfig?.write({ workspaceDir });
   }
 
-  private async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
+  async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
     if (this.data) {
       const jsonStr = stringify(this.data, undefined, 2);
       const base = workspaceDir;
