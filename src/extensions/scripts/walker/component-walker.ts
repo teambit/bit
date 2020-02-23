@@ -33,7 +33,6 @@ export async function getTopologicalWalker(
   };
 
   async function walk(visitor: Visitor) {
-    debugger;
     if (!graph.nodes().length) {
       return;
     }
