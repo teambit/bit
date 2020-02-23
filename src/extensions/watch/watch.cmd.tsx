@@ -6,11 +6,11 @@ export default class ServeCommand implements Command {
   name = 'watch [id...]';
   description = 'watch a set of components';
   alias = '';
-  group = ''
-  shortDescription = ''
-  options = []
+  group = '';
+  shortDescription = '';
+  options = [];
 
   async render() {
-    return <Color>hi amit</Color>
+    return <Color>hi amit</Color>;
   }
 }

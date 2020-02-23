@@ -1,108 +1,88 @@
 import { Graph } from 'graphlib';
 import PQueue from 'p-queue';
-import { flatten, uniq } from 'ramda';
 import { ResolvedComponent } from '../../workspace/resolved-component';
 import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
+import { createExecutionReporter, PipeReporter } from './execution-reporter';
+import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 
-export type CacheWalk = {
-  [k: string]: {
-    state: Promise<any> | 'init';
-    resolvedComponent: ResolvedComponent;
-  };
-};
+type Visitor = (component: ResolvedComponent, pipeReporter: PipeReporter) => Promise<any | { statusCode: number }>;
+
 export function getGraph(consumer: Consumer) {
   return DependencyGraph.buildGraphFromWorkspace(consumer, false, true);
 }
+
 export async function getTopologicalWalker(
-  input: ResolvedComponent[],
+  seedComponents: ResolvedComponent[],
   options: ScriptsOptions,
   workspace: Workspace,
   getGraphFn = getGraph
 ) {
-  const graph = await createSubGraph(input, workspace.consumer, options, getGraphFn);
+  const workspaceGraph = await getGraphFn(workspace.consumer);
+  const graph = createSubGraph(seedComponents, options, workspaceGraph);
   const comps = await workspace.load(graph.nodes());
-  const reporter: CacheWalk = comps.reduce((accum, comp) => {
-    accum[comp.component.id.toString()] = {
-      state: 'init',
-      resolvedComponent: comp
-    };
-    return accum;
-  }, {} as CacheWalk);
-
   const q = new PQueue({ concurrency: options.concurrency });
-  const get = (ref: CacheWalk, g: Graph, action: 'sources' | 'nodes' = 'sources') =>
-    g[action]()
-      .filter(src => ref[src].state === 'init')
-      .map(src => ref[src].resolvedComponent);
+  const reporter = createExecutionReporter(comps);
 
-  function walk(visitor: (comp: ResolvedComponent) => Promise<any>) {
+  const getSources = (g: Graph) => g.sources().filter(seed => !reporter.shouldExecute(seed));
+  const getSeeders = (g: Graph) => {
+    const sources = getSources(g);
+    return sources.length ? sources : [g.nodes()[0]].filter(v => v);
+  };
+
+  async function walk(visitor: Visitor) {
     if (!graph.nodes().length) {
-      return Promise.resolve([]);
+      return;
     }
-    const seeders: ResolvedComponent[] = graph.sources().length
-      ? get(reporter, graph)
-      : [get(reporter, graph, 'nodes')[0]].filter(v => v);
 
-    const seedersPromises = seeders.map(seed => {
-      const id = seed.component.id.toString();
-      reporter[id].state = q
-        .add(() => visitor(seed))
-        .catch(r => r)
+    const seeders = getSeeders(graph).map(seed => {
+      const component = reporter.getResolvedComponent(seed);
+      const componentReporter = reporter.getSingleComponentReporter(seed);
+      reporter.sentToQueue(seed);
+      const seederPromise = q
+        .add(() =>
+          visitor(component, componentReporter).catch(e => {
+            return e;
+          })
+        )
         .then(res => {
-          // should cache activity
-          graph.removeNode(id);
-          const sources = get(reporter, graph);
-          return sources.length || (!q.pending && graph.nodes().length)
-            ? Promise.all([Promise.resolve(res), walk(visitor)])
-            : Promise.resolve([res]);
+          // this seems like a code smell.
+          // should reporter be encapsulated in graph ?
+          reporter.setResult(seed, res);
+          graph.removeNode(seed);
+          if (res instanceof Error) {
+            const dependents = getNeighborsByDirection(seed, graph);
+            dependents.forEach(element => {
+              graph.removeNode(element);
+            });
+            reporter.setResults(dependents, new Error(`failed due to ${seed}`));
+          }
+
+          const sources = getSources(graph);
+
+          return sources.length || (!q.pending && graph.nodes().length) ? walk(visitor) : undefined;
+        })
+        .catch(err => {
+          reporter.setResult(seed, err);
         });
-      return (reporter[id].state as any) as Promise<any>;
+      return seederPromise;
     });
-    return Promise.all(seedersPromises);
+    await Promise.all(seeders);
   }
-  return { walk, reporter };
+
+  return {
+    walk,
+    reporter
+  };
 }
 
-export async function createSubGraph(
-  components: ResolvedComponent[],
-  consumer: Consumer,
-  options: ScriptsOptions,
-  getGraphFn = getGraph
-) {
-  const g = await getGraphFn(consumer);
-  const shouldStay = uniq(
-    flatten(
-      components.map(comp => {
-        const id = comp.component.id.toString();
-        const base = [id];
-        let pre: string[] = [];
-        let post: string[] = [];
-        if (options.traverse === 'both' || options.traverse === 'dependencies') {
-          pre = g.predecessors(id) || [];
-        }
-        if (options.traverse === 'both' || options.traverse === 'dependents') {
-          post = g.successors(id) || [];
-        }
-        return base.concat(post).concat(pre);
-      })
-    )
-  );
-  return g.nodes().reduce((accum, curr) => {
-    // eslint-disable-next-line no-bitwise
-    if (!~shouldStay.indexOf(curr)) {
-      g.removeNode(curr);
-    }
-    return accum;
-  }, g);
-}
 /**
- * TODO - qballer
- * cache capsules to reuse - DONE
-   cache script execution -
+ * TODO
+ *
    proper output.
+   cache script execution -
    stream execution for parsing
    {
       a: ['b','c']
