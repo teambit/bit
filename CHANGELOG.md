@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)
+
+### Internal
+
+- fix building binary assets
+
 ## [[14.7.5] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.5)
 
 ### New
