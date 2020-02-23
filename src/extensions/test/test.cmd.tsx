@@ -1,6 +1,6 @@
 import React from 'react';
 import { Color, AppContext } from 'ink';
-import {Command, CLIArgs} from '../cli'
+import { Command, CLIArgs } from '../cli';
 import { Flags } from '../paper/command';
 import { Test } from './test';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../cli/chalk-box';
@@ -19,18 +19,16 @@ export class TestCmd implements Command {
     ['j', 'json', 'return results in json format']
   ];
 
-  constructor(
-    private test: Test
-  ) {}
+  constructor(private test: Test) {}
 
   // @ts-ignore
-  async render([components]: [string[]], { all, verbose }: { all: boolean, verbose: boolean}) {
+  async render([components]: [string[]], { all, verbose }: { all: boolean; verbose: boolean }) {
     // @ts-ignore
     const results = await this.test.test(components, { all, verbose });
     const testResults = {
       type: 'results',
       results
-    }
+    };
     let output;
     const specsResultsWithComponentId = testResults.results;
     if (specsResultsWithComponentId && Array.isArray(specsResultsWithComponentId)) {
@@ -40,16 +38,17 @@ export class TestCmd implements Command {
       output = "couldn't get test results...";
     }
 
+    return (
+      <AppContext.Consumer>
+        {({ exit }) => {
+          setTimeout(() => {
+            exit(); // @todo: fix the code once test is ready.
+          }, 0);
 
-    return <AppContext.Consumer>
-    {({exit})=> {
-      setTimeout(()=> {
-        exit() // @todo: fix the code once test is ready.
-      }, 0)
-
-      return <Color>{output}</Color>
-    }}
-  </AppContext.Consumer>
+          return <Color>{output}</Color>;
+        }}
+      </AppContext.Consumer>
+    );
   }
 
   async json([components]: CLIArgs, { all, verbose }: Flags) {
@@ -59,6 +58,6 @@ export class TestCmd implements Command {
       data: testResults,
       // @todo: fix the code once test is ready.
       code: 0
-    }
+    };
   }
 }

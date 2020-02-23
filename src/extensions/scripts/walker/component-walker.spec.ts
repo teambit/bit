@@ -1,3 +1,4 @@
+/* eslint-disable no-sequences */
 // import { expect } from 'chai';
 import { Graph } from 'graphlib';
 import { Consumer } from '../../../consumer';
@@ -7,7 +8,24 @@ import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
 
 describe('component-walker', () => {
-  it('should traverse graph', () => {});
+  // todo: qballer - fix.
+  it.skip('sanity', async function() {
+    const testCase: GraphTestCase = {
+      graph: {
+        a: []
+      },
+      input: ['a'],
+      options: {
+        concurrency: 4,
+        traverse: 'both',
+        caching: true
+      }
+    };
+
+    const execute = await createTestCase(testCase);
+    const result = await execute.run();
+    // debugger
+  });
 });
 
 export type GraphTestCase = {
@@ -16,28 +34,49 @@ export type GraphTestCase = {
   options: ScriptsOptions;
 };
 
-async function runTestCase(testCase: GraphTestCase) {
+export async function createTestCase(testCase: GraphTestCase) {
   const input = createResolvedComponentsMock(testCase.input);
-  const func = createGetGraphFn(testCase);
-  const { walk, reporter } = await getTopologicalWalker(input, testCase.options, {} as Workspace, func);
+  const fakeGetGraph = createGetGraphFn(testCase);
+  const workspace = {
+    load: ids => Promise.resolve(createResolvedComponentsMock(ids))
+  };
+  // eslint-disable-next-line no-console
+  const visitor = async () => Promise.resolve();
+  const { walk, reporter } = await getTopologicalWalker(
+    input,
+    testCase.options,
+    (workspace as any) as Workspace,
+    fakeGetGraph
+  );
+  return {
+    run: () => walk(visitor),
+    reporter
+  };
 }
 
 export function createGetGraphFn(testCase: GraphTestCase) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return (_consumer: Consumer) => {
-    return Promise.resolve(
-      Object.entries(testCase.graph).reduce((accum, [key, value]) => {
-        accum.setNode(key);
-        value.forEach(val => {
-          accum.setNode(val);
-          accum.setEdge(key, val);
-        });
-        return accum;
-      }, new Graph())
-    );
+    const res = Object.entries(testCase.graph).reduce((accum, [key, value]) => {
+      accum.setNode(key);
+      value.forEach(val => {
+        accum.setNode(val);
+        accum.setEdge(key, val);
+      });
+      return accum;
+    }, new Graph());
+
+    return Promise.resolve(res);
   };
 }
 
 export function createResolvedComponentsMock(ids: string[]) {
-  return (ids as any[]) as ResolvedComponent[];
+  return (ids.map(id => ({
+    component: {
+      id: {
+        toString: () => id
+      }
+    },
+    capsule: {}
+  })) as any) as ResolvedComponent[];
 }

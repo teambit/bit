@@ -101,7 +101,7 @@ jobs:
       # -
       #   run:
       #     name: 'install pkg to support local build'
-      #     command: 'sudo npm install -g pkg@4.4.0'
+      #     command: 'sudo npm install -g pkg@4.4.3'
       -
         run:
           name: 'Install npm dependencies'
@@ -180,7 +180,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg@4.4.0'
+        run: 'sudo npm i -g pkg@4.4.3'
       # -
       #   run:
       #     name: 'save pkg targets names'
@@ -700,11 +700,11 @@ workflows:
         generate_types:
           requires:
             - build
-      # -
-      #   pack:
-      #     requires:
-      #       - build
-      #       - build_bit_javascript
+      -
+        pack:
+          requires:
+            - build
+            - build_bit_javascript
       -
         e2e_test:
           filters:

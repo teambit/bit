@@ -7,6 +7,8 @@ import { ExtensionManifest, Harmony } from '../../harmony';
 import { ScriptRegistry as Registry } from './registry';
 import { Script } from './script';
 import { ScriptsOptions } from './scripts-options';
+import { ResolvedComponent } from '../workspace/resolved-component';
+import { IdsAndScripts } from './ids-and-scripts';
 
 export type ScriptDeps = [Paper, Workspace];
 
@@ -75,7 +77,7 @@ export class Scripts {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
 
-    return walk(async ({ component, capsule }) => {
+    const visitor = async ({ component, capsule }, pipeReporter) => {
       const config = component.config.extensions.scripts || {};
       // :TODO move both logs to a proper api for reporting missing pipes
       // eslint-disable-next-line no-console
@@ -86,8 +88,40 @@ export class Scripts {
       // eslint-disable-next-line no-console
       console.log(`building component ${component.id.toString()}...`);
 
-      return pipe.run(capsule);
-    });
+      return pipe.run(capsule, pipeReporter);
+    };
+    return {
+      async run() {
+        await walk(visitor);
+        return reporter.createUserReporter().getResults();
+      },
+      reporter: reporter.createUserReporter()
+    };
+  }
+
+  /**
+   * run different scripts for different ids.
+   * an example is the compile extension. it can't run the same specific compiler script for all
+   * components as they may differ in their compiler settings.
+   */
+  async runMultiple(
+    idsAndScripts: IdsAndScripts,
+    resolvedComponents: ResolvedComponent[],
+    options?: Partial<ScriptsOptions>
+  ) {
+    const opts = Object.assign(DEFAULT_OPTIONS, options);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { walk, reporter } = await getTopologicalWalker(resolvedComponents, opts, this.workspace);
+    const visitor = async ({ component, capsule }: ResolvedComponent, pipeReporter) => {
+      const scriptsNames = idsAndScripts.getValueIgnoreVersion(component.id._legacy);
+      if (!scriptsNames) return null;
+      // @todo: fix this mess. it's only a POC.
+      const scripts = scriptsNames.map(s => this.registry.get(s));
+      const pipe = new Pipe(scripts);
+      return pipe.run(capsule, pipeReporter);
+    };
+    await walk(visitor);
+    return reporter.createUserReporter().getResults();
   }
 
   /**

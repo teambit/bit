@@ -6,6 +6,8 @@ import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { ComponentCapsule } from '../capsule-ext';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
+import { Scripts } from '../scripts';
+import { IdsAndScripts } from '../scripts/ids-and-scripts';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -14,9 +16,24 @@ export type ComponentAndCapsule = {
 };
 
 export class Compile {
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private scripts: Scripts) {}
 
-  async compile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
+  async compile(componentsIds: string[]) {
+    const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
+    // @todo: that's a hack to get the extension name saved in the "build" pipeline.
+    // we need to figure out where to store the specific compiler extensions
+    const idsAndScriptsArr = componentAndCapsules
+      .map(c => {
+        const buildScript = c.component.config?.extensions?.scripts?.build;
+        return { id: c.consumerComponent.id, value: buildScript };
+      })
+      .filter(i => i.value);
+    const idsAndScripts = new IdsAndScripts(...idsAndScriptsArr);
+    const resolvedComponents = await getResolvedComponents(componentsIds, this.workspace);
+    return this.scripts.runMultiple(idsAndScripts, resolvedComponents);
+  }
+
+  async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
     const populateDistTask = this.populateComponentDist.bind(this, params);
     const writeDistTask = this.writeComponentDist.bind(this);
     await pipeRunTask(componentsIds, populateDistTask, this.workspace);
@@ -50,9 +67,13 @@ function getBitIds(componentsIds: string[], workspace: Workspace): BitId[] {
   return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
 }
 
-async function getComponentsAndCapsules(componentsIds: string[], workspace: Workspace): Promise<ComponentAndCapsule[]> {
+async function getResolvedComponents(componentsIds: string[], workspace: Workspace): Promise<ResolvedComponent[]> {
   const bitIds = getBitIds(componentsIds, workspace);
-  const resolvedComponents: ResolvedComponent[] = await workspace.load(bitIds.map(id => id.toString()));
+  return workspace.load(bitIds.map(id => id.toString()));
+}
+
+async function getComponentsAndCapsules(componentsIds: string[], workspace: Workspace): Promise<ComponentAndCapsule[]> {
+  const resolvedComponents = await getResolvedComponents(componentsIds, workspace);
   return Promise.all(
     resolvedComponents.map(async (resolvedComponent: ResolvedComponent) => {
       // @todo: it says id._legacy "do not use this", do I have a better option to get the id?
