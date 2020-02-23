@@ -78,14 +78,13 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    const workspaceConfigProps = {
-      compiler,
-      tester,
-      componentsDefaultDirectory: defaultDirectory,
-      packageManager,
-      run: {}
+    const workspaceConfigFileProps = {
+      workspace: {
+        componentsDefaultDirectory: defaultDirectory,
+        packageManager
+      }
     };
-    return init(path, standalone, reset, resetHard, force, workspaceConfigProps).then(
+    return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,

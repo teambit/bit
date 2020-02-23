@@ -3,25 +3,34 @@ import * as fs from 'fs-extra';
 import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
-import { BIT_JSONC } from '../../constants';
+import ConsumerOverrides from '../../consumer/config/consumer-overrides';
+import { BIT_JSONC, DEFAULT_LANGUAGE, DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { AbstractVinyl } from '../../consumer/component/sources';
+import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
+import { Compilers, Testers } from '../../consumer/config/abstract-config';
 
 interface WorkspaceConfigProps {
+  componentsDefaultDirectory?: string;
+  dependenciesDirectory?: string;
+  defaultScope?: string;
+  saveDependenciesAsComponents?: boolean;
+  resolveModules?: ResolveModulesConfig;
+}
+
+export interface WorkspaceConfigFileProps {
   $schema: string;
   $schemaVersion: string;
-  // TODO: define type somehow
-  workspace: {};
-  // TODO: define type somehow
-  components: {};
+  workspace: WorkspaceConfigProps;
+  components: ConsumerOverrides;
 }
 
 export default class WorkspaceConfig {
   _path?: string;
 
-  constructor(private data?: WorkspaceConfigProps, private legacyConfig?: LegacyWorkspaceConfig) {}
+  constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {}
 
   get path(): PathOsBased {
     return this._path || this.legacyConfig?.path || '';
@@ -29,6 +38,54 @@ export default class WorkspaceConfig {
 
   set path(configPath: PathOsBased) {
     this._path = configPath;
+  }
+
+  get lang(): string {
+    return this.legacyConfig?.lang || DEFAULT_LANGUAGE;
+  }
+
+  get _dependenciesDirectory(): string | undefined {
+    if (this.data) {
+      return this.data.workspace.dependenciesDirectory;
+    }
+    if (this.legacyConfig) {
+      return this.legacyConfig.dependenciesDirectory;
+    }
+  }
+
+  get _resolveModules(): ResolveModulesConfig | undefined {
+    if (this.data) {
+      return this.data.workspace.resolveModules;
+    }
+    if (this.legacyConfig) {
+      return this.legacyConfig.resolveModules;
+    }
+  }
+
+  get _saveDependenciesAsComponents(): boolean {
+    if (this.data) {
+      return this.data.workspace.saveDependenciesAsComponents ?? false;
+    }
+    if (this.legacyConfig) {
+      return this.legacyConfig.saveDependenciesAsComponents;
+    }
+    return DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
+  }
+
+  get _distEntry(): string | undefined {
+    return this.legacyConfig?.distEntry;
+  }
+
+  get _distTarget(): string | undefined {
+    return this.legacyConfig?.distTarget;
+  }
+
+  get _compiler(): Compilers | undefined {
+    return this.legacyConfig?.compiler;
+  }
+
+  get _tester(): Testers | undefined {
+    return this.legacyConfig?.tester;
   }
 
   // TODO: define type somehow
@@ -45,9 +102,25 @@ export default class WorkspaceConfig {
     // legacy configs
     return {
       defaultScope: this.legacyConfig?.defaultScope,
-      componentsDefaultDirectory: this.legacyConfig?.componentsDefaultDirectory
+      componentsDefaultDirectory: this.legacyConfig?.componentsDefaultDirectory,
+      dependenciesDirectory: this.legacyConfig?.dependenciesDirectory
     };
   }
+
+  /**
+   * Return the components section of the config file
+   *
+   * @readonly
+   * @memberof WorkspaceConfig
+   */
+  get componentsConfig(): ConsumerOverrides | undefined {
+    if (this.data) {
+      return ConsumerOverrides.load(this.data.components);
+    }
+    // legacy configs
+    return this.legacyConfig?.overrides;
+  }
+
   /**
    * Create an instance of the WorkspaceConfig by an instance of the legacy config
    *
@@ -64,11 +137,11 @@ export default class WorkspaceConfig {
    * Create an instance of the WorkspaceConfig by data
    *
    * @static
-   * @param {WorkspaceConfigProps} data
+   * @param {WorkspaceConfigFileProps} data
    * @returns
    * @memberof WorkspaceConfig
    */
-  static fromObject(data: WorkspaceConfigProps) {
+  static fromObject(data: WorkspaceConfigFileProps) {
     return new WorkspaceConfig(data, undefined);
   }
 
@@ -76,11 +149,11 @@ export default class WorkspaceConfig {
    * Create an instance of the WorkspaceConfig by the workspace config template and override values
    *
    * @static
-   * @param {WorkspaceConfigProps} data values to override in the default template
+   * @param {WorkspaceConfigFileProps} data values to override in the default template
    * @returns
    * @memberof WorkspaceConfig
    */
-  static create(props: WorkspaceConfigProps, dirPath?: PathOsBasedAbsolute) {
+  static create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
     const template = parse(templateStr);
     const merged = assign(template, props);
@@ -97,13 +170,13 @@ export default class WorkspaceConfig {
    *
    * @static
    * @param {PathOsBasedAbsolute} dirPath
-   * @param {WorkspaceConfigProps} [workspaceConfigProps={} as any]
+   * @param {WorkspaceConfigFileProps} [workspaceConfigProps={} as any]
    * @returns {Promise<WorkspaceConfig>}
    * @memberof WorkspaceConfig
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
   ): Promise<WorkspaceConfig> {
     let workspaceConfig = await this.loadIfExist(dirPath);
     if (workspaceConfig) {
@@ -184,6 +257,12 @@ export default class WorkspaceConfig {
       return jsonFile;
     }
     return this.legacyConfig?.toVinyl({ workspaceDir });
+  }
+
+  toPlainObject(): { [prop: string]: any } | undefined {
+    if (this.legacyConfig) {
+      return this.legacyConfig.toPlainObject();
+    }
   }
 
   /**

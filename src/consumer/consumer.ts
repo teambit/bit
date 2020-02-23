@@ -10,7 +10,7 @@ import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import LegacyWorkspaceConfig from './config/workspace-config';
-import { WorkspaceConfig } from '../extensions/workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -23,7 +23,8 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS
+  DEPENDENCIES_FIELDS,
+  DEFAULT_LANGUAGE
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -76,7 +77,7 @@ import { packageNameToComponentId } from '../utils/bit/package-name-to-component
 
 type ConsumerProps = {
   projectPath: string;
-  config: LegacyWorkspaceConfig;
+  config: WorkspaceConfig;
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
@@ -101,7 +102,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  config: LegacyWorkspaceConfig;
+  config: WorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
@@ -151,7 +152,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get driver(): Driver {
     if (!this._driver) {
-      this._driver = Driver.load(this.config.lang);
+      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
     }
     return this._driver;
   }
@@ -160,9 +161,8 @@ export default class Consumer {
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
-        this.config.componentsDefaultDirectory,
-        this.config.dependenciesDirectory,
-        this.config.ejectedEnvsDirectory
+        this.config.workspaceConfig.componentsDefaultDirectory,
+        this.config.workspaceConfig.dependenciesDirectory
       );
     }
     return this._dirStructure;
@@ -428,7 +428,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -445,7 +445,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.distEntry && !this.config.distTarget;
+    return !this.config._distEntry && !this.config._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -752,9 +752,9 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigProps: WorkspaceConfigProps
+    workspaceConfigFileProps: WorkspaceConfigFileProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigProps);
+    return this.ensure(projectPath, noGit, workspaceConfigFileProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -769,14 +769,14 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigProps: WorkspaceConfigProps
+    workspaceConfigFileProps: WorkspaceConfigFileProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigProps);
+    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
@@ -832,7 +832,7 @@ export default class Consumer {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await LegacyWorkspaceConfig.load(consumerInfo.path);
+      consumerInfo.consumerConfig = await WorkspaceConfig.loadIfExist(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -913,7 +913,7 @@ export default class Consumer {
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: string | null | undefined }) {
     const component = await this.loadComponent(componentId);
-    return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
+    return component.writeConfig(this);
   }
 
   async injectConf(componentId: BitId, force: boolean) {

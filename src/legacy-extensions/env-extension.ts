@@ -24,7 +24,7 @@ import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
 import { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
-import WorkspaceConfig from '../consumer/config/workspace-config';
+import { WorkspaceConfig } from '../extensions/workspace-config';
 import ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
@@ -406,9 +406,9 @@ export default class EnvExtension extends BaseExtension {
       const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
-    if (isAuthor && workspaceConfig[envType]) {
+    if (isAuthor && workspaceConfig[`_${envType}`]) {
       logger.silly(`env-extension, loading ${envType} from the consumer config`);
-      const envConfig = { [envType]: workspaceConfig[envType] };
+      const envConfig = { [envType]: workspaceConfig[`_${envType}`] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     return null;

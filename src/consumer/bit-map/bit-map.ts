@@ -30,9 +30,7 @@ import { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import { BitIdStr } from '../../bit-id/bit-id';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
-import WorkspaceConfig from '../config/workspace-config';
 import ShowDoctorError from '../../error/show-doctor-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
@@ -276,55 +274,6 @@ export default class BitMap {
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
-  }
-
-  /**
-   * We should ignore ejected config files and dirs
-   * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
-   * They might be in internal dirs then we need to ignore the dir completely
-   */
-  async getConfigDirsAndFilesToIgnore(
-    consumerPath: PathLinux,
-    workspaceConfig: WorkspaceConfig
-  ): Promise<IgnoreFilesDirs> {
-    const ignoreList = {
-      files: [],
-      dirs: []
-    };
-    const populateIgnoreListP = this.components.map(async (component: ComponentMap) => {
-      const configDir = component.configDir;
-      const componentDir = component.getComponentDir();
-      if (configDir && componentDir) {
-        const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
-        const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentConfig = await ComponentConfig.load({
-          componentDir: component.rootDir,
-          workspaceDir: consumerPath,
-          configDir: fullConfigDir,
-          workspaceConfig
-        });
-        const compilerObj = R.values(componentConfig.compiler)[0];
-        const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = R.values(componentConfig.tester)[0];
-        const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
-        const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
-        const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
-        // R.values above might return array of something which is not string
-        // Which will not be ok with the input of resolveIgnoreFilesAndDirs
-        const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
-          configDir.linuxDirPath,
-          componentDir,
-          // $FlowFixMe - see comment above
-          compilerFiles,
-          // $FlowFixMe - see comment above
-          testerFiles
-        );
-        ignoreList.files = ignoreList.files.concat(toIgnore.files);
-        ignoreList.dirs = ignoreList.dirs.concat(toIgnore.dirs);
-      }
-    });
-    await Promise.all(populateIgnoreListP);
-    return ignoreList;
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {

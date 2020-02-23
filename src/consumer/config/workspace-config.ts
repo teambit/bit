@@ -7,7 +7,8 @@ import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_EJECTED_ENVS_DIR_PATH,
-  DEFAULT_PACKAGE_MANAGER
+  DEFAULT_PACKAGE_MANAGER,
+  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
 import { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
@@ -20,7 +21,6 @@ import InvalidPackageManager from './exceptions/invalid-package-manager';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
-const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
@@ -45,10 +45,10 @@ export type WorkspaceConfigProps = {
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
-  distTarget: string | null | undefined; // path where to store build artifacts
+  distTarget: string | undefined; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
-  distEntry: string | null | undefined;
+  distEntry: string | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
@@ -58,7 +58,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   packageManagerProcessOptions: Record<string, any> | null | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
-  resolveModules: ResolveModulesConfig | null | undefined;
+  resolveModules: ResolveModulesConfig | undefined;
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
   defaultScope: string | null | undefined; // default remote scope to export to

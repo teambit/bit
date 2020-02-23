@@ -55,6 +55,7 @@ export default class ExtensionsHelper {
     fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
+  // TODO: fix this for the new config format
   addExtensionToWorkspaceConfig(extName: string, extConfig = {}) {
     const bitJson = this.bitJson.read();
     bitJson.extensions = bitJson.extensions || {};

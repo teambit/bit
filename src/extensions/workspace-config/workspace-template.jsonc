@@ -21,6 +21,9 @@
      */
     "defaultScope": "",
 
+
+    //"dependenciesDirectory": ".dependencies"
+
     /**
     * main configuration for component dependency resolution.
     **/

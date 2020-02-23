@@ -96,6 +96,8 @@ export const COMPONENT_DIR = 'COMPONENT_DIR';
 
 export const DEFAULT_EJECTED_ENVS_DIR_PATH = `{${COMPONENT_DIR}}`;
 
+export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
+
 export const DEFAULT_SEPARATOR = '/';
 
 export const LATEST_BIT_VERSION = 'latest';

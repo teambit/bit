@@ -5,7 +5,7 @@ import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentConfig from '../config';
 import { Dist, License, SourceFile } from '../component/sources';
-import WorkspaceConfig from '../config/workspace-config';
+import { WorkspaceConfig } from '../../extensions/workspace-config';
 import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
@@ -394,29 +394,20 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap, configDir);
+  async writeConfig(consumer: Consumer): Promise<EjectConfResult> {
+    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ejectConfData;
   }
 
-  async getConfigToWrite(
-    consumer: Consumer | null | undefined,
-    bitMap: BitMap,
-    configDir: PathOsBased | ConfigDir
-  ): Promise<EjectConfData> {
+  async getConfigToWrite(consumer: Consumer | null | undefined, bitMap: BitMap): Promise<EjectConfData> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
     }
-    const configDirInstance = typeof configDir === 'string' ? new ConfigDir(configDir) : configDir.clone();
-    if (configDirInstance.isWorkspaceRoot) {
-      throw new EjectToWorkspace();
-    }
-    // Nothing is detached.. no reason to eject
 
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       const isCompilerDetached = await this.getDetachedCompiler(consumer);
@@ -424,8 +415,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap, configDirInstance);
+    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -1179,8 +1169,7 @@ export default class Component {
       componentMap.files.forEach(file => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const sourceFile = SourceFile.load(filePath, workspaceConfig.distTarget, bitDir, consumerPath, {
+          const sourceFile = SourceFile.load(filePath, bitDir, consumerPath, {
             test: file.test
           });
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1243,7 +1232,7 @@ export default class Component {
     };
     const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isNotNested ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
+    const overridesFromConsumer = isNotNested ? workspaceConfig.componentsConfig.getOverrideComponentData(id) : null;
 
     const propsToLoadEnvs = {
       consumerPath,

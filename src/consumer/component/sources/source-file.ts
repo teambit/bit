@@ -13,7 +13,6 @@ export default class SourceFile extends AbstractVinyl {
   distFilePath: string | null | undefined;
   static load(
     filePath: PathOsBased,
-    distTarget: PathOsBased,
     base: PathOsBased,
     consumerPath: PathOsBased,
     extendedProps: Record<string, any>

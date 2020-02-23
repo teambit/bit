@@ -1,7 +1,7 @@
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
-import WorkspaceConfig from './workspace-config';
+import { WorkspaceConfig } from '../../extensions/workspace-config';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
@@ -98,11 +98,16 @@ export default class ComponentConfig extends AbstractConfig {
    */
   static mergeWithWorkspaceConfig(
     componentConfig: Record<string, any>,
-    consumerConfig: WorkspaceConfig | null | undefined
+    workspaceConfig: WorkspaceConfig | undefined
   ): ComponentConfig {
-    const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
-    const consumerConfigWithoutConsumerSpecifics = filterObject(plainConsumerConfig, (val, key) => key !== 'overrides');
-    const mergedObject = R.merge(consumerConfigWithoutConsumerSpecifics, componentConfig);
+    // TODO: gilad - change this when moving to new config
+    let plainWorkspaceConfig = workspaceConfig ? workspaceConfig.toPlainObject() : {};
+    plainWorkspaceConfig = plainWorkspaceConfig || {};
+    const workspaceConfigWithoutConsumerSpecifics = filterObject(
+      plainWorkspaceConfig,
+      (val, key) => key !== 'overrides'
+    );
+    const mergedObject = R.merge(workspaceConfigWithoutConsumerSpecifics, componentConfig);
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 

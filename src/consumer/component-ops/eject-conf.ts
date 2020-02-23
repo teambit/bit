@@ -16,20 +16,16 @@ import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import RemovePath from '../component/sources/remove-path';
 import AbstractConfig from '../config/abstract-config';
 import ShowDoctorError from '../../error/show-doctor-error';
+import GeneralError from '../../error/general-error';
 
 export type EjectConfResult = { id: string; ejectedPath: string; ejectedFullPath: string };
 export type EjectConfData = { id: string; ejectedPath: string; ejectedFullPath?: string; dataToPersist: DataToPersist };
 
-export default (async function ejectConf(
-  component: ConsumerComponent,
-  consumer: Consumer,
-  configDir: ConfigDir
-): Promise<EjectConfResult> {
+export default (async function ejectConf(component: ConsumerComponent, consumer: Consumer): Promise<EjectConfResult> {
   const { id, ejectedPath, ejectedFullPath, dataToPersist } = await getEjectConfDataToPersist(
     component,
     consumer,
-    consumer.bitMap,
-    configDir
+    consumer.bitMap
   );
   dataToPersist.addBasePath(consumer.getPath());
   await dataToPersist.persistAllToFS();
@@ -43,71 +39,22 @@ export default (async function ejectConf(
 
 export async function getEjectConfDataToPersist(
   component: ConsumerComponent,
-  consumer: Consumer | null | undefined,
-  bitMap: BitMap,
-  configDir: ConfigDir
+  consumer: Consumer,
+  bitMap: BitMap
 ): Promise<EjectConfData> {
-  const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
   if (!componentMap) {
     throw new ShowDoctorError('could not find component in the .bitmap file');
   }
   const componentDir = componentMap.getComponentDir();
-  if (!componentDir && configDir.isUnderComponentDir) {
-    throw new EjectNoDir(component.id.toStringWithoutVersion());
+  if (!componentDir) {
+    throw new GeneralError('could not eject config for a component withour a root dir');
   }
-  // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
-  // (To better support bit move for example)
-  if (componentDir) {
-    configDir.replaceByComponentDirDSL(componentDir);
-  }
-  if (!configDir.isUnderComponentDir) {
-    const configDirToValidate = _getDirToValidateAgainstOtherComps(configDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
-  }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir.linuxDirPath;
-  // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
-  const resolvedConfigDir = configDir.getResolved({ componentDir });
-  const ejectedCompilerDirectoryP = populateEnvFilesToWrite({
-    configDir: resolvedConfigDir.dirPath,
-    env: component.compiler,
-    consumer,
-    bitMap,
-    component,
-    deleteOldFiles,
-    verbose: false
-  });
-  const ejectedTesterDirectoryP = populateEnvFilesToWrite({
-    configDir: resolvedConfigDir.dirPath,
-    env: component.tester,
-    consumer,
-    bitMap,
-    component,
-    deleteOldFiles,
-    verbose: false
-  });
-  const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
-    ejectedCompilerDirectoryP,
-    ejectedTesterDirectoryP
-  ]);
-  const dataToPersist = new DataToPersist();
-  if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
-  if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
 
   const id = component.id.toStringWithoutVersion();
-  if (!consumer) {
-    return {
-      id,
-      ejectedPath: configDir.linuxDirPath,
-      dataToPersist
-    };
-  }
 
-  const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
   const consumerPath: PathOsBased = consumer.getPath();
-  const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
+  const bitJsonDirFullPath = path.normalize(path.join(consumerPath, componentDir));
   const relativeEjectedCompilerDirectory = _getRelativeDir(
     bitJsonDirFullPath,
     consumer.toAbsolutePath(ejectedCompilerDirectory)
