@@ -26,4 +26,9 @@ export interface ExtensionManifest<Config = {}> {
    * reference to the extension factory function.
    */
   provider: ProviderFn<Config>;
+
+  /**
+   * any further keys which might be expected by other extensions.
+   */
+  [key: string]: any;
 }
