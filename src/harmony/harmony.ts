@@ -100,7 +100,7 @@ export default class Harmony<ConfProps> {
   }
 
   /**
-   * execute harmony. applies providers of all extensions by execution order.
+   * execute harmony extension. applies providers of all extensions by execution order.
    */
   async run() {
     // :TODO refactor to an exception
