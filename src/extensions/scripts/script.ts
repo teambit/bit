@@ -55,19 +55,18 @@ export class Script {
     const containerScript = `
 const userTask = require('${pathToTask}')
 const toExecute = userTask.default || userTask;
-if (typeof toExecute !== 'function') {
-  throw new Error('script "${pathToTask}" has no default function to run');
-}
-const getPromiseResults = () => {
-  const executed = toExecute();
-  return executed && executed.then ? executed : Promise.resolve(executed);
-};
-getPromiseResults().then(userTaskResult => {
-  process.on('beforeExit', (code) => {
-    const toSend = userTaskResult || { exitCode: code };
-    process.send && process.send(toSend);
+if (typeof toExecute === 'function') {
+  const getPromiseResults = () => {
+    const executed = toExecute();
+    return executed && executed.then ? executed : Promise.resolve(executed);
+  };
+  getPromiseResults().then(userTaskResult => {
+    process.on('beforeExit', (code) => {
+      const toSend = userTaskResult || { exitCode: code };
+      process.send && process.send(toSend);
+    });
   });
-});
+}
     `;
     try {
       capsule.fs.writeFileSync(containerScriptName, containerScript, { encoding: 'utf8' });
