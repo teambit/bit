@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix dynamic dist reference from package.json (#1808) when isolating via capsule
+## [[14.7.5-dev.2] - 2020-02-23]
+
+- [#1808](https://github.com/teambit/bit/issues/1808) fix dynamic dist reference from package.json when isolating via capsule
 - [#2341](https://github.com/teambit/bit/issues/2341) fix `bit export --all` to successfully export when deleted from remote
 - support a basic flow of using module paths when no scopeDefault is set
 - support configuring the logger level by running `bit config set log_level <level>`.
