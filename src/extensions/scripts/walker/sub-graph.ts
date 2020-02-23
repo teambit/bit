@@ -12,10 +12,10 @@ export function createSubGraph(components: ResolvedComponent[], options: Scripts
         let pre: string[] = [];
         let post: string[] = [];
         if (options.traverse === 'both' || options.traverse === 'dependencies') {
-          pre = getNeighborsByDirection(id, graph, 'successors');
+          pre = getNeighborsByDirection(id, graph);
         }
         if (options.traverse === 'both' || options.traverse === 'dependents') {
-          post = getNeighborsByDirection(id, graph);
+          post = getNeighborsByDirection(id, graph, 'successors');
         }
         return base.concat(post).concat(pre);
       })

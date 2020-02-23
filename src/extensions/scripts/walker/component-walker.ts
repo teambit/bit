@@ -26,7 +26,7 @@ export async function getTopologicalWalker(
   const q = new PQueue({ concurrency: options.concurrency });
   const reporter = createExecutionReporter(comps);
 
-  const getSources = (g: Graph) => g.sources().filter(seed => !reporter.shouldExecute(seed));
+  const getSources = (g: Graph) => g.sources().filter(seed => reporter.shouldExecute(seed));
   const getSeeders = (g: Graph) => {
     const sources = getSources(g);
     return sources.length ? sources : [g.nodes()[0]].filter(v => v);
