@@ -36,24 +36,27 @@ export class Pipe {
     return new Promise((resolve, reject) => {
       exec.stdout.on('close', () => {
         // eslint-disable-next-line prefer-rest-params
+        // console.log('close')
         return resolve(message);
       });
       exec.on('message', (msg: any) => {
-        console.log('Got Message from ChildProcess', msg);
+        // console.log('Got Message from ChildProcess', msg);
         // this is the return value of the script function running on the capsule
         message = msg;
       });
       exec.stdout.on('data', data => {
-        console.log('Got stdout from ChildProcess', data.toString());
+        // console.log('Got stdout from ChildProcess', data.toString());
       });
       exec.stdout.on('error', err => {
+        // console.error('ERROR!!!!')
         return reject(err);
       });
       exec.stderr.on('error', err => {
+        // console.error('ERROR on ERROR!!!!')
         return reject(err);
       });
       exec.stderr.on('data', err => {
-        console.log('Got stderr from ChildProcess', err.toString());
+        // console.log('Got stderr from ChildProcess', err.toString());
       });
     });
   }

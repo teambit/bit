@@ -51,7 +51,6 @@ export async function getTopologicalWalker(
           // this seems like a code smell.
           // should reporter be encapsulated in graph ?
           reporter.setResult(seed, res);
-          graph.removeNode(seed);
           if (res instanceof Error) {
             const dependents = getNeighborsByDirection(seed, graph);
             dependents.forEach(element => {
@@ -59,6 +58,7 @@ export async function getTopologicalWalker(
             });
             reporter.setResults(dependents, new Error(`failed due to ${seed}`));
           }
+          graph.removeNode(seed);
 
           const sources = getSources(graph);
 
@@ -84,7 +84,7 @@ export async function getTopologicalWalker(
    proper output.
    cache script execution -
    stream execution for parsing
-   {
+
       a: ['b','c']
       b: ['c']
       c: []
