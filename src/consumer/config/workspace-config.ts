@@ -27,8 +27,8 @@ export type WorkspaceConfigProps = {
   tester?: string | Testers;
   saveDependenciesAsComponents?: boolean;
   lang?: string;
-  distTarget?: string | null | undefined;
-  distEntry?: string | null | undefined;
+  distTarget?: string | undefined;
+  distEntry?: string | undefined;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
   ejectedEnvsDirectory?: string;
@@ -54,8 +54,8 @@ export default class WorkspaceConfig extends AbstractConfig {
   ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'npm' | 'yarn'; // package manager client to use
-  packageManagerArgs: string[] | null | undefined; // package manager client to use
-  packageManagerProcessOptions: Record<string, any> | null | undefined; // package manager process options
+  packageManagerArgs: string[] | undefined; // package manager client to use
+  packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ResolveModulesConfig | undefined;

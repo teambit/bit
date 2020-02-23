@@ -134,7 +134,7 @@ export class Scripts {
    * provider method for the scripts extension.
    */
   static async provide(config: {}, [cli, workspace]: ScriptDeps, harmony: Harmony<unknown>) {
-    const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
+    const defaultScope = workspace ? workspace.consumer.config.workspaceConfig.defaultScope : undefined;
     const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));
     return scripts;

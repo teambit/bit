@@ -106,7 +106,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
   }
 
   function _idConsiderDefaultScope(): BitId | null {
-    const defaultScope = consumer.config.defaultScope;
+    const defaultScope = consumer.config.workspaceConfig.defaultScope;
     if (defaultScope && componentName.startsWith(`${defaultScope}.`)) {
       const idWithDefaultScope = createBitIdAssumeDefaultScope(defaultScope, nameSplit);
       const bitmapHasExact = allBitIds.hasWithoutVersion(idWithDefaultScope);

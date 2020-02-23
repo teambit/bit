@@ -321,8 +321,8 @@ export default class DependencyResolver {
     });
   }
 
-  traverseTreeForComponentId(depFile: PathLinux): BitId | null | undefined {
-    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return;
+  traverseTreeForComponentId(depFile: PathLinux): BitId | undefined {
+    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return undefined;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
     }
@@ -358,6 +358,7 @@ export default class DependencyResolver {
         }
       }
     }
+    return undefined;
   }
 
   getComponentIdByDepFile(
@@ -433,7 +434,7 @@ export default class DependencyResolver {
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.config.resolveModules;
+    const resolveModules = this.consumer.config.workspaceConfig._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])
@@ -865,7 +866,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       'got an error from the driver while resolving dependencies'
     );
     logger.error('dependency-resolver.processErrors', error);
-    // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;
@@ -1118,7 +1118,7 @@ either, use the ignore file syntax or change the require statement to have a mod
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
    */
-  _getPackageJson(): Record<string, any> | null | undefined {
+  _getPackageJson(): Record<string, any> | undefined {
     const componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
@@ -1136,7 +1136,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
       return packageJson.packageJsonObject;
     }
-    return null;
+    return undefined;
   }
 
   /**

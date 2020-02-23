@@ -3,7 +3,7 @@ import { providePackageManager } from './package-manager.provider';
 const DEFAULT_PACKAGE_MANAGER = 'librarian';
 
 export default {
-  name: 'PackageManager',
+  name: 'packageManager',
   dependencies: [],
   config: {
     packageManager: DEFAULT_PACKAGE_MANAGER

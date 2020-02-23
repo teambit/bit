@@ -50,7 +50,6 @@ import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import { InvalidComponent } from './component/consumer-component';
 import { BitIdStr } from '../bit-id/bit-id';
-import { WorkspaceConfigProps } from './config/workspace-config';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
@@ -428,7 +427,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config._saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config.workspaceConfig._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -445,7 +444,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config._distEntry && !this.config._distTarget;
+    return !this.config.workspaceConfig._distEntry && !this.config.workspaceConfig._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -922,7 +921,7 @@ export default class Consumer {
   }
 
   _getEnvProps(envType: EnvType, context: Record<string, any> | null | undefined) {
-    const envs = this.config.getEnvsByType(envType);
+    const envs = this.config._getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];

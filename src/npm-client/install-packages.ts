@@ -20,12 +20,12 @@ export async function installPackages(
   installProdPackagesOnly = false
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.config.packageManager;
+  const packageManager = consumer.config.workspaceConfig.packageManager.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.config.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.config.packageManagerProcessOptions;
-  const useWorkspaces = consumer.config.useWorkspaces;
+    : consumer.config.workspaceConfig.packageManager.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.config.workspaceConfig.packageManager.packageManagerProcessOptions;
+  const useWorkspaces = consumer.config.workspaceConfig._useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
@@ -36,9 +36,7 @@ export async function installPackages(
   let results = await npmClient.install({
     modules: [],
     packageManager,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerArgs,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     packageManagerProcessOptions,
     useWorkspaces,
     dirs: dirsWithPkgJson,

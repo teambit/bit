@@ -1302,7 +1302,7 @@ export default class Component {
     if (dists && !compiler) {
       dists = undefined;
     }
-    const defaultScope = overrides.defaultScope || consumer.config.defaultScope || null;
+    const defaultScope = overrides.defaultScope || consumer.config.workspaceConfig.defaultScope || null;
 
     return new Component({
       name: id.name,

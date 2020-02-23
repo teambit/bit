@@ -3,7 +3,9 @@ import { BitCli } from '../cli';
 import PackageManager from './package-manager';
 
 export type PMConfig = {
-  packageManager: string;
+  packageManager: 'librarian' | 'npm' | 'yarn';
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Record<string, any>;
 };
 
 export type PMDeps = [BitCli, Workspace];

@@ -4,7 +4,12 @@ import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
-import { BIT_JSONC, DEFAULT_LANGUAGE, DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS } from '../../constants';
+import {
+  BIT_JSONC,
+  DEFAULT_LANGUAGE,
+  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
+  COMPILER_ENV_TYPE
+} from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -12,12 +17,25 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { Compilers, Testers } from '../../consumer/config/abstract-config';
 
+// TODO: get the types in a better way
+import { PMConfig } from '../package-manager';
+import { EnvType } from '../../legacy-extensions/env-extension-types';
+
 interface WorkspaceConfigProps {
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
   defaultScope?: string;
   saveDependenciesAsComponents?: boolean;
   resolveModules?: ResolveModulesConfig;
+  packageManager: PMConfig;
+  _useWorkspaces?: boolean;
+  _manageWorkspaces?: boolean;
+  _bindingPrefix?: string;
+  _dependenciesDirectory?: string | undefined;
+  _resolveModules?: ResolveModulesConfig | undefined;
+  _saveDependenciesAsComponents?: boolean;
+  _distEntry?: string | undefined;
+  _distTarget?: string | undefined;
 }
 
 export interface WorkspaceConfigFileProps {
@@ -44,47 +62,18 @@ export default class WorkspaceConfig {
     return this.legacyConfig?.lang || DEFAULT_LANGUAGE;
   }
 
-  get _dependenciesDirectory(): string | undefined {
-    if (this.data) {
-      return this.data.workspace.dependenciesDirectory;
-    }
-    if (this.legacyConfig) {
-      return this.legacyConfig.dependenciesDirectory;
-    }
-  }
-
-  get _resolveModules(): ResolveModulesConfig | undefined {
-    if (this.data) {
-      return this.data.workspace.resolveModules;
-    }
-    if (this.legacyConfig) {
-      return this.legacyConfig.resolveModules;
-    }
-  }
-
-  get _saveDependenciesAsComponents(): boolean {
-    if (this.data) {
-      return this.data.workspace.saveDependenciesAsComponents ?? false;
-    }
-    if (this.legacyConfig) {
-      return this.legacyConfig.saveDependenciesAsComponents;
-    }
-    return DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
-  }
-
-  get _distEntry(): string | undefined {
-    return this.legacyConfig?.distEntry;
-  }
-
-  get _distTarget(): string | undefined {
-    return this.legacyConfig?.distTarget;
-  }
-
   get _compiler(): Compilers | undefined {
     return this.legacyConfig?.compiler;
   }
 
   get _tester(): Testers | undefined {
+    return this.legacyConfig?.tester;
+  }
+
+  _getEnvsByType(type: EnvType): Compilers | Testers | undefined {
+    if (type === COMPILER_ENV_TYPE) {
+      return this.legacyConfig?.compiler;
+    }
     return this.legacyConfig?.tester;
   }
 
@@ -103,7 +92,20 @@ export default class WorkspaceConfig {
     return {
       defaultScope: this.legacyConfig?.defaultScope,
       componentsDefaultDirectory: this.legacyConfig?.componentsDefaultDirectory,
-      dependenciesDirectory: this.legacyConfig?.dependenciesDirectory
+      dependenciesDirectory: this.legacyConfig?.dependenciesDirectory,
+      packageManager: {
+        packageManager: this.legacyConfig?.packageManager,
+        packageManagerArgs: this.legacyConfig?.packageManagerArgs,
+        packageManagerProcessOptions: this.legacyConfig?.packageManagerProcessOptions
+      },
+      _bindingPrefix: this.legacyConfig?.bindingPrefix,
+      _useWorkspaces: this.legacyConfig?.useWorkspaces,
+      _manageWorkspaces: this.legacyConfig?.manageWorkspaces,
+      _dependenciesDirectory: this.legacyConfig?.dependenciesDirectory,
+      _resolveModules: this.legacyConfig?.resolveModules,
+      _saveDependenciesAsComponents: this.legacyConfig?.saveDependenciesAsComponents,
+      _distEntry: this.legacyConfig?.distEntry,
+      _distTarget: this.legacyConfig?.distTarget
     };
   }
 
@@ -250,7 +252,6 @@ export default class WorkspaceConfig {
   private async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
     if (this.data) {
       const jsonStr = stringify(this.data, undefined, 2);
-      console.log(jsonStr);
       const base = workspaceDir;
       const fullPath = workspaceDir ? WorkspaceConfig.composeBitJsoncPath(workspaceDir) : this.path;
       const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });

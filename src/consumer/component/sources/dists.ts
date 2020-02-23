@@ -105,8 +105,9 @@ export default class Dists {
     workspaceConfig: WorkspaceConfig,
     componentRootDir: PathLinux
   ): PathOsBasedRelative {
-    if (workspaceConfig._distEntry) componentRootDir = componentRootDir.replace(workspaceConfig._distEntry, '');
-    const distTarget = workspaceConfig._distTarget || DEFAULT_DIST_DIRNAME;
+    if (workspaceConfig.workspaceConfig._distEntry)
+      componentRootDir = componentRootDir.replace(workspaceConfig.workspaceConfig._distEntry, '');
+    const distTarget = workspaceConfig.workspaceConfig._distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, componentRootDir);
   }
 
@@ -124,7 +125,7 @@ export default class Dists {
   }
 
   stripDistEntryIfNeeded(id: BitId, consumer: Consumer, componentMap: ComponentMap) {
-    const distEntry = consumer.config._distEntry;
+    const distEntry = consumer.config.workspaceConfig._distEntry;
     if (!distEntry) return;
     const shouldDistEntryBeStripped = (): boolean => {
       if (this.distEntryShouldBeStripped) return false; // it has been already stripped, don't strip twice!
@@ -255,8 +256,8 @@ export default class Dists {
   calculateDistFileForAuthored(componentFile: PathOsBased, consumer: Consumer, isMain: boolean): PathOsBased {
     if (this.isEmpty()) return componentFile;
     const getFileToSearch = (): PathOsBased => {
-      if (!consumer.config._distEntry) return componentFile;
-      const distEntryNormalized = path.normalize(consumer.config._distEntry);
+      if (!consumer.config.workspaceConfig._distEntry) return componentFile;
+      const distEntryNormalized = path.normalize(consumer.config.workspaceConfig._distEntry);
       return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const fileToSearch = getFileToSearch();
@@ -264,7 +265,7 @@ export default class Dists {
     const distFile: string =
       isMain && this._mainDistFile ? this._mainDistFile : searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
     if (!distFile) return componentFile;
-    const distTarget = consumer.config._distTarget || DEFAULT_DIST_DIRNAME;
+    const distTarget = consumer.config.workspaceConfig._distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distFile);
   }
 
@@ -282,7 +283,7 @@ export default class Dists {
     const addSharedDirAndDistEntry = pathStr => {
       const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
       const withDistEntry = this.distEntryShouldBeStripped
-        ? path.join(consumer.config._distEntry as string, withSharedDir)
+        ? path.join(consumer.config.workspaceConfig._distEntry as string, withSharedDir)
         : withSharedDir;
       return pathNormalizeToLinux(withDistEntry);
     };
@@ -313,11 +314,11 @@ export default class Dists {
    * another example, distTarget = 'dist', customDir = 'src/custom', distEntry = 'src'. result: "dist/custom"
    */
   static getNodePathDir(consumer: Consumer): string | undefined {
-    const resolveModules = consumer.config._resolveModules;
+    const resolveModules = consumer.config.workspaceConfig._resolveModules;
     if (!resolveModules || !resolveModules.modulesDirectories || !resolveModules.modulesDirectories.length)
       return undefined;
-    const distTarget = consumer.config._distTarget || DEFAULT_DIST_DIRNAME;
-    const distEntry = consumer.config._distEntry;
+    const distTarget = consumer.config.workspaceConfig._distTarget || DEFAULT_DIST_DIRNAME;
+    const distEntry = consumer.config.workspaceConfig._distEntry;
     const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map(moduleDir => {
       const isRelative = str => str.startsWith('./') || str.startsWith('../');
       if (!distEntry) return path.join(distTarget, moduleDir);
