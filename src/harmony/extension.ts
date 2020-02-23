@@ -72,9 +72,8 @@ export class Extension<Conf = {}> {
    */
   async run<Conf>(dependencies: any[], harmony: Harmony<Conf>, config?: Conf) {
     if (!this.loaded) {
-      // @ts-ignore TODO: doron please fix (:
-      const instance = await this.provider(config || this.manifest.config, dependencies, harmony);
-      this._instance = instance;
+      const instance = this.provider(config || this.manifest.config || {}, dependencies, harmony);
+      this._instance = await instance;
       this._loaded = true;
       return instance;
     }
