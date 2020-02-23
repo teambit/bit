@@ -1,20 +1,18 @@
 import React from 'react';
 import { Color } from 'ink';
 import { Command } from '../paper';
-import { FailedToInstall } from './failed-to-install'
+import { FailedToInstall } from './failed-to-install';
 import { Workspace } from '../workspace';
 
 export default class InstallCmd implements Command {
   name = 'install';
-  description = 'install all component dependencies'
+  description = 'install all component dependencies';
   alias = 'in';
-  group = 'development'
-  shortDescription = ''
-  options = []
+  group = 'development';
+  shortDescription = '';
+  options = [];
 
-  constructor(
-    private workspace: Workspace,
-  ) {}
+  constructor(private workspace: Workspace) {}
 
   // TODO: remove this ts-ignore
   // @ts-ignore
@@ -22,9 +20,9 @@ export default class InstallCmd implements Command {
     try {
       const components = await this.workspace.list();
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      return <Color green>Successfully installed {isolatedEnvs.length} components</Color>
+      return <Color green>Successfully installed {isolatedEnvs.length} components</Color>;
     } catch (e) {
-      throw new FailedToInstall(e.message)
+      throw new FailedToInstall(e.message);
     }
   }
 }

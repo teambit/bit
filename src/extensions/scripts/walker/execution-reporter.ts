@@ -1,40 +1,69 @@
-type ReporterCache = { [id: string]: Reporter };
+import { Writable } from 'stream';
+import { ResolvedComponent } from '../../workspace/resolved-component';
 
-export type Reporter = {
-  pipe: Promise<number | 'Propagation'>;
-  stdout: any;
-  stderr: any;
+export type PipeReporter = {
+  out: Writable;
+  err: Writable;
 };
 
-export type FailStatus = 'Dependency';
+type ExecutionState = {
+  [k: string]: {
+    component: ResolvedComponent;
+    sentToQueue: boolean;
+    result: null | any;
+    reporter: PipeReporter;
+  };
+};
 
-export class ExecutionReporter {
-  constructor(private cache: ReporterCache = {}) {}
+export function createExecutionReporter(comps: ResolvedComponent[]) {
+  const state: ExecutionState = comps.reduce((accum, curr) => {
+    accum[curr.component.id._legacy.toString()] = {
+      component: curr,
+      sentToQueue: false,
+      result: null,
+      reporter: {
+        out: new Writable(),
+        err: new Writable()
+      }
+    };
 
-  keys() {
-    return Object.keys(this.cache);
-  }
+    process.stderr;
+    return accum;
+  }, {} as ExecutionState);
 
-  values() {
-    return Object.values(this.cache);
-  }
+  return {
+    shouldExecute(seed: string) {
+      return !state[seed].sentToQueue && !state[seed].result;
+    },
+    getResolvedComponent(seed: string) {
+      return state[seed].component;
+    },
+    getSingleComponentReporter(seed: string) {
+      return state[seed].reporter;
+    },
+    sentToQueue(seed: string) {
+      state[seed].sentToQueue = true;
+    },
+    setResult(seed: string, result: any[] | Error) {
+      state[seed].result = result;
+    },
+    setResults(seeds: string[], result: any[] | Error) {
+      seeds.map(seed => this.setResult(seed, result));
+    },
+    createUserReporter() {
+      return _creatUserReporter(state);
+    }
+  };
+}
 
-  get(componentId: string) {
-    return this.cache[componentId];
-  }
-
-  set(componentId: string, value: Reporter) {
-    this.cache[componentId] = value;
-    return this;
-  }
-
-  all() {
-    return Promise.all(Object.values(this.cache).map(val => val.pipe));
-  }
-
-  mapEntries(visit: ([k, obj]: [string, Reporter]) => any[]) {
-    Object.entries(this.cache).map(([key, obj]) => {
-      return visit([key, obj]);
-    });
-  }
+function _creatUserReporter(state: ExecutionState) {
+  return {
+    getResults: () => {
+      return Object.values(state).map(obj => ({
+        component: obj.component,
+        result: obj.result,
+        started: obj.sentToQueue
+      }));
+    }
+  };
 }
