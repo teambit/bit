@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { join } from 'path';
 import { Exec } from '@teambit/capsule';
 import { ComponentCapsule } from '../capsule-ext';
 
