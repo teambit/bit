@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color, AppContext } from 'ink';
 import { Command, CLIArgs } from '../cli';

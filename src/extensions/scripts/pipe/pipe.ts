@@ -17,7 +17,7 @@ export class Pipe {
    */
   async run(capsule: ComponentCapsule, reporter: PipeReporter) {
     // should perform caching -> SHOULD BE series and nor Promise.all
-    const results = pMapSeries(this.scripts, async script => {
+    const results = pMapSeries(this.scripts, async (script: Script) => {
       const exec = await script.run(capsule);
       const execResult = await this.waitForProcessToExit(exec);
       return execResult;
@@ -31,14 +31,14 @@ export class Pipe {
   }
 
   waitForProcessToExit(exec) {
-    let message;
+    let message = {};
     // eslint-disable-next-line prefer-rest-params
     return new Promise((resolve, reject) => {
       exec.stdout.on('close', () => {
         // eslint-disable-next-line prefer-rest-params
         return resolve(message);
       });
-      exec.on('message', msg => {
+      exec.on('message', (msg: any) => {
         console.log('Got Message from ChildProcess', msg);
         // this is the return value of the script function running on the capsule
         message = msg;
@@ -58,4 +58,3 @@ export class Pipe {
     });
   }
 }
-'[bidID]:internalModule/ninja/wow';
