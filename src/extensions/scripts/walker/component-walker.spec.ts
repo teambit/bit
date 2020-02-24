@@ -7,8 +7,9 @@ import { ResolvedComponent } from '../../workspace/resolved-component';
 import { Workspace } from '../../workspace';
 import { ScriptsOptions } from '../scripts-options';
 
-describe.only('component-walker', () => {
-  it('sanity', async function() {
+describe('component-walker', () => {
+  // todo: qballer - fix.
+  it.skip('sanity', async function() {
     const testCase: GraphTestCase = {
       graph: {
         a: []

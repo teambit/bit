@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.7.5-dev.1",
+  "version": "14.7.6",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -126,7 +126,7 @@
     "jfs": "^0.3.0",
     "level-mem": "^5.0.1",
     "level-party": "^4.0.0",
-    "librarian": "^3.6.0",
+    "librarian": "3.6.2",
     "lodash": "^4.17.15",
     "lodash.assignwith": "^4.2.0",
     "lodash.groupby": "^4.6.0",
