@@ -16,8 +16,8 @@ export class InsightsCmd implements Command {
   ) {}
 
   async render() {
+    debugger
     const graph = await this.graph.build();
     return <Color green>{graph.toString()}</Color>;
   }
 }
-  

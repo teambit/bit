@@ -23,6 +23,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     const workspaceComponents: ConsumerComponent[] = await componentsList.getFromFileSystem();
     const graph = new Graph<Component, Dependency>();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
+    const allComponents = componentFactory.transformToComponents(workspaceComponents, allModelComponents);
     const buildGraphP = allModelComponents.map(async modelComponent => {
       const latestVersion = modelComponent.latest();
       const buildVersionP = modelComponent.listVersions().map(async versionNum => {
@@ -36,7 +37,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;
         }
-        this._addDependenciesToGraph(id, graph, version, reverse);
+        this._addDependenciesToGraph(id, graph, version, reverse, allComponents);
       });
       await Promise.all(buildVersionP);
     });
@@ -44,7 +45,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     console.log(workspaceComponents);
     workspaceComponents.forEach((component: ConsumerComponent) => {
       const id = component.id;
-      this._addDependenciesToGraph(id, graph, component, reverse);
+      this._addDependenciesToGraph(id, graph, component, reverse, allComponents);
     });
     return graph;
   }
@@ -53,11 +54,12 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     id: BitId,
     graph: Graph<Component, Dependency>,
     component: Version | Component,
-    reverse = false
+    reverse = false,
+    components: Component[]
   ): void {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
-    if (!graph.hasNode(idStr)) graph.setNode(new Node(idStr, id));
+    if (!graph.hasNode(idStr)) graph.setNode(idStr, new Component());
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach(dependency => {
         const depIdStr = dependency.id.toString();
@@ -70,13 +72,4 @@ export class ComponentGraph extends Graph<Component, Dependency> {
       });
     });
   }
-}
-
-function buildFromLegacyGraph(legacyGraph: GLG, componentFactory: ComponentFactory) {
-  console.log(legacyGraph);
-  let newGraph: ComponentGraph = new ComponentGraph();
-  legacyGraph.nodes().forEach((node: string) => {
-    let NodeContent = legacyGraph.node(node);
-    newGraph.setNode(componentFactory.fromRawComponent({ id: node, content: NodeContent }));
-  });
 }

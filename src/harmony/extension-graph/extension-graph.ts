@@ -37,7 +37,6 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
    */
   static fromRoot(extension: ExtensionManifest) {
     const { vertices, edges } = fromExtension(extension);
-
     return new ExtensionGraph(vertices, edges);
   }
 
@@ -46,10 +45,6 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
    */
   static from(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
-    // let vertexArray: { id: string; node: AnyExtension }[] = [];
-    // vertices.forEach(vertex => {
-    //   vertexArray.push({ id: vertex.name, node: vertex });
-    // });
     return new ExtensionGraph(vertices, edges);
   }
 }

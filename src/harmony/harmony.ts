@@ -54,8 +54,9 @@ export default class Harmony<ConfProps> {
     const executionOrder = this.graph.byExecutionOrder();
     const newExtensionsNames = extensions.map(ext => ext.name);
     // Filter to include only new extensions
+    //@ts-ignore
     const filteredExecutionOrder = executionOrder.filter(ext => newExtensionsNames.includes(ext.name));
-
+    //@ts-ignore
     const filteredExecutionOrderNames = filteredExecutionOrder.map(ext => ext.name);
     filteredExecutionOrderNames.forEach(newExtName => {
       this.config.set(newExtName, config[newExtName]);

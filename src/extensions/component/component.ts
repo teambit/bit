@@ -8,12 +8,11 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Capsule from '../../environment/capsule-builder';
-import { Serializable } from 'cleargraph';
 
 /**
  * in-memory representation of a component.
  */
-export default class Component implements Serializable {
+export default class Component {
   constructor(
     /**
      * component ID represented by the `ComponentId` type.
