@@ -28,7 +28,7 @@ export default class InstallCmd implements Command {
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
       const packageManagerName = this.workspace.consumer.config.packageManager;
 
-      let packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
+      const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
       packageJson.dependencies = packageJson.dependencies || {};
       isolatedEnvs.forEach(e => {
         const componentPackageName = componentIdToPackageName(e.capsule.config.bitId, '@bit');
