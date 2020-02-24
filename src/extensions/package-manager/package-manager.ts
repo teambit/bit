@@ -2,6 +2,7 @@ import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
 import { ComponentCapsule } from '../capsule-ext';
+import { pipeOutput } from '../../utils/child_process';
 
 export type installOpts = {
   packageManager?: string;
@@ -38,10 +39,10 @@ function linkBitBinInCapsule(capsule) {
 }
 
 export default class PackageManager {
-  constructor(readonly packageManager: string) {}
+  constructor(readonly packageManagerName: string) {}
 
   async runInstall(capsules: ComponentCapsule[], opts: installOpts = {}) {
-    const packageManager = opts.packageManager || this.packageManager;
+    const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
@@ -61,5 +62,28 @@ export default class PackageManager {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
     return null;
+  }
+
+  async runInstallInFolder(folder: string, opts: installOpts = {}) {
+    const packageManager = opts.packageManager || this.packageManagerName;
+    if (packageManager === 'librarian') {
+      const child = librarian.runInstall(folder, { stdio: 'pipe' });
+      pipeOutput(child);
+      await child;
+      return null;
+    }
+    if (packageManager === 'yarn') {
+      const child = execa('yarn', [], { cwd: folder, stdio: 'pipe' });
+      pipeOutput(child);
+      await child;
+      return null;
+    }
+    if (packageManager === 'npm') {
+      const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
+      pipeOutput(child);
+      await child;
+      return null;
+    }
+    throw new Error(`unsupported package manager ${packageManager}`);
   }
 }

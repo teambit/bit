@@ -6,8 +6,6 @@ export type PMConfig = {
   packageManager: string;
 };
 
-export type PMDeps = [BitCli, Workspace];
-
-export async function providePackageManager(config: PMConfig, [cli, workspace]: PMDeps) {
+export async function providePackageManager(config: PMConfig) {
   return new PackageManager(config.packageManager);
 }

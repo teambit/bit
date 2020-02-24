@@ -310,7 +310,7 @@ export default class Isolator {
   }
 
   async _getPeerDependencies(): Promise<Record<string, any>> {
-    const packageManager = DEFAULT_PACKAGE_MANAGER;
+    const packageManager = 'npm';
     let npmList;
     try {
       npmList = await this._getNpmListOutput(packageManager);
