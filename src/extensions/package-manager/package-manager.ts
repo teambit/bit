@@ -2,6 +2,7 @@ import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
 import { ComponentCapsule } from '../capsule-ext';
+import { pipeOutput } from '../../utils/child_process';
 
 export type installOpts = {
   packageManager?: string;
@@ -34,16 +35,6 @@ function linkBitBinInCapsule(capsule) {
     execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
-  }
-}
-
-function pipeOutput(childProcess) {
-  const { stdout, stderr } = childProcess;
-  if (stdout) {
-    stdout.pipe(process.stdout);
-  }
-  if (stderr) {
-    stderr.pipe(process.stderr);
   }
 }
 

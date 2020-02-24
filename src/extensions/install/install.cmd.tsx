@@ -9,6 +9,7 @@ import { Workspace } from '../workspace';
 import { PackageManager } from '../package-manager';
 
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 
 export default class InstallCmd implements Command {
   name = 'install';
@@ -31,7 +32,7 @@ export default class InstallCmd implements Command {
       const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
       packageJson.dependencies = packageJson.dependencies || {};
       isolatedEnvs.forEach(e => {
-        const componentPackageName = componentIdToPackageName(e.capsule.config.bitId, '@bit');
+        const componentPackageName = componentIdToPackageName(e.capsule.config.bitId, DEFAULT_REGISTRY_DOMAIN_PREFIX);
         const depFilePath = `file:${e.capsule.wrkDir}`;
         packageJson.dependencies[componentPackageName] = depFilePath;
       });

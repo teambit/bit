@@ -3,11 +3,11 @@ import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
 import { PackageManager } from '../package-manager';
 
-export type ServeConfig = {};
+export type InstallConfig = {};
 
-export type ServeDeps = [BitCli, Workspace, PackageManager];
+export type InstallDeps = [BitCli, Workspace, PackageManager];
 
-export async function provideInstaller(config: ServeConfig, [cli, workspace, packageManager]: ServeDeps) {
+export async function provideInstaller(config: InstallConfig, [cli, workspace, packageManager]: InstallDeps) {
   // @ts-ignore
   cli.register(new InstallCmd(workspace, packageManager));
 }
