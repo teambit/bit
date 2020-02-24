@@ -12,7 +12,6 @@ import { Dependencies, Dependency } from '../../consumer/component/dependencies'
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
 import { CompilerExtensionModel } from '../../legacy-extensions/compiler-extension';
 import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
-import ExtensionFile from '../../legacy-extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
@@ -283,9 +282,7 @@ export default class Version extends BitObject {
     };
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
-    const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
-    const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [...dists, ...files].filter(ref => ref);
   }
 
   toObject() {
@@ -311,9 +308,6 @@ export default class Version extends BitObject {
         config: env.config,
         files: []
       };
-      if (env.files && !R.isEmpty(env.files)) {
-        result.files = env.files.map(ExtensionFile.fromModelObjectToObject);
-      }
       return result;
     };
 
@@ -654,8 +648,7 @@ function parseEnv(env) {
   }
   return {
     name: env.name,
-    config: env.config,
-    files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
+    config: env.config
   };
 }
 

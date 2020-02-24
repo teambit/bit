@@ -28,7 +28,6 @@ export default class ComponentConfig extends AbstractConfig {
       tester,
       lang,
       bindingPrefix,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       extensions
     });
     this.overrides = overrides;

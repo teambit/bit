@@ -13,7 +13,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import SpecsResults from '../specs-results';
-import { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
+import { getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
 import { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
@@ -53,11 +53,9 @@ import { Analytics } from '../../analytics/analytics';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
-import EjectToWorkspace from './exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import InjectNonEjected from './exceptions/inject-non-ejected';
-import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
 import { ManipulateDirItem } from '../component-ops/manipulate-dir';
@@ -398,11 +396,10 @@ export default class Component {
     const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ejectConfData;
   }
 
-  async getConfigToWrite(consumer: Consumer | null | undefined, bitMap: BitMap): Promise<EjectConfData> {
+  async getConfigToWrite(consumer: Consumer, bitMap: BitMap): Promise<EjectConfData> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -415,10 +412,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap);
-    if (this.componentMap) {
-      this.componentMap.setConfigDir(res.ejectedPath);
-    }
+    const res = await getEjectConfDataToPersist(this, consumer);
     return res;
   }
 
@@ -732,21 +726,6 @@ export default class Component {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
           const isTesterDetached = await component.getDetachedTester(consumer);
-          const shouldWriteConfig = tester.writeConfigFilesOnAction && isTesterDetached;
-          if (shouldWriteConfig) {
-            tmpFolderFullPath = component.getTmpFolder(consumerPath);
-            if (verbose) {
-              console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
-            }
-            await writeEnvFiles({
-              configDir: component.getTmpFolder(),
-              env: tester,
-              consumer,
-              component,
-              deleteOldFiles: false,
-              verbose: !!verbose
-            });
-          }
 
           const context: Record<string, any> = {
             componentObject: component.toObject(),
@@ -759,7 +738,6 @@ export default class Component {
             testFiles: testFilesList,
             rawConfig: tester.rawConfig,
             dynamicConfig: tester.dynamicConfig,
-            configFiles: tester.files,
             api: tester.api,
             context
           };
@@ -1232,7 +1210,7 @@ export default class Component {
     };
     const isNotNested = componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isNotNested ? workspaceConfig.componentsConfig.getOverrideComponentData(id) : null;
+    const overridesFromConsumer = isNotNested ? workspaceConfig?.componentsConfig?.getOverrideComponentData(id) : null;
 
     const propsToLoadEnvs = {
       consumerPath,

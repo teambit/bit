@@ -4,12 +4,7 @@ import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import ConsumerOverrides from '../../consumer/config/consumer-overrides';
-import {
-  BIT_JSONC,
-  DEFAULT_LANGUAGE,
-  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
-  COMPILER_ENV_TYPE
-} from '../../constants';
+import { BIT_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -38,12 +33,14 @@ interface WorkspaceConfigProps {
   _distTarget?: string | undefined;
 }
 
-export interface WorkspaceConfigFileProps {
-  $schema: string;
-  $schemaVersion: string;
+export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceConfigProps;
   components: ConsumerOverrides;
-}
+};
+export type WorkspaceConfigFileProps = {
+  $schema: string;
+  $schemaVersion: string;
+} & WorkspaceConfigFileInputProps;
 
 export default class WorkspaceConfig {
   _path?: string;
@@ -247,6 +244,7 @@ export default class WorkspaceConfig {
       }
     }
     this.legacyConfig?.write({ workspaceDir });
+    return undefined;
   }
 
   async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
@@ -264,6 +262,7 @@ export default class WorkspaceConfig {
     if (this.legacyConfig) {
       return this.legacyConfig.toPlainObject();
     }
+    return undefined;
   }
 
   /**

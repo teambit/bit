@@ -910,7 +910,7 @@ export default class Consumer {
     return Promise.all(dependentComponentsP);
   }
 
-  async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: string | null | undefined }) {
+  async ejectConf(componentId: BitId) {
     const component = await this.loadComponent(componentId);
     return component.writeConfig(this);
   }

@@ -13,18 +13,14 @@ export default class EjectConf extends Command {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['p', 'path <path>', 'ejecting configuration into a specific directory']];
+  opts = [];
   loader = true;
   migration = true;
 
   async action([id]: [string], { path }: { path?: string }): Promise<EjectConfCliResult> {
     const cwd = process.cwd();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const res = await ejectConf(id, { ejectPath: path });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const res = await ejectConf(id);
     res.ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedFullPath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return res;
   }
 

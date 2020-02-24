@@ -226,28 +226,6 @@ export default class ComponentWriter {
     });
   }
 
-  async _populateEnvFilesIfNeeded() {
-    [this.component.compiler, this.component.tester].forEach(env => {
-      if (!env) return;
-      env.populateDataToPersist({
-        configDir: this.writeToPath,
-        consumer: this.consumer,
-        deleteOldFiles: false,
-        verbose: false,
-        envType: env.envType
-      });
-      this.component.dataToPersist.merge(env.dataToPersist);
-    });
-
-    const areThereEnvFiles =
-      (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
-      (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
-    if (areThereEnvFiles && !this.writeConfig && !this.configDir && this.component.componentMap) {
-      this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
-      this.component.componentMap.setConfigDir(this.configDir);
-    }
-  }
-
   /**
    * these changes were entered manually by a user via `overrides` key
    */
@@ -448,12 +426,6 @@ export default class ComponentWriter {
         return nodeModulesLinkAbs ? fs.remove(nodeModulesLinkAbs) : Promise.resolve();
       })
     );
-  }
-
-  _getConfigDir() {
-    if (this.configDir) return this.configDir;
-    if (this.consumer) return this.consumer.dirStructure.ejectedEnvsDirStructure;
-    return new ConfigDir(DEFAULT_EJECTED_ENVS_DIR_PATH);
   }
 
   _getNextPatchVersion() {
