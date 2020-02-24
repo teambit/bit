@@ -25,8 +25,8 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
 
     const res = this.node(id);
     if (res) {
-      this.cache.set(res.id, res.attr);
-      return res.attr;
+      this.cache.set(res.name, res);
+      return res;
     }
 
     return null;
@@ -46,10 +46,10 @@ export default class ExtensionGraph extends Graph<AnyExtension, string> {
    */
   static from(extensions: ExtensionManifest[]) {
     const { vertices, edges } = fromExtensions(extensions);
-    let vertexArray: { id: string; node: AnyExtension }[] = [];
-    vertices.forEach(vertex => {
-      vertexArray.push({ id: vertex.name, node: vertex });
-    });
-    return new ExtensionGraph(vertexArray, edges);
+    // let vertexArray: { id: string; node: AnyExtension }[] = [];
+    // vertices.forEach(vertex => {
+    //   vertexArray.push({ id: vertex.name, node: vertex });
+    // });
+    return new ExtensionGraph(vertices, edges);
   }
 }

@@ -76,7 +76,6 @@ function buildFromLegacyGraph(legacyGraph: GLG, componentFactory: ComponentFacto
   console.log(legacyGraph);
   let newGraph: ComponentGraph = new ComponentGraph();
   legacyGraph.nodes().forEach((node: string) => {
-    debugger;
     let NodeContent = legacyGraph.node(node);
     newGraph.setNode(componentFactory.fromRawComponent({ id: node, content: NodeContent }));
   });

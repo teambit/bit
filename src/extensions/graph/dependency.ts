@@ -1,6 +1,4 @@
-import { Serializable } from 'cleargraph';
-
-export class Dependency implements Serializable {
+export class Dependency {
   type: 'dev' | 'peer' | 'regular';
   constructor(type) {
     this.type = type;

@@ -118,7 +118,6 @@ export default class Harmony<ConfProps> {
     const graph = ExtensionGraph.fromRoot(extension);
     const harmony = new Harmony<Conf>(graph, new Config(config));
     await harmony.run();
-
     return harmony;
   }
 }

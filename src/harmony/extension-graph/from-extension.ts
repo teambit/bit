@@ -27,7 +27,6 @@ export function fromExtension(extension: ExtensionManifest) {
         edge: 'dependency'
       };
     });
-
     edges = edges.concat(newEdges);
 
     // @ts-ignore
@@ -36,8 +35,13 @@ export function fromExtension(extension: ExtensionManifest) {
 
   iterate(extension);
 
+  let vertexArray: { id: string; node: AnyExtension }[] = [];
+  for (let [key, value] of Object.entries(vertices)) {
+    vertexArray.push({ id: key, node: value });
+  }
+  console.log(vertexArray);
   return {
-    vertices: Object.values(vertices),
+    vertices: vertexArray, // : Object.values(vertices),
     edges
   };
 }
@@ -47,7 +51,6 @@ export function fromExtension(extension: ExtensionManifest) {
  */
 export function fromExtensions(extensions: ExtensionManifest[]) {
   const perExtension = extensions.map(ext => fromExtension(ext));
-
   return perExtension.reduce(
     (acc, subgraph) => {
       acc.edges = acc.edges.concat(subgraph.edges);

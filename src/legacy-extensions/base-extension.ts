@@ -465,7 +465,6 @@ function _getCoreExtensionPath(name: string): ExtensionPath {
 }
 
 function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPath {
-  debugger;
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // todo: make sure it always has a scope
