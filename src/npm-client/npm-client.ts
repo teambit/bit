@@ -67,7 +67,7 @@ type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'npm' | 'yarn';
+  packageManager: 'librarian' | 'npm' | 'yarn';
   packageManagerArgs: string[];
   packageManagerProcessOptions: Record<string, any>;
   useWorkspaces: boolean;
@@ -161,7 +161,7 @@ const _installInOneDirectory = ({
  * internally it uses npm list -j
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
-  const packageManager = DEFAULT_PACKAGE_MANAGER;
+  const packageManager = 'npm';
   let npmList;
   try {
     npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });

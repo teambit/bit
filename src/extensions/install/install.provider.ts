@@ -1,12 +1,13 @@
 import InstallCmd from './install.cmd';
 import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
+import { PackageManager } from '../package-manager';
 
-export type ServeConfig = {};
+export type InstallConfig = {};
 
-export type ServeDeps = [BitCli, Workspace];
+export type InstallDeps = [BitCli, Workspace, PackageManager];
 
-export async function provideInstaller(config: ServeConfig, [cli, workspace]: ServeDeps) {
+export async function provideInstaller(config: InstallConfig, [cli, workspace, packageManager]: InstallDeps) {
   // @ts-ignore
-  cli.register(new InstallCmd(workspace));
+  cli.register(new InstallCmd(workspace, packageManager));
 }
