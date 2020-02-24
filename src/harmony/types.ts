@@ -1,4 +1,3 @@
-import { Extension } from './extension';
 import Harmony from './harmony';
 
 /**
