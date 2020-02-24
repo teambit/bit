@@ -93,7 +93,7 @@ export type ComponentProps = {
   mainFile: PathOsBased;
   compiler?: CompilerExtension;
   tester: TesterExtension;
-  bitJson: ComponentConfig | null | undefined;
+  bitJson: ComponentConfig | undefined;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   compilerDependencies?: Dependency[];
@@ -135,7 +135,7 @@ export default class Component {
   mainFile: PathOsBased;
   compiler: CompilerExtension | null | undefined;
   tester: TesterExtension | null | undefined;
-  bitJson: ComponentConfig | null | undefined;
+  bitJson: ComponentConfig | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1186,7 +1186,7 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentConfig: ComponentConfig | null | undefined;
+    let componentConfig: ComponentConfig | undefined;
     if (configDir !== consumerPath) {
       // $FlowFixMe unclear error
       componentConfig = await ComponentConfig.load({

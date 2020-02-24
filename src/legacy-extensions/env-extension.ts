@@ -254,7 +254,7 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string;
     componentOrigin: ComponentOrigin;
     componentFromModel: ConsumerComponent;
-    componentConfig: ComponentConfig | null | undefined;
+    componentConfig: ComponentConfig | undefined;
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
     workspaceConfig: WorkspaceConfig;
     envType: EnvType;
@@ -266,7 +266,6 @@ export default class EnvExtension extends BaseExtension {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Object.keys(componentConfig[envType])[0] === MANUALLY_REMOVE_ENVIRONMENT) {
         logger.debug(`env-extension, ${envType} was manually removed from the component config`);

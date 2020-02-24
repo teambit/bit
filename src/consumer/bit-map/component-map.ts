@@ -273,7 +273,7 @@ export default class ComponentMap {
   /**
    * directory of the component (root / track)
    */
-  getComponentDir(): PathLinux | null | undefined {
+  getComponentDir(): PathLinux | undefined {
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
   }

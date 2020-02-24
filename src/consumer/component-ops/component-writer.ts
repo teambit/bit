@@ -9,20 +9,13 @@ import { ComponentOrigin } from '../bit-map/component-map';
 import Consumer from '../consumer';
 import logger from '../../logger/logger';
 import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
-import {
-  COMPONENT_ORIGINS,
-  COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  DEFAULT_EJECTED_ENVS_DIR_PATH,
-  COMPONENT_DIST_PATH_TEMPLATE
-} from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import BitMap from '../bit-map/bit-map';
-import ConfigDir from '../bit-map/config-dir';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
@@ -146,8 +139,7 @@ export default class ComponentWriter {
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
-      const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap, resolvedConfigDir);
+      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
@@ -177,12 +169,11 @@ export default class ComponentWriter {
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
 
-      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
-      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
+      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
+      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject() : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
-      await this._populateEnvFilesIfNeeded();
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
@@ -331,9 +322,7 @@ export default class ComponentWriter {
         )
       );
     };
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
+    if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
@@ -414,7 +403,7 @@ export default class ComponentWriter {
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id)
+          ? getNodeModulesPathOfComponent(this.consumer.config.workspaceConfig._bindingPrefix, this.component.id)
           : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath

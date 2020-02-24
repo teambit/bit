@@ -55,7 +55,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
       return null;
     };
-    const getFromComponentConfig = () => idFromComponentConfig || null;
+    const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     const getFromModel = () => idFromModel || null;
     const getFromPackageJson = () => idFromPackageJson || null;
@@ -161,13 +161,13 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromComponentConfig(componentId: BitId): BitId | null | undefined {
+  function getIdFromComponentConfig(componentId: BitId): BitId | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
-    if (R.isEmpty(dependencies)) return null;
+    if (R.isEmpty(dependencies)) return undefined;
     const dependency = Object.keys(dependencies).find(
       idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
     );
-    if (!dependency) return null;
+    if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
   }
 }
