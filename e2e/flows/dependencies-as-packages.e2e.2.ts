@@ -13,7 +13,7 @@ chai.use(require('chai-fs'));
   'installing dependencies as packages (not as components)',
   function() {
     this.timeout(0);
-    let helper;
+    let helper: Helper;
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
@@ -378,9 +378,11 @@ chai.use(require('chai-fs'));
           before(() => {
             helper.fs.deletePath('components/bar/foo/node_modules/@ci');
           });
-          it('bit status should show missing components and not untracked components', () => {
+          it('bit status should show not show it as untracked components', () => {
+            const statusJson = helper.command.statusJson();
+            expect(statusJson.invalidComponents).to.have.lengthOf(0);
+            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(0);
             const status = helper.command.status();
-            expect(status).to.have.string(componentIssuesLabels.missingComponents);
             expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
           });
         });
