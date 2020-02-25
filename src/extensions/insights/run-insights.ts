@@ -4,20 +4,19 @@ import tar from 'tar-stream';
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
-import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
-import DoctorRegistrar from '../../../doctor/doctor-registrar';
-import Diagnosis from '../../../doctor/diagnosis';
+import registerCoreAndExtensionsInsights from './insight-registrar-builder';
+import InsightRegistrar from './insight-registrar';
 import { getWithoutExt, getExt } from '../../../utils';
 import { ExamineResult } from '../../../doctor/diagnosis';
-import logger from '../../../logger/logger';
-import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
+import logger from '../../logger/logger';
+import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../constants';
 import * as globalConfig from './global-config';
 import { getConsumerInfo } from '../../../consumer/consumer-locator';
-import BitMap from '../../../consumer/bit-map';
-import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
-import DiagnosisNotFound from './exceptions/diagnosis-not-found';
-import { ConsumerInfo } from '../../../consumer/consumer-locator';
-import npmClient from '../../../npm-client';
+import BitMap from '../../consumer/bit-map';
+import MissingInsightName from './exceptions/missing-insight-name';
+import InsightNotFound from './exceptions/insight-not-found';
+import { ConsumerInfo } from '../../consumer/consumer-locator';
+import Insight from './insight';
 
 // run specific check
 export type DoctorMetaData = {
@@ -25,16 +24,14 @@ export type DoctorMetaData = {
   runningTimestamp: number;
   platform: string;
   bitVersion: string;
-  npmVersion: string;
-  yarnVersion: string;
   userDetails: string;
 };
-export type DoctorRunAllResults = {
+export type RunAllInsights = {
   examineResults: ExamineResult[];
   savedFilePath: string | null | undefined;
   metaData: DoctorMetaData;
 };
-export type DoctorRunOneResult = {
+export type RunOneInsight = {
   examineResult: ExamineResult;
   savedFilePath: string | null | undefined;
   metaData: DoctorMetaData;
@@ -42,11 +39,11 @@ export type DoctorRunOneResult = {
 
 let runningTimeStamp;
 
-export default (async function runAll({ filePath }: { filePath?: string }): Promise<DoctorRunAllResults> {
-  registerCoreAndExtensionsDiagnoses();
+export default (async function runAll({ filePath }: { filePath?: string }): Promise<RunAllInsights> {
+  registerCoreAndExtensionsInsights();
   runningTimeStamp = _getTimeStamp();
-  const doctorRegistrar = DoctorRegistrar.getInstance();
-  const examineP = doctorRegistrar.diagnoses.map(diagnosis => diagnosis.examine());
+  const insightRegistrar = InsightRegistrar.getInstance();
+  const examineP = insightRegistrar.insights.map(diagnosis => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
   const envMeta = await _getEnvMeta();
   const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
@@ -54,21 +51,21 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
 });
 
 export async function runOne({
-  diagnosisName,
+  insightName,
   filePath
 }: {
-  diagnosisName: string;
+  insightName: string;
   filePath?: string;
-}): Promise<DoctorRunOneResult> {
-  if (!diagnosisName) {
-    throw new MissingDiagnosisName();
+}): Promise<RunOneInsight> {
+  if (!insightName) {
+    throw new MissingInsightName();
   }
-  registerCoreAndExtensionsDiagnoses();
+  registerCoreAndExtensionsInsights();
   runningTimeStamp = _getTimeStamp();
-  const doctorRegistrar = DoctorRegistrar.getInstance();
-  const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
+  const insightRegistrar = InsightRegistrar.getInstance();
+  const diagnosis = insightRegistrar.getInsightByName(insightName);
   if (!diagnosis) {
-    throw new DiagnosisNotFound(diagnosisName);
+    throw new InsightNotFound(insightName);
   }
   const examineResult = await diagnosis.examine();
   const envMeta = await _getEnvMeta();
@@ -76,10 +73,10 @@ export async function runOne({
   return { examineResult, savedFilePath, metaData: envMeta };
 }
 
-export async function listDiagnoses(): Promise<Diagnosis[]> {
-  registerCoreAndExtensionsDiagnoses();
-  const doctorRegistrar = DoctorRegistrar.getInstance();
-  return Promise.resolve(doctorRegistrar.diagnoses);
+export async function listInsights(): Promise<Insight[]> {
+  registerCoreAndExtensionsInsights();
+  const insightRegistrar = InsightRegistrar.getInstance();
+  return Promise.resolve(insightRegistrar.insights);
 }
 
 async function _saveExamineResultsToFile(
@@ -167,8 +164,6 @@ async function _getEnvMeta(): Promise<DoctorMetaData> {
     runningTimestamp: runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
     bitVersion: BIT_VERSION,
-    npmVersion: await npmClient.getNpmVersion(),
-    yarnVersion: await npmClient.getYarnVersion(),
     userDetails: _getUserDetails()
   };
 

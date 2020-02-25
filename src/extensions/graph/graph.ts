@@ -3,16 +3,12 @@ import { BitCli } from '../cli';
 import { Workspace } from '../workspace';
 import { ComponentGraph } from './component-graph';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { InsightsCmd } from './graph.cmd';
 
 export type GraphDeps = [ComponentFactory, BitCli, Workspace];
 
 export class Graph {
   constructor(
-    /**
-     * component factory
-     */
-    private componentFactory: ComponentFactory,
-
     /**
      * bit's workspace
      */
@@ -28,7 +24,8 @@ export class Graph {
   }
 
   static async provide(config: {}, [componentFactory, cli, workspace]: GraphDeps) {
-    const graph = new Graph(componentFactory, workspace);
+    const graph = new Graph(workspace);
+    cli.register(new InsightsCmd(graph));
     return graph.build();
   }
 }

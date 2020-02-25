@@ -39,7 +39,7 @@ export default class Harmony<ConfProps> {
    * list all registered extensions ids
    */
   get extensionsIds() {
-    return [...this.graph.nodesMap().keys()];
+    return [...this.graph.nodes.keys()];
   }
 
   setExtensionConfig(extensionId: string, config: any) {

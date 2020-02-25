@@ -3,20 +3,20 @@ export type ExamineBareResult = {
   data?: Record<string, any>;
 };
 
-export type DiagnosisMetaData = {
+export type InsightMetaData = {
   name: string;
   description: string;
   category: string;
 };
 
 export type ExamineResult = {
-  diagnosisMetaData: DiagnosisMetaData;
+  diagnosisMetaData: InsightMetaData;
   bareResult: ExamineBareResult;
   formattedSymptoms: string; // A human readable of the found issues
   formattedManualTreat: string; // human readable steps to fix
 };
 
-export default class Diagnosis {
+export default class Insight {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

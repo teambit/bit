@@ -1,24 +1,35 @@
-import Command from '../../command';
-import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
-import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
-import formatDiagnosesList from '../../templates/diagnosis-list-template';
-import formatDiagnosesResult from '../../templates/doctor-results-template';
-import Diagnosis from '../../../doctor/diagnosis';
 
-export default class Doctor extends Command {
-  name = 'doctor [diagnosis-name]';
-  description = 'diagnose a bit workspace';
+import runAll, { listDiagnoses, runOne } from './run-insights';
+import formatDiagnosesList from '../../templates/diagnosis-list-template'; // use Ink instead!!
+import formatDiagnosesResult from '../../templates/doctor-results-template'; // use Ink instead!!
+import { RunAllInsights, RunOneInsight } from './run-insights';
+import Insight from './insight';
+import {Command, CLIArgs} from '../cli'
+import { Flags } from '../paper/command';
+import React from 'react';
+
+export default class Insights implements Command {
+  name = 'insights [insight-name]';
+  description = 'get insights on your components';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
-    ['j', 'json', 'return diagnoses in json format'],
-    ['', 'list', 'list all available diagnoses'],
-    ['s', 'save [filePath]', 'save diagnoses to a file']
+    // ['j', 'json', 'return diagnoses in json format'],
+    // ['', 'list', 'list all available diagnoses'],
+    // ['s', 'save [filePath]', 'save diagnoses to a file']
   ];
   migration = false;
 
+  async render([components]: CLIArgs, { verbose, noCache }: Flags) {
+    // @ts-ignore
+    const compileResults = await this.compile.compile(components, { verbose, noCache });
+    // eslint-disable-next-line no-console
+    console.log("compileResults", compileResults)
+    return <div>Compile has been completed successfully</div>;
+  }
+
   action(
-    [diagnosisName]: string[],
+    [insightName]: string[],
     {
       list = false,
       save
@@ -26,7 +37,7 @@ export default class Doctor extends Command {
       list?: boolean;
       save?: string;
     }
-  ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
+  ): Promise<RunAllInsights | Insight[] | RunOneInsight> {
     if (list) {
       return listDiagnoses();
     }
@@ -36,13 +47,13 @@ export default class Doctor extends Command {
     if (save === true) {
       filePath = '.';
     }
-    if (diagnosisName) {
-      return runOne({ diagnosisName, filePath });
+    if (insightName) {
+      return runOne({ insightName, filePath });
     }
     return runAll({ filePath });
   }
 
-  report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Record<string, any>): string {
+  report(res: RunAllInsights | Insight[], args: any, flags: Record<string, any>): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (flags.list) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -60,16 +71,15 @@ export default class Doctor extends Command {
   }
 }
 
-function _listReport(res: Diagnosis[], json: boolean): string {
+function _listReport(res: Insight[], json: boolean): string {
   if (json) {
     return JSON.stringify(res, null, 2);
   }
-  // const formatted = res.map(diagnosis => `${diagnosis.name}   ${diagnosis.description}\n`);
   const formatted = formatDiagnosesList(res);
   return formatted;
 }
 
-function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
+function _runOneReport(res: RunOneInsight, json: boolean): string {
   const { examineResult, savedFilePath, metaData } = res;
   if (json) {
     const fullJson = {
@@ -82,7 +92,7 @@ function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
   return formatted;
 }
 
-function _runAllReport(res: DoctorRunAllResults, json: boolean): string {
+function _runAllReport(res: RunAllInsights, json: boolean): string {
   const { examineResults, savedFilePath, metaData } = res;
   if (json) {
     const fullJson = {
