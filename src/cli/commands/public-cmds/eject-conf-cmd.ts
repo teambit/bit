@@ -17,11 +17,11 @@ export default class EjectConf extends Command {
   loader = true;
   migration = true;
 
-  async action([id]: [string], { path }: { path?: string }): Promise<EjectConfCliResult> {
+  async action([id]: [string]): Promise<EjectConfCliResult> {
     const cwd = process.cwd();
     const res = await ejectConf(id);
-    res.ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedFullPath);
-    return res;
+    const ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedPath);
+    return Object.assign({}, res, { ejectPathRelativeToCwd });
   }
 
   report(ejectResults: EjectConfCliResult): string {

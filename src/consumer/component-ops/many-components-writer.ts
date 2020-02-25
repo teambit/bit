@@ -63,7 +63,6 @@ export default class ManyComponentsWriter {
   writeToPath?: string;
   override: boolean;
   writePackageJson: boolean;
-  writeConfig: boolean;
   configDir?: string;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
@@ -92,8 +91,6 @@ export default class ManyComponentsWriter {
     this.override = this._setBooleanDefault(params.override, true);
     this.isolated = this._setBooleanDefault(params.isolated, false);
     this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
-    this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
-    this.configDir = params.configDir;
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
@@ -197,14 +194,12 @@ export default class ManyComponentsWriter {
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
-      const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component when a user used `--ignore-dist` flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
-        configDir: this.configDir || configDirFromComponentMap,
         origin,
         existingComponentMap: componentMap
       };
@@ -221,7 +216,6 @@ export default class ManyComponentsWriter {
   }
   _getDefaultWriteParams(): Record<string, any> {
     return {
-      writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
       bitMap: this.bitMap,

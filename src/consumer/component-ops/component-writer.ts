@@ -26,12 +26,11 @@ export type ComponentWriterProps = {
   component: Component;
   writeToPath: PathOsBasedRelative;
   writeConfig?: boolean;
-  configDir?: string;
   writePackageJson?: boolean;
   override?: boolean;
   isolated?: boolean;
   origin: ComponentOrigin;
-  consumer: Consumer | null | undefined;
+  consumer: Consumer | undefined;
   bitMap: BitMap;
   writeBitDependencies?: boolean;
   deleteBitDirContent?: boolean;
@@ -44,23 +43,21 @@ export default class ComponentWriter {
   component: Component;
   writeToPath: PathOsBasedRelative;
   writeConfig: boolean;
-  configDir: string | null | undefined;
   writePackageJson: boolean;
   override: boolean;
-  isolated: boolean | null | undefined;
+  isolated: boolean | undefined;
   origin: ComponentOrigin;
-  consumer: Consumer | null | undefined; // when using capsule, the consumer is not defined
+  consumer: Consumer | undefined; // when using capsule, the consumer is not defined
   bitMap: BitMap;
   writeBitDependencies: boolean;
-  deleteBitDirContent: boolean | null | undefined;
-  existingComponentMap: ComponentMap | null | undefined;
+  deleteBitDirContent: boolean | undefined;
+  existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   capsulePaths?: CapsulePaths;
   constructor({
     component,
     writeToPath,
     writeConfig = false,
-    configDir,
     writePackageJson = true,
     override = true,
     isolated = false,
@@ -76,7 +73,6 @@ export default class ComponentWriter {
     this.component = component;
     this.writeToPath = writeToPath;
     this.writeConfig = writeConfig;
-    this.configDir = configDir;
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.isolated = isolated;
@@ -189,27 +185,19 @@ export default class ComponentWriter {
     }
   }
 
-  addComponentToBitMap(rootDir: string | null | undefined): ComponentMap {
+  addComponentToBitMap(rootDir: string | undefined): ComponentMap {
     const filesForBitMap = this.component.files.map(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
-    const getConfigDir = () => {
-      if (this.configDir) return this.configDir;
-      if (this.component.componentMap) return this.component.componentMap.configDir;
-      return undefined;
-    };
 
     return this.bitMap.addComponent({
       componentId: this.component.id,
       files: filesForBitMap,
-      mainFile: pathNormalizeToLinux(this.component.mainFile), // $FlowFixMe
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      rootDir, // $FlowFixMe
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      configDir: getConfigDir(),
+      mainFile: pathNormalizeToLinux(this.component.mainFile),
+      rootDir,
       origin: this.origin,
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
@@ -307,17 +295,17 @@ export default class ComponentWriter {
       // $FlowFixMe this.component.componentMap is set
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const context = { componentDir: this.component.componentMap.getRootDir() };
-      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
-      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
-      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
-      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : undefined;
+      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : undefined;
+      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : undefined;
+      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : undefined;
       return (
         EnvExtension.areEnvsDifferent(
-          compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+          compilerFromConsumer ? compilerFromConsumer.toModelObject() : undefined,
           compilerFromComponent
         ) ||
         EnvExtension.areEnvsDifferent(
-          testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+          testerFromConsumer ? testerFromConsumer.toModelObject() : undefined,
           testerFromComponent
         )
       );

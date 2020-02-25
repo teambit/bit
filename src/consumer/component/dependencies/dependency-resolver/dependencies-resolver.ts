@@ -456,54 +456,18 @@ export default class DependencyResolver {
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
-    const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
-    const isTesterDependency = this.componentFromModel.testerDependencies.getById(componentId);
-    const isEnvDependency = isCompilerDependency || isTesterDependency;
-    const isRelativeToConfigDir = Boolean(isEnvDependency && this.componentMap.configDir && this.componentMap.rootDir);
-    const originallySource: PathLinux = this.getOriginallySourcePath(
-      isRelativeToConfigDir,
-      rootDir,
-      depFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isCompilerDependency
-    );
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
+
+    const relativePath: RelativePath | undefined = dependency.relativePaths.find(r => r.sourceRelativePath === depFile);
     if (!relativePath) {
       throw new ShowDoctorError(
-        `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
+        `unable to find ${relativePath} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }
     return {
       componentId: dependency.id,
       destination: relativePath.destinationRelativePath,
-      // in the case of isRelativeToConfigDir, sourceRelativePath should be relative to configDir
-      depFileRelative: isRelativeToConfigDir ? originallySource : depFile
+      depFileRelative: depFile
     };
-  }
-
-  getOriginallySourcePath(
-    isRelativeToConfigDir: boolean,
-    rootDir: PathLinux,
-    depFile: PathLinux,
-    isCompilerDependency: boolean
-  ): PathLinux {
-    if (isRelativeToConfigDir) {
-      // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
-      const resolvedSource = path.resolve(rootDir, depFile);
-      // @todo: use the new ConfigDir class that Gilad added once it is merged.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.componentMap.configDir,
-        this.componentMap.rootDir
-      );
-      const configDir = isCompilerDependency ? compilerConfigDir : testerConfigDir;
-      const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
-      return pathRelativeLinux(absoluteConfigDir, resolvedSource);
-    }
-    return depFile;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested = false) {

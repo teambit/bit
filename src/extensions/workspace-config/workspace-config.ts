@@ -35,7 +35,7 @@ interface WorkspaceConfigProps {
 
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceConfigProps;
-  components: ConsumerOverrides;
+  components?: ConsumerOverrides;
 };
 export type WorkspaceConfigFileProps = {
   $schema: string;
@@ -152,7 +152,7 @@ export default class WorkspaceConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static create(props: WorkspaceConfigFileProps, dirPath?: PathOsBasedAbsolute) {
+  static create(props: WorkspaceConfigFileInputProps, dirPath?: PathOsBasedAbsolute) {
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
     const template = parse(templateStr);
     const merged = assign(template, props);
@@ -175,7 +175,7 @@ export default class WorkspaceConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any
   ): Promise<WorkspaceConfig> {
     let workspaceConfig = await this.loadIfExist(dirPath);
     if (workspaceConfig) {

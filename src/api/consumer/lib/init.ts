@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { Consumer } from '../../../consumer';
 import { Repository } from '../../../scope/objects';
 import { isDirEmpty } from '../../../utils';
-import { WorkspaceConfigFileProps } from '../../../extensions/workspace-config/index';
+import { WorkspaceConfigFileInputProps } from '../../../extensions/workspace-config/index';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default (async function init(
@@ -11,7 +11,7 @@ export default (async function init(
   reset = false,
   resetHard = false,
   force = false,
-  workspaceConfigFileProps: WorkspaceConfigFileProps
+  workspaceConfigFileProps: WorkspaceConfigFileInputProps
 ): Promise<Consumer> {
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);

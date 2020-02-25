@@ -51,11 +51,11 @@ export function buildComponentsGraphForComponentsAndVersion(
 export function buildOneGraphForComponentsAndMultipleVersions(components: ComponentsAndVersions[]): Graph {
   const graph = new Graph();
   components.forEach(({ component, version }) => {
-    const bitId = component.toBitId().changeVersion(null);
+    const bitId = component.toBitId().changeVersion(undefined);
     const idStr = bitId.toString();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, bitId);
     version.getAllDependencies().forEach(dependency => {
-      const depId = dependency.id.changeVersion(null);
+      const depId = dependency.id.changeVersion(undefined);
       const depIdStr = depId.toString();
       if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, depId);
       graph.setEdge(idStr, depIdStr);

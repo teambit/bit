@@ -61,7 +61,7 @@ export default class ComponentsList {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : null
+          version: componentObjects.scope ? componentObjects.latest() : undefined
         });
       });
     }

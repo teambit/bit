@@ -38,20 +38,20 @@ export type DistFileModel = SourceFileModel;
 export type Log = {
   message: string;
   date: string;
-  username: string | null | undefined;
-  email: string | null | undefined;
+  username: string | undefined;
+  email: string | undefined;
 };
 
 export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists?: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinux | null | undefined;
-  compiler?: CompilerExtensionModel | null | undefined;
-  tester?: TesterExtensionModel | null | undefined;
+  dists?: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinux | undefined;
+  compiler?: CompilerExtensionModel | undefined;
+  tester?: TesterExtensionModel | undefined;
   log: Log;
   ci?: CiProps;
-  specsResults?: Results | null | undefined;
+  specsResults?: Results | undefined;
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
@@ -86,14 +86,14 @@ export type VersionProps = {
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinuxRelative | null | undefined;
-  compiler: CompilerExtensionModel | null | undefined;
-  tester: TesterExtensionModel | null | undefined;
+  dists: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinuxRelative | undefined;
+  compiler: CompilerExtensionModel | undefined;
+  tester: TesterExtensionModel | undefined;
   log: Log;
   ci: CiProps | {};
-  specsResults: Results | null | undefined;
-  docs: Doclet[] | null | undefined;
+  specsResults: Results | undefined;
+  docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -113,8 +113,8 @@ export default class Version extends BitObject {
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
-  bindingPrefix: string | null | undefined;
-  customResolvedPaths: customResolvedPath[] | null | undefined;
+  bindingPrefix: string | undefined;
+  customResolvedPaths: customResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
@@ -542,11 +542,11 @@ export default class Version extends BitObject {
     flattenedCompilerDependencies: BitIds;
     flattenedTesterDependencies: BitIds;
     message: string;
-    dists: Array<DistFileModel> | null | undefined;
+    dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
-    specsResults: Results | null | undefined;
-    username: string | null | undefined;
-    email: string | null | undefined;
+    specsResults: Results | undefined;
+    username: string | undefined;
+    email: string | undefined;
   }) {
     const parseFile = file => {
       return {
@@ -567,7 +567,7 @@ export default class Version extends BitObject {
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
-      dists: dists ? dists.map(parseFile) : null,
+      dists: dists ? dists.map(parseFile) : undefined,
       mainDistFile,
       compiler,
       bindingPrefix: component.bindingPrefix,
@@ -608,11 +608,11 @@ export default class Version extends BitObject {
     });
   }
 
-  setSpecsResults(specsResults: Results | null | undefined) {
+  setSpecsResults(specsResults: Results | undefined) {
     this.specsResults = specsResults;
   }
 
-  setDist(dist: Source | null | undefined) {
+  setDist(dist: Source | undefined) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {

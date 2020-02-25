@@ -10,7 +10,11 @@ import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import LegacyWorkspaceConfig from './config/workspace-config';
-import { WorkspaceConfig, WorkspaceConfigFileProps } from '../extensions/workspace-config';
+import {
+  WorkspaceConfig,
+  WorkspaceConfigFileProps,
+  WorkspaceConfigFileInputProps
+} from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -81,8 +85,8 @@ type ConsumerProps = {
   created?: boolean;
   isolated?: boolean;
   bitMap: BitMap;
-  addedGitHooks?: string[] | null | undefined;
-  existingGitHooks: string[] | null | undefined;
+  addedGitHooks?: string[] | undefined;
+  existingGitHooks: string[] | undefined;
 };
 
 type ComponentStatus = {
@@ -105,8 +109,8 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
-  addedGitHooks: string[] | null | undefined; // list of git hooks added during init process
-  existingGitHooks: string[] | null | undefined; // list of git hooks already exists during init process
+  addedGitHooks: string[] | undefined; // list of git hooks added during init process
+  existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -137,13 +141,13 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get compiler(): Promise<CompilerExtension | null | undefined> {
+  get compiler(): Promise<CompilerExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(COMPILER_ENV_TYPE);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get tester(): Promise<TesterExtension | null | undefined> {
+  get tester(): Promise<TesterExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(TESTER_ENV_TYPE);
   }
@@ -172,12 +176,9 @@ export default class Consumer {
     return this.bitMap.getAllBitIds();
   }
 
-  async getEnv(
-    envType: EnvType,
-    context: Record<string, any> | null | undefined
-  ): Promise<EnvExtension | null | undefined> {
+  async getEnv(envType: EnvType, context: Record<string, any> | undefined): Promise<EnvExtension | undefined> {
     const props = this._getEnvProps(envType, context);
-    if (!props) return null;
+    if (!props) return undefined;
     return makeEnv(envType, props);
   }
 
@@ -195,7 +196,7 @@ export default class Consumer {
       logger.info(`consumer.cleanTmpFolder, deleting ${tmpPath}`);
       return fs.remove(tmpPath);
     }
-    return null;
+    return undefined;
   }
 
   /**
@@ -296,9 +297,9 @@ export default class Consumer {
     return bitId.changeVersion(version || LATEST);
   }
 
-  getParsedIdIfExist(id: BitIdStr): BitId | null | undefined {
-    const bitId: BitId | null | undefined = this.bitMap.getExistingBitId(id, false);
-    if (!bitId) return null;
+  getParsedIdIfExist(id: BitIdStr): BitId | undefined {
+    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false);
+    if (!bitId) return undefined;
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
   }
@@ -319,10 +320,10 @@ export default class Consumer {
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
-  async loadComponentFromModelIfExist(id: BitId): Promise<Component | null | undefined> {
-    if (!id.version) return null;
+  async loadComponentFromModelIfExist(id: BitId): Promise<Component | undefined> {
+    if (!id.version) return undefined;
     return this.loadComponentFromModel(id).catch(err => {
-      if (err instanceof ComponentNotFound) return null;
+      if (err instanceof ComponentNotFound) return undefined;
       throw err;
     });
   }
@@ -574,7 +575,7 @@ export default class Consumer {
     const getStatus = async () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const status: ComponentStatus = {};
-      const componentFromModel: ModelComponent | null | undefined = await this.scope.getModelComponentIfExist(id);
+      const componentFromModel: ModelComponent | undefined = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
         // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
@@ -636,11 +637,11 @@ export default class Consumer {
   async tag(
     ids: BitIds,
     message: string,
-    exactVersion: string | null | undefined,
+    exactVersion: string | undefined,
     releaseType: semver.ReleaseType,
-    force: boolean | null | undefined,
-    verbose: boolean | null | undefined,
-    ignoreUnresolvedDependencies: boolean | null | undefined,
+    force: boolean | undefined,
+    verbose: boolean | undefined,
+    ignoreUnresolvedDependencies: boolean | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
     skipAutoTag: boolean
@@ -689,10 +690,10 @@ export default class Consumer {
       componentMap: ComponentMap,
       bitId: BitId,
       bindingPrefix: string
-    ): PathRelative | null | undefined => {
+    ): PathRelative | undefined => {
       if (componentMap.rootDir) return componentMap.rootDir;
       // it's author
-      if (!bitId.hasScope()) return null;
+      if (!bitId.hasScope()) return undefined;
       return getNodeModulesPathOfComponent(bindingPrefix, bitId);
     };
 
@@ -751,7 +752,7 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigFileProps: WorkspaceConfigFileProps
+    workspaceConfigFileProps: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
     return this.ensure(projectPath, noGit, workspaceConfigFileProps);
   }
@@ -768,7 +769,7 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigFileProps: WorkspaceConfigFileProps
+    workspaceConfigFileProps: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
@@ -820,7 +821,7 @@ export default class Consumer {
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
       return path.join(projectPath, BIT_HIDDEN_DIR);
     }
-    return null;
+    return undefined;
   }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
@@ -920,7 +921,7 @@ export default class Consumer {
     return component.injectConfig(this.getPath(), this.bitMap, force);
   }
 
-  _getEnvProps(envType: EnvType, context: Record<string, any> | null | undefined) {
+  _getEnvProps(envType: EnvType, context: Record<string, any> | undefined) {
     const envs = this.config._getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];

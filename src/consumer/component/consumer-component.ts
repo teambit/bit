@@ -86,55 +86,55 @@ export type ExtensionData = {
 
 export type ComponentProps = {
   name: string;
-  version?: string | null | undefined;
-  scope?: string | null | undefined;
+  version?: string;
+  scope?: string | null;
   lang?: string;
   bindingPrefix?: string;
   mainFile: PathOsBased;
   compiler?: CompilerExtension;
   tester: TesterExtension;
-  bitJson: ComponentConfig | undefined;
+  bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   compilerDependencies?: Dependency[];
   testerDependencies?: Dependency[];
-  flattenedDependencies?: BitIds | null | undefined;
-  flattenedDevDependencies?: BitIds | null | undefined;
-  flattenedCompilerDependencies?: BitIds | null | undefined;
-  flattenedTesterDependencies?: BitIds | null | undefined;
-  packageDependencies?: Record<string, any> | null | undefined;
-  devPackageDependencies?: Record<string, any> | null | undefined;
-  peerPackageDependencies?: Record<string, any> | null | undefined;
-  compilerPackageDependencies?: Record<string, any> | null | undefined;
-  testerPackageDependencies?: Record<string, any> | null | undefined;
-  customResolvedPaths?: customResolvedPath[] | null | undefined;
+  flattenedDependencies?: BitIds;
+  flattenedDevDependencies?: BitIds;
+  flattenedCompilerDependencies?: BitIds;
+  flattenedTesterDependencies?: BitIds;
+  packageDependencies?: Record<string, any>;
+  devPackageDependencies?: Record<string, any>;
+  peerPackageDependencies?: Record<string, any>;
+  compilerPackageDependencies?: Record<string, any>;
+  testerPackageDependencies?: Record<string, any>;
+  customResolvedPaths?: customResolvedPath[];
   overrides: ComponentOverrides;
   defaultScope: string | null;
-  packageJsonFile?: PackageJsonFile | null | undefined;
-  packageJsonChangedProps?: { [key: string]: any } | null | undefined;
+  packageJsonFile?: PackageJsonFile;
+  packageJsonChangedProps?: { [key: string]: any };
   files: SourceFile[];
-  docs?: Doclet[] | null | undefined;
+  docs?: Doclet[];
   dists?: Dist[];
-  mainDistFile?: PathLinux | null | undefined;
+  mainDistFile?: PathLinux;
   specsResults?: SpecsResults;
-  license?: License | null | undefined;
-  deprecated: boolean | null | undefined;
+  license?: License;
+  deprecated?: boolean;
   origin: ComponentOrigin;
-  log?: Log | null | undefined;
+  log?: Log;
   scopesList?: ScopeListItem[];
   extensions: ExtensionData[];
-  componentFromModel?: Component | null | undefined;
+  componentFromModel?: Component;
 };
 
 export default class Component {
   name: string;
-  version: string | null | undefined;
+  version: string | undefined;
   scope: string | null | undefined;
   lang: string;
   bindingPrefix: string;
   mainFile: PathOsBased;
-  compiler: CompilerExtension | null | undefined;
-  tester: TesterExtension | null | undefined;
+  compiler: CompilerExtension | undefined;
+  tester: TesterExtension | undefined;
   bitJson: ComponentConfig | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dependencies: Dependencies;
@@ -160,21 +160,21 @@ export default class Component {
   manuallyRemovedDependencies: ManuallyChangedDependencies = {};
   manuallyAddedDependencies: ManuallyChangedDependencies = {};
   overrides: ComponentOverrides;
-  docs: Doclet[] | null | undefined;
+  docs: Doclet[] | undefined;
   files: SourceFile[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dists: Dists;
-  specsResults: SpecsResults[] | null | undefined;
-  license: License | null | undefined;
-  log: Log | null | undefined;
+  specsResults: SpecsResults[] | undefined;
+  license: License | undefined;
+  log: Log | undefined;
   writtenPath?: PathOsBasedRelative; // needed for generate links
-  dependenciesSavedAsComponents: boolean | null | undefined = true; // otherwise they're saved as npm packages.
-  originallySharedDir: PathLinux | null | undefined; // needed to reduce a potentially long path that was used by the author
-  _wasOriginallySharedDirStripped: boolean | null | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  wrapDir: PathLinux | null | undefined; // needed when a user adds a package.json file to the component root
+  dependenciesSavedAsComponents: boolean | undefined = true; // otherwise they're saved as npm packages.
+  originallySharedDir: PathLinux | undefined; // needed to reduce a potentially long path that was used by the author
+  _wasOriginallySharedDirStripped: boolean | undefined; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
+  wrapDir: PathLinux | undefined; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem = false; // whether a component was loaded from the filesystem or converted from the model
-  componentMap: ComponentMap | null | undefined; // always populated when the loadedFromFileSystem is true
-  componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
+  componentMap: ComponentMap | undefined; // always populated when the loadedFromFileSystem is true
+  componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -188,15 +188,15 @@ export default class Component {
   _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
-  packageJsonFile: PackageJsonFile | null | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
-  packageJsonChangedProps: Record<string, any> | null | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
+  packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
+  packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _currentlyUsedVersion: BitId; // used by listScope functionality
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
-  scopesList: ScopeListItem[] | null | undefined;
+  scopesList: ScopeListItem[] | undefined;
   extensions: ExtensionData[] = [];
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -285,7 +285,7 @@ export default class Component {
     this.packageJsonFile = packageJsonFile;
     this.packageJsonChangedProps = packageJsonChangedProps;
     this.docs = docs || [];
-    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
+    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : undefined);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.specsResults = specsResults;
     this.license = license;
@@ -356,7 +356,7 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists: Dist[] | null | undefined, mainDistFile?: PathOsBased | null | undefined) {
+  setDists(dists: Dist[] | undefined, mainDistFile?: PathOsBased | undefined) {
     this.dists = new Dists(dists, mainDistFile);
   }
 
@@ -368,15 +368,15 @@ export default class Component {
     }
   }
 
-  async getDetachedCompiler(consumer: Consumer | null | undefined): Promise<boolean> {
+  async getDetachedCompiler(consumer: Consumer | undefined): Promise<boolean> {
     return this._isEnvDetach(consumer, COMPILER_ENV_TYPE);
   }
 
-  async getDetachedTester(consumer: Consumer | null | undefined): Promise<boolean> {
+  async getDetachedTester(consumer: Consumer | undefined): Promise<boolean> {
     return this._isEnvDetach(consumer, TESTER_ENV_TYPE);
   }
 
-  async _isEnvDetach(consumer: Consumer | null | undefined, envType: EnvType): Promise<boolean> {
+  async _isEnvDetach(consumer: Consumer | undefined, envType: EnvType): Promise<boolean> {
     if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
 
     const context = { workspaceDir: consumer.getPath() };
@@ -423,12 +423,8 @@ export default class Component {
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
     }
-    const configDir = componentMap.configDir;
-    if (!configDir) {
-      throw new InjectNonEjected();
-    }
 
-    const res = await injectConf(this, consumerPath, bitMap, configDir, force);
+    const res = await injectConf(this, consumerPath, force);
     if (this.componentMap) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.componentMap.setConfigDir();
@@ -1095,7 +1091,7 @@ export default class Component {
       docs,
       dists,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : undefined,
-      license: license ? License.deserialize(license) : null,
+      license: license ? License.deserialize(license) : undefined,
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false
     });
@@ -1132,7 +1128,7 @@ export default class Component {
     const bitMap: BitMap = consumer.bitMap;
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {
-      const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(null));
+      const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport();
     }
@@ -1174,32 +1170,20 @@ export default class Component {
     };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
-    let configDir = componentDir ? path.join(consumerPath, componentDir) : consumerPath;
-    if (componentMap.configDir) {
-      await componentMap.deleteConfigDirIfNotExists();
-      const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
-      if (resolvedBaseConfigDir) {
-        configDir = path.join(consumerPath, resolvedBaseConfigDir);
-      }
-    }
+
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentConfig: ComponentConfig | undefined;
-    if (configDir !== consumerPath) {
-      // $FlowFixMe unclear error
-      componentConfig = await ComponentConfig.load({
-        componentDir: componentMap.rootDir,
-        workspaceDir: consumerPath,
-        configDir,
-        workspaceConfig
-      });
-      // by default, imported components are not written with bit.json file.
-      // use the component from the model to get their bit.json values
-      if (componentFromModel) {
-        componentConfig.mergeWithComponentData(componentFromModel);
-      }
+    const componentConfig = await ComponentConfig.load({
+      componentDir: componentMap.rootDir,
+      workspaceDir: consumerPath,
+      workspaceConfig
+    });
+    // by default, imported components are not written with bit.json file.
+    // use the component from the model to get their bit.json values
+    if (componentFromModel) {
+      componentConfig.mergeWithComponentData(componentFromModel);
     }
     // for authored componentConfig is normally undefined
     const bitJson = componentConfig || workspaceConfig;
@@ -1247,7 +1231,7 @@ export default class Component {
       ? modelTesterPackageDependencies
       : testerDynamicPackageDependencies;
 
-    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
+    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     const overrides = ComponentOverrides.loadFromConsumer(
       overridesFromConsumer,
@@ -1256,8 +1240,8 @@ export default class Component {
       isAuthor
     );
 
-    const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
-    const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
+    const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
+    const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const extensions: ExtensionData[] = [];
     if (bitJson) {
       R.forEachObjIndexed((extConfig, extName) => {
@@ -1301,7 +1285,7 @@ export default class Component {
       componentMap,
       dists,
       docs: flattenedDocs,
-      mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
+      mainDistFile: mainDistFile ? path.normalize(mainDistFile) : undefined,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,

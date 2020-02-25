@@ -154,7 +154,7 @@ export default class Dists {
     }
   }
 
-  stripOriginallySharedDir(originallySharedDir: string | null | undefined) {
+  stripOriginallySharedDir(originallySharedDir: string | undefined) {
     this.dists.forEach(distFile => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);

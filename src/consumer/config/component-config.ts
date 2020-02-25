@@ -2,7 +2,7 @@ import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
 import { WorkspaceConfig } from '../../extensions/workspace-config';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import { PathOsBasedRelative } from '../../utils/path';
 import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
@@ -123,16 +123,13 @@ export default class ComponentConfig extends AbstractConfig {
   static async load({
     componentDir,
     workspaceDir,
-    configDir,
     workspaceConfig
   }: {
-    componentDir: PathOsBasedRelative | null | undefined;
+    componentDir: PathOsBasedRelative | undefined;
     workspaceDir: PathOsBasedRelative;
-    configDir: PathOsBasedAbsolute;
     workspaceConfig: WorkspaceConfig;
   }): Promise<ComponentConfig> {
-    if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
-    const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
     const loadBitJson = async () => {
       try {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
@@ -143,11 +140,11 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
-    const loadPackageJson = async (): Promise<PackageJsonFile | null | undefined> => {
-      if (!componentDir) return null;
+    const loadPackageJson = async (): Promise<PackageJsonFile | undefined> => {
+      if (!componentDir) return undefined;
       try {
         const file = await PackageJsonFile.load(workspaceDir, componentDir);
-        if (!file.fileExist) return null;
+        if (!file.fileExist) return undefined;
         return file;
       } catch (e) {
         throw new ShowDoctorError(
@@ -159,7 +156,7 @@ export default class ComponentConfig extends AbstractConfig {
     };
     const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
     const bitJsonConfig = bitJsonFile || {};
-    const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : null;
+    const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : undefined;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

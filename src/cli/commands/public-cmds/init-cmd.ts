@@ -83,8 +83,7 @@ export default class Init extends Command {
       workspace: {
         componentsDefaultDirectory: defaultDirectory,
         packageManager
-      },
-      components: {}
+      }
     };
     return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {

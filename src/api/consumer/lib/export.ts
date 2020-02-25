@@ -255,9 +255,6 @@ async function reImportComponent(consumer: Consumer, id: BitId) {
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
-    writeConfig: Boolean(componentMap.configDir), // write bit.json and config files only if it was there before
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    configDir: componentMap.configDir,
     writePackageJson
   });
   await manyComponentsWriter.writeAll();
