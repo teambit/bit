@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.1.6-dev.1] - 2020-01-25
+
+- fix components dependencies detection to resolve from package.json if not exist on the fs
+
 ## [2.1.5] - 2020-01-12
 
 ### Bug fixes

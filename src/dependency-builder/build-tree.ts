@@ -161,7 +161,7 @@ function groupDependencyTree(tree, cwd, bindingPrefix) {
 }
 
 /**
- * Get an import statement path to node package and return the package name
+ * return the package name by the import statement path to node package
  *
  * @param {string} packagePath import statement path
  * @returns {string} name of the package
@@ -220,6 +220,10 @@ function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNam
   }
   return { foundPackages: {}, missingPackages: packagesNames };
 }
+
+type Missing = { [absolutePath: string]: string[] }; // e.g. { '/tmp/workspace': ['lodash', 'ramda'] };
+type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
+type FoundPackages = { [packageName: string]: string };
 /**
  * Run over each entry in the missing array and transform the missing from list of paths
  * to object with missing types
@@ -230,7 +234,12 @@ function findPackagesInPackageJson(packageJson: Record<string, any>, packagesNam
  * @param {string} bindingPrefix
  * @returns new object with grouped missing
  */
-function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
+function groupMissing(
+  missing: Missing,
+  cwd,
+  consumerPath,
+  bindingPrefix
+): { missingGroups: MissingGroupItem[]; foundPackages: FoundPackages } {
   // temporarily disable this functionality since it cause few bugs: explanation below (on using the packageJson)
   // const packageJson = PackageJson.findPackage(cwd);
 
@@ -243,27 +252,26 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     if (item.startsWith(`${bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
     return item.startsWith('.') ? 'files' : 'packages';
   });
-  const groups = Object.keys(missing).map(key =>
+  const groups: MissingGroupItem[] = Object.keys(missing).map(key =>
     Object.assign({ originFile: processPath(key, {}, cwd) }, byPathType(missing[key], bindingPrefix))
   );
-  groups.forEach(group => {
+  groups.forEach((group: MissingGroupItem) => {
     if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
+    if (group.bits) group.bits = group.bits.map(resolvePackageNameByPath);
   });
   // This is a hack to solve problems that madge has with packages for type script files
   // It see them as missing even if they are exists
   const foundPackages = {};
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const packageJson = PackageJson.findPackage(cwd);
-
-  groups.forEach(group => {
-    const missingPackages = [];
+  groups.forEach((group: MissingGroupItem) => {
+    const missingPackages: string[] = [];
     if (group.packages) {
       group.packages.forEach(packageName => {
-        // Don't add the same package twice
+        // Don't try to resolve the same package twice
         if (R.contains(packageName, missingPackages)) return;
         const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
         if (!resolvedPath) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           missingPackages.push(packageName);
           return;
         }
@@ -279,6 +287,13 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       groups.packages = result.missingPackages;
       Object.assign(foundPackages, result.foundPackages);
+
+      if (group.bits) {
+        const foundBits = findPackagesInPackageJson(packageJson, group.bits);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        groups.bits = foundBits.missingPackages;
+        Object.assign(foundPackages, foundBits.foundPackages);
+      }
     }
   });
 
@@ -358,15 +373,22 @@ function getResolveConfigAbsolute(
   return resolveConfigAbsolute;
 }
 
-function mergeManuallyFoundPackagesToTree(foundPackages, groups, tree: Tree) {
+function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingGroups: MissingGroupItem[], tree: Tree) {
   if (R.isEmpty(foundPackages)) return;
   // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
   Object.keys(foundPackages).forEach(pkg => {
     // locate package in groups(contains missing)
-    groups.forEach(fileDep => {
+    missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
         fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
         lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
+      }
+      if (fileDep.bits && fileDep.bits.includes(pkg)) {
+        fileDep.bits = fileDep.bits.filter(packageName => packageName !== pkg);
+        if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
+        if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
+        // @ts-ignore
+        tree[fileDep.originFile].bits.push(pkg);
       }
     });
   });

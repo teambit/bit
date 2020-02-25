@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "2.1.5",
+  "version": "2.1.6-dev.1",
   "scripts": {
     "lint": "tsc && eslint \"src/**/*.ts\"",
     "lint-circle": "eslint \"src/**/*.ts\" --format junit -o junit/eslint-results.xml",
