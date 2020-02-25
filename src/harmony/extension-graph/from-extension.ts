@@ -39,7 +39,6 @@ export function fromExtension(extension: ExtensionManifest) {
   for (let [key, value] of Object.entries(vertices)) {
     vertexArray.push({ id: key, node: value });
   }
-  console.log(vertexArray);
   return {
     vertices: vertexArray, // : Object.values(vertices),
     edges

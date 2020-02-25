@@ -2,7 +2,7 @@ import { Graph } from 'cleargraph';
 import { Component } from '../component';
 import { Dependency } from './index';
 
-export type insightType =
+export type insightName =
   | 'cyclicDependencies'
   | 'isCyclic'
   | 'duplicateDependencies'
@@ -12,18 +12,18 @@ export type insightType =
 export type responseType = 'graph_array' | 'boolean' | 'number';
 export type nodeId = string;
 export type insight = {
-  inisight: insightType;
+  inisight: insightName;
   message: string;
   data: Array<Graph<Component, Dependency>>;
 };
 
-export interface commandObject {
-  inisight: insightType;
+export interface command {
+  inisight: insightName;
   graph: Graph<Component, Dependency>;
   startingNode?: nodeId;
   depth?: number; // the max number of steps for traversal
 }
 
-export interface insightObject {
-  insights: Array<insight>;
+export interface insights {
+  data: Array<insight>;
 }
