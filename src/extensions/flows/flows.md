@@ -1,14 +1,10 @@
-Flows - runs user flows on a network of dependent component
------
+**Flows** - run user flows on a network of dependent component
 
-Open questions?
-------------------
-1. How to buffer messages until subscribed ? or provide subscriber
-2. stream of streams or messages ?
-3. How to handle caching ?
-4. How to handle version ?
-5. Why did scripts need a registry ?
+**Product**
+- Provides a `bit run` command to execute flows over networks.
+- Provides an API to create network and execute user flows.
 
+**Terms**
 Capsule - isolated representation of a component in filesystem.
 Network - A graph of isolated component dependents.
 ComponentFlow - A collection of tasks to execute in a component capsules.
@@ -38,8 +34,8 @@ export class NetworkChange {
 }
 
 export class FlowStream() {
-  flatten(){} //subscribe to all messages
-}
+  flatten(){} // subscribe to all messages
+}             // might prove easy to test
 
 export class ComponentFlow {
   constructor(private component:ComponentCapsule, private tasks:Task[]) {}
@@ -60,8 +56,7 @@ export class Flows {
 EndTimeInfo = {duration:number, end:Date}
 Start = Date
 
-Network Execution Messages
-------------------
+**Network Execution Messages**
 - network:start
 - network:end -> EndTimeInfo
 - flow:start
@@ -72,8 +67,7 @@ Network Execution Messages
 - task:stderr -> string messages.
 
 
-Network Creation Messages
-----------------------
+**Network Creation Messages**
 - capsule:sync:start
 - capsule:sync
 - capsule:create:start
@@ -84,3 +78,11 @@ Network Creation Messages
 - capsule:install -> EndTimeInfo, id, status
 - network:start
 - network:end -> Network, EndTimeInfo
+
+**Open questions?**
+1. How to buffer messages until subscribed ? or provide subscriber
+2. stream of streams or messages ?
+3. How to handle caching ?
+4. How to handle version ?
+5. Why did scripts need a registry ?
+
