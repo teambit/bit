@@ -62,25 +62,25 @@ Start = Date
 
 Network Execution Messages
 ------------------
-network:start
-network:end -> EndTimeInfo
-flow:start
-flow:result -> DependencyError || Array<T | Error | PervTaskFailedError>, EndTimeInfo
-task:start,
-task:result -> T extends {status:number},
-task:stdout -> string messages.
-task:stderr -> string messages.
+- network:start
+- network:end -> EndTimeInfo
+- flow:start
+- flow:result -> DependencyError || Array<T | Error | PervTaskFailedError>, EndTimeInfo
+- task:start,
+- task:result -> T extends {status:number},
+- task:stdout -> string messages.
+- task:stderr -> string messages.
 
 
 Network Creation Messages
 ----------------------
-capsule:sync:start
-capsule:sync
-capsule:create:start
-capsule:create -> EndTimeInfo, Capsule
-capsule:install:stdout
-capsule:install:stderr
-capsule:install:start
-capsule:install -> EndTimeInfo, id, status
-network:start
-network:end -> Network, EndTimeInfo
+- capsule:sync:start
+- capsule:sync
+- capsule:create:start
+- capsule:create -> EndTimeInfo, Capsule
+- capsule:install:stdout
+- capsule:install:stderr
+- capsule:install:start
+- capsule:install -> EndTimeInfo, id, status
+- network:start
+- network:end -> Network, EndTimeInfo
