@@ -1,14 +1,16 @@
-**Flows** - run user flows on a network of dependent component
+**Flows**
+---------
+Run user flows on a network of dependent component
 
 **Product**
 - Provides a `bit run` command to execute flows over networks.
 - Provides an API to create network and execute user flows.
 
 **Terms**
-Capsule - isolated representation of a component in filesystem.
-Network - A graph of isolated component dependents.
-ComponentFlow - A collection of tasks to execute in a component capsules.
-Task - a runnable activity in a capsule.
+- Capsule - isolated representation of a component in filesystem.
+- Network - A graph of isolated component dependents.
+- Flow - A collection of tasks to execute in a component capsules.
+- Task - a runnable activity in a capsule.
 
 ```ts
 export class Network {
@@ -37,7 +39,7 @@ export class FlowStream() {
   flatten(){} // subscribe to all messages
 }             // might prove easy to test
 
-export class ComponentFlow {
+export class Flow {
   constructor(private component:ComponentCapsule, private tasks:Task[]) {}
   execute(): TaskStream{}
 }
@@ -59,8 +61,10 @@ Start = Date
 **Network Execution Messages**
 - network:start
 - network:end -> EndTimeInfo
+- network:FlowStream
 - flow:start
 - flow:result -> DependencyError || Array<T | Error | PervTaskFailedError>, EndTimeInfo
+- flow:TaskStream
 - task:start,
 - task:result -> T extends {status:number},
 - task:stdout -> string messages.
@@ -78,6 +82,7 @@ Start = Date
 - capsule:install -> EndTimeInfo, id, status
 - network:start
 - network:end -> Network, EndTimeInfo
+- capsule:stream
 
 **Open questions?**
 1. How to buffer messages until subscribed ? or provide subscriber
