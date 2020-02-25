@@ -243,9 +243,9 @@ console.log(isType());`;
       // is-string2
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('utils/is-string');
-      const isStringFixture2 = `const isString = require('bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
+      const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
       helper.command.addComponent('test/is-string2.js', { i: 'test/is-string2' });
       helper.command.tagAllComponents();
@@ -253,24 +253,24 @@ console.log(isType());`;
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('test/is-string2');
 
-      const appJsFixture = `const isString2 = require('bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
+      const appJsFixture = `const isString2 = require('@bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
       fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.scopes.localPath, 'node_modules', 'bitTest2')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'node_modules', '@bitTest2')).to.be.a.path();
     });
     it('node_modules should contain custom dir name2', () => {
       expect(
         path.join(
           helper.scopes.localPath,
           'node_modules',
-          'bitTest2',
+          '@bitTest2',
           `${helper.scopes.remote}.test.is-string2`,
           'node_modules',
-          'bitTest2'
+          '@bitTest2'
         )
       ).to.be.a.path();
     });
@@ -279,8 +279,8 @@ console.log(isType());`;
         path.join(
           helper.scopes.localPath,
           'node_modules',
-          'bitTest2',
-          `${helper.scopes.remote}.test.is-string2/node_modules/bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/bitTest`
+          '@bitTest2',
+          `${helper.scopes.remote}.test.is-string2/node_modules/@bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/bitTest`
         )
       ).to.be.a.path();
     });
