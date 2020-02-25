@@ -34,7 +34,7 @@ export type WorkspaceConfigProps = {
   ejectedEnvsDirectory?: string;
   bindingPrefix?: string;
   extensions?: Extensions;
-  packageManager?: 'npm' | 'yarn';
+  packageManager?: 'librarian' | 'npm' | 'yarn';
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
   useWorkspaces?: boolean;
@@ -53,7 +53,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
-  packageManager: 'npm' | 'yarn'; // package manager client to use
+  packageManager: 'librarian' | 'npm' | 'yarn'; // package manager client to use
   packageManagerArgs: string[] | undefined; // package manager client to use
   packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
@@ -85,7 +85,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     overrides = ConsumerOverrides.load()
   }: WorkspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
-    if (packageManager !== 'npm' && packageManager !== 'yarn') {
+    if (packageManager !== 'npm' && packageManager !== 'yarn' && packageManager !== 'librarian') {
       throw new InvalidPackageManager(packageManager);
     }
     this.distTarget = distTarget;

@@ -161,7 +161,7 @@ const _installInOneDirectory = ({
  * internally it uses npm list -j
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
-  const packageManager = DEFAULT_PACKAGE_MANAGER;
+  const packageManager = 'npm';
   let npmList;
   try {
     npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });

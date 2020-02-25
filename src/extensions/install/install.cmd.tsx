@@ -1,8 +1,12 @@
 import React from 'react';
 import { Color } from 'ink';
 import { Command } from '../paper';
-import { FailedToInstall } from './failed-to-install';
 import { Workspace } from '../workspace';
+import { PackageManager } from '../package-manager';
+
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
+import { Install } from './install';
 
 export default class InstallCmd implements Command {
   name = 'install';
@@ -12,17 +16,12 @@ export default class InstallCmd implements Command {
   shortDescription = '';
   options = [];
 
-  constructor(private workspace: Workspace) {}
+  constructor(private install: Install) {}
 
   // TODO: remove this ts-ignore
   // @ts-ignore
   async render() {
-    try {
-      const components = await this.workspace.list();
-      const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      return <Color green>Successfully installed {isolatedEnvs.length} components</Color>;
-    } catch (e) {
-      throw new FailedToInstall(e.message);
-    }
+    const results = await this.install.install();
+    return <Color green>Successfully installed {results.length} component(s)</Color>;
   }
 }

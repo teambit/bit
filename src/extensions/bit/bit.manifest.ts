@@ -5,6 +5,8 @@ import provideBit from './bit.provider';
 import { ScriptsExt } from '../scripts';
 import { ComposerExt } from '../composer';
 import { ReactExtension } from '../react/react.manifest';
+import { InstallExt } from '../install';
+
 import CompileExt from '../compile/compile.manifest';
 import TestExt from '../test/test.manifest';
 import { GraphExt } from '../graph';
@@ -20,7 +22,8 @@ export default {
     TestExt,
     ComposerExt,
     ReactExtension,
-    GraphExt
+    GraphExt,
+    InstallExt
   ],
   config: {},
   provider: provideBit
