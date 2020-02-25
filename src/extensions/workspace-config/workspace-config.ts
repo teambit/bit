@@ -9,32 +9,13 @@ import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { AbstractVinyl } from '../../consumer/component/sources';
-import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { Compilers, Testers } from '../../consumer/config/abstract-config';
+import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings';
 
-// TODO: get the types in a better way
-import { PMConfig } from '../package-manager';
 import { EnvType } from '../../legacy-extensions/env-extension-types';
 
-interface WorkspaceConfigProps {
-  componentsDefaultDirectory?: string;
-  dependenciesDirectory?: string;
-  defaultScope?: string;
-  saveDependenciesAsComponents?: boolean;
-  resolveModules?: ResolveModulesConfig;
-  packageManager: PMConfig;
-  _useWorkspaces?: boolean;
-  _manageWorkspaces?: boolean;
-  _bindingPrefix?: string;
-  _dependenciesDirectory?: string | undefined;
-  _resolveModules?: ResolveModulesConfig | undefined;
-  _saveDependenciesAsComponents?: boolean;
-  _distEntry?: string | undefined;
-  _distTarget?: string | undefined;
-}
-
 export type WorkspaceConfigFileInputProps = {
-  workspace: WorkspaceConfigProps;
+  workspace: WorkspaceSettingsProps;
   components?: ConsumerOverrides;
 };
 export type WorkspaceConfigFileProps = {
@@ -44,8 +25,16 @@ export type WorkspaceConfigFileProps = {
 
 export default class WorkspaceConfig {
   _path?: string;
+  // Return only the configs that are workspace related (without components configs or schema definition)
+  workspaceSettings: WorkspaceSettings;
 
-  constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {}
+  constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
+    if (data) {
+      this.workspaceSettings = WorkspaceSettings.fromObject(data.workspace);
+    } else {
+      this.workspaceSettings = WorkspaceSettings.fromLegacyConfig(legacyConfig);
+    }
+  }
 
   get path(): PathOsBased {
     return this._path || this.legacyConfig?.path || '';
@@ -72,38 +61,6 @@ export default class WorkspaceConfig {
       return this.legacyConfig?.compiler;
     }
     return this.legacyConfig?.tester;
-  }
-
-  // TODO: define type somehow
-  /**
-   * Return only the configs that are workspace related (without components configs or schema definition)
-   *
-   * @readonly
-   * @memberof WorkspaceConfig
-   */
-  get workspaceConfig() {
-    if (this.data) {
-      return this.data.workspace;
-    }
-    // legacy configs
-    return {
-      defaultScope: this.legacyConfig?.defaultScope,
-      componentsDefaultDirectory: this.legacyConfig?.componentsDefaultDirectory,
-      dependenciesDirectory: this.legacyConfig?.dependenciesDirectory,
-      packageManager: {
-        packageManager: this.legacyConfig?.packageManager,
-        packageManagerArgs: this.legacyConfig?.packageManagerArgs,
-        packageManagerProcessOptions: this.legacyConfig?.packageManagerProcessOptions
-      },
-      _bindingPrefix: this.legacyConfig?.bindingPrefix,
-      _useWorkspaces: this.legacyConfig?.useWorkspaces,
-      _manageWorkspaces: this.legacyConfig?.manageWorkspaces,
-      _dependenciesDirectory: this.legacyConfig?.dependenciesDirectory,
-      _resolveModules: this.legacyConfig?.resolveModules,
-      _saveDependenciesAsComponents: this.legacyConfig?.saveDependenciesAsComponents,
-      _distEntry: this.legacyConfig?.distEntry,
-      _distTarget: this.legacyConfig?.distTarget
-    };
   }
 
   /**
@@ -271,7 +228,7 @@ export default class WorkspaceConfig {
    * @memberof WorkspaceConfig
    */
   getCoreExtensionsConfig(): { [extensionName: string]: any } {
-    const workspaceConfig = this.workspaceConfig;
+    const workspaceConfig = this.workspaceSettings;
     // TODO: take it somehow from harmony that should get it by the workspace extension manifest
     const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory'];
     const workspaceExtProps = pick(workspaceExtPropNames, workspaceConfig);

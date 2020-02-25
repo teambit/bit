@@ -434,7 +434,7 @@ export default class DependencyResolver {
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.config.workspaceConfig._resolveModules;
+    const resolveModules = this.consumer.config.workspaceSettings._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])

@@ -20,12 +20,12 @@ export async function installPackages(
   installProdPackagesOnly = false
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.config.workspaceConfig.packageManager.packageManager;
+  const packageManager = consumer.config.workspaceSettings.packageManager.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.config.workspaceConfig.packageManager.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.config.workspaceConfig.packageManager.packageManagerProcessOptions;
-  const useWorkspaces = consumer.config.workspaceConfig._useWorkspaces;
+    : consumer.config.workspaceSettings.packageManager.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.config.workspaceSettings.packageManager.packageManagerProcessOptions;
+  const useWorkspaces = consumer.config.workspaceSettings._useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 

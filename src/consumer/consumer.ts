@@ -164,8 +164,8 @@ export default class Consumer {
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
-        this.config.workspaceConfig.componentsDefaultDirectory,
-        this.config.workspaceConfig.dependenciesDirectory
+        this.config.workspaceSettings.componentsDefaultDirectory,
+        this.config.workspaceSettings._dependenciesDirectory
       );
     }
     return this._dirStructure;
@@ -428,7 +428,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.workspaceConfig._saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config.workspaceSettings._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -445,7 +445,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.workspaceConfig._distEntry && !this.config.workspaceConfig._distTarget;
+    return !this.config.workspaceSettings._distEntry && !this.config.workspaceSettings._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
