@@ -1,7 +1,9 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
+
+chai.use(require('chai-fs'));
 
 describe('tasks/scripts functionality', function() {
   this.timeout(0);
@@ -33,7 +35,8 @@ describe('tasks/scripts functionality', function() {
         scripts: {
           build: ['extensions/gulp-ts']
         },
-        'extensions/gulp-ts': {}
+        'extensions/gulp-ts': {},
+        create: { template: 'extensions/gulp-ts' }
       };
       const overrides = {
         'extensions/*': {
@@ -65,6 +68,21 @@ describe('tasks/scripts functionality', function() {
     // @todo: improve!
     it('should do something useful', () => {
       expect(taskOutput).to.have.string("Got Message from ChildProcess { dir: 'dist' }");
+    });
+    // @todo: move it from here.
+    describe('create', () => {
+      before(() => {
+        helper.command.create('foo');
+      });
+      it('should create the component files', () => {
+        const compDir = path.join(helper.scopes.localPath, 'components/foo');
+        expect(path.join(compDir, 'foo.js')).to.be.a.file();
+        expect(path.join(compDir, 'foo.spec.js')).to.be.a.file();
+      });
+      it('should add the files to bitmap', () => {
+        const status = helper.command.status();
+        expect(status).to.have.string('foo');
+      });
     });
   });
 });
