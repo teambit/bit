@@ -9,7 +9,7 @@ export type insightName =
   | 'depth'
   | 'totalDependencies'
   | 'all';
-export type responseType = 'graph_array' | 'boolean' | 'number';
+export type responseType = 'graph_array' | 'boolean' | 'number' | 'string';
 export type nodeId = string;
 export type insight = {
   inisight: insightName;

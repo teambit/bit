@@ -1,81 +1,64 @@
-export type ExamineBareResult = {
-  valid: boolean;
-  data?: Record<string, any>;
-};
-
 export type InsightMetaData = {
   name: string;
   description: string;
-  category: string;
 };
 
-export type ExamineResult = {
-  diagnosisMetaData: InsightMetaData;
-  bareResult: ExamineBareResult;
-  formattedSymptoms: string; // A human readable of the found issues
-  formattedManualTreat: string; // human readable steps to fix
+export type InsightResult = {
+  metaData: InsightMetaData;
+  message?: string;
+  data: any;
+  formattedData: string; // human-readable format
+};
+
+export type BareResult = {
+  message?: string;
+  data: any;
 };
 
 export default class Insight {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   name: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   description: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  category: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  result: Record<string, any>;
-
+  constructor(name: string, description: string) {
+    this.name = name;
+    this.description = description;
+  }
   /**
-   * A function that actually runs the examination
+   * A function that runs a specific insight. Can get any number of arguments.
    */
-  async _runExamine(): Promise<ExamineBareResult> {
+  async _runInsight(...args: any[]): Promise<BareResult> {
     throw new Error('You must implement this method');
   }
 
   /**
-   * Returns a descriptive symptoms message which might include specific data from the examination
+   * Takes the data returned by the insight and stringifies it.
    * @param bareResult ExamineBareResult
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _formatSymptoms(bareResult: ExamineBareResult): string {
-    throw new Error('You must implement this method');
-  }
-
-  /**
-   * Returns a descriptive instruction to handle the issue (might include specific data from the examination)
-   * @param bareResult ExamineBareResult
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _formatManualTreat(bareResult: ExamineBareResult): string {
+  _formatData(data: any): string {
     throw new Error('You must implement this method');
   }
 
   getMeta() {
     return {
-      category: this.category,
       name: this.name,
       description: this.description
     };
   }
 
-  async examine(): Promise<ExamineResult> {
-    const bareResult = await this._runExamine();
-    if (bareResult.valid) {
-      return {
-        diagnosisMetaData: this.getMeta(),
-        bareResult,
-        formattedSymptoms: '',
-        formattedManualTreat: ''
-      };
-    }
-    const formattedSymptoms = this._formatSymptoms(bareResult);
-    const formattedManualTreat = this._formatManualTreat(bareResult);
-    return {
-      diagnosisMetaData: this.getMeta(),
-      bareResult,
-      formattedSymptoms,
-      formattedManualTreat
+  async runInsight(...args: any[]): Promise<InsightResult> {
+    const bareResult = await this._runInsight(...args);
+    const formattedData = this._formatData(bareResult.data);
+    const result = {
+      metaData: {
+        name: this.name,
+        description: this.description
+      },
+      data: bareResult.data,
+      formattedData: formattedData
     };
+
+    if (!!bareResult.message) {
+      result['message'] = bareResult.message;
+    }
+    return result;
   }
 }
