@@ -603,6 +603,28 @@ describe('bit status command', function() {
       expect(output).to.have.string('bar/foo.js -> scope.bar/baz');
     });
   });
+  describe('when a component requires a missing bit component that exists on package.json', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      const fooFixture = "require ('@bit/scope.bar.baz');";
+      helper.fixtures.createComponentBarFoo(fooFixture);
+      helper.fixtures.addComponentBarFoo();
+      helper.npm.initNpm();
+      helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': 'v1.0.0' } });
+      output = helper.command.runCmd('bit status');
+    });
+    it('should not show the bit package as missing', () => {
+      expect(output).to.not.have.string('missing components');
+      const status = helper.command.statusJson();
+      expect(status.componentsWithMissingDeps).to.have.lengthOf(0);
+    });
+    it('should resolve the component version from the package.json file', () => {
+      const show = helper.command.showComponentParsed();
+      expect(show.dependencies).to.have.lengthOf(1);
+      expect(show.dependencies[0].id).to.equal('scope.bar/baz@1.0.0');
+    });
+  });
   /**
    * this has been written due to the following bug:
    * when Bit resolves dependencies of a component, the data is saved in the cache for the next
