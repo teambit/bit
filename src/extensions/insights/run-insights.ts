@@ -4,7 +4,7 @@ import tar from 'tar-stream';
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
-import registerCoreAndExtensionsInsights from './insight-registrar-builder';
+import registerCoreAndExtensionsInsights from './core-insights-getter';
 import InsightRegistrar from './insight-registrar';
 import { getWithoutExt, getExt } from '../../../utils';
 import { ExamineResult } from '../../../doctor/diagnosis';
@@ -17,6 +17,7 @@ import MissingInsightName from './exceptions/missing-insight-name';
 import InsightNotFound from './exceptions/insight-not-found';
 import { ConsumerInfo } from '../../consumer/consumer-locator';
 import Insight from './insight';
+import getCoreInsights from './core-insights-getter';
 
 // run specific check
 export type DoctorMetaData = {
@@ -40,7 +41,7 @@ export type RunOneInsight = {
 let runningTimeStamp;
 
 export default (async function runAll({ filePath }: { filePath?: string }): Promise<RunAllInsights> {
-  registerCoreAndExtensionsInsights();
+  getCoreInsights();
   runningTimeStamp = _getTimeStamp();
   const insightRegistrar = InsightRegistrar.getInstance();
   const examineP = insightRegistrar.insights.map(diagnosis => diagnosis.examine());
@@ -60,7 +61,7 @@ export async function runOne({
   if (!insightName) {
     throw new MissingInsightName();
   }
-  registerCoreAndExtensionsInsights();
+  getCoreInsights();
   runningTimeStamp = _getTimeStamp();
   const insightRegistrar = InsightRegistrar.getInstance();
   const diagnosis = insightRegistrar.getInsightByName(insightName);
@@ -74,7 +75,7 @@ export async function runOne({
 }
 
 export async function listInsights(): Promise<Insight[]> {
-  registerCoreAndExtensionsInsights();
+  getCoreInsights();
   const insightRegistrar = InsightRegistrar.getInstance();
   return Promise.resolve(insightRegistrar.insights);
 }

@@ -15,50 +15,36 @@ export type BareResult = {
   data: any;
 };
 
-export default class Insight {
+export default interface Insight {
   name: string;
   description: string;
-  constructor(name: string, description: string) {
-    this.name = name;
-    this.description = description;
-  }
+
   /**
    * A function that runs a specific insight. Can get any number of arguments.
    */
-  async _runInsight(...args: any[]): Promise<BareResult> {
-    throw new Error('You must implement this method');
-  }
+  _runInsight(...args: any[]): Promise<BareResult>;
 
   /**
    * Takes the data returned by the insight and stringifies it.
    * @param bareResult ExamineBareResult
    */
-  _formatData(data: any): string {
-    throw new Error('You must implement this method');
-  }
+  _formatData(data: any): string;
+}
 
-  getMeta() {
-    return {
-      name: this.name,
-      description: this.description
-    };
-  }
+async function runInsight(insight: Insight, ...args: any[]): Promise<InsightResult> {
+  const bareResult = await insight._runInsight(...args);
+  const formattedData = insight._formatData(bareResult.data);
+  const result = {
+    metaData: {
+      name: insight.name,
+      description: insight.description
+    },
+    data: bareResult.data,
+    formattedData: formattedData
+  };
 
-  async runInsight(...args: any[]): Promise<InsightResult> {
-    const bareResult = await this._runInsight(...args);
-    const formattedData = this._formatData(bareResult.data);
-    const result = {
-      metaData: {
-        name: this.name,
-        description: this.description
-      },
-      data: bareResult.data,
-      formattedData: formattedData
-    };
-
-    if (!!bareResult.message) {
-      result['message'] = bareResult.message;
-    }
-    return result;
+  if (!!bareResult.message) {
+    result['message'] = bareResult.message;
   }
+  return result;
 }

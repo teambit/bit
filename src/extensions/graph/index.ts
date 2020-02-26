@@ -1,3 +1,3 @@
-export { default as Graph } from './graph';
-export { default as GraphExt } from './graph.manifest';
+export { default as ComponentGraph } from './component-graph';
+export { default as ComponentGraphExt } from './graph.manifest';
 export { Dependency } from './dependency';
