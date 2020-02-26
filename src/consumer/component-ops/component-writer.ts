@@ -311,7 +311,7 @@ export default class ComponentWriter {
       );
     };
     if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
-      this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
+      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 

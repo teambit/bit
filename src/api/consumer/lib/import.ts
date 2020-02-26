@@ -13,10 +13,7 @@ import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 import ImportComponents from '../../../consumer/component-ops/import-components';
 
-const key = R.compose(
-  R.head,
-  R.keys
-);
+const key = R.compose(R.head, R.keys);
 
 export type EnvironmentOptions = {
   tester: boolean;
@@ -53,21 +50,12 @@ export default (async function importAction(
       }
 
       if (environmentOptions.extension) {
-        const idWithoutVersion = BitId.getStringWithoutVersion(id);
-        // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.config.extensions).find(ext => {
-          return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
-        });
-        if (oldVersion) {
-          consumer.config.extensions[id] = consumer.config.extensions[oldVersion];
-          delete consumer.config.extensions[oldVersion];
-          return consumer.config.write({ workspaceDir: consumer.getPath() });
+        const existExtension = consumer.config.workspaceSettings.findExtension(id);
+        if (existExtension) {
+          consumer.config.workspaceSettings.updateExtensionVersion(id);
+        } else {
+          consumer.config.workspaceSettings.addExtension({ id, config: {} });
         }
-        consumer.config.extensions[id] = {
-          options: {},
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          config: {}
-        };
         return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
@@ -157,12 +145,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
 
   const getNameAndVersion = pj => ({ [pj.name]: pj.version });
   const nodeModules = R.mergeAll(
-    glob.sync(path.join(projectDir, 'node_modules', '*')).map(
-      R.compose(
-        getNameAndVersion,
-        getPackageJson
-      )
-    )
+    glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
   // eslint-disable-next-line

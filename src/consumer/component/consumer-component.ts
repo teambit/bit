@@ -55,7 +55,6 @@ import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
-import InjectNonEjected from './exceptions/inject-non-ejected';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../legacy-extensions/exceptions/extension-file-not-found';
 import { ManipulateDirItem } from '../component-ops/manipulate-dir';

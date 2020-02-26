@@ -8,7 +8,6 @@ import EjectToWorkspace from '../../src/consumer/component/exceptions/eject-to-w
 import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
-import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
 import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
@@ -740,22 +739,6 @@ describe('envs', function() {
             helper.general.expectToThrow(ejectFunc, error);
             const ejectFunc2 = () => helper.command.ejectConf('comp/my-comp', { p: './' });
             helper.general.expectToThrow(ejectFunc2, error);
-          });
-          describe('invalid config dir', () => {
-            before(() => {
-              helper.command.importComponentWithOptions('comp/my-comp2', { p: 'comp2' });
-            });
-            it('should show error if the provided path is a under root dir of another component', () => {
-              const error = new InvalidConfigDir(`${helper.scopes.remote}/comp/my-comp2`);
-              const ejectFunc = () => helper.command.ejectConf('comp/my-comp', { p: './comp2/sub' });
-              helper.general.expectToThrow(ejectFunc, error);
-            });
-            it('should show error if the provided path is a under config dir of another component', () => {
-              helper.command.ejectConf('comp/my-comp2', { p: 'my-conf-folder' });
-              const error = new InvalidConfigDir(`${helper.scopes.remote}/comp/my-comp2`);
-              const ejectFunc = () => helper.command.ejectConf('comp/my-comp', { p: './my-conf-folder/sub' });
-              helper.general.expectToThrow(ejectFunc, error);
-            });
           });
         });
         describe('without path provided', () => {

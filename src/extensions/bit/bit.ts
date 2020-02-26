@@ -39,7 +39,7 @@ export default class Bit {
 
   async extensions(): Promise<{ [extensionId: string]: any }> {
     if (!this.config) return Promise.resolve({});
-    let rawExtensions = this.config.extensions || {};
+    let rawExtensions = this.config.workspaceSettings.extensionsConfig;
     rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
     return rawExtensions;
   }
