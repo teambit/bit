@@ -40,7 +40,7 @@ export class ScriptRegistry {
    */
   set(manifest: ExtensionManifest, modulePath: string, name?: string) {
     const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new ExtensionNotFound();
+    if (!extension) throw new ExtensionNotFound(manifest.name);
     if (!this.scripts[extension.name]) this.scripts[extension.name] = {};
 
     // :TODO fix this ugly hack
