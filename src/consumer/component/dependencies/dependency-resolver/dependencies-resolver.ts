@@ -703,21 +703,18 @@ either, use the ignore file syntax or change the require statement to have a mod
       const getExistingId = (): BitId | null | undefined => {
         let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
-
         // maybe the dependencies were imported as npm packages
-        if (bitDep.includes('node_modules')) {
-          // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
-          const basePath = this.componentMap.rootDir
-            ? path.join(this.consumerPath, this.componentMap.rootDir)
-            : this.consumerPath;
-          const depPath = path.join(basePath, bitDep);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
-          if (packageJson) {
-            const depVersion = packageJson.version;
-            existingId = componentId.changeVersion(depVersion);
-            return existingId;
-          }
+        // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
+        const basePath = this.componentMap.rootDir
+          ? path.join(this.consumerPath, this.componentMap.rootDir)
+          : this.consumerPath;
+        const depPath = path.join(basePath, bitDep);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
+        if (packageJson) {
+          const depVersion = packageJson.version;
+          existingId = componentId.changeVersion(depVersion);
+          return existingId;
         }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);

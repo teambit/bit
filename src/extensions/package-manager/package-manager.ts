@@ -26,16 +26,11 @@ function linkBitBinInCapsule(capsule) {
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
-
-  if (capsule.fs.existsSync(bitBinPath)) {
-    capsule.fs.unlinkSync(bitBinPath);
-  }
-
-  try {
-    execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
-  } catch (e) {
-    // fail silently - we only need to create it if it doesn't already exist
-  }
+  // we use execa here rather than the capsule.fs because there are some edge cases
+  // that the capusle fs does not deal with well (eg. identifying and deleting
+  // a symlink rather than the what the symlink links to)
+  execa.sync('rm', ['-rf', bitBinPath], { cwd: capsule.wrkDir });
+  execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
 }
 
 export default class PackageManager {
@@ -55,7 +50,7 @@ export default class PackageManager {
     } else if (packageManager === 'npm') {
       capsules.forEach(capsule => {
         deleteBitBinFromPkgJson(capsule);
-        execa.sync('npm', ['install'], { cwd: capsule.wrkDir });
+        execa.sync('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir });
         linkBitBinInCapsule(capsule);
       });
     } else {

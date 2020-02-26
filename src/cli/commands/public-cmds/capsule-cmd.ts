@@ -10,10 +10,10 @@ import { render } from '../../../utils';
 export class CapsuleList extends Command {
   // first command is supposed to be the action and the rest is the bitIds
   name = 'capsule-list [workspace]';
-  description = `list all capsule`;
+  description = `list all capsules`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['workspace', 'workspace<string>', 'list workspace capsules']];
+  opts = [['j', 'json', 'json format']];
   loader = true;
   migration = true;
 
@@ -22,7 +22,8 @@ export class CapsuleList extends Command {
     return capsuleOrchestrator.list(workspace);
   }
 
-  report(capsuleListByWorkspace: ListResults[] | ListResults): string {
+  report(capsuleListByWorkspace: ListResults[] | ListResults, ...args): string {
+    if (args[1].json) return JSON.stringify(capsuleListByWorkspace, null, '  ');
     return render(capsuleListByWorkspace);
   }
 }
