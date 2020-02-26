@@ -459,7 +459,7 @@ describe('bit export command', function() {
         if (isWin) {
           expect(output).to.have.string('exported 1 components');
         } else {
-          expect(output).to.have.string('unable to resolve group id of "nonExistGroup", the group does not exist');
+          expect(output).to.have.string('unable to resolve group id of "nonExistGroup"');
         }
       });
     });
