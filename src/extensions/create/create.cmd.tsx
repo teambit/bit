@@ -19,8 +19,24 @@ export class CreateCmd implements Command {
     // @ts-ignore
     const results = await this.create.create(name);
     const result = results.addedComponents[0];
-    // eslint-disable-next-line no-console
-    // console.log('results', result);
-    return <Box>{JSON.stringify(result, null, 4)}</Box>;
+
+    const files = result.files.map((item, key) => (
+      <li key={key}>
+        <Color green>{item.relativePath}</Color>
+      </li>
+    ));
+
+    const AddedComponent = () => (
+      <Box padding={1} flexDirection="column">
+        <Box>
+          tracking component <Text bold>{result.id}</Text>
+        </Box>
+        <Box paddingLeft={2}>
+          <ul>{files}</ul>
+        </Box>
+      </Box>
+    );
+
+    return <AddedComponent />;
   }
 }
