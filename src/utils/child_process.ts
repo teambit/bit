@@ -1,9 +1,9 @@
-export function pipeOutput(childProcess) {
+export function pipeOutput(childProcess, toPipe = process) {
   const { stdout, stderr } = childProcess;
   if (stdout) {
-    stdout.pipe(process.stdout);
+    stdout.pipe(toPipe.stdout);
   }
   if (stderr) {
-    stderr.pipe(process.stderr);
+    stderr.pipe(toPipe.stderr);
   }
 }

@@ -90,9 +90,11 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   async execNode(executable: string, args: any) {
     return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
   }
+
   async typedExec(opts: BitExecOption) {
     return this.container.exec(opts);
   }
+
   outputFile(file: string, data: any, options: any): Promise<any> {
     return this.container.outputFile(file, data, options);
   }
