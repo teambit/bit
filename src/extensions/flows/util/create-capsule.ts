@@ -7,12 +7,13 @@ import { FsContainer, ComponentCapsule } from '../../capsule-ext';
 type CapsuleContent = { [k: string]: string };
 
 export async function createFakeCapsule(fs: CapsuleContent, id: string) {
+  const bitId = { toString: () => id };
   const location = join(tmpdir(), id);
   await createFS(location, fs);
 
   const container = new FsContainer({
     wrkDir: location,
-    bitId: { toString: () => id }
+    bitId
   });
 
   const capsule = new ComponentCapsule(
@@ -20,7 +21,11 @@ export async function createFakeCapsule(fs: CapsuleContent, id: string) {
     container.fs,
     // eslint-disable-next-line no-undef
     new Console(),
-    ({} as any) as State
+    ({} as any) as State,
+    {
+      wrkDir: location,
+      bitId
+    }
   );
   return capsule;
 }

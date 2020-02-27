@@ -4,43 +4,19 @@ import { createFakeCapsule } from '../util/create-capsule';
 import { Task } from './task';
 
 describe.only('task', function() {
-  describe('should run bash commands', function() {
-    it.only('with stdout', async function() {
-      this.timeout(100 * 10000);
-      const message = 'hello world';
-      const taskString = `echo ${message}`;
-      const id = '@bit/button1';
-      const test = getTestCase(id);
-      const capsule = await createFakeCapsule(test, id);
-      const stream = await Task.execute(taskString, capsule);
-      let out = '';
-      try {
-        await new Promise(resolve =>
-          stream.subscribe({
-            next(data) {
-              // debugger;
-              console.log('data');
-              if (data.type === 'stdout') {
-                console.log('out');
-                out += data.value;
-                console.log('log', data.value.toString());
-              }
-            },
-            complete() {
-              console.log('yo');
-              expect(out).to.equal('skjdksj');
-              resolve();
-            }
-          })
-        );
-      } catch (e) {
-        debugger;
-      }
-      // expect(out).to.equal(message);
-      // await rmdir(capsule.wrkDir)
+  describe.only('should run bash commands', function() {
+    it('with stdout', async function() {
+      const message = 'hello-world';
+      const stream = await runTask(`echo ${message}`);
+      return expectMessage(stream, message);
     });
 
-    it('with stderr', function() {});
+    it('with stderr', async function() {
+      const message = 'hello-world';
+      const stream = await runTask(`1>&2 echo ${message} && false`);
+
+      return expectMessage(stream, message, 'stderr', 1);
+    });
   });
 
   describe('should run module', function() {
@@ -49,6 +25,32 @@ describe.only('task', function() {
     it('with result', function() {});
   });
 });
+
+function expectMessage(stream, message: string, pipeName = 'stdout', code = 0) {
+  let out = '';
+  return new Promise(resolve =>
+    stream.subscribe({
+      next(data) {
+        if (data.type === pipeName) {
+          out += data.value.toString();
+        } else if (data.type === 'result') {
+          expect(data.code).to.equal(code);
+        }
+      },
+      complete() {
+        expect(out).to.equal(`${message}\n`);
+        resolve();
+      }
+    })
+  );
+}
+
+async function runTask(task: string, id = '@bit/button1') {
+  const test = getTestCase(id);
+  const capsule = await createFakeCapsule(test, id);
+  const stream = await Task.execute(task, capsule);
+  return stream;
+}
 
 function getTestCase(name: string) {
   const main = 'src/index.js';

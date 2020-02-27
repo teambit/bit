@@ -1,7 +1,7 @@
-import { Exec } from '@teambit/capsule';
 import { Observable } from 'rxjs';
+import ContainerExec from '../../capsule-ext/container-exec';
 
-export function createExecutionStream(exec: Exec, id, time: Date = new Date()) {
+export function createExecutionStream(exec: ContainerExec, id, time: Date = new Date()) {
   let message: any = null;
   return new Observable(function(subscriber) {
     subscriber.next({
@@ -31,8 +31,7 @@ export function createExecutionStream(exec: Exec, id, time: Date = new Date()) {
       message = data;
     });
 
-    exec.on('end', function() {
-      console.log('close');
+    exec.on('close', function() {
       const endTime = new Date();
       subscriber.next({
         type: 'result',
@@ -40,7 +39,7 @@ export function createExecutionStream(exec: Exec, id, time: Date = new Date()) {
         value: message,
         endTime,
         duration: endTime.getTime() - time.getTime(),
-        status: exec
+        code: exec.code
       });
       subscriber.complete();
     });

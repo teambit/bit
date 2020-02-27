@@ -6,6 +6,7 @@ import librarian from 'librarian';
 import FsContainer, { BitExecOption } from './container';
 import BitId from '../../bit-id/bit-id';
 import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
+import ContainerExec from './container-exec';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -91,8 +92,8 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
   }
 
-  async typedExec(opts: BitExecOption) {
-    return this.container.exec(opts);
+  async typedExec(opts: BitExecOption, exec = new ContainerExec()) {
+    return this.container.exec(opts, exec);
   }
 
   outputFile(file: string, data: any, options: any): Promise<any> {

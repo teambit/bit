@@ -3,30 +3,33 @@
 import { Observable } from 'rxjs';
 import { join } from 'path';
 import { readFile } from 'fs-extra';
-import { Exec } from '@teambit/capsule';
 import { ComponentCapsule } from '../../capsule-ext';
 import { createExecutionStream } from './execution-stream';
+import ContainerExec from '../../capsule-ext/container-exec';
 
 export const PackageMarker = '#';
 
 export class Task {
   static async execute(task: string, capsule: ComponentCapsule): Promise<Observable<any>> {
-    const isExtension = task.trim().startsWith(PackageMarker);
+    const isExtension = (taskString: string) => taskString.trim().startsWith(PackageMarker);
 
     const time = new Date();
-    let exec: Exec;
+    const exec: ContainerExec = new ContainerExec();
+    const stream = createExecutionStream(exec, `${capsule.id}:${task}`, time);
 
-    if (isExtension) {
+    if (isExtension(task)) {
       const { host, pathToScript } = await createHostScript(capsule, task);
-      exec = await capsule.execNode(host, { args: [pathToScript] });
+      await capsule.execNode(host, { args: [pathToScript] });
     } else {
-      exec = await capsule.typedExec({
-        command: task.trim().split(' '),
-        cwd: capsule.wrkDir
-      });
+      await capsule.typedExec(
+        {
+          command: task.trim().split(' '),
+          stdio: 'ipc',
+          cwd: ''
+        } as any,
+        exec
+      );
     }
-
-    const stream = createExecutionStream(exec, `${capsule.bitId}:${task}`, time);
 
     return stream;
   }

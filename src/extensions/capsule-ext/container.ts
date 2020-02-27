@@ -67,23 +67,21 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     return fs.ensureSymlink(srcPath, destPath);
   }
 
-  async exec(execOptions: BitExecOption): Promise<ContainerExec> {
+  async exec(execOptions: BitExecOption, exec = new ContainerExec()): Promise<ContainerExec> {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
-    const exec = new ContainerExec();
     const subprocessP = execa.command(execOptions.command.join(' '), {
       shell: true,
       cwd
     });
 
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
-    subprocessP.stdout!.pipe(exec.stdout);
-    subprocessP.stderr!.pipe(exec.stderr);
+    subprocessP.stderr?.pipe(exec.stderr);
+    subprocessP.stdout?.pipe(exec.stdout);
     subprocessP.on('close', function(statusCode) {
       exec.setStatus(statusCode);
-      exec.emit('close', statusCode);
     });
-    return Promise.resolve(exec);
+    return exec;
   }
 
   execP(execOptions: BitExecOption): Promise<string> {

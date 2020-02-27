@@ -38,3 +38,11 @@ export function getNeighborsByDirection(
   const parents = g[direction](id) || [];
   return parents.concat(parents.map(pre => flatten(getNeighborsByDirection(pre, g, direction))));
 }
+
+/**
+ *
+ * if seeders = [] I get workspace network
+ * if seeders = ['some', 'wow', ['bitID']] i get the connected components of some and wow
+ * create(seeders:Components[]):Network
+ *
+ */
