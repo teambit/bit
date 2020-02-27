@@ -2,7 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { customResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
+import { CustomResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
@@ -73,7 +73,7 @@ export type VersionProps = {
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
-  customResolvedPaths?: customResolvedPath[];
+  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
@@ -114,7 +114,7 @@ export default class Version extends BitObject {
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
   bindingPrefix: string | undefined;
-  customResolvedPaths: customResolvedPath[] | undefined;
+  customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];

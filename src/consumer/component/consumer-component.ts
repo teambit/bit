@@ -70,7 +70,7 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 import { ComponentCapsule } from '../../extensions/capsule-ext';
 
-export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
+export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
 export type InvalidComponent = { id: BitId; error: Error };
 
@@ -106,7 +106,7 @@ export type ComponentProps = {
   peerPackageDependencies?: Record<string, any>;
   compilerPackageDependencies?: Record<string, any>;
   testerPackageDependencies?: Record<string, any>;
-  customResolvedPaths?: customResolvedPath[];
+  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverrides;
   defaultScope: string | null;
   packageJsonFile?: PackageJsonFile;
@@ -182,7 +182,7 @@ export default class Component {
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;
-  customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
+  customResolvedPaths: CustomResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
