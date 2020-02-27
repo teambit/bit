@@ -256,6 +256,9 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
+  create(name: string) {
+    return this.runCmd(`bit create ${name}`);
+  }
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
