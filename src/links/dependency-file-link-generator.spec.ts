@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import * as path from 'path';
 import { expect } from 'chai';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
@@ -25,7 +26,7 @@ const mockBitMap = () => {
     getComponent: () => ({
       rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1',
       getRootDir() {
-        return this.rootDir;
+        return this.rootDir!;
       }
     })
   };
@@ -66,7 +67,7 @@ describe('DependencyFileLinkGenerator', () => {
         component.componentMap = {
           rootDir: 'components/bar/foo',
           getRootDir() {
-            return this.rootDir;
+            return this.rootDir!;
           }
         };
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
@@ -104,7 +105,7 @@ describe('DependencyFileLinkGenerator', () => {
           component.componentMap = {
             rootDir: 'components/bar/foo',
             getRootDir() {
-              return this.rootDir;
+              return this.rootDir!;
             }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
@@ -164,7 +165,7 @@ describe('DependencyFileLinkGenerator', () => {
           component.componentMap = {
             rootDir: 'components/bar/foo',
             getRootDir() {
-              return this.rootDir;
+              return this.rootDir!;
             }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
@@ -227,7 +228,8 @@ describe('DependencyFileLinkGenerator', () => {
           component.componentMap = {
             rootDir: 'components/bar/foo',
             getRootDir() {
-              return this.rootDir;
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              return this.rootDir!;
             }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
@@ -285,7 +287,7 @@ describe('DependencyFileLinkGenerator', () => {
           component.componentMap = {
             rootDir: 'components/bar/foo',
             getRootDir() {
-              return this.rootDir;
+              return this.rootDir!;
             }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
@@ -347,7 +349,7 @@ describe('DependencyFileLinkGenerator', () => {
         component.componentMap = {
           rootDir: 'components/bar/foo',
           getRootDir() {
-            return this.rootDir;
+            return this.rootDir!;
           }
         };
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringSass));

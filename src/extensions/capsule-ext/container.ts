@@ -81,8 +81,9 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     subprocessP.stderr!.pipe(exec.stderr);
     subprocessP.on('close', function(statusCode) {
       exec.setStatus(statusCode);
+      exec.emit('close', statusCode);
     });
-    return exec;
+    return Promise.resolve(exec);
   }
 
   execP(execOptions: BitExecOption): Promise<string> {
