@@ -4,7 +4,6 @@ import tar from 'tar-stream';
 import fs from 'fs-extra';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import Stream from 'stream';
-import registerCoreAndExtensionsInsights from './core-insights-getter';
 import InsightRegistrar from './insight-registrar';
 import { getWithoutExt, getExt } from '../../../utils';
 import { ExamineResult } from '../../../doctor/diagnosis';

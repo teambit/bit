@@ -1,7 +1,7 @@
 import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
 import { Command } from './command';
-import CommandRegistry from './registry';
+import CommandRegistry from './insight-registry';
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { Help } from './commands/help.cmd';
@@ -47,7 +47,7 @@ export class InsightManager {
    * execute commands registered to `Paper` and the legacy bit cli.
    *
    */
-  async run() {
+  async run(insights: Insight[]) {
     const args = process.argv.slice(2);
     if ((args[0] && ['-h', '--help'].includes(args[0])) || process.argv.length === 2) {
       Help()(this.commands, this.groups);
@@ -68,4 +68,6 @@ export class InsightManager {
     commander.parse(params);
     return Promise.resolve();
   }
+
+  async runAll() {}
 }

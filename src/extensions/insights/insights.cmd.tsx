@@ -32,6 +32,7 @@ export default class InsightsCmd implements Command {
     // else
     // insightMagnager.runAll()
     // return in pretty way
+    // return div (react element)
   }
 
 //   action(
@@ -70,36 +71,36 @@ export default class InsightsCmd implements Command {
 //   }
  }
 
-function _listReport(res: Insight[], json: boolean): string {
-  if (json) {
-    return JSON.stringify(res, null, 2);
-  }
-  const formatted = formatDiagnosesList(res);
-  return formatted;
-}
+// function _listReport(res: Insight[], json: boolean): string {
+//   if (json) {
+//     return JSON.stringify(res, null, 2);
+//   }
+//   const formatted = formatDiagnosesList(res);
+//   return formatted;
+// }
 
-function _runOneReport(res: RunOneInsight, json: boolean): string {
-  const { examineResult, savedFilePath, metaData } = res;
-  if (json) {
-    const fullJson = {
-      savedFilePath,
-      examineResult
-    };
-    return JSON.stringify(fullJson, null, 2);
-  }
-  const formatted = formatDiagnosesResult({ examineResults: [examineResult], savedFilePath, metaData });
-  return formatted;
-}
+// function _runOneReport(res: RunOneInsight, json: boolean): string {
+//   const { examineResult, savedFilePath, metaData } = res;
+//   if (json) {
+//     const fullJson = {
+//       savedFilePath,
+//       examineResult
+//     };
+//     return JSON.stringify(fullJson, null, 2);
+//   }
+//   const formatted = formatDiagnosesResult({ examineResults: [examineResult], savedFilePath, metaData });
+//   return formatted;
+// }
 
-function _runAllReport(res: RunAllInsights, json: boolean): string {
-  const { examineResults, savedFilePath, metaData } = res;
-  if (json) {
-    const fullJson = {
-      savedFilePath,
-      examineResults
-    };
-    return JSON.stringify(fullJson, null, 2);
-  }
-  const formatted = formatDiagnosesResult({ examineResults, savedFilePath, metaData });
-  return formatted;
-}
+// function _runAllReport(res: RunAllInsights, json: boolean): string {
+//   const { examineResults, savedFilePath, metaData } = res;
+//   if (json) {
+//     const fullJson = {
+//       savedFilePath,
+//       examineResults
+//     };
+//     return JSON.stringify(fullJson, null, 2);
+//   }
+//   const formatted = formatDiagnosesResult({ examineResults, savedFilePath, metaData });
+//   return formatted;
+// }
