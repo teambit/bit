@@ -3,7 +3,7 @@ import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
 import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
-import CapsuleBuilder from '../../environment/capsule-builder';
+import CapsuleBuilder from './capsule-builder';
 import { CapsuleOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
 

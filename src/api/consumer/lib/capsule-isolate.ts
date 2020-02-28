@@ -1,7 +1,7 @@
 import { loadConsumerIfExist } from '../../../consumer';
-import CapsuleBuilder, { Options } from '../../../environment/capsule-builder';
+import CapsuleBuilder, { Options } from '../../../extensions/capsule/capsule-builder';
 import { CapsuleOptions } from '../../../extensions/capsule/orchestrator/types';
-import CapsuleList from '../../../environment/capsule-list';
+import CapsuleList from '../../../extensions/capsule/capsule-list';
 import { PackageManager } from '../../../extensions/package-manager';
 
 export default (async function capsuleIsolate(
