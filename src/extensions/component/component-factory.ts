@@ -1,4 +1,4 @@
-import Capsule from '../capsule/capsule-builder';
+import Capsule from '../network/capsule-builder';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';

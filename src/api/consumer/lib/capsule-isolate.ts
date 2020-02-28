@@ -1,6 +1,6 @@
 import { loadConsumerIfExist } from '../../../consumer';
-import CapsuleBuilder, { Options } from '../../../extensions/capsule/capsule-builder';
-import { CapsuleOptions } from '../../../extensions/capsule/orchestrator/types';
+import CapsuleBuilder, { Options } from '../../../extensions/network/capsule-builder';
+import { CapsuleOptions } from '../../../extensions/network/orchestrator/types';
 import CapsuleList from '../../../extensions/capsule/capsule-list';
 import { PackageManager } from '../../../extensions/package-manager';
 

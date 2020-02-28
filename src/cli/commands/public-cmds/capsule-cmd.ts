@@ -3,8 +3,8 @@ import _ from 'lodash';
 import Command from '../../command';
 import { capsuleIsolate, sshIntoCapsule } from '../../../api/consumer';
 import { ComponentCapsule } from '../../../extensions/capsule-ext';
-import capsuleOrchestrator from '../../../extensions/capsule/orchestrator/orchestrator';
-import { ListResults } from '../../../extensions/capsule/orchestrator/types';
+import capsuleOrchestrator from '../../../extensions/network/orchestrator/orchestrator';
+import { ListResults } from '../../../extensions/network/orchestrator/types';
 import { render } from '../../../utils';
 
 export class CapsuleList extends Command {

@@ -5,7 +5,7 @@ import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer, { BitExecOption } from './container';
 import BitId from '../../bit-id/bit-id';
-import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
+import BitContainerFactory from '../network/orchestrator/bit-container-factory';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;

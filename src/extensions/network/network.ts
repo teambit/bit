@@ -1,15 +1,15 @@
-import capsuleOrchestrator from '../network/orchestrator/orchestrator';
+import capsuleOrchestrator from './orchestrator/orchestrator';
 import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
-import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
+import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
-import CapsuleBuilder from '../network/capsule-builder';
-import { CapsuleOptions } from '../network/orchestrator/types';
+import CapsuleBuilder from './capsule-builder';
+import { CapsuleOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
 
 export type CapsuleFactoryDeps = [PackageManager];
 
-export default class CapsuleFactory {
+export default class Network {
   constructor(
     /**
      * instance of the capsule orchestrator.
@@ -46,6 +46,6 @@ export default class CapsuleFactory {
 
   static async provide(config: any, [packageManager]: any) {
     await capsuleOrchestrator.buildPools();
-    return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
+    return new Network(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
   }
 }
