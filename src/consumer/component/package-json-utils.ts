@@ -20,7 +20,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../extensions/capsule/capsule-paths';
+import CapsulePaths from '../../extensions/network/capsule-paths';
 
 /**
  * Add components as dependencies to root package.json

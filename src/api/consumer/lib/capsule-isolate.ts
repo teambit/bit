@@ -2,7 +2,7 @@ import { loadConsumerIfExist } from '../../../consumer';
 import Network, { Options } from '../../../extensions/network/network';
 import capsuleOrchestrator from '../../../extensions/network/orchestrator/orchestrator';
 import { CapsuleOptions } from '../../../extensions/network/orchestrator/types';
-import CapsuleList from '../../../extensions/capsule/capsule-list';
+import CapsuleList from '../../../extensions/network/capsule-list';
 import { PackageManager } from '../../../extensions/package-manager';
 
 export default (async function capsuleIsolate(

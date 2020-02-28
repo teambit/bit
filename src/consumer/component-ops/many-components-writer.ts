@@ -21,7 +21,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import BitMap from '../bit-map';
 import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
 import { BitId } from '../../bit-id';
-import CapsulePaths from '../../extensions/capsule/capsule-paths';
+import CapsulePaths from '../../extensions/network/capsule-paths';
 
 export interface ManyComponentsWriterParams {
   consumer?: Consumer;
