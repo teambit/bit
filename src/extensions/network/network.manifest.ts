@@ -1,9 +1,10 @@
 import Network from './network';
-import { Capsule } from '../capsule';
+import { CapsuleExt } from '../capsule';
+import { PackageManagerExt } from '../package-manager';
 
 export default {
   name: 'Network',
-  dependencies: [Capsule],
+  dependencies: [PackageManagerExt, CapsuleExt],
   config: {},
   provider: Network.provide
 };

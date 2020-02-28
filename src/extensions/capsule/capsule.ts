@@ -3,7 +3,7 @@ import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
 import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule-ext';
-import CapsuleBuilder from '../network/capsule-builder';
+// import CapsuleBuilder from '../network/capsule-builder';
 import { CapsuleOptions } from '../network/orchestrator/types';
 import { PackageManager } from '../package-manager';
 
@@ -14,21 +14,20 @@ export default class CapsuleFactory {
     /**
      * instance of the capsule orchestrator.
      */
-    readonly orchestrator: CapsuleOrchestrator,
-
-    readonly builder: CapsuleBuilder
-  ) {}
+    readonly orchestrator: CapsuleOrchestrator
+  ) // readonly builder: CapsuleBuilder
+  {}
 
   /**
    * create a new capsule from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(components: Component[], config?: CapsuleOptions) {
-    return this.builder.isolateComponents(
-      components.map(component => component.id.toString()),
-      config
-    );
-  }
+  //   create(components: Component[], config?: CapsuleOptions) {
+  //     return this.builder.isolateComponents(
+  //       components.map(component => component.id.toString()),
+  //       config
+  //     );
+  //   }
   /**
    * list all of the existing workspace capsules.
    */
@@ -46,6 +45,7 @@ export default class CapsuleFactory {
 
   static async provide(config: any, [packageManager]: any) {
     await capsuleOrchestrator.buildPools();
-    return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
+    return new CapsuleFactory(capsuleOrchestrator);
+    // return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
   }
 }

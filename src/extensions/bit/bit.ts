@@ -1,7 +1,7 @@
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { AnyExtension } from '../../harmony';
@@ -20,9 +20,9 @@ export default class Bit {
     readonly workspace: Workspace | undefined,
 
     /**
-     * reference to capsule orchestrator.
+     * reference to capsule network.
      */
-    private capsule: Capsule,
+    private network: Network,
 
     /**
      * private reference to the instance of Harmony.
@@ -82,7 +82,10 @@ export default class Bit {
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const capsuleList = await this.capsule.create(extensionsComponents, { packageManager: 'yarn' });
+      const capsuleList = await this.network.create(
+        extensionsComponents.map(c => c.id.toString()),
+        { packageManager: 'yarn' }
+      );
 
       const manifests = capsuleList.map(({ value, id }) => {
         const extPath = value.wrkDir;

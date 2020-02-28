@@ -7,7 +7,7 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import Capsule from '../network/capsule-builder';
+import Network from '../network/network';
 
 /**
  * in-memory representation of a component.
@@ -34,7 +34,7 @@ export default class Component {
      */
     readonly tags: TagMap = new TagMap(),
 
-    private capsuleOrchestrator: Capsule
+    private network: Network
   ) {}
 
   /**
@@ -64,8 +64,8 @@ export default class Component {
    */
   async isolate() {
     const id = this.id.toString();
-    const capsules = await this.capsuleOrchestrator.isolateComponents([id]);
-    return capsules[id];
+    const capsulesList = await this.network.create([id]);
+    return capsulesList[id];
   }
 
   capsule() {}
@@ -77,7 +77,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags, this.capsuleOrchestrator);
+    return new Component(this.id, snap, snap.state, this.tags, this.network);
   }
 
   /**

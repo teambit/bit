@@ -13,7 +13,7 @@ import { ComponentCapsule } from '../../capsule-ext';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 import { CreateOptions, ListResults } from './types';
-import { Options } from '../capsule-builder';
+import { Options } from '../network';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../../../constants';
 import { toBoolean } from '../../../utils';

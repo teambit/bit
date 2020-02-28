@@ -2,9 +2,9 @@ import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Capsule];
+export type WorkspaceDeps = [Scope, ComponentFactory, Network];
 
 export type WorkspaceConfig = {
   /**
@@ -19,7 +19,7 @@ export type WorkspaceConfig = {
   components: string;
 };
 
-export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, capsule]: WorkspaceDeps) {
+export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, network]: WorkspaceDeps) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
@@ -30,7 +30,7 @@ export default async function provideWorkspace(config: WorkspaceConfig, [scope, 
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, scope, component, capsule);
+      const workspace = new Workspace(consumer, scope, component, network);
       return workspace;
     }
 
