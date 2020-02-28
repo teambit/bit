@@ -6,12 +6,16 @@ import { ComponentHost } from '../../shared-types';
 
 // eslint-disable-next-line import/prefer-default-export
 export class Scope implements ComponentHost {
+  public onBuild?: Function[];
   constructor(
     /**
      * legacy scope
      */
     readonly legacyScope?: LegacyScope
-  ) {}
+  ) {
+    this.legacyScope = legacyScope;
+    this.onBuild = legacyScope?.onBuild;
+  }
 
   // TODO: support lanes / other kind of objects
   /**

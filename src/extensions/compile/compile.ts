@@ -1,3 +1,4 @@
+import path from 'path';
 import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
@@ -8,6 +9,7 @@ import { ComponentCapsule } from '../capsule/component-capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scripts } from '../scripts';
 import { IdsAndScripts } from '../scripts/ids-and-scripts';
+import { Scope } from '../scope';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -15,13 +17,51 @@ export type ComponentAndCapsule = {
   capsule: ComponentCapsule;
 };
 
-export class Compile {
-  constructor(private workspace: Workspace, private scripts: Scripts) {}
+type ReportResults = {
+  component: ResolvedComponent;
+  result: { dir: string }[] | null;
+  started: boolean;
+};
 
-  async compile(componentsIds: string[]) {
+type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
+
+export class Compile {
+  constructor(private workspace: Workspace, private scripts: Scripts, private scope: Scope) {
+    this.workspace = workspace;
+    this.scripts = scripts;
+    this.scope = scope;
+
+    const func = this.compileDuringBuild.bind(this);
+    this.scope.onBuild?.push(func);
+  }
+
+  async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
+    const reportResults = await this.compile(ids.map(id => id.toString()));
+    const resultsP: buildHookResult[] = reportResults.map(reportResult => {
+      const id: BitId = reportResult.component.component.id._legacy;
+      if (!reportResult.result || !reportResult.result.length) return { id };
+      // @todo: check why this is an array and values are needed
+      const distDir = reportResult.result[0].dir;
+      if (!distDir) {
+        throw new Error(
+          `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
+        );
+      }
+      const distFiles = reportResult.component.capsule.fs.readdirSync(distDir);
+      const distFilesObjects = distFiles.map(distFilePath => {
+        const distPath = path.join(distDir, distFilePath);
+        return {
+          path: distPath,
+          content: reportResult.component.capsule.fs.readFileSync(distPath).toString()
+        };
+      });
+      return { id, dists: distFilesObjects };
+    });
+    return Promise.all(resultsP);
+  }
+
+  async compile(componentsIds: string[]): Promise<ReportResults[]> {
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
-    // @todo: that's a hack to get the extension name saved in the "build" pipeline.
-    // we need to figure out where to store the specific compiler extensions
     const idsAndScriptsArr = componentAndCapsules
       .map(c => {
         const compiler = c.component.config?.extensions?.compile?.compiler;
