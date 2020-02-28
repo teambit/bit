@@ -1,10 +1,10 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import Capsule from '../capsule/capsule';
+import Network from '../network/network';
 import Bit from './bit';
 import { Harmony } from '../../harmony';
 
-export type BitDeps = [Workspace, Scope, Capsule];
+export type BitDeps = [Workspace, Scope, Network];
 
 export type BitConfig = {};
 

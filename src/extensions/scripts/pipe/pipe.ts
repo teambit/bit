@@ -1,6 +1,6 @@
 import pMapSeries from 'p-map-series';
 import { Script } from '../script';
-import { ComponentCapsule } from '../../capsule-ext';
+import { ComponentCapsule } from '../../capsule/component-capsule';
 import { PipeReporter } from '../walker/execution-reporter';
 
 export class Pipe {

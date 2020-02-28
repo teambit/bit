@@ -27,7 +27,7 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../environment/capsule-paths';
+import CapsulePaths from '../../extensions/network/capsule-paths';
 
 export type ComponentWriterProps = {
   component: Component;
