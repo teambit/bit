@@ -10,7 +10,7 @@ import { WorkspaceCapsules } from './types';
 import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';
 import { CapsuleOrchestrator } from './orchestrator/orchestrator';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
 import Consumer from '../../consumer/consumer';
@@ -65,14 +65,8 @@ export default class Network {
     consumer?: Consumer
   ): Promise<CapsuleList> {
     // TODO: must we need to pass consumer?
-    //    return this.builder.isolateComponents(
-    //      components.map(component => component.id.toString()),
-    //      config
-    //    );
 
-    // const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
-    // const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     // TODO: do we need orchestrationOptions?
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
@@ -81,7 +75,6 @@ export default class Network {
       ? await Graph.buildGraphFromWorkspace(loadedConsumer)
       : await Graph.buildGraphFromScope(scope);
     const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-    // const components: Component[] = filter(
     const components: ConsumerComponent[] = filter(
       val => val,
       uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
@@ -103,11 +96,6 @@ export default class Network {
     const after = await getPackageJSONInCapsules(capsules);
 
     const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
-    if (!this.packageManager.runInstall) {
-      console.log('this.packageManager:', this.packageManager);
-      console.trace('can has');
-      process.exit(2);
-    }
     if (actualCapsuleOptions.installPackages) {
       if (actualCapsuleOptions.packageManager) {
         await this.packageManager.runInstall(toInstall, {
@@ -208,7 +196,6 @@ export default class Network {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
-    // return this.orchestrator.getCapsule(capsuleOptions?.workspace || this.workspace, config, orchOptions);
     return this.orchestrator.getCapsule(capsuleOptions?.workspace || this.workspaceName, config, orchOptions);
   }
 

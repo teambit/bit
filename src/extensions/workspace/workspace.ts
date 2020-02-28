@@ -96,7 +96,6 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    console.log('12this.network.create:', this.network);
     const capsules = await this.network.create(
       components.map(c => c.id.toString()),
       { workspace: this.path }

@@ -1,4 +1,4 @@
-import { ComponentCapsule } from '../../../extensions/capsule-ext';
+import { ComponentCapsule } from '../../../extensions/capsule/component-capsule';
 import orchestrator from '../../../extensions/network/orchestrator/orchestrator';
 
 export default (async function sshIntoCapsule(bitId: string): Promise<any> {

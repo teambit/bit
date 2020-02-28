@@ -9,7 +9,7 @@ import { LevelUp } from 'levelup';
 import { Resource } from './resource-pool';
 import { Pool } from './resource-pool';
 import Repository from './db/repository';
-import { ComponentCapsule } from '../../capsule-ext';
+import { ComponentCapsule } from '../../capsule/component-capsule';
 import CapsuleFactory from './capsule-factory';
 import BitContainerFactory from './bit-container-factory';
 import { CreateOptions, ListResults } from './types';

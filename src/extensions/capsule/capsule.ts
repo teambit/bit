@@ -2,7 +2,7 @@ import capsuleOrchestrator from '../network/orchestrator/orchestrator';
 import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
 import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 // import CapsuleBuilder from '../network/capsule-builder';
 import { CapsuleOptions } from '../network/orchestrator/types';
 import { PackageManager } from '../package-manager';
@@ -14,9 +14,8 @@ export default class CapsuleFactory {
     /**
      * instance of the capsule orchestrator.
      */
-    readonly orchestrator: CapsuleOrchestrator
-  ) // readonly builder: CapsuleBuilder
-  {}
+    readonly orchestrator: CapsuleOrchestrator // readonly builder: CapsuleBuilder
+  ) {}
 
   /**
    * create a new capsule from a component.

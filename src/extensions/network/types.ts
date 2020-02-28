@@ -1,4 +1,4 @@
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 
 export type WorkspaceCapsules = {
   workspacePath: string;
