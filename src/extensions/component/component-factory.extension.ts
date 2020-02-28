@@ -1,9 +1,9 @@
-import { CapsuleExt } from '../capsule';
+import { NetworkExt } from '../network';
 import componentProvider from './component.provider';
 
 export default {
   name: 'ComponentFactory',
-  dependencies: [CapsuleExt],
+  dependencies: [NetworkExt],
   config: {},
   provider: componentProvider
 };

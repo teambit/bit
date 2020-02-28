@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { EventEmitter } from 'events';
-import { ComponentCapsule, BitContainerConfig } from '../../../capsule-ext';
+import { ComponentCapsule, BitContainerConfig } from '../../../capsule/component-capsule';
 import ResourceFactory from './resource-factory';
 import Resource, { ResourceEvents } from './resource';
 import Repository from '../db/repository';

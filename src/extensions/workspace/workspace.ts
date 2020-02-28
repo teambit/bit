@@ -4,7 +4,7 @@ import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -31,7 +31,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly capsule: Capsule,
+    readonly network: Network,
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}
@@ -96,7 +96,10 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const capsules = await this.capsule.create(components, { workspace: this.path });
+    const capsules = await this.network.create(
+      components.map(c => c.id.toString()),
+      { workspace: this.path }
+    );
     const capsulesMap = capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;

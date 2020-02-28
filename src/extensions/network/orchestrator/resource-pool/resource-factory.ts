@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import Resource from './resource';
-import { BitContainerConfig } from '../../../capsule-ext/container';
+import { BitContainerConfig } from '../../../capsule/component-capsule/container';
 
 export default interface ResourceFactory<T> extends EventEmitter {
   create(config: BitContainerConfig): Promise<Resource<T>>;

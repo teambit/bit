@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Exec } from '@teambit/capsule';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 
 export class Script {
   constructor(

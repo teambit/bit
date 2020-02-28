@@ -1,7 +1,7 @@
 import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 import { pipeOutput } from '../../utils/child_process';
 
 export type installOpts = {
