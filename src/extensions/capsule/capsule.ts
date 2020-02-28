@@ -3,7 +3,6 @@ import { WorkspaceCapsules } from './types';
 import { Component } from '../component';
 import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
-// import CapsuleBuilder from '../network/capsule-builder';
 import { CapsuleOptions } from '../network/orchestrator/types';
 import { PackageManager } from '../package-manager';
 
@@ -35,6 +34,5 @@ export default class CapsuleFactory {
   static async provide(config: any, [packageManager]: any) {
     await capsuleOrchestrator.buildPools();
     return new CapsuleFactory(capsuleOrchestrator);
-    // return new CapsuleFactory(capsuleOrchestrator, new CapsuleBuilder('any', packageManager));
   }
 }
