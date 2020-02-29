@@ -46,7 +46,6 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
-import { isString } from 'util';
 import { Dist } from '../consumer/component/sources';
 
 const removeNils = R.reject(R.isNil);
@@ -327,7 +326,7 @@ export default class Scope {
         if (!resultFromCompiler || !resultFromCompiler.dists) return null;
         const builtFiles = resultFromCompiler.dists;
         builtFiles.forEach(file => {
-          if (!file.path || !file.content || !isString(file.content)) {
+          if (!file.path || !file.content || typeof file.content !== 'string') {
             throw new GeneralError(
               'compile interface expects to get files in a form of { path: string, content: string }'
             );

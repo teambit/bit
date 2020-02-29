@@ -32,7 +32,7 @@ export class Compile {
     this.scope = scope;
 
     const func = this.compileDuringBuild.bind(this);
-    this.scope.onBuild?.push(func);
+    if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
