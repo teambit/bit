@@ -25,7 +25,8 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
-    const templateExtName = this.workspace.config.extensions.create?.template;
+    const templateExtName = this.workspace.config.workspaceSettings.extensionsConfig.findExtension('create')?.config
+      ?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
     }
@@ -39,7 +40,10 @@ export class Create {
   }
 
   private getComponentPath(name: string) {
-    return composeComponentPath(new BitId({ name }), this.workspace.config.componentsDefaultDirectory);
+    return composeComponentPath(
+      new BitId({ name }),
+      this.workspace.config.workspaceSettings.componentsDefaultDirectory
+    );
   }
 
   private getTemplateResults(templateFunc: Function, compName: string, templateExtName: string): TemplateFuncResult {

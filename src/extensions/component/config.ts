@@ -21,17 +21,17 @@ export default class Config {
      */
     readonly runtimeMain: PathLinux,
 
+    readonly dependencies: DependenciesConfig,
+
     readonly compiler?: CompilerExtension,
 
     readonly tester?: TesterExtension,
-
-    readonly dependencies: DependenciesConfig,
 
     bindingPrefix?: string,
 
     customResolvedPaths?: CustomResolvedPath[],
 
-    overrides: ComponentOverridesData,
+    overrides?: ComponentOverridesData,
 
     packageJsonChangedProps,
 
