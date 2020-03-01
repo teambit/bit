@@ -1,47 +1,48 @@
-import { Observable } from 'rxjs';
+import { Subject, ReplaySubject } from 'rxjs';
 import ContainerExec from '../../capsule/component-capsule/container-exec';
 
 export function createExecutionStream(exec: ContainerExec, id, time: Date = new Date()) {
   let message: any = null;
-  return new Observable(function(subscriber) {
+  const subscriber = new ReplaySubject();
+
+  subscriber.next({
+    type: 'task:start',
+    id,
+    value: time
+  });
+
+  exec.stdout.on('data', function(data) {
     subscriber.next({
-      type: 'start',
+      type: 'task:stdout',
       id,
-      value: time
-    });
-
-    exec.stdout.on('data', function(data) {
-      subscriber.next({
-        type: 'stdout',
-        id,
-        value: data.toString()
-      });
-    });
-
-    exec.stderr.on('data', function(data) {
-      subscriber.next({
-        type: 'stderr',
-        id,
-        value: data.toString()
-      });
-    });
-
-    // @ts-ignore
-    exec.on('message', function(data) {
-      message = data;
-    });
-
-    exec.on('close', function() {
-      const endTime = new Date();
-      subscriber.next({
-        type: 'result',
-        id,
-        value: message,
-        endTime,
-        duration: endTime.getTime() - time.getTime(),
-        code: exec.code
-      });
-      subscriber.complete();
+      value: data.toString()
     });
   });
+
+  exec.stderr.on('data', function(data) {
+    subscriber.next({
+      type: 'task:stderr',
+      id,
+      value: data.toString()
+    });
+  });
+
+  // @ts-ignore
+  exec.on('message', function(data) {
+    message = data;
+  });
+
+  exec.on('close', function() {
+    const endTime = new Date();
+    subscriber.next({
+      type: 'task:result',
+      id,
+      value: message,
+      endTime,
+      duration: endTime.getTime() - time.getTime(),
+      code: exec.code
+    });
+    subscriber.complete();
+  });
+  return subscriber;
 }

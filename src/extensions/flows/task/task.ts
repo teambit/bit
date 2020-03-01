@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
-import { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { join } from 'path';
 import { readFile } from 'fs-extra';
 import { createExecutionStream } from './execution-stream';
@@ -10,13 +10,12 @@ import ContainerExec from '../../capsule/component-capsule/container-exec';
 export const PackageMarker = '#';
 
 export class Task {
-  static async execute(task: string, capsule: ComponentCapsule): Promise<Observable<any>> {
-    const isExtension = (taskString: string) => taskString.trim().startsWith(PackageMarker);
+  static async execute(task: string, capsule: ComponentCapsule): Promise<Subject<any>> {
+    const isExtension = (taskString: string) => (taskString || '').trim().startsWith(PackageMarker);
 
     const time = new Date();
     const exec: ContainerExec = new ContainerExec();
     const stream = createExecutionStream(exec, `${capsule.id}:${task}`, time);
-
     if (isExtension(task)) {
       const { host, pathToScript } = await createHostScript(capsule, task);
       await capsule.execNode(host, { args: [pathToScript] }, exec);

@@ -18,7 +18,7 @@ describe('task', function() {
       const message = 'hello-world';
       const stream = await runTask(`1>&2 echo ${message} && false`);
 
-      return expectMessage(stream, message, 'stderr', 1);
+      return expectMessage(stream, message, 'task:stderr', 1);
     });
   });
 
@@ -27,17 +27,17 @@ describe('task', function() {
 
     it('with stdout and result', async function() {
       const stream = await runTask('#@bit/extension', '@bit-test/button0', createModuleTestCase as any);
-      return expectMessage(stream, 'hello-module', 'stdout', 0, { message: 'hello-module' });
+      return expectMessage(stream, 'hello-module', 'task:stdout', 0, { message: 'hello-module' });
     });
 
     it('with stderr and result', async function() {
       const stream = await runTask('#@bit/ext-err', '@bit-test/button1', getErrorCase as any);
-      return expectMessage(stream, 'hello-module', 'stderr', 0, { message: 'hello-module' });
+      return expectMessage(stream, 'hello-module', 'task:stderr', 0, { message: 'hello-module' });
     });
   });
 });
 
-function expectMessage(stream, message: string, pipeName = 'stdout', code = 0, value: any = null) {
+function expectMessage(stream, message: string, pipeName = 'task:stdout', code = 0, value: any = null) {
   let out = '';
   return new Promise(resolve =>
     stream.subscribe({
@@ -64,7 +64,7 @@ async function runTask(task: string, id = '@bit-test/button', getter = getTestCa
   return stream;
 }
 
-function getTestCase(name: string) {
+export function getTestCase(name: string) {
   const main = 'src/index.js';
   return {
     [main]: `console.log('hello-world')`,
