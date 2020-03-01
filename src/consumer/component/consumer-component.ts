@@ -1175,7 +1175,7 @@ export default class Component {
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
     const componentConfig = await ComponentConfig.load({
-      componentDir: componentMap.rootDir,
+      componentDir: componentMap.getTrackDir(),
       workspaceDir: consumerPath,
       workspaceConfig
     });
@@ -1184,8 +1184,6 @@ export default class Component {
     if (componentFromModel) {
       componentConfig.mergeWithComponentData(componentFromModel);
     }
-    // for authored componentConfig is normally undefined
-    const bitJson = componentConfig || workspaceConfig;
 
     const envsContext = {
       componentDir: bitDir,
@@ -1241,19 +1239,7 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const extensions: ExtensionData[] = [];
-    if (bitJson) {
-      R.forEachObjIndexed((extConfig, extName) => {
-        const extensionId = consumer.getParsedIdIfExist(extName);
-        // Store config for core extensions
-        if (!extensionId) {
-          extensions.push({ name: extName, config: extConfig });
-          // Do not put the extension inside the extension itself
-        } else if (id.name !== extensionId.name) {
-          extensions.push({ extensionId, config: extConfig });
-        }
-      }, bitJson.extensions);
-    }
+    const extensions: ExtensionData[] = componentConfig.parsedExtensions(consumer, id);
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
@@ -1269,8 +1255,8 @@ export default class Component {
       name: id.name,
       scope: id.scope,
       version: id.version,
-      lang: bitJson.lang,
-      bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+      lang: componentConfig.lang,
+      bindingPrefix: componentConfig.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       compiler,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -3,11 +3,14 @@ import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
 import { WorkspaceConfig } from '../../extensions/workspace-config';
 import { PathOsBasedRelative } from '../../utils/path';
-import Component from '../component/consumer-component';
+import Component, { ExtensionData } from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../../extensions/workspace-config/extension-config-list';
+import { BitId } from '../../bit-id';
+import { Consumer } from '..';
 
 type ConfigProps = {
   lang?: string;
@@ -46,6 +49,21 @@ export default class ComponentConfig extends AbstractConfig {
     return filterObject(componentObject, isPropDefaultOrEmpty);
   }
 
+  parsedExtensions(consumer: Consumer, currentId: BitId): ExtensionData[] {
+    const res: ExtensionData[] = [];
+    R.forEachObjIndexed((extConfig, extName) => {
+      const extensionId = consumer.getParsedIdIfExist(extName);
+      // Store config for core extensions
+      if (!extensionId) {
+        res.push({ name: extName, config: extConfig });
+        // Do not put the extension inside the extension itself
+      } else if (currentId.name !== extensionId.name) {
+        res.push({ extensionId, config: extConfig });
+      }
+    }, this.extensions);
+    return res;
+  }
+
   validate(bitJsonPath: string) {
     if (
       typeof this.compiler !== 'object' ||
@@ -64,8 +82,8 @@ export default class ComponentConfig extends AbstractConfig {
     const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentConfig({
-      compiler: R.prop('compiler', env),
-      tester: R.prop('tester', env),
+      compiler: env ? R.prop('compiler', env) : undefined,
+      tester: env ? R.prop('tester', env) : undefined,
       extensions,
       lang,
       bindingPrefix,
@@ -94,12 +112,12 @@ export default class ComponentConfig extends AbstractConfig {
 
   /**
    * Use the workspaceConfig as a base. Override values if exist in componentConfig
+   * This only used for legacy props that were defined in the root like compiler / tester
    */
-  static mergeWithWorkspaceConfig(
+  static mergeWithWorkspaceRootConfigs(
     componentConfig: Record<string, any>,
     workspaceConfig: WorkspaceConfig | undefined
   ): ComponentConfig {
-    // TODO: gilad - change this when moving to new config
     let plainWorkspaceConfig = workspaceConfig ? workspaceConfig.toPlainObject() : {};
     plainWorkspaceConfig = plainWorkspaceConfig || {};
     const workspaceConfigWithoutConsumerSpecifics = filterObject(
@@ -129,23 +147,39 @@ export default class ComponentConfig extends AbstractConfig {
     workspaceDir: PathOsBasedRelative;
     workspaceConfig: WorkspaceConfig;
   }): Promise<ComponentConfig> {
-    const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+    let bitJsonPath;
+    let componentHasWrittenConfig = false;
+    let packageJsonFile;
+    if (componentDir) {
+      bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+    }
     const loadBitJson = async () => {
       try {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
-        return file;
+        if (file) {
+          componentHasWrittenConfig = true;
+          return file;
+        }
+        return {};
       } catch (e) {
         throw new ShowDoctorError(
           `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
         );
       }
     };
-    const loadPackageJson = async (): Promise<PackageJsonFile | undefined> => {
-      if (!componentDir) return undefined;
+    const loadPackageJson = async (): Promise<PackageJsonFile | {}> => {
+      if (!componentDir) return {};
       try {
         const file = await PackageJsonFile.load(workspaceDir, componentDir);
-        if (!file.fileExist) return undefined;
-        return file;
+        packageJsonFile = file;
+        const packageJsonObject = file.fileExist ? file.packageJsonObject : undefined;
+        const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
+        if (packageJsonHasConfig) {
+          const packageJsonConfig = packageJsonObject?.bit;
+          componentHasWrittenConfig = true;
+          return packageJsonConfig;
+        }
+        return {};
       } catch (e) {
         throw new ShowDoctorError(
           `package.json at ${AbstractConfig.composePackageJsonPath(
@@ -154,18 +188,12 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
-    const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
-    const bitJsonConfig = bitJsonFile || {};
-    const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : undefined;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const packageJsonConfig = packageJsonHasConfig ? packageJsonObject.bit : {};
+    const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, workspaceConfig);
+    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(config, workspaceConfig);
     componentConfig.path = bitJsonPath;
-    componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
+    componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
