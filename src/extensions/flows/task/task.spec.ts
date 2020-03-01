@@ -1,10 +1,12 @@
-import { rmdir } from 'fs-extra';
+import { remove } from 'fs-extra';
 import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
 import { Task } from './task';
-import { WATCHER_COMPLETED_MSG } from '../../../consumer/component-ops/watch-components';
 
 describe.only('task', function() {
+  this.afterAll(async function() {
+    return remove('/tmp/@bit-test');
+  });
   describe('should run bash commands', function() {
     it('with stdout', async function() {
       const message = 'hello-world';
@@ -24,12 +26,12 @@ describe.only('task', function() {
     this.timeout(100 * 10000);
 
     it('with stdout and result', async function() {
-      const stream = await runTask('#@bit/extension', '@bit/button1', createModuleTestCase as any);
+      const stream = await runTask('#@bit/extension', '@bit-test/button0', createModuleTestCase as any);
       return expectMessage(stream, 'hello-module', 'stdout', 0, { message: 'hello-module' });
     });
 
     it('with stderr and result', async function() {
-      const stream = await runTask('#@bit/ext-err', '@bit/button2', getErrorCase as any);
+      const stream = await runTask('#@bit/ext-err', '@bit-test/button1', getErrorCase as any);
       return expectMessage(stream, 'hello-module', 'stderr', 0, { message: 'hello-module' });
     });
   });
@@ -55,7 +57,7 @@ function expectMessage(stream, message: string, pipeName = 'stdout', code = 0, v
   );
 }
 
-async function runTask(task: string, id = '@bit/button1', getter = getTestCase) {
+async function runTask(task: string, id = '@bit-test/button', getter = getTestCase) {
   const test = getter(id);
   const capsule = await createFakeCapsule(test, id);
   const stream = await Task.execute(task, capsule);
