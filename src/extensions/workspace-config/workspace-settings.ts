@@ -4,6 +4,7 @@ import { ResolveModulesConfig } from '../../consumer/component/dependencies/depe
 import { PMConfig } from '../package-manager';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
+import { ExtensionConfigList, ExtensionConfigEntry } from './extension-config-list';
 
 // TODO: consider moving to workspace extension
 const WORKSPACE_EXT_PROPS = [
@@ -29,11 +30,6 @@ export interface WorkspaceSettingsProps {
   bindingPrefix?: string;
   distEntry?: string | undefined;
   distTarget?: string | undefined;
-}
-
-interface ExtensionConfigEntry {
-  id: string;
-  config: any;
 }
 
 export class WorkspaceSettings {
@@ -87,24 +83,16 @@ export class WorkspaceSettings {
     return this.data.distTarget;
   }
 
-  get extensionsConfig(): ExtensionConfigEntry[] {
+  get extensionsConfig(): ExtensionConfigList {
     const workspaceExtProps = pick(WORKSPACE_EXT_PROPS, this.data);
     // TODO: take name from the extension
     const workspaceExtEntry = { id: 'workspace', config: workspaceExtProps };
     const otherExtensionsProps = omit(WORKSPACE_EXT_PROPS, this.data);
-    const otherExtensions = forEachObjIndexed((config, id) => {
-      return { id, config };
+    const otherExtensions: ExtensionConfigEntry[] = [];
+    forEachObjIndexed((config, id) => {
+      otherExtensions.push({ id, config });
     }, otherExtensionsProps);
-    return [workspaceExtEntry, ...otherExtensions];
-  }
-
-  findExtension(extensionId: string, ignoreVersion = false): ExtensionConfigEntry | undefined {
-    return find((extEntry: ExtensionConfigEntry) => {
-      if (!ignoreVersion) {
-        return extEntry.id === extensionId;
-      }
-      return BitId.getStringWithoutVersion(extEntry.id) === BitId.getStringWithoutVersion(extensionId);
-    }, this.extensionsConfig);
+    return ExtensionConfigList.fromArray([workspaceExtEntry, ...otherExtensions]);
   }
 
   /**
@@ -114,7 +102,7 @@ export class WorkspaceSettings {
    * @memberof WorkspaceSettings
    */
   updateExtensionVersion(newExtensionId: string) {
-    const existing = this.findExtension(newExtensionId, true);
+    const existing = this.extensionsConfig.findExtension(newExtensionId, true);
     if (!existing) {
       throw new GeneralError(`exntesion ${newExtensionId} not found in workspace config`);
     }
@@ -123,10 +111,10 @@ export class WorkspaceSettings {
   }
 
   addExtension(extensionEntry: ExtensionConfigEntry, override = false) {
-    const existing = this.findExtension(extensionEntry.id, true);
+    const existing = this.extensionsConfig.findExtension(extensionEntry.id, true);
     if (existing) {
       if (!override) {
-        throw new GeneralError(`exntesion ${extensionEntry.id} already exist in workspace config`);
+        throw new GeneralError(`extension ${extensionEntry.id} already exist in workspace config`);
       }
       delete this.data[existing.id];
     }

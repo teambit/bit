@@ -6,6 +6,7 @@ import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { AnyExtension } from '../../harmony';
 import { Harmony } from '../../harmony';
+import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
 export default class Bit {
   constructor(
@@ -37,11 +38,11 @@ export default class Bit {
     return '1.0.0';
   }
 
-  async extensions(): Promise<{ [extensionId: string]: any }> {
-    if (!this.config) return Promise.resolve({});
-    let rawExtensions = this.config.workspaceSettings.extensionsConfig;
-    rawExtensions = filter(ext => !ext.__legacy, rawExtensions);
-    return rawExtensions;
+  async extensions(): Promise<ExtensionConfigList> {
+    if (!this.config) return Promise.resolve(ExtensionConfigList.fromArray([]));
+    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
+    const newExtensions = extensionsConfig._filterLegacy();
+    return newExtensions;
   }
 
   public onExtensionsLoaded = new ReplaySubject();
@@ -73,7 +74,7 @@ export default class Bit {
     };
     if (this.config && this.workspace) {
       const extensionsConfig = await this.extensions();
-      const extensionsIds = Object.keys(extensionsConfig);
+      const extensionsIds = extensionsConfig.ids;
 
       if (!extensionsIds || !extensionsIds.length) {
         return result;
@@ -93,7 +94,7 @@ export default class Bit {
       });
       // @ts-ignore
       result.extensionsManifests = manifests;
-      result.extensionsConfig = extensionsConfig;
+      result.extensionsConfig = extensionsConfig.toObject();
     }
 
     return result;

@@ -358,6 +358,7 @@ export default class BitMap {
    * search for a similar id in the bitmap and return the full BitId
    */
   getExistingBitId(id: BitIdStr, shouldThrow = true): BitId | undefined {
+    debugger;
     if (!R.is(String, id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
