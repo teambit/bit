@@ -19,21 +19,21 @@ export default class Config {
     /**
      * version main file for runtime (will be written into the main property in the package.json in the capsule)
      */
-    readonly runtimeMain: PathLinux,
+    // readonly runtimeMain: PathLinux,
 
-    readonly dependencies: DependenciesConfig,
+    // readonly dependencies: DependenciesConfig,
 
-    readonly compiler?: CompilerExtension,
+    // readonly compiler?: CompilerExtension,
 
-    readonly tester?: TesterExtension,
+    // readonly tester?: TesterExtension,
 
-    bindingPrefix?: string,
+    // bindingPrefix?: string,
 
-    customResolvedPaths?: CustomResolvedPath[],
+    // customResolvedPaths?: CustomResolvedPath[],
 
-    overrides?: ComponentOverridesData,
+    // overrides?: ComponentOverridesData,
 
-    packageJsonChangedProps,
+    // packageJsonChangedProps,
 
     /**
      * configured extensions

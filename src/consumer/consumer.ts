@@ -77,6 +77,7 @@ import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
 import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
+import PackageJsonFile from './component/package-json-file';
 
 type ConsumerProps = {
   projectPath: string;
@@ -118,6 +119,7 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
+  packageJson: any;
 
   constructor({
     projectPath,
@@ -139,6 +141,7 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
+    this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get compiler(): Promise<CompilerExtension | undefined> {

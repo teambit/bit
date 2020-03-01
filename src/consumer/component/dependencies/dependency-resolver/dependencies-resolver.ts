@@ -1084,7 +1084,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     if (isAuthor) {
-      return this.consumer.config.packageJsonObject;
+      return this.consumer.packageJson;
     }
     if (this.component.packageJsonFile) {
       return this.component.packageJsonFile.packageJsonObject;

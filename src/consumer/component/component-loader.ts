@@ -212,11 +212,11 @@ export default class ComponentLoader {
 
   _isAngularProject(): boolean {
     return Boolean(
-      this.consumer.config.packageJsonObject &&
+      this.consumer.packageJson &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies &&
+        this.consumer.packageJson.dependencies &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
+        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }
 

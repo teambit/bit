@@ -74,6 +74,19 @@ export default class PackageJsonFile {
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
   }
 
+  static loadSync(workspaceDir: PathOsBasedAbsolute, componentDir: PathRelative = '.'): PackageJsonFile {
+    const filePath = composePath(componentDir);
+    const filePathAbsolute = path.join(workspaceDir, filePath);
+    const packageJsonStr = PackageJsonFile.getPackageJsonStrIfExistSync(filePathAbsolute);
+    if (!packageJsonStr) {
+      return new PackageJsonFile({ filePath, fileExist: false, workspaceDir });
+    }
+    const packageJsonObject = PackageJsonFile.parsePackageJsonStr(packageJsonStr, componentDir);
+    const indent = detectIndent(packageJsonStr).indent;
+    const newline = detectNewline(packageJsonStr);
+    return new PackageJsonFile({ filePath, packageJsonObject, fileExist: true, workspaceDir, indent, newline });
+  }
+
   static createFromComponent(
     componentDir: PathRelative,
     component: Component,
@@ -185,6 +198,17 @@ export default class PackageJsonFile {
   static async getPackageJsonStrIfExist(filePath: PathOsBased) {
     try {
       return await fs.readFile(filePath, 'utf-8');
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return null; // file not found
+      }
+      throw err;
+    }
+  }
+
+  static getPackageJsonStrIfExistSync(filePath: PathOsBased) {
+    try {
+      return fs.readFileSync(filePath, 'utf-8');
     } catch (err) {
       if (err.code === 'ENOENT') {
         return null; // file not found

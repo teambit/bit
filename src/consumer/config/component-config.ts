@@ -8,7 +8,6 @@ import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../extensions/workspace-config/extension-config-list';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 
