@@ -17,6 +17,7 @@ import { Options } from '../network';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_GLOBAL_REPOSITORY, REPOSITORY_CACHE_ROOT } from '../../../constants';
 import { toBoolean } from '../../../utils';
+import { Component } from '../../component';
 
 export class CapsuleOrchestrator {
   private _loaded = false;
@@ -77,12 +78,17 @@ export class CapsuleOrchestrator {
     return pool.acquire(bitId);
   }
 
-  async getCapsule(workspace: string, capsuleConf: CreateOptions, options: Options): Promise<ComponentCapsule> {
+  async getCapsule(
+    workspace: string,
+    capsuleConf: CreateOptions,
+    options: Options,
+    component: Component
+  ): Promise<ComponentCapsule> {
     let pool = this.getPool(workspace);
     if (!pool) {
       pool = await this.addPool(workspace);
     }
-    return pool.getResource(capsuleConf, options.alwaysNew);
+    return pool.getResource(capsuleConf, options.alwaysNew, component);
   }
 
   async getCapsules(

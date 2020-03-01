@@ -99,6 +99,7 @@ export class Scripts {
     return {
       async run() {
         await walk(visitor);
+
         return reporter.createUserReporter().getResults();
       },
       reporter: reporter.createUserReporter()

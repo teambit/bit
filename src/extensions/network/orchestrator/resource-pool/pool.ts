@@ -7,6 +7,7 @@ import Repository from '../db/repository';
 // eslint-disable-next-line import/no-named-as-default
 import Logger, { Logger as LTYPE } from '../../../../logger/logger';
 import { CreateOptions } from '../types';
+import { Component } from '../../../component';
 
 /* export enum Events {
   FactoryCreateErrors = 'factory-create-error',
@@ -75,7 +76,12 @@ export default class Pool<T> extends EventEmitter {
       // console.log('borrows', resource.id);
     });
   }
-  async getResource(capsuleWithConf: CreateOptions, newCapsule = false): Promise<ComponentCapsule> {
+  // eslint-disable-next-line max-len
+  async getResource(
+    capsuleWithConf: CreateOptions,
+    newCapsule = false,
+    component: Component
+  ): Promise<ComponentCapsule> {
     const create = async ({ resourceId, options }: CreateOptions): Promise<ComponentCapsule> => {
       let acquiredResource;
       let created = false;
@@ -89,6 +95,7 @@ export default class Pool<T> extends EventEmitter {
       this.observeResource(acquiredResource);
       const capsule = acquiredResource.use() as ComponentCapsule;
       capsule.new = created;
+      capsule.component = component;
       return capsule;
     };
 

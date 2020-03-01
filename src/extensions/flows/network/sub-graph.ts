@@ -1,13 +1,13 @@
 import { Graph } from 'graphlib';
 import { uniq, flatten } from 'ramda';
-import { ScriptsOptions } from '../scripts-options';
-import { ResolvedComponent } from '../../workspace/resolved-component';
+import { ExecutionOptions } from './options';
+import { Component } from '../../component';
 
-export function createSubGraph(components: ResolvedComponent[], options: ScriptsOptions, graph: Graph) {
+export function createSubGraph(components: Component[], options: ExecutionOptions, graph: Graph) {
   const shouldStay = uniq(
     flatten(
       components.map(comp => {
-        const id = comp.component.id.toString();
+        const id = comp.id.toString();
         const base = [id];
         let pre: string[] = [];
         let post: string[] = [];
@@ -33,16 +33,8 @@ export function createSubGraph(components: ResolvedComponent[], options: Scripts
 export function getNeighborsByDirection(
   id: string,
   g: Graph,
-  direction: 'predecessors' | 'successors' = 'predecessors'
+  direction: 'predecessors' | 'successors' = 'successors'
 ): string[] {
-  const parents = g[direction](id) || [];
-  return parents.concat(parents.map(pre => flatten(getNeighborsByDirection(pre, g, direction))));
+  const neighbors = g[direction](id) || [];
+  return neighbors.concat(neighbors.map(pre => flatten(getNeighborsByDirection(pre, g, direction))));
 }
-
-/**
- *
- * if seeders = [] I get workspace network
- * if seeders = ['some', 'wow', ['bitID']] i get the connected components of some and wow
- * create(seeders:Components[]):Network
- *
- */

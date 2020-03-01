@@ -3,6 +3,7 @@ import { State, Console } from '@teambit/capsule';
 import { tmpdir } from 'os';
 import { mkdirp, writeFile } from 'fs-extra';
 import { FsContainer, ComponentCapsule } from '../../capsule/component-capsule';
+import { Component } from '../../component';
 
 type CapsuleContent = { [k: string]: string };
 
@@ -22,6 +23,7 @@ export async function createFakeCapsule(fs: CapsuleContent, id: string) {
     // eslint-disable-next-line no-undef
     new Console(),
     ({} as any) as State,
+    {} as Component,
     {
       wrkDir: location,
       bitId

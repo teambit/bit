@@ -83,7 +83,7 @@ export default class Network {
     // create capsules
     const capsules: ComponentCapsule[] = await Promise.all(
       map((component: Component) => {
-        return this.createCapsule(component.id, actualCapsuleOptions, orchOptions);
+        return this.createCapsule(component, actualCapsuleOptions, orchOptions);
       }, components)
     );
 
@@ -189,14 +189,19 @@ export default class Network {
 
   async createCapsule(
     // TODO: move to capsule extension
-    bitId: ComponentID,
+    component: Component,
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options
   ): Promise<ComponentCapsule> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
-    return this.orchestrator.getCapsule(capsuleOptions?.workspace || this.workspaceName, config, orchOptions);
+    const config = this._generateResourceConfig(component.id, actualCapsuleOptions, orchOptions);
+    return this.orchestrator.getCapsule(
+      capsuleOptions?.workspace || this.workspaceName,
+      config,
+      orchOptions,
+      component
+    );
   }
 
   /**

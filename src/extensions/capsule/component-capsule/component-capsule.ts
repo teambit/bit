@@ -8,6 +8,7 @@ import ContainerExec from './container-exec';
 import BitContainerFactory from '../../network/orchestrator/bit-container-factory';
 import { BitId } from '../../../bit-id';
 import { SupportedPackageManagers } from '../../network/orchestrator/types/capsule-options';
+import { Component } from '../../component';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -30,6 +31,8 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
      * capsule's state.
      */
     readonly state: State,
+
+    public component: Component,
     /**
      * config to pass capsule
      */
