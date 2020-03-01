@@ -638,9 +638,9 @@ export default (err: Error): string | undefined => {
     return handleNonBitCustomErrors(err);
   }
   const func = getErrorFunc(errorDefinition);
-  console.log(err);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
   err.message = errorMessage;
   logger.error(`user gets the following error: ${errorMessage}`);
+  logger.silly(err.stack);
   return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
 };

@@ -7,6 +7,8 @@ import { Scope } from '../../scope';
 import { AnyExtension } from '../../harmony';
 import { Harmony } from '../../harmony';
 import { ExtensionConfigList } from '../workspace-config/extension-config-list';
+import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import GeneralError from '../../error/general-error';
 
 export default class Bit {
   constructor(
@@ -82,7 +84,15 @@ export default class Bit {
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
-      const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
+      let extensionsComponents;
+      // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
+      try {
+        extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
+      } catch (e) {
+        if (e instanceof MissingBitMapComponent) {
+          throw new GeneralError(`could not find an extension "${e.id}" defined in the workspace config`);
+        }
+      }
       const capsuleList = await this.capsule.create(extensionsComponents, { packageManager: 'yarn' });
 
       const manifests = capsuleList.map(({ value, id }) => {
