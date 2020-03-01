@@ -83,14 +83,15 @@ export default class Bit {
       }
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
-      // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       let extensionsComponents;
       // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
       try {
         extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
       } catch (e) {
         if (e instanceof MissingBitMapComponent) {
-          throw new GeneralError(`could not find an extension "${e.id}" defined in the workspace config`);
+          throw new GeneralError(
+            `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`
+          );
         }
       }
       const capsuleList = await this.capsule.create(extensionsComponents, { packageManager: 'yarn' });
