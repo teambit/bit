@@ -153,6 +153,9 @@ export default class ComponentConfig extends AbstractConfig {
       bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
     }
     const loadBitJson = async () => {
+      if (!bitJsonPath) {
+        return {};
+      }
       try {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
         if (file) {
