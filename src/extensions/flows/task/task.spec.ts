@@ -20,34 +20,22 @@ describe.only('task', function() {
     });
   });
 
-  describe.only('should run module', function() {
-    it('with stdout', async function() {
-      const stream = await runTask('#@bit/extension', '@bit/button1', createModuleTestCase as any);
-      let out = '';
-      return new Promise(resolve => {
-        return stream.subscribe({
-          next(data) {
-            if (data.type === 'stdout') {
-              out += data.value.toString();
-            }
+  describe('should run module', function() {
+    this.timeout(100 * 10000);
 
-            if (data.type === 'result') {
-              debugger;
-            }
-          },
-          complete() {
-            debugger;
-            console.log('done');
-          }
-        });
-      });
+    it('with stdout and result', async function() {
+      const stream = await runTask('#@bit/extension', '@bit/button1', createModuleTestCase as any);
+      return expectMessage(stream, 'hello-module', 'stdout', 0, { message: 'hello-module' });
     });
-    it('with stderr', function() {});
-    it('with result', function() {});
+
+    it('with stderr and result', async function() {
+      const stream = await runTask('#@bit/ext-err', '@bit/button2', getErrorCase as any);
+      return expectMessage(stream, 'hello-module', 'stderr', 0, { message: 'hello-module' });
+    });
   });
 });
 
-function expectMessage(stream, message: string, pipeName = 'stdout', code = 0) {
+function expectMessage(stream, message: string, pipeName = 'stdout', code = 0, value: any = null) {
   let out = '';
   return new Promise(resolve =>
     stream.subscribe({
@@ -56,6 +44,7 @@ function expectMessage(stream, message: string, pipeName = 'stdout', code = 0) {
           out += data.value.toString();
         } else if (data.type === 'result') {
           expect(data.code).to.equal(code);
+          expect(data.value).to.deep.equal(value);
         }
       },
       complete() {
@@ -81,11 +70,24 @@ function getTestCase(name: string) {
   };
 }
 
-async function createModuleTestCase(name: string) {
+function createModuleTestCase(name: string) {
   const testCase = getTestCase(name);
   testCase['node_modules/@bit/extension/index.js'] = `
-    export default function helloModule() {
+    module.exports = function helloModule() {
       console.log('hello-module')
+      return {
+        message: 'hello-module'
+      }
+    }
+  `;
+  return testCase;
+}
+
+function getErrorCase(id: string) {
+  const testCase = getTestCase(id);
+  testCase['node_modules/@bit/ext-err/index.js'] = `
+    module.exports = function printErr() {
+      console.error('hello-module')
       return {
         message: 'hello-module'
       }

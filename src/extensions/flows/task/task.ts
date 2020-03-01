@@ -3,11 +3,9 @@
 import { Observable } from 'rxjs';
 import { join } from 'path';
 import { readFile } from 'fs-extra';
-// import { ComponentCapsule } from '../../capsule-ext';
 import { createExecutionStream } from './execution-stream';
 import { ComponentCapsule } from '../../capsule/component-capsule';
 import ContainerExec from '../../capsule/component-capsule/container-exec';
-// import ContainerExec from '../../capsule-ext/container-exec';
 
 export const PackageMarker = '#';
 
@@ -21,7 +19,7 @@ export class Task {
 
     if (isExtension(task)) {
       const { host, pathToScript } = await createHostScript(capsule, task);
-      await capsule.execNode(host, { args: [pathToScript] });
+      await capsule.execNode(host, { args: [pathToScript] }, exec);
     } else {
       await capsule.typedExec(
         {

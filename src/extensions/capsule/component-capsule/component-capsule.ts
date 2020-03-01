@@ -7,6 +7,7 @@ import FsContainer, { BitExecOption } from './container';
 import ContainerExec from './container-exec';
 import BitContainerFactory from '../../network/orchestrator/bit-container-factory';
 import { BitId } from '../../../bit-id';
+import { SupportedPackageManagers } from '../../network/orchestrator/types/capsule-options';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -88,8 +89,21 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     return Object.assign({}, config, { bitId: new BitId(config.bitId) });
   }
 
-  async execNode(executable: string, args: any) {
-    return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
+  async execNode(
+    executable: string,
+    args: any,
+    exec: ContainerExec,
+    packageMannager: SupportedPackageManagers = 'npm'
+  ) {
+    return packageMannager === 'librarian'
+      ? librarian.runModule(executable, { ...args, cwd: this.wrkDir })
+      : this.typedExec(
+          {
+            command: ['node', executable, ...(args.args || [])],
+            cwd: ''
+          },
+          exec
+        );
   }
 
   async typedExec(opts: BitExecOption, exec = new ContainerExec()) {

@@ -40,11 +40,11 @@ export class Script {
 
   private async executeCmd(capsule: ComponentCapsule, executable = '') {
     const command = (executable || this.executable).split(' ');
-    const exec: Exec = executable
-      ? await capsule.execNode(command[0], { args: command.slice(1), stdio: [null, null, null, 'ipc'] })
-      : await capsule.exec({ command });
+    // const exec: Exec = executable
+    //   ? await capsule.execNode(command[0], { args: command.slice(1), stdio: [null, null, null, 'ipc'] })
+    //   : await capsule.exec({ command });
 
-    return exec;
+    // return exec;
   }
 
   private async executeModule(capsule: ComponentCapsule) {
