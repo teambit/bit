@@ -18,7 +18,6 @@ const key = R.compose(R.head, R.keys);
 export type EnvironmentOptions = {
   tester: boolean;
   compiler: boolean;
-  extension: boolean;
 };
 
 export default (async function importAction(
@@ -49,16 +48,6 @@ export default (async function importAction(
         return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
-      if (environmentOptions.extension) {
-        const existExtension = consumer.config.workspaceSettings.findExtension(id);
-        if (existExtension) {
-          consumer.config.workspaceSettings.updateExtensionVersion(id);
-        } else {
-          consumer.config.workspaceSettings.addExtension({ id, config: {} });
-        }
-        return consumer.config.write({ workspaceDir: consumer.getPath() });
-      }
-
       return Promise.resolve(true);
     }
     await writeConfigIfNeeded();
@@ -67,7 +56,7 @@ export default (async function importAction(
 
   const consumer: Consumer = await loadConsumer();
   consumer.packageManagerArgs = packageManagerArgs;
-  if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
+  if (environmentOptions.tester || environmentOptions.compiler) {
     return importEnvironment(consumer);
   }
   const importComponents = new ImportComponents(consumer, importOptions);
