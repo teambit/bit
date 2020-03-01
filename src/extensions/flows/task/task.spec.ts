@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
 import { Task } from './task';
 
-describe('task', function() {
+describe.only('task', function() {
   this.afterAll(async function() {
     return remove('/tmp/@bit-test');
   });
@@ -60,7 +60,7 @@ function expectMessage(stream, message: string, pipeName = 'task:stdout', code =
 async function runTask(task: string, id = '@bit-test/button', getter = getTestCase) {
   const test = getter(id);
   const capsule = await createFakeCapsule(test, id);
-  const stream = await Task.execute(task, capsule);
+  const stream = Task.execute(task, capsule);
   return stream;
 }
 

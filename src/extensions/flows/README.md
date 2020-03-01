@@ -52,7 +52,6 @@ export class Task {
 export class Flows {
   createNetworkByFlowName(name:string, seeders?:BitID[]):NetworkCreationStream {}  // for Run in workspace
   createNetwork(seeders:ComponentCapsule[], get:(id:BitID) => Task[]) => NetworkCreationStream {} // for compile
-  registerTask(){} // why do I need this?
 }
 ```
 EndTimeInfo = {duration:number, end:Date}

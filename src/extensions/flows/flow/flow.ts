@@ -20,16 +20,16 @@ export class Flow {
     });
 
     if (this.tasks.length) {
-      await this.execSequence(capsule, subject, startTime, 0);
+      this.execSequence(capsule, subject, startTime, 0);
     } else {
       setImmediate(() => this.handleDone(subject, capsule, startTime));
     }
     return subject;
   }
 
-  private async execSequence(capsule: ComponentCapsule, subject: Subject<any>, start: Date, index: number) {
+  private execSequence(capsule: ComponentCapsule, subject: Subject<any>, start: Date, index: number) {
     const that = this;
-    const task = await Task.execute(this.tasks[index], capsule);
+    const task = Task.execute(this.tasks[index], capsule);
     subject.next(task);
     task.subscribe({
       next(data) {
@@ -40,9 +40,9 @@ export class Flow {
           }
         }
       },
-      async complete() {
+      complete() {
         if (that.tasks.length > index + 1) {
-          await that.execSequence(capsule, subject, start, ++index);
+          that.execSequence(capsule, subject, start, ++index);
         } else {
           that.handleDone(subject, capsule, start);
         }

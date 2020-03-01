@@ -10,7 +10,7 @@ import { getTestCase } from '../task/task.spec';
 // qballer TODO - refactor these tests to make them shorter,
 //                they violate the dry principle.
 
-describe('flows', function() {
+describe.only('flows', function() {
   it('should support flow with errors', async function() {
     const id = '@bit-test2/flow1';
     const fakeFS = getTestCase(id);
@@ -18,23 +18,23 @@ describe('flows', function() {
     const stream = await new Flow(['1>&2 echo hello-flow && false', 'echo hello-flow2']).execute(fakeCapsule);
     let started = false;
     let taskSubject = 0;
-    let result: any;
     return new Promise(resolve =>
       stream.subscribe({
         next(data: any) {
           if (data.type === 'flow:start') {
             started = true;
-          } else if (data.type === 'flow:result') {
-            result = data.value;
-          } else {
-            data instanceof Subject && ++taskSubject;
           }
+          data instanceof Subject && ++taskSubject;
         },
-        complete() {
+        error(err) {
           expect(started, 'started message sent');
-          expect(result.length, 'got two results').to.equal(2);
+          expect(err.value.length, 'got two results').to.equal(2);
           expect(taskSubject, 'got subject').to.equal(1);
           resolve();
+        },
+
+        complete() {
+          expect(false, 'should have error').to.be.true;
         }
       })
     );

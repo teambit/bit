@@ -47,9 +47,7 @@ export class Network {
     });
 
     const graph = await this.createGraph(options);
-    const capsules = await this.workspace.loadCapsules(graph.nodes());
-
-    const visitedCache = createCapsuleVisitCache(capsules);
+    const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
     const q = new PQueue({ concurrency: options.concurrency });
 
     const that = this;
@@ -64,29 +62,29 @@ export class Network {
         const { capsule } = visitedCache[seed];
         const flow = await that.getFlow(capsule.component.id);
         visitedCache[seed].visited = true;
-        const flowStream = await flow.execute(capsule);
-        network.next(flowStream);
         return q
-          .add(
-            () =>
-              new Promise(resolve =>
-                flowStream.subscribe({
-                  next(data: any) {
-                    if (data.type === 'flow:result') {
-                      visitedCache[seed].result = data;
-                    }
-                  },
-                  complete() {
-                    graph.removeNode(seed);
-                    resolve();
-                  },
-                  error(err) {
-                    handleNetworkError(seed, graph, visitedCache, new Error(err.message));
-                    resolve();
+          .add(async function() {
+            const flowStream = await flow.execute(capsule);
+            network.next(flowStream);
+
+            return new Promise(resolve =>
+              flowStream.subscribe({
+                next(data: any) {
+                  if (data.type === 'flow:result') {
+                    visitedCache[seed].result = data;
                   }
-                })
-              )
-          )
+                },
+                complete() {
+                  graph.removeNode(seed);
+                  resolve();
+                },
+                error(err) {
+                  handleNetworkError(seed, graph, visitedCache, new Error(err.message));
+                  resolve();
+                }
+              })
+            );
+          })
           .then(() => {
             const sources = getSources(graph, visitedCache);
             return sources.length || !q.pending ? walk() : Promise.resolve();
@@ -138,7 +136,8 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
   graph.removeNode(seed);
 }
 
-function createCapsuleVisitCache(capsules: ComponentCapsule[]): Cache {
+async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Promise<Cache> {
+  const capsules = await workspace.loadCapsules(graph.nodes());
   return capsules.reduce((accum, curr) => {
     accum[curr.component.id.toString()] = {
       visited: false,
