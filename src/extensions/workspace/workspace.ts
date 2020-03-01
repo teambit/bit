@@ -4,9 +4,12 @@ import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
+import AddComponents from '../../consumer/component-ops/add-components';
+import { PathOsBasedRelative } from '../../utils/path';
+import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 
 /**
  * API of the Bit Workspace
@@ -28,7 +31,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly capsule: Capsule,
+    readonly network: Network,
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}
@@ -93,7 +96,10 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const capsules = await this.capsule.create(components, { workspace: this.path, packageManager: 'npm' });
+    const capsules = await this.network.create(
+      components.map(c => c.id.toString()),
+      { workspace: this.path }
+    );
     const capsulesMap = capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;
@@ -121,5 +127,27 @@ export default class Workspace implements ComponentHost {
     const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
     // @ts-ignore
     return this.transformLegacyComponents(legacyComponents.components);
+  }
+
+  /**
+   * track a new component. (practically, add it to .bitmap).
+   *
+   * @param componentPaths component paths relative to the workspace dir
+   * @param id if not set, will be concluded from the filenames
+   * @param main if not set, will try to guess according to some strategies and throws if failed
+   * @param override whether add details to an existing component or re-define it
+   */
+  async add(
+    componentPaths: PathOsBasedRelative[],
+    id?: string,
+    main?: string,
+    override = false
+  ): Promise<AddActionResults> {
+    const addComponent = new AddComponents({ consumer: this.consumer }, { componentPaths, id, main, override });
+    const addResults = await addComponent.add();
+    // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
+    //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
+    await this.consumer.bitMap.write();
+    return addResults;
   }
 }

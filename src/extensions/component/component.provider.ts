@@ -1,10 +1,9 @@
 import { ComponentFactory } from '../component';
-import Capsule from '../../environment/capsule-builder';
+import Network from '../network/network';
 
-type ComponentDeps = [Capsule];
+type ComponentDeps = [Network];
 type ComponentConfig = {};
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default async function componentProvider(config: ComponentConfig, [capsule]: ComponentDeps) {
-  return new ComponentFactory(capsule);
+export default async function componentProvider(config: ComponentConfig, [network]: ComponentDeps) {
+  return new ComponentFactory(network);
 }

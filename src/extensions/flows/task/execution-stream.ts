@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import ContainerExec from '../../capsule-ext/container-exec';
+import ContainerExec from '../../capsule/component-capsule/container-exec';
 
 export function createExecutionStream(exec: ContainerExec, id, time: Date = new Date()) {
   let message: any = null;

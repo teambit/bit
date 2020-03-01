@@ -1,12 +1,12 @@
+import { omit } from 'ramda';
 import { realpathSync } from 'fs';
 import { Capsule, Exec, Console, State } from '@teambit/capsule';
-import { NodeFS } from '@teambit/any-fs';
-import _ from 'lodash';
 import librarian from 'librarian';
-import FsContainer, { BitExecOption } from './container';
 import BitId from '../../bit-id/bit-id';
-import BitContainerFactory from '../capsule/orchestrator/bit-container-factory';
-import ContainerExec from './container-exec';
+import { NodeFS } from '@teambit/any-fs';
+import ContainerExec from '../capsule/component-capsule/container-exec';
+import FsContainer, { BitExecOption } from '../capsule/component-capsule/container';
+import BitContainerFactory from '../network/orchestrator/bit-container-factory';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -81,7 +81,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
       id: this.containerId,
       wrkDir: this.container.path,
       bitId: this.bitId,
-      options: _.omit(this.config, ['bitId', 'wrkDir'])
+      options: omit(this.config, ['bitId', 'wrkDir'])
     });
   }
   static deSerializeConfig(config: any): string {

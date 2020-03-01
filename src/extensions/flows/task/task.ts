@@ -3,9 +3,11 @@
 import { Observable } from 'rxjs';
 import { join } from 'path';
 import { readFile } from 'fs-extra';
-import { ComponentCapsule } from '../../capsule-ext';
+// import { ComponentCapsule } from '../../capsule-ext';
 import { createExecutionStream } from './execution-stream';
-import ContainerExec from '../../capsule-ext/container-exec';
+import { ComponentCapsule } from '../../capsule/component-capsule';
+import ContainerExec from '../../capsule/component-capsule/container-exec';
+// import ContainerExec from '../../capsule-ext/container-exec';
 
 export const PackageMarker = '#';
 

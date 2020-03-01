@@ -2,7 +2,7 @@ import { join, dirname, resolve } from 'path';
 import { State, Console } from '@teambit/capsule';
 import { tmpdir } from 'os';
 import { mkdirp, writeFile } from 'fs-extra';
-import { FsContainer, ComponentCapsule } from '../../capsule-ext';
+import { FsContainer, ComponentCapsule } from '../../capsule/component-capsule';
 
 type CapsuleContent = { [k: string]: string };
 

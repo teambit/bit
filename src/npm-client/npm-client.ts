@@ -18,9 +18,11 @@ const rejectNils = R.reject(isNil);
 
 const defaultNpmArgs = [];
 const defaultYarnArgs = [];
+const defaultLibrarianArgs = [];
 const defaultPackageManagerArgs = {
   npm: defaultNpmArgs,
-  yarn: defaultYarnArgs
+  yarn: defaultYarnArgs,
+  librarian: defaultLibrarianArgs
 };
 const defaultPackageManagerProcessOptions = {
   cwd: process.cwd

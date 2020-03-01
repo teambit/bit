@@ -4,7 +4,7 @@ import { BitId } from '../../bit-id';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scripts } from '../scripts';
 import { IdsAndScripts } from '../scripts/ids-and-scripts';
@@ -24,8 +24,8 @@ export class Compile {
     // we need to figure out where to store the specific compiler extensions
     const idsAndScriptsArr = componentAndCapsules
       .map(c => {
-        const buildScript = c.component.config?.extensions?.scripts?.build;
-        return { id: c.consumerComponent.id, value: buildScript };
+        const compiler = c.component.config?.extensions?.compile?.compiler;
+        return { id: c.consumerComponent.id, value: compiler ? [compiler] : [] };
       })
       .filter(i => i.value);
     const idsAndScripts = new IdsAndScripts(...idsAndScriptsArr);

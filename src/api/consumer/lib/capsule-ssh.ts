@@ -1,5 +1,5 @@
-import { ComponentCapsule } from '../../../extensions/capsule-ext';
-import orchestrator from '../../../extensions/capsule/orchestrator/orchestrator';
+import { ComponentCapsule } from '../../../extensions/capsule/component-capsule';
+import orchestrator from '../../../extensions/network/orchestrator/orchestrator';
 
 export default (async function sshIntoCapsule(bitId: string): Promise<any> {
   if (!orchestrator) throw new Error(`can't connect to capsule in non consumer environment`);
