@@ -5,7 +5,6 @@ import v4 from 'uuid';
 import filenamify from 'filenamify';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import capsuleOrchestrator from './orchestrator/orchestrator';
-import { BitId } from '../../bit-id';
 import { WorkspaceCapsules } from './types';
 import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';

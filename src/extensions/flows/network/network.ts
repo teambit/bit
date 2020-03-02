@@ -23,12 +23,6 @@ type CacheValue = {
 
 export type Cache = { [k: string]: CacheValue };
 
-const getSources = (g: Graph, cache: Cache) => g.sources().filter(seed => !cache[seed].visited);
-const getSeeders = (g: Graph, cache) => {
-  const sources = getSources(g, cache);
-  return sources.length ? sources : [g.nodes()[0]].filter(v => v);
-};
-
 export class Network {
   constructor(
     private workspace: Workspace,
@@ -38,10 +32,10 @@ export class Network {
   ) {}
 
   async execute(options: ExecutionOptions) {
-    const network = new ReplaySubject();
+    const networkStream = new ReplaySubject();
     const startTime = new Date();
 
-    network.next({
+    networkStream.next({
       type: 'network:start',
       startTime
     });
@@ -49,23 +43,28 @@ export class Network {
     const graph = await this.createGraph(options);
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
     const q = new PQueue({ concurrency: options.concurrency });
+    const walk = this.getWalker(networkStream, startTime, visitedCache, graph, q);
+    await walk();
+    return networkStream;
+  }
 
-    const that = this;
+  private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph, q: PQueue) {
+    const getFlow = this.getFlow.bind(this);
 
-    async function walk() {
+    return async function walk() {
       if (!graph.nodes().length) {
-        endNetwork(network, startTime, visitedCache);
+        endNetwork(stream, startTime, visitedCache);
         return;
       }
 
       const seeders = getSeeders(graph, visitedCache).map(async function(seed) {
         const { capsule } = visitedCache[seed];
-        const flow = await that.getFlow(capsule.component.id);
+        const flow = await getFlow(capsule.component.id);
         visitedCache[seed].visited = true;
         return q
           .add(async function() {
             const flowStream = await flow.execute(capsule);
-            network.next(flowStream);
+            stream.next(flowStream);
 
             return new Promise(resolve =>
               flowStream.subscribe({
@@ -91,10 +90,7 @@ export class Network {
           });
       });
       await Promise.all(seeders);
-    }
-
-    await walk();
-    return network;
+    };
   }
 
   private async createGraph(options: ExecutionOptions) {
@@ -103,6 +99,14 @@ export class Network {
     const subGraph = createSubGraph(components, options, fullGraph);
     return subGraph;
   }
+}
+
+function getSeeders(g: Graph, cache: Cache) {
+  const sources = getSources(g, cache);
+  return sources.length ? sources : [g.nodes()[0]].filter(v => v);
+}
+function getSources(g: Graph, cache: Cache) {
+  return g.sources().filter(seed => !cache[seed].visited);
 }
 
 function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCache: Cache) {
@@ -127,7 +131,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
 }
 
 function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: Error) {
-  const dependents = getNeighborsByDirection(seed, graph, 'successors');
+  const dependents = getNeighborsByDirection(seed, graph);
   dependents.forEach(dependent => {
     visitedCache[dependent].result = new Error(`Error due to ${seed}`);
     graph.removeNode(dependent);
