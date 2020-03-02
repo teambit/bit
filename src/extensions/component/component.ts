@@ -64,8 +64,8 @@ export default class Component {
    */
   async isolate() {
     const id = this.id.toString();
-    const capsulesList = await this.network.create([id]);
-    return capsulesList[id];
+    const subNetwork = await this.network.createSubNetwork([id]);
+    return subNetwork.capsules[id];
   }
 
   capsule() {}

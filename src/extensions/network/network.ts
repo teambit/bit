@@ -44,6 +44,11 @@ export type Options = {
   name?: string;
 };
 
+export type SubNetwork = {
+  capsules: CapsuleList;
+  components: Graph;
+};
+
 export default class Network {
   constructor(
     /**
@@ -59,12 +64,12 @@ export default class Network {
    * create a new network of capsules from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async create(
+  async createSubNetwork(
     seeders: string[],
     config?: CapsuleOptions,
     orchestrationOptions?: Options,
     consumer?: Consumer
-  ): Promise<CapsuleList> {
+  ): Promise<SubNetwork> {
     // TODO: must we need to pass consumer?
 
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
@@ -72,13 +77,13 @@ export default class Network {
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
     const loadedConsumer = consumer || (await loadConsumerIfExist());
-    this.graph = loadedConsumer
+    const graph = loadedConsumer
       ? await Graph.buildGraphFromWorkspace(loadedConsumer)
       : await Graph.buildGraphFromScope(scope);
-    const depenenciesFromAllIds = flatten(seeders.map(bitId => this.graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
     const components: ConsumerComponent[] = filter(
       val => val,
-      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => this.graph.node(id))
+      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
     );
 
     // create capsules
@@ -106,7 +111,10 @@ export default class Network {
         await this.packageManager.runInstall(toInstall);
       }
     }
-    return capsuleList;
+    return {
+      capsules: capsuleList,
+      components: this.graph
+    };
   }
   /**
    * list all of the existing workspace capsules.
