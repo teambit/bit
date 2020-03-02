@@ -51,7 +51,8 @@ export default class Network {
      */
     readonly orchestrator: CapsuleOrchestrator,
     private packageManager: PackageManager,
-    public workspaceName: string = 'any'
+    public workspaceName: string = 'any',
+    private graph: Graph = new Graph()
   ) {}
 
   /**
@@ -71,13 +72,13 @@ export default class Network {
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
     const loadedConsumer = consumer || (await loadConsumerIfExist());
-    const graph = loadedConsumer
+    this.graph = loadedConsumer
       ? await Graph.buildGraphFromWorkspace(loadedConsumer)
       : await Graph.buildGraphFromScope(scope);
-    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+    const depenenciesFromAllIds = flatten(seeders.map(bitId => this.graph.getSuccessorsByEdgeTypeRecursively(bitId)));
     const components: ConsumerComponent[] = filter(
       val => val,
-      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
+      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => this.graph.node(id))
     );
 
     // create capsules
@@ -91,7 +92,7 @@ export default class Network {
 
     const before = await getPackageJSONInCapsules(capsules);
 
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+    await this.isolateComponentsInCapsules(components, this.graph, this._buildCapsulePaths(capsules), capsuleList);
 
     const after = await getPackageJSONInCapsules(capsules);
 
