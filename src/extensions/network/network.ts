@@ -44,6 +44,11 @@ export type Options = {
   name?: string;
 };
 
+export type SubNetwork = {
+  capsules: CapsuleList;
+  components: Graph;
+};
+
 export default class Network {
   constructor(
     /**
@@ -58,12 +63,12 @@ export default class Network {
    * create a new network of capsules from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async create(
+  async createSubNetwork(
     seeders: string[],
     config?: CapsuleOptions,
     orchestrationOptions?: Options,
     consumer?: Consumer
-  ): Promise<CapsuleList> {
+  ): Promise<SubNetwork> {
     // TODO: must we need to pass consumer?
 
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
@@ -105,7 +110,10 @@ export default class Network {
         await this.packageManager.runInstall(toInstall);
       }
     }
-    return capsuleList;
+    return {
+      capsules: capsuleList,
+      components: graph
+    };
   }
   /**
    * list all of the existing workspace capsules.
