@@ -10,6 +10,8 @@ export interface CapsuleOptions extends ContainerFactoryOptions {
   installPackages?: boolean;
   packageManager?: SupportedPackageManagers;
   workspace?: string;
+  alwaysNew?: boolean;
+  name?: string;
 }
 
 export type SupportedPackageManagers = 'npm' | 'librarian' | 'yarn' | 'pnpm';

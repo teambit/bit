@@ -32,7 +32,8 @@ const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
   writeDists: true,
   writeBitDependencies: true,
   installPackages: true,
-  workspace: 'string'
+  workspace: 'string',
+  alwaysNew: false
 };
 
 const DEFAULT_OPTIONS = {
@@ -63,19 +64,12 @@ export default class Network {
    * create a new network of capsules from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createSubNetwork(
-    seeders: string[],
-    consumer: Consumer,
-    config?: CapsuleOptions,
-    orchestrationOptions?: Options
-  ): Promise<SubNetwork> {
-    // TODO: must we need to pass consumer?
-    // TODO: CONTINUE HERE
-    // * make the consumer mandatory and pass it
-    // * create a second method called createSubNetworkFromScope that accepts the scope (reuse code between them)
-
+  async createSubNetwork(seeders: string[], consumer: Consumer, config?: CapsuleOptions): Promise<SubNetwork> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
-    // TODO: do we need orchestrationOptions?
+    const orchestrationOptions = {
+      alwaysNew: (config && config.alwaysNew) || false,
+      name: (config && config.name) || undefined
+    };
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const graph = await Graph.buildGraphFromWorkspace(consumer);
     const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
@@ -94,9 +88,7 @@ export default class Network {
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
     const before = await getPackageJSONInCapsules(capsules);
-
     await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
-
     const after = await getPackageJSONInCapsules(capsules);
 
     const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
@@ -114,13 +106,13 @@ export default class Network {
       components: graph
     };
   }
-  async createSubNetworkFromScope(
-    seeders: string[],
-    config?: CapsuleOptions,
-    orchestrationOptions?: Options
-  ): Promise<SubNetwork> {
+  async createSubNetworkFromScope(seeders: string[], config?: CapsuleOptions): Promise<SubNetwork> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
     // TODO: do we need orchestrationOptions?
+    const orchestrationOptions = {
+      alwaysNew: (config && config.alwaysNew) || false,
+      name: (config && config.name) || undefined
+    };
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
     const graph = await Graph.buildGraphFromScope(scope);
