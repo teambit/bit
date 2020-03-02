@@ -56,8 +56,7 @@ export default class Network {
      */
     readonly orchestrator: CapsuleOrchestrator,
     private packageManager: PackageManager,
-    public workspaceName: string = 'any',
-    private graph: Graph = new Graph()
+    public workspaceName: string = 'any'
   ) {}
 
   /**
@@ -97,7 +96,7 @@ export default class Network {
 
     const before = await getPackageJSONInCapsules(capsules);
 
-    await this.isolateComponentsInCapsules(components, this.graph, this._buildCapsulePaths(capsules), capsuleList);
+    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
 
     const after = await getPackageJSONInCapsules(capsules);
 
@@ -113,7 +112,7 @@ export default class Network {
     }
     return {
       capsules: capsuleList,
-      components: this.graph
+      components: graph
     };
   }
   /**
