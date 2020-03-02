@@ -65,20 +65,65 @@ export default class Network {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createSubNetwork(
     seeders: string[],
+    consumer: Consumer,
     config?: CapsuleOptions,
-    orchestrationOptions?: Options,
-    consumer?: Consumer
+    orchestrationOptions?: Options
   ): Promise<SubNetwork> {
     // TODO: must we need to pass consumer?
+    // TODO: CONTINUE HERE
+    // * make the consumer mandatory and pass it
+    // * create a second method called createSubNetworkFromScope that accepts the scope (reuse code between them)
 
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
     // TODO: do we need orchestrationOptions?
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
+    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+    const components: ConsumerComponent[] = filter(
+      val => val,
+      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
+    );
+
+    // create capsules
+    const capsules: ComponentCapsule[] = await Promise.all(
+      map((component: Component) => {
+        return this.createCapsule(component.id, actualCapsuleOptions, orchOptions);
+      }, components)
+    );
+
+    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
+
+    const before = await getPackageJSONInCapsules(capsules);
+
+    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+
+    const after = await getPackageJSONInCapsules(capsules);
+
+    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
+    if (actualCapsuleOptions.installPackages) {
+      if (actualCapsuleOptions.packageManager) {
+        await this.packageManager.runInstall(toInstall, {
+          packageManager: actualCapsuleOptions.packageManager
+        });
+      } else {
+        await this.packageManager.runInstall(toInstall);
+      }
+    }
+    return {
+      capsules: capsuleList,
+      components: graph
+    };
+  }
+  async createSubNetworkFromScope(
+    seeders: string[],
+    config?: CapsuleOptions,
+    orchestrationOptions?: Options
+  ): Promise<SubNetwork> {
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
+    // TODO: do we need orchestrationOptions?
+    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
-    const loadedConsumer = consumer || (await loadConsumerIfExist());
-    const graph = loadedConsumer
-      ? await Graph.buildGraphFromWorkspace(loadedConsumer)
-      : await Graph.buildGraphFromScope(scope);
+    const graph = await Graph.buildGraphFromScope(scope);
     const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
     const components: ConsumerComponent[] = filter(
       val => val,
