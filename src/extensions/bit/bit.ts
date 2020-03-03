@@ -84,6 +84,7 @@ export default class Bit {
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
       const subNetwork = await this.network.createSubNetwork(
         extensionsComponents.map(c => c.id.toString()),
+        this.workspace.consumer,
         { packageManager: 'yarn' }
       );
 

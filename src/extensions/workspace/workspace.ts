@@ -103,6 +103,7 @@ export default class Workspace implements ComponentHost {
     const components = await this.getMany(ids);
     const subNetwork = await this.network.createSubNetwork(
       components.map(c => c.id.toString()),
+      this.consumer,
       { workspace: this.path }
     );
     const capsulesMap = subNetwork.capsules.reduce((accum, curr) => {

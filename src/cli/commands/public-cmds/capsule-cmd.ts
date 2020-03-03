@@ -95,11 +95,7 @@ export class CapsuleCreate extends Command {
     }
   ): Promise<any> {
     return Promise.resolve(
-      capsuleIsolate(
-        values,
-        _.omitBy({ baseDir, installPackages }, _.isNil),
-        _.omitBy({ alwaysNew, name: id }, _.isNil)
-      )
+      capsuleIsolate(values, _.omitBy({ baseDir, installPackages, alwaysNew, name: id }, _.isNil))
     );
   }
 
