@@ -406,8 +406,7 @@ async function convertToCorrectScope(
     await Promise.all(
       files.map(async file => {
         const newFileObject = await _createNewFileIfNeeded(version, file);
-        if (newFileObject) {
-          if (!codemod) throw new Error(`_replaceSrcOfVersionIfNeeded expects codemod to be true here`);
+        if (newFileObject && codemod) {
           file.file = newFileObject.hash();
           componentsObjects.objects.push(newFileObject);
           hasVersionChanged = true;
@@ -431,13 +430,6 @@ async function convertToCorrectScope(
     const allIds = [...dependenciesIds, componentId];
     let newFileString = fileString;
     allIds.forEach(id => {
-      if (!codemod) {
-        if (!id.scope) {
-          throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" and "${id.toString()}"
-the current import/require module has no scope-name, which result in an invalid module path upon import`);
-        }
-        return; // no codemod flag, the user doesn't want to change any source code.
-      }
       if (id.scope === remoteScope) {
         return; // nothing to do, the remote has not changed
       }
@@ -447,6 +439,10 @@ the current import/require module has no scope-name, which result in an invalid 
       // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
       // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
+      if (!id.scope && !codemod && newFileString !== fileString) {
+        throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" and "${id.toString()}"
+the current import/require module has no scope-name, which result in an invalid module path upon import`);
+      }
     });
     if (newFileString !== fileString) {
       return Source.from(Buffer.from(newFileString));
