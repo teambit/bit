@@ -8,6 +8,7 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Network from '../network/network';
+import { loadConsumerIfExist } from '../../consumer';
 
 /**
  * in-memory representation of a component.
@@ -64,8 +65,11 @@ export default class Component {
    */
   async isolate() {
     const id = this.id.toString();
-    const capsulesList = await this.network.create([id]);
-    return capsulesList[id];
+    const consumer = await loadConsumerIfExist();
+    const subNetwork = consumer
+      ? await this.network.createSubNetwork([id], consumer)
+      : await this.network.createSubNetworkFromScope([id]);
+    return subNetwork.capsules[id];
   }
 
   capsule() {}

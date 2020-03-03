@@ -96,11 +96,12 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const capsules = await this.network.create(
+    const subNetwork = await this.network.createSubNetwork(
       components.map(c => c.id.toString()),
+      this.consumer,
       { workspace: this.path }
     );
-    const capsulesMap = capsules.reduce((accum, curr) => {
+    const capsulesMap = subNetwork.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;
     }, {});

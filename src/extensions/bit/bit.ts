@@ -82,12 +82,13 @@ export default class Bit {
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const capsuleList = await this.network.create(
+      const subNetwork = await this.network.createSubNetwork(
         extensionsComponents.map(c => c.id.toString()),
+        this.workspace.consumer,
         { packageManager: 'yarn' }
       );
 
-      const manifests = capsuleList.map(({ value, id }) => {
+      const manifests = subNetwork.capsules.map(({ value, id }) => {
         const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
