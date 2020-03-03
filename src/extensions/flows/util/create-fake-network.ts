@@ -1,11 +1,12 @@
 import { Graph } from 'graphlib';
 import { ExecutionOptions } from '../network/options';
 import { ComponentID, Component } from '../../component';
-import { GetFlow, Network } from '../network';
+import { Network } from '../network';
 import { BitId } from '../../../bit-id';
 import { Consumer } from '../../../consumer';
 import { Workspace } from '../../..';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
+import { Flow } from '../flow';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };
@@ -17,7 +18,8 @@ export async function createTestNetworkStream(testCase: GraphTestCase) {
   const fakeGetGraph = createGetGraphFn(testCase);
   const fakeWorkSpace = createFakeWorkSpace(fakeGetGraph);
   const ids = testCase.input.map(val => new ComponentID(BitId.parse(val)));
-  const getFlow = {} as GetFlow;
+  const getFlow = (id: ComponentID) => Promise.resolve(new Flow([`echo hello-${id}`]));
+
   const network = new Network(fakeWorkSpace, ids, getFlow, fakeGetGraph);
   return network.execute(testCase.options);
 }
@@ -29,7 +31,7 @@ function createFakeWorkSpace(fakeGetGraph: (_consumer: Consumer) => Promise<Grap
         ids.map(id => {
           return {
             id: {
-              toString: () => id
+              toString: () => (typeof id === 'string' ? id : id.toString())
             }
           } as Component;
         })
@@ -68,11 +70,11 @@ async function createFakeCapsuleInGraph(name: string, graph: Graph) {
   const fs = {
     [main]: `
       ${Object.keys(dependencies)
-        .map(dependency => `const ${dependency} = require('${dependency}')`)
+        .map(dependency => `const ${dependency.split('/')[1]} = require('${dependency}')`)
         .join('\n')}
       function printMe(){
         console.log('${Object.keys(dependencies)
-          .map(dependency => `${dependency}()` || ['hello', 'world'])
+          .map(dependency => `${dependency.split('/')[1]}()` || ['hello', 'world'])
           .join('+')}')
       }
 

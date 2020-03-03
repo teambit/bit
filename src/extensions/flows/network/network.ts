@@ -142,8 +142,9 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
 
 async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Promise<Cache> {
   const capsules = await workspace.loadCapsules(graph.nodes());
+
   return capsules.reduce((accum, curr) => {
-    accum[curr.component.id.toString()] = {
+    accum[curr.bitId.toString()] = {
       visited: false,
       capsule: curr,
       result: null
