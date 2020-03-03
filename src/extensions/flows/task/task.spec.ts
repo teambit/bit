@@ -64,8 +64,7 @@ async function runTask(task: string, id = '@bit-test/button', getter = getTestCa
   return stream;
 }
 
-export function getTestCase(name: string) {
-  const main = 'src/index.js';
+export function getTestCase(name: string, main = 'src/index.js') {
   return {
     [main]: `console.log('hello-world')`,
     'package.json': JSON.stringify({ main, name }, null, 2)
