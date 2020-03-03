@@ -14,15 +14,6 @@ import { Options } from '../network'; // TODO: get rid of me
 
 export type CapsuleDeps = [PackageManager];
 
-const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
-  baseDir: os.tmpdir(),
-  writeDists: true,
-  writeBitDependencies: true,
-  installPackages: true,
-  workspace: 'string',
-  alwaysNew: false
-};
-
 const DEFAULT_OPTIONS = {
   alwaysNew: false
 };
@@ -55,9 +46,8 @@ export default class Capsule {
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options
   ): Promise<ComponentCapsule> {
-    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
+    const config = this._generateResourceConfig(bitId, capsuleOptions || {}, orchOptions);
     // @ts-ignore - TODO: remove me by sorting out the options situation
     return this.orchestrator.getCapsule(capsuleOptions.workspace, config, orchOptions);
   }

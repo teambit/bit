@@ -51,6 +51,15 @@ export type SubNetwork = {
   components: Graph;
 };
 
+function findSuccessorsInGraph(graph, seeders) {
+  const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+  const components: ConsumerComponent[] = filter(
+    val => val,
+    uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
+  );
+  return components;
+}
+
 export default class Network {
   constructor(
     /**
@@ -66,6 +75,7 @@ export default class Network {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createSubNetwork(seeders: string[], consumer: Consumer, config?: CapsuleOptions): Promise<SubNetwork> {
+    // TODO: consolidate these in the orchestrator
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config, {
       workspace: (config && config.workspace) || this.workspaceName
     });
@@ -74,36 +84,21 @@ export default class Network {
       name: (config && config.name) || undefined
     };
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
+
     const graph = await Graph.buildGraphFromWorkspace(consumer);
-    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-    const components: ConsumerComponent[] = filter(
-      val => val,
-      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
-    );
-
-    // create capsules
-    const capsules: ComponentCapsule[] = await Promise.all(
-      map((component: Component) => {
-        return this.capsule.create(component.id, actualCapsuleOptions, orchOptions);
-      }, components)
-    );
-
+    const components = findSuccessorsInGraph(graph, seeders);
+    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
-    const before = await getPackageJSONInCapsules(capsules);
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
-    const after = await getPackageJSONInCapsules(capsules);
-
-    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
-    if (actualCapsuleOptions.installPackages) {
-      if (actualCapsuleOptions.packageManager) {
-        await this.packageManager.runInstall(toInstall, {
-          packageManager: actualCapsuleOptions.packageManager
-        });
-      } else {
-        await this.packageManager.runInstall(toInstall);
-      }
+    await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+    if (actualCapsuleOptions.installPackages && actualCapsuleOptions.packageManager) {
+      await this.packageManager.runInstall(capsules, {
+        packageManager: actualCapsuleOptions.packageManager
+      });
+    } else if (actualCapsuleOptions.installPackages) {
+      await this.packageManager.runInstall(capsules);
     }
+
     return {
       capsules: capsuleList,
       components: graph
@@ -111,49 +106,45 @@ export default class Network {
   }
   async createSubNetworkFromScope(seeders: string[], config?: CapsuleOptions): Promise<SubNetwork> {
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
-    // TODO: do we need orchestrationOptions?
     const orchestrationOptions = {
       alwaysNew: (config && config.alwaysNew) || false,
       name: (config && config.name) || undefined
     };
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const scope = await loadScope(process.cwd());
+
     const graph = await Graph.buildGraphFromScope(scope);
-    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-    const components: ConsumerComponent[] = filter(
-      val => val,
-      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
-    );
-
-    // create capsules
-    const capsules: ComponentCapsule[] = await Promise.all(
-      map((component: Component) => {
-        return this.capsule.create(component.id, actualCapsuleOptions, orchOptions);
-      }, components)
-    );
-
+    const components = findSuccessorsInGraph(graph, seeders);
+    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
-    const before = await getPackageJSONInCapsules(capsules);
+    await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
 
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
-
-    const after = await getPackageJSONInCapsules(capsules);
-
-    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
     if (actualCapsuleOptions.installPackages) {
       if (actualCapsuleOptions.packageManager) {
-        await this.packageManager.runInstall(toInstall, {
+        await this.packageManager.runInstall(capsules, {
           packageManager: actualCapsuleOptions.packageManager
         });
       } else {
-        await this.packageManager.runInstall(toInstall);
+        await this.packageManager.runInstall(capsules);
       }
     }
     return {
       capsules: capsuleList,
       components: graph
     };
+  }
+  private async createCapsulesFromComponents(
+    components: any[],
+    capsuleOptions,
+    orchOptions
+  ): Promise<ComponentCapsule[]> {
+    const capsules: ComponentCapsule[] = await Promise.all(
+      map((component: Component) => {
+        return this.capsule.create(component.id, capsuleOptions, orchOptions);
+      }, components)
+    );
+    return capsules;
   }
   /**
    * list all of the existing workspace capsules.
@@ -170,7 +161,7 @@ export default class Network {
     return new CapsulePaths(...capsulePaths);
   }
 
-  async isolateComponentsInCapsules(
+  async writeComponentFilesToCapsules(
     components: ConsumerComponent[],
     graph: Graph,
     capsulePaths: CapsulePaths,
