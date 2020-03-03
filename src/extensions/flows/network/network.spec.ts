@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-network';
 
 describe('Network', () => {
-  it.only('sanity', async function() {
+  xit('sanity', async function() {
     const testCase: GraphTestCase = {
       graph: {
         a: []

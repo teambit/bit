@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { createFakeCapsule } from '../util/create-capsule';
 import { Task } from './task';
 
-describe.only('task', function() {
+describe('task', function() {
   this.afterAll(async function() {
     return remove('/tmp/@bit-test');
   });
