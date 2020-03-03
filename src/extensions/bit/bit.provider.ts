@@ -8,7 +8,7 @@ export type BitDeps = [Workspace, Scope, Network];
 
 export type BitConfig = {};
 
-export default async function provideBit(config: BitConfig, [workspace, scope, capsule]: BitDeps, harmony: Harmony) {
+export default async function provideBit([workspace, scope, capsule]: BitDeps, harmony: Harmony) {
   const bit = new Bit(scope, workspace, capsule, harmony);
   await bit.loadExtensions();
   bit.onExtensionsLoaded.next();

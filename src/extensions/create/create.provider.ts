@@ -8,11 +8,7 @@ export type CreateConfig = {};
 
 export type CreateDeps = [BitCli, Workspace];
 
-export async function provideCreate(
-  config: CreateConfig,
-  [cli, workspace]: CreateDeps,
-  harmony: Harmony
-): Promise<Create> {
+export async function provideCreate([cli, workspace]: CreateDeps, harmony: Harmony): Promise<Create> {
   const create = new Create(workspace, new Registry(harmony));
   // @ts-ignore
   cli.register(new CreateCmd(create));

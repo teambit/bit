@@ -4,7 +4,6 @@ import { NetworkExt } from '../network';
 import provideBit from './bit.provider';
 import { ScriptsExt } from '../scripts';
 import { ComposerExt } from '../composer';
-import { ReactExtension } from '../react/react.manifest';
 import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
@@ -22,7 +21,6 @@ export default {
     CompileExt,
     TestExt,
     ComposerExt,
-    ReactExtension,
     GraphExt,
     InstallExt,
     CreateExt
