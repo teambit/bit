@@ -1,12 +1,12 @@
 import workspaceProvider from './workspace.provider';
 import { ScopeExt } from '../scope';
 import { ComponentFactoryExt } from '../component';
-import { CapsuleExt } from '../capsule';
+import { NetworkExt } from '../network';
 import { WorkspaceConfigExt } from '../workspace-config';
 
 export default {
   name: 'workspace',
-  dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, CapsuleExt],
+  dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, NetworkExt],
   config: {
     /**
      * set the default structure of components in your project.

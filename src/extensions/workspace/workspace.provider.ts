@@ -2,10 +2,10 @@ import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 import { WorkspaceConfig } from '../workspace-config';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Capsule];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Network];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -22,7 +22,7 @@ export type WorkspaceCoreConfig = {
 
 export default async function provideWorkspace(
   config: WorkspaceCoreConfig,
-  [workspaceConfig, scope, component, capsule]: WorkspaceDeps
+  [workspaceConfig, scope, component, network]: WorkspaceDeps
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
@@ -34,7 +34,7 @@ export default async function provideWorkspace(
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, workspaceConfig, scope, component, capsule);
+      const workspace = new Workspace(consumer, workspaceConfig, scope, component, network);
       return workspace;
     }
 

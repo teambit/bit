@@ -2,7 +2,7 @@ import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule-ext';
+import { ComponentCapsule } from '../capsule/component-capsule';
 import { Compile } from '../compile/compile';
 import ComponentsList from '../../consumer/component/components-list';
 

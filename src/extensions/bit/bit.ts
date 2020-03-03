@@ -1,7 +1,7 @@
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
-import { Capsule } from '../capsule';
+import { Network } from '../network';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 import { AnyExtension } from '../../harmony';
@@ -23,9 +23,9 @@ export default class Bit {
     readonly workspace: Workspace | undefined,
 
     /**
-     * reference to capsule orchestrator.
+     * reference to capsule network.
      */
-    private capsule: Capsule,
+    private network: Network,
 
     /**
      * private reference to the instance of Harmony.
@@ -94,9 +94,12 @@ export default class Bit {
           );
         }
       }
-      const capsuleList = await this.capsule.create(extensionsComponents, { packageManager: 'yarn' });
+      const subNetwork = await this.network.createSubNetwork(
+        extensionsComponents.map(c => c.id.toString()),
+        { packageManager: 'yarn' }
+      );
 
-      const manifests = capsuleList.map(({ value, id }) => {
+      const manifests = subNetwork.capsules.map(({ value, id }) => {
         const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
