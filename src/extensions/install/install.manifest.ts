@@ -6,6 +6,5 @@ import { PackageManagerExt } from '../package-manager';
 export default {
   name: 'Install',
   dependencies: [BitCliExt, WorkspaceExt, PackageManagerExt],
-  config: {},
   provider: provideInstaller
 };

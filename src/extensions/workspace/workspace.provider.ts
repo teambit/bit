@@ -19,7 +19,7 @@ export type WorkspaceConfig = {
   components: string;
 };
 
-export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, network]: WorkspaceDeps) {
+export default async function provideWorkspace([scope, component, network]: WorkspaceDeps) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase

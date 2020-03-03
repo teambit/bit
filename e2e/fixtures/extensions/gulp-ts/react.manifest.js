@@ -4,7 +4,6 @@ const { CreateExt } = require('bit-bin/extensions/create');
 module.exports = {
   name: 'extensions/gulp-ts',
   dependencies: [ScriptsExt, CreateExt],
-  config: {},
   provider: async (config, [scripts, create]) => {
     scripts.register({ name: 'extensions/gulp-ts' }, './transpile');
     create.register({ name: 'extensions/gulp-ts' }, getTemplates);

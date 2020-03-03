@@ -234,7 +234,7 @@ export default class Network {
     return '';
   }
 
-  static async provide(config: any, [packageManager, capsule]: NetworkDeps) {
+  static async provide([packageManager, capsule]: NetworkDeps) {
     return new Network(packageManager, capsule);
   }
 

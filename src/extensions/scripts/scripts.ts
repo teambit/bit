@@ -1,9 +1,9 @@
+import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
 import { Workspace } from '../workspace';
 import { Pipe } from './pipe';
 import { getTopologicalWalker } from './walker';
-import { ExtensionManifest, Harmony } from '../../harmony';
 import { ScriptRegistry as Registry } from './registry';
 import { Script } from './script';
 import { ScriptsOptions } from './scripts-options';
@@ -133,7 +133,7 @@ export class Scripts {
   /**
    * provider method for the scripts extension.
    */
-  static async provide(config: {}, [cli, workspace]: ScriptDeps, harmony: Harmony<unknown>) {
+  static async provide([cli, workspace]: ScriptDeps, harmony: Harmony) {
     const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
     const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));

@@ -1,12 +1,9 @@
-import 'reflect-metadata';
 import Bluebird from 'bluebird';
-import { Harmony } from './harmony';
+import harmony from '@teambit/harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
-import { BitExt } from './extensions/bit';
-import HarmonyError from './harmony/exceptions/harmony-error';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -27,9 +24,8 @@ const config = {
 };
 
 try {
-  const harmony = Harmony.load([BitCliExt, BitExt], config);
   harmony
-    .run()
+    .run(BitCliExt)
     .then(() => {
       const cli = harmony.get('BitCli');
       // @ts-ignore

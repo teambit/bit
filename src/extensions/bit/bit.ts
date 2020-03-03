@@ -1,11 +1,10 @@
+import { Harmony } from '@teambit/harmony';
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
 import { Network } from '../network';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { AnyExtension } from '../../harmony';
-import { Harmony } from '../../harmony';
 
 export default class Bit {
   constructor(
@@ -27,7 +26,7 @@ export default class Bit {
     /**
      * private reference to the instance of Harmony.
      */
-    private harmony: Harmony<unknown>
+    private harmony: Harmony
   ) {}
 
   /**

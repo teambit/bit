@@ -52,7 +52,7 @@ export default class Capsule {
     return this.orchestrator.getCapsule(capsuleOptions.workspace, config, orchOptions);
   }
 
-  static async provide(config: any, [packageManager]: any) {
+  static async provide([packageManager]: any) {
     await capsuleOrchestrator.buildPools();
     return new Capsule(capsuleOrchestrator);
   }

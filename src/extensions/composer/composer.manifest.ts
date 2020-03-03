@@ -7,6 +7,5 @@ import { ScriptsExt } from '../scripts';
 export default {
   name: 'Composer',
   dependencies: [WatchExt, BitCliExt, WorkspaceExt, ScriptsExt],
-  config: {},
   provider: provideComposer
 };

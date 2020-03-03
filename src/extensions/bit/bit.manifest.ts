@@ -27,6 +27,5 @@ export default {
     InstallExt,
     CreateExt
   ],
-  config: {},
   provider: provideBit
 };
