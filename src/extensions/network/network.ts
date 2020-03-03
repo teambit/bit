@@ -13,6 +13,7 @@ import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
+import { Capsule } from '../capsule';
 import Consumer from '../../consumer/consumer';
 import { getComponentLinks } from '../../links/link-generator';
 import { getManipulateDirForComponentWithDependencies } from '../../consumer/component-ops/manipulate-dir';
@@ -25,14 +26,15 @@ import CapsuleList from './capsule-list';
 import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 
-export type NetworkDeps = [PackageManager];
+export type NetworkDeps = [PackageManager, Capsule];
 
 const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
   baseDir: os.tmpdir(),
   writeDists: true,
   writeBitDependencies: true,
   installPackages: true,
-  workspace: 'string'
+  workspace: 'string',
+  alwaysNew: false
 };
 
 const DEFAULT_OPTIONS = {
@@ -49,13 +51,22 @@ export type SubNetwork = {
   components: Graph;
 };
 
+function findSuccessorsInGraph(graph, seeders) {
+  const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
+  const components: ConsumerComponent[] = filter(
+    val => val,
+    uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
+  );
+  return components;
+}
+
 export default class Network {
   constructor(
     /**
      * instance of the capsule orchestrator.
      */
-    readonly orchestrator: CapsuleOrchestrator,
     private packageManager: PackageManager,
+    private capsule: Capsule,
     public workspaceName: string = 'any'
   ) {}
 
@@ -63,57 +74,77 @@ export default class Network {
    * create a new network of capsules from a component.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createSubNetwork(
-    seeders: string[],
-    config?: CapsuleOptions,
-    orchestrationOptions?: Options,
-    consumer?: Consumer
-  ): Promise<SubNetwork> {
-    // TODO: must we need to pass consumer?
-
-    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
-    // TODO: do we need orchestrationOptions?
+  async createSubNetwork(seeders: string[], consumer: Consumer, config?: CapsuleOptions): Promise<SubNetwork> {
+    // TODO: consolidate these in the orchestrator
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config, {
+      workspace: (config && config.workspace) || this.workspaceName
+    });
+    const orchestrationOptions = {
+      alwaysNew: (config && config.alwaysNew) || false,
+      name: (config && config.name) || undefined
+    };
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const scope = await loadScope(process.cwd());
-    const loadedConsumer = consumer || (await loadConsumerIfExist());
-    const graph = loadedConsumer
-      ? await Graph.buildGraphFromWorkspace(loadedConsumer)
-      : await Graph.buildGraphFromScope(scope);
-    const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-    const components: ConsumerComponent[] = filter(
-      val => val,
-      uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
-    );
 
-    // create capsules
-    const capsules: ComponentCapsule[] = await Promise.all(
-      map((component: Component) => {
-        return this.createCapsule(component.id, actualCapsuleOptions, orchOptions);
-      }, components)
-    );
-
+    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const components = findSuccessorsInGraph(graph, seeders);
+    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
-    const before = await getPackageJSONInCapsules(capsules);
+    await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+    if (actualCapsuleOptions.installPackages && actualCapsuleOptions.packageManager) {
+      await this.packageManager.runInstall(capsules, {
+        packageManager: actualCapsuleOptions.packageManager
+      });
+    } else if (actualCapsuleOptions.installPackages) {
+      await this.packageManager.runInstall(capsules);
+    }
 
-    await this.isolateComponentsInCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+    return {
+      capsules: capsuleList,
+      components: graph
+    };
+  }
+  async createSubNetworkFromScope(seeders: string[], config?: CapsuleOptions): Promise<SubNetwork> {
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
+    const orchestrationOptions = {
+      alwaysNew: (config && config.alwaysNew) || false,
+      name: (config && config.name) || undefined
+    };
+    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
+    const scope = await loadScope(process.cwd());
 
-    const after = await getPackageJSONInCapsules(capsules);
+    const graph = await Graph.buildGraphFromScope(scope);
+    const components = findSuccessorsInGraph(graph, seeders);
+    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
+    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
-    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
+    await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
+
     if (actualCapsuleOptions.installPackages) {
       if (actualCapsuleOptions.packageManager) {
-        await this.packageManager.runInstall(toInstall, {
+        await this.packageManager.runInstall(capsules, {
           packageManager: actualCapsuleOptions.packageManager
         });
       } else {
-        await this.packageManager.runInstall(toInstall);
+        await this.packageManager.runInstall(capsules);
       }
     }
     return {
       capsules: capsuleList,
       components: graph
     };
+  }
+  private async createCapsulesFromComponents(
+    components: any[],
+    capsuleOptions,
+    orchOptions
+  ): Promise<ComponentCapsule[]> {
+    const capsules: ComponentCapsule[] = await Promise.all(
+      map((component: Component) => {
+        return this.capsule.create(component.id, capsuleOptions, orchOptions);
+      }, components)
+    );
+    return capsules;
   }
   /**
    * list all of the existing workspace capsules.
@@ -130,7 +161,7 @@ export default class Network {
     return new CapsulePaths(...capsulePaths);
   }
 
-  async isolateComponentsInCapsules(
+  async writeComponentFilesToCapsules(
     components: ConsumerComponent[],
     graph: Graph,
     capsulePaths: CapsulePaths,
@@ -195,18 +226,6 @@ export default class Network {
     return manyComponentsWriter.writtenComponents;
   }
 
-  async createCapsule(
-    // TODO: move to capsule extension
-    bitId: ComponentID,
-    capsuleOptions?: CapsuleOptions,
-    orchestrationOptions?: Options
-  ): Promise<ComponentCapsule> {
-    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
-    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
-    return this.orchestrator.getCapsule(capsuleOptions?.workspace || this.workspaceName, config, orchOptions);
-  }
-
   /**
    * list capsules from all workspaces.
    */
@@ -215,9 +234,8 @@ export default class Network {
     return '';
   }
 
-  static async provide(config: any, [packageManager]: any) {
-    await capsuleOrchestrator.buildPools();
-    return new Network(capsuleOrchestrator, packageManager);
+  static async provide(config: any, [packageManager, capsule]: NetworkDeps) {
+    return new Network(packageManager, capsule);
   }
 
   _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
@@ -226,30 +244,6 @@ export default class Network {
     allComponents.forEach(component => {
       component.stripOriginallySharedDir(manipulateDirData);
     });
-  }
-
-  private _generateWrkDir(bitId: string, capsuleOptions: CapsuleOptions, options: Options) {
-    const baseDir = capsuleOptions.baseDir || os.tmpdir();
-    capsuleOptions.baseDir = baseDir;
-    if (options.alwaysNew) return path.join(baseDir, `${bitId}_${v4()}`);
-    if (options.name) return path.join(baseDir, `${bitId}_${options.name}`);
-    return path.join(baseDir, `${bitId}_${hash(capsuleOptions)}`);
-  }
-  private _generateResourceConfig(bitId: ComponentID, capsuleOptions: CapsuleOptions, options: Options): CreateOptions {
-    const dirName = filenamify(bitId.toString(), { replacement: '_' });
-    const wrkDir = this._generateWrkDir(dirName, capsuleOptions, options);
-    const ret = {
-      resourceId: `${bitId.toString()}_${hash(wrkDir)}`,
-      options: Object.assign(
-        {},
-        {
-          bitId,
-          wrkDir
-        },
-        capsuleOptions
-      )
-    };
-    return ret;
   }
 }
 
