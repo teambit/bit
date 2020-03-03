@@ -14,5 +14,6 @@ export default (async function capsuleIsolate(
   if (!consumer) throw new Error('no consumer found');
   await capsuleOrchestrator.buildPools();
   const network = new Network(capsuleOrchestrator, new PackageManager('librarian'));
-  return network.create(bitIds, capsuleOptions, options, consumer);
+  const subNetwork = await network.createSubNetwork(bitIds, capsuleOptions, options, consumer);
+  return subNetwork.capsules;
 });
