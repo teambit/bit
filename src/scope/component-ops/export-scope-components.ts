@@ -337,7 +337,7 @@ async function convertToCorrectScope(
   const haveVersionsChanged = await Promise.all(
     versionsObjects.map(async (objectVersion: Version) => {
       const hashBefore = objectVersion.hash().toString();
-      const didCodeMod = codemod ? await _replaceSrcOfVersionIfNeeded(objectVersion) : false;
+      const didCodeMod = await _replaceSrcOfVersionIfNeeded(objectVersion);
       const didDependencyChange = changeDependencyScope(objectVersion);
       const hashAfter = objectVersion.hash().toString();
       if (hashBefore !== hashAfter) {
@@ -407,6 +407,7 @@ async function convertToCorrectScope(
       files.map(async file => {
         const newFileObject = await _createNewFileIfNeeded(version, file);
         if (newFileObject) {
+          if (!codemod) throw new Error(`_replaceSrcOfVersionIfNeeded expects codemod to be true here`);
           file.file = newFileObject.hash();
           componentsObjects.objects.push(newFileObject);
           hasVersionChanged = true;
@@ -426,9 +427,17 @@ async function convertToCorrectScope(
     const fileObject: Source = await scope.objects.load(currentHash);
     const fileString = fileObject.contents.toString();
     const dependenciesIds = version.getAllDependencies().map(d => d.id);
-    const allIds = [...dependenciesIds, componentsObjects.component.toBitId()];
+    const componentId = componentsObjects.component.toBitId();
+    const allIds = [...dependenciesIds, componentId];
     let newFileString = fileString;
     allIds.forEach(id => {
+      if (!codemod) {
+        if (!id.scope) {
+          throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" and "${id.toString()}"
+the current import/require module has no scope-name, which result in an invalid module path upon import`);
+        }
+        return; // no codemod flag, the user doesn't want to change any source code.
+      }
       if (id.scope === remoteScope) {
         return; // nothing to do, the remote has not changed
       }
