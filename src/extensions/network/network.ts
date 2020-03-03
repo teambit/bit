@@ -13,6 +13,7 @@ import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
+import { Capsule } from '../capsule';
 import Consumer from '../../consumer/consumer';
 import { getComponentLinks } from '../../links/link-generator';
 import { getManipulateDirForComponentWithDependencies } from '../../consumer/component-ops/manipulate-dir';
@@ -25,7 +26,7 @@ import CapsuleList from './capsule-list';
 import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 
-export type NetworkDeps = [PackageManager];
+export type NetworkDeps = [PackageManager, Capsule];
 
 const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
   baseDir: os.tmpdir(),
@@ -55,8 +56,8 @@ export default class Network {
     /**
      * instance of the capsule orchestrator.
      */
-    readonly orchestrator: CapsuleOrchestrator,
     private packageManager: PackageManager,
+    private capsule: Capsule,
     public workspaceName: string = 'any'
   ) {}
 
@@ -65,7 +66,9 @@ export default class Network {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createSubNetwork(seeders: string[], consumer: Consumer, config?: CapsuleOptions): Promise<SubNetwork> {
-    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config);
+    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config, {
+      workspace: (config && config.workspace) || this.workspaceName
+    });
     const orchestrationOptions = {
       alwaysNew: (config && config.alwaysNew) || false,
       name: (config && config.name) || undefined
@@ -81,7 +84,7 @@ export default class Network {
     // create capsules
     const capsules: ComponentCapsule[] = await Promise.all(
       map((component: Component) => {
-        return this.createCapsule(component.id, actualCapsuleOptions, orchOptions);
+        return this.capsule.create(component.id, actualCapsuleOptions, orchOptions);
       }, components)
     );
 
@@ -125,7 +128,7 @@ export default class Network {
     // create capsules
     const capsules: ComponentCapsule[] = await Promise.all(
       map((component: Component) => {
-        return this.createCapsule(component.id, actualCapsuleOptions, orchOptions);
+        return this.capsule.create(component.id, actualCapsuleOptions, orchOptions);
       }, components)
     );
 
@@ -232,18 +235,6 @@ export default class Network {
     return manyComponentsWriter.writtenComponents;
   }
 
-  async createCapsule(
-    // TODO: move to capsule extension
-    bitId: ComponentID,
-    capsuleOptions?: CapsuleOptions,
-    orchestrationOptions?: Options
-  ): Promise<ComponentCapsule> {
-    const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, capsuleOptions);
-    const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const config = this._generateResourceConfig(bitId, actualCapsuleOptions, orchOptions);
-    return this.orchestrator.getCapsule(capsuleOptions?.workspace || this.workspaceName, config, orchOptions);
-  }
-
   /**
    * list capsules from all workspaces.
    */
@@ -252,9 +243,8 @@ export default class Network {
     return '';
   }
 
-  static async provide(config: any, [packageManager]: any) {
-    await capsuleOrchestrator.buildPools();
-    return new Network(capsuleOrchestrator, packageManager);
+  static async provide(config: any, [packageManager, capsule]: NetworkDeps) {
+    return new Network(packageManager, capsule);
   }
 
   _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
@@ -263,30 +253,6 @@ export default class Network {
     allComponents.forEach(component => {
       component.stripOriginallySharedDir(manipulateDirData);
     });
-  }
-
-  private _generateWrkDir(bitId: string, capsuleOptions: CapsuleOptions, options: Options) {
-    const baseDir = capsuleOptions.baseDir || os.tmpdir();
-    capsuleOptions.baseDir = baseDir;
-    if (options.alwaysNew) return path.join(baseDir, `${bitId}_${v4()}`);
-    if (options.name) return path.join(baseDir, `${bitId}_${options.name}`);
-    return path.join(baseDir, `${bitId}_${hash(capsuleOptions)}`);
-  }
-  private _generateResourceConfig(bitId: ComponentID, capsuleOptions: CapsuleOptions, options: Options): CreateOptions {
-    const dirName = filenamify(bitId.toString(), { replacement: '_' });
-    const wrkDir = this._generateWrkDir(dirName, capsuleOptions, options);
-    const ret = {
-      resourceId: `${bitId.toString()}_${hash(wrkDir)}`,
-      options: Object.assign(
-        {},
-        {
-          bitId,
-          wrkDir
-        },
-        capsuleOptions
-      )
-    };
-    return ret;
   }
 }
 
