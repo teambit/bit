@@ -88,7 +88,6 @@ export default class Network {
     const components = findSuccessorsInGraph(graph, seeders);
     const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
-    console.log(capsuleList.map(cap => cap));
 
     await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
     if (actualCapsuleOptions.installPackages && actualCapsuleOptions.packageManager) {
@@ -141,7 +140,7 @@ export default class Network {
   ): Promise<ComponentCapsule[]> {
     const capsules: ComponentCapsule[] = await Promise.all(
       map((component: Component) => {
-        return this.capsule.create(component.id, capsuleOptions, orchOptions);
+        return this.capsule.create(component, capsuleOptions, orchOptions);
       }, components)
     );
     return capsules;

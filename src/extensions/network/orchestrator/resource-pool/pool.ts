@@ -6,7 +6,7 @@ import Resource, { ResourceEvents } from './resource';
 import Repository from '../db/repository';
 // eslint-disable-next-line import/no-named-as-default
 import Logger, { Logger as LTYPE } from '../../../../logger/logger';
-import { CreateOptions } from '../types';
+import { CreateOptions, CapsuleOptions } from '../types';
 import { Component } from '../../../component';
 
 /* export enum Events {
@@ -53,7 +53,7 @@ export default class Pool<T> extends EventEmitter {
     await this.db.del(resource.id);
   }
 
-  public async createResource(resourceId: string, options: BitContainerConfig): Promise<Resource<T>> {
+  public async createResource(resourceId: string, options: CapsuleOptions): Promise<Resource<T>> {
     const resource = await this.resourceFactory.create(options);
     await this.db.put(`${resourceId}`, resource.serialize());
     resource.id = resourceId;
@@ -94,6 +94,7 @@ export default class Pool<T> extends EventEmitter {
       }
       this.observeResource(acquiredResource);
       const capsule = acquiredResource.use() as ComponentCapsule;
+      (capsule as any)._bitId = options.bitId;
       capsule.new = created;
       capsule.component = component;
       return capsule;

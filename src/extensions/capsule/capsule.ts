@@ -9,7 +9,7 @@ import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from '../network/orchestrator/types';
 import { PackageManager } from '../package-manager';
-import { Component, ComponentID } from '../component';
+import { ComponentID, Component } from '../component';
 import { Options } from '../network'; // TODO: get rid of me
 
 export type CapsuleDeps = [PackageManager];
@@ -42,14 +42,16 @@ export default class Capsule {
   }
 
   async create(
-    bitId: ComponentID,
+    component: Component,
     capsuleOptions?: CapsuleOptions,
     orchestrationOptions?: Options
   ): Promise<ComponentCapsule> {
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
-    const config = this._generateResourceConfig(bitId, capsuleOptions || {}, orchOptions);
-    // @ts-ignore - TODO: remove me by sorting out the options situation
-    return this.orchestrator.getCapsule(capsuleOptions.workspace, config, orchOptions);
+    const config = this._generateResourceConfig(component.id, capsuleOptions || {}, orchOptions);
+    //  - TODO: remove me by sorting out the options situation
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const capsule = await this.orchestrator.getCapsule(config.options.workspace!, config, orchOptions, component);
+    return capsule;
   }
 
   static async provide(config: any, [packageManager]: any) {
