@@ -1,5 +1,5 @@
 import Bluebird from 'bluebird';
-import harmony from '@teambit/harmony';
+import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
 import { BitCliExt } from './extensions/cli';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
@@ -16,12 +16,6 @@ Bluebird.config({
 
 // loudRejection();
 HooksManager.init();
-
-const config = {
-  workspace: {
-    components: '*'
-  }
-};
 
 try {
   harmony
