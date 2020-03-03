@@ -118,11 +118,6 @@ export async function exportMany({
         bitIds,
         codemod
       );
-      // const didChangeDists = await changePartialNamesToFullNamesInDists(
-      //   scope,
-      //   componentAndObject.component,
-      //   componentAndObject.objects
-      // );
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
 
@@ -319,10 +314,22 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise
 }
 
 /**
+ * Component and dependencies id changes:
  * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
  * a result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
  * to the bare-scope name.
  * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
+ *
+ * Dist code changes:
+ * see https://github.com/teambit/bit/issues/1770 for complete info
+ * some compilers require the links to be part of the bundle, change the component name in these
+ * files from the id without scope to the id with the scope
+ * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`.
+ * these files changes need to be done regardless the "--rewire" flag.
+ *
+ * Source code changes (codemod):
+ * when "--rewire" flag is used, import/require statement should be changed from the old scope-name
+ * to the new scope-name. Or from no-scope to the new scope.
  */
 async function convertToCorrectScope(
   scope: Scope,
@@ -402,7 +409,6 @@ async function convertToCorrectScope(
   }
   async function _replaceSrcOfVersionIfNeeded(version: Version): Promise<boolean> {
     let hasVersionChanged = false;
-    // const files = [...version.files, ...(version.dists || [])];
     const processFile = async (file, isDist: boolean) => {
       const newFileObject = await _createNewFileIfNeeded(version, file, isDist);
       if (newFileObject && (codemod || isDist)) {
@@ -437,10 +443,11 @@ async function convertToCorrectScope(
       const idWithNewScope = id.changeScope(remoteScope);
       const pkgNameWithNewScope = componentIdToPackageName(idWithNewScope, componentsObjects.component.bindingPrefix);
       const pkgNameWithOldScope = componentIdToPackageName(id, componentsObjects.component.bindingPrefix);
-      // replace an exact match. (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
-      // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
+      // replace old scope to a new scope (e.g. '@bit/old-scope.is-string' => '@bit/new-scope.is-string')
+      // or no-scope to a new scope. (e.g. '@bit/is-string' => '@bit/new-scope.is-string')
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
       if (!id.scope && !codemod && newFileString !== fileString && !isDist) {
+        // if this is a dist file, no need for the --rewire flag, it should replace them regardless
         throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" and "${id.toString()}"
 the current import/require module has no scope-name, which result in an invalid module path upon import`);
       }
@@ -451,69 +458,3 @@ the current import/require module has no scope-name, which result in an invalid 
     return null;
   }
 }
-
-/**
- * see https://github.com/teambit/bit/issues/1770 for complete info
- * some compilers require the links to be part of the bundle, change the component name in these
- * files from the id without scope to the id with the scope
- * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`
- */
-// async function changePartialNamesToFullNamesInDists(
-//   scope: Scope,
-//   component: ModelComponent,
-//   objects: BitObject[]
-// ): Promise<boolean> {
-//   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-//   const versions: Version[] = objects.filter(object => object instanceof Version);
-//   const haveVersionsChanged = await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
-
-//   return haveVersionsChanged.some(x => x);
-
-//   async function _replaceDistsOfVersionIfNeeded(version: Version): Promise<boolean> {
-//     const dists = version.dists;
-//     if (!dists) return false;
-//     const hasDistsChanged = await Promise.all(
-//       dists.map(async dist => {
-//         const newDistObject = await _createNewDistIfNeeded(version, dist);
-//         if (newDistObject) {
-//           dist.file = newDistObject.hash();
-//           objects.push(newDistObject);
-//           return true;
-//         }
-//         return false;
-//       })
-//     );
-//     // return true if one of the dists has changed
-//     return hasDistsChanged.some(x => x);
-//   }
-
-//   async function _createNewDistIfNeeded(
-//     version: Version,
-//     dist: Record<string, any>
-//   ): Promise<Source | null | undefined> {
-//     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-//     const currentHash = dist.file;
-//     // if a dist file has changed as a result of codemod, it's not on the fs yet, so we fallback
-//     // to load from the objects it was pushed before. it'd be better to have more efficient mechanism.
-//     // currently, we require calculating the hash for each one of the source every time.
-//     const distObject: Source =
-//       (await currentHash.load(scope.objects)) ||
-//       objects.filter(obj => obj instanceof Source).find(obj => obj.hash().toString() === currentHash.toString());
-//     const distString = distObject.contents.toString();
-//     const dependenciesIds = version.getAllDependencies().map(d => d.id);
-//     const allIds = [...dependenciesIds, component.toBitId()];
-//     let newDistString = distString;
-//     allIds.forEach(id => {
-//       const idWithoutScope = id.changeScope(null);
-//       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
-//       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-//       // replace an exact match. (e.g. '@bit/is-string' => '@bit/david.utils/is-string')
-//       // the require/import statement might be to an internal path (e.g. '@bit/david.utils/is-string/internal-file')
-//       newDistString = replacePackageName(newDistString, pkgNameWithoutScope, pkgNameWithScope);
-//     });
-//     if (newDistString !== distString) {
-//       return Source.from(Buffer.from(newDistString));
-//     }
-//     return null;
-//   }
-// }
