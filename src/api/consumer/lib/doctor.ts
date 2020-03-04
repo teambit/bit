@@ -153,7 +153,11 @@ async function _generateExamineResultsTarFile(
     pack.entry({ name: '.bitmap' }, bitmap);
   }
   if (consumerInfo && consumerInfo.consumerConfig) {
-    pack.entry({ name: 'config.json' }, JSON.stringify(consumerInfo.consumerConfig.toPlainObject(), null, 4));
+    // TODO: support new conifg as well
+    const legacyPlainConfig = consumerInfo.consumerConfig._legacyPlainObject();
+    if (legacyPlainConfig) {
+      pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));
+    }
   }
 
   pack.finalize();

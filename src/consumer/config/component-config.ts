@@ -24,6 +24,8 @@ export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
+  extensionsAddedConfig: { [prop: string]: any } | undefined;
+
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
@@ -117,7 +119,7 @@ export default class ComponentConfig extends AbstractConfig {
     componentConfig: Record<string, any>,
     workspaceConfig: WorkspaceConfig | undefined
   ): ComponentConfig {
-    let plainWorkspaceConfig = workspaceConfig ? workspaceConfig.toPlainObject() : {};
+    let plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : {};
     plainWorkspaceConfig = plainWorkspaceConfig || {};
     const workspaceConfigWithoutConsumerSpecifics = filterObject(
       plainWorkspaceConfig,
@@ -138,13 +140,17 @@ export default class ComponentConfig extends AbstractConfig {
    * @param {*} workspaceConfig
    */
   static async load({
+    componentId,
     componentDir,
     workspaceDir,
-    workspaceConfig
+    workspaceConfig,
+    addConfigRegistry
   }: {
+    componentId: BitId;
     componentDir: PathOsBasedRelative | undefined;
     workspaceDir: PathOsBasedRelative;
     workspaceConfig: WorkspaceConfig;
+    addConfigRegistry: { [extId: string]: Function };
   }): Promise<ComponentConfig> {
     let bitJsonPath;
     let componentHasWrittenConfig = false;
@@ -190,14 +196,48 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
+
     const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(config, workspaceConfig);
     componentConfig.path = bitJsonPath;
+    const extensionsAddedConfig = await getConfigFromExtensions(
+      componentId,
+      componentConfig.extensions,
+      addConfigRegistry
+    );
+    // console.log('extensionsAddedConfig', extensionsAddedConfig)
+    componentConfig.extensionsAddedConfig = extensionsAddedConfig;
     componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
+}
+
+async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, configsRegistry) {
+  // const extensionsConfigModificationsP = configsRegistry.keys.map(entry => {
+  //   // TODO: only running func for relevant extensions
+  //   const func = configsRegistry.get(entry);
+  //   return func()
+  // });
+  const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
+    // TODO: only running func for relevant extensions
+    const func = configsRegistry[extId];
+    return func();
+  });
+  const extensionsConfigModifications = await Promise.all(extensionsConfigModificationsP);
+  const extensionsConfigModificationsObject = mergeExtensionsConfig(extensionsConfigModifications);
+  return extensionsConfigModificationsObject;
+}
+
+function mergeExtensionsConfig(configs: any[]) {
+  // let concatValues = (k, l, r) => k == 'values' ? R.concat(l, r) : r
+  // R.mergeDeepWithKey(concatValues,
+  //                  { a: true, c: { thing: 'foo', values: [10, 20] }},
+  //                  { b: true, c: { thing: 'bar', values: [15, 35] }});
+  return configs.reduce((prev, curr) => {
+    return R.mergeDeepLeft(prev, curr);
+  }, {});
 }

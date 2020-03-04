@@ -39,8 +39,6 @@ export type AllPackagesDependencies = {
 
 export type FileType = {
   isTestFile: boolean;
-  isCompilerFile: boolean;
-  isTesterFile: boolean;
 };
 
 interface UntrackedFileEntry {
@@ -75,6 +73,7 @@ export default class DependencyResolver {
   componentId: BitId;
   componentMap: ComponentMap;
   componentFromModel: Component;
+  extensionsAddedConfig: Record<string, any>;
   consumerPath: PathOsBased;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tree: Tree;
@@ -96,6 +95,7 @@ export default class DependencyResolver {
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
+    this.extensionsAddedConfig = this.component.extensionsAddedConfig;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
@@ -154,9 +154,7 @@ export default class DependencyResolver {
   ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
-    this.setCompilerFiles();
-    this.setTesterFiles();
-    const allFiles = [...nonTestsFiles, ...testsFiles, ...this.compilerFiles, ...this.testerFiles];
+    const allFiles = [...nonTestsFiles, ...testsFiles];
     const getDependenciesTree = async () => {
       return driver.getDependencyTree(
         bitDir,
@@ -234,9 +232,7 @@ export default class DependencyResolver {
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
       const fileType: FileType = {
-        isTestFile: R.contains(file, testsFiles),
-        isCompilerFile: R.contains(file, this.compilerFiles),
-        isTesterFile: R.contains(file, this.testerFiles)
+        isTestFile: R.contains(file, testsFiles)
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
@@ -1014,32 +1010,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   getDiffSpecifiers(originSpecifiers: ImportSpecifier[], targetSpecifiers: ImportSpecifier[]) {
     const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
-  }
-
-  setCompilerFiles() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const compilerFiles = shouldProcessEnvDependencies(this.component.compiler) ? this.component.compiler.files : [];
-    this.compilerFiles = this.getRelativeEnvFiles(compilerFiles);
-  }
-
-  setTesterFiles() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const testerFiles = shouldProcessEnvDependencies(this.component.tester) ? this.component.tester.files : [];
-    this.testerFiles = this.getRelativeEnvFiles(testerFiles);
-  }
-
-  getRelativeEnvFiles(files: Record<string, any>[]): PathLinux[] {
-    const getPathsRelativeToComponentRoot = () => {
-      const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.getRootDir());
-      return files.map(file => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const envAbsolute = file.path;
-        return path.relative(rootDirAbsolute, envAbsolute);
-      });
-    };
-    return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
   }
 
   /**

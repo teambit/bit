@@ -215,7 +215,7 @@ export default class WorkspaceConfig {
     return this.legacyConfig?.toVinyl({ workspaceDir });
   }
 
-  toPlainObject(): { [prop: string]: any } | undefined {
+  _legacyPlainObject(): { [prop: string]: any } | undefined {
     if (this.legacyConfig) {
       return this.legacyConfig.toPlainObject();
     }

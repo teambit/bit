@@ -59,15 +59,20 @@ export default class Workspace implements ComponentHost {
    */
   async list() {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    return consumerComponents.map(consumerComponent => {
-      return this.componentFactory.fromLegacyComponent(consumerComponent);
-    });
+    return this.transformLegacyComponents(consumerComponents);
   }
 
-  private transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
-    return consumerComponents.map(consumerComponent => {
+  private async transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
+    this.componentFactory.registerAddConfig('worksapce', () => {
+      return {
+        conf: 'val'
+      };
+    });
+
+    const transformP = consumerComponents.map(consumerComponent => {
       return this.componentFactory.fromLegacyComponent(consumerComponent);
     });
+    return Promise.all(transformP);
   }
 
   /**

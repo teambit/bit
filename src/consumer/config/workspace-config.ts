@@ -6,7 +6,6 @@ import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './excepti
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
-  DEFAULT_EJECTED_ENVS_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER,
   DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
@@ -31,7 +30,6 @@ export type WorkspaceConfigProps = {
   distEntry?: string | undefined;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
-  ejectedEnvsDirectory?: string;
   bindingPrefix?: string;
   extensions?: Extensions;
   packageManager?: 'librarian' | 'npm' | 'yarn';
@@ -51,7 +49,6 @@ export default class WorkspaceConfig extends AbstractConfig {
   distEntry: string | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
-  ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'librarian' | 'npm' | 'yarn'; // package manager client to use
   packageManagerArgs: string[] | undefined; // package manager client to use
@@ -72,7 +69,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     distEntry,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
-    ejectedEnvsDirectory = DEFAULT_EJECTED_ENVS_DIR_PATH,
     bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
@@ -97,7 +93,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       this.componentsDefaultDirectory = `${this.componentsDefaultDirectory}/{name}`;
     }
     this.dependenciesDirectory = dependenciesDirectory;
-    this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
@@ -114,7 +109,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     let consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
-      ejectedEnvsDirectory: this.ejectedEnvsDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
@@ -136,7 +130,6 @@ export default class WorkspaceConfig extends AbstractConfig {
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
-      if (key === 'ejectedEnvsDirectory') return val !== DEFAULT_EJECTED_ENVS_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
@@ -197,8 +190,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesDirectory,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      ejectedEnvsDirectory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dist,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
@@ -233,7 +224,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
-      ejectedEnvsDirectory,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
@@ -300,8 +290,8 @@ export default class WorkspaceConfig extends AbstractConfig {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory } = object;
-    const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory };
+    const { componentsDefaultDirectory, dependenciesDirectory } = object;
+    const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory };
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {

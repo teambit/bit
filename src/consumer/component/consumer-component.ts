@@ -122,10 +122,16 @@ export type ComponentProps = {
   log?: Log;
   scopesList?: ScopeListItem[];
   extensions: ExtensionData[];
+  extensionsAddedConfig: any;
   componentFromModel?: Component;
 };
 
 export default class Component {
+  static addConfigRegistry: { [extId: string]: Function } = {};
+  static registerAddConfigAction(extId, func: () => any) {
+    this.addConfigRegistry[extId] = func;
+  }
+
   name: string;
   version: string | undefined;
   scope: string | null | undefined;
@@ -197,6 +203,7 @@ export default class Component {
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
   extensions: ExtensionData[] = [];
+  extensionsAddedConfig: any;
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
@@ -254,7 +261,8 @@ export default class Component {
     origin,
     customResolvedPaths,
     scopesList,
-    extensions
+    extensions,
+    extensionsAddedConfig
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -294,6 +302,7 @@ export default class Component {
     this.customResolvedPaths = customResolvedPaths || [];
     this.scopesList = scopesList;
     this.extensions = extensions || [];
+    this.extensionsAddedConfig = extensionsAddedConfig || {};
     this.componentFromModel = componentFromModel;
   }
 
@@ -1175,10 +1184,15 @@ export default class Component {
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
     const componentConfig = await ComponentConfig.load({
+      componentId: id,
       componentDir: componentMap.getTrackDir(),
       workspaceDir: consumerPath,
-      workspaceConfig
+      workspaceConfig,
+      addConfigRegistry: this.addConfigRegistry
     });
+
+    const extensions: ExtensionData[] = componentConfig.parsedExtensions(consumer, id);
+    const extensionsAddedConfig = componentConfig.extensionsAddedConfig;
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {
@@ -1239,7 +1253,6 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const extensions: ExtensionData[] = componentConfig.parsedExtensions(consumer, id);
     const files = await getLoadedFiles();
     const docsP = _getDocsForFiles(files);
     const docs = await Promise.all(docsP);
@@ -1279,8 +1292,8 @@ export default class Component {
       defaultScope,
       packageJsonFile,
       packageJsonChangedProps,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      extensions
+      extensions,
+      extensionsAddedConfig
     });
   }
 }

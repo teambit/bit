@@ -1,8 +1,4 @@
-import {
-  DEFAULT_COMPONENTS_DIR_PATH,
-  DEFAULT_DEPENDENCIES_DIR_PATH,
-  DEFAULT_EJECTED_ENVS_DIR_PATH
-} from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 
