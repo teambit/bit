@@ -13,7 +13,6 @@ export type CodemodResult = {
 
 // eslint-disable-next-line import/prefer-default-export
 export async function changeCodeFromRelativeToModulePaths(components: Component[]): Promise<CodemodResult[]> {
-  // @ts-ignore
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map(component => {
@@ -27,12 +26,10 @@ export async function changeCodeFromRelativeToModulePaths(components: Component[
 
 function codemodComponent(component: Component): DataToPersist {
   const dataToPersist = new DataToPersist();
-  // @ts-ignore
-  if (!component.issues || !component.issues.relativeComponentsAuthored) return dataToPersist;
+  const issues = component.issues;
+  if (!issues || !issues.relativeComponentsAuthored) return dataToPersist;
   component.files.forEach((file: SourceFile) => {
-    // @ts-ignore
-    const relativeInstances = component.issues.relativeComponentsAuthored[file.relative];
-    // @ts-ignore
+    const relativeInstances = issues.relativeComponentsAuthored[file.relative];
     if (!relativeInstances) return;
     // @ts-ignore
     const fileBefore = file.contents.toString() as string;

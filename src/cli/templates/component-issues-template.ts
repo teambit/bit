@@ -101,6 +101,7 @@ export function formatMissing(missingComponent: Component) {
         // @ts-ignore
         return formatMissingStr(
           key,
+          // @ts-ignore
           missingComponent.issues[key],
           componentIssuesLabels[key],
           untrackedFilesComponentIssueToString
@@ -109,6 +110,7 @@ export function formatMissing(missingComponent: Component) {
       if (key === 'relativeComponentsAuthored') {
         return formatMissingStr(
           key,
+          // @ts-ignore
           missingComponent.issues[key],
           componentIssuesLabels[key],
           relativeComponentsAuthoredIssuesToString
@@ -116,6 +118,7 @@ export function formatMissing(missingComponent: Component) {
       }
       if (key === 'missingPackagesDependenciesOnFs') {
         // Combine missing from files and missing from packages (for output only)
+        // @ts-ignore
         const missingPackagesDependenciesOnFs = missingComponent.issues[key] || {};
         const missingPackagesDependenciesFromOverrides =
           // @ts-ignore
@@ -128,6 +131,7 @@ export function formatMissing(missingComponent: Component) {
 
         return formatMissingStr(key, missingPackagesDependenciesOnFs, componentIssuesLabels[key]);
       }
+      // @ts-ignore
       return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
     })
     .join('');

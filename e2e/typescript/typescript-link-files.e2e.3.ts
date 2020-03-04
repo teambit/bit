@@ -43,6 +43,7 @@ describe('typescript components with link files', function() {
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
     it('should not consider that index file as a dependency', () => {
+      helper.command.linkAndRewire();
       output = helper.command.runCmd('bit status');
       expect(output.includes('bar/foo ... ok')).to.be.true;
       expect(output.includes(statusFailureMsg)).to.be.false;

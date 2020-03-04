@@ -58,7 +58,7 @@ export type RelativeComponentsAuthoredEntry = { importSource: string; componentI
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
 
-interface Issues {
+export type Issues = {
   missingPackagesDependenciesOnFs: {};
   missingPackagesDependenciesFromOverrides: string[];
   missingComponents: {};
@@ -71,7 +71,7 @@ interface Issues {
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
-}
+};
 
 export default class DependencyResolver {
   component: Component;
@@ -84,8 +84,7 @@ export default class DependencyResolver {
   tree: Tree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: Issues; // $PropertyType<Component, 'issues'>;
+  issues: Issues;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -115,6 +114,7 @@ export default class DependencyResolver {
       peerPackageDependencies: {}
     };
     this.processedFiles = [];
+    // later on, empty issues are removed. see `this.removeEmptyIssues();`
     this.issues = {
       missingPackagesDependenciesOnFs: {},
       missingPackagesDependenciesFromOverrides: [],

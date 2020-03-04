@@ -603,7 +603,7 @@ describe('bit tag command', function() {
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(
-        'components with relative import statements (please use absolute paths for imported components)'
+        'components with relative import statements (please use module paths for imported components)'
       );
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });

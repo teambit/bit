@@ -44,6 +44,7 @@ describe('es6 components with link files', function() {
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider that index file as a dependency', () => {
+      helper.command.linkAndRewire();
       output = helper.command.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
       expect(output).to.not.have.string(statusFailureMsg);

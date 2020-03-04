@@ -100,8 +100,6 @@ export default class Tag extends Command {
     else if (patch) releaseType = 'patch';
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
-    // @todo: fix by having these two flag separated, so users with both issues will get errors on each one
-    if (allowRelativePaths) ignoreUnresolvedDependencies = true;
 
     const idHasWildcard = hasWildcard(id);
 
@@ -113,6 +111,7 @@ export default class Tag extends Command {
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
+      allowRelativePaths,
       skipTests,
       skipAutoTag
     };
