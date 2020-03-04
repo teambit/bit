@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduce `bit link --rewire` to change relative paths in the source code to module paths
+- prevent tagging component that require each other by relative paths (bypassed by `--allow-relative-paths`)
 - prevent exporting components when import/require uses a module path with no scope-name
 - fix components dependencies detection to resolve from package.json if not exist on the fs
 

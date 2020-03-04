@@ -53,7 +53,10 @@ export interface UntrackedFileDependencyEntry {
   untrackedFiles: Array<UntrackedFileEntry>;
 }
 
+export type RelativeComponentsAuthoredEntry = { importSource: string; componentId: BitId };
+
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
 
 interface Issues {
   missingPackagesDependenciesOnFs: {};
@@ -64,6 +67,7 @@ interface Issues {
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
   relativeComponents: {};
+  relativeComponentsAuthored: RelativeComponentsAuthoredIssues;
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
@@ -120,6 +124,7 @@ export default class DependencyResolver {
       missingLinks: {},
       missingCustomModuleResolutionLinks: {},
       relativeComponents: {},
+      relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
       missingBits: {} // temporarily, will be combined with missingComponents. see combineIssues
@@ -642,6 +647,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToRelativeComponentsIssues(originFile, componentId);
       return false;
     }
+    this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, depFileObject.importSource);
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
@@ -1210,6 +1216,12 @@ either, use the ignore file syntax or change the require statement to have a mod
     } else {
       this.issues.relativeComponents[originFile] = [componentId];
     }
+  }
+  _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string) {
+    if (!this.issues.relativeComponentsAuthored[originFile]) {
+      this.issues.relativeComponentsAuthored[originFile] = [];
+    }
+    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId });
   }
   _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     this.issues.missingBits[originFile]

@@ -2,6 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -311,6 +312,49 @@ console.log(isType());`;
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+      });
+    });
+  });
+  describe('rewire', () => {
+    let beforeLink;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.fs.outputFile('app.js', fixtures.appPrintBarFooAuthor);
+      beforeLink = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('with no defaultScope', () => {
+      let output;
+      before(() => {
+        output = helper.command.link(true);
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string('@bit/utils.is-string');
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should show results from the rewire step', () => {
+        expect(output).to.have.string('rewired');
+      });
+    });
+    describe('with defaultScope', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeLink);
+        helper.bitJson.addDefaultScope();
+        helper.command.link(true);
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string(`@bit/${helper.scopes.remote}.utils.is-string`);
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
   });

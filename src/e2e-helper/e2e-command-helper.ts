@@ -253,6 +253,9 @@ export default class CommandHelper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
+  link(rewire = false) {
+    return this.runCmd(`bit link ${rewire ? '--rewire' : ''}`);
+  }
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
