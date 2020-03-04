@@ -10,41 +10,28 @@ export type InsightResult = {
   formattedData: string; // human-readable format
 };
 
-export type BareResult = {
+export type RawResult = {
   message?: string;
   data: any;
 };
 
-export default interface Insight {
+export interface Insight {
   name: string;
   description: string;
 
   /**
-   * A function that runs a specific insight. Can get any number of arguments.
+   * internally runs a specific insight. Can get any number of arguments.
    */
-  _runInsight(...args: any[]): Promise<BareResult>;
+  _runInsight(...args: any[]): Promise<RawResult>;
 
   /**
-   * Takes the data returned by the insight and stringifies it.
-   * @param bareResult ExamineBareResult
+   * takes the data returned in RawResult and stringifies it.
+   * @param data
    */
   _formatData(data: any): string;
-}
 
-async function runInsight(insight: Insight, ...args: any[]): Promise<InsightResult> {
-  const bareResult = await insight._runInsight(...args);
-  const formattedData = insight._formatData(bareResult.data);
-  const result = {
-    metaData: {
-      name: insight.name,
-      description: insight.description
-    },
-    data: bareResult.data,
-    formattedData: formattedData
-  };
-
-  if (!!bareResult.message) {
-    result['message'] = bareResult.message;
-  }
-  return result;
+  /**
+   * runs a specific insight using _runInsight, gets a RawResult, and uses _formatData to transform the output to InsightResult.
+   */
+  run(...args: any[]): Promise<InsightResult>;
 }

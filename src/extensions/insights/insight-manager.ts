@@ -1,73 +1,78 @@
-import commander from 'commander';
-import { splitWhen, equals } from 'ramda';
-import { Command } from './command';
-import CommandRegistry from './insight-registry';
-import { register } from '../../cli/command-registry';
-import { AlreadyExistsError } from './exceptions/already-exists';
-import { Help } from './commands/help.cmd';
-import Insight from './insight';
+import { Insight, InsightResult } from './insight';
+import InsightAlreadyExists from './exceptions/insight-already-exists';
+import InsightNotFound from './exceptions/insight-not-found';
 
 export class InsightManager {
-  /**
-   * insight registry
-   */
-  registry: CommandRegistry;
-  constructor(insightList: Insight[]) {
-    this.registry = new CommandRegistry(insightList);
+  /** insights is an insight registry */
+  readonly insights: Map<string, Insight> = new Map();
+  constructor(
+    /**
+     * array of registered insights
+     */
+    insights: Insight[]
+  ) {
+    insights.forEach(insight => {
+      this.register(insight);
+    });
   }
 
-  private setDefaults(command: Command) {
-    command.alias = command.alias || '';
-    command.description = command.description || '';
-    command.shortDescription = command.shortDescription || '';
-    command.group = command.group || 'extensions';
-    command.options = command.options || [];
-    command.private = command.private || false;
-    command.loader = command.loader || true;
-    command.commands = command.commands || [];
-  }
   /**
-   * register a new insight
+   * registers a new insight and returns the updated insight registry map
    */
   register(insight: Insight) {
-    // this.setDefaults(insight);
-    // command.commands!.forEach(cmd => this.setDefaults(cmd));
-    this.registry.register(insight);
-    return this;
+    const name = insight.name;
+    if (this.insights.has(name)) {
+      throw new InsightAlreadyExists(name);
+    }
+    this.insights.set(name, insight);
   }
-
   /**
-   * list of all registered commands.
+   * list of all registered insights
    */
-  get listInsights() {
-    return this.registry.insights;
+  get listInsights(): string[] {
+    return [...this.insights.keys()];
   }
 
   /**
-   * execute commands registered to `Paper` and the legacy bit cli.
+   * gets a specific insight by its name or undefined if doesn't exist
+   */
+  getById(insightName: string): Insight | undefined {
+    return this.insights.get(insightName);
+  }
+
+  /**
+   * deletes a specific insight by its name if exists
+   */
+  delete(insightName: string) {
+    if (!this.insights.has(insightName)) {
+      throw new InsightNotFound(insightName);
+    }
+    this.insights.delete(insightName);
+  }
+
+  /**
+   * execute an array of insights
    *
    */
-  async run(insights: Insight[]) {
-    const args = process.argv.slice(2);
-    if ((args[0] && ['-h', '--help'].includes(args[0])) || process.argv.length === 2) {
-      Help()(this.commands, this.groups);
-      return;
-    }
-    /* eslint-disable */
-    Object.entries(this.commands).reduce(function(acc, [_key, paperCommand]) {
-      register(paperCommand as any, acc);
-      return acc;
-    }, commander);
-
-    const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
-    if (packageManagerArgs && packageManagerArgs.length) {
-      // Remove the -- delimiter
-      packageManagerArgs.shift();
-    }
-    commander.packageManagerArgs = packageManagerArgs;
-    commander.parse(params);
-    return Promise.resolve();
+  async run(insights: Insight[]): Promise<InsightResult[]> {
+    const res: InsightResult[] = [];
+    insights.forEach(async insight => {
+      const insightRes: InsightResult = await insight.run();
+      res.push(insightRes);
+    });
+    return res;
   }
 
-  async runAll() {}
+  /**
+   * execute all insights in the registry
+   *
+   */
+  async runAll() {
+    const res: InsightResult[] = [];
+    for (let [name, insight] of this.insights) {
+      const insightRes: InsightResult = await insight.run();
+      res.push(insightRes);
+    }
+    return res;
+  }
 }

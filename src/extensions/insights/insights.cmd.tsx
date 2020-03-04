@@ -1,6 +1,4 @@
 
-import { RunAllInsights, RunOneInsight } from './run-insights';
-import Insight from './insight';
 import {Command, CLIArgs} from '../cli'
 import { Flags } from '../paper/command';
 import React from 'react';
@@ -11,29 +9,79 @@ export default class InsightsCmd implements Command {
   // description = 'get insights on your components';
   // alias = '';
   // opts = []; // should be of the format: ['j', 'json', 'return diagnoses in json format']
-  name = 'start [id]';
+  name = 'insights [...names]';
   description = 'start a dev environment for a workspace or a specific component'
   group = 'development'
   shortDescription = ''
-  options = []
+  // @ts-ignore
+  options = [['l', 'list', 'list all insights'], []]
 
   constructor(
     private insightManager: InsightManager,
   ) {}
 
-  async render([insightNames]: CLIArgs, { list }: Flags) {
+  async render([names]: CLIArgs, { list }: Flags) {
+    if (list) {
+      return <Color green>There are many insights</Color>
+    }
     // args - names of insights
-    // options - list
+    // opts - list
     // if list
     // insightMagnager.list()
     // return list in pretty way
     // if insigtNames
-    // insightMagnager.runMany(insightNames)
+    // insightMagnager.run(insightNames)
     // else
     // insightMagnager.runAll()
     // return in pretty way
     // return div (react element)
   }
+
+
+  // async someRender([components]: CLIArgs, { verbose, noCache }: Flags) {
+  //   // @ts-ignore
+  //   const compileResults = await this.compile.compile(components, { verbose, noCache });
+  //   // eslint-disable-next-line no-console
+  //   console.log("compileResults", compileResults)
+  //   return <div >Compile has been completed successfully</div>;
+  // }
+
+  // async json([components]: CLIArgs, { verbose, noCache }: Flags) {
+  //   // @ts-ignore
+  //   const compileResults = await this.compile.compile(components, { verbose, noCache });
+  //   return {
+  //     data: compileResults,
+  //     code: 0
+  //   }
+  // }
+
+  // async someOtheRender([id]: CLIArgs) {
+  //   // eslint-disable-next-line no-async-promise-executor
+  //   return new Promise(async () => {
+  //     // @ts-ignore
+  //     const components = id ? await this.workspace.get(id) : await this.workspace.list();
+  //     // const components = await this.workspace.get('base/card');
+  //     const resolved = await this.pipes.run('build', components);
+
+  //     const data = resolved.reduce((map, component) => {
+  //       map[component.component.id.toString()] = component.capsule.wrkDir;
+  //       return map;
+  //     }, {});
+
+  //     // eslint-disable-next-line no-console
+  //     // start(data);
+
+  //     return <Color green>das</Color>
+  //   });
+  // }
+
+  // async yetAnotherRender([pipeline, components]: CLIArgs, { concurrency }: Flags) {
+  //   const concurrencyN = (concurrency && typeof concurrency === 'string') ? Number.parseInt(concurrency) : 5;
+  //   const actualComps = typeof components === 'string' ? [components]: components
+  //   await this.scripts.run(pipeline as string, actualComps, { concurrency: concurrencyN});
+
+  //   return <div />;
+  // }
 
 //   action(
 //     [insightName]: string[],

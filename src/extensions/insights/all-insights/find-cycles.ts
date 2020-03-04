@@ -1,4 +1,4 @@
-import Insight, { InsightResult, BareResult } from '../insight';
+import { Insight, InsightResult, RawResult } from '../insight';
 import { ComponentGraph } from '../../graph/component-graph';
 
 export const INSIGHT_NAME = 'Find cyclic dependencies';
@@ -10,7 +10,7 @@ export default class FindCycles implements Insight {
   constructor(graph: ComponentGraph) {
     this.graph = graph;
   }
-  async _runInsight(): Promise<BareResult> {
+  async _runInsight(): Promise<RawResult> {
     const cycles = this.graph.findCycles();
     return {
       message: `Found ${cycles.length} cycles.`,
@@ -19,11 +19,10 @@ export default class FindCycles implements Insight {
   }
 
   _formatData(data: any): string {
-    // TODO - implement
-    throw new Error('You must implement this method');
+    return JSON.stringify(data);
   }
 
-  async run(str: string, num: number): Promise<InsightResult> {
+  async run(): Promise<InsightResult> {
     const bareResult = await this._runInsight();
     const formattedData = this._formatData(bareResult.data);
     const result = {
@@ -40,13 +39,4 @@ export default class FindCycles implements Insight {
     }
     return result;
   }
-
-  // _formatSymptoms(bareResult: ExamineBareResult): string {
-  //   if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
-  //   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  //   const toString = bareResult.data.brokenSymlinks
-  //     .map(brokenSymlink => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`)
-  //     .join('\n');
-  //   return `the following symlinks points to non-existing paths\n${toString}`;
-  // }
 }

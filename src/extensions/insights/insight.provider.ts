@@ -2,7 +2,7 @@ import { ComponentGraph } from '../graph/component-graph';
 import getCoreInsights from './core-insights-getter';
 import { BitCli } from '../cli';
 import { InsightManager } from './insight-manager';
-import Insight from './insight';
+import { Insight } from './insight';
 import InsightsCmd from './insights.cmd';
 
 export type InsightConfig = {
