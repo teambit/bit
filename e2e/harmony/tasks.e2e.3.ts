@@ -14,7 +14,7 @@ describe('tasks/scripts functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('running build task', () => {
+  xdescribe('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
