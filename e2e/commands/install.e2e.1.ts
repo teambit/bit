@@ -73,7 +73,7 @@ describe('run bit install', function() {
         });
         it('bit install should npm-install all missing node-modules and link all components', () => {
           expect(output).to.have.string('successfully ran npm install');
-          expect(output).to.have.string('found 2 components');
+          expect(output).to.have.string('linked 2 components');
           const result = helper.command.runCmd('node app.js');
           expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
         });
@@ -101,7 +101,7 @@ describe('run bit install', function() {
           expect(output).to.have.string('successfully ran npm install at components/bar/foo');
         });
         it('should link only the specified id and its dependencies', () => {
-          expect(output).to.have.string('found 2 components'); // 1 is for bar/foo and 2 for its dep is-string
+          expect(output).to.have.string('linked 2 components'); // 1 is for bar/foo and 2 for its dep is-string
         });
         it('all links should be in place', () => {
           const result = helper.command.runCmd('node app.js');

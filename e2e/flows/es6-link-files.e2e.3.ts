@@ -81,6 +81,7 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
+      helper.command.linkAndRewire();
       output = helper.command.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
       expect(output).to.not.have.string(statusFailureMsg);
@@ -164,6 +165,7 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
+      helper.command.linkAndRewire();
       output = helper.command.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
       expect(output).to.not.have.string(statusFailureMsg);

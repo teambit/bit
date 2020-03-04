@@ -447,6 +447,7 @@ describe('workspace config', function() {
           showBar = helper.command.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing component', () => {
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.not.have.string(statusFailureMsg);
         });
