@@ -863,11 +863,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   private _pushToDependenciesIfNotExist(dependencyId: BitId, dependency: Dependency, fileType: FileType) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependencyId);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependencyId);
-    const existingCompilerDependency = this.getExistingDependency(
-      this.allDependencies.compilerDependencies,
-      dependencyId
-    );
-    const existingTesterDependency = this.getExistingDependency(this.allDependencies.testerDependencies, dependencyId);
     if (fileType.isTestFile && !existingDevDependency) {
       this.allDependencies.devDependencies.push(dependency);
     } else if (!fileType.isTestFile && !existingDependency) {
