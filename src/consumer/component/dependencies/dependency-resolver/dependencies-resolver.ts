@@ -496,9 +496,7 @@ export default class DependencyResolver {
           // Recursively check for untracked files (to show them all in bit status)
           // for nested files we don't really care about the file types since we won't do all the checking
           const dummyFileType: FileType = {
-            isTestFile: false,
-            isCompilerFile: false,
-            isTesterFile: false
+            isTestFile: false
           };
           this.processDepFiles(depFile.file, dummyFileType, true);
         }
@@ -517,10 +515,6 @@ export default class DependencyResolver {
     depFileObject: FileObject,
     nested = false
   ): boolean {
-    // if the dependency of an envFile is already included in the env files of the component, we're good
-    if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return false;
-    if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return false;
-
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
@@ -738,10 +732,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!packages || R.isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
-    } else if (fileType.isCompilerFile) {
-      Object.assign(this.allPackagesDependencies.compilerPackageDependencies, packages);
-    } else if (fileType.isTesterFile) {
-      Object.assign(this.allPackagesDependencies.testerPackageDependencies, packages);
     } else {
       Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
@@ -845,8 +835,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!this.componentFromModel) return; // not relevant, the component is not imported
     const getDependencies = (): Dependencies => {
       if (fileType.isTestFile) return this.componentFromModel.devDependencies;
-      if (fileType.isCompilerFile) return this.componentFromModel.compilerDependencies;
-      if (fileType.isTesterFile) return this.componentFromModel.testerDependencies;
       return this.componentFromModel.dependencies;
     };
     const dependencies: Dependencies = getDependencies();
@@ -882,11 +870,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const existingTesterDependency = this.getExistingDependency(this.allDependencies.testerDependencies, dependencyId);
     if (fileType.isTestFile && !existingDevDependency) {
       this.allDependencies.devDependencies.push(dependency);
-    } else if (fileType.isCompilerFile && !existingCompilerDependency) {
-      this.allDependencies.compilerDependencies.push(dependency);
-    } else if (fileType.isTesterFile && !existingTesterDependency) {
-      this.allDependencies.testerDependencies.push(dependency);
-    } else if (!fileType.isTestFile && !fileType.isCompilerFile && !fileType.isTesterFile && !existingDependency) {
+    } else if (!fileType.isTestFile && !existingDependency) {
       this.allDependencies.dependencies.push(dependency);
     }
   }
@@ -894,10 +878,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
     if (fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
-    } else if (fileType.isCompilerFile) {
-      this.allDependencies.compilerDependencies.push(currentComponentsDeps);
-    } else if (fileType.isTesterFile) {
-      this.allDependencies.testerDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
