@@ -326,7 +326,7 @@ console.log(isType());`;
     describe('with no defaultScope', () => {
       let output;
       before(() => {
-        output = helper.command.link(true);
+        output = helper.command.linkAndRewire();
       });
       it('should change the require statement to be module path with no-scope', () => {
         const barFoo = helper.fs.readFile('bar/foo.js');
@@ -345,7 +345,7 @@ console.log(isType());`;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeLink);
         helper.bitJson.addDefaultScope();
-        helper.command.link(true);
+        helper.command.linkAndRewire();
       });
       it('should change the require statement to be module path with no-scope', () => {
         const barFoo = helper.fs.readFile('bar/foo.js');

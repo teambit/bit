@@ -135,7 +135,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           npmCiRegistry.setCiScopeInBitJson();
           helper.command.importComponent('string/is-string');
           helper.command.importComponent('string/pad-left');
-          helper.command.runCmd('bit tag -a -s 2.0.0');
+          helper.command.tagScope('2.0.0');
 
           // as an intermediate step, make sure bit status doesn't show them as modified
           // it's a very important step which covers a few bugs
@@ -514,7 +514,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.bitJson.modifyField('dist', { target: 'dist', entry: 'src' });
       });
       it('should show a descriptive error when tagging the component', () => {
-        const error = helper.general.runWithTryCatch('bit tag -a -s 2.0.0');
+        const error = helper.general.runWithTryCatch('bit tag -a -s 2.0.0 --allow-relative-paths');
         expect(error).to.have.string(
           'to rebuild the "dist" directory for all components, please run "bit import --merge"'
         );
