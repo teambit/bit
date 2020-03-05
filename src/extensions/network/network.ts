@@ -95,7 +95,7 @@ export default class Network {
 
     const graph = await Graph.buildGraphFromWorkspace(consumer);
     const components = findSuccessorsInGraph(graph, seeders);
-    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions, orchOptions);
+    const capsules = await this.createCapsulesFromComponents(components, actualCapsuleOptions.baseDir, orchOptions);
     const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
 
     await this.writeComponentFilesToCapsules(components, graph, this._buildCapsulePaths(capsules), capsuleList);
@@ -142,14 +142,11 @@ export default class Network {
       components: graph
     };
   }
-  private async createCapsulesFromComponents(
-    components: any[],
-    capsuleOptions,
-    orchOptions
-  ): Promise<ComponentCapsule[]> {
+  private async createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<ComponentCapsule[]> {
     const capsules: ComponentCapsule[] = await Promise.all(
       map((component: Component) => {
-        return this.capsule.create(component.id, capsuleOptions, orchOptions);
+        // @ts-ignore - fix by moving to componentId
+        return this.capsule.create(component.id, baseDir, orchOptions);
       }, components)
     );
     return capsules;
@@ -244,14 +241,6 @@ export default class Network {
       })
     );
     return manyComponentsWriter.writtenComponents;
-  }
-
-  /**
-   * list capsules from all workspaces.
-   */
-  listAll(): WorkspaceCapsules {
-    // @ts-ignore
-    return '';
   }
 
   static async provide(config: any, [packageManager, capsule]: NetworkDeps) {

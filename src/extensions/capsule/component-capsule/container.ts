@@ -23,30 +23,17 @@ export interface BitContainerConfig extends ContainerFactoryOptions {
 export default class FsContainer implements Container<Exec, AnyFS> {
   id = 'FS Container';
 
-  get path() {
-    let p = _.get(this.config, 'wrkDir');
-    if (!p) p = this.generateDefaultTmpDir();
-    return p;
-  }
+  fs: NodeFS = new NodeFS(this.wrkDir);
 
-  fs: NodeFS = new NodeFS(this.path);
+  constructor(readonly wrkDir: string) {}
 
-  constructor(readonly config: any) {}
-
+  // TODO: do we need this?
   public getPath() {
-    return this.path;
+    return this.wrkDir;
   }
 
   private composePath(pathToCompose) {
     return path.join(this.getPath(), pathToCompose);
-  }
-
-  private generateDefaultTmpDir() {
-    if (this.config.bitId) {
-      return path.join(os.tmpdir(), `${this.config.bitId.toString()}_${hash(this.config)}`);
-    }
-    // backword capsule support - remove
-    return path.join(os.tmpdir(), v4());
   }
 
   outputFile(file, data, options) {
@@ -106,7 +93,7 @@ export default class FsContainer implements Container<Exec, AnyFS> {
   }
 
   start(): Promise<void> {
-    return fs.ensureDir(this.path);
+    return fs.ensureDir(this.wrkDir);
   }
   // @ts-ignore
   async inspect(): Promise<ContainerStatus> {
@@ -120,7 +107,7 @@ export default class FsContainer implements Container<Exec, AnyFS> {
   }
   // eslint-disable-next-line
   stop(ttl?: number | undefined): Promise<void> {
-    return fs.remove(this.path);
+    return fs.remove(this.wrkDir);
   }
   async destroy(): Promise<void> {
     await this.stop();

@@ -4,11 +4,11 @@ import { NodeFS } from '@teambit/any-fs';
 import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer, { BitExecOption } from './container';
+import { Component, ComponentID } from '../../component';
 import BitId from '../../../bit-id/bit-id';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
-  private _bitId: BitId;
   private _new = false;
   constructor(
     /**
@@ -27,14 +27,10 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
      * capsule's state.
      */
     readonly state: State,
-    /**
-     * config to pass capsule
-     */
-    readonly config: any = {}
+    readonly bitId: BitId
   ) {
-    super(container, fs, console, state, config);
-    this._wrkDir = container.path;
-    this._bitId = config.bitId;
+    super(container, fs, console, state);
+    this._wrkDir = container.wrkDir;
   }
 
   get new(): boolean {
@@ -44,9 +40,6 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   set new(value: boolean) {
     this._new = value;
   }
-  get bitId(): BitId {
-    return this._bitId;
-  }
 
   get wrkDir(): string {
     return realpathSync(this._wrkDir);
@@ -54,7 +47,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
 
   // implement this to handle capsules ids.
   get id(): string {
-    return this._bitId.toString();
+    return this.bitId.toString();
   }
 
   get containerId(): string {
@@ -77,7 +70,7 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   serialize(): string {
     return JSON.stringify({
       id: this.containerId,
-      wrkDir: this.container.path,
+      wrkDir: this.container.wrkDir,
       bitId: this.bitId,
       options: _.omit(this.config, ['bitId', 'wrkDir'])
     });
