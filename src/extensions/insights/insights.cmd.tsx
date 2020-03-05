@@ -1,7 +1,8 @@
 
+import React from 'react';
+import { Color } from 'ink';
 import {Command, CLIArgs} from '../cli'
 import { Flags } from '../paper/command';
-import React from 'react';
 import { InsightManager } from './insight-manager';
 
 export default class InsightsCmd implements Command {
@@ -14,7 +15,7 @@ export default class InsightsCmd implements Command {
   group = 'development'
   shortDescription = ''
   // @ts-ignore
-  options = [['l', 'list', 'list all insights'], []]
+  options = [['l', 'list', 'list all insights']]
 
   constructor(
     private insightManager: InsightManager,
