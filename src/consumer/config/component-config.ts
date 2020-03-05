@@ -26,6 +26,11 @@ export default class ComponentConfig extends AbstractConfig {
   packageJsonFile: PackageJsonFile | null | undefined;
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
+  static componentConfigLoadingRegistry: { [extId: string]: Function } = {};
+  static registerOnComponentConfigLoading(extId, func: () => any) {
+    this.componentConfigLoadingRegistry[extId] = func;
+  }
+
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
@@ -90,6 +95,8 @@ export default class ComponentConfig extends AbstractConfig {
       bindingPrefix,
       overrides
     });
+
+    // TODO: run runOnLoadEvent
   }
 
   static fromComponent(component: Component): ComponentConfig {
@@ -104,6 +111,8 @@ export default class ComponentConfig extends AbstractConfig {
       tester: component.tester || {},
       overrides: component.overrides.componentOverridesData
     });
+
+    // TODO: run runOnLoadEvent
   }
 
   mergeWithComponentData(component: Component) {
@@ -116,16 +125,19 @@ export default class ComponentConfig extends AbstractConfig {
    * This only used for legacy props that were defined in the root like compiler / tester
    */
   static mergeWithWorkspaceRootConfigs(
+    componentId: BitId,
     componentConfig: Record<string, any>,
     workspaceConfig: WorkspaceConfig | undefined
   ): ComponentConfig {
-    let plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : {};
-    plainWorkspaceConfig = plainWorkspaceConfig || {};
-    const workspaceConfigWithoutConsumerSpecifics = filterObject(
-      plainWorkspaceConfig,
-      (val, key) => key !== 'overrides'
-    );
-    const mergedObject = R.merge(workspaceConfigWithoutConsumerSpecifics, componentConfig);
+    const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : {};
+    let workspaceConfigToMerge;
+    if (plainWorkspaceConfig) {
+      workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
+    } else {
+      workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
+    }
+    // plainWorkspaceConfig = plainWorkspaceConfig || {};
+    const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 
@@ -200,7 +212,8 @@ export default class ComponentConfig extends AbstractConfig {
     const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(config, workspaceConfig);
+    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(componentId, config, workspaceConfig);
+    await runOnLoadEvent(this.componentConfigLoadingRegistry);
     componentConfig.path = bitJsonPath;
     const extensionsAddedConfig = await getConfigFromExtensions(
       componentId,
@@ -214,6 +227,14 @@ export default class ComponentConfig extends AbstractConfig {
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
+}
+
+async function runOnLoadEvent(componentConfigLoadingRegistry) {
+  const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(extId => {
+    const func = componentConfigLoadingRegistry[extId];
+    return func();
+  });
+  return Promise.all(onLoadSubscribersP);
 }
 
 async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, configsRegistry) {

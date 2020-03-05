@@ -1185,7 +1185,7 @@ export default class Component {
     // (like dependencies)
     const componentConfig = await ComponentConfig.load({
       componentId: id,
-      componentDir: componentMap.getTrackDir(),
+      componentDir,
       workspaceDir: consumerPath,
       workspaceConfig,
       addConfigRegistry: this.addConfigRegistry

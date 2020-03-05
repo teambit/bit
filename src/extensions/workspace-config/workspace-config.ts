@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import { pick, omit } from 'ramda';
 import { parse, stringify, assign } from 'comment-json';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
-import ConsumerOverrides from '../../consumer/config/consumer-overrides';
+import ConsumerOverrides, { ConsumerOverridesOfComponent } from '../../consumer/config/consumer-overrides';
 import { BIT_JSONC, DEFAULT_LANGUAGE, COMPILER_ENV_TYPE } from '../../constants';
 import { PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -13,6 +13,7 @@ import { Compilers, Testers } from '../../consumer/config/abstract-config';
 import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings';
 
 import { EnvType } from '../../legacy-extensions/env-extension-types';
+import { BitId } from '../../bit-id';
 
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
@@ -75,6 +76,20 @@ export default class WorkspaceConfig {
     }
     // legacy configs
     return this.legacyConfig?.overrides;
+  }
+
+  getComponentConfig(componentId: BitId): ConsumerOverridesOfComponent {
+    const componentsConfig = this.componentsConfig;
+    const config = componentsConfig?.getOverrideComponentData(componentId) || {};
+
+    const plainLegacy = this._legacyPlainObject();
+    // Update envs from the root workspace object in case of legacy workspace config
+    if (plainLegacy) {
+      config.env = config.env || {};
+      config.env.compiler = config.env.compiler || plainLegacy.env.compiler;
+      config.env.tester = config.env.tester || plainLegacy.env.tester;
+    }
+    return config;
   }
 
   /**
