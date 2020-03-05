@@ -5,10 +5,13 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import replacePackageName from '../../utils/string/replace-package-name';
 import DataToPersist from '../component/sources/data-to-persist';
 import { BitId } from '../../bit-id';
+import { pathNormalizeToLinux } from '../../utils';
+import { ImportSpecifier } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 
 export type CodemodResult = {
   id: BitId;
   changedFiles: string[];
+  warnings?: string[];
 };
 
 // eslint-disable-next-line import/prefer-default-export
@@ -16,35 +19,57 @@ export async function changeCodeFromRelativeToModulePaths(components: Component[
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map(component => {
-    const componentDataToMerge = codemodComponent(component);
-    dataToPersist.merge(componentDataToMerge);
-    return { id: component.id, changedFiles: componentDataToMerge.files.map(f => f.relative) };
+    const { files, warnings } = codemodComponent(component);
+    dataToPersist.addManyFiles(files);
+    return { id: component.id, changedFiles: files.map(f => f.relative), warnings };
   });
   await dataToPersist.persistAllToFS();
-  return codemodResults.filter(c => c.changedFiles.length);
+  return codemodResults.filter(c => c.changedFiles.length || c.warnings);
 }
 
-function codemodComponent(component: Component): DataToPersist {
-  const dataToPersist = new DataToPersist();
+function codemodComponent(component: Component): { files: SourceFile[]; warnings?: string[] } {
   const issues = component.issues;
-  if (!issues || !issues.relativeComponentsAuthored) return dataToPersist;
+  const files: SourceFile[] = [];
+  if (!issues || !issues.relativeComponentsAuthored) return { files };
+  const warnings: string[] = [];
   component.files.forEach((file: SourceFile) => {
-    const relativeInstances = issues.relativeComponentsAuthored[file.relative];
+    const relativeInstances = issues.relativeComponentsAuthored[pathNormalizeToLinux(file.relative)];
     if (!relativeInstances) return;
     // @ts-ignore
     const fileBefore = file.contents.toString() as string;
     let newFileString = fileBefore;
-
     relativeInstances.forEach((relativeEntry: RelativeComponentsAuthoredEntry) => {
       const id = relativeEntry.componentId;
+      if (isLinkFileHasDifferentImportType(relativeEntry.importSpecifiers)) {
+        warnings.push(
+          `"${file.relative}" requires "${id.toString()}" through a link-file ("${
+            relativeEntry.importSource
+          }") and not directly, which makes it difficult change the import, please change your code to require the component directly`
+        );
+        return;
+      }
       const packageName = componentIdToPackageName(id, component.bindingPrefix, component.defaultScope);
       newFileString = replacePackageName(newFileString, relativeEntry.importSource, packageName);
     });
     if (fileBefore !== newFileString) {
       // @ts-ignore
       file.contents = Buffer.from(newFileString);
-      dataToPersist.addFile(file);
+      files.push(file);
     }
   });
-  return dataToPersist;
+  return { files, warnings };
+}
+
+/**
+ * if this is a link-file (a file that only import and export other files), bit doesn't require
+ * the user to track it and it knows to skip it. If however, the link file uses default import and
+ * the real file uses non-default, or vice versa, the codemod will result in an incorrect import
+ * statement, and won't work.
+ */
+function isLinkFileHasDifferentImportType(importSpecifiers?: ImportSpecifier[]) {
+  if (!importSpecifiers) return false;
+  return importSpecifiers.some(importSpecifier => {
+    if (!importSpecifier.linkFile) return false;
+    return importSpecifier.linkFile.isDefault !== importSpecifier.mainFile.isDefault;
+  });
 }

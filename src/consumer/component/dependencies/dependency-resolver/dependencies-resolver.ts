@@ -53,7 +53,11 @@ export interface UntrackedFileDependencyEntry {
   untrackedFiles: Array<UntrackedFileEntry>;
 }
 
-export type RelativeComponentsAuthoredEntry = { importSource: string; componentId: BitId };
+export type RelativeComponentsAuthoredEntry = {
+  importSource: string;
+  componentId: BitId;
+  importSpecifiers: ImportSpecifier[] | undefined;
+};
 
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
@@ -647,7 +651,12 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToRelativeComponentsIssues(originFile, componentId);
       return false;
     }
-    this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, depFileObject.importSource);
+    this._pushToRelativeComponentsAuthoredIssues(
+      originFile,
+      componentId,
+      depFileObject.importSource,
+      depsPaths.importSpecifiers
+    );
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
@@ -1217,11 +1226,16 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.issues.relativeComponents[originFile] = [componentId];
     }
   }
-  _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string) {
+  _pushToRelativeComponentsAuthoredIssues(
+    originFile,
+    componentId,
+    importSource: string,
+    importSpecifiers: ImportSpecifier[] | undefined
+  ) {
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }
-    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId });
+    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId, importSpecifiers });
   }
   _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     this.issues.missingBits[originFile]
