@@ -3,14 +3,14 @@ import v4 from 'uuid';
 import path from 'path';
 import hash from 'object-hash';
 import filenamify from 'filenamify';
-import capsuleOrchestrator from '../network/orchestrator/orchestrator';
+import { Exec, Console, State } from '@teambit/capsule';
 import { WorkspaceCapsules } from './types';
-import { CapsuleOrchestrator } from '../network/orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from '../network/orchestrator/types';
 import { PackageManager } from '../package-manager';
 import { Component, ComponentID } from '../component';
 import { Options } from '../network'; // TODO: get rid of me
+import FsContainer, { BitExecOption } from '../capsule/component-capsule/container';
 
 export type CapsuleDeps = [PackageManager];
 
@@ -19,13 +19,6 @@ const DEFAULT_OPTIONS = {
 };
 
 export default class Capsule {
-  constructor(
-    /**
-     * instance of the capsule orchestrator.
-     */
-    readonly orchestrator: CapsuleOrchestrator // readonly builder: CapsuleBuilder
-  ) {}
-
   /**
    * list all of the existing workspace capsules.
    */
@@ -48,13 +41,14 @@ export default class Capsule {
   ): Promise<ComponentCapsule> {
     const orchOptions = Object.assign({}, DEFAULT_OPTIONS, orchestrationOptions);
     const config = this._generateResourceConfig(bitId, capsuleOptions || {}, orchOptions);
-    // @ts-ignore - TODO: remove me by sorting out the options situation
-    return this.orchestrator.getCapsule(capsuleOptions.workspace, config, orchOptions);
+    const container = new FsContainer(config.options);
+    const capsule = new ComponentCapsule(container, container.fs, new Console(), new State(), config.options);
+    await capsule.start();
+    return capsule;
   }
 
   static async provide(config: any, [packageManager]: any) {
-    await capsuleOrchestrator.buildPools();
-    return new Capsule(capsuleOrchestrator);
+    return new Capsule();
   }
   private _generateResourceConfig(bitId: ComponentID, capsuleOptions: CapsuleOptions, options: Options): CreateOptions {
     const dirName = filenamify(bitId.toString(), { replacement: '_' });
