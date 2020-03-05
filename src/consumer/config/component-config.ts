@@ -27,7 +27,7 @@ export default class ComponentConfig extends AbstractConfig {
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
   static componentConfigLoadingRegistry: { [extId: string]: Function } = {};
-  static registerOnComponentConfigLoading(extId, func: () => any) {
+  static registerOnComponentConfigLoading(extId, func: (config) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
@@ -213,28 +213,28 @@ export default class ComponentConfig extends AbstractConfig {
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(componentId, config, workspaceConfig);
-    await runOnLoadEvent(this.componentConfigLoadingRegistry);
+
+    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentConfig);
     componentConfig.path = bitJsonPath;
     const extensionsAddedConfig = await getConfigFromExtensions(
       componentId,
       componentConfig.extensions,
       addConfigRegistry
     );
-    // console.log('extensionsAddedConfig', extensionsAddedConfig)
     componentConfig.extensionsAddedConfig = extensionsAddedConfig;
     componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
-}
 
-async function runOnLoadEvent(componentConfigLoadingRegistry) {
-  const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(extId => {
-    const func = componentConfigLoadingRegistry[extId];
-    return func();
-  });
-  return Promise.all(onLoadSubscribersP);
+  static async runOnLoadEvent(componentConfigLoadingRegistry, config) {
+    const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(extId => {
+      const func = componentConfigLoadingRegistry[extId];
+      return func(config);
+    });
+    return Promise.all(onLoadSubscribersP);
+  }
 }
 
 async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, configsRegistry) {

@@ -1,4 +1,4 @@
-import { find } from 'ramda';
+import { find, forEachObjIndexed } from 'ramda';
 import { BitId } from '../../bit-id';
 
 export interface ExtensionConfigEntry {
@@ -28,6 +28,14 @@ export class ExtensionConfigList extends Array<ExtensionConfigEntry> {
 
   _filterLegacy(): ExtensionConfigList {
     return ExtensionConfigList.fromArray(this.filter(ext => !ext.config.__legacy));
+  }
+
+  static fromObject(obj: { [extensionId: string]: any }) {
+    const arr: ExtensionConfigEntry[] = [];
+    forEachObjIndexed((config, id) => {
+      arr.push({ id, config });
+    }, obj);
+    return this.fromArray(arr);
   }
 
   static fromArray(entries: ExtensionConfigEntry[]): ExtensionConfigList {

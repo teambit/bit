@@ -1,5 +1,7 @@
+import { difference } from 'ramda';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
+import { Harmony } from '../../harmony';
 import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
@@ -11,6 +13,10 @@ import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
+import { AnyExtension } from '../../harmony';
+import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import GeneralError from '../../error/general-error';
+import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
 /**
  * API of the Bit Workspace
@@ -39,7 +45,12 @@ export default class Workspace implements ComponentHost {
 
     readonly network: Network,
 
-    private componentList: ComponentsList = new ComponentsList(consumer)
+    private componentList: ComponentsList = new ComponentsList(consumer),
+
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony<unknown>
   ) {}
 
   /**
@@ -153,5 +164,58 @@ export default class Workspace implements ComponentHost {
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
     await this.consumer.bitMap.write();
     return addResults;
+  }
+
+  async loadWorkspaceExtensions() {
+    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
+    const extensionsManifests = await this.resolveExtensions(extensionsConfig);
+    await this.loadExtensions(extensionsManifests, extensionsConfig);
+  }
+
+  async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
+    const extensionsManifests = await this.resolveExtensions(extensionsConfig);
+    await this.loadExtensions(extensionsManifests, extensionsConfig);
+  }
+
+  private async loadExtensions(extensionsManifests: AnyExtension[], extensionsConfig: ExtensionConfigList) {
+    await this.harmony.set(extensionsManifests, extensionsConfig.toObject());
+  }
+
+  /**
+   * load all of bit's extensions.
+   * :TODO must be refactored by @gilad
+   */
+  private async resolveExtensions(extensionsConfig: ExtensionConfigList): Promise<AnyExtension[]> {
+    const extensionsIds = extensionsConfig.ids;
+
+    if (!extensionsIds || !extensionsIds.length) {
+      return [];
+    }
+    const allRegisteredExtensionIds = this.harmony.extensionsIds;
+    const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+    let extensionsComponents;
+    // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
+    try {
+      extensionsComponents = await this.getMany(nonRegisteredExtensions);
+    } catch (e) {
+      if (e instanceof MissingBitMapComponent) {
+        throw new GeneralError(
+          `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`
+        );
+      }
+    }
+
+    const subNetwork = await this.network.createSubNetwork(
+      extensionsComponents.map(c => c.id.toString()),
+      { packageManager: 'yarn' }
+    );
+    const manifests = subNetwork.capsules.map(({ value, id }) => {
+      const extPath = value.wrkDir;
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const mod = require(extPath);
+      mod.name = id.toString();
+      return mod;
+    });
+    return manifests;
   }
 }

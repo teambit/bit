@@ -88,11 +88,9 @@ export class WorkspaceSettings {
     // TODO: take name from the extension
     const workspaceExtEntry = { id: 'workspace', config: workspaceExtProps };
     const otherExtensionsProps = omit(WORKSPACE_EXT_PROPS, this.data);
-    const otherExtensions: ExtensionConfigEntry[] = [];
-    forEachObjIndexed((config, id) => {
-      otherExtensions.push({ id, config });
-    }, otherExtensionsProps);
-    return ExtensionConfigList.fromArray([workspaceExtEntry, ...otherExtensions]);
+    const res = ExtensionConfigList.fromObject(otherExtensionsProps);
+    res.push(workspaceExtEntry);
+    return res;
   }
 
   /**

@@ -4,6 +4,9 @@ import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Network } from '../network';
 import { WorkspaceConfig } from '../workspace-config';
+import { Harmony } from '../../harmony';
+import ComponentConfig from '../../consumer/config/component-config';
+import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
 export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Network];
 
@@ -22,7 +25,8 @@ export type WorkspaceCoreConfig = {
 
 export default async function provideWorkspace(
   config: WorkspaceCoreConfig,
-  [workspaceConfig, scope, component, network]: WorkspaceDeps
+  [workspaceConfig, scope, component, network]: WorkspaceDeps,
+  harmony: Harmony<unknown>
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
@@ -34,7 +38,12 @@ export default async function provideWorkspace(
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, workspaceConfig, scope, component, network);
+      const workspace = new Workspace(consumer, workspaceConfig, scope, component, network, undefined, harmony);
+      ComponentConfig.registerOnComponentConfigLoading('component-service', componentConfig => {
+        const extensionsConfig = ExtensionConfigList.fromObject(componentConfig.extensions);
+        workspace.loadExtensionsByConfig(extensionsConfig);
+      });
+      await workspace.loadWorkspaceExtensions();
       return workspace;
     }
 
