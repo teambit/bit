@@ -5,7 +5,6 @@ import _ from 'lodash';
 import librarian from 'librarian';
 import FsContainer, { BitExecOption } from './container';
 import BitId from '../../../bit-id/bit-id';
-import BitContainerFactory from '../../network/orchestrator/bit-container-factory';
 
 export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   private _wrkDir: string;
@@ -88,15 +87,6 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
   }
 
   async execNode(executable: string, args: any) {
-    // TODO: better
-    // const loaderPrefix = this.bitId.toString() ? `isolating ${this.bitId.toString()}` : '';
-    // const log = message => (this.bitId.toString() ? loader.setText(`${loaderPrefix}: ${message}`) : {});
-    // const { patchFileSystem } = librarian.api();
-    // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // const onScriptRun = async () => {
-    //   // this.componentName ? loader.setText(`running build for ${this.componentName} in an isolated environment`) : {}; // TODO: do this from the compiler/tester so we can customize the message
-    //   return patchFileSystem(executable, { args, cwd: this.config.path, log, onScriptRun });
-    // };
     return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
   }
   async typedExec(opts: BitExecOption) {
@@ -132,16 +122,5 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
 
   destroy() {
     return this.container.stop();
-  }
-
-  static async obtain<Exec, Volume, ComponentCapsule, CapsuleBaseOptions>(
-    containerFactory: BitContainerFactory,
-    raw: string
-  ): Promise<ComponentCapsule> {
-    const object = JSON.parse(raw);
-    const deserializedObject = Object.assign({}, object, ComponentCapsule.deSerializeConfig(object));
-    const container = (await containerFactory.obtain(deserializedObject)) as FsContainer;
-    // @ts-ignore
-    return new ComponentCapsule(container, container.fs, new Console(), new State(), deserializedObject);
   }
 }

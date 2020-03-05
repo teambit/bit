@@ -3,12 +3,12 @@ import path from 'path';
 import hash from 'object-hash';
 import v4 from 'uuid';
 import filenamify from 'filenamify';
+import fs from 'fs-extra';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { BitId } from '../../bit-id';
 import { WorkspaceCapsules } from './types';
 import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';
-import { CapsuleOrchestrator } from './orchestrator/orchestrator';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import { CapsuleOptions, CreateOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
@@ -38,6 +38,13 @@ const DEFAULT_ISOLATION_OPTIONS: CapsuleOptions = {
 
 const DEFAULT_OPTIONS = {
   alwaysNew: false
+};
+
+const GLOBAL_BASE_DIR = path.join(os.tmpdir(), 'bit'); // TODO: move elsewhere
+
+export type ListResults = {
+  workspace: string;
+  capsules: string[];
 };
 
 export type Options = {
@@ -75,8 +82,10 @@ export default class Network {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createSubNetwork(seeders: string[], consumer: Consumer, config?: CapsuleOptions): Promise<SubNetwork> {
     // TODO: consolidate these in the orchestrator
+    const workspace = (config && config.workspace) || this.workspaceName;
     const actualCapsuleOptions = Object.assign({}, DEFAULT_ISOLATION_OPTIONS, config, {
-      workspace: (config && config.workspace) || this.workspaceName
+      workspace,
+      baseDir: path.join(GLOBAL_BASE_DIR, hash(workspace)) // TODO: move this logic elsewhere
     });
     const orchestrationOptions = {
       alwaysNew: (config && config.alwaysNew) || false,
@@ -145,11 +154,23 @@ export default class Network {
     );
     return capsules;
   }
-  /**
-   * list all of the existing workspace capsules.
-   */
-  list(): ComponentCapsule[] {
-    return [];
+
+  async list(consumer: Consumer): Promise<ListResults[] | ListResults> {
+    const workspacePath = consumer.getPath();
+    try {
+      const workspaceCapsuleFolder = path.join(GLOBAL_BASE_DIR, hash(workspacePath));
+      const capsules = await fs.readdir(workspaceCapsuleFolder);
+      const capsuleFullPaths = capsules.map(c => path.join(workspaceCapsuleFolder, c));
+      return {
+        workspace: workspacePath,
+        capsules: capsuleFullPaths
+      };
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        return { workspace: workspacePath, capsules: [] };
+      }
+      throw e;
+    }
   }
 
   private _buildCapsulePaths(capsules: ComponentCapsule[]): CapsulePaths {
