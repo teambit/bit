@@ -29,14 +29,14 @@ export class InsightManager {
   /**
    * list of all registered insights
    */
-  get listInsights(): string[] {
+  listInsights(): string[] {
     return [...this.insights.keys()];
   }
 
   /**
    * gets a specific insight by its name or undefined if doesn't exist
    */
-  getById(insightName: string): Insight | undefined {
+  getByName(insightName: string): Insight | undefined {
     return this.insights.get(insightName);
   }
 
@@ -54,11 +54,14 @@ export class InsightManager {
    * execute an array of insights
    *
    */
-  async run(insights: Insight[]): Promise<InsightResult[]> {
+  async run(insightNames: string[]): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
-    insights.forEach(async insight => {
-      const insightRes: InsightResult = await insight.run();
-      res.push(insightRes);
+    insightNames.forEach(async insightName => {
+      const insight = this.getByName(insightName);
+      if (!!insight) {
+        const insightRes: InsightResult = await insight.run();
+        res.push(insightRes);
+      }
     });
     return res;
   }

@@ -1,28 +1,21 @@
 import { Insight, InsightResult, RawResult } from '../insight';
 import { ComponentGraph } from '../../graph/component-graph';
 
-export const INSIGHT_NAME = 'findCycles';
+export const INSIGHT_NAME = 'duplicateDependencies';
 
-export default class FindCycles implements Insight {
+export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
-  description = 'Get all cyclic dependencies in component graph';
+  description = 'Get all duplicate dependencies in component graph';
   graph: ComponentGraph;
   constructor(graph: ComponentGraph) {
     this.graph = graph;
   }
   async _runInsight(): Promise<RawResult> {
     const cycles = this.graph.findCycles();
-    if (cycles.length === 1) {
-      return {
-        message: `Found ${cycles.length} cycle.`,
-        data: cycles
-      };
-    } else {
-      return {
-        message: `Found ${cycles.length} cycles.`,
-        data: cycles
-      };
-    }
+    return {
+      message: `Found ${cycles.length} cycles.`,
+      data: cycles
+    };
   }
 
   _formatData(data: any): string {

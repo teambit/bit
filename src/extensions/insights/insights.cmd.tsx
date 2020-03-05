@@ -4,6 +4,7 @@ import { Color } from 'ink';
 import {Command, CLIArgs} from '../cli'
 import { Flags } from '../paper/command';
 import { InsightManager } from './insight-manager';
+import { InsightResult } from './insight';
 
 export default class InsightsCmd implements Command {
   // name = 'insights [insight-name]';
@@ -23,19 +24,28 @@ export default class InsightsCmd implements Command {
 
   async render([names]: CLIArgs, { list }: Flags) {
     if (list) {
-      return <Color green>There are many insights</Color>
+      //return <Color green>There are many insights</Color>
+      const results = this.insightManager.listInsights();
+      const listItems = results.map(insight =>
+        insight += '\n'
+      );
+      return <Color blueBright>{listItems}</Color>
     }
-    // args - names of insights
-    // opts - list
-    // if list
-    // insightMagnager.list()
-    // return list in pretty way
-    // if insigtNames
-    // insightMagnager.run(insightNames)
-    // else
-    // insightMagnager.runAll()
-    // return in pretty way
-    // return div (react element)
+    if (names) {
+      let results: InsightResult[] = [];
+      if(Array.isArray(names)){
+        results = await this.insightManager.run(names);
+      }
+      else {
+        results = await this.insightManager.run([names]);
+      }
+      return <Color blueBright>{results}</Color>
+      }
+    else {
+      const results = await this.insightManager.runAll();
+      debugger
+      return <Color blueBright>{results}</Color>
+    }
   }
 
 
