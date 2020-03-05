@@ -10,6 +10,7 @@ import CompileExt from '../compile/compile.manifest';
 import TestExt from '../test/test.manifest';
 import { GraphExt } from '../graph';
 import { CreateExt } from '../create';
+import { FlowsExt } from '../flows';
 
 export default {
   name: 'Bit',
@@ -17,6 +18,7 @@ export default {
     WorkspaceExt,
     ScopeExt,
     NetworkExt,
+    FlowsExt,
     CompileExt,
     TestExt,
     ComposerExt,
