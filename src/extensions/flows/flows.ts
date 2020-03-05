@@ -1,7 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable max-classes-per-file */
 import { Workspace } from '../workspace';
 import { Network, GetFlow } from './network';
 import { ComponentID } from '../component';
 import { Flow } from './flow/flow';
+import BitIdAndValueArray from '../../bit-id/bit-id-and-value-array';
+import { ComponentCapsule } from '../capsule/component-capsule';
+import { ExecutionOptions } from './network/options';
+import { BitId } from '../../bit-id';
 
 export class Flows {
   constructor(private workspace: Workspace) {}
@@ -22,26 +28,40 @@ export class Flows {
     };
     return this.createNetwork(seeders, getFlow);
   }
+
+  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+    network = network || this.createNetworkByFlowName(seeders, name);
+    const opts = Object.assign(
+      {
+        caching: true,
+        concurrency: 4,
+        traverse: 'both'
+      },
+      options
+    );
+    const resultStream = await network.execute(opts);
+    return new Promise((resolve, reject) => {
+      resultStream.subscribe({
+        next(data: any) {
+          if (data.type === 'network:result') {
+            resolve(data.value);
+          }
+        },
+        error(err: any) {
+          reject(err);
+        }
+      });
+    });
+  }
+  async runMultiple(flowsWithIds: IdsAndFlows, capsules: ComponentCapsule[], options?: Partial<ExecutionOptions>) {
+    const getFlow = (id: ComponentID) => {
+      const value = flowsWithIds.getValue(id._legacy);
+      return Promise.resolve(new Flow(value || []));
+    };
+    const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
+    const network = this.createNetwork(ids, getFlow);
+    return this.run(ids, '', options || {}, network);
+  }
 }
 
-const network = ({} as Flows).createNetworkByFlowName([]);
-// eslint-disable-next-line promise/catch-or-return
-network
-  .execute({
-    traverse: 'both',
-    caching: true,
-    concurrency: 5
-  })
-  .then(subject => {
-    subject.subscribe({
-      next(data: any) {
-        if (data.type === 'network:start') {
-          //
-        } else if (data.type === 'network:result') {
-          //
-        }
-      },
-      complete() {}
-    });
-  })
-  .catch(e => e);
+export class IdsAndFlows extends BitIdAndValueArray<string[]> {}

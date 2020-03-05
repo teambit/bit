@@ -1,11 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ExtensionManifest } from '../../harmony';
-import { ScriptsExt, Scripts } from '../scripts';
-import { reactTask } from './react.task';
+import { Flows, FlowsExt } from '../flows';
 
 export const ReactExtension: ExtensionManifest = {
   name: 'react',
-  dependencies: [ScriptsExt],
-  provider: async (config: {}, [pipes]: [Scripts]) => {
-    // pipes.register('react', reactTask);
-  }
+  dependencies: [FlowsExt],
+  provider: async (config: {}, [flows]: [Flows]) => {}
 };

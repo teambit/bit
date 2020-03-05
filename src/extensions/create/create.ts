@@ -2,7 +2,6 @@
 import path from 'path';
 import { Workspace } from '../workspace';
 import { ExtensionManifest, Harmony } from '../../harmony';
-import { ExtensionNotFound } from '../scripts/exceptions';
 import { BitId } from '../../bit-id';
 import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -13,6 +12,8 @@ import { AddActionResults } from '../../consumer/component-ops/add-components/ad
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
 type TemplateFunc = (...args: string[]) => TemplateFuncResult;
+
+const ExtensionNotFound = 'Extensions not found.';
 
 export class TemplateFileVinyl extends AbstractVinyl {}
 
@@ -91,7 +92,7 @@ export class Registry {
    */
   get(name: string) {
     const scripts = this.templates[name];
-    if (!scripts) throw new ExtensionNotFound();
+    if (!scripts) throw new Error(ExtensionNotFound);
     return this.templates[name] || DEFAULT_TEMPLATE;
   }
 
@@ -100,7 +101,7 @@ export class Registry {
    */
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
     const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new ExtensionNotFound(manifest.name);
+    if (!extension) throw new Error(`${ExtensionNotFound} ${manifest.name}`);
     if (!this.templates[extension.name]) this.templates[extension.name] = {};
     this.templates[extension.name] = templateFunc;
     return this;

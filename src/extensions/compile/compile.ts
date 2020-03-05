@@ -6,8 +6,9 @@ import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { ComponentCapsule } from '../capsule/component-capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scripts } from '../scripts';
-import { IdsAndScripts } from '../scripts/ids-and-scripts';
+import { Flows } from '../flows';
+import { IdsAndFlows } from '../flows/flows';
+// import { IdsAndScripts } from '../scripts/ids-and-scripts';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -16,21 +17,24 @@ export type ComponentAndCapsule = {
 };
 
 export class Compile {
-  constructor(private workspace: Workspace, private scripts: Scripts) {}
+  constructor(private workspace: Workspace, private flows: Flows) {}
 
   async compile(componentsIds: string[]) {
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
     // @todo: that's a hack to get the extension name saved in the "build" pipeline.
     // we need to figure out where to store the specific compiler extensions
-    const idsAndScriptsArr = componentAndCapsules
+    const idsAndFlowsArr = componentAndCapsules
       .map(c => {
         const compiler = c.component.config?.extensions?.compile?.compiler;
         return { id: c.consumerComponent.id, value: compiler ? [compiler] : [] };
       })
       .filter(i => i.value);
-    const idsAndScripts = new IdsAndScripts(...idsAndScriptsArr);
+    const idsAndFlows = new IdsAndFlows(...idsAndFlowsArr);
     const resolvedComponents = await getResolvedComponents(componentsIds, this.workspace);
-    return this.scripts.runMultiple(idsAndScripts, resolvedComponents);
+    return this.flows.runMultiple(
+      idsAndFlows,
+      resolvedComponents.map(comp => comp.capsule)
+    );
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
