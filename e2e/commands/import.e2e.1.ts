@@ -71,9 +71,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/imprel'
+        });
         helper.command.tagComponent('imprel/imprel');
         helper.command.exportComponent('imprel/imprel');
         helper.scopeHelper.reInitLocalScope();
@@ -392,9 +394,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/impreldist'
+        });
         helper.command.tagComponent('imprel/impreldist');
         helper.command.exportComponent('imprel/impreldist');
       });
@@ -532,9 +536,11 @@ describe('bit import', function() {
       helper.fs.createFile('src', 'imprel.js');
       helper.fs.createFile('src', 'imprel.spec.js');
       helper.fs.createFile('src/utils', 'myUtil.js');
-      helper.command.runCmd(
-        'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-      );
+      helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+        t: 'src/imprel.spec.js',
+        m: 'src/imprel.js',
+        i: 'imprel/imprel'
+      });
       helper.command.tagComponent('imprel/imprel');
       helper.command.deprecateComponent('imprel/imprel');
       helper.command.exportComponent('imprel/imprel');

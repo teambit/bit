@@ -29,7 +29,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { m: 'foo.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -59,7 +59,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { m: 'png_fixture.png', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -112,7 +112,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/png' });
+      helper.command.addComponentDir('bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
@@ -494,7 +494,7 @@ describe('binary files', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'my-comp.md', 'some md5 content');
       helper.fs.createFile('bar', 'my-comp.js');
-      helper.command.addComponent('bar', { m: 'my-comp.js', i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { m: 'my-comp.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.env.importDummyCompiler();

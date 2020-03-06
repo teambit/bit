@@ -810,7 +810,7 @@ describe('bit tag command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     it('Should tag component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -827,7 +827,7 @@ describe('bit tag command', function() {
       let errMsg;
       helper.fs.createFile('bar', 'foo.js', '');
       helper.fs.createFile('bar', 'index.js', 'var foo = require("./foo.js")');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
       helper.fs.deletePath('bar/foo.js');
       try {
         helper.command.runCmd('bit tag -a');

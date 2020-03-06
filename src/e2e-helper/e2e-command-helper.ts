@@ -72,6 +72,12 @@ export default class CommandHelper {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
+  }
+  addComponentDir(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
   getConfig(configName: string) {

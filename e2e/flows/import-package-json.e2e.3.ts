@@ -91,7 +91,7 @@ describe('component with package.json as a file of the component', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('bar/package.json', fixturePackageJson);
       helper.fs.createFile('bar', 'foo.js');
-      const addOutput = helper.command.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
+      const addOutput = helper.command.addComponentDir('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

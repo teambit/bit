@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - deprecate files overrides (using file:// prefix)
+- disallow adding individual files by `bit add` unless `--allow-files` flag is used
 - introduce `bit link --rewire` to change relative paths in the source code to module paths
 - prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
 - prevent exporting components when import/require uses a module path with no scope-name
