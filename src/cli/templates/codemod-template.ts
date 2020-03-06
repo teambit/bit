@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { CodemodResult } from '../../consumer/component-ops/codemod-components';
 
-// eslint-disable-next-line import/prefer-default-export
 export function codemodTemplate(results: CodemodResult[]): string {
   const reportComponents = results
     .map(result => {

@@ -59,7 +59,6 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export const FileStatusWithoutChalk = R.fromPairs(
   Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );

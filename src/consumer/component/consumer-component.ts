@@ -50,7 +50,6 @@ import { RawTestsResults } from '../specs-results/specs-results';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
-import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
 import EjectToWorkspace from './exceptions/eject-to-workspace';

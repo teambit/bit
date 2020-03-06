@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 describe('typescript components with link files', function() {

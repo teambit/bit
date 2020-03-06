@@ -14,7 +14,6 @@ export type CodemodResult = {
   warnings?: string[];
 };
 
-// eslint-disable-next-line import/prefer-default-export
 export async function changeCodeFromRelativeToModulePaths(components: Component[]): Promise<CodemodResult[]> {
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();

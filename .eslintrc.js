@@ -41,6 +41,7 @@ module.exports = {
     'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'prefer-object-spread': 'off',
     'import/no-duplicates': 'off',
+    'import/prefer-default-export': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
     'import/no-useless-path-segments': 'off',
