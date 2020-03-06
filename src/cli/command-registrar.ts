@@ -73,12 +73,10 @@ function execAction(command, concrete, args) {
   if (flags[TOKEN_FLAG_NAME]) {
     globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
   }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (flags.json) {
     loader.off();
-    logger.shouldWriteToConsole = false;
   }
+  logger.shouldWriteToConsole = !flags.json;
   const migrateWrapper = (run: boolean) => {
     if (run) {
       logger.debug('Checking if a migration is needed');
@@ -248,7 +246,10 @@ export default class CommandRegistrar {
           `warning: '${chalk.bold(subcommand)}' is not a valid command.\nsee 'bit --help' for additional information.\n`
         )
       );
-      const suggestion = didYouMean(subcommand, commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name));
+      const suggestion = didYouMean(
+        subcommand,
+        commander.commands.filter(c => !c._noHelp).map(cmd => cmd._name)
+      );
       if (suggestion) {
         const match = typeof suggestion === 'string' ? suggestion : suggestion[0];
         console.log(chalk.red(`Did you mean ${chalk.bold(match)}?`)); // eslint-disable-line no-console

@@ -215,6 +215,12 @@ describe('workspace config', function() {
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
         });
+        it('should show a warning saying that this feature is deprecated', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string(
+            'warning: file overrides (using "file://") is deprecated and will be removed on the next major version'
+          );
+        });
         it('should not add any dependency to the component', () => {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
