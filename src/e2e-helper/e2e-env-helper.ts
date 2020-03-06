@@ -121,7 +121,7 @@ export default class EnvHelper {
       }
     });
     this.command.runCmd('npm install', tempScopePath);
-    this.command.addComponent('tester.js', { i: 'tester/dummy' }, tempScopePath);
+    this.command.addComponent('tester.js', { i: 'testers/dummy' }, tempScopePath);
     this.command.runCmd('bit tag testers/dummy -m msg', tempScopePath);
 
     fs.emptyDirSync(this.scopes.envPath);
