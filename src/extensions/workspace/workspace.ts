@@ -4,7 +4,7 @@ import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import { Network } from '../network';
+import { Isolator } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -31,7 +31,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly network: Network,
+    readonly isolateEnv: Isolator,
 
     private componentList: ComponentsList = new ComponentsList(consumer)
   ) {}
@@ -96,12 +96,11 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const subNetwork = await this.network.createSubNetwork(
+    const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
-      this.consumer,
-      { workspace: this.path }
+      this.consumer
     );
-    const capsulesMap = subNetwork.capsules.reduce((accum, curr) => {
+    const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;
     }, {});

@@ -1,4 +1,4 @@
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
@@ -9,7 +9,7 @@ export default class ComponentFactory {
     /**
      * instance of the capsule orchestrator
      */
-    private network: Network
+    private isolateEnv: Isolator
   ) {}
 
   create() {}
@@ -28,7 +28,7 @@ export default class ComponentFactory {
       null,
       State.fromLegacy(legacyComponent),
       undefined,
-      this.network
+      this.isolateEnv
     );
   }
 }

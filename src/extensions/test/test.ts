@@ -2,14 +2,14 @@ import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule/component-capsule';
+import { Capsule } from '../isolator/capsule';
 import { Compile } from '../compile/compile';
 import ComponentsList from '../../consumer/component/components-list';
 
 export type ComponentsAndCapsules = {
   consumerComponent: ConsumerComponent;
   component: Component;
-  capsule: ComponentCapsule;
+  capsule: Capsule;
 };
 
 export class Test {

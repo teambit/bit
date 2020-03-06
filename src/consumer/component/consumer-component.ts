@@ -71,7 +71,7 @@ import Isolator, { IsolateOptions } from '../../environment/isolator';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
-import { ComponentCapsule } from '../../extensions/capsule/component-capsule';
+import { Capsule } from '../../extensions/isolator/capsule';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -727,7 +727,7 @@ export default class Component {
           shouldBuildDependencies?: boolean;
           installNpmPackages?: boolean;
           keepExistingCapsule?: boolean;
-        }): Promise<{ capsule: ComponentCapsule; componentWithDependencies: ComponentWithDependencies }> => {
+        }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
           shouldBuildDependencies;
           const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
           const componentWithDependencies = await isolator.isolate(component.id, {
