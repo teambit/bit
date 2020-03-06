@@ -1310,7 +1310,7 @@ describe('bit add command', function() {
     });
     it('should throw an error AddingIndividualFiles', () => {
       const addFunc = () => helper.command.addComponentDir('bar/foo.js');
-      const error = new AddingIndividualFiles('bar/foo.js');
+      const error = new AddingIndividualFiles(path.normalize('bar/foo.js'));
       helper.general.expectToThrow(addFunc, error);
     });
   });
