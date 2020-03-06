@@ -81,7 +81,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags, this.isolateEnv);
+    return new Component(this.id, snap, snap.state, this.tags, this.isolator);
   }
 
   /**
