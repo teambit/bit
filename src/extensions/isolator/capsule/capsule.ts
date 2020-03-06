@@ -1,15 +1,17 @@
-import { realpathSync } from 'fs';
-import { Capsule, Exec, Console, State } from '@teambit/capsule';
-import { NodeFS } from '@teambit/any-fs';
-import _ from 'lodash';
+import os from 'os';
+import v4 from 'uuid';
+import path from 'path';
+import hash from 'object-hash';
+import filenamify from 'filenamify';
 import librarian from 'librarian';
+import { realpathSync } from 'fs';
+import { Capsule as CapsuleTemplate, Exec, Console, State } from '@teambit/capsule';
+import { NodeFS } from '@teambit/any-fs';
 import FsContainer, { BitExecOption } from './container';
-import { Component, ComponentID } from '../../component';
 import BitId from '../../../bit-id/bit-id';
 
-export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
+export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
   private _wrkDir: string;
-  private _new = false;
   constructor(
     /**
      * container implementation the capsule is being executed within.
@@ -33,50 +35,12 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     this._wrkDir = container.wrkDir;
   }
 
-  get new(): boolean {
-    return this._new;
-  }
-
-  set new(value: boolean) {
-    this._new = value;
-  }
-
   get wrkDir(): string {
     return realpathSync(this._wrkDir);
   }
 
-  // implement this to handle capsules ids.
-  get id(): string {
-    return this.bitId.toString();
-  }
-
-  get containerId(): string {
-    return this.container.id;
-  }
-
   start(): Promise<any> {
     return this.container.start();
-  }
-
-  on(event: string, fn: (data: any) => void) {
-    this.container.on(event, fn);
-  }
-
-  // async terminal(shell: string = process.env.SHELL || '/bin/sh') {
-  async terminal() {
-    return this.container.terminal();
-  }
-
-  serialize(): string {
-    return JSON.stringify({
-      id: this.containerId,
-      wrkDir: this.container.wrkDir,
-      bitId: this.bitId,
-      options: _.omit(this.config, ['bitId', 'wrkDir'])
-    });
-  }
-  static deSerializeConfig(config: any): string {
-    return Object.assign({}, config, { bitId: new BitId(config.bitId) });
   }
 
   async execNode(executable: string, args: any) {
@@ -97,23 +61,22 @@ export default class ComponentCapsule extends Capsule<Exec, NodeFS> {
     return this.container.symlink(src, dest);
   }
 
-  pause() {
-    return this.container.pause();
-  }
+  static async createFromBitId(bitId: BitId, baseDir: string, opts?: {}): Promise<Capsule> {
+    // TODO: make this a static method and combine with ComponentCapsule
+    const config = Object.assign(
+      {
+        alwaysNew: false,
+        name: undefined
+      },
+      opts
+    );
 
-  resume() {
-    return this.container.resume();
-  }
+    const capsuleDirName = config.name || filenamify(bitId.toString(), { replacement: '_' });
+    const wrkDir = path.join(baseDir, config.alwaysNew ? `${capsuleDirName}_${v4()}` : capsuleDirName);
 
-  stop() {
-    return this.container.stop();
-  }
-
-  status() {
-    return this.container.inspect();
-  }
-
-  destroy() {
-    return this.container.stop();
+    const container = new FsContainer(wrkDir);
+    const capsule = new Capsule(container, container.fs, new Console(), new State(), bitId);
+    await capsule.start();
+    return capsule;
   }
 }

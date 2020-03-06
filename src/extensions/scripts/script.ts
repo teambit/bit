@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Exec } from '@teambit/capsule';
-import { ComponentCapsule } from '../capsule/component-capsule';
+import { Capsule } from '../isolator/capsule';
 
 export class Script {
   constructor(
@@ -19,7 +19,7 @@ export class Script {
    * execute the script on a given capsule
    * @param capsule capsule to execute on
    */
-  async run(capsule: ComponentCapsule) {
+  async run(capsule: Capsule) {
     // if (this.modulePath) return capsule.run(this.modulePath);
     return this.modulePath ? this.executeModule(capsule) : this.executeCmd(capsule);
   }
@@ -38,7 +38,7 @@ export class Script {
     return new Script(cmd);
   }
 
-  private async executeCmd(capsule: ComponentCapsule, executable = '') {
+  private async executeCmd(capsule: Capsule, executable = '') {
     const command = (executable || this.executable).split(' ');
     const exec: Exec = executable
       ? await capsule.execNode(command[0], { args: command.slice(1), stdio: [null, null, null, 'ipc'] })
@@ -47,7 +47,7 @@ export class Script {
     return exec;
   }
 
-  private async executeModule(capsule: ComponentCapsule) {
+  private async executeModule(capsule: Capsule) {
     const containerScriptName = '__bit-run-container.js';
     const pathToTask = this.modulePath!.startsWith('/') ? this.modulePath!.slice(1) : this.modulePath;
     // @todo: currently it only runs when the script file has default export or module.exports

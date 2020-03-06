@@ -7,13 +7,10 @@ import fs from 'fs-extra';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { BitId } from '../../bit-id';
 import { CACHE_ROOT } from '../../constants';
-import { WorkspaceCapsules } from './types';
 import { Component, ComponentID } from '../component';
 import ConsumerComponent from '../../consumer/component';
-import { ComponentCapsule } from '../capsule/component-capsule';
-import { CapsuleOptions, CreateOptions } from './orchestrator/types';
 import { PackageManager } from '../package-manager';
-import { Capsule } from '../capsule';
+import { Capsule } from './capsule';
 import Consumer from '../../consumer/consumer';
 import { getComponentLinks } from '../../links/link-generator';
 import { getManipulateDirForComponentWithDependencies } from '../../consumer/component-ops/manipulate-dir';
@@ -28,14 +25,14 @@ import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
-export type NetworkDeps = [PackageManager, Capsule];
+export type IsolatorDeps = [PackageManager];
 
 export type ListResults = {
   workspace: string;
   capsules: string[];
 };
 
-export type SubNetwork = {
+export type Network = {
   capsules: CapsuleList;
   components: Graph;
 };
@@ -49,21 +46,21 @@ function findSuccessorsInGraph(graph, seeders) {
   return components;
 }
 
-export default class Network {
-  constructor(private packageManager: PackageManager, private capsule: Capsule) {}
+export default class Isolator {
+  constructor(private packageManager: PackageManager) {}
 
-  async createSubNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<SubNetwork> {
+  async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
     const graph = await Graph.buildGraphFromWorkspace(consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
-    return this.createSubNetwork(seeders, graph, baseDir, opts);
+    return this.createNetwork(seeders, graph, baseDir, opts);
   }
-  async createSubNetworkFromScope(seeders: string[], opts?: CapsuleOptions): Promise<SubNetwork> {
+  async createNetworkFromScope(seeders: string[], opts?: {}): Promise<Network> {
     const scope = await loadScope(process.cwd());
     const graph = await Graph.buildGraphFromScope(scope);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(scope.path)); // TODO: move this logic elsewhere
-    return this.createSubNetwork(seeders, graph, baseDir, opts);
+    return this.createNetwork(seeders, graph, baseDir, opts);
   }
-  async createSubNetwork(seeders: string[], graph: Graph, baseDir, opts?: {}) {
+  async createNetwork(seeders: string[], graph: Graph, baseDir, opts?: {}) {
     const config = Object.assign(
       {},
       {
@@ -86,11 +83,12 @@ export default class Network {
       components: graph
     };
   }
-  private async createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<ComponentCapsule[]> {
-    const capsules: ComponentCapsule[] = await Promise.all(
+  private async createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
+    const capsules: Capsule[] = await Promise.all(
       map((component: Component) => {
         // @ts-ignore - fix by moving to componentId
-        return this.capsule.create(component.id, baseDir, orchOptions);
+        // return this.capsule.create(component.id, baseDir, orchOptions);
+        return Capsule.createFromBitId(component.id, baseDir, orchOptions);
       }, components)
     );
     return capsules;
@@ -114,7 +112,7 @@ export default class Network {
     }
   }
 
-  private _buildCapsulePaths(capsules: ComponentCapsule[]): CapsulePaths {
+  private _buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
     const capsulePaths = capsules.map(componentCapsule => ({
       id: componentCapsule.bitId,
       value: componentCapsule.wrkDir
@@ -187,8 +185,8 @@ export default class Network {
     return manyComponentsWriter.writtenComponents;
   }
 
-  static async provide(config: any, [packageManager, capsule]: NetworkDeps) {
-    return new Network(packageManager, capsule);
+  static async provide(config: any, [packageManager]: IsolatorDeps) {
+    return new Isolator(packageManager);
   }
 
   _manipulateDir(componentWithDependencies: ComponentWithDependencies) {

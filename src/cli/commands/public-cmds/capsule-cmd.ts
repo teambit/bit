@@ -3,11 +3,11 @@ import _ from 'lodash';
 import Command from '../../command';
 import { loadConsumerIfExist } from '../../../consumer';
 import { capsuleIsolate } from '../../../api/consumer';
-import { ComponentCapsule } from '../../../extensions/capsule/component-capsule';
+import { Capsule } from '../../../extensions/isolator/capsule';
 import { PackageManager } from '../../../extensions/package-manager';
-import { Capsule } from '../../../extensions/capsule';
-import { Network } from '../../../extensions/network';
-import { ListResults } from '../../../extensions/network/orchestrator/types';
+// import { Capsule } from '../../../extensions/capsule';
+import { Isolator } from '../../../extensions/isolator';
+import { ListResults } from '../../../extensions/isolator/isolator';
 import { render } from '../../../utils';
 
 export class CapsuleList extends Command {
@@ -24,9 +24,9 @@ export class CapsuleList extends Command {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
     const packageManager = new PackageManager('librarian');
-    const capsule = await Capsule.provide();
-    const network = await Network.provide(undefined, [packageManager, capsule]);
-    return network.list(consumer);
+    // const capsule = await Capsule.provide();
+    const isolatorExt = await Isolator.provide(undefined, [packageManager]);
+    return isolatorExt.list(consumer);
   }
 
   report(capsuleListByWorkspace: ListResults[] | ListResults, ...args): string {
@@ -68,7 +68,7 @@ export class CapsuleCreate extends Command {
     );
   }
 
-  report(capsuleObj: { [bitId: string]: ComponentCapsule }): string {
+  report(capsuleObj: { [bitId: string]: Capsule }): string {
     const createdCapsules = Object.values(capsuleObj).map(capsule => {
       return {
         bitId: capsule.bitId.toString(),
