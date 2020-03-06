@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
@@ -8,7 +9,6 @@ import GeneralError from '../../error/general-error';
 import AbstractConfig from './abstract-config';
 import { DEPENDENCIES_FIELDS, OVERRIDE_FILE_PREFIX } from '../../constants';
 import logger from '../../logger/logger';
-import chalk from 'chalk';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Record<string, any>;
