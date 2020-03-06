@@ -96,18 +96,24 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} `);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths`);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
+    this.linkAndRewire();
+    const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);
   }
 
   untag(id: string) {
@@ -120,6 +126,9 @@ export default class CommandHelper {
   }
   exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --force`);
+  }
+  exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
+    return this.runCmd(`bit export ${scope} --rewire --force`);
   }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
@@ -252,6 +261,12 @@ export default class CommandHelper {
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
+  link() {
+    return this.runCmd('bit link');
+  }
+  linkAndRewire() {
+    return this.runCmd('bit link --rewire');
   }
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options

@@ -15,13 +15,22 @@ import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
+import { changeCodeFromRelativeToModulePaths, CodemodResult } from '../consumer/component-ops/codemod-components';
 
-export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
+export async function linkAllToNodeModules(
+  consumer: Consumer,
+  changeRelativeToModulePaths = false
+): Promise<{ linksResults: LinksResult[]; codemodResults?: CodemodResult[] }> {
   const componentsIds = consumer.bitmapIds;
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
-  return nodeModuleLinker.link();
+  const linksResults = await nodeModuleLinker.link();
+  let codemodResults;
+  if (changeRelativeToModulePaths) {
+    codemodResults = await changeCodeFromRelativeToModulePaths(components);
+  }
+  return { linksResults, codemodResults };
 }
 
 export async function getLinksInDistToWrite(

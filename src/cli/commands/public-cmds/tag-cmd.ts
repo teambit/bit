@@ -30,6 +30,7 @@ export default class Tag extends Command {
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
+    ['', 'allow-relative-paths', 'allow components to require each other using relative paths (not recommended)'],
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents']
   ];
@@ -50,6 +51,7 @@ export default class Tag extends Command {
       ignoreMissingDependencies = false,
       ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
+      allowRelativePaths = false,
       skipTests = false,
       skipAutoTag = false,
       scope
@@ -64,6 +66,7 @@ export default class Tag extends Command {
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
       ignoreNewestVersion?: boolean;
+      allowRelativePaths: boolean;
       skipTests?: boolean;
       skipAutoTag?: boolean;
       scope?: string;
@@ -108,6 +111,7 @@ export default class Tag extends Command {
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
+      allowRelativePaths,
       skipTests,
       skipAutoTag
     };

@@ -72,6 +72,7 @@ import Capsule from '../../../components/core/capsule';
 import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../extensions/extension-isolate-result';
+import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -172,9 +173,7 @@ export default class Component {
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: { [label: keyof typeof componentIssuesLabels]: { [fileName: string]: string[] | BitId[] | string | BitId } };
+  issues?: Issues;
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;
