@@ -67,7 +67,7 @@ export default class Component {
     const id = this.id.toString();
     const consumer = await loadConsumerIfExist();
     const subNetwork = consumer
-      ? await this.network.createSubNetwork([id], consumer)
+      ? await this.network.createSubNetworkFromConsumer([id], consumer)
       : await this.network.createSubNetworkFromScope([id]);
     return subNetwork.capsules[id];
   }

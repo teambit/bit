@@ -24,7 +24,7 @@ export class CapsuleList extends Command {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
     const packageManager = new PackageManager('librarian');
-    const capsule = await Capsule.provide(undefined, [packageManager]);
+    const capsule = await Capsule.provide();
     const network = await Network.provide(undefined, [packageManager, capsule]);
     return network.list(consumer);
   }

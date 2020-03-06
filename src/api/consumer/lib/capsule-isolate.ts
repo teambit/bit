@@ -9,8 +9,8 @@ export default (async function capsuleIsolate(bitIds: string[], capsuleOptions: 
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new Error('no consumer found');
   const packageManager = new PackageManager('librarian');
-  const capsule = await Capsule.provide(undefined, [packageManager]);
+  const capsule = await Capsule.provide();
   const network = await Network.provide(undefined, [packageManager, capsule]);
-  const subNetwork = await network.createSubNetwork(bitIds, consumer, capsuleOptions);
+  const subNetwork = await network.createSubNetworkFromConsumer(bitIds, consumer, capsuleOptions);
   return subNetwork.capsules;
 });

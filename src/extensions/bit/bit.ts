@@ -82,7 +82,7 @@ export default class Bit {
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const subNetwork = await this.network.createSubNetwork(
+      const subNetwork = await this.network.createSubNetworkFromConsumer(
         extensionsComponents.map(c => c.id.toString()),
         this.workspace.consumer,
         { packageManager: 'yarn' }
