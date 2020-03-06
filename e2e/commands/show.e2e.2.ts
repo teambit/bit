@@ -41,7 +41,7 @@ describe('bit show command', function() {
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
       helper.fs.createFile('src/utils', 'utilFile.js');
-      helper.command.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
+      helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', { m: 'src/mainFile.js', i: 'comp/comp' });
       helper.command.tagComponent('comp/comp');
     });
 

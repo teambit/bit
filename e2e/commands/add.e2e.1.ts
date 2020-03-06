@@ -592,7 +592,7 @@ describe('bit add command', function() {
     it('should throw an error when main file is excluded', () => {
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo2.js');
-      const addCmd = () => helper.command.runCmd('bit add bar/*.js -e bar/foo2.js -m bar/foo2.js');
+      const addCmd = () => helper.command.addComponent('bar/*.js', { e: 'bar/foo2.js', m: 'bar/foo2.js' });
       const error = new ExcludedMainFile(path.join('bar', 'foo2.js'));
       helper.general.expectToThrow(addCmd, error);
     });
@@ -1205,7 +1205,7 @@ describe('bit add command', function() {
       helper.scopeHelper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
-      const addCmd = () => helper.command.runCmd('bit add ../foo.js', consumerDir);
+      const addCmd = () => helper.command.addComponent('../foo.js', undefined, consumerDir);
       const error = new PathOutsideConsumer(path.normalize('../foo.js'));
       helper.general.expectToThrow(addCmd, error);
     });
@@ -1220,7 +1220,7 @@ describe('bit add command', function() {
       helper.scopeHelper.initWorkspace(consumerDir);
     });
     it('should throw PathOutsideConsumer error', () => {
-      const addCmd = () => helper.command.runCmd('bit add ../foo', consumerDir);
+      const addCmd = () => helper.command.addComponent('../foo', undefined, consumerDir);
       const error = new PathOutsideConsumer(path.normalize('../foo'));
       helper.general.expectToThrow(addCmd, error);
     });
