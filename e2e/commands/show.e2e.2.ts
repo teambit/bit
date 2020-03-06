@@ -370,7 +370,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -401,7 +401,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {

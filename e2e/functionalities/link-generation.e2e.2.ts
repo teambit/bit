@@ -24,7 +24,7 @@ describe('link generation', function() {
       helper.fs.deletePath('bar');
       helper.command.status(); // removes the old directory 'bar' from .bitmap
       helper.fs.createFile('', 'bar');
-      helper.command.addComponent('bar', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       // a previous bug was throwing an error upon export "EISDIR: illegal operation on a directory, read"
       helper.command.exportAllComponents();

@@ -64,7 +64,7 @@ describe('bit export command', function() {
       createFile('bar', 'foo2');
       createFile('baz', 'foo1');
       createFile('baz', 'foo2');
-      helper.command.addComponent('bar', { m: 'foo1.js' });
+      helper.command.addComponentDir('bar', { m: 'foo1.js' });
       helper.command.addComponent('baz', { m: 'foo1.js' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -295,7 +295,7 @@ describe('bit export command', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { m: 'foo.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });

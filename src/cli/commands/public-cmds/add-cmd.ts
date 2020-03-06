@@ -12,7 +12,7 @@ import GeneralError from '../../../error/general-error';
 export default class Add extends Command {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
-  all flags support glob patterns and {PARENT} {FILE_NAME} annotations 
+  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components`;
   alias = 'a';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -24,12 +24,13 @@ export default class Add extends Command {
       'tests <file>/"<file>,<file>"',
       'specify test files to track. use quotation marks to list files or use a glob pattern'
     ],
-    ['n', 'namespace <namespace>', 'orginize component in a namespace'],
+    ['n', 'namespace <namespace>', 'organize component in a namespace'],
     [
       'e',
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
+    ['', 'allow-files', 'allow adding individual files (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
@@ -43,6 +44,7 @@ export default class Add extends Command {
       tests,
       namespace,
       exclude,
+      allowFiles = false,
       override = false
     }: {
       id: string | null | undefined;
@@ -50,6 +52,7 @@ export default class Add extends Command {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
+      allowFiles: boolean;
       override: boolean;
     }
   ): Promise<any> {
@@ -77,6 +80,7 @@ export default class Add extends Command {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
+      allowFiles,
       override
     });
   }
