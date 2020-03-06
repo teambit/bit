@@ -82,8 +82,8 @@ describe('bit export command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       createFile('bar', 'foo1');
       createFile('bar', 'foo2');
-      helper.command.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
-      helper.command.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponent('bar/foo1.js', { i: 'bar/foo1' });
+      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.command.tagAllComponents();
       // DO NOT change the next line to `helper.command.exportAllComponents()`. the current form catches some wierd bugs
       helper.command.exportComponent('bar/foo1 bar/foo2');
