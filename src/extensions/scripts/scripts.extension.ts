@@ -1,7 +1,7 @@
-import { ExtensionManifest, Harmony } from '@teambit/harmony';
+import { ExtensionManifest, Harmony, Extension } from '@teambit/harmony';
 import { Paper } from '../paper';
 import { RunCmd } from './run.cmd';
-import { Workspace } from '../workspace';
+import { Workspace, WorkspaceExt } from '../workspace';
 import { Pipe } from './pipe';
 import { getTopologicalWalker } from './walker';
 import { ScriptRegistry as Registry } from './registry';
@@ -9,6 +9,7 @@ import { Script } from './script';
 import { ScriptsOptions } from './scripts-options';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import { IdsAndScripts } from './ids-and-scripts';
+import { BitCliExt } from '../cli';
 
 export type ScriptDeps = [Paper, Workspace];
 
@@ -21,6 +22,9 @@ const DEFAULT_OPTIONS: ScriptsOptions = {
   traverse: 'both'
 };
 
+@Extension({
+  dependencies: [BitCliExt, WorkspaceExt]
+})
 export class Scripts {
   constructor(
     /**
@@ -133,7 +137,7 @@ export class Scripts {
   /**
    * provider method for the scripts extension.
    */
-  static async provide([cli, workspace]: ScriptDeps, harmony: Harmony) {
+  static async provider([cli, workspace]: ScriptDeps, harmony: Harmony) {
     const defaultScope = workspace ? workspace.consumer.config.defaultScope : undefined;
     const scripts = new Scripts(workspace, new Registry(harmony, defaultScope || null));
     cli.register(new RunCmd(scripts));

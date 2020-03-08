@@ -2,7 +2,7 @@ import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
 import { NetworkExt } from '../network';
 import provideBit from './bit.provider';
-import { ScriptsExt } from '../scripts';
+import { Scripts } from '../scripts';
 import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
 
@@ -17,7 +17,7 @@ export default {
     WorkspaceExt,
     ScopeExt,
     NetworkExt,
-    ScriptsExt,
+    Scripts,
     CompileExt,
     TestExt,
     ComposerExt,
