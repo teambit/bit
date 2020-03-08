@@ -1,6 +1,6 @@
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
-import { NetworkExt } from '../network';
+import { IsolatorExt } from '../isolator';
 import provideBit from './bit.provider';
 import { Scripts } from '../scripts';
 import { ComposerExt } from '../composer';
@@ -16,7 +16,7 @@ export default {
   dependencies: [
     WorkspaceExt,
     ScopeExt,
-    NetworkExt,
+    IsolatorExt,
     Scripts,
     CompileExt,
     TestExt,

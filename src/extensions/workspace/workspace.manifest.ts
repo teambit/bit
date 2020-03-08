@@ -1,10 +1,10 @@
 import workspaceProvider from './workspace.provider';
 import { ScopeExt } from '../scope';
 import { ComponentFactoryExt } from '../component';
-import { NetworkExt } from '../network';
+import { IsolatorExt } from '../isolator';
 
 export default {
   name: 'workspace',
-  dependencies: [ScopeExt, ComponentFactoryExt, NetworkExt],
+  dependencies: [ScopeExt, ComponentFactoryExt, IsolatorExt],
   provider: workspaceProvider
 };

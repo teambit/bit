@@ -2,9 +2,9 @@ import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Network } from '../network';
+import { Isolator } from '../isolator';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Network];
+export type WorkspaceDeps = [Scope, ComponentFactory, Isolator];
 
 export type WorkspaceConfig = {
   /**

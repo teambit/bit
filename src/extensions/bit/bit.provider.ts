@@ -1,10 +1,10 @@
 import { Harmony } from '@teambit/harmony';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
 import Bit from './bit';
 
-export type BitDeps = [Workspace, Scope, Network];
+export type BitDeps = [Workspace, Scope, Isolator];
 
 export type BitConfig = {};
 

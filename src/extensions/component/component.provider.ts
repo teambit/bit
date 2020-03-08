@@ -1,9 +1,9 @@
 import { ComponentFactory } from '../component';
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
 
-type ComponentDeps = [Network];
+type ComponentDeps = [Isolator];
 type ComponentConfig = {};
 
-export default async function componentProvider([network]: ComponentDeps) {
-  return new ComponentFactory(network);
+export default async function componentProvider([isolate]: ComponentDeps) {
+  return new ComponentFactory(isolate);
 }

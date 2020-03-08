@@ -2,7 +2,7 @@ import { Harmony } from '@teambit/harmony';
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
-import { Network } from '../network';
+import { Isolator } from '../isolator';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 
@@ -18,10 +18,7 @@ export default class Bit {
      */
     readonly workspace: Workspace | undefined,
 
-    /**
-     * reference to capsule network.
-     */
-    private network: Network,
+    private isolate: Isolator,
 
     /**
      * private reference to the instance of Harmony.
@@ -81,13 +78,13 @@ export default class Bit {
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
       const extensionsComponents = await this.workspace.getMany(nonRegisteredExtensions);
-      const subNetwork = await this.network.createSubNetwork(
+      const isolatedNetwork = await this.isolate.createNetworkFromConsumer(
         extensionsComponents.map(c => c.id.toString()),
         this.workspace.consumer,
         { packageManager: 'yarn' }
       );
 
-      const manifests = subNetwork.capsules.map(({ value, id }) => {
+      const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
         const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
