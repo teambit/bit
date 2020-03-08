@@ -1,4 +1,4 @@
-import { Harmony } from '@teambit/harmony';
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
@@ -51,8 +51,8 @@ export default class Bit {
   }
 
   async loadExtensions() {
-    const { extensionsManifests, extensionsConfig } = await this.resolveExtensions();
-    await this.harmony.set(extensionsManifests, extensionsConfig);
+    const { extensionsManifests } = await this.resolveExtensions();
+    await this.harmony.set(extensionsManifests);
   }
 
   /**
@@ -60,7 +60,7 @@ export default class Bit {
    * :TODO must be refactored by @gilad
    */
   private async resolveExtensions(): Promise<{
-    extensionsManifests: AnyExtension[];
+    extensionsManifests: ExtensionManifest[];
     extensionsConfig: { [extensionId: string]: any };
   }> {
     const result = {
