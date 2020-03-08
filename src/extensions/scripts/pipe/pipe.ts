@@ -1,6 +1,6 @@
 import pMapSeries from 'p-map-series';
 import { Script } from '../script';
-import { ComponentCapsule } from '../../capsule/component-capsule';
+import { Capsule } from '../../isolator/capsule';
 import { PipeReporter } from '../walker/execution-reporter';
 
 export class Pipe {
@@ -15,7 +15,7 @@ export class Pipe {
    * runs a pipe of scripts on a given component capsule.
    * @param capsule component capsule to act on
    */
-  async run(capsule: ComponentCapsule, reporter: PipeReporter) {
+  async run(capsule: Capsule, reporter: PipeReporter) {
     // should perform caching -> SHOULD BE series and nor Promise.all
     const results = pMapSeries(this.scripts, async (script: Script) => {
       const exec = await script.run(capsule);

@@ -7,7 +7,7 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
 import { loadConsumerIfExist } from '../../consumer';
 
 /**
@@ -35,7 +35,7 @@ export default class Component {
      */
     readonly tags: TagMap = new TagMap(),
 
-    private network: Network
+    private isolator: Isolator
   ) {}
 
   /**
@@ -66,10 +66,10 @@ export default class Component {
   async isolate() {
     const id = this.id.toString();
     const consumer = await loadConsumerIfExist();
-    const subNetwork = consumer
-      ? await this.network.createSubNetwork([id], consumer)
-      : await this.network.createSubNetworkFromScope([id]);
-    return subNetwork.capsules[id];
+    const isolatedEnvironment = consumer
+      ? await this.isolator.createNetworkFromConsumer([id], consumer)
+      : await this.isolator.createNetworkFromScope([id]);
+    return isolatedEnvironment.capsules[id];
   }
 
   capsule() {}
@@ -81,7 +81,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags, this.network);
+    return new Component(this.id, snap, snap.state, this.tags, this.isolator);
   }
 
   /**
