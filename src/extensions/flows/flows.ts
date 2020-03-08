@@ -12,6 +12,9 @@ import { BitId } from '../../bit-id';
 export class Flows {
   constructor(private workspace: Workspace) {}
 
+  getIds(ids: string[]) {
+    return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
+  }
   createNetwork(seeders: ComponentID[], getFlow: GetFlow) {
     return new Network(this.workspace, seeders, getFlow);
   }
@@ -43,6 +46,7 @@ export class Flows {
     return new Promise((resolve, reject) => {
       resultStream.subscribe({
         next(data: any) {
+          console.log('data: ', data.type);
           if (data.type === 'network:result') {
             resolve(data.value);
           }

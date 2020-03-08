@@ -4,7 +4,6 @@ import ContainerExec from '../../capsule/component-capsule/container-exec';
 export function createExecutionStream(exec: ContainerExec, id, time: Date = new Date()) {
   let message: any = null;
   const subscriber = new ReplaySubject();
-
   subscriber.next({
     type: 'task:start',
     id,
@@ -29,6 +28,7 @@ export function createExecutionStream(exec: ContainerExec, id, time: Date = new 
 
   // @ts-ignore
   exec.on('message', function(data) {
+    console.log('message:', data);
     message = data;
   });
 

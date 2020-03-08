@@ -14,7 +14,7 @@ describe('tasks/scripts functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  xdescribe('running build task', () => {
+  describe.only('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -66,7 +66,7 @@ describe('tasks/scripts functionality', function() {
       taskOutput = helper.command.runTask('build');
     });
     // @todo: improve!
-    it('should do something useful', () => {
+    it.only('should do something useful', () => {
       expect(taskOutput).to.have.string("Got Message from ChildProcess { dir: 'dist' }");
     });
     // @todo: move it from here.
