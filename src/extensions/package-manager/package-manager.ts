@@ -1,7 +1,7 @@
 import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
-import { ComponentCapsule } from '../capsule/component-capsule';
+import { Capsule } from '../isolator/capsule';
 import { pipeOutput } from '../../utils/child_process';
 
 export type installOpts = {
@@ -40,7 +40,7 @@ function linkBitBinInCapsule(capsule) {
 export default class PackageManager {
   constructor(readonly packageManagerName: string) {}
 
-  async runInstall(capsules: ComponentCapsule[], opts: installOpts = {}) {
+  async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));

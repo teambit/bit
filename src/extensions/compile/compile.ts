@@ -4,7 +4,7 @@ import { BitId } from '../../bit-id';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule/component-capsule';
+import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scripts } from '../scripts';
 import { IdsAndScripts } from '../scripts/ids-and-scripts';
@@ -12,7 +12,7 @@ import { IdsAndScripts } from '../scripts/ids-and-scripts';
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
   component: Component;
-  capsule: ComponentCapsule;
+  capsule: Capsule;
 };
 
 export class Compile {

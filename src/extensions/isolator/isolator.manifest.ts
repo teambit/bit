@@ -1,9 +1,9 @@
-import CapsuleFactory from './capsule';
+import Isolator from './isolator';
 import { PackageManagerExt } from '../package-manager';
 
 export default {
-  name: 'CapsuleFactory',
+  name: 'Isolator',
   dependencies: [PackageManagerExt],
   config: {},
-  provider: CapsuleFactory.provide
+  provider: Isolator.provide
 };

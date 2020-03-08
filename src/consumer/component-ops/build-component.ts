@@ -17,7 +17,7 @@ import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
 import Isolator from '../../environment/isolator';
-import { ComponentCapsule } from '../../extensions/capsule/component-capsule';
+import { Capsule } from '../../extensions/isolator/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import { CompilerResults } from '../../legacy-extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
@@ -301,7 +301,7 @@ async function _runBuild({
     shouldBuildDependencies?: boolean;
     installNpmPackages?: boolean;
     keepExistingCapsule?: boolean;
-  }): Promise<{ capsule: ComponentCapsule; componentWithDependencies: ComponentWithDependencies }> => {
+  }): Promise<{ capsule: Capsule; componentWithDependencies: ComponentWithDependencies }> => {
     shouldBuildUponDependenciesChanges = shouldBuildDependencies;
     const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
     const componentWithDependencies = await isolator.isolate(component.id, {

@@ -1,7 +1,5 @@
-import { Network } from '../network';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
 export default class Bit {
   constructor(
@@ -13,12 +11,7 @@ export default class Bit {
     /**
      * Workspace
      */
-    readonly workspace: Workspace | undefined,
-
-    /**
-     * reference to capsule network.
-     */
-    private network: Network
+    readonly workspace: Workspace | undefined
   ) {}
 
   /**

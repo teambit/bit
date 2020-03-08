@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { mergeAll } from 'ramda';
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
@@ -14,11 +14,11 @@ export default class ComponentFactory {
     /**
      * instance of the capsule orchestrator
      */
-    private network: Network
-  ) /**
-   * registry for config modifications funcion
-   */
-  // private configsRegistry: Registry
+    private isolateEnv: Isolator
+    /**
+     * registry for config modifications funcion
+     */
+  ) // private configsRegistry: Registry
   {}
 
   registerAddConfig(extensionId, configFunc: ConfigFunc) {
@@ -45,7 +45,7 @@ export default class ComponentFactory {
       null,
       State.fromLegacy(legacyComponent),
       undefined,
-      this.network
+      this.isolateEnv
     );
   }
 

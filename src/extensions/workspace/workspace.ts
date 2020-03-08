@@ -7,7 +7,7 @@ import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import { Network } from '../network';
+import { Isolator } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -43,7 +43,7 @@ export default class Workspace implements ComponentHost {
      */
     private componentFactory: ComponentFactory,
 
-    readonly network: Network,
+    readonly isolateEnv: Isolator,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -111,11 +111,11 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
-    const subNetwork = await this.network.createSubNetwork(
+    const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
-      { workspace: this.path }
+      this.consumer
     );
-    const capsulesMap = subNetwork.capsules.reduce((accum, curr) => {
+    const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;
     }, {});
@@ -205,11 +205,13 @@ export default class Workspace implements ComponentHost {
       }
     }
 
-    const subNetwork = await this.network.createSubNetwork(
+    const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
+      this.consumer,
       { packageManager: 'yarn' }
     );
-    const manifests = subNetwork.capsules.map(({ value, id }) => {
+
+    const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const mod = require(extPath);

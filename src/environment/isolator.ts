@@ -3,7 +3,7 @@ import * as path from 'path';
 import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import { runModule } from 'librarian';
-import { ComponentCapsule } from '../extensions/capsule/component-capsule';
+import { Capsule } from '../extensions/isolator/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
@@ -45,7 +45,7 @@ export interface IsolateOptions {
 }
 
 export default class Isolator {
-  capsule: ComponentCapsule;
+  capsule: Capsule;
   consumer?: Consumer;
   scope: Scope;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -62,7 +62,7 @@ export default class Isolator {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dir?: string;
 
-  constructor(capsule: ComponentCapsule, scope: Scope, consumer?: Consumer, dir?: string) {
+  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer, dir?: string) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
