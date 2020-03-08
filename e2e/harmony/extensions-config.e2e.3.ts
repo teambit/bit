@@ -58,10 +58,6 @@ describe('harmony extension config', function() {
         expect(output).to.have.string('has a dependency "my-ext"');
         expect(output).to.have.string('this dependency was not included in the tag command');
       });
-      it('should load the extension successfully with config', () => {
-        const status = helper.command.status();
-        expect(status).to.have.string(`hi there from an extension, got config: ${JSON.stringify(config)}`);
-      });
       describe('tagging extension and component together', () => {
         let componentModel;
         before(() => {
