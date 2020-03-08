@@ -28,8 +28,7 @@ export type Network = {
 async function createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
   const capsules: Capsule[] = await Promise.all(
     map((component: Component) => {
-      // @ts-ignore - fix by moving to componentId
-      return Capsule.createFromBitId(component.id, baseDir, orchOptions);
+      return Capsule.createFromComponent(component, baseDir, orchOptions);
     }, components)
   );
   return capsules;
