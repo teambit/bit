@@ -23,6 +23,7 @@ const DEFAULT_OPTIONS: ScriptsOptions = {
 };
 
 @Extension({
+  name: 'scripts',
   dependencies: [BitCliExt, WorkspaceExt]
 })
 export class Scripts {
