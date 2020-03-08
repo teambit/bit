@@ -5,6 +5,5 @@ import { ScopeExt } from '../scope';
 export default {
   name: 'ComponentResolver',
   dependencies: [WorkspaceExt, ScopeExt],
-  config: {},
   provider: componentResolverProvider
 };

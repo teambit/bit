@@ -8,7 +8,7 @@ export type ServeConfig = {};
 
 export type ServeDeps = [BitCli, Compile, Workspace];
 
-export async function provideTest(config: ServeConfig, [cli, compile, workspace]: ServeDeps) {
+export async function provideTest([cli, compile, workspace]: ServeDeps) {
   const test = new Test(compile, workspace);
   // @ts-ignore
   cli.register(new TestCmd(test));

@@ -4,8 +4,5 @@ import { providePaper } from './paper.provider';
 export default {
   name: 'Paper',
   dependencies: [],
-  config: {
-    silence: false
-  },
   provider: providePaper
 };

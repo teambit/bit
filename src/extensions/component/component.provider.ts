@@ -4,6 +4,6 @@ import Isolator from '../isolator/isolator';
 type ComponentDeps = [Isolator];
 type ComponentConfig = {};
 
-export default async function componentProvider(config: ComponentConfig, [isolate]: ComponentDeps) {
+export default async function componentProvider([isolate]: ComponentDeps) {
   return new ComponentFactory(isolate);
 }

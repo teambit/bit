@@ -6,6 +6,5 @@ import { WorkspaceExt } from '../workspace';
 export default {
   name: 'graph',
   dependencies: [ComponentFactoryExt, BitCliExt, WorkspaceExt],
-  config: {},
   provider: Graph.provide
 };

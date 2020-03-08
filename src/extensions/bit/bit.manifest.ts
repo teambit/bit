@@ -2,9 +2,8 @@ import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
 import { IsolatorExt } from '../isolator';
 import provideBit from './bit.provider';
-import { ScriptsExt } from '../scripts';
+import { Scripts } from '../scripts';
 import { ComposerExt } from '../composer';
-import { ReactExtension } from '../react/react.manifest';
 import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
@@ -18,15 +17,13 @@ export default {
     WorkspaceExt,
     ScopeExt,
     IsolatorExt,
-    ScriptsExt,
+    Scripts,
     CompileExt,
     TestExt,
     ComposerExt,
-    ReactExtension,
     GraphExt,
     InstallExt,
     CreateExt
   ],
-  config: {},
   provider: provideBit
 };

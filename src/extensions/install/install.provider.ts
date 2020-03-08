@@ -8,7 +8,7 @@ export type InstallConfig = {};
 
 export type InstallDeps = [BitCli, Workspace, PackageManager];
 
-export async function provideInstaller(config: InstallConfig, [cli, workspace, packageManager]: InstallDeps) {
+export async function provideInstaller([cli, workspace, packageManager]: InstallDeps) {
   // @ts-ignore
   const install = new Install(workspace, packageManager);
   cli.register(new InstallCmd(install));

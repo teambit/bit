@@ -1,7 +1,7 @@
 // :TODO make sure React is not an unused variable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Scripts } from './scripts';
+import { Scripts } from './scripts.extension';
 import { Command, CLIArgs } from '../cli';
 import { Flags, PaperOptions } from '../paper/command';
 
