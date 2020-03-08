@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { Harmony, ExtensionManifest } from '../../../harmony';
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { ExtensionNotFound } from '../exceptions';
 import { Script } from '../script';
 import componentIdToPackageName from '../../../utils/bit/component-id-to-package-name';
@@ -15,7 +15,7 @@ export class ScriptRegistry {
     /**
      * instance of harmony.
      */
-    private harmony: Harmony<unknown>,
+    private harmony: Harmony,
 
     /**
      * :TODO remove this ugly hack as well.
