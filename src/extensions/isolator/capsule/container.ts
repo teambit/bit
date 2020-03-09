@@ -1,10 +1,6 @@
 import fs from 'fs-extra';
-import _ from 'lodash';
-import hash from 'object-hash';
 import * as path from 'path';
 import execa from 'execa';
-import os from 'os';
-import v4 from 'uuid';
 import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
 import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { Stream } from 'stream';
@@ -54,18 +50,21 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     return fs.ensureSymlink(srcPath, destPath);
   }
 
-  async exec(execOptions: BitExecOption): Promise<ContainerExec> {
+  async exec(execOptions: BitExecOption, exec = new ContainerExec()): Promise<ContainerExec> {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
-    const exec = new ContainerExec();
     const subprocessP = execa.command(execOptions.command.join(' '), {
       shell: true,
-      cwd
+      cwd,
+      stdio: ['ipc']
     });
 
+    subprocessP.on('message', function(msg: any) {
+      exec.emit('message', msg);
+    });
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
-    subprocessP.stdout!.pipe(exec.stdout);
-    subprocessP.stderr!.pipe(exec.stderr);
+    subprocessP.stderr?.pipe(exec.stderr);
+    subprocessP.stdout?.pipe(exec.stdout);
     subprocessP.on('close', function(statusCode) {
       exec.setStatus(statusCode);
     });

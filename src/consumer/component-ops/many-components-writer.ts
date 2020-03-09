@@ -281,7 +281,6 @@ export default class ManyComponentsWriter {
         // When a component is NESTED we do interested in the exact version, because multiple
         // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
           writeConfig: false,
