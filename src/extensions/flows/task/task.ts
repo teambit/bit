@@ -15,6 +15,7 @@ export class Task {
 
     const time = new Date();
     const exec: ContainerExec = new ContainerExec();
+
     const stream = createExecutionStream(exec, `${capsule.id}:${task}`, time);
     if (isExtension(task)) {
       from(createHostScript(capsule, task)).subscribe(({ host, pathToScript }) => {

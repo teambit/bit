@@ -14,7 +14,7 @@ describe('flows functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('running build task', () => {
+  describe('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -33,7 +33,7 @@ describe('flows functionality', function() {
       // helper.bitJson.addDefaultScope();
       const extensions = {
         flows: {
-          build: ['extensions/gulp-ts']
+          build: ['#@bit/extensions.gulp-ts:transpile']
         },
         'extensions/gulp-ts': {},
         create: { template: 'extensions/gulp-ts' }
@@ -67,7 +67,7 @@ describe('flows functionality', function() {
     });
     // @todo: improve!
     it('should do something useful', () => {
-      expect(taskOutput).to.have.string("Got Message from ChildProcess { dir: 'dist' }");
+      expect(taskOutput).to.have.string('result');
     });
     // @todo: move it from here.
     describe('create', () => {

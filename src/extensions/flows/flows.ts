@@ -50,12 +50,13 @@ export class Flows {
       resultStream.subscribe({
         next(data: any) {
           if (data.type === 'network:result') {
-            resolve(data.value);
+            resolve(data);
           }
         },
         error(err: any) {
           reject(err);
-        }
+        },
+        complete() {}
       });
     });
   }
