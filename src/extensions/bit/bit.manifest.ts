@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
 import { IsolatorExt } from '../isolator';
@@ -26,4 +27,4 @@ export default {
     CreateExt
   ],
   provider: provideBit
-};
+} as ExtensionManifest;
