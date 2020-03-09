@@ -17,7 +17,7 @@ export const componentIssuesLabels = {
   missingDependenciesOnFs: 'non-existing dependency files (make sure all files exists on your workspace)',
   missingLinks: 'missing links between components(use "bit link" to build missing component links)',
   missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
-  relativeComponents: 'components with relative import statements found(use module paths for imported components)',
+  relativeComponents: 'components with relative import statements found (use module paths for imported components)',
   relativeComponentsAuthored:
     'components with relative import statements found (replace to module paths or use "bit link --rewire" to replace)',
   parseErrors: 'error found while parsing the file (edit the file and fix the parsing error)',

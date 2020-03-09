@@ -8,6 +8,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 let logSpy;
 const assertArrays = require('chai-arrays');
@@ -602,9 +603,7 @@ describe('bit tag command', function() {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('error: issues found with the following component dependencies');
-      expect(output).to.have.string(
-        'components with relative import statements (please use module paths for imported components)'
-      );
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
   });

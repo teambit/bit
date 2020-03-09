@@ -8,7 +8,7 @@ import * as fixtures from '../../src/fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import componentIssuesTemplate, { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -1394,9 +1394,10 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string(
-        `error: issues found with the following component dependencies\n\n${helper.scopes.remote}/utils/is-string@0.0.1\n       \n       components with relative import statements (please use module paths for imported components): \n          is-string.js -> utils/is-type\n\n`
-      );
+      expect(output).to.have.string('error: issues found with the following component dependencies');
+      expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
+      expect(output).to.have.string('is-string.js -> utils/is-type');
     });
   });
 
@@ -1426,9 +1427,7 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string(
-        'components with relative import statements (please use module paths for imported components)'
-      );
+      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
     });
   });
 
