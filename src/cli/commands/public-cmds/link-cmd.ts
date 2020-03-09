@@ -8,15 +8,11 @@ import { codemodTemplate } from '../../templates/codemod-template';
 
 export default class Link extends Command {
   name = 'link';
-  description = `generate symlinks for sourced components absolute path resolution.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
+  description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
   // @ts-ignore
   opts = [
-    [
-      'r',
-      'rewire',
-      'EXPERIMENTAL. change source code, replace relative paths with module paths (e.g. "../foo" => "@bit/foo")'
-    ]
+    ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")']
   ];
   private = false;
   loader = true;
