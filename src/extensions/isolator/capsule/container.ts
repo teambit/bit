@@ -1,10 +1,6 @@
 import fs from 'fs-extra';
-import _ from 'lodash';
-import hash from 'object-hash';
 import * as path from 'path';
 import execa from 'execa';
-import os from 'os';
-import v4 from 'uuid';
 import { Container, ExecOptions, Exec, ContainerStatus, ContainerFactoryOptions } from '@teambit/capsule';
 import { AnyFS, NodeFS } from '@teambit/any-fs';
 import { Stream } from 'stream';
