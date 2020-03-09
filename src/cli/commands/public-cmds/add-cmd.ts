@@ -30,7 +30,7 @@ export default class Add extends Command {
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
-    ['', 'allow-files', 'allow adding individual files to component(not recommended)'],
+    ['', 'allow-files', 'allow adding individual files to component (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
