@@ -7,7 +7,7 @@ export default (async function capsuleIsolate(bitIds: string[], capsuleOptions: 
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new Error('no consumer found');
   const packageManager = new PackageManager('librarian');
-  const network = await Isolator.provide(undefined, [packageManager]);
+  const network = await Isolator.provide([packageManager]);
   const isolatedEnvironment = await network.createNetworkFromConsumer(bitIds, consumer, capsuleOptions);
   return isolatedEnvironment.capsules;
 });

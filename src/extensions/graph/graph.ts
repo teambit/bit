@@ -24,7 +24,7 @@ export class Graph {
     return legacyGraph.isDirected();
   }
 
-  static async provide(config: {}, [componentFactory, cli, workspace]: GraphDeps) {
+  static async provide([componentFactory, cli, workspace]: GraphDeps) {
     const graph = new Graph(componentFactory, workspace);
     cli.register(new InsightsCmd(graph));
     return graph;

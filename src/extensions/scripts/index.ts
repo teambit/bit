@@ -1,2 +1,1 @@
-export { default as ScriptsExt } from './scripts.manifest';
-export { Scripts } from './scripts';
+export { Scripts } from './scripts.extension';

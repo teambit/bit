@@ -25,7 +25,7 @@ export class CapsuleList extends Command {
     if (!consumer) throw new Error('no consumer found');
     const packageManager = new PackageManager('librarian');
     // const capsule = await Capsule.provide();
-    const isolatorExt = await Isolator.provide(undefined, [packageManager]);
+    const isolatorExt = await Isolator.provide([packageManager]);
     return isolatorExt.list(consumer);
   }
 

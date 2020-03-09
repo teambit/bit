@@ -1,9 +1,8 @@
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
 import provideBit from './bit.provider';
-import { ScriptsExt } from '../scripts';
+import { Scripts } from '../scripts';
 import { ComposerExt } from '../composer';
-import { ReactExtension } from '../react/react.manifest';
 import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
@@ -13,18 +12,6 @@ import { CreateExt } from '../create';
 
 export default {
   name: 'Bit',
-  dependencies: [
-    WorkspaceExt,
-    ScopeExt,
-    ScriptsExt,
-    CompileExt,
-    TestExt,
-    ComposerExt,
-    ReactExtension,
-    GraphExt,
-    InstallExt,
-    CreateExt
-  ],
-  config: {},
+  dependencies: [WorkspaceExt, ScopeExt, Scripts, CompileExt, TestExt, ComposerExt, GraphExt, InstallExt, CreateExt],
   provider: provideBit
 };

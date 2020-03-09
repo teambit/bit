@@ -46,7 +46,7 @@ function findSuccessorsInGraph(graph, seeders) {
 
 export default class Isolator {
   constructor(private packageManager: PackageManager) {}
-  static async provide(config: any, [packageManager]: IsolatorDeps) {
+  static async provide([packageManager]: IsolatorDeps) {
     return new Isolator(packageManager);
   }
 

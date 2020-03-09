@@ -4,7 +4,7 @@ import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { WorkspaceConfig } from '../workspace-config';
-import { Harmony } from '../../harmony';
+import { Harmony } from '@teambit/harmony';
 import ComponentConfig from '../../consumer/config/component-config';
 import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
@@ -24,9 +24,8 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  config: WorkspaceCoreConfig,
   [workspaceConfig, scope, component, isolateEnv]: WorkspaceDeps,
-  harmony: Harmony<unknown>
+  harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the

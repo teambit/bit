@@ -69,9 +69,8 @@ export default class ExtensionsHelper {
       module.exports = {
         name: 'eslint',
         dependencies: [],
-        config: {},
-        provider: async (config) => {
-          console.log(\`hi there from an extension, got config: \${JSON.stringify(config)}\`)
+        provider: async () => {
+          console.log(\`hi there from an extension, got config: \${JSON.stringify()}\`)
         }
       };
       `;
