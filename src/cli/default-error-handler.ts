@@ -144,8 +144,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
   [
     AddingIndividualFiles,
-    err => `error: unable to add individual files ("${err.file}"), please add directories only.
-to bypass this error, use --allow-files flag`
+    err =>
+      `error: adding individual files is blocked ("${err.file}"), and only directories can be added. To force adding files use --allow-files flag`
   ],
   [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [

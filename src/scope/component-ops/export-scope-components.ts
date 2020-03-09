@@ -463,7 +463,7 @@ async function convertToCorrectScope(
       newFileString = replacePackageName(newFileString, pkgNameWithOldScope, pkgNameWithNewScope);
       if (!id.scope && !codemod && newFileString !== fileString && !isDist) {
         // if this is a dist file, no need for the --rewire flag, it should replace them regardless
-        throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" and "${id.toString()}"
+        throw new GeneralError(`please use "--rewire" flag to fix the import/require statements between "${componentId.toString()}" is requiring "${id.toString()}" with relative path
 the current import/require module has no scope-name, which result in an invalid module path upon import`);
       }
     });

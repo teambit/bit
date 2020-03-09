@@ -11,16 +11,16 @@ import { Analytics } from '../../analytics/analytics';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
-    'missing package dependencies (use `bit install` to make sure all dependencies are installed)',
-  missingComponents: 'missing components (use "bit import" or `bit install` to make sure all components are installed)',
+    'missing packages dependencies (use `bit install` to make sure all package dependencies are installed)',
+  missingComponents: 'missing components (use "bit import" or `bit install` to make sure all components exist)',
   untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',
-  missingDependenciesOnFs: 'non-existing dependency files (please make sure all files exists on your workspace)',
-  missingLinks: 'missing links (use "bit link" to build missing component links)',
+  missingDependenciesOnFs: 'non-existing dependency files (make sure all files exists on your workspace)',
+  missingLinks: 'missing links between components(use "bit link" to build missing component links)',
   missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
-  relativeComponents: 'components with relative import statements (please use module paths for imported components)',
+  relativeComponents: 'components with relative import statements found (use module paths for imported components)',
   relativeComponentsAuthored:
-    'components with relative import statements (please use module paths. can be auto-replaced by "bit link --rewire")',
-  parseErrors: 'error found while parsing the file (please edit the file and fix the parsing error)',
+    'components with relative import statements found (replace to module paths or use "bit link --rewire" to replace)',
+  parseErrors: 'error found while parsing the file (edit the file and fix the parsing error)',
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
 
