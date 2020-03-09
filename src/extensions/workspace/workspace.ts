@@ -89,6 +89,11 @@ export default class Workspace implements ComponentHost {
     return this.transformLegacyComponents(consumerComponents);
   }
 
+  async loadCapsules(bitIds: string[]) {
+    // throw new Error("Method not implemented.");
+    const components = await this.load(bitIds);
+    return components.map(comp => comp.capsule);
+  }
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
@@ -98,7 +103,10 @@ export default class Workspace implements ComponentHost {
     const components = await this.getMany(ids);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
-      this.consumer
+      this.consumer,
+      {
+        packageManager: 'npm'
+      }
     );
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
