@@ -8,7 +8,7 @@ import { ComponentWithDependencies } from '../scope';
 import Consumer from '../consumer/consumer';
 import { PathOsBasedRelative, PathAbsolute } from '../utils/path';
 import filterAsync from '../utils/array/filter-async';
-import { PACKAGE_JSON } from '../constants';
+import { PACKAGE_JSON, DEFAULT_PACKAGE_MANAGER } from '../constants';
 
 export async function installPackages(
   consumer: Consumer,
@@ -20,11 +20,12 @@ export async function installPackages(
   installProdPackagesOnly = false
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.config.workspaceSettings.packageManager.packageManager;
+  const packageManager = consumer.config.workspaceSettings?.packageManager?.packageManager || DEFAULT_PACKAGE_MANAGER;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.config.workspaceSettings.packageManager.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.config.workspaceSettings.packageManager.packageManagerProcessOptions;
+    : consumer.config.workspaceSettings?.packageManager?.packageManagerArgs || [];
+  const packageManagerProcessOptions =
+    consumer.config.workspaceSettings?.packageManager?.packageManagerProcessOptions || {};
   const useWorkspaces = consumer.config.workspaceSettings._useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
@@ -38,7 +39,7 @@ export async function installPackages(
     packageManager,
     packageManagerArgs,
     packageManagerProcessOptions,
-    useWorkspaces,
+    useWorkspaces: !!useWorkspaces,
     dirs: dirsWithPkgJson,
     rootDir: consumer.getPath(),
     installRootPackageJson,

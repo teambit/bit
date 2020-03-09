@@ -1,7 +1,7 @@
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { difference } from 'ramda';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
-import { Harmony } from '../../harmony';
 import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
@@ -13,7 +13,6 @@ import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { AnyExtension } from '../../harmony';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList } from '../workspace-config/extension-config-list';
@@ -50,7 +49,7 @@ export default class Workspace implements ComponentHost {
     /**
      * private reference to the instance of Harmony.
      */
-    private harmony: Harmony<unknown>
+    private harmony: Harmony
   ) {}
 
   /**
@@ -177,7 +176,7 @@ export default class Workspace implements ComponentHost {
     await this.loadExtensions(extensionsManifests, extensionsConfig);
   }
 
-  private async loadExtensions(extensionsManifests: AnyExtension[], extensionsConfig: ExtensionConfigList) {
+  private async loadExtensions(extensionsManifests: ExtensionManifest[], extensionsConfig: ExtensionConfigList) {
     await this.harmony.set(extensionsManifests, extensionsConfig.toObject());
   }
 
@@ -185,7 +184,7 @@ export default class Workspace implements ComponentHost {
    * load all of bit's extensions.
    * :TODO must be refactored by @gilad
    */
-  private async resolveExtensions(extensionsConfig: ExtensionConfigList): Promise<AnyExtension[]> {
+  private async resolveExtensions(extensionsConfig: ExtensionConfigList): Promise<ExtensionManifest[]> {
     const extensionsIds = extensionsConfig.ids;
 
     if (!extensionsIds || !extensionsIds.length) {

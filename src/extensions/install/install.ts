@@ -4,7 +4,7 @@ import { FailedToInstall } from './failed-to-install';
 import { Workspace } from '../workspace';
 import { PackageManager } from '../package-manager';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX, DEFAULT_PACKAGE_MANAGER } from '../../constants';
 
 export class Install {
   constructor(private workspace: Workspace, private packageManager: PackageManager) {}
@@ -12,7 +12,8 @@ export class Install {
     try {
       const components = await this.workspace.list();
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      const packageManagerName = this.workspace.consumer.config.workspaceSettings.packageManager.packageManager;
+      const packageManagerName =
+        this.workspace.consumer.config.workspaceSettings.packageManager?.packageManager || DEFAULT_PACKAGE_MANAGER;
 
       const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
       packageJson.dependencies = packageJson.dependencies || {};

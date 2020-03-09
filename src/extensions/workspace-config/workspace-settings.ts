@@ -1,7 +1,6 @@
 import { omit, pick, find, forEachObjIndexed } from 'ramda';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 // TODO: get the types in a better way
-import { PMConfig } from '../package-manager';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from './extension-config-list';
@@ -18,13 +17,21 @@ const WORKSPACE_EXT_PROPS = [
   'distEntry',
   'distTarget'
 ];
+
+export interface DependnecyResolverConfig {
+  packageManager: 'librarian' | 'npm' | 'yarn' | undefined;
+  strictPeerDependnecies?: boolean;
+  packageManagerProcessOptions?: any;
+  packageManagerArgs?: string[];
+}
+
 export interface WorkspaceSettingsProps {
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
   defaultScope?: string;
   saveDependenciesAsComponents?: boolean;
   resolveModules?: ResolveModulesConfig;
-  packageManager: PMConfig;
+  packageManager: DependnecyResolverConfig;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
   bindingPrefix?: string;
