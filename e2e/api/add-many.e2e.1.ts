@@ -156,6 +156,7 @@ describe('bit add many programmatically', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       nodeStartOutputObj = await api.addMany(components, helper.scopes.localPath);
       nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
+      helper.command.linkAndRewire();
       status = helper.command.status();
     });
     it('should add a component with no id and no spec', function() {

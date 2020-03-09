@@ -603,7 +603,7 @@ describe('bit tag command', function() {
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(
-        'components with relative import statements (please use absolute paths for imported components)'
+        'components with relative import statements (please use module paths for imported components)'
       );
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
@@ -810,7 +810,7 @@ describe('bit tag command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     it('Should tag component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -827,7 +827,7 @@ describe('bit tag command', function() {
       let errMsg;
       helper.fs.createFile('bar', 'foo.js', '');
       helper.fs.createFile('bar', 'index.js', 'var foo = require("./foo.js")');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
       helper.fs.deletePath('bar/foo.js');
       try {
         helper.command.runCmd('bit tag -a');
@@ -962,7 +962,7 @@ describe('bit tag command', function() {
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.command.addComponent('utils/is-type.js');
       helper.command.addComponent('utils/is-string.js');
-      output = helper.general.runWithTryCatch('bit tag is-string');
+      output = helper.general.runWithTryCatch('bit tag is-string --allow-relative-paths');
     });
     it('should show a descriptive error message', () => {
       expect(output).to.have.string('this dependency was not included in the tag command');

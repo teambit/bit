@@ -43,15 +43,15 @@ export default class FixtureHelper {
   }
 
   addComponentBarFoo() {
-    return this.command.runCmd('bit add bar/foo.js --id bar/foo');
+    return this.command.addComponent('bar/foo.js', { i: 'bar/foo' });
   }
 
   addComponentUtilsIsType() {
-    return this.command.runCmd('bit add utils/is-type.js --id utils/is-type');
+    return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
 
   addComponentUtilsIsString() {
-    return this.command.runCmd('bit add utils/is-string.js --id utils/is-string');
+    return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {

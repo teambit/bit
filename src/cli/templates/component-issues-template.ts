@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import ConsumerComponent from '../../consumer/component/consumer-component';
-import { UntrackedFileDependencyEntry } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
+import {
+  UntrackedFileDependencyEntry,
+  RelativeComponentsAuthoredEntry
+} from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
 import Component from '../../consumer/component/consumer-component';
 import { Analytics } from '../../analytics/analytics';
@@ -14,7 +17,9 @@ export const componentIssuesLabels = {
   missingDependenciesOnFs: 'non-existing dependency files (please make sure all files exists on your workspace)',
   missingLinks: 'missing links (use "bit link" to build missing component links)',
   missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
-  relativeComponents: 'components with relative import statements (please use absolute paths for imported components)',
+  relativeComponents: 'components with relative import statements (please use module paths for imported components)',
+  relativeComponentsAuthored:
+    'components with relative import statements (please use module paths. can be auto-replaced by "bit link --rewire")',
   parseErrors: 'error found while parsing the file (please edit the file and fix the parsing error)',
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
@@ -50,6 +55,12 @@ export function untrackedFilesComponentIssueToString(value: UntrackedFileDepende
     return curr.relativePath;
   });
   return colorizedMap.join(', ');
+}
+
+function relativeComponentsAuthoredIssuesToString(relativeEntries: RelativeComponentsAuthoredEntry[]) {
+  const stringifyEntry = (entry: RelativeComponentsAuthoredEntry) =>
+    `"${entry.importSource}" (${entry.componentId.toString()})`;
+  return relativeEntries.map(stringifyEntry).join(', ');
 }
 
 export default function componentIssuesTemplate(components: ConsumerComponent[]) {
@@ -89,13 +100,24 @@ export function formatMissing(missingComponent: Component) {
         // @ts-ignore
         return formatMissingStr(
           key,
+          // @ts-ignore
           missingComponent.issues[key],
           componentIssuesLabels[key],
           untrackedFilesComponentIssueToString
         );
       }
+      if (key === 'relativeComponentsAuthored') {
+        return formatMissingStr(
+          key,
+          // @ts-ignore
+          missingComponent.issues[key],
+          componentIssuesLabels[key],
+          relativeComponentsAuthoredIssuesToString
+        );
+      }
       if (key === 'missingPackagesDependenciesOnFs') {
         // Combine missing from files and missing from packages (for output only)
+        // @ts-ignore
         const missingPackagesDependenciesOnFs = missingComponent.issues[key] || {};
         const missingPackagesDependenciesFromOverrides =
           // @ts-ignore
@@ -108,6 +130,7 @@ export function formatMissing(missingComponent: Component) {
 
         return formatMissingStr(key, missingPackagesDependenciesOnFs, componentIssuesLabels[key]);
       }
+      // @ts-ignore
       return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
     })
     .join('');

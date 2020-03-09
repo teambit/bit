@@ -71,9 +71,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/imprel'
+        });
         helper.command.tagComponent('imprel/imprel');
         helper.command.exportComponent('imprel/imprel');
         helper.scopeHelper.reInitLocalScope();
@@ -392,9 +394,11 @@ describe('bit import', function() {
         helper.fs.createFile('src', 'imprel.js');
         helper.fs.createFile('src', 'imprel.spec.js');
         helper.fs.createFile('src/utils', 'myUtil.js');
-        helper.command.runCmd(
-          'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
-        );
+        helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+          t: 'src/imprel.spec.js',
+          m: 'src/imprel.js',
+          i: 'imprel/impreldist'
+        });
         helper.command.tagComponent('imprel/impreldist');
         helper.command.exportComponent('imprel/impreldist');
       });
@@ -532,9 +536,11 @@ describe('bit import', function() {
       helper.fs.createFile('src', 'imprel.js');
       helper.fs.createFile('src', 'imprel.spec.js');
       helper.fs.createFile('src/utils', 'myUtil.js');
-      helper.command.runCmd(
-        'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
-      );
+      helper.command.addComponent('src/imprel.js src/utils/myUtil.js', {
+        t: 'src/imprel.spec.js',
+        m: 'src/imprel.js',
+        i: 'imprel/imprel'
+      });
       helper.command.tagComponent('imprel/imprel');
       helper.command.deprecateComponent('imprel/imprel');
       helper.command.exportComponent('imprel/imprel');
@@ -919,7 +925,9 @@ describe('bit import', function() {
         });
         describe('after running bit link', () => {
           before(() => {
-            helper.command.runCmd('bit link');
+            helper.command.linkAndRewire();
+            // first time creates the link file, the second does the rewire. (yes, ideally it'd be one).
+            helper.command.linkAndRewire();
           });
           it('bit status should not show issues', () => {
             const status = helper.command.status();
@@ -1387,7 +1395,7 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
-        `error: issues found with the following component dependencies\n\n${helper.scopes.remote}/utils/is-string@0.0.1\n       \n       components with relative import statements (please use absolute paths for imported components): \n          is-string.js -> utils/is-type\n\n`
+        `error: issues found with the following component dependencies\n\n${helper.scopes.remote}/utils/is-string@0.0.1\n       \n       components with relative import statements (please use module paths for imported components): \n          is-string.js -> utils/is-type\n\n`
       );
     });
   });
@@ -1419,7 +1427,7 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
-        'components with relative import statements (please use absolute paths for imported components)'
+        'components with relative import statements (please use module paths for imported components)'
       );
     });
   });

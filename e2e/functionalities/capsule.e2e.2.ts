@@ -435,7 +435,7 @@ describe('capsule', function() {
       helper.npm.installNpmPackage('chai', '4.1.2');
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.command.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
+      helper.command.addComponent('utils/is-type.js', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
       const output = helper.command.testComponent();
