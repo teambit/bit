@@ -2,7 +2,6 @@
 import path from 'path';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
-import { ExtensionNotFound } from '../scripts/exceptions';
 import { BitId } from '../../bit-id';
 import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -91,7 +90,7 @@ export class Registry {
    */
   get(name: string) {
     const scripts = this.templates[name];
-    if (!scripts) throw new ExtensionNotFound();
+    if (!scripts) throw new Error();
     return this.templates[name] || DEFAULT_TEMPLATE;
   }
 
@@ -100,7 +99,7 @@ export class Registry {
    */
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
     const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new ExtensionNotFound(manifest.name);
+    if (!extension) throw new Error(manifest.name);
     if (!this.templates[extension.name]) this.templates[extension.name] = {};
     this.templates[extension.name] = templateFunc;
     return this;

@@ -37,7 +37,7 @@ module.exports = function(api) {
   return {
     presets,
     plugins,
-    only: ['**/*.ts', '**/*.tsx'],
+    only: ['**/*.ts', '**/*.tsx', 'src/extensions/flows/task/container-script.js'],
     ignore: ['components/*']
   };
 };

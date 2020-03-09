@@ -1,7 +1,7 @@
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
-import { flatten, filter, uniq, concat, map } from 'ramda';
+import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { CACHE_ROOT } from '../../constants';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
@@ -12,6 +12,7 @@ import Consumer from '../../consumer/consumer';
 import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
+import { BitId } from '../../bit-id';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -28,8 +29,7 @@ export type Network = {
 async function createCapsulesFromComponents(components: any[], baseDir, orchOptions): Promise<Capsule[]> {
   const capsules: Capsule[] = await Promise.all(
     map((component: Component) => {
-      // @ts-ignore - fix by moving to componentId
-      return Capsule.createFromBitId(component.id, baseDir, orchOptions);
+      return Capsule.createFromComponent(component, baseDir, orchOptions);
     }, components)
   );
   return capsules;
@@ -72,12 +72,24 @@ export default class Isolator {
     );
     const components = findSuccessorsInGraph(graph, seeders);
     const capsules = await createCapsulesFromComponents(components, baseDir, config);
-    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
+
+    const capsuleList = new CapsuleList(
+      ...capsules.map(c => {
+        const id = c.component.id instanceof BitId ? c.component.id : c.component.id.legacyComponentId;
+        return { id, value: c };
+      })
+    );
+    const before = await getPackageJSONInCapsules(capsules);
+
     await writeComponentsToCapsules(components, graph, capsules, capsuleList);
+    const after = await getPackageJSONInCapsules(capsules);
+
+    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
+
     if (config.installPackages && config.packageManager) {
-      await this.packageManager.runInstall(capsules, { packageManager: config.packageManager });
+      await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
-      await this.packageManager.runInstall(capsules);
+      await this.packageManager.runInstall(toInstall);
     }
     return {
       capsules: capsuleList,
@@ -101,4 +113,20 @@ export default class Isolator {
       throw e;
     }
   }
+}
+
+async function getPackageJSONInCapsules(capsules: Capsule[]) {
+  const resolvedJsons = await Promise.all(
+    capsules.map(async capsule => {
+      const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+      let capsuleJson: any = null;
+      try {
+        capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
+        return JSON.parse(capsuleJson);
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
+      return capsuleJson;
+    })
+  );
+  return resolvedJsons;
 }
