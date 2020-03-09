@@ -85,7 +85,7 @@
     "@teambit/any-fs": "0.0.5",
     "@teambit/capsule": "0.0.12",
     "@teambit/gitconfig": "^2.0.6",
-    "@teambit/harmony": "0.0.9",
+    "@teambit/harmony": "file://../harmony",
     "@types/levelup": "^4.3.0",
     "@types/react": "^16.9.17",
     "@vuedoc/parser": "^2.0.0-beta.5",

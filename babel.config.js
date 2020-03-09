@@ -22,9 +22,9 @@ module.exports = function(api) {
     ],
     'babel-plugin-transform-typescript-metadata',
     ['@babel/plugin-proposal-decorators', { legacy: true }],
+    ['@babel/plugin-proposal-class-properties', { loose: true }],
     ['@babel/plugin-transform-runtime'],
     ['@babel/plugin-proposal-object-rest-spread'],
-    ['@babel/plugin-proposal-class-properties'],
     [
       '@babel/plugin-transform-async-to-generator',
       {

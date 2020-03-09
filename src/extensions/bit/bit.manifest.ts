@@ -6,7 +6,7 @@ import { Scripts } from '../scripts';
 import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
 
-import CompileExt from '../compile/compile.manifest';
+import { Compile } from '../compile';
 import TestExt from '../test/test.manifest';
 import { GraphExt } from '../graph';
 import { CreateExt } from '../create';
@@ -18,7 +18,7 @@ export default {
     ScopeExt,
     IsolatorExt,
     Scripts,
-    CompileExt,
+    Compile,
     TestExt,
     ComposerExt,
     GraphExt,

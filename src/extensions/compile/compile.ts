@@ -1,3 +1,4 @@
+import { subscribe, Extension } from '@teambit/harmony';
 import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
@@ -8,6 +9,8 @@ import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scripts } from '../scripts';
 import { IdsAndScripts } from '../scripts/ids-and-scripts';
+import { CompileCmd } from './compile.cmd';
+import { BitCliExt } from '../cli';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -15,8 +18,29 @@ export type ComponentAndCapsule = {
   capsule: Capsule;
 };
 
+@Extension()
 export class Compile {
-  constructor(private workspace: Workspace, private scripts: Scripts) {}
+  constructor(
+    /**
+     * workspace extension.
+     */
+    private workspace: Workspace,
+
+    /**
+     * scripts extension.
+     */
+    private scripts: Scripts
+  ) {}
+
+  @subscribe(BitCliExt, 'commands')
+  command() {
+    return new CompileCmd(this);
+  }
+
+  // @subscribe(Scope.onTag)
+  // onTag() {
+
+  // }
 
   async compile(componentsIds: string[]) {
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
@@ -64,7 +88,7 @@ function getBitIds(componentsIds: string[], workspace: Workspace): BitId[] {
   if (componentsIds.length) {
     return componentsIds.map(idStr => workspace.consumer.getParsedId(idStr));
   }
-  return workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
+  return workspace.consumer.bitMap.getAuthoredAndImportedBitIds(); // refactor to list
 }
 
 async function getResolvedComponents(componentsIds: string[], workspace: Workspace): Promise<ResolvedComponent[]> {
