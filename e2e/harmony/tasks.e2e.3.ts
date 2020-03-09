@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('tasks/scripts functionality', function() {
+describe('flows functionality', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -14,7 +14,7 @@ describe('tasks/scripts functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('running build task', () => {
+  describe.only('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -32,7 +32,7 @@ describe('tasks/scripts functionality', function() {
 
       // helper.bitJson.addDefaultScope();
       const extensions = {
-        scripts: {
+        flows: {
           build: ['extensions/gulp-ts']
         },
         'extensions/gulp-ts': {},
@@ -41,7 +41,7 @@ describe('tasks/scripts functionality', function() {
       const overrides = {
         'extensions/*': {
           extensions: {
-            pipes: {
+            flows: {
               build: []
             }
           }
