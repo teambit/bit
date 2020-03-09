@@ -146,7 +146,6 @@ async function applyVersion(
 
   // update files according to the merge results
   const modifiedStatus = applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
-
   const componentWriter = ComponentWriter.getInstance({
     component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -6,8 +6,8 @@ import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scripts } from '../scripts';
-import { IdsAndScripts } from '../scripts/ids-and-scripts';
+import { Flows } from '../flows';
+import { IdsAndFlows } from '../flows/flows';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -16,7 +16,7 @@ export type ComponentAndCapsule = {
 };
 
 export class Compile {
-  constructor(private workspace: Workspace, private scripts: Scripts) {}
+  constructor(private workspace: Workspace, private scripts: Flows) {}
 
   async compile(componentsIds: string[]) {
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
@@ -28,9 +28,12 @@ export class Compile {
         return { id: c.consumerComponent.id, value: compiler ? [compiler] : [] };
       })
       .filter(i => i.value);
-    const idsAndScripts = new IdsAndScripts(...idsAndScriptsArr);
+    const idsAndScripts = new IdsAndFlows(...idsAndScriptsArr);
     const resolvedComponents = await getResolvedComponents(componentsIds, this.workspace);
-    return this.scripts.runMultiple(idsAndScripts, resolvedComponents);
+    return this.scripts.runMultiple(
+      idsAndScripts,
+      resolvedComponents.map(cap => cap.capsule)
+    );
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {

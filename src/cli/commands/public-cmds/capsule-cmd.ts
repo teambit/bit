@@ -71,7 +71,7 @@ export class CapsuleCreate extends Command {
   report(capsuleObj: { [bitId: string]: Capsule }): string {
     const createdCapsules = Object.values(capsuleObj).map(capsule => {
       return {
-        bitId: capsule.bitId.toString(),
+        bitId: capsule.component.id.toString(),
         wrkDir: capsule.wrkDir
       };
     });

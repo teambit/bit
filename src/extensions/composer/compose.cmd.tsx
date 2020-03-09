@@ -3,7 +3,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../paper';
 import { Workspace } from '../workspace';
-import { Scripts } from '../scripts';
+import { Flows } from '../flows';
 
 export default class ComposeCmd implements Command {
   name = 'start [id]';
@@ -13,7 +13,7 @@ export default class ComposeCmd implements Command {
   shortDescription = '';
   options = [];
 
-  constructor(private workspace: Workspace, private pipes: Scripts) {}
+  constructor(private workspace: Workspace, private flows: Flows) {}
 
   // TODO: remove this ts-ignore
   // @ts-ignore
@@ -23,7 +23,7 @@ export default class ComposeCmd implements Command {
       // @ts-ignore
       const components = id ? await this.workspace.get(id) : await this.workspace.list();
       // const components = await this.workspace.get('base/card');
-      const resolved = await this.pipes.run('build', components);
+      const resolved = await this.flows.run(components, 'build');
 
       // const data = resolved.reduce((map, component) => {
       //   map[component.component.id.toString()] = component.capsule.wrkDir;
