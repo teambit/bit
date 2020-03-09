@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Graph } from 'graphlib';
 import { ExecutionOptions } from '../network/options';
 import { ComponentID, Component } from '../../component';
@@ -45,7 +46,6 @@ function createFakeWorkSpace(fakeGetGraph: (_consumer: Consumer) => Promise<Grap
 }
 
 export function createGetGraphFn(testCase: GraphTestCase) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return (_consumer: Consumer) => {
     const res = Object.entries(testCase.graph).reduce((accum, [key, value]) => {
       accum.setNode(key);
