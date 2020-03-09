@@ -25,7 +25,7 @@ export async function createTestNetworkStream(testCase: GraphTestCase) {
 }
 
 function createFakeWorkSpace(fakeGetGraph: (_consumer: Consumer) => Promise<Graph>) {
-  return {
+  return ({
     getMany: (ids: Array<BitId | string>) => {
       return Promise.resolve(
         ids.map(id => {
@@ -41,7 +41,7 @@ function createFakeWorkSpace(fakeGetGraph: (_consumer: Consumer) => Promise<Grap
       const graph = await fakeGetGraph({} as Consumer);
       return Promise.all(ids.map(id => createFakeCapsuleInGraph(id, graph)));
     }
-  } as Workspace;
+  } as any) as Workspace;
 }
 
 export function createGetGraphFn(testCase: GraphTestCase) {

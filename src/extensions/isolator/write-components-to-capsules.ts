@@ -87,7 +87,7 @@ function normalizeComponentDir(componentWithDependencies: ComponentWithDependenc
 
 function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
   const capsulePaths = capsules.map(componentCapsule => ({
-    id: componentCapsule.bitId,
+    id: componentCapsule.component.id._legacy,
     value: componentCapsule.wrkDir
   }));
   return new CapsulePaths(...capsulePaths);

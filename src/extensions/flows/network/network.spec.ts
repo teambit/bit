@@ -6,7 +6,7 @@ import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-netw
 // a graph of inter connected capsules where a->b if a is liable for b (b depends on a).
 //
 //
-describe.only('Network', () => {
+describe('Network', () => {
   describe('sanity', function() {
     it('should support 1 component graph', async function() {
       const testCase: GraphTestCase = {

@@ -71,7 +71,7 @@ export default class Isolator {
     );
     const components = findSuccessorsInGraph(graph, seeders);
     const capsules = await createCapsulesFromComponents(components, baseDir, config);
-    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.bitId, value: c })));
+    const capsuleList = new CapsuleList(...capsules.map(c => ({ id: c.component.id._legacy, value: c })));
     await writeComponentsToCapsules(components, graph, capsules, capsuleList);
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(capsules, { packageManager: config.packageManager });

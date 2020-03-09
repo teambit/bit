@@ -151,7 +151,7 @@ async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Prom
   const capsules = await workspace.loadCapsules(graph.nodes());
 
   return capsules.reduce((accum, curr) => {
-    accum[curr.bitId.toString()] = {
+    accum[curr.component.id.toString()] = {
       visited: false,
       capsule: curr,
       result: null

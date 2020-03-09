@@ -7,6 +7,7 @@ import { Capsule as CapsuleTemplate, Exec, Console, State } from '@teambit/capsu
 import { NodeFS } from '@teambit/any-fs';
 import FsContainer, { BitExecOption } from './container';
 import { Component } from '../../component';
+import ContainerExec from './container-exec';
 
 export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
   private _wrkDir: string;
@@ -41,12 +42,22 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return this.container.start();
   }
 
-  async execNode(executable: string, args: any) {
-    return librarian.runModule(executable, { ...args, cwd: this.wrkDir });
+  async execNode(executable: string, args: any, exec: ContainerExec, packageMannager = 'npm') {
+    return packageMannager === 'librarian'
+      ? librarian.runModule(executable, { ...args, cwd: this.wrkDir })
+      : this.typedExec(
+          {
+            command: ['node', executable, ...(args.args || [])],
+            cwd: ''
+          },
+          exec
+        );
   }
-  async typedExec(opts: BitExecOption) {
-    return this.container.exec(opts);
+
+  async typedExec(opts: BitExecOption, exec = new ContainerExec()) {
+    return this.container.exec(opts, exec);
   }
+
   outputFile(file: string, data: any, options: any): Promise<any> {
     return this.container.outputFile(file, data, options);
   }
