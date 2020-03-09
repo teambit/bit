@@ -3,7 +3,10 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -1008,8 +1011,8 @@ describe('workspace config', function() {
         });
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
-          const output = helper.command.status();
-          expect(output).to.have.string('missing package dependencies');
+          const output = helper.command.status().replace(/\n/g, '');
+          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
