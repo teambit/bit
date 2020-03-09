@@ -1,12 +1,9 @@
-import 'reflect-metadata';
 import Bluebird from 'bluebird';
-import { Harmony } from './harmony';
+import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
-import { BitCliExt } from './extensions/cli';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
-import HarmonyError from './harmony/exceptions/harmony-error';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
@@ -20,23 +17,19 @@ Bluebird.config({
 // loudRejection();
 HooksManager.init();
 
-const config = {
-  workspace: {
-    components: '*'
-  }
-};
-
 try {
-  const harmony = Harmony.load([BitCliExt, BitExt], config);
   harmony
-    .run()
+    .run(BitExt)
+    .then(() => {
+      // harmony.set([BitCliExt]);
+    })
     .then(() => {
       const cli = harmony.get('BitCli');
-      // @ts-ignore
-      if (cli && cli.instance) return cli.instance.run([], harmony);
-      throw new Error('failed to load CLI');
+      // @ts-ignore :TODO until refactoring cli extension to dynamiclly load extensions
+      return cli?.instance.run();
     })
     .catch(err => {
+      console.log(err);
       const errorHandlerExist = findErrorDefinition(err.originalError);
       const handledError = errorHandlerExist ? defaultHandleError(err.originalError) : err;
       logErrAndExit(handledError, process.argv[1] || '');

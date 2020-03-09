@@ -7,6 +7,5 @@ import { FlowsExt } from '../flows';
 export default {
   name: 'Composer',
   dependencies: [WatchExt, BitCliExt, WorkspaceExt, FlowsExt],
-  config: {},
   provider: provideComposer
 };

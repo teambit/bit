@@ -1,7 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 import path from 'path';
+import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
-import { ExtensionManifest, Harmony } from '../../harmony';
 import { BitId } from '../../bit-id';
 import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -81,7 +81,7 @@ const DEFAULT_TEMPLATE = name => [
 ];
 
 export class Registry {
-  constructor(private harmony: Harmony<unknown>) {}
+  constructor(private harmony: Harmony) {}
 
   private templates = {};
 

@@ -1,11 +1,10 @@
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
 import { Isolator } from '../isolator';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import { AnyExtension } from '../../harmony';
-import { Harmony } from '../../harmony';
 
 export default class Bit {
   constructor(
@@ -24,7 +23,7 @@ export default class Bit {
     /**
      * private reference to the instance of Harmony.
      */
-    private harmony: Harmony<unknown>
+    private harmony: Harmony
   ) {}
 
   /**
@@ -52,8 +51,8 @@ export default class Bit {
   }
 
   async loadExtensions() {
-    const { extensionsManifests, extensionsConfig } = await this.resolveExtensions();
-    await this.harmony.set(extensionsManifests, extensionsConfig);
+    const { extensionsManifests } = await this.resolveExtensions();
+    await this.harmony.set(extensionsManifests);
   }
 
   /**
@@ -61,7 +60,7 @@ export default class Bit {
    * :TODO must be refactored by @gilad
    */
   private async resolveExtensions(): Promise<{
-    extensionsManifests: AnyExtension[];
+    extensionsManifests: ExtensionManifest[];
     extensionsConfig: { [extensionId: string]: any };
   }> {
     const result = {

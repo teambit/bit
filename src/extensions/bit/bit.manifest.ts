@@ -3,7 +3,6 @@ import { ScopeExt } from '../scope';
 import { IsolatorExt } from '../isolator';
 import provideBit from './bit.provider';
 import { ComposerExt } from '../composer';
-// import { ReactExtension } from '../react/react.manifest';
 import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
@@ -18,15 +17,13 @@ export default {
     WorkspaceExt,
     ScopeExt,
     IsolatorExt,
+    FlowsExt,
     CompileExt,
     TestExt,
     ComposerExt,
-    FlowsExt,
-    // ReactExtension,
     GraphExt,
     InstallExt,
     CreateExt
   ],
-  config: {},
   provider: provideBit
 };
