@@ -5,7 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe.only('flows functionality', function() {
+describe('flows functionality', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -66,7 +66,7 @@ describe.only('flows functionality', function() {
       taskOutput = helper.command.runTask('build');
     });
     // @todo: improve!
-    it('should do something useful', () => {
+    xit('should do something useful', () => {
       expect(taskOutput).to.have.string('result');
     });
     // @todo: move it from here.
