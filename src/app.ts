@@ -13,10 +13,8 @@ Bluebird.config({
   longStackTraces: true
   // longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG)
 });
-
 // loudRejection();
 HooksManager.init();
-
 try {
   harmony
     .run(BitExt)

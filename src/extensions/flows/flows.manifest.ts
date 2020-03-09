@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { ExtensionManifest } from '@teambit/harmony';
 import { Flows } from './flows';
 import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
 import { RunCmd } from './run.cmd';
-import { ExtensionManifest } from '@teambit/harmony';
 
 type ScriptDeps = [BitCli, Workspace];
 

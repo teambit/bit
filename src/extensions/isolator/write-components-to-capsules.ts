@@ -1,4 +1,4 @@
-import { flatten, filter, uniq, concat } from 'ramda';
+import { concat } from 'ramda';
 import ConsumerComponent from '../../consumer/component';
 import { Capsule } from './capsule';
 import { getComponentLinks } from '../../links/link-generator';
@@ -10,6 +10,7 @@ import ManyComponentsWriter, { ManyComponentsWriterParams } from '../../consumer
 import CapsuleList from './capsule-list';
 import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
+import { BitId } from '../../bit-id';
 
 export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
@@ -86,9 +87,12 @@ function normalizeComponentDir(componentWithDependencies: ComponentWithDependenc
 }
 
 function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
-  const capsulePaths = capsules.map(componentCapsule => ({
-    id: componentCapsule.component.id._legacy,
-    value: componentCapsule.wrkDir
-  }));
+  const capsulePaths = capsules.map(componentCapsule => {
+    const id = componentCapsule.component.id;
+    return {
+      id: id instanceof BitId ? id : id.legacyComponentId,
+      value: componentCapsule.wrkDir
+    };
+  });
   return new CapsulePaths(...capsulePaths);
 }
