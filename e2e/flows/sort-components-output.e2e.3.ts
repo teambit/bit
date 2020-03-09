@@ -25,6 +25,7 @@ describe('basic flow with dependencies', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.command.linkAndRewire();
     });
     describe('bit status', () => {
       let output;

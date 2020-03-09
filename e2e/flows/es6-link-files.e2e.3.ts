@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 describe('es6 components with link files', function() {
   this.timeout(0);
@@ -44,9 +44,8 @@ describe('es6 components with link files', function() {
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider that index file as a dependency', () => {
-      output = helper.command.runCmd('bit status');
-      expect(output).to.have.string('bar/foo ... ok');
-      expect(output).to.not.have.string(statusFailureMsg);
+      output = helper.command.status();
+      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
     });
   });
 
@@ -80,9 +79,14 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.runCmd('bit status');
-      expect(output).to.have.string('bar/foo ... ok');
-      expect(output).to.not.have.string(statusFailureMsg);
+      output = helper.command.status();
+      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+    });
+    it('bit link --rewire should not change the source code', () => {
+      // that's because this link file and the main file don't have the same "import default" settings
+      // so changing the source-code result in an invalid import statement
+      const rewire = helper.command.linkAndRewire();
+      expect(rewire).to.have.string('rewired 0 components');
     });
     describe('when importing the component', () => {
       before(() => {
@@ -163,9 +167,8 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.runCmd('bit status');
-      expect(output).to.have.string('bar/foo ... ok');
-      expect(output).to.not.have.string(statusFailureMsg);
+      output = helper.command.status();
+      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
     });
     describe('when importing the component', () => {
       before(() => {

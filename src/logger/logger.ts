@@ -58,7 +58,12 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
 
 class BitLogger {
   logger: Logger;
-  shouldWriteToConsole = true;
+  /**
+   * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
+   * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
+   * is actually "json". that's why this variable is overridden once the command-registrar is up.
+   */
+  shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
 
   constructor(logger: Logger) {
     this.logger = logger;

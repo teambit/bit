@@ -29,7 +29,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.runCmd('bit add bar -m foo.js -i bar/foo');
+      helper.command.addComponentDir('bar', { m: 'foo.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -59,7 +59,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.runCmd('bit add bar -m png_fixture.png -i bar/foo');
+      helper.command.addComponentDir('bar', { m: 'png_fixture.png', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -112,7 +112,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add bar/png_fixture.png -m png_fixture.png -i bar/png');
+      helper.command.addComponent('bar/png_fixture.png', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("./png_fixture.png")';
       helper.fs.createFile('bar', 'foo.js', fixture);
       helper.command.addComponent('bar/foo.js', { i: 'bar/foo' });
@@ -151,7 +151,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -217,7 +217,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -303,7 +303,7 @@ describe('binary files', function() {
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
-      helper.command.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'png_fixture.png', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -402,7 +402,7 @@ describe('binary files', function() {
       destPngFile = path.join(helper.scopes.localPath, 'src/bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
       helper.fs.createFile('src/bar', 'index.js', "require('./png_fixture.png');");
-      helper.command.runCmd('bit add src/bar -m index.js -i bar/png');
+      helper.command.addComponent('src/bar', { m: 'index.js', i: 'bar/png' });
       const fixture = 'require("../bar/png_fixture.png")';
       helper.fs.createFile('src/foo', 'foo.js', fixture);
       helper.command.addComponent('src/foo/foo.js', { i: 'bar/foo' });
@@ -494,7 +494,7 @@ describe('binary files', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'my-comp.md', 'some md5 content');
       helper.fs.createFile('bar', 'my-comp.js');
-      helper.command.runCmd('bit add bar -m my-comp.js -i bar/foo');
+      helper.command.addComponentDir('bar', { m: 'my-comp.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.env.importDummyCompiler();

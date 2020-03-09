@@ -16,7 +16,7 @@ export default (results: LinksResult[]): string => {
     })
     .join('\n');
 
-  const reportTitle = chalk.underline(`found ${chalk.bold(results.length.toString())} components\n`);
+  const reportTitle = chalk.underline(`linked ${chalk.bold(results.length.toString())} components\n`);
 
   return reportTitle + reportComponents;
 };

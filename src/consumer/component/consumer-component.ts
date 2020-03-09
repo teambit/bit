@@ -50,7 +50,6 @@ import { RawTestsResults } from '../specs-results/specs-results';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
-import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import EjectToWorkspace from './exceptions/eject-to-workspace';
@@ -72,6 +71,7 @@ import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 import { Capsule } from '../../extensions/isolator/capsule';
+import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 
 export type customResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -179,9 +179,7 @@ export default class Component {
   componentFromModel: Component | null | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: { [label: keyof typeof componentIssuesLabels]: { [fileName: string]: string[] | BitId[] | string | BitId } };
+  issues?: Issues;
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;

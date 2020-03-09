@@ -24,12 +24,13 @@ export default class Add extends Command {
       'tests <file>/"<file>,<file>"',
       'specify test files to track. use quotation marks to list files or use a glob pattern'
     ],
-    ['n', 'namespace <namespace>', 'orginize component in a namespace'],
+    ['n', 'namespace <namespace>', 'organize component in a namespace'],
     [
       'e',
       'exclude <file>/"<file>,<file>"',
       'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
     ],
+    ['', 'allow-files', 'allow adding individual files to component (not recommended)'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
@@ -43,6 +44,7 @@ export default class Add extends Command {
       tests,
       namespace,
       exclude,
+      allowFiles = false,
       override = false
     }: {
       id: string | null | undefined;
@@ -50,6 +52,7 @@ export default class Add extends Command {
       tests: string | null | undefined;
       namespace: string | null | undefined;
       exclude: string | null | undefined;
+      allowFiles: boolean;
       override: boolean;
     }
   ): Promise<any> {
@@ -77,6 +80,7 @@ export default class Add extends Command {
       namespace,
       tests: testsArray,
       exclude: excludedFiles,
+      allowFiles,
       override
     });
   }

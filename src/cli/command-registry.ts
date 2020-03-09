@@ -71,12 +71,10 @@ export function execAction(command, concrete, args): Promise<any> {
   if (flags[TOKEN_FLAG_NAME]) {
     globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
   }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (flags.json) {
     loader.off();
-    logger.shouldWriteToConsole = false;
   }
+  logger.shouldWriteToConsole = !flags.json;
   const migrateWrapper = (run: boolean) => {
     if (run) {
       logger.debug('Checking if a migration is needed');

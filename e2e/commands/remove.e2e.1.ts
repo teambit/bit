@@ -410,7 +410,7 @@ describe('bit remove command', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo-main.js');
-      helper.command.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { m: 'foo-main.js', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.fs.deletePath('bar/foo-main.js');
       const status = helper.command.status();
