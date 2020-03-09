@@ -30,7 +30,6 @@ export class Task {
         exec
       );
     }
-
     return stream;
   }
 }
