@@ -12,7 +12,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('re-import after the author changed the originally-shared-dir', () => {
+  describe('with old-functionality (reduced on import) re-import after the author changed the originally-shared-dir', () => {
     let localConsumerFiles;
     before(() => {
       // Author creates a component in bar/foo.js
@@ -52,6 +52,26 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       expect(localConsumerFiles).to.include(path.join('components', 'bar', 'foo', 'foo2.js'));
       // this makes sure that the older copy of the component is gone
       expect(localConsumerFiles).not.to.include(path.join('components', 'bar', 'foo', 'foo.js'));
+    });
+  });
+  describe('with new functionality (save added path as rootDir, no reduce on import)', () => {
+    describe('when rootDir is not the same as the sharedDir', () => {
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fs.outputFile('src/bar/foo.js');
+        helper.command.addComponentDir('src', { i: 'comp' });
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp');
+      });
+      it('should not strip the shared dir', () => {
+        const bitMap = helper.bitMap.read();
+        const componentMap = bitMap[`${helper.scopes.remote}/comp@0.0.1`];
+        expect(componentMap.rootDir).to.equal('components/comp');
+        expect(componentMap.mainFile).to.equal('bar/foo.js');
+      });
     });
   });
 });

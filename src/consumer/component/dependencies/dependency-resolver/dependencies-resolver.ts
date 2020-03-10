@@ -21,6 +21,7 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
+import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -216,7 +217,7 @@ export default class DependencyResolver {
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
-
+    this.throwForIncorrectRootDir();
     return this.component;
   }
 
@@ -297,6 +298,14 @@ export default class DependencyResolver {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
+    }
+  }
+
+  throwForIncorrectRootDir() {
+    const relatives = this.issues.relativeComponentsAuthored;
+    if (relatives && !R.isEmpty(relatives) && this.componentMap.doesAuthorHaveRootDir()) {
+      const firstRelativeKey = Object.keys(relatives)[0];
+      throw new IncorrectRootDir(this.componentId.toString(), relatives[firstRelativeKey][0].importSource);
     }
   }
 

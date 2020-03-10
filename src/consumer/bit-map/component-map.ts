@@ -254,7 +254,7 @@ export default class ComponentMap {
    * directory to track for changes (such as files added/renamed)
    */
   getTrackDir(): PathLinux | null | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
     }
@@ -276,6 +276,10 @@ export default class ComponentMap {
   getComponentDir(): PathLinux | null | undefined {
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
+  }
+
+  doesAuthorHaveRootDir(): boolean {
+    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir && this.rootDir !== '.');
   }
 
   setConfigDir(val: PathLinux | null | undefined) {
@@ -377,9 +381,6 @@ export default class ComponentMap {
     }
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
-    }
-    if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
     }
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);

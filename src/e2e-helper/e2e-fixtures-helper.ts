@@ -114,6 +114,37 @@ export default class FixtureHelper {
   }
 
   /**
+   * important: use only this function. ignore other populateWorkspaceWith* functions, they're for
+   * legacy code (which adds files instead of directory).
+   *
+   * it creates and adds components that require each other.
+   * e.g. when creating 3 components, the workspace is: comp1 => comp2 => comp3.
+   * meaning, comp1 requires comp2 and comp2 requires comp2.
+   *
+   * it also adds app.js file.
+   * in the case of the 3 components above, the output is: "comp1 and comp2 and comp3".
+   *
+   * @returns the expected output in case "node app.js" is running
+   */
+  populateComponents(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `module.exports = () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `const ${nextComp} = require('../${nextComp}');
+module.exports = () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.js`), getImp(i));
+      this.command.addComponentDir(`comp${i}`);
+    }
+    this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
+  /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component
    * 'utils/is-type'

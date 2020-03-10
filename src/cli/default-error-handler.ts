@@ -104,6 +104,7 @@ import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-anothe
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
+import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -274,6 +275,12 @@ To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`
   ],
   [ScopeNotFound, err => `error: scope not found at ${chalk.bold(err.scopePath)}`],
+  [
+    IncorrectRootDir,
+    err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.
+an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths`
+  ],
   [
     ScopeJsonNotFound,
     err =>

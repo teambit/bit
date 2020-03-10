@@ -74,10 +74,13 @@ export default class CommandHelper {
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
   }
-  addComponentDir(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
+  addComponentDir(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
+    const value =
+      typeof options === 'string'
+        ? options
+        : Object.keys(options)
+            .map(key => `-${key} ${options[key]}`)
+            .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
   getConfig(configName: string) {
@@ -107,16 +110,21 @@ export default class CommandHelper {
   tagWithoutMessage(id: string, version = '', options = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
+  // @todo: change to tagAllComponentsLegacy
   tagAllComponents(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
-  rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
-    this.linkAndRewire();
+  // @todo: change to tagAllComponents
+  tagAllComponentsWithoutAllowRelativePaths(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
+  }
+  rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
+    this.linkAndRewire();
+    return this.tagAllComponentsWithoutAllowRelativePaths(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);

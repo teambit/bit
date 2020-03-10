@@ -148,8 +148,28 @@ export default class NodeModuleLinker {
     return this.consumer ? this.consumer.config.defaultScope : null;
   }
 
+  /**
+   * for authored, when there is no rootDir, the files can be distributed across multiple
+   * directories, as such, there is not one directory to symlink. instead, it creates link files.
+   * these link files are not ideal, and in case there is shared-dir, they point to the paths
+   * without shared-dir, making it difficult to use them.
+   *
+   * when rootDir is set, it's easier to just symlink to the rootDir.
+   */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    if (component.componentMap?.doesAuthorHaveRootDir()) {
+      this.dataToPersist.addSymlink(
+        Symlink.makeInstance(component.componentMap.rootDir as string, linkPath, componentId)
+      );
+      return;
+    }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -159,10 +179,7 @@ export default class NodeModuleLinker {
       const isMain = file === component.componentMap.mainFile;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
-      const dest = path.join(
-        getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true, this._getDefaultScope(component)),
-        file
-      );
+      const dest = path.join(linkPath, file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {

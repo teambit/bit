@@ -6,7 +6,12 @@ import { customResolvedPath, ExtensionData } from '../../consumer/component/cons
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS } from '../../constants';
+import {
+  DEFAULT_BUNDLE_FILENAME,
+  DEFAULT_BINDINGS_PREFIX,
+  DEPENDENCIES_FIELDS,
+  COMPONENT_ORIGINS
+} from '../../constants';
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
@@ -74,6 +79,7 @@ export type VersionProps = {
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
+  ignoreSharedDir?: boolean;
   customResolvedPaths?: customResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
@@ -114,6 +120,7 @@ export default class Version extends BitObject {
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
   bindingPrefix: string | null | undefined;
+  ignoreSharedDir: boolean | undefined;
   customResolvedPaths: customResolvedPath[] | null | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
@@ -145,6 +152,7 @@ export default class Version extends BitObject {
     this.compilerPackageDependencies = props.compilerPackageDependencies || {};
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
+    this.ignoreSharedDir = props.ignoreSharedDir;
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
@@ -220,6 +228,7 @@ export default class Version extends BitObject {
           peerPackageDependencies: obj.peerPackageDependencies,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           bindingPrefix: obj.bindingPrefix,
+          ignoreSharedDir: obj.ignoreSharedDir,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides
         },
@@ -333,6 +342,7 @@ export default class Version extends BitObject {
         mainDistFile: this.mainDistFile,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        ignoreSharedDir: this.ignoreSharedDir,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
@@ -390,6 +400,7 @@ export default class Version extends BitObject {
       files,
       compiler,
       bindingPrefix,
+      ignoreSharedDir,
       tester,
       log,
       docs,
@@ -464,6 +475,7 @@ export default class Version extends BitObject {
       mainDistFile,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
+      ignoreSharedDir: ignoreSharedDir || undefined,
       tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
@@ -584,6 +596,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
+      ignoreSharedDir: component.ignoreSharedDir,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
