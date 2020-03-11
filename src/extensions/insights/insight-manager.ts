@@ -72,6 +72,7 @@ export class InsightManager {
    */
   async runAll() {
     const res: InsightResult[] = [];
+    console.log('in runAll');
     for (let [name, insight] of this.insights) {
       const insightRes: InsightResult = await insight.run();
       res.push(insightRes);

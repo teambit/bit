@@ -82,7 +82,7 @@ export async function buildOneGraphForComponents(
 
   // set vertices
   allComponents.forEach(component => {
-    const idStr = component.id.toStringWithoutVersion();
+    const idStr = component.id.toString();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, component);
   });
 
@@ -90,11 +90,11 @@ export async function buildOneGraphForComponents(
   allComponents.forEach((component: Component) => {
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
-        const depIdStr = dependency.id.toStringWithoutVersion();
+        const depIdStr = dependency.id.toString();
         if (direction === 'normal') {
-          graph.setEdge(component.id.toStringWithoutVersion(), depIdStr, depType);
+          graph.setEdge(component.id.toString(), depIdStr, depType);
         } else {
-          graph.setEdge(depIdStr, component.id.toStringWithoutVersion(), depType);
+          graph.setEdge(depIdStr, component.id.toString(), depType);
         }
       });
     });

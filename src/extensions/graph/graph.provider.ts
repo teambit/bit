@@ -1,8 +1,9 @@
 import { Workspace } from '../workspace';
 import { ComponentGraph } from './component-graph';
+import { ComponentFactory } from '../component';
 
-export type GraphDeps = [Workspace];
+export type GraphDeps = [Workspace, ComponentFactory];
 
-export async function provide(_config: {}, [workspace]: GraphDeps) {
-  return ComponentGraph.build(workspace);
+export async function provide(_config: {}, [workspace, componentFactory]: GraphDeps) {
+  return ComponentGraph.build(workspace, componentFactory);
 }

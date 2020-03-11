@@ -11,10 +11,10 @@ export default class DuplicateDependencies implements Insight {
     this.graph = graph;
   }
   async _runInsight(): Promise<RawResult> {
-    const cycles = this.graph.findCycles();
+    const duplicates = this.graph.findDuplicateDependencies();
     return {
-      message: `Found ${cycles.length} cycles.`,
-      data: cycles
+      message: `Found ${duplicates.length} duplicate dependencies.`,
+      data: duplicates
     };
   }
 
