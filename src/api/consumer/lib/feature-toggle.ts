@@ -1,12 +1,15 @@
 /**
  * provides an option to enable/disable experimental features before releasing them.
  * two ways to enable a feature:
- * 1) from the CLI. prefix your command with CFG_FEATURE_TOGGLE and the features list separated by a comma.
+ * 1) from the CLI. prefix your command with BIT_FEATURES and the features list separated by a comma.
  * 2) from the config. run `bit config set features=<features-list>` and the features list separated by a comma.
  * if the environment variable was provided, it'll skip the config.
  * the results are cached so no penalty calling it multiple times in the same process.
  *
- * for the e2e-tests, there is a mechanism built around it, see the class docs of CommandHelper class.
+ * to use it in the code, simply call `isFeatureEnabled('your-feature')`
+ *
+ * for the e2e-tests, there is a mechanism built around it, to enable/disable features per file or
+ * per command. see the docs of CommandHelper class for more info.
  */
 
 import { getSync } from './global-config';
