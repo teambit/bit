@@ -41,7 +41,7 @@ describe('bit show command', function() {
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
       helper.fs.createFile('src/utils', 'utilFile.js');
-      helper.command.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
+      helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', { m: 'src/mainFile.js', i: 'comp/comp' });
       helper.command.tagComponent('comp/comp');
     });
 
@@ -370,7 +370,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -401,7 +401,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponent('bar/', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {

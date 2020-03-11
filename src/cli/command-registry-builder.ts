@@ -114,6 +114,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatScope(),
       new ScopeConfig(),
+      // @ts-ignore
       new Link(),
       new DependencyStatus(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

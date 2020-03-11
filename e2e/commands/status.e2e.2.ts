@@ -12,7 +12,10 @@ import {
 } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 const assertArrays = require('chai-arrays');
 
@@ -127,8 +130,8 @@ describe('bit status command', function() {
         helper.bitJson.addOverrides(overrides);
       });
       it('Should show missing package dependencies', () => {
-        output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing package dependencies');
+        output = helper.command.runCmd('bit status').replace(/\n/g, '');
+        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
         expect(output).to.have.string('bar/foo.js -> react');
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
@@ -148,8 +151,8 @@ describe('bit status command', function() {
         helper.bitJson.addOverrides(overrides);
       });
       it('Should show missing package dependencies', () => {
-        output = helper.command.runCmd('bit status');
-        expect(output).to.have.string('missing package dependencies');
+        output = helper.command.runCmd('bit status').replace(/\n/g, '');
+        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
     });
@@ -480,7 +483,7 @@ describe('bit status command', function() {
         helper.scopeHelper.initNewLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fs.createFile('bar', 'index.js');
-        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.command.addComponentDir('bar/', { i: 'bar/foo' });
         helper.fs.deletePath('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
@@ -496,7 +499,7 @@ describe('bit status command', function() {
       it('Should show "non-existing dependency" when deleting a file that is required by other files', () => {
         helper.fs.createFile('bar', 'foo1.js');
         helper.fs.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
-        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.command.addComponentDir('bar/', { i: 'bar/foo' });
         helper.fs.deletePath('bar/foo1.js');
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
@@ -507,7 +510,7 @@ describe('bit status command', function() {
           helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar', 'index.js');
           helper.fs.createFile('bar', 'foo.js');
-          helper.command.addComponent('bar/', { i: 'bar/foo' });
+          helper.command.addComponentDir('bar/', { i: 'bar/foo' });
           helper.fs.deletePath('bar/index.js');
         });
         it('should show an error indicating the mainFile was deleting', () => {
@@ -523,7 +526,7 @@ describe('bit status command', function() {
         helper.scopeHelper.initNewLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fs.createFile('bar', 'index.js');
-        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.command.addComponentDir('bar/', { i: 'bar/foo' });
         helper.fs.deletePath('bar/index.js');
         helper.fs.deletePath('bar/foo.js');
         output = helper.command.runCmd('bit status');
@@ -559,7 +562,7 @@ describe('bit status command', function() {
         helper.scopeHelper.initNewLocalScope();
         helper.fixtures.createComponentBarFoo();
         helper.fs.createFile('bar', 'index.js');
-        helper.command.addComponent('bar/', { i: 'bar/foo' });
+        helper.command.addComponentDir('bar/', { i: 'bar/foo' });
         helper.fs.deletePath('bar');
         output = helper.command.runCmd('bit status');
       });

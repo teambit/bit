@@ -210,7 +210,7 @@ describe('foo', () => {
       helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.command.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
+      helper.command.addComponentDir('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.addComponentUtilsIsType();
       helper.command.tagAllComponents();

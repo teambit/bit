@@ -51,9 +51,16 @@ export interface UntrackedFileDependencyEntry {
   untrackedFiles: Array<UntrackedFileEntry>;
 }
 
-type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+export type RelativeComponentsAuthoredEntry = {
+  importSource: string;
+  componentId: BitId;
+  importSpecifiers: ImportSpecifier[] | undefined;
+};
 
-interface Issues {
+type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
+
+export type Issues = {
   missingPackagesDependenciesOnFs: {};
   missingPackagesDependenciesFromOverrides: string[];
   missingComponents: {};
@@ -62,10 +69,11 @@ interface Issues {
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
   relativeComponents: {};
+  relativeComponentsAuthored: RelativeComponentsAuthoredIssues;
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
-}
+};
 
 export default class DependencyResolver {
   component: Component;
@@ -79,8 +87,7 @@ export default class DependencyResolver {
   tree: Tree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: Issues; // $PropertyType<Component, 'issues'>;
+  issues: Issues;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -111,6 +118,7 @@ export default class DependencyResolver {
       peerPackageDependencies: {}
     };
     this.processedFiles = [];
+    // later on, empty issues are removed. see `this.removeEmptyIssues();`
     this.issues = {
       missingPackagesDependenciesOnFs: {},
       missingPackagesDependenciesFromOverrides: [],
@@ -120,6 +128,7 @@ export default class DependencyResolver {
       missingLinks: {},
       missingCustomModuleResolutionLinks: {},
       relativeComponents: {},
+      relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
       missingBits: {} // temporarily, will be combined with missingComponents. see combineIssues
@@ -597,6 +606,12 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToRelativeComponentsIssues(originFile, componentId);
       return false;
     }
+    this._pushToRelativeComponentsAuthoredIssues(
+      originFile,
+      componentId,
+      depFileObject.importSource,
+      depsPaths.importSpecifiers
+    );
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
@@ -1119,6 +1134,17 @@ either, use the ignore file syntax or change the require statement to have a mod
     } else {
       this.issues.relativeComponents[originFile] = [componentId];
     }
+  }
+  _pushToRelativeComponentsAuthoredIssues(
+    originFile,
+    componentId,
+    importSource: string,
+    importSpecifiers: ImportSpecifier[] | undefined
+  ) {
+    if (!this.issues.relativeComponentsAuthored[originFile]) {
+      this.issues.relativeComponentsAuthored[originFile] = [];
+    }
+    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId, importSpecifiers });
   }
   _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     this.issues.missingBits[originFile]
