@@ -211,7 +211,7 @@ describe('track directories functionality', function() {
       helper.fs.createFile('utils/foo', 'index.js');
       helper.fs.createFile('utils/bar', 'index.js');
       helper.fs.createFile('utils/baz', 'index.js');
-      helper.command.addComponent('utils/*', { n: 'utils' });
+      helper.command.addComponentDir('utils/*', { n: 'utils' });
     });
     it('should add rootDir property for each one of the directories', () => {
       const bitMap = helper.bitMap.read();
@@ -230,7 +230,7 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo.spec.js');
-      helper.command.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
+      helper.command.addComponentDir('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
       helper.fs.createFile('utils/bar', 'foo2.js');
       helper.command.runCmd('bit status');
     });
@@ -254,7 +254,7 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo2.js');
-      helper.command.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
+      helper.command.addComponentDir('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.command.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {
