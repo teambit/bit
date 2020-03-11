@@ -228,7 +228,6 @@ export default class Version extends BitObject {
           peerPackageDependencies: obj.peerPackageDependencies,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           bindingPrefix: obj.bindingPrefix,
-          ignoreSharedDir: obj.ignoreSharedDir,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           overrides: obj.overrides
         },
