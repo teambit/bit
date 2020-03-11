@@ -53,7 +53,7 @@ export default class PackageManager {
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
           await new Promise((resolve, reject) => {
-            const { log, warn } = this.reporter.createLogger(capsule.component.id.toString());
+            const { log, warn, done } = this.reporter.createLogger(capsule.component.id.toString());
             log('running install...', capsule.component.id.toString());
             const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
             // @ts-ignore
@@ -61,7 +61,11 @@ export default class PackageManager {
             // @ts-ignore
             installProc.stderr.on('data', d => warn(d.toString()));
             installProc.on('error', e => reject(e));
-            installProc.on('end', () => resolve());
+            installProc.on('close', () => {
+              // TODO: exit status
+              done();
+              resolve();
+            });
           });
           linkBitBinInCapsule(capsule);
         })
