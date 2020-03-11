@@ -50,6 +50,7 @@ import ShowDoctorError from '../../../error/show-doctor-error';
 import { AddingIndividualFiles } from './exceptions/addding-individual-files';
 import { stripSharedDirFromPath, addSharedDirForPath } from '../manipulate-dir';
 import OutsideRootDir from '../../bit-map/exceptions/outside-root-dir';
+import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
@@ -347,6 +348,7 @@ export default class AddComponents {
         return '.';
       }
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
+      if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) return '';
       // this is a new component created > v14.8.0
       if (!trackDir) return '.'; // user didn't add a directory only
       component.files = component.files.map(file => {

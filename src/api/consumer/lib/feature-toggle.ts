@@ -32,3 +32,5 @@ export const isFeatureEnabled: IsFeatureEnabled = (featureName: string): boolean
   }
   return isFeatureEnabled.cache[featureName];
 };
+
+export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';

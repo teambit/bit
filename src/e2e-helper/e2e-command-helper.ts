@@ -10,7 +10,7 @@ import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -102,7 +102,7 @@ export default class CommandHelper {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd, undefined, LEGACY_SHARED_DIR_FEATURE);
   }
   addComponentDir(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
