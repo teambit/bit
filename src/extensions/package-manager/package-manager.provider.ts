@@ -1,5 +1,8 @@
 import PackageManager from './package-manager';
+import Reporter from '../reporter';
 
-export async function providePackageManager() {
-  return new PackageManager('yarn');
+export type InstallDeps = [Reporter];
+
+export async function providePackageManager([reporter]) {
+  return new PackageManager('yarn', reporter);
 }
