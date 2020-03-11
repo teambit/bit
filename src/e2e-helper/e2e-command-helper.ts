@@ -10,27 +10,57 @@ import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
+import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
+/**
+ * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
+ * to enable a feature for a single command, add the feature to the runCmd, e.g. `runCmd(cmd, cwd, stdio, 'your-feature');`
+ * if you set both, the runCmd wins.
+ * more about feature-toggle head to feature-toggle.ts file.
+ */
 export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
   bitBin: string;
+  featuresToggle: string | undefined;
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
+  setFeatures(featuresToggle: string) {
+    this.featuresToggle = featuresToggle;
+  }
+
+  runCmd(
+    cmd: string,
+    cwd: string = this.scopes.localPath,
+    stdio: StdioOptions = 'pipe',
+    overrideFeatures?: string
+  ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
-    if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
+    const isBitCommand = cmd.startsWith('bit ');
+    if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
+    cmd = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
+    const featuresToggle = overrideFeatures || this.featuresToggle;
+    if (!featuresToggle) return '';
+    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${featuresToggle}`;
+    if (process.platform === 'win32') {
+      return `set "${featureToggleStr}" && `;
+    }
+    return `${featureToggleStr} `;
   }
 
   listRemoteScope(raw = true, options = '') {

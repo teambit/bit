@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add infrastructure for feature-toggle
 - deprecate files overrides (using file:// prefix)
 - disallow adding individual files by `bit add` unless `--allow-files` flag is used
 - introduce `bit link --rewire` to change relative paths in the source code to module paths
