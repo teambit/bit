@@ -267,7 +267,8 @@ export default class ComponentMap {
    * directory to track for changes (such as files added/renamed)
    */
   getTrackDir(): PathLinux | null | undefined {
-    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.rootDir || this.trackDir;
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
     }
@@ -287,6 +288,7 @@ export default class ComponentMap {
    * directory of the component (root / track)
    */
   getComponentDir(): PathLinux | null | undefined {
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
   }
