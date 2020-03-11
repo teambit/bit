@@ -49,6 +49,7 @@ import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { AddingIndividualFiles } from './exceptions/addding-individual-files';
 import { stripSharedDirFromPath, addSharedDirForPath } from '../manipulate-dir';
+import OutsideRootDir from '../../bit-map/exceptions/outside-root-dir';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
@@ -311,8 +312,7 @@ export default class AddComponents {
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter(file => file);
     if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     if (foundComponentFromBitMap) {
-      const existingRootDir = foundComponentFromBitMap.rootDir;
-      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
+      this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
     if (this.trackDirFeature) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -337,7 +337,7 @@ export default class AddComponents {
             throw new GeneralError('unable to use "--allow-relative-paths" with imported components');
           }
           if (foundComponentFromBitMap.rootDir && foundComponentFromBitMap.rootDir !== '.') {
-            component.files = componentFiles.map(file => {
+            component.files = component.files.map(file => {
               file.relativePath = addSharedDirForPath(file.relativePath, foundComponentFromBitMap.rootDir);
               return file;
             });
@@ -349,7 +349,7 @@ export default class AddComponents {
       if (foundComponentFromBitMap) return foundComponentFromBitMap.rootDir;
       // this is a new component created > v14.8.0
       if (!trackDir) return '.'; // user didn't add a directory only
-      component.files = componentFiles.map(file => {
+      component.files = component.files.map(file => {
         file.relativePath = stripSharedDirFromPath(file.relativePath, trackDir);
         return file;
       });
@@ -374,6 +374,39 @@ export default class AddComponents {
     };
     const componentMap = getComponentMap();
     return { id: componentId.toString(), files: componentMap.files };
+  }
+
+  /**
+   * current componentFiles are relative to the workspace. we want them relative to the rootDir.
+   */
+  _updateFilesAccordingToExistingRootDir(
+    foundComponentFromBitMap: ComponentMap,
+    componentFiles: ComponentMapFile[],
+    component: AddedComponent
+  ) {
+    const existingRootDir = foundComponentFromBitMap.rootDir;
+    if (!existingRootDir || existingRootDir === '.') return; // nothing to do.
+    const areFilesInsideExistingRootDir = componentFiles.every(file =>
+      pathNormalizeToLinux(file.relativePath).startsWith(`${existingRootDir}/`)
+    );
+    if (foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED || areFilesInsideExistingRootDir) {
+      ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
+      return;
+    }
+    // some (or all) added files are outside the existing rootDir, the rootDir needs to be changed
+    // if a directory was added and it's a parent of the existing rootDir, change the rootDir to
+    // the currently added rootDir.
+    const currentlyAddedDir = pathNormalizeToLinux(component.trackDir);
+    const currentlyAddedDirParentOfRootDir = currentlyAddedDir && existingRootDir.startsWith(`${currentlyAddedDir}/`);
+    if (currentlyAddedDirParentOfRootDir) {
+      foundComponentFromBitMap.changeRootDirAndUpdateFilesAccordingly(currentlyAddedDir);
+      ComponentMap.changeFilesPathAccordingToItsRootDir(currentlyAddedDir, componentFiles);
+      return;
+    }
+    throw new GeneralError(`unable to add individual files outside the root dir (${existingRootDir}) of ${component.componentId}.
+you can add the directory these files are located at and it'll change the root dir of the component accordingly`);
+    // we might want to change the behavior here to not throw an error and only change the rootDir to "."
+    // foundComponentFromBitMap.changeRootDirAndUpdateFilesAccordingly('.');
   }
 
   /**

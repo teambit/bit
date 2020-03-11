@@ -563,8 +563,12 @@ export default class Component {
    * already relative to the sharedDir rather than the author workspace.
    */
   get ignoreSharedDir(): boolean {
+    if (!this.componentMap) throw new Error('ignoreSharedDir expect Component to have componentMap');
     // @ts-ignore
-    return Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir);
+    return (
+      Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
+      Boolean(this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED && !this.componentMap.originallySharedDir)
+    );
   }
 
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {

@@ -14,6 +14,8 @@ import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import ConfigDir from './config-dir';
 import ShowDoctorError from '../../error/show-doctor-error';
+import GeneralError from '../../error/general-error';
+import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
 // @ts-ignore
@@ -114,9 +116,7 @@ export default class ComponentMap {
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
-      throw new ShowDoctorError(
-        `unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`
-      );
+      throw new OutsideRootDir(filePath, rootDir);
     }
     return newPath;
   }
@@ -142,6 +142,19 @@ export default class ComponentMap {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
+  }
+
+  changeRootDirAndUpdateFilesAccordingly(newRootDir: PathLinuxRelative) {
+    if (this.rootDir === newRootDir) return;
+    this.files.forEach(file => {
+      const filePathRelativeToConsumer = this.rootDir
+        ? pathJoinLinux(this.rootDir, file.relativePath)
+        : file.relativePath;
+      const newPath = ComponentMap.getPathWithoutRootDir(newRootDir, filePathRelativeToConsumer);
+      if (this.mainFile === file.relativePath) this.mainFile = newPath;
+      file.relativePath = newPath;
+    });
+    this.rootDir = newRootDir;
   }
 
   updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {

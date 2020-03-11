@@ -105,6 +105,7 @@ import ComponentsPendingImport from '../consumer/component-ops/exceptions/compon
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
+import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -140,6 +141,10 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [
+    OutsideRootDir,
+    err => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`
+  ],
   [
     AddingIndividualFiles,
     err =>
