@@ -1,11 +1,20 @@
-import path from 'path';
-import execa from 'execa';
-import librarian from 'librarian';
-import { Capsule } from '../isolator/capsule';
-import { pipeOutput } from '../../utils/child_process';
+import stc from 'string-to-color';
+import chalk from 'chalk';
 
 export default class Reporter {
-  log(...messages) {
-    console.log(...messages);
+  createLogger(id) {
+    return {
+      log(...messages) {
+        console.log(chalk.hex(stc(id))(messages.join(' ')));
+      },
+      warn(...messages) {
+        const lines = messages.join(' ').split(/\n/);
+        lines
+          .filter(line => line.replace(/\s+/, '').length > 0)
+          .forEach(line => {
+            console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+          });
+      }
+    };
   }
 }
