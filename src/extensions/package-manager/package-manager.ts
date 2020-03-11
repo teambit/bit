@@ -1,6 +1,7 @@
 import path from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
+import { Reporter } from '../reporter';
 import { Capsule } from '../isolator/capsule';
 import { pipeOutput } from '../../utils/child_process';
 
@@ -34,7 +35,7 @@ function linkBitBinInCapsule(capsule) {
 }
 
 export default class PackageManager {
-  constructor(readonly packageManagerName: string) {}
+  constructor(readonly packageManagerName: string, readonly reporter: Reporter) {}
 
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
@@ -48,11 +49,27 @@ export default class PackageManager {
         linkBitBinInCapsule(capsule);
       });
     } else if (packageManager === 'npm') {
-      capsules.forEach(capsule => {
-        deleteBitBinFromPkgJson(capsule);
-        execa.sync('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir });
-        linkBitBinInCapsule(capsule);
-      });
+      await Promise.all(
+        capsules.map(async capsule => {
+          deleteBitBinFromPkgJson(capsule);
+          await new Promise((resolve, reject) => {
+            const { log, warn, done } = this.reporter.createLogger(capsule.component.id.toString());
+            log('running install...', capsule.component.id.toString());
+            const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+            // @ts-ignore
+            installProc.stdout.on('data', d => log(d.toString()));
+            // @ts-ignore
+            installProc.stderr.on('data', d => warn(d.toString()));
+            installProc.on('error', e => reject(e));
+            installProc.on('close', () => {
+              // TODO: exit status
+              done();
+              resolve();
+            });
+          });
+          linkBitBinInCapsule(capsule);
+        })
+      );
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
