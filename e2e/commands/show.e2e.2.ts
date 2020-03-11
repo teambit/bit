@@ -411,7 +411,7 @@ describe('bit show command', function() {
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsWithoutAllowRelativePaths();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
@@ -423,8 +423,8 @@ describe('bit show command', function() {
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
 
-        // files should contain the originallySharedDir
-        expect(componentFromModel.mainFile).to.have.string('bar');
+        // files should NOT contain the originallySharedDir (because it was added as a directory)
+        expect(componentFromModel.mainFile).to.not.have.string('bar');
       });
     });
     describe('when importing a component', () => {

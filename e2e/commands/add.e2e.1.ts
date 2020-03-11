@@ -219,8 +219,8 @@ describe('bit add command', function() {
       helper.command.addComponent(' -t bar/foo.spec.js --id bar/foo');
       const bitMap = helper.bitMap.read();
       const files = bitMap['bar/foo'].files;
-      const expectImplFile = { relativePath: 'bar/foo.js', test: false, name: 'foo.js' };
-      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
+      const expectImplFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
+      const expectTestFile = { relativePath: 'foo.spec.js', test: true, name: 'foo.spec.js' };
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.include(expectTestFile);
       expect(files).to.deep.include(expectImplFile);
@@ -349,9 +349,9 @@ describe('bit add command', function() {
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo.spec.js');
       helper.command.addComponentDir('bar', { t: 'bar/foo.spec.js', m: 'bar/foo.js' });
-      helper.command.addComponentDir('bar', { o: true, m: 'bar/foo.js' });
+      helper.command.addComponentDir('bar', { o: true, m: 'bar/foo.js', i: 'bar' });
       const bitMap = helper.bitMap.read();
-      const specFile = bitMap.bar.files.find(f => f.relativePath === 'bar/foo.spec.js');
+      const specFile = bitMap.bar.files.find(f => f.relativePath === 'foo.spec.js');
       expect(specFile.test).to.be.false;
     });
     it('Should throw error when no index file is found', () => {
@@ -393,15 +393,15 @@ describe('bit add command', function() {
       const addFunc = () => helper.command.addComponent('bar/foo.js', { i: 'bar/fo.o' });
       helper.general.expectToThrow(addFunc, error);
     });
-    it('Define dynamic main file ', () => {
+    it('Define dynamic main file', () => {
       const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');
       helper.fs.createFile('bar', 'bar.js');
       helper.fs.createFile('bar', 'foo1.js');
       helper.command.addComponentDir('bar', { m: mainFileOs, n: 'test' });
       const bitMap = helper.bitMap.read();
-      const mainFile = bitMap['test/bar'].mainFile;
       expect(bitMap).to.have.property('test/bar');
-      expect(mainFile).to.equal('bar/bar.js');
+      const mainFile = bitMap['test/bar'].mainFile;
+      expect(mainFile).to.equal('bar.js');
     });
     it('Should add component with spec file from another dir according to dsl', () => {
       const dslOs = path.normalize('test/{FILE_NAME}.spec.js');
@@ -446,7 +446,7 @@ describe('bit add command', function() {
       helper.fs.createFile('bar', 'foo3.js');
       helper.fs.createFile('test', 'foo.spec.js');
       helper.fs.createFile('test', 'foo2.spec.js');
-      helper.command.addComponentDir('bar', {
+      helper.command.addComponentDir('bar --allow-files', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
         t: path.normalize('test/{FILE_NAME}.spec.js')

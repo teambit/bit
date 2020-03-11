@@ -351,10 +351,20 @@ export default class AddComponents {
       if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) return '';
       // this is a new component created > v14.8.0
       if (!trackDir) return '.'; // user didn't add a directory only
+      const fileNotInsideTrackDir = componentFiles.find(
+        file => !pathNormalizeToLinux(file.relativePath).startsWith(`${pathNormalizeToLinux(trackDir)}/`)
+      );
+      if (fileNotInsideTrackDir) {
+        // we check for this error before. however, it's possible that a user have one trackDir
+        // and another dir for the tests.
+        if (!this.allowFiles) throw new AddingIndividualFiles(fileNotInsideTrackDir.relativePath);
+        return '.';
+      }
       component.files = component.files.map(file => {
         file.relativePath = stripSharedDirFromPath(file.relativePath, trackDir);
         return file;
       });
+
       mainFile = stripSharedDirFromPath(mainFile, trackDir);
       return trackDir;
     };

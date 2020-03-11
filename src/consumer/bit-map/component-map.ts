@@ -343,6 +343,7 @@ export default class ComponentMap {
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
         allowFiles: true,
+        allowRelativePaths: false,
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
