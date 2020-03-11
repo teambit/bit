@@ -33,7 +33,7 @@ export default class WorkspaceConfig {
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
-      const withoutComponentsConfig = omit([COMPONENT_CONFIG_ENTRY_NAME]);
+      const withoutComponentsConfig = omit([COMPONENT_CONFIG_ENTRY_NAME], data);
       this.workspaceSettings = WorkspaceSettings.fromObject(withoutComponentsConfig);
       // } else if (legacyConfig){
     } else {
