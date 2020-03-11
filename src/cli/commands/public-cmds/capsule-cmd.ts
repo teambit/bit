@@ -4,8 +4,8 @@ import Command from '../../command';
 import { loadConsumerIfExist } from '../../../consumer';
 import { capsuleIsolate } from '../../../api/consumer';
 import { Capsule } from '../../../extensions/isolator/capsule';
+import { Reporter } from '../../../extensions/reporter';
 import { PackageManager } from '../../../extensions/package-manager';
-// import { Capsule } from '../../../extensions/capsule';
 import { Isolator } from '../../../extensions/isolator';
 import { ListResults } from '../../../extensions/isolator/isolator';
 import { render } from '../../../utils';
@@ -23,7 +23,8 @@ export class CapsuleList extends Command {
   async action(): Promise<ListResults[] | ListResults> {
     const consumer = await loadConsumerIfExist();
     if (!consumer) throw new Error('no consumer found');
-    const packageManager = new PackageManager('librarian');
+    const reporter = new Reporter();
+    const packageManager = new PackageManager('librarian', reporter);
     // const capsule = await Capsule.provide();
     const isolatorExt = await Isolator.provide([packageManager]);
     return isolatorExt.list(consumer);

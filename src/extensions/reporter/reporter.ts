@@ -6,6 +6,6 @@ import { pipeOutput } from '../../utils/child_process';
 
 export default class Reporter {
   log(...messages) {
-    // console.log(...messages)
+    console.log(...messages);
   }
 }
