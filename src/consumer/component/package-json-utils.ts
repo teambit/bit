@@ -175,7 +175,7 @@ export async function updateAttribute(
 export async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: string | null | undefined) {
   if (
     consumer.config.workspaceSettings._manageWorkspaces &&
-    consumer.config.workspaceSettings.packageManager.packageManager === 'yarn' &&
+    consumer.config.workspaceSettings.packageManager === 'yarn' &&
     consumer.config.workspaceSettings._useWorkspaces
   ) {
     const rootDir = consumer.getPath();
@@ -201,7 +201,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   const PackageJson = driver.PackageJson;
   if (
     consumer.config.workspaceSettings._manageWorkspaces &&
-    consumer.config.workspaceSettings.packageManager.packageManager === 'yarn' &&
+    consumer.config.workspaceSettings.packageManager === 'yarn' &&
     consumer.config.workspaceSettings._useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);

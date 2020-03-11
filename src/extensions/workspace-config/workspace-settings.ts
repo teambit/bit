@@ -1,69 +1,102 @@
 import { omit, pick, find, forEachObjIndexed } from 'ramda';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 // TODO: get the types in a better way
-import { BitId } from '../../bit-id';
+// import { BitId } from '../../bit-id';
+import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from './extension-config-list';
 
 // TODO: consider moving to workspace extension
-const WORKSPACE_EXT_PROPS = [
-  'componentsDefaultDirectory',
-  'defaultScope',
+// const WORKSPACE_EXT_PROPS = [
+//   'componentsDefaultDirectory',
+//   'defaultScope',
+//   'dependenciesDirectory',
+//   'saveDependenciesAsComponents',
+//   'useWorkspaces',
+//   'manageWorkspaces',
+//   'bindingPrefix',
+//   'distEntry',
+//   'distTarget'
+// ];
+
+const LEGACY_PROPS = [
   'dependenciesDirectory',
-  'saveDependenciesAsComponents',
-  'useWorkspaces',
-  'manageWorkspaces',
   'bindingPrefix',
+  'resolveModules',
+  'saveDependenciesAsComponents',
   'distEntry',
   'distTarget'
 ];
 
-export interface DependnecyResolverConfig {
-  packageManager: 'librarian' | 'npm' | 'yarn' | undefined;
-  strictPeerDependnecies?: boolean;
-  packageManagerProcessOptions?: any;
-  packageManagerArgs?: string[];
-}
-
-export interface WorkspaceSettingsProps {
-  componentsDefaultDirectory?: string;
-  dependenciesDirectory?: string;
+export type ComponentScopeDirMap = {
   defaultScope?: string;
-  saveDependenciesAsComponents?: boolean;
-  resolveModules?: ResolveModulesConfig;
-  packageManager: DependnecyResolverConfig;
+  directory: string;
+};
+
+export type WorkspaceExtensionProps = {
+  owner?: string;
+  components: ComponentScopeDirMap[];
+};
+
+export interface DependencyResolverExtensionProps {
+  packageManager: 'librarian' | 'npm' | 'yarn' | undefined;
+  strictPeerDependencies?: boolean;
+  extraArgs?: string[];
+  packageManagerProcessOptions?: any;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
-  bindingPrefix?: string;
-  distEntry?: string | undefined;
-  distTarget?: string | undefined;
 }
+
+export type WorkspaceSettingsNewProps = {
+  workspace: WorkspaceExtensionProps;
+  dependencyResolver: DependencyResolverExtensionProps;
+};
+
+export type WorkspaceSettingsLegacyProps = {
+  dependenciesDirectory?: string;
+  bindingPrefix?: string;
+  resolveModules?: ResolveModulesConfig;
+  saveDependenciesAsComponents?: boolean;
+  distEntry?: string;
+  distTarget?: string;
+};
+
+export type WorkspaceSettingsProps = WorkspaceSettingsNewProps & WorkspaceSettingsLegacyProps;
 
 export class WorkspaceSettings {
   constructor(private data: WorkspaceSettingsProps) {}
 
   get componentsDefaultDirectory() {
-    return this.data.componentsDefaultDirectory;
+    // TODO: change when supporting many dirs<>scopes mapping
+    return this.data.workspace.components[0].directory;
   }
 
   get defaultScope(): string | undefined {
-    return this.data.defaultScope;
+    // TODO: change when supporting many dirs<>scopes mapping
+    return this.data.workspace.components[0].defaultScope;
   }
 
   set defaultScope(defaultScope: string | undefined) {
-    this.data.defaultScope = defaultScope;
+    if (defaultScope) {
+      // TODO: change when supporting many dirs<>scopes mapping
+      this.data.workspace.components[0].defaultScope = defaultScope;
+    }
+  }
+
+  get dependencyResolver() {
+    return this.data.dependencyResolver;
   }
 
   get packageManager() {
-    return this.data.packageManager;
+    return this.data.dependencyResolver.packageManager;
   }
 
   get _useWorkspaces() {
-    return this.data.useWorkspaces;
+    return this.data.dependencyResolver.useWorkspaces;
   }
 
   get _manageWorkspaces() {
-    return this.data.manageWorkspaces;
+    return this.data.dependencyResolver.manageWorkspaces;
   }
 
   get _bindingPrefix() {
@@ -91,13 +124,19 @@ export class WorkspaceSettings {
   }
 
   get extensionsConfig(): ExtensionConfigList {
-    const workspaceExtProps = pick(WORKSPACE_EXT_PROPS, this.data);
+    // const workspaceExtProps = pick(WORKSPACE_EXT_PROPS, this.data);
     // TODO: take name from the extension
-    const workspaceExtEntry = { id: 'workspace', config: workspaceExtProps };
-    const otherExtensionsProps = omit(WORKSPACE_EXT_PROPS, this.data);
-    const res = ExtensionConfigList.fromObject(otherExtensionsProps);
-    res.push(workspaceExtEntry);
+    // const workspaceExtEntry = { id: 'workspace', config: workspaceExtProps };
+    // const otherExtensionsProps = omit(WORKSPACE_EXT_PROPS, this.data);
+    const withoutLegacyProps = omit(LEGACY_PROPS, this.data);
+    const res = ExtensionConfigList.fromObject(withoutLegacyProps);
+    // res.push(workspaceExtEntry);
     return res;
+  }
+
+  getExtensionConfig(extensionId: string): { [key: string]: any } | undefined {
+    const existing = this.extensionsConfig.findExtension(extensionId, true);
+    return existing?.config;
   }
 
   /**
@@ -109,7 +148,7 @@ export class WorkspaceSettings {
   updateExtensionVersion(newExtensionId: string) {
     const existing = this.extensionsConfig.findExtension(newExtensionId, true);
     if (!existing) {
-      throw new GeneralError(`exntesion ${newExtensionId} not found in workspace config`);
+      throw new GeneralError(`extension ${newExtensionId} not found in workspace config`);
     }
     this.data[newExtensionId] = existing.config;
     delete this.data[existing.id];
@@ -134,19 +173,27 @@ export class WorkspaceSettings {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static fromLegacyConfig(legacyConfig) {
+  static fromLegacyConfig(legacyConfig: LegacyWorkspaceConfig) {
     const data = {
-      defaultScope: legacyConfig.defaultScope,
-      componentsDefaultDirectory: legacyConfig.componentsDefaultDirectory,
-      dependenciesDirectory: legacyConfig.dependenciesDirectory,
-      packageManager: {
-        packageManager: legacyConfig.packageManager,
-        packageManagerArgs: legacyConfig.packageManagerArgs,
-        packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions
+      workspace: {
+        components: [
+          {
+            defaultScope: legacyConfig.defaultScope,
+            directory: legacyConfig.componentsDefaultDirectory
+          }
+        ]
       },
+      dependencyResolver: {
+        packageManager: legacyConfig.packageManager,
+        strictPeerDependnecies: false,
+        extraArgs: legacyConfig.packageManagerArgs,
+        packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
+        manageWorkspaces: legacyConfig.manageWorkspaces,
+        useWorkspaces: legacyConfig.useWorkspaces
+      },
+      dependenciesDirectory: legacyConfig.dependenciesDirectory,
       bindingPrefix: legacyConfig.bindingPrefix,
       useWorkspaces: legacyConfig.useWorkspaces,
-      manageWorkspaces: legacyConfig.manageWorkspaces,
       resolveModules: legacyConfig.resolveModules,
       saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
       distEntry: legacyConfig.distEntry,

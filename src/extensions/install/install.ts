@@ -13,7 +13,7 @@ export class Install {
       const components = await this.workspace.list();
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
       const packageManagerName =
-        this.workspace.consumer.config.workspaceSettings.packageManager?.packageManager || DEFAULT_PACKAGE_MANAGER;
+        this.workspace.consumer.config.workspaceSettings.packageManager || DEFAULT_PACKAGE_MANAGER;
 
       const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
       packageJson.dependencies = packageJson.dependencies || {};

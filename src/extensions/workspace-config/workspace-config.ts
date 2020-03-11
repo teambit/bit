@@ -15,6 +15,8 @@ import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings'
 import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { BitId } from '../../bit-id';
 
+const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
+
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
   components?: ConsumerOverrides;
@@ -31,9 +33,13 @@ export default class WorkspaceConfig {
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
-      this.workspaceSettings = WorkspaceSettings.fromObject(data.workspace);
+      const withoutComponentsConfig = omit([COMPONENT_CONFIG_ENTRY_NAME]);
+      this.workspaceSettings = WorkspaceSettings.fromObject(withoutComponentsConfig);
+      // } else if (legacyConfig){
     } else {
-      this.workspaceSettings = WorkspaceSettings.fromLegacyConfig(legacyConfig);
+      // We know we have either data or legacy config
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.workspaceSettings = WorkspaceSettings.fromLegacyConfig(legacyConfig!);
     }
   }
 
@@ -90,6 +96,10 @@ export default class WorkspaceConfig {
       config.env.tester = config.env.tester || plainLegacy.env.tester;
     }
     return config;
+  }
+
+  getExtensionConfig(extensionId: string) {
+    return this.workspaceSettings.getExtensionConfig(extensionId);
   }
 
   /**

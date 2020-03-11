@@ -81,8 +81,12 @@ export default class Init extends Command {
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
     const workspaceConfigFileProps: WorkspaceConfigFileInputProps = {
       workspace: {
-        componentsDefaultDirectory: defaultDirectory,
-        packageManager
+        workspace: {
+          components: [{ directory: defaultDirectory }]
+        },
+        dependencyResolver: {
+          packageManager
+        }
       }
     };
     return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(

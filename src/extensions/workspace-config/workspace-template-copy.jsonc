@@ -1,0 +1,142 @@
+/**
+ * this is the main configuration file of your bit workspace.
+ * for full documentation, please see: https://docs.bit.dev/configuration
+ */
+{
+  "$schema": "",
+  "$schemaVersion": "1.0.0",
+  /**
+   * main configuration of the Bit workspace
+   * All core extensions are configured under this section
+  **/
+  "workspace": {
+
+    /**
+    * sets the default location of components
+    **/
+    "componentsDefaultDirectory": "components",
+    /**
+     * The default scope for exporting the components.
+     * The components can be required as modules using the scope name + component name.
+     */
+    "defaultScope": "",
+
+
+    //"dependenciesDirectory": ".dependencies"
+
+    /**
+    * main configuration for component dependency resolution.
+    **/
+    "packageManager": {
+      /**
+      * The package manager Bit uses to install components.
+      * Valid values are: 'npm', 'yarn', 'librarian' (recommended).
+      * Use librarian to reduce package duplicates and improves performance.
+      */
+      "packageManager": "librarian",
+      /**
+      * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
+      * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
+      * an invalid state that can cause build failures or incompatible dependency versions.
+      * (For historical reasons, JavaScript package managers generally do not treat this invalid
+      * state as an error.)
+      *
+      * The default value is false to avoid legacy compatibility issues.
+      * It is strongly recommended to set strictPeerDependencies=true.
+      */
+      "strictPeerDependencies": true,
+      /**
+      * map of extra arguments to pass to the configured package manager upon the installation
+      * of dependencies.
+      */
+      "packageManagerExtraArgs": []
+    },
+    /**
+     * automate Bit workflow with Git.
+     */
+    "gitPolicy": {},
+    /**
+     * main configuration for composer, Bit's UI.
+     */
+    "composer": {
+      /**
+       * Root component to run in the composer UI
+       **/
+      "rootComponent": "app"
+    },
+
+      /**
+    * main configuration file for handling the build process of components.
+    */
+    "run": {
+      /**
+      * specify the number of concurrent build processes for Bit to run. default value
+      * depends on the operating system and the number of available CPU cores.
+      */
+      "concurrency": 4
+    },
+    /**
+     * configure the creation of new components in your workspace through the `bit create` command.
+     * this is helpful for setting component structure standards.
+     */
+    "create": {
+      /**
+       * default component template for Bit to use for creation of components upon `bit create`.
+       * default template is:
+       */
+      "defaultTemplate": ""
+    },
+
+    /**
+    * component deployment configuration
+    **/
+    "deploy": {}
+  },
+
+
+
+
+  /**
+   * Components configuration
+  **/
+  "components": {
+    "*": {
+      /**
+     * main configuration file for handling the build process of components.
+     */
+    // "run": {
+      /**
+       * configure scripts that the user can run within a workspace.
+       * build tasks. configuration of build tasks is basically a map of `task name`
+       * pointed to an array of tasks. each task can be either a bash command or an extension
+       * which exposes a task. reserved task names: build, test, runs on pre-tag.
+      */
+      // "runners": {
+      //   "build": [
+      //     "@compile"
+      //   ],
+      //   "e2e": []
+      // }
+    // },
+    /**
+    * configuration for component compilation. can be any component which implments Compiler interface by default.
+    **/
+      // "compile": {
+      //   "id": "bit.envs/react-ts"
+      // },
+      // /**
+      // * configuration for component testing.
+      // **/
+      // "test": {},
+      // /**
+      // * configuration for component linting.
+      // **/
+      // "lint": {},
+      // /**
+      // * configuration for component doc generation.
+      // **/
+      // "docs": {},
+    }
+
+  }
+}

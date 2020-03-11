@@ -58,7 +58,7 @@ export default class WorkspaceConfig extends AbstractConfig {
   resolveModules: ResolveModulesConfig | undefined;
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
-  defaultScope: string | null | undefined; // default remote scope to export to
+  defaultScope: string | undefined; // default remote scope to export to
 
   constructor({
     compiler,
