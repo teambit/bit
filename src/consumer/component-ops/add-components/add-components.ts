@@ -369,11 +369,11 @@ export default class AddComponents {
       mainFile = stripSharedDirFromPath(mainFile, trackDir);
       return trackDir;
     };
-    const rootDir = getRootDir();
     const getComponentMap = (): ComponentMap => {
       if (this.trackDirFeature) {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
+      const rootDir = getRootDir();
       return this.bitMap.addComponent({
         componentId,
         files: component.files,

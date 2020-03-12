@@ -98,11 +98,22 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return JSON.parse(result);
   }
+  /**
+   * add component as legacy-mode.
+   * rootDir is not set for authored. same as it was on versions < 14.8.0.
+   * useful for tests that involve originallySharedDir logic. that's the only way to test them.
+   */
   addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd, undefined, LEGACY_SHARED_DIR_FEATURE);
+  }
+  addComponentAllowFiles(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
   }
   addComponentDir(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =

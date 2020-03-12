@@ -63,13 +63,14 @@ describe('bit move command', function() {
       expect(bitMap['bar/foo'].mainFile).to.equal('bar/foo2.js');
     });
   });
+  // legacy test. new code only rootDir is changed.
   describe('move a directory', () => {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('bar', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
       helper.fs.createFile('bar', 'foo1.spec.js');
-      helper.command.addComponentDir('bar', {
+      helper.command.addComponent('bar', {
         i: 'bar/foo',
         t: path.normalize('bar/foo1.spec.js'),
         m: path.normalize('bar/foo1.js')
