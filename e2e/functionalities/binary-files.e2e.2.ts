@@ -11,7 +11,7 @@ chai.use(require('chai-fs'));
 
 describe('binary files', function() {
   this.timeout(0);
-  let helper;
+  let helper: Helper;
   before(() => {
     helper = new Helper();
   });
@@ -49,6 +49,8 @@ describe('binary files', function() {
       });
     });
   });
+  // legacy test, to check the writing of links in node_modules for author.
+  // new code doesn't have it. only one symlink and that's it.
   describe('exporting a PNG file as the only file', () => {
     let pngSize;
     let destPngFile;
@@ -59,7 +61,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
+      helper.command.addComponentLegacy('bar', { m: 'png_fixture.png', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });
@@ -124,7 +126,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -229,7 +231,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -316,7 +318,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
@@ -415,7 +417,7 @@ describe('binary files', function() {
       helper.command.importComponent('bar/foo');
     });
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
-      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/bar/png_fixture.png');
+      const expectedDest = path.join(helper.scopes.localPath, 'components/bar/foo/src/bar/png_fixture.png');
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
