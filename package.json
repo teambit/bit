@@ -97,7 +97,7 @@
     "bluebird": "^3.5.3",
     "chalk": "^2.4.1",
     "chokidar": "^3.0.2",
-    "cleargraph": "^4.2.2",
+    "cleargraph": "^5.2.0",
     "cli-spinners": "^1.0.0",
     "commander": "^2.12.2",
     "comment-json": "^1.1.3",

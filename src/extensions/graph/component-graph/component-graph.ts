@@ -1,11 +1,11 @@
-import { Graph } from 'cleargraph';
+import { Graph, NodeDoesntExist } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
 import Component from '../../component/component';
 import { Dependency } from '../index';
 import { Workspace } from '../../workspace';
 import { buildOneGraphForComponents } from '../../../scope/graph/components-graph';
 import ComponentFactory from '../../component/component-factory';
-import Version from '../../../version';
+import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
 
@@ -41,7 +41,54 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return this.buildFromLegacy(initialGraph, componentFactory);
   }
 
-  findDuplicateDependencies() {}
+  findDuplicateDependencies(): Map<string, DuplicateDependency> {
+    let duplicateDependencies: Map<string, DuplicateDependency> = new Map();
+    for (const [compFullName, versions] of this.versionMap) {
+      if (versions.allVersionNodes.length > 1) {
+        let versionSubgraphs: VersionSubgraph[] = [];
+        const notLatestVersions = versions.allVersionNodes.filter(version => version !== versions.latestVersionNode);
+        notLatestVersions.forEach(version => {
+          let predecessors = this.predecessorsSubgraph(version);
+          let subGraph = this.buildFromCleargraph(predecessors);
+          const versionSubgraph: VersionSubgraph = {
+            versionId: version,
+            subGraph: subGraph
+          };
+          versionSubgraphs.push(versionSubgraph);
+        });
+        if (versionSubgraphs.length > 0) {
+          const duplicateDep = new DuplicateDependency(versions.latestVersionNode, versionSubgraphs);
+          duplicateDependencies.set(compFullName, duplicateDep);
+        }
+      }
+    }
+    return duplicateDependencies;
+  }
+
+  buildFromCleargraph(graph: Graph<Component, Dependency>) {
+    let newGraph = new ComponentGraph();
+    let newGraphNodes: { id: string; node: Component }[] = [];
+    let newGraphEdges: { sourceId: string; targetId: string; edge: Dependency }[] = [];
+    for (const [nodeId, node] of graph.nodes.entries()) {
+      newGraphNodes.push({
+        id: nodeId,
+        node: node
+      });
+    }
+    for (const [edgeId, edge] of graph.edges.entries()) {
+      const { sourceId, targetId } = graph.edgeNodesById(edgeId);
+      if (!!sourceId && !!targetId) {
+        newGraphEdges.push({
+          sourceId: sourceId,
+          targetId: targetId,
+          edge: edge
+        });
+      }
+    }
+    newGraph.setNodes(newGraphNodes);
+    newGraph.setEdges(newGraphEdges);
+    return newGraph;
+  }
 
   _calculateVersionMap() {
     let versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }> = new Map();
