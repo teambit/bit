@@ -690,7 +690,7 @@ export default class Consumer {
       bitId: BitId,
       bindingPrefix: string
     ): PathRelative | null | undefined => {
-      if (componentMap.rootDir) return componentMap.rootDir;
+      if (componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) return componentMap.rootDir;
       // it's author
       if (!bitId.hasScope()) return null;
       return getNodeModulesPathOfComponent(bindingPrefix, bitId);

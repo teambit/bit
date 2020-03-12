@@ -629,11 +629,12 @@ Circle.defaultProps = {
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('bar-dep', 'bar.js');
       helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
-      helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
+      helper.command.addComponentDir('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
       helper.command.addComponent('baz/baz.js');
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.linkAndRewire();
+      helper.command.tagAllComponentsWithoutAllowRelativePaths();
+      helper.command.exportAllComponentsAndRewire();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
     });

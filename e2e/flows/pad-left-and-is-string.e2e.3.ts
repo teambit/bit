@@ -7,7 +7,7 @@ import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/st
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
-
+// legacy test as it tests lots of the originallySharedDir functionality
 describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function() {
   this.timeout(0);
   let helper: Helper;
@@ -31,8 +31,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       fs.copySync(path.join(sourceDir, 'is-string'), path.join(destination, 'is-string'));
       fs.copySync(path.join(sourceDir, 'pad-left'), path.join(destination, 'pad-left'));
 
-      helper.command.addComponent('src/is-string -t src/is-string/is-string.spec.js -i string/is-string');
-      helper.command.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
+      helper.command.addComponentLegacy('src/is-string -t src/is-string/is-string.spec.js -i string/is-string');
+      helper.command.addComponentLegacy('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
 
       helper.env.importCompiler();
       helper.env.importTester();
