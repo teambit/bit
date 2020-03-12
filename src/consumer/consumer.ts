@@ -71,6 +71,7 @@ import { AutoTagResult } from '../scope/component-ops/auto-tag';
 import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
+import ComponentMap from './bit-map/component-map';
 
 type ConsumerProps = {
   projectPath: string;
@@ -685,15 +686,15 @@ export default class Consumer {
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
     const getPackageJsonDir = (
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentMap: ComponentMap,
       bitId: BitId,
       bindingPrefix: string
     ): PathRelative | null | undefined => {
-      if (componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) return componentMap.rootDir;
-      // it's author
-      if (!bitId.hasScope()) return null;
-      return getNodeModulesPathOfComponent(bindingPrefix, bitId);
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        if (componentMap.hasRootDir()) return null; // no package.json in this case
+        return getNodeModulesPathOfComponent(bindingPrefix, bitId, true, this.config.defaultScope);
+      }
+      return componentMap.rootDir;
     };
 
     const updateVersionsP = components.map(component => {
