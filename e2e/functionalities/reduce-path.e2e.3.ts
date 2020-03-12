@@ -18,7 +18,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       // Author creates a component in bar/foo.js
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooLegacy();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       const authorScope = helper.scopeHelper.cloneLocalScope();
@@ -39,7 +39,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       expect(fs.existsSync(authorLocation)).to.be.true;
       expect(fs.readFileSync(authorLocation).toString()).to.equal(barFooV2);
       helper.fs.createFile('', 'foo2.js');
-      helper.command.addComponent('foo2.js', { i: 'bar/foo' });
+      helper.command.addComponentLegacy('foo2.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.getClonedLocalScope(importedScope);

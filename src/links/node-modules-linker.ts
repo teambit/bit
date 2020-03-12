@@ -282,7 +282,7 @@ export default class NodeModuleLinker {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
-      if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
+      if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(

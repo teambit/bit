@@ -284,6 +284,10 @@ export default class ComponentMap {
     return this.rootDir || '.';
   }
 
+  hasRootDir(): boolean {
+    return Boolean(this.rootDir && this.rootDir !== '.');
+  }
+
   /**
    * directory of the component (root / track)
    */
