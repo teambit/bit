@@ -21,7 +21,12 @@ export default class InstallCmd implements Command {
   // TODO: remove this ts-ignore
   // @ts-ignore
   async render() {
-    const results = await this.install.install();
-    return <Color green>Successfully installed {results.length} component(s)</Color>;
+    try {
+      const results = await this.install.install();
+      return <Color green>Successfully installed {results.length} component(s)</Color>;
+    } catch (e) {
+      return <Color red>Failed to install: {e.message || e.toString()}</Color>;
+      // TODO: exit status?
+    }
   }
 }

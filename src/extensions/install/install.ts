@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { FailedToInstall } from './failed-to-install';
 import { Workspace } from '../workspace';
 import { PackageManager } from '../package-manager';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
@@ -9,26 +8,43 @@ import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
 export class Install {
   constructor(private workspace: Workspace, private packageManager: PackageManager) {}
   async install() {
-    try {
-      const components = await this.workspace.list();
-      const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      const packageManagerName = this.workspace.consumer.config.packageManager;
+    const components = await this.workspace.list();
+    const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
+    const packageManagerName = this.workspace.consumer.config.packageManager;
+    await Promise.all(
+      isolatedEnvs.map(async e => {
+        const componentPackageName = componentIdToPackageName(
+          e.component.id.legacyComponentId,
+          DEFAULT_REGISTRY_DOMAIN_PREFIX
+        );
+        try {
+          await fs.unlink(path.join(process.cwd(), 'node_modules', componentPackageName));
+        } catch (err) {
+          // if the symlink does not exist - no problem
+          if (err.code !== 'ENOENT') {
+            throw err;
+          }
+        }
+      })
+    );
 
-      const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
-      packageJson.dependencies = packageJson.dependencies || {};
-      isolatedEnvs.forEach(e => {
-        const componentPackageName = componentIdToPackageName(e.capsule.config.bitId, DEFAULT_REGISTRY_DOMAIN_PREFIX);
+    await this.packageManager.runInstallInFolder(process.cwd(), {
+      packageManager: packageManagerName
+    });
+
+    await Promise.all(
+      isolatedEnvs.map(async e => {
+        const componentPackageName = componentIdToPackageName(
+          e.component.id.legacyComponentId,
+          DEFAULT_REGISTRY_DOMAIN_PREFIX
+        );
         const depFilePath = `file:${e.capsule.wrkDir}`;
-        packageJson.dependencies[componentPackageName] = depFilePath;
-      });
-      await fs.writeFile(path.join(process.cwd(), 'package.json'), JSON.stringify(packageJson, null, 2));
+        const linkPath = path.join(process.cwd(), 'node_modules', componentPackageName);
+        await fs.mkdirp(path.dirname(linkPath));
+        await fs.symlink(e.capsule.wrkDir, linkPath);
+      })
+    );
 
-      await this.packageManager.runInstallInFolder(process.cwd(), {
-        packageManager: packageManagerName
-      });
-      return isolatedEnvs;
-    } catch (e) {
-      throw new FailedToInstall(e.message);
-    }
+    return isolatedEnvs;
   }
 }

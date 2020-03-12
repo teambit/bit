@@ -60,7 +60,10 @@ export default class PackageManager {
             installProc.stdout.on('data', d => log(d.toString()));
             // @ts-ignore
             installProc.stderr.on('data', d => warn(d.toString()));
-            installProc.on('error', e => reject(e));
+            installProc.on('error', e => {
+              done();
+              reject(e);
+            });
             installProc.on('close', () => {
               // TODO: exit status
               done();
@@ -77,11 +80,23 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
+    const { log, warn, done } = this.reporter.createLogger(folder);
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
-      pipeOutput(child);
-      await child;
+      await new Promise((resolve, reject) => {
+        child.stdout.on('data', d => log(d.toString()));
+        // @ts-ignore
+        child.stderr.on('data', d => warn(d.toString()));
+        child.on('error', e => reject(e));
+        child.on('close', () => {
+          // TODO: exit status
+          done();
+          resolve();
+        });
+      });
+      // pipeOutput(child);
+      // await child;
       return null;
     }
     if (packageManager === 'yarn') {
@@ -92,8 +107,27 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      pipeOutput(child);
-      await child;
+      await new Promise((resolve, reject) => {
+        // @ts-ignore
+        child.stdout.on('data', d => log(d.toString()));
+        // @ts-ignore
+        child.stderr.on('data', d => warn(d.toString()));
+        child.on('error', e => {
+          done();
+          reject(e);
+        });
+        child.on('close', exitStatus => {
+          // TODO: exit status
+          done();
+          if (exitStatus) {
+            reject(new Error(`${folder}`));
+          } else {
+            resolve();
+          }
+        });
+      });
+      //      pipeOutput(child);
+      //      await child;
       return null;
     }
     throw new Error(`unsupported package manager ${packageManager}`);
