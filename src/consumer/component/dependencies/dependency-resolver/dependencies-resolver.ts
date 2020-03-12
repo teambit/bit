@@ -398,10 +398,10 @@ export default class DependencyResolver {
     if (!componentId) componentId = this._getComponentIdFromCustomResolveToPackageWithDist(depFileRelative);
     // if not found here, the file is not a component file. It might be a bit-auto-generated file.
     // find the component file by the auto-generated file.
-    // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
-    // auto-generated files.
-    if (!componentId && rootDir) {
+    // We make sure also that it's not an AUTHORED component, which shouldn't have auto-generated files.
+    if (!componentId && this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
       componentId = this.traverseTreeForComponentId(depFile);
+      if (!rootDir) throw new Error('rootDir must be set for non authored components');
       if (componentId) {
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
