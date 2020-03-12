@@ -563,8 +563,10 @@ export default class Component {
    * already relative to the sharedDir rather than the author workspace.
    */
   get ignoreSharedDir(): boolean {
-    if (!this.componentMap) throw new Error('ignoreSharedDir expect Component to have componentMap');
-    // @ts-ignore
+    if (!this.componentMap) {
+      // @todo: this happens when isolating via capsule. needs to decide what should be the behavior.
+      return false;
+    }
     return (
       Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
       Boolean(this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED && !this.componentMap.originallySharedDir)

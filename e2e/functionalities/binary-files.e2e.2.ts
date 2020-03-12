@@ -59,7 +59,7 @@ describe('binary files', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
-      helper.command.addComponentDir('bar', { m: 'png_fixture.png', i: 'bar/foo' });
+      helper.command.addComponent('bar', { m: 'png_fixture.png', i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
     });

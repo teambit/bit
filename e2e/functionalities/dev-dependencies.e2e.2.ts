@@ -213,6 +213,7 @@ describe('foo', () => {
       helper.command.addComponentDir('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.addComponentUtilsIsType();
+      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       barFoo = helper.command.catComponent('bar/foo@latest');
 
