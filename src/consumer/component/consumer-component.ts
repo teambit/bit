@@ -565,7 +565,7 @@ export default class Component {
   get ignoreSharedDir(): boolean {
     if (!this.componentMap) {
       // @todo: this happens when isolating via capsule. needs to decide what should be the behavior.
-      return false;
+      return !this.originallySharedDir;
     }
     return (
       Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
