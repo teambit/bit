@@ -606,6 +606,7 @@ describe('bit checkout command', function() {
       });
     });
   });
+  // legacy test in order to check the originallySharedDir
   describe('component with originallySharedDir', () => {
     let output;
     let authorScope;
@@ -613,7 +614,7 @@ describe('bit checkout command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.addComponentBarFooLegacy();
       helper.fixtures.tagComponentBarFoo();
       helper.command.tagScope('0.0.5');
       helper.command.exportAllComponents();

@@ -1289,14 +1289,15 @@ describe('workspace config', function() {
         });
       });
     });
+    // legacy test in order to check the originallySharedDir
     describe('ignoring files with originallySharedDir', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         const fooFixture = 'require("../utils/is-string");';
         helper.fs.createFile('src/bar', 'foo.js', fooFixture);
         helper.fs.createFile('src/utils', 'is-string.js');
-        helper.command.addComponent('src/bar/foo.js');
-        helper.command.addComponent('src/utils/is-string.js');
+        helper.command.addComponentLegacy('src/bar/foo.js');
+        helper.command.addComponentLegacy('src/utils/is-string.js');
         const overrides = {
           foo: {
             dependencies: {

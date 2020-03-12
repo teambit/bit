@@ -65,7 +65,7 @@ describe('dynamic namespaces', function() {
         });
         it('should create the directories according to the multiple namespaces', () => {
           expect(path.join(helper.scopes.localPath, 'components', componentName)).to.be.a.path();
-          expect(path.join(helper.scopes.localPath, 'components', componentName, 'foo.js')).to.be.a.file();
+          expect(path.join(helper.scopes.localPath, 'components', componentName, 'bar/foo.js')).to.be.a.file();
         });
       });
     });
