@@ -43,7 +43,6 @@ export default class InsightsCmd implements Command {
       }
     else {
       const results = await this.insightManager.runAll();
-      debugger
       return <Color blueBright>{results}</Color>
     }
   }

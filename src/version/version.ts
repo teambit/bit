@@ -30,4 +30,8 @@ export default class Version {
     if (this.versionNum && !this.latest) return this.versionNum.toString();
     throw new InvalidVersion(this.versionNum);
   }
+
+  isLaterThan(otherVersion: Version) {
+    return semver.gt(this.versionNum, otherVersion.versionNum);
+  }
 }
