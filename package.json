@@ -126,7 +126,7 @@
     "make-fetch-happen": "^4.0.1",
     "memfs": "2.15.5",
     "minimatch": "^3.0.4",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.0",
     "mockery": "^2.0.0",
     "needle": "^2.3.2",
     "normalize-path": "^2.1.1",
