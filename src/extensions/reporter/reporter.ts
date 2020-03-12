@@ -4,7 +4,7 @@ import ora from 'ora';
 
 export default class Reporter {
   createLogger(id) {
-    const spinner = ora({ spinner: 'bouncingBar' }).start();
+    const spinner = ora({ spinner: 'bouncingBar' }); // TODO: start?
     return {
       log(...messages) {
         spinner.stop();
