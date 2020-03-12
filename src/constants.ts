@@ -221,6 +221,8 @@ export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { c
 
 export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
 
+export const CFG_FEATURE_TOGGLE = 'features';
+
 /**
  * git hooks
  */
