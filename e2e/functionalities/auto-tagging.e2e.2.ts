@@ -141,7 +141,7 @@ describe('auto tagging functionality', function() {
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
       });
-      describe('running all tests', () => {
+      describe.only('running all tests', () => {
         let testResults;
         before(() => {
           testResults = helper.general.runWithTryCatch('bit test');
