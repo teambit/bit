@@ -103,11 +103,17 @@ export default class CommandHelper {
    * rootDir is not set for authored. same as it was on versions < 14.8.0.
    * useful for tests that involve originallySharedDir logic. that's the only way to test them.
    */
-  addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+  addComponentLegacy(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd, undefined, LEGACY_SHARED_DIR_FEATURE);
+  }
+  addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
   }
   addComponentAllowFiles(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
