@@ -332,6 +332,7 @@ export default class AddComponents {
     const { componentId, trackDir } = component;
     let mainFile = determineMainFile(component, foundComponentFromBitMap);
     const getRootDir = () => {
+      if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
       if (this.allowRelativePaths) {
         if (foundComponentFromBitMap) {
           if (foundComponentFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
@@ -743,6 +744,7 @@ you can add the directory these files are located at and it'll change the root d
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
     ignoreList = ignoreList.concat(configsToIgnore.files);
     ignoreList = ignoreList.concat(configDirs);
+    if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) ignoreList.push(PACKAGE_JSON);
     return ignoreList;
   }
 
