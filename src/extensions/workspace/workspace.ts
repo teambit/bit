@@ -209,7 +209,10 @@ export default class Workspace implements ComponentHost {
     const isCore = (config: ExtensionConfigEntry): boolean => {
       return coreNames.includes(config.id);
     };
-    return groupBy(isCore, extensionsConfig);
+    const groups = groupBy(isCore, extensionsConfig);
+    groups.false = ExtensionConfigList.fromArray(groups.false);
+    groups.true = ExtensionConfigList.fromArray(groups.true);
+    return groups;
   }
 
   async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
@@ -227,7 +230,6 @@ export default class Workspace implements ComponentHost {
    */
   private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
     // const extensionsIds = extensionsConfig.ids;
-
     if (!extensionsIds || !extensionsIds.length) {
       return [];
     }
