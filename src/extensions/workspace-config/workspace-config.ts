@@ -16,6 +16,7 @@ import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { BitId } from '../../bit-id';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
+const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
 
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
@@ -33,8 +34,8 @@ export default class WorkspaceConfig {
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     if (data) {
-      const withoutComponentsConfig = omit([COMPONENT_CONFIG_ENTRY_NAME], data);
-      this.workspaceSettings = WorkspaceSettings.fromObject(withoutComponentsConfig);
+      const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, data);
+      this.workspaceSettings = WorkspaceSettings.fromObject(withoutInternalConfig);
       // } else if (legacyConfig){
     } else {
       // We know we have either data or legacy config

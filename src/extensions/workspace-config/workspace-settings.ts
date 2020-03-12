@@ -28,14 +28,16 @@ const LEGACY_PROPS = [
   'distTarget'
 ];
 
-export type ComponentScopeDirMap = {
+export type ComponentScopeDirMapEntry = {
   defaultScope?: string;
   directory: string;
 };
 
+export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
+
 export type WorkspaceExtensionProps = {
   owner?: string;
-  components: ComponentScopeDirMap[];
+  components: ComponentScopeDirMap;
 };
 
 export interface DependencyResolverExtensionProps {

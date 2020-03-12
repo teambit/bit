@@ -293,9 +293,8 @@ export default class Consumer {
   }
 
   getParsedId(id: BitIdStr): BitId {
-    // $FlowFixMe, bitId is always defined as shouldThrow is true
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const bitId: BitId = this.bitMap.getExistingBitId(id);
+    // @ts-ignore (we know it will never be undefined since it pass throw=true)
+    const bitId: BitId = this.bitMap.getExistingBitId(id, true);
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version || LATEST);
   }

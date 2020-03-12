@@ -1,5 +1,6 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
-import { difference } from 'ramda';
+import { difference, groupBy } from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
 import { WorkspaceConfig } from '../workspace-config';
@@ -15,12 +16,17 @@ import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import GeneralError from '../../error/general-error';
-import { ExtensionConfigList } from '../workspace-config/extension-config-list';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../workspace-config/extension-config-list';
+import { coreConfigurableExtensions } from './core-configurable-extensions';
+import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 
 /**
  * API of the Bit Workspace
  */
 export default class Workspace implements ComponentHost {
+  owner?: string;
+  componentsScopeDirsMap: ComponentScopeDirMap;
+
   constructor(
     /**
      * private access to the legacy consumer instance.
@@ -50,7 +56,11 @@ export default class Workspace implements ComponentHost {
      * private reference to the instance of Harmony.
      */
     private harmony: Harmony
-  ) {}
+  ) {
+    const workspaceExtConfig = this.config.getExtensionConfig('workspace');
+    this.owner = workspaceExtConfig?.owner;
+    this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
+  }
 
   /**
    * root path of the Workspace.
@@ -137,6 +147,7 @@ export default class Workspace implements ComponentHost {
    */
   async get(id: string | BitId): Promise<Component | undefined> {
     const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+    if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
@@ -146,7 +157,8 @@ export default class Workspace implements ComponentHost {
    */
   async getMany(ids: Array<BitId | string>) {
     const componentIds = ids.map(id => (typeof id === 'string' ? this.consumer.getParsedId(id) : id));
-    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
+    const idsWithoutEmpty = compact(componentIds);
+    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(idsWithoutEmpty));
     // @ts-ignore
     return this.transformLegacyComponents(legacyComponents.components);
   }
@@ -178,12 +190,30 @@ export default class Workspace implements ComponentHost {
 
   async loadWorkspaceExtensions() {
     const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
-    const extensionsManifests = await this.resolveExtensions(extensionsConfig);
-    await this.loadExtensions(extensionsManifests);
+    const extensionsConfigGroups = this.groupByCoreExtensions(extensionsConfig);
+    // Do not load workspace extension again
+    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true.filter(
+      config => config.id !== 'workspace'
+    );
+    const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
+      configEntry => coreConfigurableExtensions[configEntry.id]
+    );
+    const externalExtensionsManifests = await this.resolveExtensions(extensionsConfigGroups.false.ids);
+    await this.loadExtensions([...coreExtensionsManifests, ...externalExtensionsManifests]);
+  }
+
+  private groupByCoreExtensions(
+    extensionsConfig: ExtensionConfigList
+  ): { true: ExtensionConfigList; false: ExtensionConfigList } {
+    const coreNames = Object.keys(coreConfigurableExtensions);
+    const isCore = (config: ExtensionConfigEntry): boolean => {
+      return coreNames.includes(config.id);
+    };
+    return groupBy(isCore, extensionsConfig);
   }
 
   async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
-    const extensionsManifests = await this.resolveExtensions(extensionsConfig);
+    const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
     await this.loadExtensions(extensionsManifests);
   }
 
@@ -195,8 +225,8 @@ export default class Workspace implements ComponentHost {
    * load all of bit's extensions.
    * :TODO must be refactored by @gilad
    */
-  private async resolveExtensions(extensionsConfig: ExtensionConfigList): Promise<ExtensionManifest[]> {
-    const extensionsIds = extensionsConfig.ids;
+  private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
+    // const extensionsIds = extensionsConfig.ids;
 
     if (!extensionsIds || !extensionsIds.length) {
       return [];
