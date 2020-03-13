@@ -3,6 +3,7 @@ import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
 import { Isolator } from '../isolator';
+import { Reporter } from '../reporter';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 
@@ -19,6 +20,7 @@ export default class Bit {
     readonly workspace: Workspace | undefined,
 
     private isolate: Isolator,
+    private reporter: Reporter,
 
     /**
      * private reference to the instance of Harmony.

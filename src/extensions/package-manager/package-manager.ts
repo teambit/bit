@@ -43,30 +43,43 @@ export default class PackageManager {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     if (packageManager === 'yarn') {
-      capsules.forEach(capsule => {
-        deleteBitBinFromPkgJson(capsule);
-        execa.sync('yarn', [], { cwd: capsule.wrkDir });
-        linkBitBinInCapsule(capsule);
-      });
+      await Promise.all(
+        capsules.map(async capsule => {
+          deleteBitBinFromPkgJson(capsule);
+          await new Promise((resolve, reject) => {
+            const { log, warn } = this.reporter.createLogger(capsule.component.id.toString());
+            const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+            // @ts-ignore
+            installProc.stdout.on('data', d => log(d.toString()));
+            // @ts-ignore
+            installProc.stderr.on('data', d => warn(d.toString()));
+            installProc.on('error', e => {
+              reject(e);
+            });
+            installProc.on('close', () => {
+              // TODO: exit status
+              resolve();
+            });
+          });
+          linkBitBinInCapsule(capsule);
+        })
+      );
     } else if (packageManager === 'npm') {
       await Promise.all(
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
           await new Promise((resolve, reject) => {
-            const { log, warn, done } = this.reporter.createLogger(capsule.component.id.toString());
-            log('running install...', capsule.component.id.toString());
+            const { log, warn } = this.reporter.createLogger(capsule.component.id.toString());
             const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
             // @ts-ignore
             installProc.stdout.on('data', d => log(d.toString()));
             // @ts-ignore
             installProc.stderr.on('data', d => warn(d.toString()));
             installProc.on('error', e => {
-              done();
               reject(e);
             });
             installProc.on('close', () => {
               // TODO: exit status
-              done();
               resolve();
             });
           });
@@ -80,7 +93,7 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    const { log, warn, done } = this.reporter.createLogger(folder);
+    const { log, warn } = this.reporter.createLogger(folder);
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
@@ -91,12 +104,9 @@ export default class PackageManager {
         child.on('error', e => reject(e));
         child.on('close', () => {
           // TODO: exit status
-          done();
           resolve();
         });
       });
-      // pipeOutput(child);
-      // await child;
       return null;
     }
     if (packageManager === 'yarn') {
@@ -113,12 +123,10 @@ export default class PackageManager {
         // @ts-ignore
         child.stderr.on('data', d => warn(d.toString()));
         child.on('error', e => {
-          done();
           reject(e);
         });
         child.on('close', exitStatus => {
           // TODO: exit status
-          done();
           if (exitStatus) {
             reject(new Error(`${folder}`));
           } else {
@@ -126,8 +134,6 @@ export default class PackageManager {
           }
         });
       });
-      //      pipeOutput(child);
-      //      await child;
       return null;
     }
     throw new Error(`unsupported package manager ${packageManager}`);
