@@ -51,4 +51,3 @@ export default class ExtensionsHelper {
     fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 }
-addComponentAllowFiles;

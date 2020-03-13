@@ -19,10 +19,10 @@ describe('relative paths flow (components requiring each other by relative paths
     let appOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      appOutput = helper.fixtures.populateComponents(3);
+      appOutput = helper.fixtures.populateComponents(2);
       beforeFix = helper.scopeHelper.cloneLocalScope();
     });
-    it.only('bit status should show it as an invalid component', () => {
+    it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
       expect(status.invalidComponents).to.have.lengthOf(1);
       expect(status.invalidComponents[0].id.name).to.equal('comp1');
