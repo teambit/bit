@@ -3,6 +3,7 @@ import { ReplaySubject } from 'rxjs';
 import { filter, difference } from 'ramda';
 
 import { Isolator } from '../isolator';
+import { Reporter } from '../reporter';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 
@@ -19,6 +20,7 @@ export default class Bit {
     readonly workspace: Workspace | undefined,
 
     private isolate: Isolator,
+    private reporter: Reporter,
 
     /**
      * private reference to the instance of Harmony.
@@ -63,6 +65,7 @@ export default class Bit {
     extensionsManifests: ExtensionManifest[];
     extensionsConfig: { [extensionId: string]: any };
   }> {
+    this.reporter.startPhase('Resolving extensions');
     const result = {
       extensionsManifests: [],
       extensionsConfig: {}
@@ -95,6 +98,7 @@ export default class Bit {
       result.extensionsManifests = manifests;
       result.extensionsConfig = extensionsConfig;
     }
+    this.reporter.end();
 
     return result;
   }
