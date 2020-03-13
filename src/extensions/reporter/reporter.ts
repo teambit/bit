@@ -13,7 +13,9 @@ export default class Reporter {
     this.ids = [];
     this.spinnerText = phaseName;
     this.spinner.stop();
-    const titleUnderline = Array(Math.round(process.stdout.columns / 2))
+    // this number is arbitrary and is mostly for non terminal environments
+    const columnCount = process.stdout.columns || 100;
+    const titleUnderline = Array(Math.round(columnCount / 2))
       .fill('-')
       .join('');
     console.log('');
