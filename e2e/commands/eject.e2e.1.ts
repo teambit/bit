@@ -96,7 +96,7 @@ describe('bit eject command', function() {
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'bar/foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -146,7 +146,7 @@ describe('bit eject command', function() {
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'bar/foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);

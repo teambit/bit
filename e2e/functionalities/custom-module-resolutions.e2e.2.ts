@@ -216,7 +216,7 @@ describe('custom module resolutions', function() {
           "const isString = require('utils/is-string');\n module.exports = function foo() { return isString() + ' and got foo'; };";
         helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-        helper.command.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.addComponentDir('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
         helper.command.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {
@@ -230,12 +230,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-string.js',
+          destinationPath: 'utils/is-string.js',
           importSource: 'utils/is-string'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-type.js',
+          destinationPath: 'utils/is-type.js',
           importSource: 'utils/is-type'
         });
       });
@@ -311,7 +311,7 @@ describe('custom module resolutions', function() {
         helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.fs.createFile('src/utils', 'index.js', indexFixture);
         helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-        helper.command.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.addComponentDir('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
         helper.command.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {
@@ -325,12 +325,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/index.js',
+          destinationPath: 'utils/index.js',
           importSource: '@/utils'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-type.js',
+          destinationPath: 'utils/is-type.js',
           importSource: '@/utils/is-type'
         });
       });
@@ -520,7 +520,7 @@ describe('custom module resolutions', function() {
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
-        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/src/assets/png_fixture.png'));
       });
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {

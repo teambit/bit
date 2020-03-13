@@ -1076,7 +1076,7 @@ describe('bit export command', function() {
               helper.command.runCmd(`bit import ${forkScope}/bar/foo`);
             });
             it('should write the source code with the changed source of the forked scope', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
               expect(barFoo).to.have.string(forkScope);
               expect(barFoo).to.not.have.string(helper.scopes.remote);
             });
@@ -1141,11 +1141,11 @@ describe('bit export command', function() {
               output = helper.command.export(`${forkScope} --include-dependencies --set-current-scope --rewire --all`);
             });
             it('should change the files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/bar/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the dist files locally on the workspace', () => {
-              const barFoo = helper.fs.readFile('components/bar/foo/dist/foo.js');
+              const barFoo = helper.fs.readFile('components/bar/foo/dist/bar/foo.js');
               expect(barFoo).to.equal(fixtures.barFooModulePath(forkScope));
             });
             it('should change the files objects locally', () => {
