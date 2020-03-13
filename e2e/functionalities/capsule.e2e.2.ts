@@ -207,8 +207,8 @@ describe('capsule', function() {
         capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
       });
       it('should write all dependencies dists into the capsule', () => {
-        const isStringDist = path.join(capsuleDir, '.dependencies/utils/is-string/dist/is-string.js');
-        const isTypeDist = path.join(capsuleDir, '.dependencies/utils/is-type/dist/is-type.js');
+        const isStringDist = path.join(capsuleDir, '.dependencies/utils/is-string/dist/utils/is-string.js');
+        const isTypeDist = path.join(capsuleDir, '.dependencies/utils/is-type/dist/utils/is-type.js');
         expect(isStringDist).to.be.a.file();
         expect(isTypeDist).to.be.a.file();
       });
@@ -250,8 +250,8 @@ describe('capsule', function() {
           newCapsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
         });
         it('should write all dependencies dists into the capsule', () => {
-          const isStringDist = path.join(newCapsuleDir, '.dependencies/utils/is-string/dist/is-string.js');
-          const isTypeDist = path.join(newCapsuleDir, '.dependencies/utils/is-type/dist/is-type.js');
+          const isStringDist = path.join(newCapsuleDir, '.dependencies/utils/is-string/dist/utils/is-string.js');
+          const isTypeDist = path.join(newCapsuleDir, '.dependencies/utils/is-type/dist/utils/is-type.js');
           expect(isStringDist).to.be.a.file();
           expect(isTypeDist).to.be.a.file();
         });
