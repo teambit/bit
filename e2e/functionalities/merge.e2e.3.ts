@@ -115,7 +115,7 @@ describe('merge functionality', function() {
     describe('modifying the component so it will get conflict upon importing', () => {
       let localScope;
       before(() => {
-        helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV3);
+        helper.fs.createFile('components/utils/is-type/utils', 'is-type.js', fixtures.isTypeV3);
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       describe('merge with strategy=manual', () => {
@@ -123,7 +123,7 @@ describe('merge functionality', function() {
         let fileContent;
         before(() => {
           output = helper.command.importComponent('utils/is-type --merge=manual');
-          fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+          fileContent = helper.fs.readFile('components/utils/is-type/utils/is-type.js');
         });
         it('should indicate that there were files with conflicts', () => {
           expect(output).to.have.string('conflicts');
@@ -153,7 +153,7 @@ describe('merge functionality', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           output = helper.command.importComponent('utils/is-type --merge=theirs');
-          fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+          fileContent = helper.fs.readFile('components/utils/is-type/utils/is-type.js');
         });
         it('should not indicate that there were files with conflicts', () => {
           expect(output).to.not.have.string('conflicts');
@@ -177,7 +177,7 @@ describe('merge functionality', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
           output = helper.command.importComponent('utils/is-type --merge=ours');
-          fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+          fileContent = helper.fs.readFile('components/utils/is-type/utils/is-type.js');
         });
         it('should not indicate that there were files with conflicts', () => {
           expect(output).to.not.have.string('conflicts');
@@ -198,7 +198,7 @@ describe('merge functionality', function() {
     });
     describe('modifying the component to be the same as the imported component (so the merge will succeed with no conflicts)', () => {
       before(() => {
-        helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV2);
+        helper.fs.createFile('components/utils/is-type/utils', 'is-type.js', fixtures.isTypeV2);
       });
       describe('merge with strategy=manual', () => {
         // strategies of ours and theirs are leading to the same results
@@ -206,7 +206,7 @@ describe('merge functionality', function() {
         let fileContent;
         before(() => {
           output = helper.command.importComponent('utils/is-type --merge=manual');
-          fileContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+          fileContent = helper.fs.readFile('components/utils/is-type/utils/is-type.js');
         });
         it('should not indicate that there were files with conflicts', () => {
           expect(output).to.not.have.string('conflicts');
@@ -230,13 +230,13 @@ describe('merge functionality', function() {
         helper.scopeHelper.getClonedLocalScope(beforeImport);
         helper.command.importComponent('utils/is-type');
         helper.command.importComponent('utils/is-string');
-        helper.fs.createFile('components/utils/is-type', 'is-type.js', fixtures.isTypeV3);
+        helper.fs.createFile('components/utils/is-type/utils', 'is-type.js', fixtures.isTypeV3);
         // an intermediate step, make sure bit status shows as modified
         expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/utils/is-type@0.0.2`)).to.be.true;
         helper.command.importComponent('utils/is-string --merge');
       });
       it('should not remove the dependency changes', () => {
-        const isTypeContent = helper.fs.readFile('components/utils/is-type/is-type.js');
+        const isTypeContent = helper.fs.readFile('components/utils/is-type/utils/is-type.js');
         expect(isTypeContent).to.equal(fixtures.isTypeV3);
         expect(helper.command.statusComponentIsModified(`${helper.scopes.remote}/utils/is-type@0.0.2`)).to.be.true;
       });

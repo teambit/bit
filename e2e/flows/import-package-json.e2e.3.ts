@@ -18,6 +18,7 @@ describe('component with package.json as a file of the component', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component with package.json', () => {
     let consumerFiles;
     let bitMap;
@@ -26,7 +27,7 @@ describe('component with package.json as a file of the component', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
-      const addOutput = helper.command.addComponent('package.json', { i: 'foo/pkg' });
+      const addOutput = helper.command.addComponentLegacy('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -68,7 +69,7 @@ describe('component with package.json as a file of the component', function() {
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
       it('should prevent users from deliberately adding them', () => {
-        const output = helper.command.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
+        const output = helper.command.addComponentLegacy('components/foo/pkg/bar.js', { i: 'foo/pkg' });
         expect(output).to.have.string('no files to track');
       });
     });
@@ -82,6 +83,7 @@ describe('component with package.json as a file of the component', function() {
       });
     });
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component with package.json in an shared directory with another file', () => {
     let consumerFiles;
     let bitMap;
@@ -91,7 +93,7 @@ describe('component with package.json as a file of the component', function() {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('bar/package.json', fixturePackageJson);
       helper.fs.createFile('bar', 'foo.js');
-      const addOutput = helper.command.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
+      const addOutput = helper.command.addComponentLegacy('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -124,6 +126,7 @@ describe('component with package.json as a file of the component', function() {
       });
     });
   });
+  // legacy test. (tracking package.json is deprecated)
   describe('a component requires another component with package.json', () => {
     let consumerFiles;
     let bitMap;
@@ -135,9 +138,9 @@ describe('component with package.json as a file of the component', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.fs.createJsonFile('package.json', fixturePackageJson);
-      helper.command.addComponent('package.json', { i: 'foo/pkg' });
+      helper.command.addComponentLegacy('package.json', { i: 'foo/pkg' });
       helper.fs.createFile('', 'foo.js', fooFixture);
-      helper.command.addComponent('foo.js', { i: 'bar/foo' });
+      helper.command.addComponentLegacy('foo.js', { i: 'bar/foo' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       afterExportScope = helper.scopeHelper.cloneLocalScope();

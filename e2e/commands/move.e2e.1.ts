@@ -70,7 +70,7 @@ describe('bit move command', function() {
       helper.fs.createFile('bar', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
       helper.fs.createFile('bar', 'foo1.spec.js');
-      helper.command.addComponent('bar', {
+      helper.command.addComponentLegacy('bar', {
         i: 'bar/foo',
         t: path.normalize('bar/foo1.spec.js'),
         m: path.normalize('bar/foo1.js')

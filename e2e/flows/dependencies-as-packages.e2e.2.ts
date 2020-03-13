@@ -105,8 +105,8 @@ chai.use(require('chai-fs'));
         });
         it('should install the dependencies using NPM', () => {
           const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
-          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
-          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string/utils`, 'is-string.js')).to.be.a.file();
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type/utils`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
           const output = helper.command.runCmd('bit status');
@@ -127,8 +127,8 @@ chai.use(require('chai-fs'));
           });
           it('should install the dependencies using NPM', () => {
             const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
-            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
-            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string/utils`, 'is-string.js')).to.be.a.file();
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type/utils`, 'is-type.js')).to.be.a.file();
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
