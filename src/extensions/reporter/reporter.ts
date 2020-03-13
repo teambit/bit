@@ -33,25 +33,35 @@ export default class Reporter {
   createLogger(id) {
     this.addId(id);
     const spinner = this.spinner;
+    const getSpinnerText = () => this.spinnerText; // TODO: remove this ugly hack
     return {
       log(...messages) {
-        spinner.stop();
-        console.log(chalk.hex(stc(id))(messages.join(' ')));
-        spinner.start();
+        if (getSpinnerText()) {
+          // spinner is running
+          // TODO: this is a hack because we're only trying out this method for now
+          spinner.stop();
+          console.log(chalk.hex(stc(id))(messages.join(' ')));
+          spinner.start();
+        }
       },
       warn(...messages) {
-        const lines = messages.join(' ').split(/\n/);
-        spinner.stop();
-        lines
-          .filter(line => line.replace(/\s+/, '').length > 0)
-          .forEach(line => {
-            console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
-          });
-        spinner.start();
+        if (getSpinnerText()) {
+          // spinner is running
+          // TODO: this is a hack because we're only trying out this method for now
+          const lines = messages.join(' ').split(/\n/);
+          spinner.stop();
+          lines
+            .filter(line => line.replace(/\s+/, '').length > 0)
+            .forEach(line => {
+              console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+            });
+          spinner.start();
+        }
       }
     };
   }
   end() {
     this.spinner.stop();
+    this.spinnerText = undefined;
   }
 }

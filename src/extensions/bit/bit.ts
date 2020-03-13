@@ -65,7 +65,6 @@ export default class Bit {
     extensionsManifests: ExtensionManifest[];
     extensionsConfig: { [extensionId: string]: any };
   }> {
-    this.reporter.startPhase('Resolving extensions');
     const result = {
       extensionsManifests: [],
       extensionsConfig: {}
@@ -98,7 +97,6 @@ export default class Bit {
       result.extensionsManifests = manifests;
       result.extensionsConfig = extensionsConfig;
     }
-    this.reporter.end();
 
     return result;
   }
