@@ -6,12 +6,7 @@ import { customResolvedPath, ExtensionData } from '../../consumer/component/cons
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
-import {
-  DEFAULT_BUNDLE_FILENAME,
-  DEFAULT_BINDINGS_PREFIX,
-  DEPENDENCIES_FIELDS,
-  COMPONENT_ORIGINS
-} from '../../constants';
+import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, DEPENDENCIES_FIELDS } from '../../constants';
 import { Results } from '../../consumer/specs-results/specs-results';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';

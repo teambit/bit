@@ -219,7 +219,7 @@ describe('custom module resolutions', function() {
           "const isString = require('utils/is-string');\n module.exports = function foo() { return isString() + ' and got foo'; };";
         helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-        helper.command.addComponentDir('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
         helper.command.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {
@@ -314,7 +314,7 @@ describe('custom module resolutions', function() {
         helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.fs.createFile('src/utils', 'index.js', indexFixture);
         helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-        helper.command.addComponentDir('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
         helper.command.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {

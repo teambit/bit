@@ -49,7 +49,6 @@ import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { AddingIndividualFiles } from './exceptions/addding-individual-files';
 import { stripSharedDirFromPath, addSharedDirForPath } from '../manipulate-dir';
-import OutsideRootDir from '../../bit-map/exceptions/outside-root-dir';
 import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };

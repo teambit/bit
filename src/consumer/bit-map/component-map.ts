@@ -13,8 +13,6 @@ import { NoFiles, EmptyDirectory } from '../component-ops/add-components/excepti
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import ConfigDir from './config-dir';
-import ShowDoctorError from '../../error/show-doctor-error';
-import GeneralError from '../../error/general-error';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
