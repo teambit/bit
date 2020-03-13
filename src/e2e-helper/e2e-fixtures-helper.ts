@@ -54,8 +54,16 @@ export default class FixtureHelper {
     return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
 
+  addComponentUtilsIsTypeLegacy() {
+    return this.command.addComponentLegacy('utils/is-type.js', { i: 'utils/is-type' });
+  }
+
   addComponentUtilsIsString() {
     return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
+  }
+
+  addComponentUtilsIsStringLegacy() {
+    return this.command.addComponentLegacy('utils/is-string.js', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {
