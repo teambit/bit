@@ -269,7 +269,7 @@ describe('component with package.json as a file of the component', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.outputFile('bar/package.json');
       helper.fs.outputFile('bar/foo.js');
-      helper.command.addComponentDir('bar');
+      helper.command.addComponent('bar');
     });
     it('should not track the package.json file', () => {
       const bitMap = helper.bitMap.read();

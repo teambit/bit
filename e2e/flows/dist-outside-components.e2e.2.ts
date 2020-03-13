@@ -360,15 +360,15 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.bitJson.write(bitJson);
 
       helper.fs.createFile('src/utils', 'is-type.js', fixtures.isTypeES6);
-      helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
       const isStringFixture = `import isType from 'utils/is-type';
  export default function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
       const fooBarFixture = `import isString from 'utils/is-string';
 export default function foo() { return isString() + ' and got foo'; };`;
       helper.fs.createFile('src/bar', 'foo.js', fooBarFixture);
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo' });
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

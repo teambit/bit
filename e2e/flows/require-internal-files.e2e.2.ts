@@ -22,7 +22,7 @@ describe('component that requires another component internal (not main) file', f
       npmCiRegistry.setCiScopeInBitJson();
       helper.fs.createFile('src/utils', 'is-type.js', '');
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
-      helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
         m: 'src/utils/is-type.js'
       });
@@ -31,7 +31,7 @@ describe('component that requires another component internal (not main) file', f
         "const isType = require('./is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('src/utils', 'is-string.js', '');
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
         m: 'src/utils/is-string.js'
       });
@@ -39,7 +39,7 @@ describe('component that requires another component internal (not main) file', f
       const barFooFixture =
         "const isString = require('../utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
@@ -88,7 +88,7 @@ describe('component that requires another component internal (not main) file', f
       npmCiRegistry.setCiScopeInBitJson();
       helper.fs.createFile('src/utils', 'is-type.js', '');
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isTypeES6);
-      helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
         m: 'src/utils/is-type.js'
       });
@@ -97,7 +97,7 @@ describe('component that requires another component internal (not main) file', f
         "import isType from './is-type-internal'; export default function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('src/utils', 'is-string.js', '');
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
         m: 'src/utils/is-string.js'
       });
@@ -105,7 +105,7 @@ describe('component that requires another component internal (not main) file', f
       const barFooFixture =
         "import isString from '../utils/is-string-internal.js'; export default function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
       helper.command.tagAllComponents();
 
       helper.command.exportAllComponents();
@@ -151,7 +151,7 @@ describe('component that requires another component internal (not main) file', f
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('src/utils', 'is-type.js', '');
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
-      helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
         m: 'src/utils/is-type.js'
       });
@@ -159,7 +159,7 @@ describe('component that requires another component internal (not main) file', f
       const isStringFixture =
         "const isType = require('./is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
       helper.env.importDummyCompiler('bundle');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

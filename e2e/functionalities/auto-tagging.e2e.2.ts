@@ -126,7 +126,10 @@ describe('auto tagging functionality', function() {
         helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
         helper.fs.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
-        helper.command.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
+        helper.command.addComponentAllowFiles('utils/is-string.js', {
+          t: 'utils/is-string.spec.js',
+          i: 'utils/is-string'
+        });
         helper.command.tagAllComponents(); // tests are passing at this point
         helper.command.exportAllComponents();
 
@@ -323,7 +326,7 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'c.js', 'require("./d")');
       helper.fs.createFile('bar', 'd.js', 'require("./e")');
       helper.fs.createFile('bar', 'e.js', 'console.log("I am E v1")');
-      helper.command.addComponent('bar/*.js', { n: 'bar' });
+      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -401,7 +404,7 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
-      helper.command.addComponent('bar/*.js', { n: 'bar' });
+      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
@@ -528,7 +531,7 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'a.js', 'require("./b"); require("./c");');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'console.log("I am C v1")');
-      helper.command.addComponent('bar/*.js', { n: 'bar' });
+      helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 

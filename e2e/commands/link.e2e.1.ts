@@ -177,7 +177,7 @@ console.log(isType());`;
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar2', 'foo2.js');
       helper.fixtures.addComponentBarFoo();
-      helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
+      helper.command.addComponentAllowFiles('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -248,7 +248,7 @@ console.log(isType());`;
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
-      helper.command.addComponent('test/is-string2.js', { i: 'test/is-string2' });
+      helper.command.addComponentAllowFiles('test/is-string2.js', { i: 'test/is-string2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 

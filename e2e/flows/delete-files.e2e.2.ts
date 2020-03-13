@@ -16,7 +16,7 @@ describe('delete files from a component', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
-      helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
+      helper.command.addComponentAllowFiles('bar -i bar/foo -m bar/foo.js');
       helper.fs.deletePath('bar/baz.js');
       statusOutput = helper.command.runCmd('bit status');
     });
@@ -30,7 +30,7 @@ describe('delete files from a component', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
-      helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
+      helper.command.addComponentAllowFiles('bar -i bar/foo -m bar/foo.js');
       helper.fs.deletePath('bar/baz.js');
       helper.command.tagComponent('bar/foo');
     });
@@ -44,7 +44,7 @@ describe('delete files from a component', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
-      helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
+      helper.command.addComponentAllowFiles('bar -i bar/foo -m bar/foo.js');
       helper.command.tagComponent('bar/foo');
       helper.fs.deletePath('bar/baz.js');
     });
@@ -59,7 +59,7 @@ describe('delete files from a component', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'baz.js');
-      helper.command.addComponentDir('bar -i bar/foo -m bar/foo.js');
+      helper.command.addComponent('bar -i bar/foo -m bar/foo.js');
       helper.command.tagComponent('bar/foo');
       helper.fs.deletePath('bar/baz.js');
       helper.command.tagComponent('bar/foo');

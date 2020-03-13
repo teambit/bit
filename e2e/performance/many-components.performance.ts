@@ -63,7 +63,7 @@ describe('many components', function() {
       let addTimeInSeconds;
       before(() => {
         const start = process.hrtime();
-        helper.command.addComponent('bar/*');
+        helper.command.addComponentAllowFiles('bar/*');
         [addTimeInSeconds] = process.hrtime(start);
         console.log('addTimeInSeconds', addTimeInSeconds);
       });

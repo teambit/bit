@@ -19,10 +19,10 @@ describe('relative paths flow (components requiring each other by relative paths
     let appOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      appOutput = helper.fixtures.populateComponents(2);
+      appOutput = helper.fixtures.populateComponents(3);
       beforeFix = helper.scopeHelper.cloneLocalScope();
     });
-    it('bit status should show it as an invalid component', () => {
+    it.only('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
       expect(status.invalidComponents).to.have.lengthOf(1);
       expect(status.invalidComponents[0].id.name).to.equal('comp1');
@@ -91,7 +91,7 @@ describe('relative paths flow (components requiring each other by relative paths
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeFix);
         helper.scopeHelper.reInitRemoteScope();
-        helper.command.addComponentDir('comp1', '--id comp1 --allow-relative-paths');
+        helper.command.addComponent('comp1', '--id comp1 --allow-relative-paths');
       });
       it('bitmap record should be reverted to be relative to the workspace', () => {
         const bitMap = helper.bitMap.read();

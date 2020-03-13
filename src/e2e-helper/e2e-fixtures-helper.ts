@@ -43,7 +43,7 @@ export default class FixtureHelper {
   }
 
   addComponentBarFoo() {
-    return this.command.addComponent('bar/foo.js', { i: 'bar/foo' });
+    return this.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo' });
   }
 
   addComponentBarFooLegacy() {
@@ -51,7 +51,7 @@ export default class FixtureHelper {
   }
 
   addComponentUtilsIsType() {
-    return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
+    return this.command.addComponentAllowFiles('utils/is-type.js', { i: 'utils/is-type' });
   }
 
   addComponentUtilsIsTypeLegacy() {
@@ -59,7 +59,7 @@ export default class FixtureHelper {
   }
 
   addComponentUtilsIsString() {
-    return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
+    return this.command.addComponentAllowFiles('utils/is-string.js', { i: 'utils/is-string' });
   }
 
   addComponentUtilsIsStringLegacy() {
@@ -147,7 +147,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     };
     for (let i = 1; i <= numOfComponents; i += 1) {
       this.fs.outputFile(path.join(`comp${i}`, `index.js`), getImp(i));
-      this.command.addComponentDir(`comp${i}`);
+      this.command.addComponent(`comp${i}`);
     }
     this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
     return Array(numOfComponents)

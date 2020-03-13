@@ -349,7 +349,7 @@ describe('bit checkout command', function() {
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponentDir('bar', { i: 'bar/foo' });
+      helper.command.addComponent('bar', { i: 'bar/foo' });
       helper.command.tagAllComponents();
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');
@@ -472,7 +472,7 @@ describe('bit checkout command', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('bar', 'foo2.js');
-        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
+        helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo' });
         scopeWithAddedFile = helper.scopeHelper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -673,7 +673,7 @@ describe('bit checkout command', function() {
       helper.fixtures.addComponentBarFoo();
 
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
 
       helper.command.tagAllComponents('-m v1 -s 0.0.1');
       helper.command.tagAllComponents('-m v2 -s 0.0.2');
@@ -808,7 +808,7 @@ describe('bit checkout command', function() {
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.fs.createFile('bar', `foo${index}.js`, barFooV1);
       }
-      helper.command.addComponent('bar/*');
+      helper.command.addComponentAllowFiles('bar/*');
       helper.command.tagAllComponents();
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.fs.createFile('bar', `foo${index}.js`, barFooV2);

@@ -41,7 +41,10 @@ describe('bit show command', function() {
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
       helper.fs.createFile('src/utils', 'utilFile.js');
-      helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', { m: 'src/mainFile.js', i: 'comp/comp' });
+      helper.command.addComponentAllowFiles('src/mainFile.js src/utils/utilFile.js', {
+        m: 'src/mainFile.js',
+        i: 'comp/comp'
+      });
       helper.command.tagComponent('comp/comp');
     });
 
@@ -370,7 +373,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -401,7 +404,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
@@ -629,9 +632,9 @@ Circle.defaultProps = {
       helper.fixtures.populateWorkspaceWithThreeComponents();
       helper.fs.createFile('bar-dep', 'bar.js');
       helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
-      helper.command.addComponentDir('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
+      helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
-      helper.command.addComponent('baz/baz.js');
+      helper.command.addComponentAllowFiles('baz/baz.js');
       helper.command.linkAndRewire();
       helper.command.tagAllComponentsWithoutAllowRelativePaths();
       helper.command.exportAllComponentsAndRewire();

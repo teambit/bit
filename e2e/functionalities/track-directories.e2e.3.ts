@@ -20,7 +20,7 @@ describe('track directories functionality', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('utils/bar', 'foo.js');
-      helper.command.addComponentDir('utils/bar', { i: 'utils/bar' });
+      helper.command.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should add the directory as rootDir in bitmap file', () => {
@@ -138,7 +138,7 @@ describe('track directories functionality', function() {
       });
       describe('without --allow-files flag', () => {
         it('should throw an error', () => {
-          const addFunc = () => helper.command.addComponentDir('utils/a.js', { i: 'utils/bar' });
+          const addFunc = () => helper.command.addComponent('utils/a.js', { i: 'utils/bar' });
           const error = new AddingIndividualFiles(path.normalize('utils/a.js'));
           helper.general.expectToThrow(addFunc, error);
         });
@@ -171,7 +171,7 @@ describe('track directories functionality', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.outputFile('utils/qux/qux.js');
-        output = helper.command.addComponentDir('utils --id utils/bar');
+        output = helper.command.addComponent('utils --id utils/bar');
       });
       it('should add the files in that directory successfully', () => {
         expect(output).to.have.string('added qux/qux.js');
@@ -211,7 +211,7 @@ describe('track directories functionality', function() {
       helper.fs.createFile('utils/foo', 'index.js');
       helper.fs.createFile('utils/bar', 'index.js');
       helper.fs.createFile('utils/baz', 'index.js');
-      helper.command.addComponentDir('utils/*', { n: 'utils' });
+      helper.command.addComponent('utils/*', { n: 'utils' });
     });
     it('should add rootDir property for each one of the directories', () => {
       const bitMap = helper.bitMap.read();
@@ -230,7 +230,7 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo.spec.js');
-      helper.command.addComponentDir('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
+      helper.command.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
       helper.fs.createFile('utils/bar', 'foo2.js');
       helper.command.runCmd('bit status');
     });
@@ -254,7 +254,7 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo2.js');
-      helper.command.addComponentDir('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
+      helper.command.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.command.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {

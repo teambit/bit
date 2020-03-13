@@ -109,19 +109,13 @@ export default class CommandHelper {
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd, undefined, LEGACY_SHARED_DIR_FEATURE);
   }
-  addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
-  }
   addComponentAllowFiles(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
   }
-  addComponentDir(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
+  addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
     const value =
       typeof options === 'string'
         ? options

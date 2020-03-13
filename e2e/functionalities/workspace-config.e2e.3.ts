@@ -75,8 +75,8 @@ describe('workspace config', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'foo.js');
         helper.fs.createFile('', 'bar.js', "require('./foo');");
-        helper.command.addComponent('foo.js');
-        helper.command.addComponent('bar.js');
+        helper.command.addComponentAllowFiles('foo.js');
+        helper.command.addComponentAllowFiles('bar.js');
         helper.command.tagAllComponents();
         helper.command.tagScope('2.0.0');
         localScope = helper.scopeHelper.cloneLocalScope();
@@ -196,9 +196,9 @@ describe('workspace config', function() {
         helper.fs.createFile('foo-dir', 'foo1.js');
         helper.fs.createFile('foo-dir', 'foo2.js');
         helper.fs.createFile('bar-dir', 'bar.js', "require('../foo-dir/foo1'); require('../foo-dir/foo2'); ");
-        helper.command.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
-        helper.command.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
-        helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+        helper.command.addComponentAllowFiles('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
+        helper.command.addComponentAllowFiles('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
+        helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
         scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
         remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
@@ -502,7 +502,7 @@ describe('workspace config', function() {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar-dir', 'bar.js', "require('non-exist-package')");
-          helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+          helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
           const status = helper.command.status();
@@ -538,7 +538,7 @@ describe('workspace config', function() {
             'bar.js',
             "require('existing-package'); require('another-existing-package');"
           );
-          helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+          helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
           const overrides = {
             bar: {
               dependencies: {
@@ -571,7 +571,11 @@ describe('workspace config', function() {
             'bar.spec.js',
             "require('existing-package'); require('another-existing-package');"
           );
-          helper.command.addComponent('bar-dir/*', { i: 'bar', m: 'bar-dir/bar.js', t: 'bar-dir/bar.spec.js' });
+          helper.command.addComponentAllowFiles('bar-dir/*', {
+            i: 'bar',
+            m: 'bar-dir/bar.js',
+            t: 'bar-dir/bar.spec.js'
+          });
 
           const overrides = {
             bar: {
@@ -640,9 +644,9 @@ describe('workspace config', function() {
         helper.fs.createFile('', 'foo1.js');
         helper.fs.createFile('', 'foo2.js');
         helper.fs.createFile('', 'bar.js');
-        helper.command.addComponent('foo1.js');
-        helper.command.addComponent('foo2.js');
-        helper.command.addComponent('bar.js');
+        helper.command.addComponentAllowFiles('foo1.js');
+        helper.command.addComponentAllowFiles('foo2.js');
+        helper.command.addComponentAllowFiles('bar.js');
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.fs.createFile(
@@ -1020,8 +1024,8 @@ describe('workspace config', function() {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
+          helper.command.addComponentAllowFiles('bar.js');
+          helper.command.addComponentAllowFiles('foo.js');
           const overrides = {
             bar: {
               dependencies: {
@@ -1151,8 +1155,8 @@ describe('workspace config', function() {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
+          helper.command.addComponentAllowFiles('bar.js');
+          helper.command.addComponentAllowFiles('foo.js');
           const overrides = {
             bar: {
               dependencies: {
@@ -1220,7 +1224,7 @@ describe('workspace config', function() {
           helper.fs.createFile('bar', 'foo-default.js');
           helper.fs.createFile('bar', 'foo1.js');
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponent('bar/*');
+          helper.command.addComponentAllowFiles('bar/*');
           const bitJson = helper.bitJson.read();
           bitJson.env = { compiler: 'my-scope/default-compiler@0.0.1' };
           bitJson.overrides = {
@@ -1506,7 +1510,7 @@ describe('workspace config', function() {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fs.outputFile('baz.js');
-        helper.command.addComponent('baz.js');
+        helper.command.addComponentAllowFiles('baz.js');
         overrides = {
           '*': {
             scripts: {

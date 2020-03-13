@@ -21,7 +21,7 @@ describe('environments with dependencies', function() {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.fixtures.copyFixtureFile(compiler);
-    helper.command.addComponent('compiler.js', {
+    helper.command.addComponentAllowFiles('compiler.js', {
       i: compilerId
     });
     helper.scopeHelper.reInitEnvsScope();
@@ -91,7 +91,7 @@ describe('environments with dependencies', function() {
       helper.bitJson.addFileToEnv(undefined, 'dev.config.js', './dev.config.js', 'compiler');
 
       helper.npm.addNpmPackage('webpack', '4.16.4');
-      helper.command.addComponent('base.config.js', { i: 'webpack/base' });
+      helper.command.addComponentAllowFiles('base.config.js', { i: 'webpack/base' });
     });
     // this test is going to die anyway very soon
     it.skip('bit status should not show any missing', () => {
