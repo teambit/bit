@@ -81,7 +81,7 @@ export default class Isolator {
     );
     const before = await getPackageJSONInCapsules(capsules);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
     const after = await getPackageJSONInCapsules(capsules);
 
     const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));

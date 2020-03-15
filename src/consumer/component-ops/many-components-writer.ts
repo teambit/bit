@@ -24,6 +24,7 @@ import { BitId } from '../../bit-id';
 import CapsulePaths from '../../extensions/isolator/capsule-paths';
 
 export interface ManyComponentsWriterParams {
+  packageManager?: string;
   consumer?: Consumer;
   silentPackageManagerResult?: boolean;
   componentsWithDependencies: ComponentWithDependencies[];
@@ -83,6 +84,7 @@ export default class ManyComponentsWriter {
   bitMap: BitMap;
   basePath?: string;
   capsulePaths?: CapsulePaths;
+  pacackgeManager?: string;
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
@@ -107,6 +109,7 @@ export default class ManyComponentsWriter {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.capsulePaths = params.capsulePaths;
+    this.pacackgeManager = params.packageManager;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -168,7 +171,7 @@ export default class ManyComponentsWriter {
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
     this.writtenComponents = await pMapSeries(componentWriterInstances, componentWriter =>
-      componentWriter.populateComponentsFilesToWrite()
+      componentWriter.populateComponentsFilesToWrite(this.pacackgeManager)
     );
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {

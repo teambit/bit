@@ -110,7 +110,8 @@ export function preparePackageJsonToWrite(
   override? = true,
   writeBitDependencies? = false,
   excludeRegistryPrefix?: boolean,
-  capsulePaths?: CapsulePaths
+  capsulePaths?: CapsulePaths,
+  packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
@@ -143,6 +144,7 @@ export function preparePackageJsonToWrite(
     packageJsonFile.addDependencies(bitDependencies);
     packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
   };
+  packageJson.setPackageManager(packageManager);
   addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {

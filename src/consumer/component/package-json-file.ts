@@ -157,6 +157,11 @@ export default class PackageJsonFile {
   getProperty(propertyName: string): any {
     return this.packageJsonObject[propertyName];
   }
+  setPackageManager(packageManager: string | undefined) {
+    if (!packageManager) return;
+
+    this.packageJsonObject.packageManager = packageManager;
+  }
 
   mergePackageJsonObject(packageJsonObject: Record<string, any> | null | undefined): void {
     if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
