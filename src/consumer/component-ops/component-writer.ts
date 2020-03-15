@@ -118,7 +118,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(): Promise<Record<string, any>> {
+  async populateComponentsFilesToWrite(packageManager?: string): Promise<Record<string, any>> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -133,11 +133,11 @@ export default class ComponentWriter {
     this._updateBitMapIfNeeded();
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
-    await this.populateFilesToWriteToComponentDir();
+    await this.populateFilesToWriteToComponentDir(packageManager);
     return this.component;
   }
 
-  async populateFilesToWriteToComponentDir() {
+  async populateFilesToWriteToComponentDir(packageManager?: string) {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
@@ -164,7 +164,8 @@ export default class ComponentWriter {
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsulePaths
+        this.capsulePaths,
+        packageManager
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
