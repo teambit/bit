@@ -217,7 +217,9 @@ export default class Workspace implements ComponentHost {
 
   async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
     const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
-    await this.loadExtensions(extensionsManifests);
+    if (extensionsManifests && extensionsManifests.length) {
+      await this.loadExtensions(extensionsManifests);
+    }
   }
 
   private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
