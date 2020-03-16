@@ -1,3 +1,4 @@
+import { Harmony } from '@teambit/harmony';
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
@@ -19,7 +20,7 @@ export type WorkspaceConfig = {
   components: string;
 };
 
-export default async function provideWorkspace([scope, component, network]: WorkspaceDeps) {
+export default async function provideWorkspace([scope, component, network]: WorkspaceDeps, harmony: Harmony) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
@@ -30,7 +31,7 @@ export default async function provideWorkspace([scope, component, network]: Work
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, scope, component, network);
+      const workspace = new Workspace(consumer, scope, component, network, undefined, harmony);
       return workspace;
     }
 
