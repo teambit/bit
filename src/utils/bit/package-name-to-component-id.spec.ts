@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { packageNameToComponentId } from './package-name-to-component-id';
 import { Consumer } from '../../consumer';
 import { BitIds, BitId } from '../../bit-id';
+import { WorkspaceConfig } from '../../extensions/workspace-config';
 
 describe('packageNameToComponentId', function() {
   this.timeout(0);
@@ -98,6 +99,7 @@ describe('packageNameToComponentId', function() {
       it('should return bitId without scope when the component is in .bitmap without scope', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ name: 'bar/foo' })) };
+        consumer.config = WorkspaceConfig.fromLegacyConfig({ defaultScope: 'bit.utils' });
         consumer.config.workspaceSettings.defaultScope = 'bit.utils';
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.be.null;
@@ -106,7 +108,7 @@ describe('packageNameToComponentId', function() {
       it('should return bitId with scope when the component is in .bitmap with scope', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds(new BitId({ scope: 'bit.utils', name: 'bar/foo' })) };
-        consumer.config.workspaceSettings.defaultScope = 'bit.utils';
+        consumer.config = WorkspaceConfig.fromLegacyConfig({ defaultScope: 'bit.utils' });
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.equal('bit.utils');
         expect(result.name).to.equal('bar/foo');
@@ -114,7 +116,7 @@ describe('packageNameToComponentId', function() {
       it('should return bitId with scope when the component is not .bitmap at all', () => {
         // @ts-ignore
         consumer.bitMap = { getAllBitIds: () => new BitIds() };
-        consumer.config.workspaceSettings.defaultScope = 'bit.utils';
+        consumer.config = WorkspaceConfig.fromLegacyConfig({ defaultScope: 'bit.utils' });
         const result = packageNameToComponentId(consumer, '@bit/bit.utils.bar.foo', '@bit');
         expect(result.scope).to.equal('bit.utils');
         expect(result.name).to.equal('bar/foo');
