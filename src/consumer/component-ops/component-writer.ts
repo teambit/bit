@@ -457,6 +457,7 @@ export default class ComponentWriter {
   }
 
   _getNextPatchVersion() {
-    return semver.inc(this.component.version, 'prerelease') || '0.0.1-0';
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return semver.inc(this.component.version!, 'prerelease') || '0.0.1-0';
   }
 }
