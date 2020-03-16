@@ -39,6 +39,9 @@ export class ExtensionConfigList extends Array<ExtensionConfigEntry> {
   }
 
   static fromArray(entries: ExtensionConfigEntry[]): ExtensionConfigList {
+    if (!entries || !entries.length) {
+      return new ExtensionConfigList();
+    }
     return new ExtensionConfigList(...entries);
   }
 }
