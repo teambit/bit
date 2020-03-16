@@ -74,7 +74,7 @@ export class Flows {
       const value = flowsWithIds.getValue(id._legacy);
       return Promise.resolve(new Flow(value || []));
     };
-    const postFlow = (capsule: Capsule) => Promise.resolve();
+    const postFlow = (_capsule: Capsule) => Promise.resolve();
 
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
     const network = this.createNetwork(ids, getFlow, postFlow);
