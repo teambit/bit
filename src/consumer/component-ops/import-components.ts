@@ -117,7 +117,8 @@ export default class ImportComponents {
         c =>
           !c.component.id.isEqual(comp.component.id) &&
           c.component.id.isEqualWithoutVersion(comp.component.id) &&
-          semver.gt(c.component.id.version, comp.component.id.version)
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          semver.gt(c.component.id.version!, comp.component.id.version!)
       );
       return !sameIdHigherVersion;
     });

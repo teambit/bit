@@ -41,6 +41,9 @@ function linkBitBinInCapsule(capsule) {
 export default class PackageManager {
   constructor(readonly packageManagerName: string, readonly reporter: Reporter) {}
 
+  get name() {
+    return this.packageManagerName;
+  }
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {

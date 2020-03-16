@@ -133,7 +133,8 @@ async function updateComponents(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependencyId: BitId = graph.node(dependency);
       const changedComponentId = changedComponents.searchWithoutVersion(dependencyId);
-      if (changedComponentId && semver.gt(changedComponentId.version, dependencyId.version)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (changedComponentId && semver.gt(changedComponentId.version!, dependencyId.version!)) {
         updateDependencies(version, dependencyId, changedComponentId);
         pendingUpdate = true;
         triggeredBy.push(dependencyId);
@@ -224,7 +225,8 @@ export async function getAutoTagPending(
       // we only check whether a modified component may cause auto-tagging
       // since it's only modified on the file-system, its version might be the same as the version stored in its
       // dependents. That's why "semver.gte" is used instead of "semver.gt".
-      return semver.gte(changedComponentId.version, edgeId.version);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return semver.gte(changedComponentId.version!, edgeId.version!);
     });
     return isAutoTagPending ? component : null;
   });

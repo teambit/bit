@@ -166,7 +166,8 @@ export default class Scope {
     if (!fs.existsSync(componentFullPath)) return '';
     const versions = readDirSyncIgnoreDsStore(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*');
-    return pathLib.join(relativePath, latestVersion);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return pathLib.join(relativePath, latestVersion!);
   }
 
   getBitPathInComponentsDir(id: BitId): string {

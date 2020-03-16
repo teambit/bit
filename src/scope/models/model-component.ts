@@ -162,7 +162,8 @@ export default class Component extends BitObject {
 
   latest(): string {
     if (empty(this.versions)) return VERSION_ZERO;
-    return semver.maxSatisfying(this.listVersions(), '*');
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return semver.maxSatisfying(this.listVersions(), '*')!;
   }
 
   /**
@@ -231,9 +232,10 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE) {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
     const latest = this.latest();
-    if (latest) return semver.inc(latest, releaseType);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (latest) return semver.inc(latest, releaseType)!;
     return DEFAULT_BIT_VERSION;
   }
 
@@ -341,12 +343,14 @@ export default class Component extends BitObject {
   toComponentVersion(versionStr: string): ComponentVersion {
     const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
-    if (!this.versions[versionNum]) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (!this.versions[versionNum!]) {
       throw new ShowDoctorError(
         `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
       );
     }
-    return new ComponentVersion(this, versionNum);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return new ComponentVersion(this, versionNum!);
   }
 
   /**
