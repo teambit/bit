@@ -2,6 +2,7 @@ import commander from 'commander';
 import { splitWhen, equals } from 'ramda';
 import { Command } from './command';
 import CommandRegistry from './registry';
+import { Reporter } from '../reporter';
 // TODO: remove this import - paper should not consume cli
 import { register } from '../../cli/command-registry';
 import { AlreadyExistsError } from './exceptions/already-exists';
@@ -13,7 +14,8 @@ export class Paper {
     /**
      * paper's command registry
      */
-    private registry: CommandRegistry
+    private registry: CommandRegistry,
+    private reporter: Reporter
   ) {}
 
   private setDefaults(command: Command) {
@@ -67,6 +69,10 @@ export class Paper {
     }
     commander.packageManagerArgs = packageManagerArgs;
     commander.parse(params);
+    const outputShouldBeJson = commander.commands.some(c => c.json);
+    if (outputShouldBeJson) {
+      this.reporter.machineOutput();
+    }
     return Promise.resolve();
   }
 

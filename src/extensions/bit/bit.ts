@@ -69,7 +69,6 @@ export default class Bit {
       extensionsManifests: [],
       extensionsConfig: {}
     };
-    this.reporter.startPhase('Resolving extensions');
     if (this.config && this.workspace) {
       const extensionsConfig = await this.extensions();
       const extensionsIds = Object.keys(extensionsConfig);
@@ -77,6 +76,7 @@ export default class Bit {
       if (!extensionsIds || !extensionsIds.length) {
         return result;
       }
+      this.reporter.startPhase('Resolving extensions');
       const allRegisteredExtensionIds = this.harmony.extensionsIds;
       const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
       // nonRegisteredExtensions.forEeach(extId => this.harmony.setExtensionConfig(extId, extensions[extId]))
@@ -86,12 +86,14 @@ export default class Bit {
         this.workspace.consumer,
         { packageManager: 'yarn' }
       );
+      this.reporter.end();
 
       const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
         const extPath = value.wrkDir;
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const mod = require(extPath);
         mod.name = id.toString();
+        this.reporter.end();
         return mod;
       });
       // @ts-ignore
@@ -99,6 +101,7 @@ export default class Bit {
       result.extensionsConfig = extensionsConfig;
     }
 
+    this.reporter.end();
     return result;
   }
 }
