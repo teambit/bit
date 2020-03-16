@@ -24,13 +24,13 @@ export class ExecutionCache {
       .join('\n')}`;
     const md5 = createHash('md5', { encoding: 'utf8' })
       .update(content)
-      .digest()
+      .digest('base64')
       .toString();
     return md5;
   }
 
   async saveHashValue(capsule: Capsule, name: string): Promise<void> {
-    const release = await lock(this.pathToCache);
+    const release = await lock(this.pathToCache, { realpath: false });
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
     const hash = this.hash(capsule);
@@ -41,10 +41,12 @@ export class ExecutionCache {
   }
 
   async getCacheValue(wrkDir: string, name: string): Promise<string | undefined> {
-    const release = await lock(this.pathToCache);
+    const release = await lock(this.pathToCache, {
+      realpath: false
+    });
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
-    const cacheValue = path(`[${wrkDir}][${name}]`, content);
+    const cacheValue = path([wrkDir, name], content);
     await release();
     return cacheValue;
   }

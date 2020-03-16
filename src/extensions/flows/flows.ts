@@ -32,6 +32,7 @@ export class Flows {
       }
       // const tasks = component.config.extensions.flows[name] || [];
       const isCached = await getExecutionCache().compareToCache(capsule, name);
+
       const flow = isCached ? new Flow([]) : new Flow(path(['config', 'extensions', 'flows', name], component));
 
       return flow;
