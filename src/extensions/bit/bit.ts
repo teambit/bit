@@ -69,6 +69,7 @@ export default class Bit {
       extensionsManifests: [],
       extensionsConfig: {}
     };
+    this.reporter.startPhase('Resolving extensions');
     if (this.config && this.workspace) {
       const extensionsConfig = await this.extensions();
       const extensionsIds = Object.keys(extensionsConfig);
