@@ -183,7 +183,8 @@ export default class Workspace implements ComponentHost {
     const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
       configEntry => coreConfigurableExtensions[configEntry.id]
     );
-    const externalExtensionsManifests = await this.resolveExtensions(extensionsConfigGroups.false.ids);
+    const externalExtensionsWithoutLegacy = extensionsConfigGroups.false._filterLegacy();
+    const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
     await this.loadExtensions([...coreExtensionsManifests, ...externalExtensionsManifests]);
   }
 
