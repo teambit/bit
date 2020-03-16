@@ -10,6 +10,8 @@ export type BitConfig = {};
 
 export default async function provideBit([workspace, scope, isolator, reporter]: BitDeps) {
   const bit = new Bit(scope, workspace, isolator, reporter);
-  await workspace.loadWorkspaceExtensions();
+  if (workspace) {
+    await workspace.loadWorkspaceExtensions();
+  }
   return bit;
 }
