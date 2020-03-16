@@ -96,7 +96,7 @@ async function getCommitPendingComponents(
 export async function tagAllAction(args: {
   message: string;
   exactVersion?: string;
-  releaseType: string;
+  releaseType: semver.ReleaseType;
   force?: boolean;
   verbose?: boolean;
   ignoreUnresolvedDependencies?: boolean;
