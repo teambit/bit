@@ -14,6 +14,7 @@ import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings'
 
 import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { BitId } from '../../bit-id';
+import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -135,7 +136,12 @@ export default class WorkspaceConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static create(props: WorkspaceConfigFileInputProps, dirPath?: PathOsBasedAbsolute) {
+  static async create(props: WorkspaceConfigFileInputProps, dirPath?: PathOsBasedAbsolute) {
+    if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
+      const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, false);
+      const instance = this.fromLegacyConfig(legacyConfig);
+      return instance;
+    }
     const templateStr = fs.readFileSync(path.join(__dirname, './workspace-template.jsonc')).toString();
     const template = parse(templateStr);
     const merged = assign(template, props);
@@ -164,7 +170,7 @@ export default class WorkspaceConfig {
     if (workspaceConfig) {
       return workspaceConfig;
     }
-    workspaceConfig = this.create(workspaceConfigProps, dirPath);
+    workspaceConfig = await this.create(workspaceConfigProps, dirPath);
     return workspaceConfig;
   }
 
