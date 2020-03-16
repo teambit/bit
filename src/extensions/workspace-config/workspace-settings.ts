@@ -195,7 +195,6 @@ export class WorkspaceSettings {
       },
       dependenciesDirectory: legacyConfig.dependenciesDirectory,
       bindingPrefix: legacyConfig.bindingPrefix,
-      useWorkspaces: legacyConfig.useWorkspaces,
       resolveModules: legacyConfig.resolveModules,
       saveDependenciesAsComponents: legacyConfig.saveDependenciesAsComponents,
       distEntry: legacyConfig.distEntry,
