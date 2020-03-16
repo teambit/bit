@@ -1,10 +1,10 @@
+import { Harmony } from '@teambit/harmony';
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { WorkspaceConfig } from '../workspace-config';
-import { Harmony } from '@teambit/harmony';
 import ComponentConfig from '../../consumer/config/component-config';
 import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
@@ -42,7 +42,6 @@ export default async function provideWorkspace(
         const extensionsConfig = ExtensionConfigList.fromObject(componentConfig.extensions);
         workspace.loadExtensionsByConfig(extensionsConfig);
       });
-      await workspace.loadWorkspaceExtensions();
       return workspace;
     }
 

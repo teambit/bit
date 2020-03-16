@@ -5,10 +5,14 @@
 import { ComposerExt } from '../composer';
 import { PackageManagerExt } from '../package-manager';
 import workspaceExt from './workspace.manifest';
+import { FlowsExt } from '../flows';
+import { CreateExt } from '../create';
 
 const coreConfigurableExtensions = {
   // TODO: change the way we get the name when moving to decorators
   [ComposerExt.name]: ComposerExt,
+  [FlowsExt.name]: FlowsExt,
+  [CreateExt.name]: CreateExt,
   // TODO: take the name from the extension. Its hard coded because currently that's how it is in the config
   dependencyResolver: PackageManagerExt,
   [workspaceExt.name]: workspaceExt
