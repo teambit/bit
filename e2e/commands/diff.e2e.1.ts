@@ -17,6 +17,7 @@ describe('bit diff command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   const barFooFile = path.join('bar', 'foo.js');
   before(() => {

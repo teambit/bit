@@ -36,6 +36,7 @@ describe('envs', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   const compilerId = 'compilers/new-babel';
   const testerId = 'testers/new-mocha';
@@ -1535,6 +1536,7 @@ describe('envs with relative paths', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   before(() => {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -1594,6 +1596,7 @@ describe('add an env with an invalid env name', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   let numOfObjectsBeforeTagging;
   before(() => {

@@ -14,6 +14,7 @@ describe('environments with dependencies', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   const compilerId = 'compilers/webpack';
   let scopeBeforeTagging;

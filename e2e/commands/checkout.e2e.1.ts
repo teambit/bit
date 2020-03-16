@@ -18,6 +18,7 @@ describe('bit checkout command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
