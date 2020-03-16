@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { ExtensionManifest } from '@teambit/harmony';
 import { Flows } from './flows';
 import { BitCliExt, BitCli } from '../cli';
 import { WorkspaceExt, Workspace } from '../workspace';
