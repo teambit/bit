@@ -79,13 +79,14 @@ export default class Isolator {
         return { id, value: c };
       })
     );
-    const before = await getPackageJSONInCapsules(capsules);
+    // const before = await getPackageJSONInCapsules(capsules);
 
     await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
-    const after = await getPackageJSONInCapsules(capsules);
+    // const after = await getPackageJSONInCapsules(capsules);
 
-    const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));
+    // const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));
 
+    const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
