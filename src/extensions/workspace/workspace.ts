@@ -1,3 +1,5 @@
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
+import { difference, groupBy } from 'ramda';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
 import { Component, ComponentFactory } from '../component';
@@ -10,6 +12,10 @@ import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
+import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import GeneralError from '../../error/general-error';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../workspace-config/extension-config-list';
+import { coreConfigurableExtensions } from './core-configurable-extensions';
 
 /**
  * API of the Bit Workspace
@@ -33,7 +39,12 @@ export default class Workspace implements ComponentHost {
 
     readonly isolateEnv: Isolator,
 
-    private componentList: ComponentsList = new ComponentsList(consumer)
+    private componentList: ComponentsList = new ComponentsList(consumer),
+
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony
   ) {}
 
   /**
@@ -160,5 +171,82 @@ export default class Workspace implements ComponentHost {
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
     await this.consumer.bitMap.write();
     return addResults;
+  }
+
+  async loadWorkspaceExtensions() {
+    const extensionsConfig = this.config.extensions || {};
+    const extensionsConfigGroups = this.groupByCoreExtensions(ExtensionConfigList.fromObject(extensionsConfig));
+    // Do not load workspace extension again
+    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true.filter(
+      config => config.id !== 'workspace'
+    );
+    const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
+      configEntry => coreConfigurableExtensions[configEntry.id]
+    );
+    const externalExtensionsWithoutLegacy = extensionsConfigGroups.false._filterLegacy();
+    const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
+    await this.loadExtensions([...coreExtensionsManifests, ...externalExtensionsManifests]);
+  }
+
+  private groupByCoreExtensions(
+    extensionsConfig: ExtensionConfigList
+  ): { true: ExtensionConfigList; false: ExtensionConfigList } {
+    const coreNames = Object.keys(coreConfigurableExtensions);
+    const isCore = (config: ExtensionConfigEntry): boolean => {
+      return coreNames.includes(config.id);
+    };
+    const groups = groupBy(isCore, extensionsConfig);
+    groups.false = ExtensionConfigList.fromArray(groups.false);
+    groups.true = ExtensionConfigList.fromArray(groups.true);
+    return groups;
+  }
+
+  async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
+    const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
+    if (extensionsManifests && extensionsManifests.length) {
+      await this.loadExtensions(extensionsManifests);
+    }
+  }
+
+  private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
+    await this.harmony.set(extensionsManifests);
+  }
+
+  /**
+   * load all of bit's extensions.
+   * :TODO must be refactored by @gilad
+   */
+  private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
+    if (!extensionsIds || !extensionsIds.length) {
+      return [];
+    }
+    const allRegisteredExtensionIds = this.harmony.extensionsIds;
+    const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+    let extensionsComponents;
+    // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
+    try {
+      extensionsComponents = await this.getMany(nonRegisteredExtensions);
+    } catch (e) {
+      if (e instanceof MissingBitMapComponent) {
+        throw new GeneralError(
+          `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`
+        );
+      }
+    }
+
+    const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
+      extensionsComponents.map(c => c.id.toString()),
+      this.consumer,
+      { packageManager: 'yarn' }
+    );
+
+    const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
+      const extPath = value.wrkDir;
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const mod = require(extPath);
+      mod.name = id.toString();
+      return mod;
+    });
+    return manifests;
   }
 }
