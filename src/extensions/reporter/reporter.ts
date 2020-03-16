@@ -4,7 +4,7 @@ import ora from 'ora';
 
 export default class Reporter {
   private spinner: any;
-  private shouldOutput: boolean = true;
+  private shouldOutput = true;
   public spinnerText?: string;
   public ids?: Array<string>;
   constructor() {
