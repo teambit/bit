@@ -14,7 +14,9 @@ import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator/capsule';
 
-export type GetFlow = (id: ComponentID) => Promise<Flow>;
+export type GetFlow = (capsule: Capsule) => Promise<Flow>;
+export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
+
 type CacheValue = {
   visited: boolean;
   capsule: Capsule;
@@ -28,7 +30,8 @@ export class Network {
     private workspace: Workspace,
     private seeders: ComponentID[],
     private getFlow: GetFlow,
-    private getGraph = getWorkspaceGraph
+    private getGraph = getWorkspaceGraph,
+    private postFlow?: PostFlow
   ) {}
 
   async execute(options: ExecutionOptions) {
@@ -50,6 +53,7 @@ export class Network {
 
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph, q: PQueue) {
     const getFlow = this.getFlow.bind(this);
+    const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
 
     return async function walk() {
       if (!graph.nodes().length) {
@@ -59,7 +63,7 @@ export class Network {
 
       const seeders = getSeeders(graph, visitedCache).map(async function(seed) {
         const { capsule } = visitedCache[seed];
-        const flow = await getFlow(capsule.component.id);
+        const flow = await getFlow(capsule);
         visitedCache[seed].visited = true;
         return q
           .add(async function() {
@@ -75,7 +79,13 @@ export class Network {
                 },
                 complete() {
                   graph.removeNode(seed);
-                  resolve();
+                  if (postFlow) {
+                    postFlow(capsule)
+                      .then(() => resolve())
+                      .catch(() => resolve());
+                  } else {
+                    resolve();
+                  }
                 },
                 error(err) {
                   handleNetworkError(seed, graph, visitedCache, new Error(err.message));
