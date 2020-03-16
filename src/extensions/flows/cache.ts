@@ -12,14 +12,14 @@ import ConsumerComponent from '../../consumer/component';
 export class ExecutionCache {
   constructor(private pathToCache: string) {}
 
-  hash(capsule: Capsule) {
+  hash(capsule: Capsule, name: string) {
     // const component = capsule.component.toLegacyConsumerComponent
-
+    const configString = JSON.stringify(path(['component', 'extensions'], capsule));
     // for some reason in this point i get consumerComponent and not a component
     const consumerComponent = (capsule.component as any) as ConsumerComponent;
-
+    // capsule.component..extensions.flows
     const { files, packageJsonFile } = consumerComponent;
-    const content = `${capsule.wrkDir}\n${[...files, packageJsonFile!.toVinylFile()]
+    const content = `${configString}\n${capsule.wrkDir}\n${[...files, packageJsonFile!.toVinylFile()]
       .map(file => (file.contents || '').toString())
       .join('\n')}`;
     const md5 = createHash('md5', { encoding: 'utf8' })
@@ -33,7 +33,7 @@ export class ExecutionCache {
     const release = await lock(this.pathToCache, { realpath: false });
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
-    const hash = this.hash(capsule);
+    const hash = this.hash(capsule, name);
     content[capsule.wrkDir] = content[capsule.wrkDir] || {};
     content[capsule.wrkDir][name] = hash;
     await fs.writeFile(this.pathToCache, JSON.stringify(content, null, 2));
@@ -53,7 +53,7 @@ export class ExecutionCache {
 
   async compareToCache(capsule: Capsule, name: string): Promise<boolean> {
     const inCache = await this.getCacheValue(capsule.wrkDir, name);
-    const hashValue = this.hash(capsule);
+    const hashValue = this.hash(capsule, name);
     return equals(inCache, hashValue);
   }
 }
