@@ -74,6 +74,8 @@ export default class PackageManager {
           await new Promise((resolve, reject) => {
             const { log, warn } = this.reporter.createLogger(capsule.component.id.toString());
             const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+            log('$ npm install --no-package-lock'); // TODO: better
+            log('');
             // @ts-ignore
             installProc.stdout.on('data', d => log(d.toString()));
             // @ts-ignore
@@ -120,6 +122,8 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
+      log('$ npm install');
+      log('');
       await new Promise((resolve, reject) => {
         // @ts-ignore
         child.stdout.on('data', d => log(d.toString()));
