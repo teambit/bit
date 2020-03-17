@@ -220,7 +220,6 @@ export default class Workspace implements ComponentHost {
    * :TODO must be refactored by @gilad
    */
   private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
-    this.reporter.startPhase('Resolving extensions');
     if (!extensionsIds || !extensionsIds.length) {
       this.reporter.end();
       return [];
@@ -239,6 +238,7 @@ export default class Workspace implements ComponentHost {
       }
     }
 
+    this.reporter.startPhase('Resolving extensions');
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
       this.consumer,
