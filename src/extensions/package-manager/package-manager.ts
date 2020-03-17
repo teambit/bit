@@ -52,6 +52,8 @@ export default class PackageManager {
           await new Promise((resolve, reject) => {
             const { log, warn } = this.reporter.createLogger(capsule.component.id.toString());
             const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+            log('$ yarn'); // TODO: better
+            log('');
             // @ts-ignore
             installProc.stdout.on('data', d => log(d.toString()));
             // @ts-ignore

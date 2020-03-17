@@ -4,10 +4,12 @@ import ora from 'ora';
 
 export default class Reporter {
   private spinner: any;
+  private suppressOutput = false;
   public spinnerText?: string;
   public ids?: Array<string>;
   constructor() {
-    this.spinner = ora({ spinner: 'bouncingBar' }).stop();
+    this.suppressOutput = process.argv.includes('--json') || process.argv.includes('-j');
+    this.spinner = ora({ spinner: 'bouncingBar', stream: process.stdout }).stop();
   }
   startPhase(phaseName) {
     this.ids = [];
@@ -33,10 +35,10 @@ export default class Reporter {
   createLogger(id) {
     this.addId(id);
     const spinner = this.spinner;
-    const getSpinnerText = () => this.spinnerText; // TODO: remove this ugly hack
+    const shouldWriteOutput = () => this.spinnerText && !this.suppressOutput; // TODO: remove this ugly hack
     return {
       log(...messages) {
-        if (getSpinnerText()) {
+        if (shouldWriteOutput()) {
           // spinner is running
           // TODO: this is a hack because we're only trying out this method for now
           spinner.stop();
@@ -45,7 +47,7 @@ export default class Reporter {
         }
       },
       warn(...messages) {
-        if (getSpinnerText()) {
+        if (shouldWriteOutput()) {
           // spinner is running
           // TODO: this is a hack because we're only trying out this method for now
           const lines = messages.join(' ').split(/\n/);
