@@ -72,6 +72,7 @@ import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../extensions/env-extension-types';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import ComponentMap from './bit-map/component-map';
+import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
 
 type ConsumerProps = {
   projectPath: string;
@@ -633,11 +634,12 @@ export default class Consumer {
     ignoreNewestVersion: boolean,
     skipTests = false,
     skipAutoTag: boolean,
-    allowRelativePaths: boolean
+    allowRelativePaths: boolean,
+    allowFiles: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
-    const { components } = await this.loadComponents(ids);
+    const components = await this._loadComponentsForTag(ids, allowFiles, allowRelativePaths);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
     const componentsWithRelativeAuthored = components.filter(
@@ -682,6 +684,39 @@ export default class Consumer {
     await this.updateComponentsVersions(allComponents);
 
     return { taggedComponents, autoTaggedResults };
+  }
+
+  async _loadComponentsForTag(ids: BitIds, allowFiles: boolean, allowRelativePaths: boolean): Promise<Component[]> {
+    const { components } = await this.loadComponents(ids);
+    let shouldReloadComponents;
+    const componentsWithRelativePaths: string[] = [];
+    const componentsWithFilesNotDir: string[] = [];
+    components.forEach(component => {
+      const componentMap = component.componentMap as ComponentMap;
+      if (componentMap.rootDir) return;
+      const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
+      if (componentMap.trackDir && !hasRelativePaths) {
+        componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);
+        shouldReloadComponents = true;
+        return;
+      }
+      if (hasRelativePaths && !allowRelativePaths) {
+        componentsWithRelativePaths.push(component.id.toStringWithoutVersion());
+      }
+      if (!componentMap.trackDir && !allowFiles) {
+        componentsWithFilesNotDir.push(component.id.toStringWithoutVersion());
+      }
+      if ((hasRelativePaths && allowRelativePaths) || (!componentMap.trackDir && allowFiles)) {
+        componentMap.changeRootDirAndUpdateFilesAccordingly('.');
+      }
+    });
+    if (componentsWithRelativePaths.length || componentsWithFilesNotDir.length) {
+      throw new FailedLoadForTag(componentsWithRelativePaths.sort(), componentsWithFilesNotDir.sort());
+    }
+    if (!shouldReloadComponents) return components;
+    this.componentLoader.clearComponentsCache();
+    const { components: reloadedComponents } = await this.loadComponents(ids);
+    return reloadedComponents;
   }
 
   updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {

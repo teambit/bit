@@ -48,7 +48,7 @@ describe('relative paths flow (components requiring each other by relative paths
       describe('tagging the component', () => {
         let tagOutput;
         before(() => {
-          tagOutput = helper.command.tagAllComponentsWithoutAllowRelativePaths();
+          tagOutput = helper.command.tagAllComponentsNew();
         });
         it('should allow tagging the component', () => {
           expect(tagOutput).to.have.string('2 component(s) tagged');
@@ -105,7 +105,7 @@ describe('relative paths flow (components requiring each other by relative paths
         expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
       });
       it('bit tag should be blocked by default', () => {
-        const cmd = () => helper.command.tagAllComponentsWithoutAllowRelativePaths();
+        const cmd = () => helper.command.tagAllComponentsNew();
         expect(cmd).to.throw('error: issues found');
       });
       describe('bit tag with --allow-relative-paths', () => {

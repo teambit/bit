@@ -153,6 +153,7 @@ export default class ComponentMap {
       file.relativePath = newPath;
     });
     this.rootDir = newRootDir;
+    this.trackDir = undefined; // if there is trackDir, it's not needed anymore.
   }
 
   addRootDirToDistributedFiles(rootDir: PathOsBased) {

@@ -106,6 +106,7 @@ import { importPendingMsg } from './commands/public-cmds/status-cmd';
 import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
 import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
+import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -441,6 +442,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
         err.newId
       )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
+  [FailedLoadForTag, err => err.getErrorMessage()],
   [
     NoFiles,
     err =>

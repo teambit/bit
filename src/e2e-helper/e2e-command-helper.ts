@@ -153,19 +153,19 @@ export default class CommandHelper {
   }
   // @todo: change to tagAllComponentsLegacy
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths --allow-files`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   // @todo: change to tagAllComponents
-  tagAllComponentsWithoutAllowRelativePaths(options = '', version = '', assertTagged = true) {
+  tagAllComponentsNew(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
-    return this.tagAllComponentsWithoutAllowRelativePaths(options, version, assertTagged);
+    return this.tagAllComponentsNew(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);
