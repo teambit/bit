@@ -148,6 +148,14 @@ export default class CommandHelper {
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths`);
   }
+  tagComponentLegacy(id: string, tagMsg = 'tag-message', options = '') {
+    return this.runCmd(
+      `bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+  }
   tagWithoutMessage(id: string, version = '', options = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
