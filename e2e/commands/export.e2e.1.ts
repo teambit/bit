@@ -600,6 +600,24 @@ describe('bit export command', function() {
         });
       });
     });
+    describe('when a component has flattened dependency change', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.fixtures.populateWorkspaceWithThreeComponents();
+        helper.bitJson.addDefaultScope();
+        helper.command.tagAllComponents();
+        helper.command.exportAllComponents();
+        helper.fs.outputFile('qux.js');
+        helper.command.addComponent('qux.js');
+        helper.fs.outputFile('utils/is-string.js', 'require("../qux");');
+        helper.command.tagAllComponents();
+        output = helper.command.export();
+      });
+      it('should send the component with the flattened dependency changes to the remote', () => {
+        expect(output).to.have.string('exported the following 3 component(s)');
+      });
+    });
     describe('some components were exported to one scope and other to another scope', () => {
       let localScopeBefore;
       let remoteScopeBefore;
