@@ -9,7 +9,7 @@ import { WorkspaceConfig } from '../workspace-config';
 import ComponentConfig from '../../consumer/config/component-config';
 import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 
 export type WorkspaceCoreConfig = {
   /**
