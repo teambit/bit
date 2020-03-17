@@ -810,17 +810,17 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = LegacyWorkspaceConfig.reset(projectPath, resetHard);
+    const configP = WorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, configP]);
   }
 
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const config = await LegacyWorkspaceConfig.ensure(consumerPath);
+    const config = await WorkspaceConfig.ensure(consumerPath);
     // isolated environments in the workspace rely on a physical node_modules folder
     // for this reason, we must use a package manager that supports one
-    config.packageManager = 'npm';
+    config.workspaceSettings._setPackageManager('npm');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,

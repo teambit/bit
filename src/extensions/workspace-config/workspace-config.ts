@@ -15,6 +15,7 @@ import { WorkspaceSettings, WorkspaceSettingsProps } from './workspace-settings'
 import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import logger from '../../logger/logger';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -172,6 +173,16 @@ export default class WorkspaceConfig {
     }
     workspaceConfig = await this.create(workspaceConfigProps, dirPath);
     return workspaceConfig;
+  }
+
+  static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+    const bitJsoncPath = this.composeBitJsoncPath(dirPath);
+    if (bitJsoncPath && resetHard) {
+      logger.info(`deleting the consumer bit.jsonc file at ${bitJsoncPath}`);
+      await fs.remove(bitJsoncPath);
+      return;
+    }
+    LegacyWorkspaceConfig.reset(dirPath, resetHard);
   }
 
   /**

@@ -40,8 +40,10 @@ export type WorkspaceExtensionProps = {
   components: ComponentScopeDirMap;
 };
 
+export type PackageManagerClients = 'librarian' | 'npm' | 'yarn' | undefined;
+
 export interface DependencyResolverExtensionProps {
-  packageManager: 'librarian' | 'npm' | 'yarn' | undefined;
+  packageManager: PackageManagerClients;
   strictPeerDependencies?: boolean;
   extraArgs?: string[];
   packageManagerProcessOptions?: any;
@@ -91,6 +93,10 @@ export class WorkspaceSettings {
 
   get packageManager() {
     return this.data.dependencyResolver.packageManager;
+  }
+
+  _setPackageManager(clientName: PackageManagerClients) {
+    this.data.dependencyResolver.packageManager = clientName;
   }
 
   get _useWorkspaces() {
