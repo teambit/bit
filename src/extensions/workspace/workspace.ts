@@ -9,6 +9,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
+import { Reporter } from '../reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -49,6 +50,8 @@ export default class Workspace implements ComponentHost {
     private componentFactory: ComponentFactory,
 
     readonly isolateEnv: Isolator,
+
+    private reporter: Reporter,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -234,6 +237,7 @@ export default class Workspace implements ComponentHost {
   private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
     // const extensionsIds = extensionsConfig.ids;
     if (!extensionsIds || !extensionsIds.length) {
+      this.reporter.end();
       return [];
     }
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
@@ -250,6 +254,7 @@ export default class Workspace implements ComponentHost {
       }
     }
 
+    this.reporter.startPhase('Resolving extensions');
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
       this.consumer,
@@ -263,6 +268,7 @@ export default class Workspace implements ComponentHost {
       mod.name = id.toString();
       return mod;
     });
+    this.reporter.end();
     return manifests;
   }
 }
