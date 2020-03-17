@@ -149,10 +149,10 @@
   /**
    * automate Bit workflow with Git.
   */
-  "gitPolicy": {
+  // "gitPolicy": {
     /**
      * fetch dependency and component updates on `git pull`.
     **/
-    "dependencyUpdateOnPull": true
-  }
+    // "dependencyUpdateOnPull": true
+  // }
 }
