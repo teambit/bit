@@ -615,8 +615,8 @@ describe('bit checkout command', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooLegacy();
-      helper.fixtures.tagComponentBarFoo();
-      helper.command.tagScope('0.0.5');
+      helper.command.tagAllComponentsLegacy();
+      helper.command.tagScopeLegacy('0.0.5');
       helper.command.exportAllComponents();
       authorScope = helper.scopeHelper.cloneLocalScope();
       helper.scopeHelper.reInitLocalScope();
@@ -646,7 +646,7 @@ describe('bit checkout command', function() {
           }
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsLegacy();
         helper.command.exportAllComponents();
 
         helper.scopeHelper.getClonedLocalScope(importedScope);

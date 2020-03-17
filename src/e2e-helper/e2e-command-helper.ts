@@ -151,6 +151,16 @@ export default class CommandHelper {
   tagWithoutMessage(id: string, version = '', options = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
+  tagAllComponentsLegacy(options = '', version = '', assertTagged = true) {
+    const result = this.runCmd(
+      `bit tag -a ${version} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
   // @todo: change to tagAllComponentsLegacy
   tagAllComponents(options = '', version = '', assertTagged = true) {
     const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths --allow-files`);
@@ -170,7 +180,14 @@ export default class CommandHelper {
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);
   }
-
+  tagScopeLegacy(version: string, message = 'tag-message', options = '') {
+    return this.runCmd(
+      `bit tag -s ${version} -m ${message} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }

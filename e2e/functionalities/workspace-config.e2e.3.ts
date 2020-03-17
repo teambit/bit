@@ -1310,7 +1310,7 @@ describe('workspace config', function() {
           }
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsLegacy();
         // intermediate step, make sure the dependency is-string is ignored
         const foo = helper.command.catComponent('foo@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1341,7 +1341,7 @@ describe('workspace config', function() {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllComponentsLegacy();
         });
         it('should add back the sharedDir into the overrides', () => {
           const catFoo = helper.command.catComponent(`${helper.scopes.remote}/foo@latest`);

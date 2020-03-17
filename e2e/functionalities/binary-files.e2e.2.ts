@@ -62,7 +62,7 @@ describe('binary files', function() {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.command.addComponentLegacy('bar', { m: 'png_fixture.png', i: 'bar/foo' });
-      helper.command.tagAllComponents();
+      helper.command.tagAllComponentsLegacy();
       helper.command.exportAllComponents();
     });
     it('should export it with no errors', () => {

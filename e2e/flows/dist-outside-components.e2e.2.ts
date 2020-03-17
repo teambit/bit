@@ -249,7 +249,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as imported', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(clonedScope);
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsLegacy();
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();

@@ -73,6 +73,7 @@ import { EnvType } from '../extensions/env-extension-types';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import ComponentMap from './bit-map/component-map';
 import { FailedLoadForTag } from './component/exceptions/failed-load-for-tag';
+import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
 
 type ConsumerProps = {
   projectPath: string;
@@ -688,6 +689,9 @@ export default class Consumer {
 
   async _loadComponentsForTag(ids: BitIds, allowFiles: boolean, allowRelativePaths: boolean): Promise<Component[]> {
     const { components } = await this.loadComponents(ids);
+    if (isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+      return components;
+    }
     let shouldReloadComponents;
     const componentsWithRelativePaths: string[] = [];
     const componentsWithFilesNotDir: string[] = [];
