@@ -91,7 +91,7 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    let component;
+    let component: Component;
     const handleError = error => {
       if (throwOnFailure) throw error;
 

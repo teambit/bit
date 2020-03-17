@@ -1,7 +1,10 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { removeChalkCharacters } from '../../src/utils';
+
+chai.use(require('chai-fs'));
 
 describe('bit move command', function() {
   this.timeout(0);
@@ -263,6 +266,35 @@ console.log(barFoo());`;
       fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJS);
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got foo');
+    });
+  });
+  describe('move component files into one directory (--component flag)', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fs.outputFile('src/foo.js');
+      helper.fs.outputFile('src/test/foo.spec.js');
+      helper.command.addComponentLegacy('src/foo.js src/test/foo.spec.js', { i: 'foo', m: 'src/foo.js' });
+      output = helper.command.runCmd('bit move foo components/foo --component');
+    });
+    it('should output the file changes', () => {
+      const outputClean = removeChalkCharacters(output);
+      expect(outputClean).to.have.string('from src/foo.js to components/foo/foo.js');
+      expect(outputClean).to.have.string('from src/test/foo.spec.js to components/foo/foo.spec.js');
+    });
+    it('should move the files to the specified dir', () => {
+      const rootDir = path.join(helper.scopes.localPath, 'components/foo');
+      expect(path.join(rootDir, 'foo.js')).to.be.a.file();
+      expect(path.join(rootDir, 'foo.spec.js')).to.be.a.file();
+    });
+    it('should update bitmap with the changes', () => {
+      const bitMap = helper.bitMap.read();
+      const componentMap = bitMap.foo;
+      expect(componentMap.rootDir).to.equal('components/foo');
+      const files = componentMap.files.map(f => f.relativePath);
+      expect(files).to.have.lengthOf(2);
+      expect(files).to.deep.equal(['foo.js', 'foo.spec.js']);
+      expect(componentMap.mainFile).to.equal('foo.js');
     });
   });
 });

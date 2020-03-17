@@ -155,6 +155,15 @@ export default class ComponentMap {
     this.rootDir = newRootDir;
   }
 
+  addRootDirToDistributedFiles(rootDir: PathOsBased) {
+    this.files.forEach(file => {
+      file.relativePath = file.name;
+    });
+    this.rootDir = pathNormalizeToLinux(rootDir);
+    this.mainFile = path.basename(this.mainFile);
+    this.validate();
+  }
+
   updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {
     fileFrom = pathNormalizeToLinux(fileFrom);
     fileTo = pathNormalizeToLinux(fileTo);
