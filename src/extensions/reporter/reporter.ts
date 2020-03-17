@@ -20,11 +20,13 @@ export default class Reporter {
     const titleUnderline = Array(Math.round(columnCount / 2))
       .fill('-')
       .join('');
-    console.log('');
-    console.log(phaseName);
-    console.log(titleUnderline);
-    console.log('');
-    this.spinner.start(this.spinnerText);
+    if (!this.suppressOutput) {
+      console.log('');
+      console.log(phaseName);
+      console.log(titleUnderline);
+      console.log('');
+      this.spinner.start(this.spinnerText);
+    }
   }
   private addId(id) {
     this.ids = this.ids || [];
