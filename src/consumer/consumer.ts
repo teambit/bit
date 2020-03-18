@@ -766,7 +766,7 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigFileProps: WorkspaceConfigFileInputProps
+    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
     return this.ensure(projectPath, noGit, workspaceConfigFileProps);
   }
@@ -783,7 +783,7 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigFileProps: WorkspaceConfigFileInputProps
+    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
@@ -846,7 +846,6 @@ export default class Consumer {
       return Promise.reject(new ConsumerNotFound());
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
       consumerInfo.consumerConfig = await WorkspaceConfig.loadIfExist(consumerInfo.path);
