@@ -11,7 +11,7 @@ export type InsightConfig = {
 
 export type InsightDeps = [ComponentGraph, BitCli];
 
-export async function provide(_config: {}, [componentGraph, cli]: InsightDeps) {
+export async function provide([componentGraph, cli]: InsightDeps) {
   // get all insights from registry
   const initialInsights: Insight[] = getCoreInsights(componentGraph);
   // register all insights in cli

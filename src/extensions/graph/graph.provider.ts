@@ -4,6 +4,6 @@ import { ComponentFactory } from '../component';
 
 export type GraphDeps = [Workspace, ComponentFactory];
 
-export async function provide(_config: {}, [workspace, componentFactory]: GraphDeps) {
+export async function provide([workspace, componentFactory]: GraphDeps) {
   return ComponentGraph.build(workspace, componentFactory);
 }
