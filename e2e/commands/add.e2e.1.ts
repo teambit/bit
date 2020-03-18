@@ -1153,10 +1153,9 @@ describe('bit add command', function() {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('bar');
       const files = bitMap.bar.files.map(file => file.relativePath);
-      expect(files).to.include('Bar/foo.js');
-      expect(files).to.include('Bar/foo.spec.js');
-      expect(files).not.to.include('bar/foo.js');
-      expect(files).not.to.include('bar/foo.js');
+      expect(files).to.include('foo.js');
+      expect(files).to.include('foo.spec.js');
+      expect(bitMap.bar.rootDir).to.equal('Bar');
     });
   });
   describe('adding a file outside the consumer dir', () => {
