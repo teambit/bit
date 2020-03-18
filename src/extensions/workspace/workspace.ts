@@ -243,6 +243,7 @@ export default class Workspace implements ComponentHost {
       this.consumer,
       { packageManager: 'yarn' }
     );
+    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
