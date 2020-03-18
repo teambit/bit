@@ -92,12 +92,16 @@ export async function moveExistingComponentFilesToOneDir(
   id: BitId,
   to: string
 ): Promise<PathChangeResult[]> {
-  const componentMap = consumer.bitMap.getComponent(id);
-  if (componentMap.trackDir || componentMap.rootDir) return [];
+  const componentMap = consumer.bitMap.getComponent(id, { ignoreVersion: true });
   if (componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
     throw new GeneralError(
       `bit move --component is relevant for authored components only. ${id.toString()} is not an authored component`
     );
+  }
+  const existingRootDir = componentMap.hasRootDir() ? componentMap.rootDir : componentMap.trackDir;
+  if (existingRootDir) {
+    throw new GeneralError(`${id.toString()} has already one directory (${existingRootDir}) for all its files.
+to change that directory, use bit move without --component flag`);
   }
   const toRelative = consumer.getPathRelativeToConsumer(to);
   const toAbsolute = consumer.toAbsolutePath(toRelative);
