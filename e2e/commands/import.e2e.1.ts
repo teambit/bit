@@ -566,7 +566,7 @@ describe('bit import', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooLegacy();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponentsLegacy();
       helper.command.exportComponent('bar/foo');
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
@@ -1312,7 +1312,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooLegacy();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponentsLegacy();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
@@ -2150,7 +2150,7 @@ console.log(barFoo.default());`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooLegacy();
-      helper.fixtures.tagComponentBarFoo();
+      helper.command.tagAllComponentsLegacy();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
