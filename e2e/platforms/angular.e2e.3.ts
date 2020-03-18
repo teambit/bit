@@ -47,7 +47,7 @@ export class AppModule {}
       before(() => {
         helper.fs.createFile('bar', 'my-template.html');
         helper.fs.createFile('bar', 'my-style.css');
-        helper.command.addComponent('bar', { i: 'bar/foo ' });
+        helper.command.addComponentDir('bar', { i: 'bar/foo ' });
       });
       it('should not warn about it anymore', () => {
         const output = helper.command.runCmd('bit status');
@@ -64,7 +64,7 @@ export class AppModule {}
       helper.command.runCmd('git checkout v4.8.1', path.join(helper.scopes.localPath, 'ng-lightning'));
       localWorkspace = path.join(helper.scopes.localPath, 'ng-lightning/projects/ng-lightning');
       helper.scopeHelper.initWorkspace(localWorkspace);
-      helper.command.runCmd('bit add src/lib/badges', localWorkspace);
+      helper.command.addComponent('src/lib/badges', undefined, localWorkspace);
     });
     describe('isolating a component that has public_api.js on the root dir', () => {
       before(() => {

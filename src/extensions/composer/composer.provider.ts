@@ -3,14 +3,12 @@ import Composer from './composer';
 import ComposeCmd from './compose.cmd';
 import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
-import { Scripts } from '../scripts';
+import { Flows } from '../flows';
 
-export type ServeConfig = {};
+export type ComposerDeps = [Watch, BitCli, Workspace, Flows];
 
-export type ServeDeps = [Watch, BitCli, Workspace, Scripts];
-
-export async function provideComposer(config: ServeConfig, [watch, cli, workspace, scripts]: ServeDeps) {
+export async function provideComposer([watch, cli, workspace, flows]: ComposerDeps) {
   // @ts-ignore
-  cli.register(new ComposeCmd(workspace, scripts));
+  cli.register(new ComposeCmd(workspace, flows));
   return new Composer(watch);
 }

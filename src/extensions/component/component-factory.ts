@@ -1,4 +1,4 @@
-import Capsule from '../../environment/capsule-builder';
+import Isolator from '../isolator/isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
@@ -12,7 +12,7 @@ export default class ComponentFactory {
     /**
      * instance of the capsule orchestrator
      */
-    private capsuleOrchestrator: Capsule
+    private isolateEnv: Isolator
   ) {}
 
   create() {}
@@ -33,7 +33,7 @@ export default class ComponentFactory {
       null,
       State.fromLegacy(legacyComponent),
       undefined,
-      this.capsuleOrchestrator
+      this.isolateEnv
     );
   }
 }

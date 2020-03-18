@@ -1,16 +1,15 @@
 import { loadConsumerIfExist } from '../../../consumer';
-import CapsuleBuilder, { Options } from '../../../environment/capsule-builder';
-import { CapsuleOptions } from '../../../extensions/capsule/orchestrator/types';
-import CapsuleList from '../../../environment/capsule-list';
+import Isolator from '../../../extensions/isolator/isolator';
+import CapsuleList from '../../../extensions/isolator/capsule-list';
 import { PackageManager } from '../../../extensions/package-manager';
+import { Reporter } from '../../../extensions/reporter';
 
-export default (async function capsuleIsolate(
-  bitIds: string[],
-  capsuleOptions: CapsuleOptions,
-  options: Options
-): Promise<CapsuleList> {
+export default (async function capsuleIsolate(bitIds: string[], capsuleOptions: {}): Promise<CapsuleList> {
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new Error('no consumer found');
-  const capsuleBuilder = new CapsuleBuilder(consumer.getPath(), new PackageManager('librarian'));
-  return capsuleBuilder.isolateComponents(bitIds, capsuleOptions, options, consumer);
+  const reporter = new Reporter();
+  const packageManager = new PackageManager('librarian', reporter);
+  const network = await Isolator.provide([packageManager]);
+  const isolatedEnvironment = await network.createNetworkFromConsumer(bitIds, consumer, capsuleOptions);
+  return isolatedEnvironment.capsules;
 });

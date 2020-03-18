@@ -643,18 +643,30 @@ export default class Consumer {
     ignoreUnresolvedDependencies: boolean | null | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
-    skipAutoTag: boolean
+    skipAutoTag: boolean,
+    allowRelativePaths: boolean
   ): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
+    const componentsWithRelativeAuthored = components.filter(
+      component => component.issues && component.issues.relativeComponentsAuthored
+    );
+    if (!allowRelativePaths && !R.isEmpty(componentsWithRelativeAuthored)) {
+      throw new MissingDependencies(componentsWithRelativeAuthored);
+    }
     if (!ignoreUnresolvedDependencies) {
-      const componentsWithMissingDeps = components.filter(component => {
-        return Boolean(component.issues);
+      // components that have issues other than relativeComponentsAuthored.
+      const componentsWithOtherIssues = components.filter(component => {
+        const issues = component.issues;
+        return (
+          issues &&
+          Object.keys(issues).some(label => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
+        );
       });
-      if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
     }
     const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
@@ -803,6 +815,9 @@ export default class Consumer {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const config = await WorkspaceConfig.ensure(consumerPath);
+    // isolated environments in the workspace rely on a physical node_modules folder
+    // for this reason, we must use a package manager that supports one
+    config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,

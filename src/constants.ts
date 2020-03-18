@@ -66,7 +66,7 @@ export const DEFAULT_COMPILER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
-export const DEFAULT_PACKAGE_MANAGER = 'npm';
+export const DEFAULT_PACKAGE_MANAGER = 'librarian';
 
 export const DEFAULT_EXTENSIONS = {};
 
@@ -220,6 +220,8 @@ export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 
 export const CFG_SSH_NO_COMPRESS = 'ssh_no_compress';
+
+export const CFG_FEATURE_TOGGLE = 'features';
 
 /**
  * git hooks

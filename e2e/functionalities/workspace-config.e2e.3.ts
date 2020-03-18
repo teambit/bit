@@ -3,7 +3,10 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -215,6 +218,12 @@ describe('workspace config', function() {
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
         });
+        it('should show a warning saying that this feature is deprecated', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string(
+            'warning: file overrides (using "file://") is deprecated and will be removed on the next major version'
+          );
+        });
         it('should not add any dependency to the component', () => {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
@@ -399,6 +408,7 @@ describe('workspace config', function() {
           );
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.have.string(statusFailureMsg);
 
@@ -446,6 +456,7 @@ describe('workspace config', function() {
           showBar = helper.command.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing component', () => {
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.not.have.string(statusFailureMsg);
         });
@@ -1000,8 +1011,8 @@ describe('workspace config', function() {
         });
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
-          const output = helper.command.status();
-          expect(output).to.have.string('missing package dependencies');
+          const output = helper.command.status().replace(/\n/g, '');
+          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });

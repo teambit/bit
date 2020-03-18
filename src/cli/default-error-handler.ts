@@ -106,6 +106,7 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
+import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -141,6 +142,11 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [
+    AddingIndividualFiles,
+    err =>
+      `error: adding individual files is blocked ("${err.file}"), and only directories can be added. To force adding files use --allow-files flag`
+  ],
   [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
     ExtensionNameNotValid,

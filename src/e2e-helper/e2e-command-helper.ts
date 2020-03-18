@@ -10,27 +10,57 @@ import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
+import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
+/**
+ * to enable a feature for Helper instance, in the e2e-test file add `helper.command.setFeatures('your-feature');`
+ * to enable a feature for a single command, add the feature to the runCmd, e.g. `runCmd(cmd, cwd, stdio, 'your-feature');`
+ * if you set both, the runCmd wins.
+ * more about feature-toggle head to feature-toggle.ts file.
+ */
 export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
   bitBin: string;
+  featuresToggle: string | undefined;
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
   }
 
-  runCmd(cmd: string, cwd: string = this.scopes.localPath, stdio: StdioOptions = 'pipe'): string {
+  setFeatures(featuresToggle: string) {
+    this.featuresToggle = featuresToggle;
+  }
+
+  runCmd(
+    cmd: string,
+    cwd: string = this.scopes.localPath,
+    stdio: StdioOptions = 'pipe',
+    overrideFeatures?: string
+  ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
-    if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
+    const isBitCommand = cmd.startsWith('bit ');
+    if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
+    const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
+    cmd = featuresTogglePrefix + cmd;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line no-console
     // const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     const cmdOutput = childProcess.execSync(cmd, { cwd, stdio });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
+  }
+
+  _getFeatureToggleCmdPrefix(overrideFeatures?: string): string {
+    const featuresToggle = overrideFeatures || this.featuresToggle;
+    if (!featuresToggle) return '';
+    const featureToggleStr = `${ENV_VAR_FEATURE_TOGGLE}=${featuresToggle}`;
+    if (process.platform === 'win32') {
+      return `set "${featureToggleStr}" && `;
+    }
+    return `${featureToggleStr} `;
   }
 
   listRemoteScope(raw = true, options = '') {
@@ -65,10 +95,16 @@ export default class CommandHelper {
   }
 
   catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
-    const result = this.runCmd(`bit cat-component ${id} -j`, cwd);
+    const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return parse ? JSON.parse(result) : result;
   }
   addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
+  }
+  addComponentDir(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
@@ -96,18 +132,24 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} `);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths`);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
+    this.linkAndRewire();
+    const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);
   }
 
   untag(id: string) {
@@ -120,6 +162,9 @@ export default class CommandHelper {
   }
   exportAllComponents(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --force`);
+  }
+  exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
+    return this.runCmd(`bit export ${scope} --rewire --force`);
   }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
@@ -252,6 +297,18 @@ export default class CommandHelper {
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
+  runTask(taskName: string) {
+    return this.runCmd(`bit run ${taskName}`);
+  }
+  create(name: string) {
+    return this.runCmd(`bit create ${name}`);
+  }
+  link() {
+    return this.runCmd('bit link');
+  }
+  linkAndRewire() {
+    return this.runCmd('bit link --rewire');
   }
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options

@@ -47,6 +47,7 @@ import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
+import { AddingIndividualFiles } from './exceptions/addding-individual-files';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
 type Warnings = {
@@ -84,6 +85,7 @@ export type AddProps = {
   exclude?: PathOrDSL[];
   override: boolean;
   trackDirFeature?: boolean;
+  allowFiles: boolean;
   origin?: ComponentOrigin;
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
@@ -114,6 +116,7 @@ export default class AddComponents {
   origin: ComponentOrigin;
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
+  allowFiles: boolean;
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -123,6 +126,7 @@ export default class AddComponents {
     this.main = addProps.main;
     this.namespace = addProps.namespace;
     this.tests = addProps.tests ? this.joinConsumerPathIfNeeded(addProps.tests) : [];
+    this.allowFiles = addProps.allowFiles;
     this.exclude = addProps.exclude ? this.joinConsumerPathIfNeeded(addProps.exclude) : [];
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
@@ -704,6 +708,13 @@ export default class AddComponents {
       } else {
         throw new NoFiles(diff);
       }
+    }
+    if (!this.allowFiles) {
+      Object.keys(componentPathsStats).forEach(compPath => {
+        if (!componentPathsStats[compPath].isDir) {
+          throw new AddingIndividualFiles(compPath);
+        }
+      });
     }
     // if a user entered multiple paths and entered an id, he wants all these paths to be one component
     // conversely, if a user entered multiple paths without id, he wants each dir as an individual component

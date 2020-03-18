@@ -7,16 +7,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix dynamic dist reference from package.json (#1808) when isolating via capsule
-- [#2341](https://github.com/teambit/bit/issues/2341) fix `bit export --all` to successfully export when deleted from remote
-- support a basic flow of using module paths when no scopeDefault is set
+- add infrastructure for feature-toggle
+- deprecate files overrides (using file:// prefix)
+- disallow adding individual files by `bit add` unless `--allow-files` flag is used
+- introduce `bit link --rewire` to change relative paths in the source code to module paths
+- prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
+- prevent exporting components when import/require uses a module path with no scope-name
+- fix components dependencies detection to resolve from package.json if not exist on the fs
+
+## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)
+
+### Internal
+
+- fix building binary assets
+
+## [[14.7.5] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.5)
+
+### New
+
 - support configuring the logger level by running `bit config set log_level <level>`.
+
+### Changes
+
+- support a basic flow of using module paths when no `scopeDefault` is set
+
+### Bug Fixes
+
+- [#2211](https://github.com/teambit/bit/issues/2211) fix `bit export` to not export non-staged dependencies
+- [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
+- [#1808](https://github.com/teambit/bit/issues/1808) fix dynamic dist reference from `package.json` when isolating via capsule
+- [#2341](https://github.com/teambit/bit/issues/2341) fix `bit export --all` to successfully export when deleted from remote
 - [#2268](https://github.com/teambit/bit/issues/2268) prevent logger from holding the terminal once a command is completed
 
-## [[14.7.5-dev.1] - 2020-02-06]
-
-- [#2211](https://github.com/teambit/bit/issues/2211) fix bit export to not export non-staged dependencies
-- [#2308](https://github.com/teambit/bit/issues/2308) fix "Cannot read property 'scope' of undefined" error on bit export
 
 ## [[14.7.4] - 2020-02-06](https://github.com/teambit/bit/releases/tag/v14.7.4)
 

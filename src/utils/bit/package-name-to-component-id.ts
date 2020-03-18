@@ -49,7 +49,6 @@ import GeneralError from '../../error/general-error';
  * component 2. when you specify bit add --id foo/bar, it actually adds the files to component 1,
  * assuming you used the entire name of the component 1 including the scope.
  */
-// eslint-disable-next-line import/prefer-default-export
 export function packageNameToComponentId(consumer: Consumer, packageName: string, bindingPrefix: string): BitId {
   const componentName = getComponentName(packageName, bindingPrefix);
 

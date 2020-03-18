@@ -1,9 +1,8 @@
-import { CapsuleExt } from '../capsule';
+import { IsolatorExt } from '../isolator';
 import componentProvider from './component.provider';
 
 export default {
   name: 'ComponentFactory',
-  dependencies: [CapsuleExt],
-  config: {},
+  dependencies: [IsolatorExt],
   provider: componentProvider
 };

@@ -6,7 +6,7 @@ import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 
 export type BitCLIDeps = [Paper];
 
-export async function CLIProvider(config: {}, [paper]: BitCLIDeps) {
+export async function CLIProvider([paper]: BitCLIDeps) {
   const legacyExtensions = await legacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {

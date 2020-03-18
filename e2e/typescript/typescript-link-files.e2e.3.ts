@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 describe('typescript components with link files', function() {
   this.timeout(0);
@@ -43,9 +43,8 @@ describe('typescript components with link files', function() {
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
     it('should not consider that index file as a dependency', () => {
-      output = helper.command.runCmd('bit status');
-      expect(output.includes('bar/foo ... ok')).to.be.true;
-      expect(output.includes(statusFailureMsg)).to.be.false;
+      output = helper.command.status();
+      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
     });
   });
 

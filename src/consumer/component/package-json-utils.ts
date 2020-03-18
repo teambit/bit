@@ -20,7 +20,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../environment/capsule-paths';
+import CapsulePaths from '../../extensions/isolator/capsule-paths';
 
 /**
  * Add components as dependencies to root package.json
@@ -110,7 +110,8 @@ export function preparePackageJsonToWrite(
   override? = true,
   writeBitDependencies? = false,
   excludeRegistryPrefix?: boolean,
-  capsulePaths?: CapsulePaths
+  capsulePaths?: CapsulePaths,
+  packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: Dependencies) => {
@@ -143,6 +144,7 @@ export function preparePackageJsonToWrite(
     packageJsonFile.addDependencies(bitDependencies);
     packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
   };
+  packageJson.setPackageManager(packageManager);
   addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {

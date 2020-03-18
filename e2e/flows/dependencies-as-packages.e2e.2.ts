@@ -13,7 +13,7 @@ chai.use(require('chai-fs'));
   'installing dependencies as packages (not as components)',
   function() {
     this.timeout(0);
-    let helper;
+    let helper: Helper;
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
@@ -110,7 +110,8 @@ chai.use(require('chai-fs'));
         });
         it('bit status should not show any error', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          const outputWithoutLinebreaks = output.replace(/\n/, '');
+          expect(outputWithoutLinebreaks).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -132,7 +133,8 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string('pending updates');
+            const outputWithoutLinebreaks = output.replace(/\n/, '');
+            expect(outputWithoutLinebreaks).to.have.string('pending updates');
           });
           it('should be able to require its direct dependency and print results from all dependencies', () => {
             const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -156,7 +158,8 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            const outputWithoutLinebreaks = output.replace(/\n/, '');
+            expect(outputWithoutLinebreaks).to.have.string(statusWorkspaceIsCleanMsg);
           });
           describe('bit checkout all components to an older version', () => {
             let checkoutOutput;
@@ -218,7 +221,8 @@ chai.use(require('chai-fs'));
               });
               it('bit status should not show the component as modified', () => {
                 const status = helper.command.status();
-                expect(status).to.not.have.string('modified');
+                const statusWithoutLinebreaks = status.replace(/\n/, '');
+                expect(statusWithoutLinebreaks).to.not.have.string('modified');
               });
             });
           });
@@ -366,7 +370,8 @@ chai.use(require('chai-fs'));
         });
         it('bit status should not show any error', () => {
           const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          const outputWithoutLinebreaks = output.replace(/\n/, '');
+          expect(outputWithoutLinebreaks).to.have.string(statusWorkspaceIsCleanMsg);
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -378,10 +383,13 @@ chai.use(require('chai-fs'));
           before(() => {
             helper.fs.deletePath('components/bar/foo/node_modules/@ci');
           });
-          it('bit status should show missing components and not untracked components', () => {
+          it('bit status should show not show it as untracked components', () => {
+            const statusJson = helper.command.statusJson();
+            expect(statusJson.invalidComponents).to.have.lengthOf(0);
+            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(0);
             const status = helper.command.status();
-            expect(status).to.have.string(componentIssuesLabels.missingComponents);
-            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+            const statusWithoutLinebreaks = status.replace(/\n/g, '');
+            expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);
           });
         });
         describe('import with dist outside the component directory', () => {
@@ -393,7 +401,8 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            const outputWithoutLinebreaks = output.replace(/\n/, '');
+            expect(outputWithoutLinebreaks).to.have.string(statusWorkspaceIsCleanMsg);
           });
           describe('running bit link after deleting the symlink from dist directory', () => {
             let symlinkPath;

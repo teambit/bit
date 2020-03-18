@@ -1,8 +1,8 @@
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule-ext';
+import { Capsule } from '../isolator/capsule';
 
 export class ResolvedComponent {
-  constructor(readonly component: Component, readonly capsule: ComponentCapsule) {}
+  constructor(readonly component: Component, readonly capsule: Capsule) {}
 
   require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require

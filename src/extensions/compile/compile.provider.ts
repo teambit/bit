@@ -2,13 +2,14 @@ import { Workspace } from '../workspace';
 import { BitCli } from '../cli';
 import { CompileCmd } from './compile.cmd';
 import { Compile } from './compile';
+import { Flows } from '../flows';
 
-export type ServeConfig = {};
+export type CompileConfig = {};
 
-export type ServeDeps = [BitCli, Workspace];
+export type CompileDeps = [BitCli, Workspace, Flows];
 
-export async function provideCompile(config: ServeConfig, [cli, workspace]: ServeDeps) {
-  const compile = new Compile(workspace);
+export async function provideCompile([cli, workspace, scripts]: CompileDeps) {
+  const compile = new Compile(workspace, scripts);
   // @ts-ignore
   cli.register(new CompileCmd(compile));
   return compile;

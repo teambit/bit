@@ -349,7 +349,7 @@ describe('bit checkout command', function() {
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponent('bar', { i: 'bar/foo' });
+      helper.command.addComponentDir('bar', { i: 'bar/foo' });
       helper.command.tagAllComponents();
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');

@@ -5,7 +5,7 @@ import Isolator from '../environment/isolator';
 import ConsumerComponent from '../consumer/component';
 import { Dist, AbstractVinyl } from '../consumer/component/sources';
 import { getComponentsDependenciesLinks } from '../links/link-generator';
-import { ComponentCapsule } from '../extensions/capsule-ext';
+import { Capsule } from '../extensions/isolator/capsule';
 
 /**
  * This is a formal API for extension developers, changes in this API should result a major version.
@@ -13,7 +13,7 @@ import { ComponentCapsule } from '../extensions/capsule-ext';
 
 export default class ExtensionIsolateResult {
   private isolator: Isolator;
-  capsule: ComponentCapsule;
+  capsule: Capsule;
   componentWithDependencies: ComponentWithDependencies;
 
   constructor(isolator: Isolator, componentWithDependencies: ComponentWithDependencies) {

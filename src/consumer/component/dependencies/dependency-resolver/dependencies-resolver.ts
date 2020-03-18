@@ -53,9 +53,16 @@ export interface UntrackedFileDependencyEntry {
   untrackedFiles: Array<UntrackedFileEntry>;
 }
 
-type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+export type RelativeComponentsAuthoredEntry = {
+  importSource: string;
+  componentId: BitId;
+  importSpecifiers: ImportSpecifier[] | undefined;
+};
 
-interface Issues {
+type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
+type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
+
+export type Issues = {
   missingPackagesDependenciesOnFs: {};
   missingPackagesDependenciesFromOverrides: string[];
   missingComponents: {};
@@ -64,10 +71,11 @@ interface Issues {
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
   relativeComponents: {};
+  relativeComponentsAuthored: RelativeComponentsAuthoredIssues;
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
-}
+};
 
 export default class DependencyResolver {
   component: Component;
@@ -80,8 +88,7 @@ export default class DependencyResolver {
   tree: Tree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  issues: Issues; // $PropertyType<Component, 'issues'>;
+  issues: Issues;
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -111,6 +118,7 @@ export default class DependencyResolver {
       peerPackageDependencies: {}
     };
     this.processedFiles = [];
+    // later on, empty issues are removed. see `this.removeEmptyIssues();`
     this.issues = {
       missingPackagesDependenciesOnFs: {},
       missingPackagesDependenciesFromOverrides: [],
@@ -120,6 +128,7 @@ export default class DependencyResolver {
       missingLinks: {},
       missingCustomModuleResolutionLinks: {},
       relativeComponents: {},
+      relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
       missingBits: {} // temporarily, will be combined with missingComponents. see combineIssues
@@ -642,6 +651,12 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToRelativeComponentsIssues(originFile, componentId);
       return false;
     }
+    this._pushToRelativeComponentsAuthoredIssues(
+      originFile,
+      componentId,
+      depFileObject.importSource,
+      depsPaths.importSpecifiers
+    );
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
@@ -738,21 +753,18 @@ either, use the ignore file syntax or change the require statement to have a mod
       const getExistingId = (): BitId | null | undefined => {
         let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
-
         // maybe the dependencies were imported as npm packages
-        if (bitDep.includes('node_modules')) {
-          // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
-          const basePath = this.componentMap.rootDir
-            ? path.join(this.consumerPath, this.componentMap.rootDir)
-            : this.consumerPath;
-          const depPath = path.join(basePath, bitDep);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
-          if (packageJson) {
-            const depVersion = packageJson.version;
-            existingId = componentId.changeVersion(depVersion);
-            return existingId;
-          }
+        // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
+        const basePath = this.componentMap.rootDir
+          ? path.join(this.consumerPath, this.componentMap.rootDir)
+          : this.consumerPath;
+        const depPath = path.join(basePath, bitDep);
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
+        if (packageJson) {
+          const depVersion = packageJson.version;
+          existingId = componentId.changeVersion(depVersion);
+          return existingId;
         }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
@@ -1213,6 +1225,17 @@ either, use the ignore file syntax or change the require statement to have a mod
     } else {
       this.issues.relativeComponents[originFile] = [componentId];
     }
+  }
+  _pushToRelativeComponentsAuthoredIssues(
+    originFile,
+    componentId,
+    importSource: string,
+    importSpecifiers: ImportSpecifier[] | undefined
+  ) {
+    if (!this.issues.relativeComponentsAuthored[originFile]) {
+      this.issues.relativeComponentsAuthored[originFile] = [];
+    }
+    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId, importSpecifiers });
   }
   _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     this.issues.missingBits[originFile]

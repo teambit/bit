@@ -2,6 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -243,9 +244,9 @@ console.log(isType());`;
       // is-string2
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('utils/is-string');
-      const isStringFixture2 = `const isString = require('bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
+      const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
       helper.command.addComponent('test/is-string2.js', { i: 'test/is-string2' });
       helper.command.tagAllComponents();
@@ -253,24 +254,24 @@ console.log(isType());`;
 
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest2');
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest2');
       helper.command.importComponent('test/is-string2');
 
-      const appJsFixture = `const isString2 = require('bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
+      const appJsFixture = `const isString2 = require('@bitTest2/${helper.scopes.remote}.test.is-string2'); console.log(isString2());`;
       fs.outputFileSync(path.join(helper.scopes.localPath, 'app.js'), appJsFixture);
     });
     it('node_modules should contain custom dir name', () => {
-      expect(path.join(helper.scopes.localPath, 'node_modules', 'bitTest2')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'node_modules', '@bitTest2')).to.be.a.path();
     });
     it('node_modules should contain custom dir name2', () => {
       expect(
         path.join(
           helper.scopes.localPath,
           'node_modules',
-          'bitTest2',
+          '@bitTest2',
           `${helper.scopes.remote}.test.is-string2`,
           'node_modules',
-          'bitTest2'
+          '@bitTest2'
         )
       ).to.be.a.path();
     });
@@ -279,8 +280,8 @@ console.log(isType());`;
         path.join(
           helper.scopes.localPath,
           'node_modules',
-          'bitTest2',
-          `${helper.scopes.remote}.test.is-string2/node_modules/bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/bitTest`
+          '@bitTest2',
+          `${helper.scopes.remote}.test.is-string2/node_modules/@bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/bitTest`
         )
       ).to.be.a.path();
     });
@@ -311,6 +312,49 @@ console.log(isType());`;
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+      });
+    });
+  });
+  describe('rewire', () => {
+    let beforeLink;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.fs.outputFile('app.js', fixtures.appPrintBarFooAuthor);
+      beforeLink = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('with no defaultScope', () => {
+      let output;
+      before(() => {
+        output = helper.command.linkAndRewire();
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string('@bit/utils.is-string');
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should show results from the rewire step', () => {
+        expect(output).to.have.string('rewired');
+      });
+    });
+    describe('with defaultScope', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeLink);
+        helper.bitJson.addDefaultScope();
+        helper.command.linkAndRewire();
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string(`@bit/${helper.scopes.remote}.utils.is-string`);
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
   });
