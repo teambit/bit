@@ -20,6 +20,7 @@ import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+import { AbstractVinyl } from '../component/sources';
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -207,9 +208,9 @@ export default class AbstractConfig {
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
-  }): Promise<JSONFile[]> {
-    const vinyl = await this.toVinyl({ workspaceDir, componentDir });
-    return [vinyl];
+  }): Promise<AbstractVinyl[]> {
+    const files = await this.toVinyl({ workspaceDir, componentDir });
+    return files;
   }
 
   async toVinyl({
@@ -218,17 +219,21 @@ export default class AbstractConfig {
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
-  }): Promise<JSONFile> {
+  }): Promise<AbstractVinyl[]> {
     const plainObject = this.toPlainObject();
-    const JsonFiles = [];
+    const jsonFiles: AbstractVinyl[] = [];
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      return packageJsonFile.toVinylFile();
+      jsonFiles.push(packageJsonFile.toVinylFile());
     }
-    const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
-    const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
-    return JSONFile.load(params);
+    if (this.writeToBitJson) {
+      const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
+      const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
+      const bitJsonFile = JSONFile.load(params);
+      jsonFiles.push(bitJsonFile);
+    }
+    return jsonFiles;
   }
 
   static composeBitJsonPath(bitPath: PathOsBased): PathOsBased {

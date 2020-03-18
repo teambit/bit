@@ -150,9 +150,9 @@ export default class ManyComponentsWriter {
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
     if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
-      const jsonFile = await this.consumer.config.toVinyl(this.consumer.getPath());
-      if (jsonFile) {
-        dataToPersist.addFile(jsonFile);
+      const jsonFiles = await this.consumer.config.toVinyl(this.consumer.getPath());
+      if (jsonFiles) {
+        dataToPersist.addManyFiles(jsonFiles);
       }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

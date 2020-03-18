@@ -240,10 +240,10 @@ export default class WorkspaceConfig {
 
   async write({ workspaceDir }: { workspaceDir: PathOsBasedAbsolute }): Promise<void> {
     if (this.data) {
-      const file = await this.toVinyl(workspaceDir);
+      const files = await this.toVinyl(workspaceDir);
       const dataToPersist = new DataToPersist();
-      if (file) {
-        dataToPersist.addFile(file);
+      if (files) {
+        dataToPersist.addManyFiles(files);
         return dataToPersist.persistAllToFS();
       }
     }
@@ -251,13 +251,13 @@ export default class WorkspaceConfig {
     return undefined;
   }
 
-  async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl | undefined> {
+  async toVinyl(workspaceDir: PathOsBasedAbsolute): Promise<AbstractVinyl[] | undefined> {
     if (this.data) {
       const jsonStr = stringify(this.data, undefined, 2);
       const base = workspaceDir;
       const fullPath = workspaceDir ? WorkspaceConfig.composeBitJsoncPath(workspaceDir) : this.path;
       const jsonFile = new AbstractVinyl({ base, path: fullPath, contents: Buffer.from(jsonStr) });
-      return jsonFile;
+      return [jsonFile];
     }
     return this.legacyConfig?.toVinyl({ workspaceDir });
   }
