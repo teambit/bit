@@ -56,13 +56,15 @@ export class InsightManager {
    */
   async run(insightNames: string[]): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
-    insightNames.forEach(async insightName => {
-      const insight = this.getByName(insightName);
-      if (!!insight) {
-        const insightRes: InsightResult = await insight.run();
-        res.push(insightRes);
-      }
-    });
+    await Promise.all(
+      insightNames.map(async insightName => {
+        const insight = this.getByName(insightName);
+        if (!!insight) {
+          const insightRes: InsightResult = await insight.run();
+          res.push(insightRes);
+        }
+      })
+    );
     return res;
   }
 
@@ -70,10 +72,9 @@ export class InsightManager {
    * execute all insights in the registry
    *
    */
-  async runAll() {
+  async runAll(): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
-    console.log('in runAll');
-    for (let [name, insight] of this.insights) {
+    for (let [name, insight] of this.insights.entries()) {
       const insightRes: InsightResult = await insight.run();
       res.push(insightRes);
     }

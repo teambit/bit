@@ -1,26 +1,24 @@
 
 import React from 'react';
-import { Color } from 'ink';
+import { Color, Box, Text } from 'ink';
 import {Command, CLIArgs} from '../cli'
 import { Flags } from '../paper/command';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
 
 export default class InsightsCmd implements Command {
-  // name = 'insights [insight-name]';
-  // description = 'get insights on your components';
-  // alias = '';
-  // opts = []; // should be of the format: ['j', 'json', 'return diagnoses in json format']
-  name = 'insights [...names]';
-  description = 'start a dev environment for a workspace or a specific component'
-  group = 'development'
-  shortDescription = ''
-  // @ts-ignore
-  options = [['l', 'list', 'list all insights']]
-
-  constructor(
-    private insightManager: InsightManager,
-  ) {}
+  name: string;
+  description: string;
+  group: string;
+  opts: string[][];
+  insightManager: InsightManager
+  constructor(insightManager: InsightManager) {
+    this.insightManager = insightManager;
+    this.opts = [['l', 'list', 'list all insights']]
+    this.name = 'insights [...names]';
+    this.description = 'start a dev environment for a workspace or a specific component'
+    this.group = 'development'
+  }
 
   async render([names]: CLIArgs, { list }: Flags) {
     if (list) {
@@ -43,9 +41,29 @@ export default class InsightsCmd implements Command {
       }
     else {
       const results = await this.insightManager.runAll();
-      return <Color blueBright>{results}</Color>
-    }
+      // console.log('rendering,',results[0].renderedData)
+      // return results[1].renderedData
+      return (
+      <Box key ="help" flexDirection="column">
+        { results.map(function(result) {
+          return (
+            <Box key={result.metaData.name}>
+              <Box marginBottom={1}>
+                <Text bold underline>
+                  {result.metaData.name}
+                </Text>
+              </Box>
+              <Box>
+                {result.renderedData}
+              </Box>
+            </Box>);
+        })
+      }
+      </Box>
+    )
   }
+}
+
 
 
   // async someRender([components]: CLIArgs, { verbose, noCache }: Flags) {

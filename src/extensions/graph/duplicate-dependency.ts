@@ -15,4 +15,5 @@ export class DuplicateDependency {
 export type VersionSubgraph = {
   versionId: string;
   subGraph: ComponentGraph;
+  immediateDependents: string[];
 };

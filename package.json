@@ -86,7 +86,7 @@
     "@teambit/capsule": "0.0.11",
     "@teambit/gitconfig": "^2.0.6",
     "@types/levelup": "^4.3.0",
-    "@types/react": "^16.9.17",
+    "@types/react": "^16.9.23",
     "@vuedoc/parser": "^2.0.0-beta.5",
     "acorn": "^6.2.1",
     "ajv": "^6.5.3",

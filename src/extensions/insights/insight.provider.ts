@@ -17,5 +17,6 @@ export async function provide(_config: {}, [componentGraph, cli]: InsightDeps) {
   // register all insights in cli
   // TODO - get user-defined insights as well, and use them when instantiating InsightManager and InsightsCmd
   const insightManager = new InsightManager(initialInsights);
-  cli.register(new InsightsCmd(insightManager));
+  const insightsCmd = new InsightsCmd(insightManager);
+  cli.register(insightsCmd);
 }

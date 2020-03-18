@@ -49,10 +49,12 @@ export class ComponentGraph extends Graph<Component, Dependency> {
         const notLatestVersions = versions.allVersionNodes.filter(version => version !== versions.latestVersionNode);
         notLatestVersions.forEach(version => {
           let predecessors = this.predecessorsSubgraph(version);
+          let immediatePredecessors = [...this.predecessors(version).keys()];
           let subGraph = this.buildFromCleargraph(predecessors);
           const versionSubgraph: VersionSubgraph = {
             versionId: version,
-            subGraph: subGraph
+            subGraph: subGraph,
+            immediateDependents: immediatePredecessors
           };
           versionSubgraphs.push(versionSubgraph);
         });
