@@ -609,7 +609,7 @@ describe('bit export command', function() {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.fs.outputFile('qux.js');
-        helper.command.addComponent('qux.js');
+        helper.command.addComponentAllowFiles('qux.js');
         helper.fs.outputFile('utils/is-string.js', 'require("../qux");');
         helper.command.tagAllComponents();
         output = helper.command.export();
