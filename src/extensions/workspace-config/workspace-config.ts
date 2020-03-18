@@ -247,7 +247,7 @@ export default class WorkspaceConfig {
         return dataToPersist.persistAllToFS();
       }
     }
-    this.legacyConfig?.write({ workspaceDir });
+    await this.legacyConfig?.write({ workspaceDir });
     return undefined;
   }
 
