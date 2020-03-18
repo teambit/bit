@@ -62,8 +62,20 @@ export default class WorkspaceConfig {
     return this.legacyConfig?.compiler;
   }
 
+  _setCompiler(compiler) {
+    if (this.legacyConfig) {
+      this.legacyConfig.compiler = compiler;
+    }
+  }
+
   get _tester(): Testers | undefined {
     return this.legacyConfig?.tester;
+  }
+
+  _setTester(tester) {
+    if (this.legacyConfig) {
+      this.legacyConfig.tester = tester;
+    }
   }
 
   _getEnvsByType(type: EnvType): Compilers | Testers | undefined {

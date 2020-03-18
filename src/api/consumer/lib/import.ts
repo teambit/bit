@@ -33,17 +33,16 @@ export default (async function importAction(
     const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envComponents[0].component.id.toString();
-    function writeConfigIfNeeded() {
+    async function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        consumer.config.compiler = id;
+        consumer.config._setCompiler(id);
         Analytics.setExtraData('build_env', id);
-        return consumer.config.write({ workspaceDir: consumer.getPath() });
+        const res = consumer.config.write({ workspaceDir: consumer.getPath() });
+        return res;
       }
 
       if (environmentOptions.tester) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        consumer.config.tester = id;
+        consumer.config._setTester(id);
         Analytics.setExtraData('test_env', id);
         return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
