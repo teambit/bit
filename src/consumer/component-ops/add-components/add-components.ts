@@ -37,7 +37,7 @@ import {
 } from './exceptions';
 import { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import ComponentMap from '../../bit-map/component-map';
-import { PathLinux, PathOsBased } from '../../../utils/path';
+import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';
@@ -329,20 +329,13 @@ export default class AddComponents {
     }
 
     const { componentId, trackDir } = component;
-    let mainFile = determineMainFile(component, foundComponentFromBitMap);
-    const getRootDir = () => {
+    const mainFile = determineMainFile(component, foundComponentFromBitMap);
+    const getRootDir = (): PathLinuxRelative | undefined => {
       if (this.trackDirFeature) throw new Error('track dir should not calculate the rootDir');
       if (this.allowRelativePaths) {
         if (foundComponentFromBitMap) {
           if (foundComponentFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
             throw new GeneralError('unable to use "--allow-relative-paths" with imported components');
-          }
-          if (foundComponentFromBitMap.rootDir && foundComponentFromBitMap.rootDir !== '.') {
-            component.files = component.files.map(file => {
-              file.relativePath = addSharedDirForPath(file.relativePath, foundComponentFromBitMap.rootDir);
-              return file;
-            });
-            mainFile = addSharedDirForPath(mainFile, foundComponentFromBitMap.rootDir);
           }
         }
         return '.';
@@ -360,29 +353,24 @@ export default class AddComponents {
         if (!this.allowFiles) throw new AddingIndividualFiles(fileNotInsideTrackDir.relativePath);
         return '.';
       }
-      component.files = component.files.map(file => {
-        file.relativePath = stripSharedDirFromPath(file.relativePath, trackDir);
-        return file;
-      });
-
-      mainFile = stripSharedDirFromPath(mainFile, trackDir);
-      return trackDir;
+      return pathNormalizeToLinux(trackDir);
     };
     const getComponentMap = (): ComponentMap => {
       if (this.trackDirFeature) {
         return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
       const rootDir = getRootDir();
-      return this.bitMap.addComponent({
+      const componentMap = this.bitMap.addComponent({
         componentId,
         files: component.files,
         mainFile,
         trackDir: rootDir ? '' : trackDir, // if rootDir exists, no need for trackDir.
-        rootDir,
         origin: COMPONENT_ORIGINS.AUTHORED,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override
       });
+      if (rootDir) componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
+      return componentMap;
     };
     const componentMap = getComponentMap();
     return { id: componentId.toString(), files: componentMap.files };
