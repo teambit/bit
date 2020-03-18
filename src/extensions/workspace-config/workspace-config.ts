@@ -141,7 +141,7 @@ export default class WorkspaceConfig {
     if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
       // Only support here what needed for e2e tests
       const legacyProps = {
-        packageManager: props?.workspace.dependencyResolver.packageManager
+        packageManager: props?.workspace?.dependencyResolver?.packageManager
       };
       const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, false, legacyProps);
       const instance = this.fromLegacyConfig(legacyConfig);
