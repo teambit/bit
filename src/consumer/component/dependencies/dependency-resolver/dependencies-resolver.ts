@@ -760,8 +760,8 @@ either, use the ignore file syntax or change the require statement to have a mod
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
       const getExistingId = (): BitId | null | undefined => {
-        let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
-        if (existingId) return existingId;
+        const existingIds = this.consumer.bitmapIds.filterWithoutVersion(componentId);
+        if (existingIds.length === 1) return existingIds[0];
         // maybe the dependencies were imported as npm packages
         // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
         const basePath = this.componentMap.rootDir
@@ -772,8 +772,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
         if (packageJson) {
           const depVersion = packageJson.version;
-          existingId = componentId.changeVersion(depVersion);
-          return existingId;
+          return componentId.changeVersion(depVersion);
         }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
