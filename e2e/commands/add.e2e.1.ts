@@ -834,6 +834,12 @@ describe('bit add command', function() {
       const bitMap = helper.bitMap.read();
       expect(bitMap).not.to.have.property('bar/foo1');
     });
+    it('when adding a dir and excluding a file, the rootDir should not be that dir', () => {
+      helper.fs.outputFile('src/index.js');
+      helper.fs.outputFile('src/foo.js');
+      const cmd = () => helper.command.addComponent('src', { e: 'src/foo.js' });
+      expect(cmd).to.throw('unable to exclude files when tracking a directory');
+    });
   });
   describe('with multiple index files', () => {
     before(() => {

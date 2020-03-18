@@ -464,9 +464,9 @@ you can add the directory these files are located at and it'll change the root d
       const mainFile = componentWithFiles.mainFile ? pathNormalizeToLinux(componentWithFiles.mainFile) : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (resolvedExcludedFiles.includes(mainFile)) {
+        // if mainFile is excluded, exclude all files
         componentWithFiles.files = [];
       } else {
-        // if mainFile is excluded, exclude all files
         componentWithFiles.files = componentWithFiles.files.filter(
           key => !resolvedExcludedFiles.includes(key.relativePath)
         );
@@ -641,12 +641,20 @@ you can add the directory these files are located at and it'll change the root d
           }
         }
 
-        const trackDir =
-          Object.keys(componentPathsStats).length === 1 &&
-          !this.exclude.length &&
-          this.origin === COMPONENT_ORIGINS.AUTHORED
-            ? relativeComponentPath
-            : undefined;
+        const getTrackDir = () => {
+          if (Object.keys(componentPathsStats).length === 1 && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+            if (!this.exclude.length) {
+              return relativeComponentPath;
+            }
+            if (!this.allowFiles) {
+              throw new GeneralError(`unable to exclude files when tracking a directory, as Bit won't be able to auto-track changes in this directory.
+try to avoid excluding files and maybe put them in your .gitignore if it makes sense.
+to skip this error (not recommended) use "--allow-files" flag, this dir will not be auto-tracked anymore`);
+            }
+          }
+          return null;
+        };
+        const trackDir = getTrackDir();
 
         return {
           componentId: finalBitId,
