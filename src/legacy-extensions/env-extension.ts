@@ -309,7 +309,6 @@ export default class EnvExtension extends BaseExtension {
     envModelB: EnvExtensionModel | null | undefined
   ) {
     const sortEnv = env => {
-      env.files = R.sortBy(R.prop('name'), env.files);
       env.config = sortObject(env.config);
       const result = sortObject(env);
       return result;
