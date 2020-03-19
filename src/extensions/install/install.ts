@@ -46,7 +46,8 @@ export class Install {
     {
       const components = await this.workspace.list();
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      const packageManagerName = this.workspace.consumer.config.packageManager || DEFAULT_PACKAGE_MANAGER;
+      const packageManagerName =
+        this.workspace.consumer.config.workspaceSettings.packageManager || DEFAULT_PACKAGE_MANAGER;
       await removeExistingLinksInNodeModules(isolatedEnvs);
       await this.packageManager.runInstallInFolder(process.cwd(), {
         packageManager: packageManagerName
