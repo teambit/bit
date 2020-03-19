@@ -149,12 +149,10 @@ export default class NodeModuleLinker {
   }
 
   /**
-   * for authored, when there is no rootDir, the files can be distributed across multiple
-   * directories, as such, there is not one directory to symlink. instead, it creates link files.
-   * these link files are not ideal, and in case there is shared-dir, they point to the paths
-   * without shared-dir, making it difficult to use them.
-   *
-   * when rootDir is set, it's easier to just symlink to the rootDir.
+   * even when an authored component has rootDir, we can't just symlink that rootDir to
+   * node_modules/rootDir. it could work only when the main-file is index.js, not for other cases.
+   * node expects the module inside node_modules to have either package.json with valid "main"
+   * property or an index.js file. this main property can't be relative.
    */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
@@ -164,21 +162,20 @@ export default class NodeModuleLinker {
       true,
       this._getDefaultScope(component)
     );
-    if (component.componentMap?.doesAuthorHaveRootDir()) {
-      this.dataToPersist.addSymlink(
-        Symlink.makeInstance(component.componentMap.rootDir as string, linkPath, componentId)
-      );
-      return;
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const isMain = file === component.componentMap.mainFile;
+      const isMain = file === componentMap.mainFile;
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
+      const possiblyDist = component.dists.calculateDistFileForAuthored(
+        path.normalize(fileWithRootDir),
+        this.consumer,
+        isMain
+      );
       const dest = path.join(linkPath, file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
