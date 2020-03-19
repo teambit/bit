@@ -76,7 +76,6 @@ describe('bit eject command', function() {
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/foo');
 
@@ -238,7 +237,6 @@ describe('bit eject command', function() {
         helper.command.exportAllComponents();
         remoteScope = helper.scopeHelper.cloneRemoteScope();
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.unpublishComponent('bar.foo');
         npmCiRegistry.unpublishComponent('utils.is-string');
@@ -318,7 +316,6 @@ describe('bit eject command', function() {
             helper.fs.createFile('components/bar/foo/bar/', 'foo.js', fixtures.barFooFixtureV2);
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('bar/foo', '0.0.2');
 
@@ -374,7 +371,6 @@ describe('bit eject command', function() {
             npmCiRegistry.setCiScopeInBitJson();
             helper.command.tagScope('2.0.0', 'msg', '-a');
             helper.command.exportAllComponents();
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('bar/foo', '2.0.0');
             npmCiRegistry.publishComponent('utils/is-string', '2.0.0');

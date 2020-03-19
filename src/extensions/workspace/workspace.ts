@@ -237,7 +237,6 @@ export default class Workspace implements ComponentHost {
   private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
     // const extensionsIds = extensionsConfig.ids;
     if (!extensionsIds || !extensionsIds.length) {
-      this.reporter.end();
       return [];
     }
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
@@ -260,6 +259,7 @@ export default class Workspace implements ComponentHost {
       this.consumer,
       { packageManager: 'yarn' }
     );
+    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
@@ -268,7 +268,6 @@ export default class Workspace implements ComponentHost {
       mod.name = id.toString();
       return mod;
     });
-    this.reporter.end();
     return manifests;
   }
 }

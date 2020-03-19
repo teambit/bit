@@ -10,9 +10,21 @@ import TestExt from '../test/test.manifest';
 import { GraphExt } from '../graph';
 import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';
+import { PackExt } from '../pack';
 
 export default {
   name: 'Bit',
-  dependencies: [WorkspaceExt, ScopeExt, FlowsExt, CompileExt, TestExt, ComposerExt, GraphExt, InstallExt, CreateExt],
+  dependencies: [
+    WorkspaceExt,
+    ScopeExt,
+    FlowsExt,
+    PackExt,
+    CompileExt,
+    TestExt,
+    ComposerExt,
+    GraphExt,
+    InstallExt,
+    CreateExt
+  ],
   provider: provideBit
 } as ExtensionManifest;

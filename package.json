@@ -104,6 +104,7 @@
     "cli-spinners": "^1.0.0",
     "commander": "^2.20.3",
     "comment-json": "^3.0.2",
+    "debounce": "^1.2.0",
     "debug": "^4.1.1",
     "decamelize": "^1.2.0",
     "detect-indent": "^5.0.0",

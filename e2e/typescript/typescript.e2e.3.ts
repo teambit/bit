@@ -413,7 +413,6 @@ describe('typescript', function() {
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.unpublishComponent('bar.foo');
           npmCiRegistry.unpublishComponent('utils.is-string');

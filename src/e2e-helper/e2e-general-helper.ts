@@ -1,4 +1,5 @@
 import * as path from 'path';
+import tar from 'tar';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import { BIT_VERSION } from '../constants';
@@ -40,6 +41,10 @@ export default class GeneralHelper {
   }
   nodeStart(mainFilePath: string, cwd?: string) {
     return this.command.runCmd(`node ${mainFilePath}`, cwd);
+  }
+
+  untarFile(filePath: string, dir: string, sync: boolean) {
+    return tar.x({ file: filePath, C: dir, sync });
   }
 
   runWithTryCatch(cmd: string, cwd: string = this.scopes.localPath) {
