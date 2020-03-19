@@ -1,5 +1,6 @@
 import rightpad from 'pad-right';
 import chalk from 'chalk';
+import tar from 'tar';
 import * as path from 'path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import childProcess, { StdioOptions } from 'child_process';
@@ -310,6 +311,36 @@ export default class CommandHelper {
   linkAndRewire() {
     return this.runCmd('bit link --rewire');
   }
+
+  packComponent(id: string, options: Record<string, any>, extract = false) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    const result = this.runCmd(`bit pack ${id} ${value}`);
+    if (extract) {
+      if (
+        !options ||
+        // We don't just check that it's falsy because usually it's an empty string.
+        // eslint-disable-next-line no-prototype-builtins
+        (!options.hasOwnProperty('-json') && !options.hasOwnProperty('j')) ||
+        (!options['-out-dir'] && !options.d)
+      ) {
+        throw new Error('extracting supporting only when packing with json and out-dir');
+      }
+      const resultParsed = JSON.parse(result);
+      if (!resultParsed || !resultParsed.tarPath) {
+        throw new Error('npm pack results are invalid');
+      }
+      const tarballFilePath = resultParsed.tarPath;
+      const dir = options.d || options['-out-dir'];
+      if (this.debugMode) {
+        console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
+      }
+      tar.x({ file: tarballFilePath, C: dir, sync: true });
+    }
+    return result;
+  }
+
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
       ? Object.keys(options) // $FlowFixMe

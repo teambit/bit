@@ -12,6 +12,7 @@ import TestExt from '../test/test.manifest';
 import { GraphExt } from '../graph';
 import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';
+import { PackExt } from '../pack';
 
 export default {
   name: 'Bit',
@@ -21,6 +22,7 @@ export default {
     IsolatorExt,
     ReporterExt,
     FlowsExt,
+    PackExt,
     CompileExt,
     TestExt,
     ComposerExt,

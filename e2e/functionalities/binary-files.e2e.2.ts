@@ -179,7 +179,6 @@ describe('binary files', function() {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -245,7 +244,6 @@ describe('binary files', function() {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -332,7 +330,6 @@ describe('binary files', function() {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
@@ -431,7 +428,6 @@ describe('binary files', function() {
       let barPngPath;
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');

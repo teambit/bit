@@ -48,7 +48,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('fixtures');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -337,7 +336,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-type');
         helper.command.importComponent('utils/is-string');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');

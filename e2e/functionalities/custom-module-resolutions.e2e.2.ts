@@ -112,27 +112,36 @@ describe('custom module resolutions', function() {
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
-      describe('npm packing the component using an extension npm-pack', () => {
+      describe('npm packing the component using an extension pack', () => {
         let packDir;
+        let untarDir;
         before(() => {
-          helper.extensions.importNpmPackExtension();
           packDir = path.join(helper.scopes.localPath, 'pack');
-          helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+          untarDir = path.join(packDir, 'package');
+          const componentId = `${helper.scopes.remote}/bar/foo`;
+          const options = {
+            o: '',
+            k: '',
+            p: '',
+            j: '',
+            d: packDir
+          };
+          helper.command.packComponent(componentId, options, true);
         });
         it('should create the specified directory', () => {
-          expect(packDir).to.be.a.path();
+          expect(untarDir).to.be.a.path();
         });
         it('should generate .bit.postinstall.js file', () => {
-          expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+          expect(path.join(untarDir, '.bit.postinstall.js')).to.be.a.file();
         });
         it('should add the postinstall script to the package.json file', () => {
-          const packageJson = helper.packageJson.read(packDir);
+          const packageJson = helper.packageJson.read(untarDir);
           expect(packageJson).to.have.property('scripts');
           expect(packageJson.scripts).to.have.property('postinstall');
           expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
         });
         it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-          const packageJson = helper.packageJson.read(packDir);
+          const packageJson = helper.packageJson.read(untarDir);
           expect(packageJson).to.have.property('bit');
           expect(packageJson.bit).to.have.property('resolveAliases');
           expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
@@ -256,33 +265,42 @@ describe('custom module resolutions', function() {
           const output = helper.command.runCmd('bit status');
           expect(output).to.not.have.string('modified');
         });
-        describe('npm packing the component using an extension npm-pack', () => {
+        describe('npm packing the component using an extension pack', () => {
           let packDir;
+          let untarDir;
           before(() => {
-            helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+            untarDir = path.join(packDir, 'package');
+            const componentId = `${helper.scopes.remote}/bar/foo`;
+            const options = {
+              o: '',
+              k: '',
+              p: '',
+              j: '',
+              d: packDir
+            };
+            helper.command.packComponent(componentId, options, true);
           });
           it('should create the specified directory', () => {
-            expect(packDir).to.be.a.path();
+            expect(untarDir).to.be.a.path();
           });
           it('should generate .bit.postinstall.js file', () => {
-            expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+            expect(path.join(untarDir, '.bit.postinstall.js')).to.be.a.file();
           });
           it('should add the postinstall script to the package.json file', () => {
-            const packageJson = helper.packageJson.read(packDir);
+            const packageJson = helper.packageJson.read(untarDir);
             expect(packageJson).to.have.property('scripts');
             expect(packageJson.scripts).to.have.property('postinstall');
             expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
           });
           it('npm install should create the custom-resolved dir inside node_modules', () => {
-            helper.command.runCmd('npm i', packDir);
-            expect(path.join(packDir, 'node_modules/utils/is-string.js')).to.be.a.file();
-            expect(path.join(packDir, 'node_modules/utils/is-type.js')).to.be.a.file();
-            expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
+            helper.command.runCmd('npm i', untarDir);
+            expect(path.join(untarDir, 'node_modules/utils/is-string.js')).to.be.a.file();
+            expect(path.join(untarDir, 'node_modules/utils/is-type.js')).to.be.a.file();
+            expect(() => helper.command.runCmd(`node ${untarDir}/bar/foo.js`)).to.not.throw();
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-            const packageJson = helper.packageJson.read(packDir);
+            const packageJson = helper.packageJson.read(untarDir);
             const packageName = helper.general.getRequireBitPath('bar', 'foo');
             expect(packageJson.bit.resolveAliases)
               .to.have.property('utils/is-string')
@@ -351,33 +369,42 @@ describe('custom module resolutions', function() {
           const output = helper.command.runCmd('bit status');
           expect(output).to.not.have.string('modified');
         });
-        describe('npm packing the component using an extension npm-pack', () => {
+        describe('npm packing the component using an extension pack', () => {
           let packDir;
+          let untarDir;
           before(() => {
-            helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+            untarDir = path.join(packDir, 'package');
+            const componentId = `${helper.scopes.remote}/bar/foo`;
+            const options = {
+              o: '',
+              k: '',
+              p: '',
+              j: '',
+              d: packDir
+            };
+            helper.command.packComponent(componentId, options, true);
           });
           it('should create the specified directory', () => {
-            expect(packDir).to.be.a.path();
+            expect(untarDir).to.be.a.path();
           });
           it('should generate .bit.postinstall.js file', () => {
-            expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+            expect(path.join(untarDir, '.bit.postinstall.js')).to.be.a.file();
           });
           it('should add the postinstall script to the package.json file', () => {
-            const packageJson = helper.packageJson.read(packDir);
+            const packageJson = helper.packageJson.read(untarDir);
             expect(packageJson).to.have.property('scripts');
             expect(packageJson.scripts).to.have.property('postinstall');
             expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
           });
           it('npm install should create the custom-resolved dir inside node_modules', () => {
-            helper.command.runCmd('npm i', packDir);
-            expect(path.join(packDir, 'node_modules/@/utils/index.js')).to.be.a.file();
-            expect(path.join(packDir, 'node_modules/@/utils/is-type.js')).to.be.a.file();
-            expect(() => helper.command.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
+            helper.command.runCmd('npm i', untarDir);
+            expect(path.join(untarDir, 'node_modules/@/utils/index.js')).to.be.a.file();
+            expect(path.join(untarDir, 'node_modules/@/utils/is-type.js')).to.be.a.file();
+            expect(() => helper.command.runCmd(`node ${untarDir}/bar/foo.js`)).to.not.throw();
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-            const packageJson = helper.packageJson.read(packDir);
+            const packageJson = helper.packageJson.read(untarDir);
             const packageName = helper.general.getRequireBitPath('bar', 'foo');
             expect(packageJson.bit.resolveAliases)
               .to.have.property('@/utils')
@@ -455,7 +482,6 @@ describe('custom module resolutions', function() {
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
         before(async () => {
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('utils/is-type');
           npmCiRegistry.publishComponent('utils/is-string');
@@ -525,7 +551,6 @@ describe('custom module resolutions', function() {
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('bar/foo');
 
