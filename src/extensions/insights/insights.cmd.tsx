@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Color, Box, Text } from 'ink';
-import {Command, CLIArgs} from '../cli'
+import { Command, CLIArgs } from '../cli';
 import { Flags } from '../paper/command';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
@@ -11,60 +10,54 @@ export default class InsightsCmd implements Command {
   description: string;
   group: string;
   opts: string[][];
-  insightManager: InsightManager
+  insightManager: InsightManager;
   constructor(insightManager: InsightManager) {
     this.insightManager = insightManager;
-    this.opts = [['l', 'list', 'list all insights']]
+    this.opts = [['l', 'list', 'list all insights']];
     this.name = 'insights [...names]';
-    this.description = 'start a dev environment for a workspace or a specific component'
-    this.group = 'development'
+    this.description = 'start a dev environment for a workspace or a specific component';
+    this.group = 'development';
   }
 
   async render([names]: CLIArgs, { list }: Flags) {
     if (list) {
       //return <Color green>There are many insights</Color>
       const results = this.insightManager.listInsights();
-      const listItems = results.map(insight =>
-        insight += '\n'
-      );
-      return <Color blueBright>{listItems}</Color>
+      const listItems = results.map(insight => (insight += '\n'));
+      return <Color blueBright>{listItems}</Color>;
     }
     if (names) {
       let results: InsightResult[] = [];
-      if(Array.isArray(names)){
+      if (Array.isArray(names)) {
         results = await this.insightManager.run(names);
-      }
-      else {
+      } else {
         results = await this.insightManager.run([names]);
       }
-      return <Color blueBright>{results}</Color>
-      }
-    else {
+      return <Color blueBright>{results}</Color>;
+    } else {
       const results = await this.insightManager.runAll();
       // console.log('rendering,',results[0].renderedData)
       // return results[1].renderedData
       return (
-      <Box key ="help" flexDirection="column">
-        { results.map(function(result) {
-          return (
-            <Box key={result.metaData.name}>
-              <Box marginBottom={1}>
-                <Text bold underline>
-                  {result.metaData.name}
-                </Text>
+        <Box key="help" flexDirection="column">
+          {results.map(function(result) {
+            return (
+              <Box key={result.metaData.name}>
+                <Box>
+                  <Text bold underline>
+                    {result.metaData.name}
+                    {'\n'}
+                  </Text>
+                </Box>
+                <Text>{'\n'}</Text>
+                <Box>{result.renderedData}</Box>
               </Box>
-              <Box>
-                {result.renderedData}
-              </Box>
-            </Box>);
-        })
-      }
-      </Box>
-    )
+            );
+          })}
+        </Box>
+      );
+    }
   }
-}
-
-
 
   // async someRender([components]: CLIArgs, { verbose, noCache }: Flags) {
   //   // @ts-ignore
@@ -111,41 +104,41 @@ export default class InsightsCmd implements Command {
   //   return <div />;
   // }
 
-//   action(
-//     [insightName]: string[],
-//     {
-//       list = false,
-//       save
-//     }: {
-//       list?: boolean;
-//       save?: string;
-//     }
-//   ): Promise<RunAllInsights | Insight[] | RunOneInsight> {
-//     if (list) {
-//       return listInsights();
-//     }
-//     let filePath = save;
-//     // Happen when used --save without specify the location
-//     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-//     if (save === true) {
-//       filePath = '.';
-//     }
-//     if (insightName) {
-//       return runOne({ insightName, filePath });
-//     }
-//     return runAll({ filePath });
-//   }
+  //   action(
+  //     [insightName]: string[],
+  //     {
+  //       list = false,
+  //       save
+  //     }: {
+  //       list?: boolean;
+  //       save?: string;
+  //     }
+  //   ): Promise<RunAllInsights | Insight[] | RunOneInsight> {
+  //     if (list) {
+  //       return listInsights();
+  //     }
+  //     let filePath = save;
+  //     // Happen when used --save without specify the location
+  //     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  //     if (save === true) {
+  //       filePath = '.';
+  //     }
+  //     if (insightName) {
+  //       return runOne({ insightName, filePath });
+  //     }
+  //     return runAll({ filePath });
+  //   }
 
-//   report(res: RunAllInsights | Insight[], args: any, flags: Record<string, any>): string {
-//     if (flags.list) {
-//       return _listReport(res, flags.json);
-//     }
-//     if (args && args[0]) {
-//       return _runOneReport(res, flags.json);
-//     }
-//     return _runAllReport(res, flags.json);
-//   }
- }
+  //   report(res: RunAllInsights | Insight[], args: any, flags: Record<string, any>): string {
+  //     if (flags.list) {
+  //       return _listReport(res, flags.json);
+  //     }
+  //     if (args && args[0]) {
+  //       return _runOneReport(res, flags.json);
+  //     }
+  //     return _runAllReport(res, flags.json);
+  //   }
+}
 
 // function _listReport(res: Insight[], json: boolean): string {
 //   if (json) {

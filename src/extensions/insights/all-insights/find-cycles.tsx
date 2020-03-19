@@ -27,18 +27,31 @@ export default class FindCycles implements Insight {
     }
   }
 
-  _formatData(data: any): string {
-    return JSON.stringify(data);
-  }
-
   _renderData(data: any) {
-    return <Box flexDirection="column" key="find_cycles">results from fc</Box>
+    if (data.data.length === 0) {
+      return (
+        <Box textWrap="wrap" height={1} key="num_results">
+          No cyclic dependencies
+        </Box>
+      );
+    }
+    return (
+      <Box textWrap="wrap" key="find_cycles">
+        <Box key="data" height={1}>
+          <Box textWrap="wrap" height={1}>
+            {data.message}
+          </Box>
+          <Box textWrap="wrap" height={1}>
+            {data.data}
+          </Box>
+        </Box>
+      </Box>
+    );
   }
 
   async run(): Promise<InsightResult> {
     const bareResult = await this._runInsight();
-    const formattedData = this._formatData(bareResult.data);
-    const renderedData = this._renderData(formattedData);
+    const renderedData = this._renderData(bareResult);
     const result = {
       metaData: {
         name: this.name,
