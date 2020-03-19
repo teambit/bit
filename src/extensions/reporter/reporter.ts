@@ -57,7 +57,6 @@ export default class Reporter {
           spinner.stop();
           console.log(chalk.hex(stc(id))(messages.join(' ')));
           unpauseSpinner();
-          // spinner.start();
         }
       },
       warn(...messages) {
@@ -71,7 +70,6 @@ export default class Reporter {
               console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
             });
           unpauseSpinner();
-          // spinner.start();
         }
       }
     };
@@ -82,7 +80,7 @@ export default class Reporter {
     this.ids = [];
   }
   private reRenderSpinner() {
-    if (this.phaseName && !this.paused) {
+    if (this.phaseName && !this.paused && !this.outputShouldBeSuppressed) {
       this.spinner.stop();
       {
         const columnCount = getColumnCount();
