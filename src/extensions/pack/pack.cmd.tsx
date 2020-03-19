@@ -8,10 +8,11 @@ export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
   description = 'Create tar for npm publish';
   // @ts-ignore
-  options: PaperOptions = [
+  options = [
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
     ['o', 'override [boolean]', 'override existing pack file'],
-    ['k', 'keep [boolean]', 'should keep isolated environment [default = false]']
+    ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
+    ['j', 'json', 'return the output as JSON']
   ];
   shortDescription = '';
   alias = '';
@@ -19,7 +20,12 @@ export class PackCmd implements Command {
 
   constructor(private packer: Packer) {}
 
-  async render([componentId, scopePath]: CLIArgs, options: Flags) {
+  async render(args: CLIArgs, options: Flags) {
+    const packResult = await this.json(args, options);
+    return <Color green>tar path: {packResult.tarPath}</Color>;
+  }
+
+  async json([componentId, scopePath]: CLIArgs, options: Flags) {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     let scopePathStr: string | undefined;
     if (scopePath) {
@@ -34,6 +40,6 @@ export class PackCmd implements Command {
       options.override,
       options.keep
     );
-    return <Color green>tar path: {packResult.tarPath}</Color>;
+    return packResult;
   }
 }
