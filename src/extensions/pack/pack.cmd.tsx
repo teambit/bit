@@ -2,6 +2,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../cli';
 import { Packer } from './pack';
+import { Flags } from '../paper/command';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
@@ -20,14 +21,15 @@ export class PackCmd implements Command {
 
   async render([componentId, scopePath]: CLIArgs, options: Flags) {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
-    let scopePathStr = scopePath;
-    if (scopePath && typeof scopePath !== 'string') {
-      scopePathStr = scopePath[0];
+    let scopePathStr: string | undefined;
+    if (scopePath) {
+      scopePathStr = typeof scopePath !== 'string' ? scopePath[0] : scopePath;
     }
     // @ts-ignore
     const packResult = await this.packer.packComponent(
       compId,
       scopePathStr,
+      // @ts-ignore
       options.outDir,
       options.override,
       options.keep

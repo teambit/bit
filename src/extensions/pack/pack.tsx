@@ -3,6 +3,7 @@ import execa from 'execa';
 import fs from 'fs-extra';
 import LegacyScope from '../../scope/scope';
 import IsolatedEnvironment from '../../environment';
+// @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 
 export class Packer {
