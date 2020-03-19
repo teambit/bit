@@ -22,7 +22,7 @@ export class PackCmd implements Command {
 
   async render(args: CLIArgs, options: Flags) {
     const packResult = await this.json(args, options);
-    return <Color green>tar path: {packResult.tarPath}</Color>;
+    return <Color green>tar path: {packResult.data.tarPath}</Color>;
   }
 
   async json([componentId, scopePath]: CLIArgs, options: Flags) {
@@ -40,6 +40,9 @@ export class PackCmd implements Command {
       options.override,
       options.keep
     );
-    return packResult;
+    return {
+      data: packResult,
+      code: 0
+    };
   }
 }
