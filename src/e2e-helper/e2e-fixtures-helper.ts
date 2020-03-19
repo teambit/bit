@@ -202,13 +202,16 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
    * to add more components to the .tgz file, extract it, add it as a remote, then from your
    * workspace import the component you want and fork it into this remote, e.g.
    * # extract the file into `/tmp` so then the scope is in `/tmp/global-remote`.
+   * cp e2e/fixtures/scopes/global-remote.tgz /tmp/
+   * cd tmp && tar -xzvf global-remote.tgz
    * # go to your workspace and run the following
    * bit remote add file:///tmp/global-remote
    * bit import bit.envs/compilers/typescript
    * bit export global-remote bit.envs/compilers/typescript --include-dependencies --force --rewire
-   * # then, cd into /tmp/global-remote and tar the directory
-   * tar -czf global-remote.tgz global-remote
+   * # then, cd into /tmp and tar the directory
+   * cd /tmp && tar -czf global-remote.tgz global-remote
    * # copy the file to the fixtures/scopes directory.
+   * cp /tmp/global-remote.tgz e2e/fixtures/scopes/
    */
   ensureGlobalRemoteScope() {
     if (fs.existsSync(this.scopes.globalRemotePath)) return;
