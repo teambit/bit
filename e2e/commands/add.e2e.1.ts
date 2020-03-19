@@ -1128,7 +1128,7 @@ describe('bit add command', function() {
       expect(output).to.have.string('added foo-main2.js');
     });
   });
-  describe.only('directory is with upper case and test/main flags are written with lower case', () => {
+  describe('directory is with upper case and test/main flags are written with lower case', () => {
     let addOutput;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
