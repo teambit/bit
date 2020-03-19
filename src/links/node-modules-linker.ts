@@ -170,9 +170,9 @@ export default class NodeModuleLinker {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isMain = file === componentMap.mainFile;
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const possiblyDist = component.dists.calculateDistFileForAuthored(
         path.normalize(fileWithRootDir),
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this.consumer,
         isMain
       );
@@ -191,7 +191,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
       }
     });
     this._deleteOldLinksOfIdWithoutScope(component);
