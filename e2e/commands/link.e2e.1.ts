@@ -357,5 +357,33 @@ console.log(isType());`;
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
+    describe('with css files in one dir and extension', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.outputFile('foo/foo.css', 'h1 { color:green; }');
+        helper.fs.outputFile('bar/bar.css', '@import "../foo/foo.css";');
+        helper.command.addComponentDir('foo');
+        helper.command.addComponentDir('bar');
+        helper.command.linkAndRewire();
+      });
+      it('should add a tilda before the package name', () => {
+        const bar = helper.fs.readFile('bar/bar.css');
+        expect(bar).to.have.string('@import "~@bit/foo"');
+      });
+    });
+    describe('with sass files in the same dir and no extension', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.outputFile('foo.sass', 'h1 { color:green; }');
+        helper.fs.outputFile('bar.sass', '@import "foo";');
+        helper.command.addComponent('foo.sass');
+        helper.command.addComponent('bar.sass');
+        helper.command.linkAndRewire();
+      });
+      it('should add a tilda before the package name', () => {
+        const bar = helper.fs.readFile('bar.sass');
+        expect(bar).to.have.string('@import "~@bit/foo"');
+      });
+    });
   });
 });
