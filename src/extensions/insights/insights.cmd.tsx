@@ -34,29 +34,26 @@ export default class InsightsCmd implements Command {
         results = await this.insightManager.run([names]);
       }
       return <Color blueBright>{results}</Color>;
-    } else {
-      const results = await this.insightManager.runAll();
-      // console.log('rendering,',results[0].renderedData)
-      // return results[1].renderedData
-      return (
-        <Box key="help" flexDirection="column">
-          {results.map(function(result) {
-            return (
-              <Box key={result.metaData.name}>
-                <Box>
-                  <Text bold underline>
-                    {result.metaData.name}
-                    {'\n'}
-                  </Text>
-                </Box>
-                <Text>{'\n'}</Text>
-                <Box>{result.renderedData}</Box>
-              </Box>
-            );
-          })}
-        </Box>
-      );
     }
+    const results = await this.insightManager.runAll();
+    // console.log('rendering,',results[0].renderedData)
+    // return results[1].renderedData
+    return (
+      <Box flexDirection="column">
+        {results.map(function(result) {
+          return (
+            <Box key={result.metaData.name} marginBottom={1} flexDirection="column">
+              <Box>
+                <Text bold underline>
+                  {result.metaData.name}
+                </Text>
+              </Box>
+              <Box marginTop={1}>{result.renderedData}</Box>
+            </Box>
+          );
+        })}
+      </Box>
+    );
   }
 
   // async someRender([components]: CLIArgs, { verbose, noCache }: Flags) {

@@ -7,13 +7,13 @@ import { VersionSubgraph } from '../../graph/duplicate-dependency';
 export const INSIGHT_NAME = 'duplicateDependencies';
 
 type FormattedEntry = {
-  dependencyId: string,
-  latestVersion: string,
+  dependencyId: string;
+  latestVersion: string;
   dependents: {
-    id: string,
-    usedVersion: string
-  }[]
-}
+    id: string;
+    usedVersion: string;
+  }[];
+};
 export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
   description = 'Get all duplicate dependencies in component graph';
@@ -31,27 +31,25 @@ export default class DuplicateDependencies implements Insight {
 
   _formatData(data: any): FormattedEntry[] {
     let formatted: FormattedEntry[] = [];
-    for (const [dependency, depData] of data.entries()){
-      const dependents: {id: string, usedVersion: string}[] = this._getDependents(depData.priorVersions);
+    for (const [dependency, depData] of data.entries()) {
+      const dependents: { id: string; usedVersion: string }[] = this._getDependents(depData.priorVersions);
       formatted.push({
         dependencyId: dependency,
         latestVersion: depData.latestVersionId,
         dependents: dependents
-      })
+      });
     }
     return formatted;
   }
 
-  _getDependents(priorVersions: VersionSubgraph[]): {id: string, usedVersion: string}[]{
-    let dependents: {id: string, usedVersion: string}[] = [];
+  _getDependents(priorVersions: VersionSubgraph[]): { id: string; usedVersion: string }[] {
+    let dependents: { id: string; usedVersion: string }[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
       pVersion.immediateDependents.forEach((dependent: string) => {
-        dependents.push(
-          {
-            id: dependent,
-            usedVersion: pVersion.versionId
-          }
-        )
+        dependents.push({
+          id: dependent,
+          usedVersion: pVersion.versionId
+        });
       });
     });
     return dependents;
@@ -60,29 +58,29 @@ export default class DuplicateDependencies implements Insight {
   _renderData(data: FormattedEntry[]) {
     const element = (
       <Box flexDirection="column" key="duplicate_dependencies">
-      {data.map(function(mainDependency) {
-        return (
-          <Box key={mainDependency.dependencyId} flexDirection="column" marginBottom={1}>
+        {data.map(function(mainDependency) {
+          return (
+            <Box key={mainDependency.dependencyId} flexDirection="column" marginBottom={1}>
               <Text bold underline key={`group_${mainDependency.dependencyId}`}>
                 {mainDependency.dependencyId}
               </Text>
               <Box flexDirection="column">
-              {
-                mainDependency.dependents.map(function(dependent) {
+                {mainDependency.dependents.map(function(dependent) {
                   return (
-                    <Text key={dependent.id}>
-                      {'  '}
-                      <Color blue>{alignCommandName(dependent.id)}</Color>
-                      {dependent.usedVersion}
-                    </Text>
+                    <Box flexDirection="column" key={dependent.id}>
+                      <Text>
+                        {'  '}
+                        <Color blue>{alignCommandName(dependent.id)}</Color>
+                        {dependent.usedVersion}
+                      </Text>
+                    </Box>
                   );
-                })
-              }
+                })}
               </Box>
-          </Box>
-        );
-      })}
-    </Box>
+            </Box>
+          );
+        })}
+      </Box>
     );
     return element;
   }
@@ -117,15 +115,13 @@ function HelpHeader() {
 }
 
 function HelpFooter() {
-  const m = `please use 'bit <command> --help' for more information and guides on specific commands.`
-  return <Box>
-    <Color grey>{m}</Color>
-  </Box>
+  const m = `please use 'bit <command> --help' for more information and guides on specific commands.`;
+  return (
+    <Box>
+      <Color grey>{m}</Color>
+    </Box>
+  );
 }
 function alignCommandName(name: string, sizeToAlign = 20) {
   return `${name}${new Array(sizeToAlign).join(' ')}`;
 }
-
-
-
-
