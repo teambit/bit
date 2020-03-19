@@ -12,6 +12,7 @@ export class PackCmd implements Command {
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
     ['o', 'override [boolean]', 'override existing pack file'],
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
+    ['p', 'prefix', 'keep custom prefix'],
     ['j', 'json', 'return the output as JSON']
   ];
   shortDescription = '';
@@ -37,6 +38,7 @@ export class PackCmd implements Command {
       scopePathStr,
       // @ts-ignore
       options.outDir,
+      options.prefix,
       options.override,
       options.keep
     );

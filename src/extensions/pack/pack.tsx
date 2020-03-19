@@ -13,6 +13,7 @@ export class Packer {
     componentId: string,
     scopePath: string | undefined,
     outDir: string,
+    prefix = false,
     override = false,
     keep = false
   ) {
@@ -29,7 +30,7 @@ export class Packer {
       createNpmLinkFiles: true,
       installPackages: false,
       noPackageJson: false,
-      excludeRegistryPrefix: true,
+      excludeRegistryPrefix: !prefix,
       saveDependenciesAsComponents: false
     };
     await isolatedEnvironment.isolateComponent(componentId, isolateOpts);

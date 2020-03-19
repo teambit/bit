@@ -121,7 +121,7 @@ EOD`;
       ? componentName
       : `${this.helper.scopes.remote}/${componentName}`;
     const result = this.helper.command.runCmd(
-      `bit pack ${componentFullName}@${componentVersion} -o -k -j -d ${packDir}`
+      `bit pack ${componentFullName}@${componentVersion} -o -k -p -j -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
     const resultParsed = JSON.parse(result);
