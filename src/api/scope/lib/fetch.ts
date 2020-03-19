@@ -20,7 +20,7 @@ export default (async function fetch(
   // This might be undefined in case of fork process like during bit test command
   if (HooksManagerInstance) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
+    await HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
   const scope: Scope = await loadScope(path);
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);

@@ -19,7 +19,7 @@ export async function deprecate(
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);
+  await HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);
   const scope = await loadScope(path);
   const deprecationResult = await deprecateMany(scope, bitIds);
   const hookArgs = {
@@ -41,7 +41,7 @@ export async function undeprecate(
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  HooksManagerInstance.triggerHook(PRE_UNDEPRECATE_REMOTE, args, headers);
+  await HooksManagerInstance.triggerHook(PRE_UNDEPRECATE_REMOTE, args, headers);
   const scope = await loadScope(path);
   const deprecationResult = await undeprecateMany(scope, bitIds);
   const hookArgs = {

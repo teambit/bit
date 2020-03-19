@@ -37,12 +37,12 @@ export default (async function exportAction(params: {
   codemod: boolean;
   force: boolean;
 }) {
-  HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
+  await HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported } = await exportComponents(params);
   let ejectResults;
   if (params.eject) ejectResults = await ejectExportedComponents(updatedIds);
   const exportResults = { componentsIds: exported, nonExistOnBitMap, missingScope, ejectResults };
-  HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+  await HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
   return exportResults;
 });
 

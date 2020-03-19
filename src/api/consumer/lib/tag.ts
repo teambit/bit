@@ -47,7 +47,7 @@ export async function tagAction(args: {
     skipAutoTag
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
-  HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
+  await HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
@@ -72,7 +72,7 @@ export async function tagAction(args: {
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_HOOK, tagResults);
+  await HooksManagerInstance.triggerHook(POST_TAG_HOOK, tagResults);
   await consumer.onDestroy();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return tagResults;
@@ -124,7 +124,7 @@ export async function tagAllAction(args: {
     skipAutoTag
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
-  HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
+  await HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
@@ -160,7 +160,7 @@ export async function tagAllAction(args: {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
+  await HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
   Analytics.setExtraData(
     'num_components',
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
