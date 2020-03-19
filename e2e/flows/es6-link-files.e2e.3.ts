@@ -110,7 +110,6 @@ export { isString };`
           before(async () => {
             await npmCiRegistry.init();
             helper.command.importComponent('is-string/is-string');
-            helper.extensions.importNpmPackExtension();
             helper.scopeHelper.removeRemoteScope();
             npmCiRegistry.publishComponent('is-string/is-string');
             npmCiRegistry.publishComponent('bar/foo');

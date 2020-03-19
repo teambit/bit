@@ -59,7 +59,6 @@ describe('component that requires another component internal (not main) file', f
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -125,7 +124,6 @@ describe('component that requires another component internal (not main) file', f
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       before(async () => {
         await npmCiRegistry.init();
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');

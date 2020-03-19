@@ -144,7 +144,6 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
           exportOutput = helper.command.exportAllComponents();
 
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('string/is-string', '2.0.0');
           npmCiRegistry.publishComponent('string/pad-left', '2.0.0');

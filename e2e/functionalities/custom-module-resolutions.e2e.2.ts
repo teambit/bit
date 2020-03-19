@@ -115,7 +115,6 @@ describe('custom module resolutions', function() {
       describe('npm packing the component using an extension npm-pack', () => {
         let packDir;
         before(() => {
-          helper.extensions.importNpmPackExtension();
           packDir = path.join(helper.scopes.localPath, 'pack');
           helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
         });
@@ -259,7 +258,6 @@ describe('custom module resolutions', function() {
         describe('npm packing the component using an extension npm-pack', () => {
           let packDir;
           before(() => {
-            helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
             helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
           });
@@ -354,7 +352,6 @@ describe('custom module resolutions', function() {
         describe('npm packing the component using an extension npm-pack', () => {
           let packDir;
           before(() => {
-            helper.extensions.importNpmPackExtension();
             packDir = path.join(helper.scopes.localPath, 'pack');
             helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
           });
@@ -455,7 +452,6 @@ describe('custom module resolutions', function() {
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
         before(async () => {
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('utils/is-type');
           npmCiRegistry.publishComponent('utils/is-string');
@@ -525,7 +521,6 @@ describe('custom module resolutions', function() {
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {
           await npmCiRegistry.init();
-          helper.extensions.importNpmPackExtension();
           helper.scopeHelper.removeRemoteScope();
           npmCiRegistry.publishComponent('bar/foo');
 

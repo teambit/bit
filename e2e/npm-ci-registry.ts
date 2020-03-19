@@ -19,9 +19,8 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * To get it work, the following steps are mandatory.
  * 1. before tagging the components, run `this.setCiScopeInBitJson()`.
  * 2. import the components to a new scope.
- * 3. run `helper.extensions.importNpmPackExtension();`
- * 4. run `helper.scopeHelper.removeRemoteScope();` otherwise, it'll save components as dependencies
- * 5. run `this.publishComponent(your-component)`.
+ * 3. run `helper.scopeHelper.removeRemoteScope();` otherwise, it'll save components as dependencies
+ * 4. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
  *
  * in case you need to init ciRegistry a few times on the same e2e-test file, it's better to
@@ -122,7 +121,7 @@ EOD`;
       ? componentName
       : `${this.helper.scopes.remote}/${componentName}`;
     const result = this.helper.command.runCmd(
-      `bit npm-pack ${componentFullName}@${componentVersion} -o -k -j -d ${packDir}`
+      `bit pack ${componentFullName}@${componentVersion} -o -k -j -d ${packDir}`
     );
     if (this.helper.debugMode) console.log('npm pack result ', result);
     const resultParsed = JSON.parse(result);
@@ -144,7 +143,6 @@ EOD`;
     this.helper.scopeHelper.reInitLocalScope();
     this.helper.scopeHelper.addRemoteScope();
     this.helper.command.importComponent('* --objects');
-    this.helper.extensions.importNpmPackExtension();
     const remoteComponents = this.helper.command.listRemoteScopeParsed();
     const remoteIds = remoteComponents.map(c => c.id);
     this.helper.scopeHelper.removeRemoteScope();
