@@ -120,16 +120,15 @@ EOD`;
     const componentFullName = componentName.startsWith(this.helper.scopes.remote)
       ? componentName
       : `${this.helper.scopes.remote}/${componentName}`;
-    const result = this.helper.command.runCmd(
-      `bit pack ${componentFullName}@${componentVersion} -o -k -p -j -d ${packDir}`
-    );
-    if (this.helper.debugMode) console.log('npm pack result ', result);
-    const resultParsed = JSON.parse(result);
-    if (!resultParsed || !resultParsed.tarPath) {
-      throw new Error('npm pack results are invalid');
-    }
-    const tarballFilePath = resultParsed.tarPath;
-    tar.x({ file: tarballFilePath, C: packDir, sync: true });
+    const componentId = `${componentFullName}@${componentVersion}`;
+    const options = {
+      o: '',
+      k: '',
+      p: '',
+      j: '',
+      d: packDir
+    };
+    this.helper.command.packComponent(componentId, options, true);
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
