@@ -318,9 +318,10 @@ export default class CommandHelper {
       .join(' ');
     const result = this.runCmd(`bit pack ${id} ${value}`);
     if (extract) {
-      // eslint-disable-next-line no-prototype-builtins
       if (
         !options ||
+        // We don't just check that it's falsy because usually it's an empty string.
+        // eslint-disable-next-line no-prototype-builtins
         (!options.hasOwnProperty('-json') && !options.hasOwnProperty('j')) ||
         (!options['-out-dir'] && !options.d)
       ) {
