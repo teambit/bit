@@ -48,7 +48,6 @@ import { ModelComponent } from '../../../scope/models';
 import determineMainFile from './determine-main-file';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { AddingIndividualFiles } from './exceptions/addding-individual-files';
-import { stripSharedDirFromPath, addSharedDirForPath } from '../manipulate-dir';
 import { isFeatureEnabled, LEGACY_SHARED_DIR_FEATURE } from '../../../api/consumer/lib/feature-toggle';
 
 export type AddResult = { id: string; files: ComponentMapFile[] };
@@ -652,7 +651,7 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
 to skip this error (not recommended) use "--allow-files" flag, this dir will not be auto-tracked anymore`);
             }
           }
-          return null;
+          return undefined;
         };
         const trackDir = getTrackDir();
 

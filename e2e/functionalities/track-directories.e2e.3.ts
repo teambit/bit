@@ -254,13 +254,15 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo2.js');
-      helper.command.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
+      helper.command.addComponentAllowFiles('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.command.runCmd('bit status');
     });
-    it('should not add the trackDir property', () => {
+    it('should set the rootDir to "."', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar']).to.not.have.property('trackDir');
+      expect(bitMap['utils/bar']).to.have.property('rootDir');
+      expect(bitMap['utils/bar'].rootDir).to.equal('.');
     });
     it('should not add the excluded file', () => {
       const bitMap = helper.bitMap.read();

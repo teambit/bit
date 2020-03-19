@@ -557,7 +557,7 @@ describe('bit add command', function() {
       helper.fs.createFile('test/bar', 'foo.spec.js');
       helper.fs.createFile('test/bar', 'foo2.spec.js');
       helper.fs.createFile('test', 'foo2.spec.js');
-      helper.command.addComponent('bar/', {
+      helper.command.addComponentAllowFiles('bar/', {
         i: 'bar/foo',
         m: path.normalize('bar/foo.js'),
         t: 'test/{PARENT}/{FILE_NAME}.spec.js,test/*.spec.js',
@@ -569,18 +569,6 @@ describe('bit add command', function() {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
-    });
-    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
-    it.skip('Should prevent using exclude flag without wrapping in quotes', () => {
-      let errMsg = '';
-      helper.fs.createFile('bar', 'foo.js');
-      helper.fs.createFile('bar', 'foo2.js');
-      try {
-        helper.command.runCmd('bit add bar/*.js -e bar/foo2.js');
-      } catch (err) {
-        errMsg = err.message;
-      }
-      expect(errMsg).to.have.string('Please wrap excluded files with quotes');
     });
     it('should throw an error when main file is excluded', () => {
       helper.fs.createFile('bar', 'foo.js');
@@ -684,7 +672,7 @@ describe('bit add command', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('bar', 'baz1/foo.js');
         helper.fs.createFile('bar', 'baz2/foo3.js');
-        output = helper.command.addComponent('bar/*', { e: 'bar/baz2/foo3.js' });
+        output = helper.command.addComponentAllowFiles('bar/*', { e: 'bar/baz2/foo3.js' });
       });
       it('should not break the operation if some of the components have empty directory', () => {
         expect(output).to.have.string('tracking component baz1');
@@ -1140,7 +1128,7 @@ describe('bit add command', function() {
       expect(output).to.have.string('added foo-main2.js');
     });
   });
-  describe('directory is with upper case and test/main flags are written with lower case', () => {
+  describe.only('directory is with upper case and test/main flags are written with lower case', () => {
     let addOutput;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
@@ -1148,16 +1136,22 @@ describe('bit add command', function() {
       helper.fs.createFile('Bar', 'foo.spec.js');
       addOutput = helper.general.runWithTryCatch('bit add Bar -i bar -m bar/foo.js -t bar/foo.spec.js');
     });
-    it('should add successfully', () => {
-      expect(addOutput).to.have.string('added');
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property('bar');
-      const files = bitMap.bar.files.map(file => file.relativePath);
-      expect(files).to.include('foo.js');
-      expect(files).to.include('foo.spec.js');
-      expect(bitMap.bar.rootDir).to.equal('Bar');
+    it('should throw an error for case sensitive filesystem saying the file was not found. for other system, it should work', () => {
+      if (addOutput.includes('error')) {
+        expect(addOutput).to.have.string('file or directory');
+        expect(addOutput).to.have.string('was not found');
+      } else {
+        expect(addOutput).to.have.string('added');
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('bar');
+        const files = bitMap.bar.files.map(file => file.relativePath);
+        expect(files).to.include('foo.js');
+        expect(files).to.include('foo.spec.js');
+        expect(bitMap.bar.rootDir).to.equal('Bar');
+      }
     });
   });
+
   describe('adding a file outside the consumer dir', () => {
     let consumerDir;
     before(() => {
