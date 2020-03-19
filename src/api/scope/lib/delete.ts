@@ -6,7 +6,7 @@ import { RemovedObjectSerialized } from '../../../scope/removed-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-export default function remove(
+export default async function remove(
   { path, ids, force }: { path: string; ids: string[]; force: boolean },
   headers: Record<string, any> | null | undefined
 ): Promise<RemovedObjectSerialized> {
