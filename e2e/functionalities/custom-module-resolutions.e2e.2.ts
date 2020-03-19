@@ -112,11 +112,11 @@ describe('custom module resolutions', function() {
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
-      describe('npm packing the component using an extension npm-pack', () => {
+      describe('npm packing the component using an extension pack', () => {
         let packDir;
         before(() => {
           packDir = path.join(helper.scopes.localPath, 'pack');
-          helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+          helper.command.runCmd(`bit pack ${helper.scopes.remote}/bar/foo -o -k -j -p -d ${packDir}`);
         });
         it('should create the specified directory', () => {
           expect(packDir).to.be.a.path();
@@ -255,11 +255,11 @@ describe('custom module resolutions', function() {
           const output = helper.command.runCmd('bit status');
           expect(output).to.not.have.string('modified');
         });
-        describe('npm packing the component using an extension npm-pack', () => {
+        describe('npm packing the component using an extension pack', () => {
           let packDir;
           before(() => {
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+            helper.command.runCmd(`bit pack ${helper.scopes.remote}/bar/foo -o -k -j -p -d ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
@@ -349,11 +349,11 @@ describe('custom module resolutions', function() {
           const output = helper.command.runCmd('bit status');
           expect(output).to.not.have.string('modified');
         });
-        describe('npm packing the component using an extension npm-pack', () => {
+        describe('npm packing the component using an extension pack', () => {
           let packDir;
           before(() => {
             packDir = path.join(helper.scopes.localPath, 'pack');
-            helper.command.runCmd(`bit npm-pack ${helper.scopes.remote}/bar/foo -o -k -j -d ${packDir}`);
+            helper.command.runCmd(`bit pack ${helper.scopes.remote}/bar/foo -o -k -j -p -d ${packDir}`);
           });
           it('should create the specified directory', () => {
             expect(packDir).to.be.a.path();
