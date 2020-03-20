@@ -43,9 +43,9 @@ Emits messages to the log with a yellow `WARN:` prefix. They will receive a uniq
 
 eg. `logger.warn('foo', 'bar', 'baz', {some: { more: 'stuff' } })`
 #### error(...messages)
-<TBD>
+TBD
 #### debug(...messages)
-<TBD>
+TBD
 #### onInfo(cb)
 Calls `cb` every time info is called.
 
@@ -59,9 +59,9 @@ eg. `logger.onWarn((...messages) => {
   // messages is a list of arguments sent to logger.warn
 })`
 #### onError(cb)
-<TBD>
+TBD
 #### onDebug(cb)
-<TBD>
+TBD
 
 ## How does it work?
 This extension was written in order to provide an interactive terminal experience without breaking the terminal output when it is resized.
