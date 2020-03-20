@@ -18,7 +18,7 @@ import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
 import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/addding-individual-files';
+import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
 chai.use(require('chai-fs'));
 

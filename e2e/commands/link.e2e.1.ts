@@ -362,8 +362,8 @@ console.log(isType());`;
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo/foo.css', 'h1 { color:green; }');
         helper.fs.outputFile('bar/bar.css', '@import "../foo/foo.css";');
-        helper.command.addComponentDir('foo');
-        helper.command.addComponentDir('bar');
+        helper.command.addComponent('foo');
+        helper.command.addComponent('bar');
         helper.command.linkAndRewire();
       });
       it('should add a tilda before the package name', () => {
@@ -376,8 +376,8 @@ console.log(isType());`;
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.sass', 'h1 { color:green; }');
         helper.fs.outputFile('bar.sass', '@import "foo";');
-        helper.command.addComponent('foo.sass');
-        helper.command.addComponent('bar.sass');
+        helper.command.addComponentAllowFiles('foo.sass');
+        helper.command.addComponentAllowFiles('bar.sass');
         helper.command.linkAndRewire();
       });
       it('should add a tilda before the package name', () => {

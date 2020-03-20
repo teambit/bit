@@ -3,7 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/addding-individual-files';
+import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
 //  track directories functionality = add/rename files to rootDir or trackDir
 describe('track directories functionality', function() {
