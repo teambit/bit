@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - stabilize Bit by eliminating the removal of shared directory upon import and having rootDir for authored components
+- fix `bit link --rewire` for css/sass/less files
 - [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
 - add infrastructure for feature-toggle
 - deprecate files overrides (using file:// prefix)
