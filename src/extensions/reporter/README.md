@@ -5,7 +5,7 @@ It renders a single status-line on the bottom of the screen.
 It also renders a continuous log of real-time messages sent to it from an arbitrary amount of different sources.
 
 ## Workflow
-The reporter works in "phases". A phase describes is a brief description of what Bit is doing now (eg. Installing, Building Capsules, etc.)
+The reporter works in "phases". A phase is a brief description of what Bit is doing now (eg. Installing, Building Capsules, etc.)
 In order for the reporter to start, we need to start a phase using the `startPhase` method. Once this is done, the reporter prints a title
 with the phase name to the screen, and starts showing all logs sent to it.
 
@@ -16,8 +16,10 @@ It will also display this id (in its appropriate color) in the status line.
 Once we no longer wish for the reporter to report, we should use the `end` method to stop it.
 The reporter can always be started again with the `startPhase` method.
 
+Logs sent to the reporter while not in a `phase` (between `startPhase` and `end`) will not be printed.
+
 If we wish to start a new phase (eg. we finished Installing and now we wish to start Building), we can use the `startPhase` method again.
-This will erase all the previous logger IDs from the status line.
+This will erase all the previous logger IDs from the status line. Stopping a phase with `end` before starting a new one is not necessary.
 
 ## API
 
@@ -26,7 +28,7 @@ This will erase all the previous logger IDs from the status line.
 #### `startPhase(phaseName)`
 Starts a reporting phase with the phaseName. It (re)renders the status line and prints the phase name to the terminal.
 #### `suppressOutput()`
-Suppresses the output of the reporter. This cannot be undone and should be used in environments where we do not wish for real time reporting at all (eg. JSON output).
+Suppresses the output of the reporter. This cannot be undone and should be used in environments where we do not wish to have real time reporting at all (eg. JSON output).
 #### `createLogger(id)`
 Creates a `Logger` instance. The ID should be a component name. This might be enforced in the future.
 #### `end()`
