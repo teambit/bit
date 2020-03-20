@@ -28,8 +28,7 @@ export default class FsHelper {
   /**
    * @deprecated use outputFile instead
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
+  createFile(folder: string, name: string, impl: string = fixtures.fooFixture) {
     const filePath = path.join(this.scopes.localPath, folder, name);
     fs.outputFileSync(filePath, impl);
   }
