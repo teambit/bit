@@ -342,6 +342,9 @@ export default class CommandHelper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
+  moveComponent(id: string, to: string) {
+    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
+  }
   link() {
     return this.runCmd('bit link');
   }

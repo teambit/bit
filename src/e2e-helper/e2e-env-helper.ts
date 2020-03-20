@@ -41,10 +41,23 @@ export default class EnvHelper {
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
-  importTypescriptCompiler() {
+  importTypescriptCompiler(version = '3.0.0') {
     this.fixtures.ensureGlobalRemoteScope();
     this.scopeHelper.addGlobalRemoteScope();
-    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@3.0.0`);
+    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@${version}`);
+  }
+
+  getTypeScriptSettingsForES5() {
+    return {
+      rawConfig: {
+        tsconfig: {
+          compilerOptions: {
+            target: 'ES5',
+            module: 'CommonJS'
+          }
+        }
+      }
+    };
   }
 
   importDummyCompiler(dummyType = 'dummy') {

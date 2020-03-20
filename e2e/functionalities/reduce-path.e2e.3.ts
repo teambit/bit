@@ -1,8 +1,11 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import * as path from 'path';
 import fs from 'fs-extra';
+import * as fixtures from '../../src/fixtures/fixtures';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { FailedLoadForTag } from '../../src/consumer/component/exceptions/failed-load-for-tag';
+
+chai.use(require('chai-fs'));
 
 describe('reduce-path functionality (eliminate the original shared-dir among component files and its dependencies)', function() {
   this.timeout(0);
@@ -195,6 +198,185 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
           expect(componentMapBar).to.not.have.property('trackDir');
           expect(componentMapBar).to.have.property('rootDir');
           expect(componentMapBar.rootDir).to.equal('.');
+        });
+      });
+    });
+    describe('using typescript (3.1.40) with capsule', () => {
+      let authorLegacyScope;
+      before(() => {
+        const tsCompilerVersion = '3.1.40';
+        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.env.importTypescriptCompiler(tsCompilerVersion);
+        const tsconfigES5 = helper.env.getTypeScriptSettingsForES5();
+        const compilerName = `${helper.scopes.globalRemote}/compilers/typescript@${tsCompilerVersion}`;
+        helper.bitJson.addKeyVal('env', {
+          compiler: {
+            [compilerName]: tsconfigES5
+          }
+        });
+        helper.fs.createFile('utils', 'is-type.ts', fixtures.isTypeTS);
+        helper.command.addComponentLegacy('utils/is-type.ts', { i: 'utils/is-type' });
+        helper.fs.createFile('utils', 'is-string.ts', fixtures.isStringTS);
+        helper.command.addComponentLegacy('utils/is-string.ts', { i: 'utils/is-string' });
+        helper.fs.createFile('bar', 'foo.ts', fixtures.barFooTS);
+        helper.command.addComponentLegacy('bar/foo.ts', { i: 'bar/foo' });
+        helper.command.build();
+        helper.fs.outputFile('app.js', "const barFoo = require('./dist/bar/foo'); console.log(barFoo.default());");
+      });
+      it('should compile the files successfully and be able to run the app', () => {
+        const output = helper.command.runCmd('node app.js');
+        expect(output).to.have.string('got is-type and got is-string and got foo');
+      });
+      it('as authored legacy, should remove the shared-dir, as such, the capsule and workspace are not the same', () => {
+        // as you can see the sharedDir "utils" had been removed when the files are written to the dist dir
+        // that's because the sharedDir was removed on the capsule.
+        expect(path.join(helper.scopes.localPath, 'dist/is-string.js')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, 'dist/is-type.js')).to.be.a.file();
+      });
+      let importedScope;
+      describe('as imported legacy', () => {
+        before(() => {
+          helper.command.tagAllComponentsLegacy();
+          helper.command.exportAllComponents();
+          authorLegacyScope = helper.scopeHelper.cloneLocalScope();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('*');
+          importedScope = helper.scopeHelper.cloneLocalScope();
+        });
+        it('the app should work', () => {
+          helper.fs.outputFile(
+            'app.js',
+            `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`
+          );
+          const output = helper.command.runCmd('node app.js');
+          expect(output).to.have.string('got is-type and got is-string and got foo');
+        });
+        it('should write the files without the shared-dir', () => {
+          const expectedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.ts');
+          // the sharedDir "utils" had been removed
+          expect(expectedFile).to.be.a.file();
+        });
+        describe('as authored, convert from relative path to module paths ', () => {
+          let linkOutput;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(authorLegacyScope);
+            linkOutput = helper.command.linkAndRewire();
+            helper.command.build();
+            helper.fs.outputFile(
+              'app.js',
+              `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`
+            );
+          });
+          it('should change the source code from relative to module paths', () => {
+            expect(linkOutput).to.have.string('linked 3 components');
+            const barFoo = helper.fs.readFile('bar/foo.ts');
+            expect(barFoo).to.not.have.string('../utils/is-string');
+            expect(barFoo).to.have.string('@bit/');
+            expect(barFoo).to.have.string('utils.is-string');
+          });
+          it('should still work', () => {
+            const output = helper.command.runCmd('node app.js');
+            expect(output).to.have.string('got is-type and got is-string and got foo');
+          });
+          it('should still remove shared-dir on the capsule', () => {
+            expect(path.join(helper.scopes.localPath, 'dist/is-string.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, 'dist/is-type.js')).to.be.a.file();
+          });
+          it('the capsule should write the files without the shared dir', () => {
+            // although it's an author env, the way how it works for all component is that
+            // the shared-dir is remove when writing to the capsule.
+            // it was done mainly for typescript component in order to have their links
+            // saved in the dists in the model in the same way it's imported later.
+            const capsuleDir = helper.general.generateRandomTmpDirName();
+            helper.command.isolateComponentWithCapsule('utils/is-string', capsuleDir);
+            expect(path.join(capsuleDir, 'is-string.ts')).to.be.a.file();
+            expect(path.join(capsuleDir, 'utils/is-string.ts')).not.to.be.a.path();
+          });
+          let authorWithModulePaths;
+          describe('tagging the components, which convert them to the new system', () => {
+            before(() => {
+              helper.command.tagAllComponents();
+              helper.command.exportAllComponents();
+              authorWithModulePaths = helper.scopeHelper.cloneLocalScope();
+            });
+            it('should still work', () => {
+              const output = helper.command.runCmd('node app.js');
+              expect(output).to.have.string('got is-type and got is-string and got foo');
+            });
+            it('the capsule should write the files with the shared dir', () => {
+              // because they were transferred to the new system, their rootDir was replaced to "."
+              // and they were saved into the model with ignoreSharedDir
+              const capsuleDir = helper.general.generateRandomTmpDirName();
+              helper.command.isolateComponentWithCapsule('utils/is-string', capsuleDir);
+              expect(path.join(capsuleDir, 'utils/is-string.ts')).to.be.a.file();
+              expect(path.join(capsuleDir, 'is-string.ts')).not.to.be.a.path();
+            });
+            describe('importing the component ', () => {
+              let importedWithRelative;
+              before(() => {
+                helper.scopeHelper.getClonedLocalScope(importedScope);
+                helper.command.importComponent('* --override');
+                importedWithRelative = helper.scopeHelper.cloneLocalScope();
+              });
+              it('the app should work', () => {
+                helper.fs.outputFile(
+                  'app.js',
+                  `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`
+                );
+                const output = helper.command.runCmd('node app.js');
+                expect(output).to.have.string('got is-type and got is-string and got foo');
+              });
+              it('should write the files with the shared-dir', () => {
+                const expectedFile = path.join(
+                  helper.scopes.localPath,
+                  'components/utils/is-string/utils/is-string.ts'
+                );
+                // the sharedDir "utils" had not been removed
+                expect(expectedFile).to.be.a.file();
+              });
+              describe('as author, move individual component files to dedicated directory with bit move --component', () => {
+                before(() => {
+                  helper.scopeHelper.getClonedLocalScope(authorWithModulePaths);
+                  helper.command.moveComponent('bar/foo', 'component/bar/foo');
+                  helper.command.moveComponent('utils/is-string', 'component/utils/is-string');
+                  helper.command.moveComponent('utils/is-type', 'component/utils/is-type');
+                  helper.command.tagAllComponentsNew();
+                  helper.command.exportAllComponents();
+                });
+                it('should still work', () => {
+                  const output = helper.command.runCmd('node app.js');
+                  expect(output).to.have.string('got is-type and got is-string and got foo');
+                });
+                it('the capsule should write the files without the shared dir', () => {
+                  // because they were moved to dedicated dirs, their rootDir was replaced to that dir
+                  const capsuleDir = helper.general.generateRandomTmpDirName();
+                  helper.command.isolateComponentWithCapsule('utils/is-string', capsuleDir);
+                  expect(path.join(capsuleDir, 'is-string.ts')).to.be.a.file();
+                  expect(path.join(capsuleDir, 'utils/is-string.ts')).not.to.be.a.path();
+                });
+                describe('as imported', () => {
+                  before(() => {
+                    helper.scopeHelper.getClonedLocalScope(importedWithRelative);
+                    helper.command.importComponent('* --override');
+                  });
+                  it('the app should work', () => {
+                    helper.fs.outputFile(
+                      'app.js',
+                      `const barFoo = require('@bit/${helper.scopes.remote}.bar.foo'); console.log(barFoo.default());`
+                    );
+                    const output = helper.command.runCmd('node app.js');
+                    expect(output).to.have.string('got is-type and got is-string and got foo');
+                  });
+                  it('should write the files without the shared-dir', () => {
+                    const expectedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.ts');
+                    // the sharedDir "utils" had not been removed
+                    expect(expectedFile).to.be.a.file();
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });

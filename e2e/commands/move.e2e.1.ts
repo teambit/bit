@@ -276,7 +276,7 @@ console.log(barFoo());`;
         helper.fs.outputFile('src/foo.js');
         helper.fs.outputFile('src/test/foo.spec.js');
         helper.command.addComponentLegacy('src/foo.js src/test/foo.spec.js', { i: 'foo', m: 'src/foo.js' });
-        output = helper.command.runCmd('bit move foo components/foo --component');
+        output = helper.command.moveComponent('foo', 'components/foo');
       });
       it('should output the file changes', () => {
         const outputClean = removeChalkCharacters(output);
@@ -305,7 +305,7 @@ console.log(barFoo());`;
         helper.command.addComponentLegacy('src', { i: 'foo' });
       });
       it('should throw an error saying it is not possible', () => {
-        const cmd = () => helper.command.runCmd('bit move foo components/foo --component');
+        const cmd = () => helper.command.moveComponent('foo', 'components/foo');
         expect(cmd).to.throw('foo has already one directory (src) for all its files');
       });
     });
@@ -316,7 +316,7 @@ console.log(barFoo());`;
         helper.command.addComponentAllowFiles('src', { i: 'foo' });
       });
       it('should throw an error saying it is not possible', () => {
-        const cmd = () => helper.command.runCmd('bit move foo components/foo --component');
+        const cmd = () => helper.command.moveComponent('foo', 'components/foo');
         expect(cmd).to.throw('foo has already one directory (src) for all its files');
       });
     });
@@ -326,7 +326,7 @@ console.log(barFoo());`;
         helper.scopeHelper.reInitLocalScope();
         helper.fs.outputFile('foo.js');
         helper.command.addComponentAllowFiles('foo.js', { i: 'foo' });
-        output = helper.command.runCmd('bit move foo components/foo --component');
+        output = helper.command.moveComponent('foo', 'components/foo');
       });
       it('should output the file changes', () => {
         const outputClean = removeChalkCharacters(output);

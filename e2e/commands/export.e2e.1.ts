@@ -565,7 +565,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+          helper.bitJson.addDefaultScope();
           output = helper.command.runCmd('bit export');
         });
         it('should export successfully both, the id with and without the scope', () => {
@@ -584,7 +584,7 @@ describe('bit export command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);
           helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
-          helper.bitJson.addKeyVal(undefined, 'defaultScope', 'my-general-remote');
+          helper.bitJson.addDefaultScope('my-general-remote');
           helper.bitJson.addOverrides({ foo2: { defaultScope: helper.scopes.remote } });
           output = helper.command.runCmd('bit export');
         });
@@ -826,7 +826,7 @@ describe('bit export command', function() {
             helper.scopeHelper.getClonedLocalScope(beforeExportScope);
             helper.scopeHelper.getClonedRemoteScope(remoteScopeBefore);
             helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
-            helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+            helper.bitJson.addDefaultScope();
             output = helper.command.export();
           });
           it('should export them all successfully', () => {
@@ -1213,7 +1213,7 @@ describe('bit export command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateWorkspaceWithThreeComponents();
-      helper.bitJson.addKeyVal(undefined, 'defaultScope', helper.scopes.remote);
+      helper.bitJson.addDefaultScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       anotherRemotePath = scopePath;

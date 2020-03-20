@@ -1408,11 +1408,7 @@ describe('envs', function() {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
-          helper.bitJson.addKeyVal(
-            helper.scopes.localPath,
-            'ejectedEnvsDirectory',
-            `${ejectedEnvsDirectory}/{ENV_TYPE}`
-          );
+          helper.bitJson.addKeyVal('ejectedEnvsDirectory', `${ejectedEnvsDirectory}/{ENV_TYPE}`);
           helper.command.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           fullComponentFolder = path.join(helper.scopes.localPath, 'components', 'comp', 'my-comp');
           bitJsonPath = path.join(fullComponentFolder, 'bit.json');
