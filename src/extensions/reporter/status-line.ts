@@ -20,7 +20,7 @@ function clearStatusRow() {
 export default class StatusLine {
   public buffer = SPACE_BUFFER;
   private spinner: any = ora({ spinner: 'bouncingBar', stream: process.stdout }).stop();
-  private spinnerLength: number = 7; // 6 for spinner, 1 for space after it
+  private spinnerLength = 7; // 6 for spinner, 1 for space after it
   private ids: Array<string> = [];
   constructor() {
     this.reRender = debounce(this.reRender, 100);
