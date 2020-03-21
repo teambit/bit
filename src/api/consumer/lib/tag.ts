@@ -30,6 +30,7 @@ export async function tagAction(args: {
   ignoreUnresolvedDependencies?: boolean;
   ignoreNewestVersion: boolean;
   allowRelativePaths: boolean;
+  allowFiles: boolean;
   skipTests: boolean;
   skipAutoTag: boolean;
 }): Promise<TagResults> {
@@ -43,6 +44,7 @@ export async function tagAction(args: {
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     allowRelativePaths,
+    allowFiles,
     skipTests,
     skipAutoTag
   } = args;
@@ -68,7 +70,8 @@ export async function tagAction(args: {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
-    allowRelativePaths
+    allowRelativePaths,
+    allowFiles
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;
@@ -102,6 +105,7 @@ export async function tagAllAction(args: {
   ignoreUnresolvedDependencies?: boolean;
   ignoreNewestVersion: boolean;
   allowRelativePaths: boolean;
+  allowFiles: boolean;
   skipTests: boolean;
   scope?: string;
   includeImported?: boolean;
@@ -117,6 +121,7 @@ export async function tagAllAction(args: {
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     allowRelativePaths,
+    allowFiles,
     skipTests,
     scope,
     includeImported,
@@ -153,7 +158,8 @@ export async function tagAllAction(args: {
     ignoreNewestVersion,
     skipTests,
     skipAutoTag,
-    allowRelativePaths
+    allowRelativePaths,
+    allowFiles
   );
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.warnings = warnings;

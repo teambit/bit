@@ -10,7 +10,7 @@ import runInteractive from '../interactive/utils/run-interactive-cmd';
 import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
 import ScopesData from './e2e-scopes';
 import { CURRENT_UPSTREAM } from '../constants';
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE, LEGACY_SHARED_DIR_FEATURE } from '../api/consumer/lib/feature-toggle';
 
 const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 
@@ -98,16 +98,30 @@ export default class CommandHelper {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return JSON.parse(result);
   }
-  addComponent(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+  /**
+   * add component as legacy-mode.
+   * rootDir is not set for authored. same as it was on versions < 14.8.0.
+   * useful for tests that involve originallySharedDir logic. that's the only way to test them.
+   */
+  addComponentLegacy(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd, undefined, LEGACY_SHARED_DIR_FEATURE);
+  }
+  addComponentAllowFiles(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value} --allow-files`, cwd);
   }
-  addComponentDir(filePaths: string, options: Record<string, any> = {}, cwd: string = this.scopes.localPath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
+  addComponent(filePaths: string, options: Record<string, any> | string = {}, cwd: string = this.scopes.localPath) {
+    const value =
+      typeof options === 'string'
+        ? options
+        : Object.keys(options)
+            .map(key => `-${key} ${options[key]}`)
+            .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
   getConfig(configName: string) {
@@ -134,24 +148,54 @@ export default class CommandHelper {
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths`);
   }
+  tagComponentLegacy(id: string, tagMsg = 'tag-message', options = '') {
+    return this.runCmd(
+      `bit tag ${id} -m ${tagMsg} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+  }
   tagWithoutMessage(id: string, version = '', options = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options} --allow-relative-paths`);
   }
+  tagAllComponentsLegacy(options = '', version = '', assertTagged = true) {
+    const result = this.runCmd(
+      `bit tag -a ${version} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  // @todo: change to tagAllComponentsLegacy
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --allow-relative-paths --allow-files`);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  // @todo: change to tagAllComponents
+  tagAllComponentsNew(options = '', version = '', assertTagged = true) {
+    const result = this.runCmd(`bit tag -a ${version} ${options}`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
-    const result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
+    return this.tagAllComponentsNew(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --allow-relative-paths`);
   }
-
+  tagScopeLegacy(version: string, message = 'tag-message', options = '') {
+    return this.runCmd(
+      `bit tag -s ${version} -m ${message} ${options} --allow-relative-paths --allow-files`,
+      undefined,
+      undefined,
+      LEGACY_SHARED_DIR_FEATURE
+    );
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
@@ -297,6 +341,9 @@ export default class CommandHelper {
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
+  moveComponent(id: string, to: string) {
+    return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
   }
   link() {
     return this.runCmd('bit link');

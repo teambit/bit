@@ -148,21 +148,35 @@ export default class NodeModuleLinker {
     return this.consumer ? this.consumer.config.defaultScope : null;
   }
 
+  /**
+   * even when an authored component has rootDir, we can't just symlink that rootDir to
+   * node_modules/rootDir. it could work only when the main-file is index.js, not for other cases.
+   * node expects the module inside node_modules to have either package.json with valid "main"
+   * property or an index.js file. this main property can't be relative.
+   */
   _populateAuthoredComponentsLinks(component: Component): void {
     const componentId = component.id;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
+      component.bindingPrefix,
+      componentId,
+      true,
+      this._getDefaultScope(component)
+    );
+    const componentMap = component.componentMap as ComponentMap;
+    const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const isMain = file === component.componentMap.mainFile;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
-      const dest = path.join(
-        getNodeModulesPathOfComponent(component.bindingPrefix, componentId, true, this._getDefaultScope(component)),
-        file
+      const isMain = file === componentMap.mainFile;
+      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+      const possiblyDist = component.dists.calculateDistFileForAuthored(
+        path.normalize(fileWithRootDir),
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        this.consumer,
+        isMain
       );
+      const dest = path.join(linkPath, file);
       const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
@@ -177,7 +191,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
       }
     });
     this._deleteOldLinksOfIdWithoutScope(component);
@@ -265,7 +279,7 @@ export default class NodeModuleLinker {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
-      if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
+      if (!dependencyComponentMap || !dependencyComponentMap.hasRootDir()) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(

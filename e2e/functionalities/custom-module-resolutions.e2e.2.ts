@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 
 describe('custom module resolutions', function() {
   this.timeout(0);
-  let helper;
+  let helper: Helper;
   before(() => {
     helper = new Helper();
   });
@@ -30,9 +30,9 @@ describe('custom module resolutions', function() {
         "const isString = require('utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
-      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo' });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.command.runCmd('bit status');
@@ -158,8 +158,11 @@ describe('custom module resolutions', function() {
           "const isString = require('utils/is-string');\n module.exports = function foo() { return isString() + ' and got foo'; };";
         helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-        helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
-        helper.command.addComponent('src/bar/foo.js src/utils/is-string.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+        helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
+        helper.command.addComponentAllowFiles('src/bar/foo.js src/utils/is-string.js', {
+          i: 'bar/foo',
+          m: 'src/bar/foo.js'
+        });
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.command.runCmd('bit status');
@@ -230,12 +233,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-string.js',
+          destinationPath: 'utils/is-string.js',
           importSource: 'utils/is-string'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-type.js',
+          destinationPath: 'utils/is-type.js',
           importSource: 'utils/is-type'
         });
       });
@@ -325,12 +328,12 @@ describe('custom module resolutions', function() {
         expect(barFoo.customResolvedPaths).to.have.lengthOf(2);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/index.js',
+          destinationPath: 'utils/index.js',
           importSource: '@/utils'
         });
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barFoo.customResolvedPaths).to.deep.include({
-          destinationPath: 'src/utils/is-type.js',
+          destinationPath: 'utils/is-type.js',
           importSource: '@/utils/is-type'
         });
       });
@@ -401,7 +404,7 @@ describe('custom module resolutions', function() {
       npmCiRegistry.setCiScopeInBitJson();
       helper.fs.createFile('src/utils', 'is-type.js', '');
       helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
-      helper.command.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-type.js src/utils/is-type-internal.js', {
         i: 'utils/is-type',
         m: 'src/utils/is-type.js'
       });
@@ -410,7 +413,7 @@ describe('custom module resolutions', function() {
         "const isType = require('utils/is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.fs.createFile('src/utils', 'is-string.js', '');
       helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+      helper.command.addComponentAllowFiles('src/utils/is-string.js src/utils/is-string-internal.js', {
         i: 'utils/is-string',
         m: 'src/utils/is-string.js'
       });
@@ -418,7 +421,7 @@ describe('custom module resolutions', function() {
       const barFooFixture =
         "const isString = require('utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.command.runCmd('bit status');
@@ -493,7 +496,10 @@ describe('custom module resolutions', function() {
       fs.copySync(sourcePngFile, destPngFile);
       const barFooFixture = "require('assets/png_fixture.png');";
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/bar/foo.js src/assets/png_fixture.png', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js src/assets/png_fixture.png', {
+        i: 'bar/foo',
+        m: 'src/bar/foo.js'
+      });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.command.runCmd('bit status');
@@ -520,7 +526,7 @@ describe('custom module resolutions', function() {
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
-        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/src/assets/png_fixture.png'));
       });
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {
@@ -564,9 +570,9 @@ describe('custom module resolutions', function() {
         "const isString = require('@/utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
-      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo' });
       scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should not warn about missing packages', () => {

@@ -21,6 +21,7 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
+import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -216,7 +217,7 @@ export default class DependencyResolver {
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
-
+    this.throwForIncorrectRootDir();
     return this.component;
   }
 
@@ -297,6 +298,14 @@ export default class DependencyResolver {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
+    }
+  }
+
+  throwForIncorrectRootDir() {
+    const relatives = this.issues.relativeComponentsAuthored;
+    if (relatives && !R.isEmpty(relatives) && this.componentMap.doesAuthorHaveRootDir()) {
+      const firstRelativeKey = Object.keys(relatives)[0];
+      throw new IncorrectRootDir(this.componentId.toString(), relatives[firstRelativeKey][0].importSource);
     }
   }
 
@@ -389,10 +398,10 @@ export default class DependencyResolver {
     if (!componentId) componentId = this._getComponentIdFromCustomResolveToPackageWithDist(depFileRelative);
     // if not found here, the file is not a component file. It might be a bit-auto-generated file.
     // find the component file by the auto-generated file.
-    // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
-    // auto-generated files.
-    if (!componentId && rootDir) {
+    // We make sure also that it's not an AUTHORED component, which shouldn't have auto-generated files.
+    if (!componentId && this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
       componentId = this.traverseTreeForComponentId(depFile);
+      if (!rootDir) throw new Error('rootDir must be set for non authored components');
       if (componentId) {
         // it is verified now that this depFile is an auto-generated file, therefore the sourceRelativePath and the
         // destinationRelativePath should be a partial-path and not full-relative-to-consumer path.
@@ -751,8 +760,8 @@ either, use the ignore file syntax or change the require statement to have a mod
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
       const getExistingId = (): BitId | null | undefined => {
-        let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
-        if (existingId) return existingId;
+        const existingIds = this.consumer.bitmapIds.filterWithoutVersion(componentId);
+        if (existingIds.length === 1) return existingIds[0];
         // maybe the dependencies were imported as npm packages
         // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
         const basePath = this.componentMap.rootDir
@@ -763,8 +772,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
         if (packageJson) {
           const depVersion = packageJson.version;
-          existingId = componentId.changeVersion(depVersion);
-          return existingId;
+          return componentId.changeVersion(depVersion);
         }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);

@@ -98,10 +98,13 @@ export async function getManipulateDirWhenImportingComponents(
  * this doesn't return the manipulate-dir for the dependencies, only for the given component.
  * it is useful for stripping the shared-dir for author when generating symlinks from node_modules
  */
-export function getManipulateDirForConsumerComponent(component: Component): ManipulateDirItem {
+function getManipulateDirForConsumerComponent(component: Component): ManipulateDirItem {
   const id: BitId = component.id;
-  const originallySharedDir =
-    component.originallySharedDir || calculateOriginallySharedDirForConsumerComponent(component);
+  const getSharedDir = () => {
+    if (component.ignoreSharedDir) return null;
+    return component.originallySharedDir || calculateOriginallySharedDirForConsumerComponent(component);
+  };
+  const originallySharedDir = getSharedDir();
   const wrapDir = isWrapperDirNeededForConsumerComponent(component) ? WRAPPER_DIR : null;
   return { id, originallySharedDir, wrapDir };
 }
@@ -167,7 +170,7 @@ function _calculateSharedDir(
 }
 
 function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): PathLinux | null | undefined {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  if (origin === COMPONENT_ORIGINS.AUTHORED || version.ignoreSharedDir) return null;
   return calculateOriginallySharedDirForVersion(version);
 }
 
@@ -249,7 +252,7 @@ async function getManipulateDirItemFromComponentVersion(
   return { id, originallySharedDir, wrapDir };
 }
 
-function addSharedDirForPath(pathStr: string, originallySharedDir: PathLinux | null | undefined): PathLinux {
+export function addSharedDirForPath(pathStr: string, originallySharedDir: PathLinux | null | undefined): PathLinux {
   const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
   return pathNormalizeToLinux(withSharedDir);
 }

@@ -74,6 +74,7 @@ export type VersionProps = {
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
+  ignoreSharedDir?: boolean;
   customResolvedPaths?: customResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
@@ -114,6 +115,7 @@ export default class Version extends BitObject {
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
   bindingPrefix: string | null | undefined;
+  ignoreSharedDir: boolean | undefined;
   customResolvedPaths: customResolvedPath[] | null | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
@@ -145,6 +147,7 @@ export default class Version extends BitObject {
     this.compilerPackageDependencies = props.compilerPackageDependencies || {};
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
+    this.ignoreSharedDir = props.ignoreSharedDir;
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
@@ -333,6 +336,7 @@ export default class Version extends BitObject {
         mainDistFile: this.mainDistFile,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        ignoreSharedDir: this.ignoreSharedDir,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
@@ -390,6 +394,7 @@ export default class Version extends BitObject {
       files,
       compiler,
       bindingPrefix,
+      ignoreSharedDir,
       tester,
       log,
       docs,
@@ -464,6 +469,7 @@ export default class Version extends BitObject {
       mainDistFile,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
+      ignoreSharedDir: ignoreSharedDir || undefined,
       tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
@@ -584,6 +590,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
+      ignoreSharedDir: component.ignoreSharedDir,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

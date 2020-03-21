@@ -47,12 +47,12 @@ describe('envs', function() {
     helper.scopeHelper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.fixtures.copyFixtureFile(compiler);
-    helper.command.addComponent('compiler.js', {
+    helper.command.addComponentAllowFiles('compiler.js', {
       i: compilerId
     });
     const tester = path.join('testers', 'new-mocha', 'tester.js');
     helper.fixtures.copyFixtureFile(tester);
-    helper.command.addComponent('tester.js', {
+    helper.command.addComponentAllowFiles('tester.js', {
       i: testerId
     });
     helper.scopeHelper.reInitEnvsScope();
@@ -81,9 +81,13 @@ describe('envs', function() {
     helper.bitJson.addToRawConfigOfEnv(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
     helper.fs.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
     helper.fs.createFile('', 'pass.spec.js', fixtures.passTest);
-    helper.command.addComponent('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
+    helper.command.addComponentAllowFiles('objRestSpread.js', {
+      i: 'comp/my-comp',
+      t: '"*.spec.js"',
+      m: 'objRestSpread.js'
+    });
     helper.fs.createFile('', 'comp2.js');
-    helper.command.addComponent('comp2.js', { i: 'comp/my-comp2' });
+    helper.command.addComponentAllowFiles('comp2.js', { i: 'comp/my-comp2' });
     helper.npm.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.npm.installNpmPackage('babel-preset-env', '1.6.1');
     helper.npm.installNpmPackage('chai', '4.1.2');
@@ -350,7 +354,7 @@ describe('envs', function() {
       describe('with failing tests', () => {
         before(() => {
           helper.fs.createFile('', 'fail.spec.js', fixtures.failTest);
-          helper.command.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+          helper.command.addComponentAllowFiles('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
         });
         describe('with default fork level', () => {
           it('should show results without define fork level', () => {
@@ -397,7 +401,7 @@ describe('envs', function() {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.command.addComponentAllowFiles('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponent('comp/my-comp');
             } catch (e) {
               output = e.message;
@@ -411,7 +415,7 @@ describe('envs', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.fs.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.command.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.command.addComponentAllowFiles('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
             let output;
@@ -431,7 +435,7 @@ describe('envs', function() {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.command.addComponentAllowFiles('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
             } catch (e) {
               output = e.message;
@@ -445,7 +449,7 @@ describe('envs', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.fs.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.command.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.command.addComponentAllowFiles('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
             let output;
@@ -465,7 +469,7 @@ describe('envs', function() {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.command.addComponentAllowFiles('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
             } catch (e) {
               output = e.message;
@@ -479,7 +483,7 @@ describe('envs', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.fs.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.command.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.command.addComponentAllowFiles('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
             let output;
@@ -499,7 +503,7 @@ describe('envs', function() {
             helper.fs.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.command.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.command.addComponentAllowFiles('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.command.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
             } catch (e) {
               output = e.message;
@@ -683,7 +687,7 @@ describe('envs', function() {
           before(() => {
             helper.fs.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
             const failSpecPath = path.join(componentFolder, 'fail.spec.js');
-            helper.command.addComponent(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+            helper.command.addComponentAllowFiles(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
           });
           describe('with default fork level', () => {
             it('should show results without define fork level', () => {
@@ -706,7 +710,7 @@ describe('envs', function() {
 
               let output;
               try {
-                helper.command.addComponent(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                helper.command.addComponentAllowFiles(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
                 helper.command.testComponent('comp/my-comp');
               } catch (e) {
                 output = e.message;
@@ -1144,7 +1148,7 @@ describe('envs', function() {
               helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
               helper.fs.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
               const failSpecPath = path.join(componentFolder, 'fail.spec.js');
-              helper.command.addComponent(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+              helper.command.addComponentAllowFiles(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
             });
             describe('with default fork level', () => {
               it('should show results without define fork level', () => {
@@ -1164,7 +1168,7 @@ describe('envs', function() {
               it('should show results when there is exception on a test file', () => {
                 helper.fs.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
                 const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
-                helper.command.addComponent(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                helper.command.addComponentAllowFiles(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
                 let output;
                 try {
                   helper.command.testComponent('comp/my-comp');
@@ -1404,11 +1408,7 @@ describe('envs', function() {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();
           helper.scopeHelper.addRemoteEnvironment();
-          helper.bitJson.addKeyVal(
-            helper.scopes.localPath,
-            'ejectedEnvsDirectory',
-            `${ejectedEnvsDirectory}/{ENV_TYPE}`
-          );
+          helper.bitJson.addKeyVal('ejectedEnvsDirectory', `${ejectedEnvsDirectory}/{ENV_TYPE}`);
           helper.command.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           fullComponentFolder = path.join(helper.scopes.localPath, 'components', 'comp', 'my-comp');
           bitJsonPath = path.join(fullComponentFolder, 'bit.json');
