@@ -64,7 +64,7 @@ describe('harmony extension config', function() {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.command.tagAllComponents();
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging with the component', () => {
@@ -91,7 +91,7 @@ describe('harmony extension config', function() {
           helper.command.tagComponent('my-ext');
           helper.command.tagComponent('bar/foo');
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging the extension before component', () => {
@@ -123,7 +123,7 @@ describe('harmony extension config', function() {
           before(() => {
             helper.command.exportAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
           });
           it('should update extension scope in the component when exporting together', () => {
@@ -137,7 +137,7 @@ describe('harmony extension config', function() {
             helper.command.exportComponent('my-ext');
             helper.command.exportComponent('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
           });
 
