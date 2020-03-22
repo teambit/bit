@@ -21,6 +21,10 @@ import { InvalidBitJson } from '../../consumer/config/exceptions';
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
 
+export type LegacyInitProps = {
+  standAlone?: boolean;
+};
+
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
   components?: ConsumerOverrides;
@@ -150,14 +154,19 @@ export default class WorkspaceConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileInputProps, dirPath?: PathOsBasedAbsolute) {
+  static async create(
+    props: WorkspaceConfigFileInputProps,
+    dirPath?: PathOsBasedAbsolute,
+    legacyInitProps?: LegacyInitProps
+  ) {
     if (isFeatureEnabled('legacy-workspace-config') && dirPath) {
       // Only support here what needed for e2e tests
       const legacyProps = {
         packageManager: props?.workspace?.dependencyResolver?.packageManager,
         componentsDefaultDirectory: props?.workspace?.workspace.defaultDirectory
       };
-      const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, false, legacyProps);
+      const standAlone = legacyInitProps?.standAlone ?? false;
+      const legacyConfig = await LegacyWorkspaceConfig.ensure(dirPath, standAlone, legacyProps);
       const instance = this.fromLegacyConfig(legacyConfig);
       return instance;
     }
@@ -183,14 +192,15 @@ export default class WorkspaceConfig {
    */
   static async ensure(
     dirPath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any,
+    legacyInitProps?: LegacyInitProps
   ): Promise<WorkspaceConfig> {
     try {
       let workspaceConfig = await this.loadIfExist(dirPath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, legacyInitProps);
       return workspaceConfig;
     } catch (err) {
       if (err instanceof InvalidBitJson) {

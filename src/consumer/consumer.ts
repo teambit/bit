@@ -790,7 +790,7 @@ export default class Consumer {
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps);
+    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps, { standAlone });
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
