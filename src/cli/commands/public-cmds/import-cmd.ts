@@ -139,10 +139,6 @@ export default class Import extends Command {
       importDependenciesDirectly: dependencies,
       importDependents: dependents
     };
-    // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
-    if (typeof conf === 'string') {
-      importOptions.configDir = conf;
-    }
     return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults => ({
       displayDependencies,
       json,

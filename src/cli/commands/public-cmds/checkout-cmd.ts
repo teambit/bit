@@ -82,9 +82,6 @@ export default class Checkout extends Command {
       writeConfig: !!conf,
       ignoreDist
     };
-    if (typeof conf === 'string') {
-      checkoutProps.configDir = conf;
-    }
     return checkout(values, checkoutProps);
   }
 

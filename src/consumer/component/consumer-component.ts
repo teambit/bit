@@ -431,11 +431,7 @@ export default class Component {
     }
 
     const res = await injectConf(this, consumerPath, force);
-    if (this.componentMap) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.componentMap.setConfigDir();
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore
     return res;
   }
 

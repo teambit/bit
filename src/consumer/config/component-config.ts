@@ -148,7 +148,6 @@ export default class ComponentConfig extends AbstractConfig {
    *
    * @param {*} componentDir root component directory, needed for loading package.json file.
    * in case a component is authored, leave this param empty to not load the project package.json
-   * @param {*} configDir dir where bit.json and other envs files are written (by eject-conf or import --conf)
    * @param {*} workspaceConfig
    */
   static async load({

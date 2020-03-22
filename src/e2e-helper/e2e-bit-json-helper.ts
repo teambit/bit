@@ -36,14 +36,6 @@ export default class BitJsonHelper {
     const envName = Object.keys(env)[0];
     return env[envName];
   }
-  addFileToEnv(
-    bitJsonPath: string = this.scopes.localPath,
-    fileName: string,
-    filePath: string,
-    envType: 'compiler' | 'tester'
-  ) {
-    this._addKeyValToEnvProp(bitJsonPath, 'files', fileName, filePath, envType);
-  }
   addToRawConfigOfEnv(
     bitJsonPath: string = this.scopes.localPath,
     key: string,

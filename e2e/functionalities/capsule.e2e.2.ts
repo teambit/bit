@@ -180,12 +180,14 @@ describe('capsule', function() {
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
-    describe('using the new compiler API', () => {
+    // Skip for now, until talking with @david about it, the add files to envs are deleted so this test
+    // need to be changed or deleted.
+    describe.skip('using the new compiler API', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterImportingCompiler);
         const babelrcFixture = path.join('compilers', 'new-babel', '.babelrc');
         helper.fixtures.copyFixtureFile(babelrcFixture);
-        helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
+        // helper.bitJson.addFileToEnv(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
         helper.env.changeDummyCompilerCode('isNewAPI = false', 'isNewAPI = true');
         const output = helper.command.build();
         expect(output).to.have.string('using the new compiler API');

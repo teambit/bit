@@ -34,7 +34,6 @@ export interface ManyComponentsWriterParams {
   writePackageJson?: boolean;
   saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
-  configDir?: string;
   writeBitDependencies?: boolean;
   createNpmLinkFiles?: boolean;
   writeDists?: boolean;
@@ -64,7 +63,6 @@ export default class ManyComponentsWriter {
   writeToPath?: string;
   override: boolean;
   writePackageJson: boolean;
-  configDir?: string;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;

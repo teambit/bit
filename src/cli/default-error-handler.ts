@@ -90,7 +90,6 @@ import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/ex
 import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
 import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
-import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
@@ -158,19 +157,16 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],
-  [EjectToWorkspace, () => 'error: could not eject config to the workspace root please provide a valid path'],
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => importPendingMsg],
+  // TODO: improve error
   [
     EjectNoDir,
-    err =>
-      `error: could not eject config for ${chalk.bold(
-        err.compId
-      )}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+    err => `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`
   ],
   [
     ComponentNotFound,
