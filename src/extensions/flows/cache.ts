@@ -3,7 +3,7 @@
 import { createHash } from 'crypto';
 import { path, equals } from 'ramda';
 import { promises as fs } from 'fs';
-import { lock } from 'proper-lockfile';
+import { lock, unlock } from 'proper-lockfile';
 import { join } from 'path';
 import { CACHE_ROOT } from '../../constants';
 import { Capsule } from '../isolator/capsule';
@@ -37,7 +37,7 @@ export class ExecutionCache {
     content[capsule.wrkDir] = content[capsule.wrkDir] || {};
     content[capsule.wrkDir][name] = hash;
     await fs.writeFile(this.pathToCache, JSON.stringify(content, null, 2));
-    return release();
+    return unlock(this.pathToCache);
   }
 
   async getCacheValue(wrkDir: string, name: string): Promise<string | undefined> {
@@ -47,7 +47,7 @@ export class ExecutionCache {
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
     const cacheValue = path([wrkDir, name], content);
-    await release();
+    await unlock(this.pathToCache);
     return cacheValue;
   }
 
