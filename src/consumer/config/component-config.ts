@@ -253,10 +253,6 @@ async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, confi
 }
 
 function mergeExtensionsConfig(configs: any[]) {
-  // let concatValues = (k, l, r) => k == 'values' ? R.concat(l, r) : r
-  // R.mergeDeepWithKey(concatValues,
-  //                  { a: true, c: { thing: 'foo', values: [10, 20] }},
-  //                  { b: true, c: { thing: 'bar', values: [15, 35] }});
   return configs.reduce((prev, curr) => {
     return R.mergeDeepLeft(prev, curr);
   }, {});
