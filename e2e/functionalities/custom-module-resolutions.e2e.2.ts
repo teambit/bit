@@ -508,6 +508,7 @@ describe('custom module resolutions', function() {
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const bitJson = helper.bitJson.read();
