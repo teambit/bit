@@ -39,7 +39,7 @@ export type WorkspaceExtensionProps = {
   owner?: string;
   defaultScope?: string;
   defaultDirectory?: string;
-  components: ComponentScopeDirMap;
+  components?: ComponentScopeDirMap;
 };
 
 export type PackageManagerClients = 'librarian' | 'npm' | 'yarn' | undefined;

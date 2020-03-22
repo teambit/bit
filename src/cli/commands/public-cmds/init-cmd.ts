@@ -31,8 +31,9 @@ export default class Init extends Command {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
     ],
-    ['c', 'compiler <compiler>', 'set up compiler'],
-    ['t', 'tester <tester>', 'set up tester'],
+    // Disabled until supported by the new config
+    // ['c', 'compiler <compiler>', 'set up compiler'],
+    // ['t', 'tester <tester>', 'set up tester'],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
@@ -82,7 +83,7 @@ export default class Init extends Command {
     const workspaceConfigFileProps: WorkspaceConfigFileInputProps = {
       workspace: {
         workspace: {
-          components: [{ directory: defaultDirectory }]
+          defaultDirectory
         },
         dependencyResolver: {
           packageManager
