@@ -1046,7 +1046,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (isAuthor) {
       return this.consumer.packageJson.packageJsonObject;
     }
-    if (this.component.packageJsonFile) {
+    if (this.component.packageJsonFile && this.component.packageJsonFile.fileExist) {
       return this.component.packageJsonFile.packageJsonObject;
     }
     if (this.componentFromModel) {
