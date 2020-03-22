@@ -37,6 +37,8 @@ export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
   owner?: string;
+  defaultScope?: string;
+  defaultDirectory?: string;
   components: ComponentScopeDirMap;
 };
 
@@ -72,18 +74,18 @@ export class WorkspaceSettings {
 
   get componentsDefaultDirectory() {
     // TODO: change when supporting many dirs<>scopes mapping
-    return this.data.workspace.components[0].directory;
+    return this.data.workspace.defaultDirectory;
   }
 
   get defaultScope(): string | undefined {
     // TODO: change when supporting many dirs<>scopes mapping
-    return this.data.workspace.components[0].defaultScope;
+    return this.data.workspace.defaultScope;
   }
 
   set defaultScope(defaultScope: string | undefined) {
     if (defaultScope) {
       // TODO: change when supporting many dirs<>scopes mapping
-      this.data.workspace.components[0].defaultScope = defaultScope;
+      this.data.workspace.defaultScope = defaultScope;
     }
   }
 

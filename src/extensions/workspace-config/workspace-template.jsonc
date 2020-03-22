@@ -12,8 +12,18 @@
 
     /**
      * applies only on bit.dev. configure the main owner of your workspace.
-    **/
+     */
     "owner": "ripples",
+
+    /**
+     * set the default scope when there is no matching for the component in the components array.
+     */
+    // "defaultScope": "my-scope",
+
+    /**
+     * set the default directory when there is no matching for the component in the components array.
+     **/
+    // "defaultDirectory": "components",
 
     /**
     * set the default structure of components in your project.
