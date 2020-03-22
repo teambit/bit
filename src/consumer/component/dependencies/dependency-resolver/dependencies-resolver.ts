@@ -171,7 +171,7 @@ export default class DependencyResolver {
         allFiles,
         this.component.bindingPrefix,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.resolveModules,
+        this.consumer.config.workspaceSettings._resolveModules,
         cacheResolvedDependencies,
         cacheProjectAst
       );
