@@ -16,6 +16,7 @@ import { EnvType } from '../../legacy-extensions/env-extension-types';
 import { BitId } from '../../bit-id';
 import { isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 import logger from '../../logger/logger';
+import { InvalidBitJson } from '../../consumer/config/exceptions';
 
 const COMPONENT_CONFIG_ENTRY_NAME = 'variants';
 const INTERNAL_CONFIG_PROPS = ['$schema', COMPONENT_CONFIG_ENTRY_NAME];
@@ -184,22 +185,32 @@ export default class WorkspaceConfig {
     dirPath: PathOsBasedAbsolute,
     workspaceConfigProps: WorkspaceConfigFileInputProps = {} as any
   ): Promise<WorkspaceConfig> {
-    let workspaceConfig = await this.loadIfExist(dirPath);
-    if (workspaceConfig) {
+    try {
+      let workspaceConfig = await this.loadIfExist(dirPath);
+      if (workspaceConfig) {
+        return workspaceConfig;
+      }
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath);
       return workspaceConfig;
+    } catch (err) {
+      if (err instanceof InvalidBitJson) {
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath);
+        return workspaceConfig;
+      }
+      throw err;
     }
-    workspaceConfig = await this.create(workspaceConfigProps, dirPath);
-    return workspaceConfig;
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const bitJsoncPath = this.composeBitJsoncPath(dirPath);
-    if (bitJsoncPath && resetHard) {
-      logger.info(`deleting the consumer bit.jsonc file at ${bitJsoncPath}`);
-      await fs.remove(bitJsoncPath);
-      return;
+    if (resetHard) {
+      // Call the legacy reset hard to make sure there is no old bit.json kept
+      LegacyWorkspaceConfig.reset(dirPath, true);
+      if (bitJsoncPath) {
+        logger.info(`deleting the consumer bit.jsonc file at ${bitJsoncPath}`);
+        await fs.remove(bitJsoncPath);
+      }
     }
-    LegacyWorkspaceConfig.reset(dirPath, resetHard);
   }
 
   /**
