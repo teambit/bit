@@ -24,8 +24,8 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
-    const templateExtName = this.workspace.config.workspaceSettings.extensionsConfig.findExtension('create')?.config
-      ?.template;
+    const config = this.workspace.config.workspaceSettings.getExtensionConfig('create');
+    const templateExtName = config?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
     }

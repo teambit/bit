@@ -237,11 +237,6 @@ export default class ComponentConfig extends AbstractConfig {
 }
 
 async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, configsRegistry) {
-  // const extensionsConfigModificationsP = configsRegistry.keys.map(entry => {
-  //   // TODO: only running func for relevant extensions
-  //   const func = configsRegistry.get(entry);
-  //   return func()
-  // });
   const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
