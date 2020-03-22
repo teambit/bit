@@ -23,7 +23,7 @@ describe('harmony extension config', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.extensions.addExtensionToWorkspaceConfig('Scope', config);
+      helper.extensions.addExtensionToVariant('*', 'Scope', config);
       helper.command.tagAllComponents();
       componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
       extensionData = componentVersionModel.extensions;
