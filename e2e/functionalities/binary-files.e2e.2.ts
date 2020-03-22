@@ -211,6 +211,7 @@ describe('binary files', function() {
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
