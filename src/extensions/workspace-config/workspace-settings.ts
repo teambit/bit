@@ -186,12 +186,8 @@ export class WorkspaceSettings {
   static fromLegacyConfig(legacyConfig: LegacyWorkspaceConfig) {
     const data = {
       workspace: {
-        components: [
-          {
-            defaultScope: legacyConfig.defaultScope,
-            directory: legacyConfig.componentsDefaultDirectory
-          }
-        ]
+        defaultScope: legacyConfig.defaultScope,
+        defaultDirectory: legacyConfig.componentsDefaultDirectory
       },
       dependencyResolver: {
         packageManager: legacyConfig.packageManager,
