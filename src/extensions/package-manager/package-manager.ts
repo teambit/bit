@@ -88,12 +88,12 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    const { log, warn } = this.reporter.createLogger(folder);
+    const { info, warn } = this.reporter.createLogger(folder);
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
       await new Promise((resolve, reject) => {
-        child.stdout.on('data', d => log(d.toString()));
+        child.stdout.on('data', d => info(d.toString()));
         // @ts-ignore
         child.stderr.on('data', d => warn(d.toString()));
         child.on('error', e => reject(e));
@@ -112,11 +112,11 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      log('$ npm install');
-      log('');
+      info('$ npm install');
+      info('');
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', d => log(d.toString()));
+        child.stdout.on('data', d => info(d.toString()));
         // @ts-ignore
         child.stderr.on('data', d => warn(d.toString()));
         child.on('error', e => {
