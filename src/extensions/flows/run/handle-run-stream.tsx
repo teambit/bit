@@ -34,10 +34,10 @@ function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, s
     next(flowData: any) {
       if (flowData.type === 'flow:start') {
         console.log('start-id:', flowData.id);
-        reporter.createLogger(flowData.id).log(`***** started ${flowData.id} *****`);
+        reporter.createLogger(flowData.id).info(`***** started ${flowData.id} *****`);
       } else if (flowData.type === 'flow:result') {
         console.log('end-id:', flowData.id);
-        reporter.createLogger(flowData.id).log(`***** finished ${flowData.id} - duration:${flowData.duration} *****`);
+        reporter.createLogger(flowData.id).info(`***** finished ${flowData.id} - duration:${flowData.duration} *****`);
         summery[flowData.id] = flowData;
       } else if (flowData instanceof ReplaySubject) {
         handleTaskStream(flowData, reporter);
@@ -53,7 +53,7 @@ function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter) {
     next(data: any) {
       console.log('\ntask:', data.type);
       if (data.type === 'task:stdout') {
-        reporter.createLogger(data.id).log(data.value);
+        reporter.createLogger(data.id).info(data.value);
       } else if (data.type === 'task:stderr') {
         reporter.createLogger(data.id).warn(data.value);
       }
