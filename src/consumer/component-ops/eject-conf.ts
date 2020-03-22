@@ -30,7 +30,7 @@ export async function getEjectConfDataToPersist(
   }
   const componentDir = componentMap.getComponentDir();
   if (!componentDir) {
-    throw new GeneralError('could not eject config for a component withour a root dir');
+    throw new GeneralError('could not eject config for a component without a root dir');
   }
 
   const id = component.id.toStringWithoutVersion();
