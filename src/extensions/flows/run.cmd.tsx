@@ -36,8 +36,7 @@ export class RunCmd implements Command {
     const actualComps = typeof components === 'string' ? [components] : components;
     const comps = this.flows.getIds(actualComps);
     const result = await this.flows.run(comps, 'build');
-
-    console.log('result', result);
+    // console.log('result', result);
     return <div></div>;
   }
 }
