@@ -1,6 +1,7 @@
 import Bluebird from 'bluebird';
 import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
+import { WorkspaceConfigExt } from './extensions/workspace-config';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';
@@ -27,9 +28,9 @@ try {
       return cli?.instance.run();
     })
     .catch(err => {
-      console.log(err);
-      const errorHandlerExist = findErrorDefinition(err.originalError);
-      const handledError = errorHandlerExist ? defaultHandleError(err.originalError) : err;
+      const originalError = err.originalError || err;
+      const errorHandlerExist = findErrorDefinition(originalError);
+      const handledError = errorHandlerExist ? defaultHandleError(originalError) : err;
       logErrAndExit(handledError, process.argv[1] || '');
     });
   // Catching errors from the load phase

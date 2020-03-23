@@ -1,5 +1,3 @@
-import { Isolator } from '../isolator';
-import { Reporter } from '../reporter';
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 
@@ -13,10 +11,7 @@ export default class Bit {
     /**
      * Workspace
      */
-    readonly workspace: Workspace | undefined,
-
-    private isolate: Isolator,
-    private reporter: Reporter
+    readonly workspace: Workspace | undefined
   ) {}
 
   /**

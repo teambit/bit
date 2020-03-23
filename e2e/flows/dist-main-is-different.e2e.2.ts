@@ -17,6 +17,7 @@ describe('mainFile of the dist is different than the source', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   let npmCiRegistry;
   after(() => {

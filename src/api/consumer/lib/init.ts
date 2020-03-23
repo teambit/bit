@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { Consumer } from '../../../consumer';
 import { Repository } from '../../../scope/objects';
 import { isDirEmpty } from '../../../utils';
-import { WorkspaceConfigProps } from '../../../consumer/config/workspace-config';
+import { WorkspaceConfigFileInputProps } from '../../../extensions/workspace-config/index';
 import ObjectsWithoutConsumer from './exceptions/objects-without-consumer';
 
 export default (async function init(
@@ -11,12 +11,12 @@ export default (async function init(
   reset = false,
   resetHard = false,
   force = false,
-  workspaceConfigProps: WorkspaceConfigProps
+  workspaceConfigFileProps: WorkspaceConfigFileInputProps
 ): Promise<Consumer> {
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);
   }
-  const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
+  const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigFileProps);
   if (!force) {
     await throwForOutOfSyncScope(consumer);
   }

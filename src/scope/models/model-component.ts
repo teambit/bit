@@ -253,7 +253,7 @@ export default class Component extends BitObject {
 
   toBitIdWithLatestVersionAllowNull(): BitId {
     const id = this.toBitIdWithLatestVersion();
-    return id.version === VERSION_ZERO ? id.changeVersion(null) : id;
+    return id.version === VERSION_ZERO ? id.changeVersion(undefined) : id;
   }
 
   toObject() {
@@ -427,7 +427,7 @@ export default class Component extends BitObject {
       dists,
       mainDistFile: version.mainDistFile,
       docs: version.docs,
-      license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,

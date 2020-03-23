@@ -106,7 +106,9 @@ export default class NodeModuleLinker {
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
-    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
+    const bindingPrefix = this.consumer
+      ? this.consumer.config.workspaceSettings._bindingPrefix
+      : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
       bindingPrefix,
       componentId,
@@ -145,7 +147,7 @@ export default class NodeModuleLinker {
     if (component) {
       return component.defaultScope;
     }
-    return this.consumer ? this.consumer.config.defaultScope : null;
+    return this.consumer ? this.consumer.config.workspaceSettings.defaultScope : null;
   }
 
   _populateAuthoredComponentsLinks(component: Component): void {
@@ -246,7 +248,7 @@ export default class NodeModuleLinker {
     const unfilteredDirs = glob.sync('*', { cwd: fromNodeModules });
     // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
     // otherwise, node_modules/@bit has packages as any other directory in node_modules
-    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.config.bindingPrefix] : [];
+    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.config.workspaceSettings._bindingPrefix] : [];
     const customResolvedData = component.dependencies.getCustomResolvedData();
     if (!R.isEmpty(customResolvedData)) {
       // filter out packages that are actually symlinks to dependencies

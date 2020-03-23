@@ -658,14 +658,7 @@ export default class AddComponents {
     const distDirsOfImportedComponents = importedComponents.map(componentMap =>
       pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
-    const configsToIgnore = await this.bitMap.getConfigDirsAndFilesToIgnore(
-      this.consumer.getPath(),
-      this.consumer.config
-    );
-    const configDirs = configsToIgnore.dirs.map(dir => pathJoinLinux(dir, '**'));
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    ignoreList = ignoreList.concat(configsToIgnore.files);
-    ignoreList = ignoreList.concat(configDirs);
     return ignoreList;
   }
 

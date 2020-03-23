@@ -1,36 +1,19 @@
-import {
-  DEFAULT_COMPONENTS_DIR_PATH,
-  DEFAULT_DEPENDENCIES_DIR_PATH,
-  DEFAULT_EJECTED_ENVS_DIR_PATH
-} from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
 import GeneralError from '../../error/general-error';
-import ConfigDir from '../bit-map/config-dir';
 import logger from '../../logger/logger';
 
 export default class BitStructure {
   _componentsDefaultDirectoryUnProcessed: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _componentsDefaultDirectory: string;
+  _componentsDefaultDirectory?: string;
   dependenciesDirectory: string;
-  ejectedEnvsDirectory: string;
-  constructor(
-    componentsDefaultDirectory: string | null | undefined,
-    dependenciesDirectory: string | null | undefined,
-    ejectedEnvsDirectory: string | null | undefined
-  ) {
+  constructor(componentsDefaultDirectory: string | undefined, dependenciesDirectory: string | undefined) {
     this._componentsDefaultDirectoryUnProcessed = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
-    this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get dependenciesDirStructure(): string {
     return this.dependenciesDirectory;
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get ejectedEnvsDirStructure(): ConfigDir {
-    return new ConfigDir(this.ejectedEnvsDirectory);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

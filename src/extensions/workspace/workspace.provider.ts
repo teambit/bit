@@ -5,24 +5,27 @@ import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
 import { Isolator } from '../isolator';
 import { Reporter } from '../reporter';
+import { WorkspaceConfig } from '../workspace-config';
+import ComponentConfig from '../../consumer/config/component-config';
+import { ExtensionConfigList } from '../workspace-config/extension-config-list';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Isolator, Reporter];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 
-export type WorkspaceConfig = {
+export type WorkspaceCoreConfig = {
   /**
-   * default scope for the Workspace, defaults to none.
+   * sets the default location of components.
    */
-  defaultScope: string;
+  componentsDefaultDirectory: string;
 
   /**
    * default scope for components to be exported to. absolute require paths for components
    * will be generated accordingly.
    */
-  components: string;
+  defaultScope: string;
 };
 
 export default async function provideWorkspace(
-  [scope, component, isolator, reporter]: WorkspaceDeps,
+  [workspaceConfig, scope, component, isolator, reporter]: WorkspaceDeps,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -35,7 +38,20 @@ export default async function provideWorkspace(
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, scope, component, isolator, reporter, undefined, harmony);
+      const workspace = new Workspace(
+        consumer,
+        workspaceConfig,
+        scope,
+        component,
+        isolator,
+        reporter,
+        undefined,
+        harmony
+      );
+      ComponentConfig.registerOnComponentConfigLoading('component-service', componentConfig => {
+        const extensionsConfig = ExtensionConfigList.fromObject(componentConfig.extensions);
+        workspace.loadExtensionsByConfig(extensionsConfig);
+      });
       return workspace;
     }
 

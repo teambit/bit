@@ -8,6 +8,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();

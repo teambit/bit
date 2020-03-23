@@ -1,8 +1,6 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
-import { IsolatorExt } from '../isolator';
-import { ReporterExt } from '../reporter';
 import provideBit from './bit.provider';
 import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
@@ -19,8 +17,6 @@ export default {
   dependencies: [
     WorkspaceExt,
     ScopeExt,
-    IsolatorExt,
-    ReporterExt,
     FlowsExt,
     PackExt,
     CompileExt,

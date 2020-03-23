@@ -13,6 +13,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();

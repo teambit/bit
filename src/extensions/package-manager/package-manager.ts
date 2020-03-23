@@ -12,11 +12,15 @@ export type installOpts = {
 };
 
 function deleteBitBinFromPkgJson(capsule) {
+  // try {
   const packageJsonPath = 'package.json';
   const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-  const packageJson = JSON.parse(pjsonString);
-  delete packageJson.dependencies['bit-bin'];
-  capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  if (pjsonString) {
+    const packageJson = JSON.parse(pjsonString);
+    delete packageJson.dependencies['bit-bin'];
+    capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  }
+  // } catch (e) {}
 }
 
 function linkBitBinInCapsule(capsule) {

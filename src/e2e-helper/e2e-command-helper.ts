@@ -341,7 +341,7 @@ export default class CommandHelper {
     return result;
   }
 
-  ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
+  ejectConf(id = 'bar/foo', options?: Record<string, any>) {
     const value = options
       ? Object.keys(options) // $FlowFixMe
           .map(key => `-${key} ${options[key]}`)

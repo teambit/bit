@@ -9,7 +9,12 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import WorkspaceConfig from './config/workspace-config';
+import LegacyWorkspaceConfig from './config/workspace-config';
+import {
+  WorkspaceConfig,
+  WorkspaceConfigFileProps,
+  WorkspaceConfigFileInputProps
+} from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -22,7 +27,8 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS
+  DEPENDENCIES_FIELDS,
+  DEFAULT_LANGUAGE
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -48,7 +54,6 @@ import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import { InvalidComponent } from './component/consumer-component';
 import { BitIdStr } from '../bit-id/bit-id';
-import { WorkspaceConfigProps } from './config/workspace-config';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
@@ -72,6 +77,7 @@ import ShowDoctorError from '../error/show-doctor-error';
 import { EnvType } from '../legacy-extensions/env-extension-types';
 import loadFlattenedDependenciesForCapsule from './component-ops/load-flattened-dependencies';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
+import PackageJsonFile from './component/package-json-file';
 
 type ConsumerProps = {
   projectPath: string;
@@ -80,8 +86,8 @@ type ConsumerProps = {
   created?: boolean;
   isolated?: boolean;
   bitMap: BitMap;
-  addedGitHooks?: string[] | null | undefined;
-  existingGitHooks: string[] | null | undefined;
+  addedGitHooks?: string[] | undefined;
+  existingGitHooks: string[] | undefined;
 };
 
 type ComponentStatus = {
@@ -104,8 +110,8 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
-  addedGitHooks: string[] | null | undefined; // list of git hooks added during init process
-  existingGitHooks: string[] | null | undefined; // list of git hooks already exists during init process
+  addedGitHooks: string[] | undefined; // list of git hooks added during init process
+  existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _driver: Driver;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -113,6 +119,7 @@ export default class Consumer {
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
+  packageJson: any;
 
   constructor({
     projectPath,
@@ -134,15 +141,16 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
+    this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get compiler(): Promise<CompilerExtension | null | undefined> {
+  get compiler(): Promise<CompilerExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(COMPILER_ENV_TYPE);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get tester(): Promise<TesterExtension | null | undefined> {
+  get tester(): Promise<TesterExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(TESTER_ENV_TYPE);
   }
@@ -150,7 +158,7 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get driver(): Driver {
     if (!this._driver) {
-      this._driver = Driver.load(this.config.lang);
+      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
     }
     return this._driver;
   }
@@ -159,9 +167,8 @@ export default class Consumer {
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
-        this.config.componentsDefaultDirectory,
-        this.config.dependenciesDirectory,
-        this.config.ejectedEnvsDirectory
+        this.config.workspaceSettings.componentsDefaultDirectory,
+        this.config.workspaceSettings._dependenciesDirectory
       );
     }
     return this._dirStructure;
@@ -172,12 +179,9 @@ export default class Consumer {
     return this.bitMap.getAllBitIds();
   }
 
-  async getEnv(
-    envType: EnvType,
-    context: Record<string, any> | null | undefined
-  ): Promise<EnvExtension | null | undefined> {
+  async getEnv(envType: EnvType, context: Record<string, any> | undefined): Promise<EnvExtension | undefined> {
     const props = this._getEnvProps(envType, context);
-    if (!props) return null;
+    if (!props) return undefined;
     return makeEnv(envType, props);
   }
 
@@ -195,7 +199,7 @@ export default class Consumer {
       logger.info(`consumer.cleanTmpFolder, deleting ${tmpPath}`);
       return fs.remove(tmpPath);
     }
-    return null;
+    return undefined;
   }
 
   /**
@@ -289,16 +293,15 @@ export default class Consumer {
   }
 
   getParsedId(id: BitIdStr): BitId {
-    // $FlowFixMe, bitId is always defined as shouldThrow is true
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const bitId: BitId = this.bitMap.getExistingBitId(id);
+    // @ts-ignore (we know it will never be undefined since it pass throw=true)
+    const bitId: BitId = this.bitMap.getExistingBitId(id, true);
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version || LATEST);
   }
 
-  getParsedIdIfExist(id: BitIdStr): BitId | null | undefined {
-    const bitId: BitId | null | undefined = this.bitMap.getExistingBitId(id, false);
-    if (!bitId) return null;
+  getParsedIdIfExist(id: BitIdStr): BitId | undefined {
+    const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false);
+    if (!bitId) return undefined;
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
   }
@@ -319,10 +322,10 @@ export default class Consumer {
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
-  async loadComponentFromModelIfExist(id: BitId): Promise<Component | null | undefined> {
-    if (!id.version) return null;
+  async loadComponentFromModelIfExist(id: BitId): Promise<Component | undefined> {
+    if (!id.version) return undefined;
     return this.loadComponentFromModel(id).catch(err => {
-      if (err instanceof ComponentNotFound) return null;
+      if (err instanceof ComponentNotFound) return undefined;
       throw err;
     });
   }
@@ -427,7 +430,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.config.saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config.workspaceSettings._saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -444,7 +447,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.config.distEntry && !this.config.distTarget;
+    return !this.config.workspaceSettings._distEntry && !this.config.workspaceSettings._distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -574,7 +577,7 @@ export default class Consumer {
     const getStatus = async () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const status: ComponentStatus = {};
-      const componentFromModel: ModelComponent | null | undefined = await this.scope.getModelComponentIfExist(id);
+      const componentFromModel: ModelComponent | undefined = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
         // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
@@ -636,11 +639,11 @@ export default class Consumer {
   async tag(
     ids: BitIds,
     message: string,
-    exactVersion: string | null | undefined,
+    exactVersion: string | undefined,
     releaseType: semver.ReleaseType,
-    force: boolean | null | undefined,
-    verbose: boolean | null | undefined,
-    ignoreUnresolvedDependencies: boolean | null | undefined,
+    force: boolean | undefined,
+    verbose: boolean | undefined,
+    ignoreUnresolvedDependencies: boolean | undefined,
     ignoreNewestVersion: boolean,
     skipTests = false,
     skipAutoTag: boolean,
@@ -701,10 +704,10 @@ export default class Consumer {
       componentMap: ComponentMap,
       bitId: BitId,
       bindingPrefix: string
-    ): PathRelative | null | undefined => {
+    ): PathRelative | undefined => {
       if (componentMap.rootDir) return componentMap.rootDir;
       // it's author
-      if (!bitId.hasScope()) return null;
+      if (!bitId.hasScope()) return undefined;
       return getNodeModulesPathOfComponent(bindingPrefix, bitId);
     };
 
@@ -763,9 +766,9 @@ export default class Consumer {
   static create(
     projectPath: PathOsBasedAbsolute,
     noGit = false,
-    workspaceConfigProps: WorkspaceConfigProps
+    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, workspaceConfigProps);
+    return this.ensure(projectPath, noGit, workspaceConfigFileProps);
   }
 
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
@@ -780,14 +783,14 @@ export default class Consumer {
   static async ensure(
     projectPath: PathOsBasedAbsolute,
     standAlone = false,
-    workspaceConfigProps: WorkspaceConfigProps
+    workspaceConfigFileProps?: WorkspaceConfigFileInputProps
   ): Promise<Consumer> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
-    const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
+    const configP = WorkspaceConfig.ensure(projectPath, workspaceConfigFileProps, { standAlone });
     const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
@@ -817,7 +820,7 @@ export default class Consumer {
     const config = await WorkspaceConfig.ensure(consumerPath);
     // isolated environments in the workspace rely on a physical node_modules folder
     // for this reason, we must use a package manager that supports one
-    config.packageManager = 'npm';
+    config.workspaceSettings._setPackageManager('npm');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Consumer({
       projectPath: consumerPath,
@@ -835,7 +838,7 @@ export default class Consumer {
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) {
       return path.join(projectPath, BIT_HIDDEN_DIR);
     }
-    return null;
+    return undefined;
   }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const consumerInfo = await getConsumerInfo(currentPath);
@@ -843,10 +846,9 @@ export default class Consumer {
       return Promise.reject(new ConsumerNotFound());
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
+      consumerInfo.consumerConfig = await WorkspaceConfig.loadIfExist(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -925,9 +927,9 @@ export default class Consumer {
     return Promise.all(dependentComponentsP);
   }
 
-  async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: string | null | undefined }) {
+  async ejectConf(componentId: BitId) {
     const component = await this.loadComponent(componentId);
-    return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
+    return component.writeConfig(this);
   }
 
   async injectConf(componentId: BitId, force: boolean) {
@@ -935,8 +937,8 @@ export default class Consumer {
     return component.injectConfig(this.getPath(), this.bitMap, force);
   }
 
-  _getEnvProps(envType: EnvType, context: Record<string, any> | null | undefined) {
-    const envs = this.config.getEnvsByType(envType);
+  _getEnvProps(envType: EnvType, context: Record<string, any> | undefined) {
+    const envs = this.config._getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];

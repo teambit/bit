@@ -39,8 +39,6 @@ export type AllPackagesDependencies = {
 
 export type FileType = {
   isTestFile: boolean;
-  isCompilerFile: boolean;
-  isTesterFile: boolean;
 };
 
 interface UntrackedFileEntry {
@@ -83,6 +81,7 @@ export default class DependencyResolver {
   componentId: BitId;
   componentMap: ComponentMap;
   componentFromModel: Component;
+  extensionsAddedConfig: Record<string, any>;
   consumerPath: PathOsBased;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tree: Tree;
@@ -103,6 +102,7 @@ export default class DependencyResolver {
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
+    this.extensionsAddedConfig = this.component.extensionsAddedConfig;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
@@ -163,9 +163,7 @@ export default class DependencyResolver {
   ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
-    this.setCompilerFiles();
-    this.setTesterFiles();
-    const allFiles = [...nonTestsFiles, ...testsFiles, ...this.compilerFiles, ...this.testerFiles];
+    const allFiles = [...nonTestsFiles, ...testsFiles];
     const getDependenciesTree = async () => {
       return driver.getDependencyTree(
         bitDir,
@@ -173,7 +171,7 @@ export default class DependencyResolver {
         allFiles,
         this.component.bindingPrefix,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.resolveModules,
+        this.consumer.config.workspaceSettings._resolveModules,
         cacheResolvedDependencies,
         cacheProjectAst
       );
@@ -243,9 +241,7 @@ export default class DependencyResolver {
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
       const fileType: FileType = {
-        isTestFile: R.contains(file, testsFiles),
-        isCompilerFile: R.contains(file, this.compilerFiles),
-        isTesterFile: R.contains(file, this.testerFiles)
+        isTestFile: R.contains(file, testsFiles)
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
@@ -330,8 +326,8 @@ export default class DependencyResolver {
     });
   }
 
-  traverseTreeForComponentId(depFile: PathLinux): BitId | null | undefined {
-    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return;
+  traverseTreeForComponentId(depFile: PathLinux): BitId | undefined {
+    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return undefined;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
     }
@@ -367,6 +363,7 @@ export default class DependencyResolver {
         }
       }
     }
+    return undefined;
   }
 
   getComponentIdByDepFile(
@@ -442,7 +439,7 @@ export default class DependencyResolver {
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): BitId | null | undefined {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.config.resolveModules;
+    const resolveModules = this.consumer.config.workspaceSettings._resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])
@@ -464,54 +461,18 @@ export default class DependencyResolver {
         `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
-    const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
-    const isTesterDependency = this.componentFromModel.testerDependencies.getById(componentId);
-    const isEnvDependency = isCompilerDependency || isTesterDependency;
-    const isRelativeToConfigDir = Boolean(isEnvDependency && this.componentMap.configDir && this.componentMap.rootDir);
-    const originallySource: PathLinux = this.getOriginallySourcePath(
-      isRelativeToConfigDir,
-      rootDir,
-      depFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      isCompilerDependency
-    );
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
+
+    const relativePath: RelativePath | undefined = dependency.relativePaths.find(r => r.sourceRelativePath === depFile);
     if (!relativePath) {
       throw new ShowDoctorError(
-        `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
+        `unable to find ${relativePath} path in the dependencies relativePaths of ${this.componentFromModel.id}`
       );
     }
     return {
       componentId: dependency.id,
       destination: relativePath.destinationRelativePath,
-      // in the case of isRelativeToConfigDir, sourceRelativePath should be relative to configDir
-      depFileRelative: isRelativeToConfigDir ? originallySource : depFile
+      depFileRelative: depFile
     };
-  }
-
-  getOriginallySourcePath(
-    isRelativeToConfigDir: boolean,
-    rootDir: PathLinux,
-    depFile: PathLinux,
-    isCompilerDependency: boolean
-  ): PathLinux {
-    if (isRelativeToConfigDir) {
-      // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
-      const resolvedSource = path.resolve(rootDir, depFile);
-      // @todo: use the new ConfigDir class that Gilad added once it is merged.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.componentMap.configDir,
-        this.componentMap.rootDir
-      );
-      const configDir = isCompilerDependency ? compilerConfigDir : testerConfigDir;
-      const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
-      return pathRelativeLinux(absoluteConfigDir, resolvedSource);
-    }
-    return depFile;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested = false) {
@@ -544,9 +505,7 @@ export default class DependencyResolver {
           // Recursively check for untracked files (to show them all in bit status)
           // for nested files we don't really care about the file types since we won't do all the checking
           const dummyFileType: FileType = {
-            isTestFile: false,
-            isCompilerFile: false,
-            isTesterFile: false
+            isTestFile: false
           };
           this.processDepFiles(depFile.file, dummyFileType, true);
         }
@@ -565,10 +524,6 @@ export default class DependencyResolver {
     depFileObject: FileObject,
     nested = false
   ): boolean {
-    // if the dependency of an envFile is already included in the env files of the component, we're good
-    if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return false;
-    if (fileType.isTesterFile && this.testerFiles.includes(depFile)) return false;
-
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
@@ -792,10 +747,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!packages || R.isEmpty(packages)) return;
     if (fileType.isTestFile) {
       Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
-    } else if (fileType.isCompilerFile) {
-      Object.assign(this.allPackagesDependencies.compilerPackageDependencies, packages);
-    } else if (fileType.isTesterFile) {
-      Object.assign(this.allPackagesDependencies.testerPackageDependencies, packages);
     } else {
       Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
@@ -877,7 +828,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       'got an error from the driver while resolving dependencies'
     );
     logger.error('dependency-resolver.processErrors', error);
-    // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
     else this.issues.resolveErrors[originFile] = error.message;
@@ -900,8 +850,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!this.componentFromModel) return; // not relevant, the component is not imported
     const getDependencies = (): Dependencies => {
       if (fileType.isTestFile) return this.componentFromModel.devDependencies;
-      if (fileType.isCompilerFile) return this.componentFromModel.compilerDependencies;
-      if (fileType.isTesterFile) return this.componentFromModel.testerDependencies;
       return this.componentFromModel.dependencies;
     };
     const dependencies: Dependencies = getDependencies();
@@ -930,18 +878,9 @@ either, use the ignore file syntax or change the require statement to have a mod
   private _pushToDependenciesIfNotExist(dependencyId: BitId, dependency: Dependency, fileType: FileType) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependencyId);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependencyId);
-    const existingCompilerDependency = this.getExistingDependency(
-      this.allDependencies.compilerDependencies,
-      dependencyId
-    );
-    const existingTesterDependency = this.getExistingDependency(this.allDependencies.testerDependencies, dependencyId);
     if (fileType.isTestFile && !existingDevDependency) {
       this.allDependencies.devDependencies.push(dependency);
-    } else if (fileType.isCompilerFile && !existingCompilerDependency) {
-      this.allDependencies.compilerDependencies.push(dependency);
-    } else if (fileType.isTesterFile && !existingTesterDependency) {
-      this.allDependencies.testerDependencies.push(dependency);
-    } else if (!fileType.isTestFile && !fileType.isCompilerFile && !fileType.isTesterFile && !existingDependency) {
+    } else if (!fileType.isTestFile && !existingDependency) {
       this.allDependencies.dependencies.push(dependency);
     }
   }
@@ -949,10 +888,6 @@ either, use the ignore file syntax or change the require statement to have a mod
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
     if (fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
-    } else if (fileType.isCompilerFile) {
-      this.allDependencies.compilerDependencies.push(currentComponentsDeps);
-    } else if (fileType.isTesterFile) {
-      this.allDependencies.testerDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
@@ -1067,32 +1002,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     return R.differenceWith(cmp, targetSpecifiers, originSpecifiers);
   }
 
-  setCompilerFiles() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const compilerFiles = shouldProcessEnvDependencies(this.component.compiler) ? this.component.compiler.files : [];
-    this.compilerFiles = this.getRelativeEnvFiles(compilerFiles);
-  }
-
-  setTesterFiles() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const testerFiles = shouldProcessEnvDependencies(this.component.tester) ? this.component.tester.files : [];
-    this.testerFiles = this.getRelativeEnvFiles(testerFiles);
-  }
-
-  getRelativeEnvFiles(files: Record<string, any>[]): PathLinux[] {
-    const getPathsRelativeToComponentRoot = () => {
-      const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.getRootDir());
-      return files.map(file => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const envAbsolute = file.path;
-        return path.relative(rootDirAbsolute, envAbsolute);
-      });
-    };
-    return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
-  }
-
   /**
    * For author, the peer-dependencies are set in the root package.json
    * For imported components, we don't want to change the peerDependencies of the author, unless
@@ -1130,14 +1039,14 @@ either, use the ignore file syntax or change the require statement to have a mod
    * returns `package.json` of the component when it's imported, or `package.json` of the workspace
    * when it's authored.
    */
-  _getPackageJson(): Record<string, any> | null | undefined {
+  _getPackageJson(): Record<string, any> | undefined {
     const componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     if (isAuthor) {
-      return this.consumer.config.packageJsonObject;
+      return this.consumer.packageJson.packageJsonObject;
     }
-    if (this.component.packageJsonFile) {
+    if (this.component.packageJsonFile && this.component.packageJsonFile.fileExist) {
       return this.component.packageJsonFile.packageJsonObject;
     }
     if (this.componentFromModel) {
@@ -1148,7 +1057,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       const packageJson = PackageJsonFile.createFromComponent(componentMap.rootDir, this.componentFromModel);
       return packageJson.packageJsonObject;
     }
-    return null;
+    return undefined;
   }
 
   /**
