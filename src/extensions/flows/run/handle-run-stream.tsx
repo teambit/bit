@@ -50,7 +50,6 @@ function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter, ve
   taskStream.subscribe({
     next(data: any) {
       // console.log('\ntask:', data.type);
-      debugger;
       if (data.type === 'task:stdout' && verbose) {
         reporter.createLogger(data.id).info(data.value);
       } else if (data.type === 'task:stderr') {
