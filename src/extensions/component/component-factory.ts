@@ -14,11 +14,10 @@ export default class ComponentFactory {
     /**
      * instance of the capsule orchestrator
      */
-    private isolateEnv: Isolator
-    /**
-     * registry for config modifications funcion
-     */
-  ) // private configsRegistry: Registry
+    private isolateEnv: Isolator // private configsRegistry: Registry
+  ) /**
+   * registry for config modifications funcion
+   */
   {}
 
   registerAddConfig(extensionId, configFunc: ConfigFunc) {

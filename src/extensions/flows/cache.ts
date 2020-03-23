@@ -1,9 +1,10 @@
+/* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createHash } from 'crypto';
 import { path, equals } from 'ramda';
 import { promises as fs } from 'fs';
-import { lock } from 'proper-lockfile';
+import { lock, unlock } from 'proper-lockfile';
 import { join } from 'path';
 import { CACHE_ROOT } from '../../constants';
 import { Capsule } from '../isolator/capsule';
@@ -30,24 +31,26 @@ export class ExecutionCache {
   }
 
   async saveHashValue(capsule: Capsule, name: string): Promise<void> {
-    const release = await lock(this.pathToCache, { realpath: false });
+    // const release = await lock(this.pathToCache, { realpath: false });
+    await safeGetLock(this.pathToCache);
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
     const hash = this.hash(capsule, name);
     content[capsule.wrkDir] = content[capsule.wrkDir] || {};
     content[capsule.wrkDir][name] = hash;
     await fs.writeFile(this.pathToCache, JSON.stringify(content, null, 2));
-    return release();
+    return unlock(this.pathToCache);
   }
 
   async getCacheValue(wrkDir: string, name: string): Promise<string | undefined> {
-    const release = await lock(this.pathToCache, {
-      realpath: false
-    });
+    // const release = await lock(this.pathToCache, {
+    //   realpath: false
+    // });
+    await safeGetLock(this.pathToCache);
     const file = await safeReadFile(this.pathToCache);
     const content = file ? JSON.parse(file) : {};
     const cacheValue = path([wrkDir, name], content);
-    await release();
+    await unlock(this.pathToCache);
     return cacheValue;
   }
 
@@ -70,4 +73,37 @@ async function safeReadFile(filePath: string) {
     // eslint-disable-next-line no-empty
   } catch (e) {}
   return content;
+}
+
+async function safeGetLock(
+  cachePath: string,
+  options: {
+    init: (somePath: string) => Promise<void>;
+    timeout: number;
+  } = {
+    init: (somePath: string) => fs.writeFile(somePath, '{}', 'utf8'),
+    timeout: 100
+  }
+) {
+  let lockState: 'UNLOCK' | 'LOCK' | 'UNLOCKERROR' = 'UNLOCK';
+  try {
+    await lock(cachePath, { retries: 5, update: options.timeout });
+    lockState = 'LOCK';
+  } catch (e) {
+    if (e.code === 'ENOENT') {
+      await options.init(cachePath);
+    } else {
+      lockState = 'UNLOCKERROR';
+      // console.log('something else: ', e.code) should log this
+    }
+  }
+  return lockState === 'UNLOCK'
+    ? safeGetLock(cachePath)
+    : lockState === 'UNLOCKERROR'
+    ? new Promise(function(resolve) {
+        setTimeout(function() {
+          return safeGetLock(cachePath).then(() => resolve());
+        }, options.timeout);
+      })
+    : undefined;
 }
