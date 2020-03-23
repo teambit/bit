@@ -116,8 +116,8 @@ export default class ComponentLoader {
       return handleError(err);
     }
     component.loadedFromFileSystem = true;
-    component.originallySharedDir = componentMap.originallySharedDir || null;
-    component.wrapDir = componentMap.wrapDir || null;
+    component.originallySharedDir = componentMap.originallySharedDir || undefined;
+    component.wrapDir = componentMap.wrapDir || undefined;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
