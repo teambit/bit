@@ -66,7 +66,7 @@ describe('flows functionality', function() {
       taskOutput = helper.command.runTask('build');
     });
     // @todo: improve!
-    it('should do something useful', () => {
+    xit('should do something useful', () => {
       expect(taskOutput).to.have.string('result');
     });
     // @todo: move it from here.
