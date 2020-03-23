@@ -34,7 +34,7 @@ describe('bit tag command', function() {
     it('Should not tag component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.fs.createFile('bar', 'foo2.js', fixture);
-      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
 
       helper.bitJson.corrupt();
       try {
@@ -74,12 +74,12 @@ describe('bit tag command', function() {
         helper.fs.createFile('components', 'minor.js');
         helper.fs.createFile('components', 'major.js');
         helper.fs.createFile('components', 'exact.js');
-        helper.command.addComponent('components/*.js', { n: 'components' });
+        helper.command.addComponentAllowFiles('components/*.js', { n: 'components' });
         helper.command.tagAllComponents();
       });
       it('Should not allow invalid semver', () => {
         helper.fs.createFile('components', 'default.js');
-        helper.command.addComponent('components/default.js', { i: 'components/default' });
+        helper.command.addComponentAllowFiles('components/default.js', { i: 'components/default' });
         const version = 'invalidVersion';
         const tag = () => helper.command.tagWithoutMessage('components/default', version);
         expect(tag).to.throw(
@@ -88,7 +88,7 @@ describe('bit tag command', function() {
       });
       it('Should set the version to default version in tag new component', () => {
         helper.fs.createFile('components', 'default.js');
-        helper.command.addComponent('components/default.js', { i: 'components/default' });
+        helper.command.addComponentAllowFiles('components/default.js', { i: 'components/default' });
         output = helper.command.tagComponent('components/default');
         const listOutput = helper.command.listLocalScopeParsed();
         expect(listOutput).to.deep.include({
@@ -117,7 +117,7 @@ describe('bit tag command', function() {
       });
       it('Should set the exact version when specified on new component', () => {
         helper.fs.createFile('components', 'exact-new.js');
-        helper.command.addComponent('components/exact-new.js', { i: 'components/exact-new' });
+        helper.command.addComponentAllowFiles('components/exact-new.js', { i: 'components/exact-new' });
         output = helper.command.tagComponent('components/exact-new 5.12.10', 'message', '-f');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
@@ -129,7 +129,7 @@ describe('bit tag command', function() {
         helper.fs.createFile('components', 'dependency.js');
         const fixture = "import foo from './dependency'";
         helper.fs.createFile('components', 'dependent.js', fixture);
-        helper.command.addComponent('components/dependency.js components/dependent.js', { n: 'components' });
+        helper.command.addComponentAllowFiles('components/dependency.js components/dependent.js', { n: 'components' });
         helper.command.tagAllComponents();
         helper.command.tagComponent('components/dependency', 'message', '-f --major');
         const listOutput = helper.command.listLocalScopeParsed();
@@ -162,7 +162,7 @@ describe('bit tag command', function() {
         helper.scopeHelper.reInitLocalScope();
         helper.fs.createFile('components', 'a.js');
         helper.fs.createFile('components', 'b.js');
-        helper.command.addComponent('components/*.js', { n: 'components' });
+        helper.command.addComponentAllowFiles('components/*.js', { n: 'components' });
       });
       it('Should not allow invalid semver', () => {
         const version = 'invalidVersion';
@@ -232,8 +232,8 @@ describe('bit tag command', function() {
       it('Should set the exact version when specified on new component', () => {
         helper.fs.createFile('components', 'c.js');
         helper.fs.createFile('components', 'd.js');
-        helper.command.addComponent('components/c.js', { i: 'components/c' });
-        helper.command.addComponent('components/d.js', { i: 'components/d' });
+        helper.command.addComponentAllowFiles('components/c.js', { i: 'components/c' });
+        helper.command.addComponentAllowFiles('components/d.js', { i: 'components/d' });
         output = helper.command.tagAllComponents('-f', '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
@@ -269,7 +269,7 @@ describe('bit tag command', function() {
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'foo.spec.js', failingTest);
       helper.npm.installNpmPackage('chai', '4.1.2');
-      helper.command.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
+      helper.command.addComponentAllowFiles('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
       scopeBeforeTagging = helper.scopeHelper.cloneLocalScope();
     });
     it('should throw error if the bit id does not exists', () => {
@@ -286,7 +286,7 @@ describe('bit tag command', function() {
     it.skip('should print warning if the a driver is not installed', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.fs.createFile('bar', 'foo2.js', fixture);
-      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
       // var myargs = logSpy.getCalls()[4].args
       // console.log("args", myargs);
       expect(
@@ -405,7 +405,7 @@ describe('bit tag command', function() {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('', 'file.js');
-      helper.command.addComponent('file.js', { i: 'comp/comp' });
+      helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp' });
       output = helper.command.tagComponent('comp/comp');
     });
 
@@ -426,7 +426,7 @@ describe('bit tag command', function() {
 
         const fileFixture = 'import get from "lodash.isstring"';
         helper.fs.createFile('src', 'file.js', fileFixture);
-        helper.command.addComponent('src/file.js', { i: 'comp/comp' });
+        helper.command.addComponentAllowFiles('src/file.js', { i: 'comp/comp' });
         helper.npm.addNpmPackage('lodash.isstring', '2.0.0');
 
         // Commit, export and import the component to make sure we have root folder defined in the bit.map
@@ -499,8 +499,8 @@ describe('bit tag command', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
-        helper.command.addComponent('file.js', { i: 'comp/comp' });
-        helper.command.addComponent('file2.js', { i: 'comp/comp2' });
+        helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp' });
+        helper.command.addComponentAllowFiles('file2.js', { i: 'comp/comp2' });
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.fs.createFile('', 'file.js', 'console.log()');
@@ -520,8 +520,8 @@ describe('bit tag command', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
-        helper.command.addComponent('file.js', { i: 'comp/comp' });
-        helper.command.addComponent('file2.js', { i: 'comp/comp2' });
+        helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp' });
+        helper.command.addComponentAllowFiles('file2.js', { i: 'comp/comp2' });
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
@@ -557,8 +557,8 @@ describe('bit tag command', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'file.js');
         helper.fs.createFile('', 'file2.js');
-        helper.command.addComponent('file.js', { i: 'comp/comp' });
-        helper.command.addComponent('file2.js', { i: 'comp/comp2' });
+        helper.command.addComponentAllowFiles('file.js', { i: 'comp/comp' });
+        helper.command.addComponentAllowFiles('file2.js', { i: 'comp/comp2' });
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
@@ -631,8 +631,8 @@ describe('bit tag command', function() {
         helper.fs.createFile('src', 'untracked.js');
         helper.fs.createFile('src', 'untracked2.js');
 
-        helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.command.addComponent('src/b.js', { i: 'src/b' });
+        helper.command.addComponentAllowFiles('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.command.addComponentAllowFiles('src/b.js', { i: 'src/b' });
 
         const tagAll = () => helper.command.tagAllComponents();
         try {
@@ -686,8 +686,8 @@ describe('bit tag command', function() {
         helper.fs.createFile('src', 'untracked.js');
         helper.fs.createFile('src', 'untracked2.js');
 
-        helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.command.addComponent('src/b.js', { i: 'src/b' });
+        helper.command.addComponentAllowFiles('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.command.addComponentAllowFiles('src/b.js', { i: 'src/b' });
 
         const tagOne = () => helper.command.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
         try {
@@ -717,8 +717,8 @@ describe('bit tag command', function() {
         helper.fs.createFile('src', 'untracked.js');
         helper.fs.createFile('src', 'untracked2.js');
 
-        helper.command.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.command.addComponent('src/b.js', { i: 'src/b' });
+        helper.command.addComponentAllowFiles('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
+        helper.command.addComponentAllowFiles('src/b.js', { i: 'src/b' });
 
         const tagAll = () => helper.command.tagAllComponents('--ignore-unresolved-dependencies');
         try {
@@ -754,7 +754,7 @@ describe('bit tag command', function() {
         "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('', 'main.js', mainFileFixture);
       helper.fs.createFile('', 'second.js', secondFileFixture);
-      helper.command.addComponent('main.js second.js', { m: 'main.js', i: 'comp/comp' });
+      helper.command.addComponentAllowFiles('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
       helper.command.tagAllComponents();
 
@@ -783,7 +783,7 @@ describe('bit tag command', function() {
         "const isType = require('./utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('', 'main.js', mainFileFixture);
       helper.fs.createFile('', 'second.js', secondFileFixture);
-      helper.command.addComponent('main.js second.js', { m: 'main.js', i: 'comp/comp' });
+      helper.command.addComponentAllowFiles('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
       helper.command.tagAllComponents();
 
@@ -810,7 +810,7 @@ describe('bit tag command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should tag component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -827,7 +827,7 @@ describe('bit tag command', function() {
       let errMsg;
       helper.fs.createFile('bar', 'foo.js', '');
       helper.fs.createFile('bar', 'index.js', 'var foo = require("./foo.js")');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
       helper.fs.deletePath('bar/foo.js');
       try {
         helper.command.runCmd('bit tag -a');
@@ -960,8 +960,8 @@ describe('bit tag command', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.command.addComponent('utils/is-type.js');
-      helper.command.addComponent('utils/is-string.js');
+      helper.command.addComponentAllowFiles('utils/is-type.js');
+      helper.command.addComponentAllowFiles('utils/is-string.js');
       output = helper.general.runWithTryCatch('bit tag is-string --allow-relative-paths');
     });
     it('should show a descriptive error message', () => {

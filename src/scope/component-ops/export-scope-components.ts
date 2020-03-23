@@ -382,10 +382,20 @@ async function convertToCorrectScope(
         dependency.id = updatedScope;
       }
     });
-    version.flattenedDependencies = getBitIdsWithUpdatedScope(version.flattenedDependencies);
-    version.flattenedDevDependencies = getBitIdsWithUpdatedScope(version.flattenedDevDependencies);
-    version.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(version.flattenedCompilerDependencies);
-    version.flattenedTesterDependencies = getBitIdsWithUpdatedScope(version.flattenedTesterDependencies);
+    const flattenedFields = [
+      'flattenedDependencies',
+      'flattenedDevDependencies',
+      'flattenedCompilerDependencies',
+      'flattenedTesterDependencies'
+    ];
+    flattenedFields.forEach(flattenedField => {
+      const ids: BitIds = version[flattenedField];
+      const needsChange = ids.some(id => id.scope !== remoteScope);
+      if (needsChange) {
+        version[flattenedField] = getBitIdsWithUpdatedScope(ids);
+        hasChanged = true;
+      }
+    });
     return hasChanged;
   }
 

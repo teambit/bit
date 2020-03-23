@@ -104,7 +104,10 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
-import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
+import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
+import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
+import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
+import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -140,6 +143,10 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [
+    OutsideRootDir,
+    err => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`
+  ],
   [
     AddingIndividualFiles,
     err =>
@@ -271,6 +278,12 @@ To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`
   ],
   [ScopeNotFound, err => `error: scope not found at ${chalk.bold(err.scopePath)}`],
+  [
+    IncorrectRootDir,
+    err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.
+an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths`
+  ],
   [
     ScopeJsonNotFound,
     err =>
@@ -427,6 +440,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
         err.newId
       )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
+  [FailedLoadForTag, err => err.getErrorMessage()],
   [
     NoFiles,
     err =>

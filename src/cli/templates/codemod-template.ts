@@ -14,6 +14,10 @@ export function codemodTemplate(results: CodemodResult[]): string {
 
   const numOfCodemod = results.filter(r => r.changedFiles.length).length;
   const reportTitle = chalk.underline(`rewired ${numOfCodemod} components\n`);
+  const reportFooter =
+    numOfCodemod > 0
+      ? chalk.yellow('\nif you have a compiler set up, please run "bit build" to update the dists as well')
+      : '';
 
-  return reportTitle + reportComponents;
+  return reportTitle + reportComponents + reportFooter;
 }

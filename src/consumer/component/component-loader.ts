@@ -92,7 +92,19 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    let component;
+    let component: Component;
+    const handleError = error => {
+      if (throwOnFailure) throw error;
+
+      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
+        id: id.toString()
+      });
+      if (Component.isComponentInvalidByErrorType(error)) {
+        invalidComponents.push({ id, error, component });
+        return null;
+      }
+      throw error;
+    };
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
@@ -101,16 +113,7 @@ export default class ComponentLoader {
         consumer: this.consumer
       });
     } catch (err) {
-      if (throwOnFailure) throw err;
-
-      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
-        id: id.toString()
-      });
-      if (Component.isComponentInvalidByErrorType(err)) {
-        invalidComponents.push({ id, error: err });
-        return null;
-      }
-      throw err;
+      return handleError(err);
     }
     component.loadedFromFileSystem = true;
     component.originallySharedDir = componentMap.originallySharedDir || null;
@@ -144,7 +147,12 @@ export default class ComponentLoader {
       addExtensionsAsDevDependencies(component);
       updateDependenciesVersions(this.consumer, component);
     };
-    await loadDependencies();
+    try {
+      await loadDependencies();
+    } catch (err) {
+      return handleError(err);
+    }
+
     return component;
   }
 
@@ -208,6 +216,12 @@ export default class ComponentLoader {
     }
     const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
     return remoteComponent.component;
+  }
+
+  clearComponentsCache() {
+    this._componentsCache = {};
+    this._componentsCacheForCapsule = {};
+    this.cacheResolvedDependencies = {};
   }
 
   _isAngularProject(): boolean {

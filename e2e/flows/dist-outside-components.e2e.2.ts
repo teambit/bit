@@ -30,28 +30,6 @@ describe('dists file are written outside the components dir', function() {
     /**
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
-     *
-     * Expected structure after importing bar/foo in another project
-     ./components/bar/foo/index.js
-     ./components/bar/foo/package.json
-     ./components/bar/foo/foo.js
-     ./components/.dependencies/utils/is-type/remote-scope/0.0.1/bit.json
-     ./components/.dependencies/utils/is-type/remote-scope/0.0.1/index.js
-     ./components/.dependencies/utils/is-type/remote-scope/0.0.1/utils/is-type.js
-     ./components/.dependencies/utils/is-type/remote-scope/0.0.1/package.json
-     ./components/.dependencies/utils/is-string/remote-scope/0.0.1/bit.json
-     ./components/.dependencies/utils/is-string/remote-scope/0.0.1/index.js
-     ./components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string.js
-     ./components/.dependencies/utils/is-string/remote-scope/0.0.1/package.json
-     ./dist/components/bar/foo/index.js
-     ./dist/components/bar/foo/foo.js
-     ./dist/components/bar/foo/foo.js.map
-     ./dist/components/.dependencies/utils/is-type/remote-scope/0.0.1/index.js
-     ./dist/components/.dependencies/utils/is-type/remote-scope/0.0.1/utils/is-type.js.map
-     ./dist/components/.dependencies/utils/is-type/remote-scope/0.0.1/utils/is-type.js
-     ./dist/components/.dependencies/utils/is-string/remote-scope/0.0.1/index.js
-     ./dist/components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string.js.map
-     ./dist/components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string.js
      */
     before(() => {
       helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
@@ -93,7 +71,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from '${helper.general.getRequireBitPath('utils', 'is-string')}';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.fs.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
+        helper.fs.createFile('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.build();
       });
@@ -229,6 +207,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       });
     });
   });
+  // legacy test as it checks the removal of shared-dir
   describe('bit build', () => {
     let localConsumerFiles;
     let clonedScope;
@@ -236,7 +215,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       helper.scopeHelper.getClonedLocalScope(scopeWithCompiler);
       helper.scopeHelper.reInitRemoteScope();
       helper.fs.createFile(path.normalize('src/bar'), 'foo.js');
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponentLegacy('src/bar/foo.js', { i: 'bar/foo' });
       clonedScope = helper.scopeHelper.cloneLocalScope();
     });
     describe('as author', () => {
@@ -271,7 +250,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as imported', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(clonedScope);
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsLegacy();
         helper.command.exportAllComponents();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
@@ -382,15 +361,15 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.bitJson.write(bitJson);
 
       helper.fs.createFile('src/utils', 'is-type.js', fixtures.isTypeES6);
-      helper.command.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.command.addComponentAllowFiles('src/utils/is-type.js', { i: 'utils/is-type' });
       const isStringFixture = `import isType from 'utils/is-type';
  export default function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('src/utils', 'is-string.js', isStringFixture);
-      helper.command.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.command.addComponentAllowFiles('src/utils/is-string.js', { i: 'utils/is-string' });
       const fooBarFixture = `import isString from 'utils/is-string';
 export default function foo() { return isString() + ' and got foo'; };`;
       helper.fs.createFile('src/bar', 'foo.js', fooBarFixture);
-      helper.command.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo' });
 
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
@@ -414,7 +393,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from 'utils/is-string';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.fs.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
+        helper.fs.createFile('components/bar/foo/src/bar', 'foo.js', fooBarFixtureV2); // update component
         helper.scopeHelper.addRemoteEnvironment();
         helper.command.build();
       });
