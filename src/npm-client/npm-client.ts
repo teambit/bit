@@ -69,10 +69,10 @@ type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'librarian' | 'npm' | 'yarn';
-  packageManagerArgs: string[];
-  packageManagerProcessOptions: Record<string, any>;
-  useWorkspaces: boolean;
+  packageManager?: 'librarian' | 'npm' | 'yarn';
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Record<string, any>;
+  useWorkspaces?: boolean;
   dirs: string[];
   rootDir: string | null | undefined; // Used for yarn workspace
   installRootPackageJson: boolean;

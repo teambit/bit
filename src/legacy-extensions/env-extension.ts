@@ -1,6 +1,5 @@
 import R from 'ramda';
 import * as path from 'path';
-import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import {
@@ -12,28 +11,19 @@ import {
 } from './env-extension-types';
 import { BaseExtensionProps, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
-import ExtensionFile from './extension-file';
-import { Repository } from '../scope/objects';
-import { pathJoinLinux, sortObject, sha1 } from '../utils';
-import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
-import { PathOsBased } from '../utils/path';
+import { sortObject, sha1 } from '../utils';
 import { EnvExtensionObject } from '../consumer/config/abstract-config';
 import { ComponentWithDependencies } from '../scope';
-import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT, DEPENDENCIES_FIELDS } from '../constants';
 import { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
-import WorkspaceConfig from '../consumer/config/workspace-config';
+import { WorkspaceConfig } from '../extensions/workspace-config';
 import ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
-import { Dependencies } from '../consumer/component/dependencies';
-import ConfigDir from '../consumer/bit-map/config-dir';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import RemovePath from '../consumer/component/sources/remove-path';
-import Consumer from '../consumer/consumer';
 import { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
 import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
@@ -47,17 +37,14 @@ export type EnvPackages = {
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
-  dynamicPackageDependencies: Record<string, any> | null | undefined;
-  files: ExtensionFile[];
+  dynamicPackageDependencies: Record<string, any> | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
 
   /**
    * Return the action
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get action(): Function | null | undefined {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  get action(): Function | undefined {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.script && this.script.action && typeof this.script.action === 'function') {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -90,7 +77,6 @@ export default class EnvExtension extends BaseExtension {
     super(extensionProps);
     this.envType = extensionProps.envType;
     this.dynamicPackageDependencies = extensionProps.dynamicPackageDependencies;
-    this.files = extensionProps.files;
   }
 
   async install(
@@ -122,16 +108,14 @@ export default class EnvExtension extends BaseExtension {
 
   toModelObject(): EnvExtensionModel {
     const baseObject: BaseExtensionModel = super.toModelObject();
-    const files = this.files.map(file => file.toModelObject());
-    const modelObject = { files, ...baseObject };
+    const modelObject = { ...baseObject };
     return modelObject;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toObject(): Record<string, any> {
     const baseObject: Record<string, any> = super.toObject();
-    const files = this.files;
-    const object = { ...baseObject, files };
+    const object = { ...baseObject };
     return object;
   }
 
@@ -141,88 +125,16 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  toBitJsonObject(ejectedEnvDirectory: string): { [key: string]: EnvExtensionObject } {
+  toBitJsonObject(): { [key: string]: EnvExtensionObject } {
     logger.silly('env-extension, toBitJsonObject');
-    const files = {};
-    this.files.forEach(file => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      files[file.name] = `./${relativePath}`;
-    });
     const envVal = {
       rawConfig: this.dynamicConfig,
-      options: this.options,
-      files
+      options: this.options
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return {
       [this.name]: envVal
     };
-  }
-
-  populateDataToPersist({
-    configDir,
-    envType,
-    deleteOldFiles,
-    consumer,
-    verbose = false
-  }: {
-    configDir: string;
-    envType: EnvType;
-    deleteOldFiles: boolean;
-    consumer: Consumer | null | undefined;
-    verbose: boolean;
-  }): Promise<string> {
-    const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
-    const filePathsToRemove = [];
-
-    this.files.forEach(file => {
-      if (deleteOldFiles) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const pathToDelete = consumer ? consumer.getPathRelativeToConsumer(file.path) : file.path;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        filePathsToRemove.push(pathToDelete);
-      }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
-      file.verbose = verbose;
-    });
-    this.dataToPersist = new DataToPersist();
-    this.files.forEach(file => {
-      const cloned = file.clone();
-      cloned.verbose = verbose;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.dataToPersist.addFile(cloned);
-    });
-    filePathsToRemove.map(file => this.dataToPersist.removePath(new RemovePath(file, true)));
-    return resolvedEjectedEnvsDirectory;
-  }
-
-  /**
-   * Delete env files from file system
-   */
-  async removeFilesFromFs(
-    dependencies: Dependencies,
-    configDir: ConfigDir,
-    envType: EnvType,
-    consumerPath: PathOsBased
-  ): Promise<boolean> {
-    Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const filePaths = this.files.map(file => file.path);
-    const relativeSourcePaths = dependencies.getSourcesPaths();
-    if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const componentDir = this.context.componentDir;
-    const configDirResolved = configDir.getResolved({ componentDir, envType });
-    const configDirPath = configDirResolved.dirPath;
-    const absoluteEnvsDirectory = path.isAbsolute(configDirPath)
-      ? configDirPath
-      : path.join(consumerPath, configDirPath);
-    const linkPaths = relativeSourcePaths.map(relativePath => path.join(absoluteEnvsDirectory, relativePath));
-    return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
 
   async reload(scopePath: string, context?: Record<string, any>): Promise<void> {
@@ -244,14 +156,7 @@ export default class EnvExtension extends BaseExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
-    const files = await ExtensionFile.loadFromBitJsonObject(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      props.files, // $FlowFixMe
-      props.consumerPath,
-      props.bitJsonPath,
-      props.envType
-    );
-    const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
+    const envExtensionProps: EnvExtensionProps = { envType: props.envType, ...baseExtensionProps };
     const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
     const dynamicConfig = EnvExtension.loadDynamicConfig(envExtensionProps);
@@ -260,7 +165,7 @@ export default class EnvExtension extends BaseExtension {
     return envExtensionProps;
   }
 
-  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): EnvPackages | null | undefined {
+  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): EnvPackages | undefined {
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (!getDynamicPackageDependencies || typeof getDynamicPackageDependencies !== 'function') {
       return undefined;
@@ -270,7 +175,6 @@ export default class EnvExtension extends BaseExtension {
       dynamicPackageDependencies = getDynamicPackageDependencies({
         rawConfig: envExtensionProps.rawConfig,
         dynamicConfig: envExtensionProps.dynamicConfig,
-        configFiles: envExtensionProps.files,
         context: envExtensionProps.context
       });
     } catch (err) {
@@ -298,7 +202,6 @@ export default class EnvExtension extends BaseExtension {
       try {
         const dynamicConfig = getDynamicConfig({
           rawConfig: envExtensionProps.rawConfig,
-          configFiles: envExtensionProps.files,
           context: envExtensionProps.context
         });
         return dynamicConfig;
@@ -312,18 +215,9 @@ export default class EnvExtension extends BaseExtension {
   /**
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
-  static async loadFromModelObject(
-    modelObject: EnvExtensionModel & { envType: EnvType },
-    repository: Repository
-  ): Promise<EnvExtensionProps> {
+  static async loadFromModelObject(modelObject: EnvExtensionModel & { envType: EnvType }): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
-    let files = [];
-    if (modelObject.files && !R.isEmpty(modelObject.files)) {
-      const loadFilesP = modelObject.files.map(file => ExtensionFile.loadFromExtensionFileModel(file, repository));
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      files = await Promise.all(loadFilesP);
-    }
-    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };
+    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
     return envExtensionProps;
   }
 
@@ -332,13 +226,7 @@ export default class EnvExtension extends BaseExtension {
   ): Promise<EnvExtensionProps> {
     logger.silly('env-extension, loadFromModelObject');
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
-    let files = [];
-    if (modelObject.files && !R.isEmpty(modelObject.files)) {
-      const loadFilesP = modelObject.files.map(file => ExtensionFile.loadFromExtensionFileSerializedModel(file));
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      files = await Promise.all(loadFilesP);
-    }
-    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };
+    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
     return envExtensionProps;
   }
 
@@ -366,7 +254,7 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string;
     componentOrigin: ComponentOrigin;
     componentFromModel: ConsumerComponent;
-    componentConfig: ComponentConfig | null | undefined;
+    componentConfig: ComponentConfig | undefined;
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined;
     workspaceConfig: WorkspaceConfig;
     envType: EnvType;
@@ -378,7 +266,6 @@ export default class EnvExtension extends BaseExtension {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (componentHasWrittenConfig && componentConfig[envType]) {
       // load from component config.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Object.keys(componentConfig[envType])[0] === MANUALLY_REMOVE_ENVIRONMENT) {
         logger.debug(`env-extension, ${envType} was manually removed from the component config`);
@@ -406,9 +293,9 @@ export default class EnvExtension extends BaseExtension {
       const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
-    if (isAuthor && workspaceConfig[envType]) {
+    if (isAuthor && workspaceConfig[`_${envType}`]) {
       logger.silly(`env-extension, loading ${envType} from the consumer config`);
-      const envConfig = { [envType]: workspaceConfig[envType] };
+      const envConfig = { [envType]: workspaceConfig[`_${envType}`] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     return null;
@@ -422,7 +309,6 @@ export default class EnvExtension extends BaseExtension {
     envModelB: EnvExtensionModel | null | undefined
   ) {
     const sortEnv = env => {
-      env.files = R.sortBy(R.prop('name'), env.files);
       env.config = sortObject(env.config);
       const result = sortObject(env);
       return result;

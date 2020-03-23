@@ -28,6 +28,7 @@ describe('bit add many programmatically', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   const components = [
     {

@@ -17,6 +17,7 @@ chai.use(require('chai-fs'));
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -317,6 +318,7 @@ chai.use(require('chai-fs'));
     describe('components with nested dependencies and compiler', () => {
       before(async () => {
         helper = new Helper();
+        helper.command.setFeatures('legacy-workspace-config');
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         helper.scopeHelper.setNewLocalAndRemoteScopes();

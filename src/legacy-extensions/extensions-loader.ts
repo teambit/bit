@@ -72,9 +72,6 @@ export default (async function loadExtensions(): Promise<Extension[]> {
 
     let rawExtensions = {};
     if (consumer) {
-      rawExtensions = consumer.config.extensions || {};
-      // Only load legacy extensions here
-      rawExtensions = filter(ext => ext.__legacy, rawExtensions);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       consumerPath = consumer.getPath();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

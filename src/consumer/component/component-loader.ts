@@ -165,7 +165,7 @@ export default class ComponentLoader {
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
@@ -174,7 +174,7 @@ export default class ComponentLoader {
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
-        newId = currentId.changeVersion(null);
+        newId = currentId.changeVersion(undefined);
       }
     }
 
@@ -212,11 +212,11 @@ export default class ComponentLoader {
 
   _isAngularProject(): boolean {
     return Boolean(
-      this.consumer.config.packageJsonObject &&
+      this.consumer.packageJson &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies &&
+        this.consumer.packageJson.dependencies &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
+        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }
 

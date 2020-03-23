@@ -11,6 +11,7 @@ describe('component that requires another component internal (not main) file', f
   let npmCiRegistry;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
     npmCiRegistry = new NpmCiRegistry(helper);
   });
   after(() => {

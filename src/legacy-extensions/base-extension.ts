@@ -493,7 +493,7 @@ function _getRegularExtensionPath(name: string, scopePath: string): ExtensionPat
   }
 }
 
-function _getExtensionVersionFromComponentPath(componentPath: string): string | null | undefined {
+function _getExtensionVersionFromComponentPath(componentPath: string): string | undefined {
   const parsed = path.parse(componentPath);
   const version = parsed.base;
   if (!semver.valid(version)) {

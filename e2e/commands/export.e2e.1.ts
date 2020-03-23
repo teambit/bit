@@ -12,6 +12,7 @@ describe('bit export command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   const createFile = (dir, name) => {
     const componentFixture = `module.exports = function foo() { return 'got ${name}'; };`;

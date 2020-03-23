@@ -34,7 +34,6 @@ export interface ManyComponentsWriterParams {
   writePackageJson?: boolean;
   saveDependenciesAsComponents?: boolean;
   writeConfig?: boolean;
-  configDir?: string;
   writeBitDependencies?: boolean;
   createNpmLinkFiles?: boolean;
   writeDists?: boolean;
@@ -65,7 +64,6 @@ export default class ManyComponentsWriter {
   override: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
-  configDir?: string;
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
@@ -95,7 +93,6 @@ export default class ManyComponentsWriter {
     this.isolated = this._setBooleanDefault(params.isolated, false);
     this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
     this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
-    this.configDir = params.configDir;
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
@@ -152,9 +149,11 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer && this.consumer.config.overrides.hasChanged) {
-      const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
-      dataToPersist.addManyFiles(jsonFiles);
+    if (this.consumer && this.consumer.config && this.consumer.config.componentsConfig?.hasChanged) {
+      const jsonFiles = await this.consumer.config.toVinyl(this.consumer.getPath());
+      if (jsonFiles) {
+        dataToPersist.addManyFiles(jsonFiles);
+      }
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addBasePath(this.basePath);
@@ -198,14 +197,12 @@ export default class ManyComponentsWriter {
         componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
-      const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
       // $FlowFixMe consumer is set here
       this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component when a user used `--ignore-dist` flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return {
-        configDir: this.configDir || configDirFromComponentMap,
         origin,
         existingComponentMap: componentMap
       };
@@ -216,13 +213,13 @@ export default class ManyComponentsWriter {
       ...this._getDefaultWriteParams(),
       component: componentWithDeps.component,
       writeToPath: componentRootDir,
+      writeConfig: this.writeConfig,
       writeBitDependencies: this.writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
       ...getParams()
     };
   }
   _getDefaultWriteParams(): Record<string, any> {
     return {
-      writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
       bitMap: this.bitMap,
@@ -284,6 +281,7 @@ export default class ManyComponentsWriter {
         // When a component is NESTED we do interested in the exact version, because multiple
         // components with the same scope and namespace can co-exist with different versions.
         const componentMap = this.bitMap.getComponentIfExist(dep.id);
+        // @ts-ignore
         const componentWriter = ComponentWriter.getInstance({
           ...this._getDefaultWriteParams(),
           writeConfig: false,

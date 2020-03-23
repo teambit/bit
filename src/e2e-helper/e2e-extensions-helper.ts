@@ -1,7 +1,7 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
-import BitJsonHelper from './e2e-bit-json-helper';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
 import ScopesData from './e2e-scopes';
 import FixtureHelper from './e2e-fixtures-helper';
 import ScopeHelper from './e2e-scope-helper';
@@ -10,38 +10,32 @@ import FsHelper from './e2e-fs-helper';
 export default class ExtensionsHelper {
   scopes: ScopesData;
   command: CommandHelper;
-  bitJson: BitJsonHelper;
+  bitJsonc: BitJsoncHelper;
   scopeHelper: ScopeHelper;
   fixtures: FixtureHelper;
   fs: FsHelper;
   constructor(
     scopes: ScopesData,
     command: CommandHelper,
-    bitJson: BitJsonHelper,
+    bitJsonc: BitJsoncHelper,
     scopeHelper: ScopeHelper,
     fixtures: FixtureHelper,
     fsHelper: FsHelper
   ) {
     this.scopes = scopes;
     this.command = command;
-    this.bitJson = bitJson;
+    this.bitJsonc = bitJsonc;
     this.scopeHelper = scopeHelper;
     this.fixtures = fixtures;
     this.fs = fsHelper;
   }
 
-  importAndConfigureLegacyExtension(id: string) {
-    this.command.importExtension(id);
-    const bitJson = this.bitJson.read();
-    bitJson.extensions = { [id]: { __legacy: true } };
-    this.bitJson.write(bitJson);
+  addExtensionToWorkspace(extName: string, extConfig = {}) {
+    this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
   }
 
-  addExtensionToWorkspaceConfig(extName: string, extConfig = {}) {
-    const bitJson = this.bitJson.read();
-    bitJson.extensions = bitJson.extensions || {};
-    bitJson.extensions[extName] = extConfig;
-    this.bitJson.write(bitJson);
+  addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
+    this.bitJsonc.addToVariant(this.scopes.localPath, variant, extName, extConfig);
   }
 
   createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
@@ -51,13 +45,13 @@ export default class ExtensionsHelper {
         name: 'eslint',
         dependencies: [],
         provider: async () => {
-          console.log(\`hi there from an extension, got config: \${JSON.stringify()}\`)
+          console.log(\`hi there from an extension\`)
         }
       };
       `;
     }
     this.fs.outputFile('foo-ext.js', content);
     this.command.addComponent('foo-ext.js', { i: name });
-    this.addExtensionToWorkspaceConfig(name, config);
+    this.addExtensionToWorkspace(name, config);
   }
 }

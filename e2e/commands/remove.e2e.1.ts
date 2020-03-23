@@ -12,6 +12,7 @@ describe('bit remove command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -340,6 +341,7 @@ describe('bit remove command', function() {
     let helper2;
     before(() => {
       helper2 = new Helper();
+      helper2.command.setFeatures('legacy-workspace-config');
       helper2.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.addRemoteScope(helper2.scopes.remotePath, helper.scopes.remotePath);
