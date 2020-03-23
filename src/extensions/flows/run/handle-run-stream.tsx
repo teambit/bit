@@ -1,13 +1,13 @@
 import { ReplaySubject } from 'rxjs';
 import { Reporter } from '../../reporter';
 
-export async function handleRunStream(stream: ReplaySubject<any>, reporter: Reporter) {
+export async function handleRunStream(stream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
   const summary: { [k: string]: string } = {};
   const streamPromise = await new Promise(resolve =>
     stream.subscribe({
       next(networkData: any) {
         if (networkData instanceof ReplaySubject) {
-          handleFlowStream(networkData, reporter, summary);
+          handleFlowStream(networkData, reporter, summary, verbose);
         } else if (networkData.type === 'network:start') {
           //
         } else if (networkData.type === 'network:result') {
@@ -29,18 +29,16 @@ export async function handleRunStream(stream: ReplaySubject<any>, reporter: Repo
 
   return streamPromise;
 }
-function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, summery: any) {
+function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, summery: any, verbose: boolean) {
   networkData.subscribe({
     next(flowData: any) {
       if (flowData.type === 'flow:start') {
-        console.log('start-id:', flowData.id);
         reporter.createLogger(flowData.id).info(`***** started ${flowData.id} *****`);
       } else if (flowData.type === 'flow:result') {
-        console.log('end-id:', flowData.id);
         reporter.createLogger(flowData.id).info(`***** finished ${flowData.id} - duration:${flowData.duration} *****`);
         summery[flowData.id] = flowData;
       } else if (flowData instanceof ReplaySubject) {
-        handleTaskStream(flowData, reporter);
+        handleTaskStream(flowData, reporter, verbose);
       }
     },
     error() {},
@@ -48,11 +46,12 @@ function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, s
   });
 }
 
-function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter) {
+function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
   taskStream.subscribe({
     next(data: any) {
-      console.log('\ntask:', data.type);
-      if (data.type === 'task:stdout') {
+      // console.log('\ntask:', data.type);
+      debugger;
+      if (data.type === 'task:stdout' && verbose) {
         reporter.createLogger(data.id).info(data.value);
       } else if (data.type === 'task:stderr') {
         reporter.createLogger(data.id).warn(data.value);

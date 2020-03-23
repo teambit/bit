@@ -22,7 +22,7 @@ export class Flows {
     return new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
   }
 
-  createNetworkByFlowName(seeders: ComponentID[], name = 'build') {
+  createNetworkByFlowName(seeders: ComponentID[], name = 'build', options: ExecutionOptions) {
     const getFlow = async (capsule: Capsule) => {
       const seed = capsule.component.id;
       const id = seed instanceof BitId ? seed : seed._legacy;
@@ -33,7 +33,8 @@ export class Flows {
       // const tasks = component.config.extensions.flows[name] || [];
       const isCached = await getExecutionCache().compareToCache(capsule, name);
 
-      const flow = isCached ? new Flow([]) : new Flow(path(['config', 'extensions', 'flows', name], component));
+      const flow =
+        isCached && options.caching ? new Flow([]) : new Flow(path(['config', 'extensions', 'flows', name], component));
 
       return flow;
     };
@@ -62,8 +63,7 @@ export class Flows {
   }
 
   async runStream(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
-    network = network || this.createNetworkByFlowName(seeders, name);
-    const opts = Object.assign(
+    const opts: ExecutionOptions = Object.assign(
       {
         caching: true,
         concurrency: 4,
@@ -71,6 +71,7 @@ export class Flows {
       },
       options
     );
+    network = network || this.createNetworkByFlowName(seeders, name, opts);
     const resultStream = await network.execute(opts);
     return resultStream;
   }

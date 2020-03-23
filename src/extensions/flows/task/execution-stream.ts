@@ -1,7 +1,7 @@
 import { ReplaySubject } from 'rxjs';
 import ContainerExec from '../../isolator/capsule/container-exec';
 
-export function createExecutionStream(exec: ContainerExec, id, time: Date = new Date()) {
+export function createExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()) {
   let message: any = null;
   const subscriber = new ReplaySubject();
   subscriber.next({

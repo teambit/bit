@@ -19,26 +19,22 @@ export class RunCmd implements Command {
 
   // @ts-ignore
   options: PaperOptions = [
-    [
-      'c',
-      'concurrency',
-      'specify the number of concurrent build processes for Bit to run. default value depends on the operating system and the number of available CPU cores.'
-    ]
+    ['p', 'parallel', 'specify the number of parallel flows to run.'],
+    ['n', 'no-cache', 'Get execution result from cache if possibile.'],
+    ['v', 'verbose', 'include stdout in screen']
   ];
 
   constructor(private flows: Flows, private reporter: Reporter) {}
 
-  async render([flow, components]: CLIArgs, { concurrency }: Flags) {
-    const concurrencyN = concurrency && typeof concurrency === 'string' ? Number.parseInt(concurrency) : 5;
+  async render([flow, components]: CLIArgs, { parallel, noCache, verbose }: Flags) {
+    const concurrencyN = parallel && typeof parallel === 'string' ? Number.parseInt(parallel) : 5;
     const actualComps = typeof components === 'string' ? [components] : components;
     const comps = this.flows.getIds(actualComps);
-    const result = await this.flows.runStream(comps, 'build', { concurrency: concurrencyN });
-    this.reporter.end();
-    this.reporter.startPhase('network');
+    const result = await this.flows.runStream(comps, flow as string, { concurrency: concurrencyN, caching: !noCache });
+    this.reporter.startPhase('~~~ Flows ~~~~');
 
-    const report = await handleRunStream(result, this.reporter);
+    const report = await handleRunStream(result, this.reporter, verbose);
     const reportComp = <Report props={report} />;
-    this.reporter.end();
     return reportComp;
   }
 }
