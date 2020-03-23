@@ -13,6 +13,7 @@ import { NoFiles, EmptyDirectory } from '../component-ops/add-components/excepti
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import ShowDoctorError from '../../error/show-doctor-error';
+import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
 // @ts-ignore
@@ -93,9 +94,7 @@ export default class ComponentMap {
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
-      throw new ShowDoctorError(
-        `unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`
-      );
+      throw new OutsideRootDir(filePath, rootDir);
     }
     return newPath;
   }
@@ -121,6 +120,29 @@ export default class ComponentMap {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
+  }
+
+  changeRootDirAndUpdateFilesAccordingly(newRootDir: PathLinuxRelative) {
+    if (this.rootDir === newRootDir) return;
+    this.files.forEach(file => {
+      const filePathRelativeToConsumer = this.rootDir
+        ? pathJoinLinux(this.rootDir, file.relativePath)
+        : file.relativePath;
+      const newPath = ComponentMap.getPathWithoutRootDir(newRootDir, filePathRelativeToConsumer);
+      if (this.mainFile === file.relativePath) this.mainFile = newPath;
+      file.relativePath = newPath;
+    });
+    this.rootDir = newRootDir;
+    this.trackDir = undefined; // if there is trackDir, it's not needed anymore.
+  }
+
+  addRootDirToDistributedFiles(rootDir: PathOsBased) {
+    this.files.forEach(file => {
+      file.relativePath = file.name;
+    });
+    this.rootDir = pathNormalizeToLinux(rootDir);
+    this.mainFile = path.basename(this.mainFile);
+    this.validate();
   }
 
   updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {
@@ -224,6 +246,7 @@ export default class ComponentMap {
    * directory to track for changes (such as files added/renamed)
    */
   getTrackDir(): PathLinux | undefined {
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
@@ -240,12 +263,21 @@ export default class ComponentMap {
     return this.rootDir || '.';
   }
 
+  hasRootDir(): boolean {
+    return Boolean(this.rootDir && this.rootDir !== '.');
+  }
+
   /**
    * directory of the component (root / track)
    */
   getComponentDir(): PathLinux | undefined {
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
+  }
+
+  doesAuthorHaveRootDir(): boolean {
+    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir && this.rootDir !== '.');
   }
 
   /**
@@ -264,6 +296,7 @@ export default class ComponentMap {
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
         allowFiles: true,
+        allowRelativePaths: false,
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
@@ -317,9 +350,6 @@ export default class ComponentMap {
     }
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
-    }
-    if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
     }
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);

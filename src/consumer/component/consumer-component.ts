@@ -69,10 +69,11 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-result';
 import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
+import IncorrectRootDir from './exceptions/incorrect-root-dir';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
-export type InvalidComponent = { id: BitId; error: Error };
+export type InvalidComponent = { id: BitId; error: Error; component: Component | undefined };
 
 // TODO: Change id to bitId
 export type ExtensionData = {
@@ -546,6 +547,22 @@ export default class Component {
     this._wasOriginallySharedDirStripped = true;
   }
 
+  /**
+   * components added since v14.8.0 have "rootDir" in .bitmap, which is mostly the same as the
+   * sharedDir. so, if rootDir is found, no need to strip/add the sharedDir as the files are
+   * already relative to the sharedDir rather than the author workspace.
+   */
+  get ignoreSharedDir(): boolean {
+    if (!this.componentMap) {
+      // @todo: this happens when isolating via capsule. needs to decide what should be the behavior.
+      return !this.originallySharedDir;
+    }
+    return (
+      Boolean(this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.componentMap.rootDir) ||
+      Boolean(this.componentMap.origin !== COMPONENT_ORIGINS.AUTHORED && !this.componentMap.originallySharedDir)
+    );
+  }
+
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
     const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
     if (!manipulateDirItem || !manipulateDirItem.wrapDir) return;
@@ -934,6 +951,7 @@ export default class Component {
       ComponentNotFoundInPath,
       ComponentOutOfSync,
       ComponentsPendingImport,
+      IncorrectRootDir,
       ExtensionFileNotFound
     ];
     return invalidComponentErrors.some(errorType => err instanceof errorType);
