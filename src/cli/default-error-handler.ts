@@ -249,9 +249,8 @@ once your changes are merged with the new remote version, please tag and export 
     OutdatedIndexJson,
     err => `error: component ${chalk.bold(
       err.componentId
-    )} found in the index.json file, however, is missing from the scope.
-to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIssueToGithubMsg}
-`
+    )} found in the cache (index.json file), however, is missing from the scope.
+the cache is deleted and will be rebuilt on the next command. please re-run the command.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [

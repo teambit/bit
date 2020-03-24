@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
 - stabilize capsule by writing the same paths as the workspace relative to the component rootDir
 - stabilize Bit by eliminating the removal of shared directory upon import and having rootDir for authored components
 - fix `bit link --rewire` for css/sass/less files
