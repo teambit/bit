@@ -17,13 +17,6 @@ export default class ComponentFactory {
 
   create() {}
 
-  transformToComponents(workspaceComponents: ConsumerComponent[], modelComponents: ModelComponent[]) {}
-
-  /**
-   * instantiate a component object from a legacy `ComponentVersions` type object.
-   */
-  fromComponentVersions(legacyComponent: ModelComponent, version: Version) {}
-
   /**
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */

@@ -19,12 +19,11 @@ export default class FindCycles implements Insight {
         message: `Found ${cycles.length} cycle.`,
         data: cycles
       };
-    } else {
-      return {
-        message: `Found ${cycles.length} cycles.`,
-        data: cycles
-      };
     }
+    return {
+      message: `Found ${cycles.length} cycles.`,
+      data: cycles
+    };
   }
 
   _renderData(data: any) {

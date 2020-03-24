@@ -7,7 +7,6 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import { BitId } from '../../bit-id';
 import Isolator from '../isolator/isolator';
 import { loadConsumerIfExist } from '../../consumer';
 
@@ -53,7 +52,7 @@ export default class Component {
     return this.state.filesystem;
   }
 
-  toString(): string {
+  stringify(): string {
     return JSON.stringify({
       id: this.id,
       head: this.head

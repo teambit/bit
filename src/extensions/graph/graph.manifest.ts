@@ -5,6 +5,5 @@ import { ComponentFactoryExt } from '../component';
 export default {
   name: 'graph',
   dependencies: [WorkspaceExt, ComponentFactoryExt],
-  config: {},
   provider: provide
 };

@@ -1,4 +1,4 @@
-import { Graph, NodeDoesntExist } from 'cleargraph';
+import { Graph } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
 import Component from '../../component/component';
 import { Dependency } from '../index';
@@ -9,17 +9,17 @@ import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
 
+type Node = { id: string; node: Component };
+type Edge = { sourceId: string; targetId: string; edge: Dependency };
+
 export class ComponentGraph extends Graph<Component, Dependency> {
   versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }>;
-  constructor(
-    nodes: { id: string; node: Component }[] = [],
-    edges: { sourceId: string; targetId: string; edge: Dependency }[] = []
-  ) {
+  constructor(nodes: Node[] = [], edges: Edge[] = []) {
     super(nodes, edges);
     this.versionMap = new Map();
   }
   static buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Graph<Component, Dependency> {
-    let newGraph = new ComponentGraph();
+    const newGraph = new ComponentGraph();
     legacyGraph.nodes().forEach(nodeId => {
       newGraph.setNode(nodeId, componentFactory.fromLegacyComponent(legacyGraph.node(nodeId)));
     });
@@ -69,8 +69,8 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   buildFromCleargraph(graph: Graph<Component, Dependency>) {
     let newGraph = new ComponentGraph();
-    let newGraphNodes: { id: string; node: Component }[] = [];
-    let newGraphEdges: { sourceId: string; targetId: string; edge: Dependency }[] = [];
+    let newGraphNodes: Node[] = [];
+    let newGraphEdges: Edge[] = [];
     for (const [nodeId, node] of graph.nodes.entries()) {
       newGraphNodes.push({
         id: nodeId,

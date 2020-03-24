@@ -5,7 +5,7 @@ import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
 import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Component from '../../consumer/component/consumer-component';
-import { getLatestVersionNumber, cleanBang } from '../../utils';
+import { getLatestVersionNumber } from '../../utils';
 import Consumer from '../../consumer/consumer';
 import ComponentsList from '../../consumer/component/components-list';
 
@@ -109,8 +109,6 @@ export default class DependencyGraph {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
-    console.log('buildGraphFromWorkspace');
-
     const componentsList = new ComponentsList(consumer);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
@@ -133,7 +131,6 @@ export default class DependencyGraph {
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
-    console.log(workspaceComponents);
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
       this._addDependenciesToGraph(id, graph, component, reverse);

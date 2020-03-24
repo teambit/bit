@@ -1,11 +1,11 @@
-type DependencyTypes = 'dev' | 'peer' | 'runtime';
+type DependencyType = 'dev' | 'peer' | 'runtime';
 
 export class Dependency {
-  readonly type: DependencyTypes;
-  constructor(type: DependencyTypes) {
+  readonly type: DependencyType;
+  constructor(type: DependencyType) {
     this.type = type;
   }
-  toString(): string {
+  stringify(): string {
     return this.type;
   }
 }

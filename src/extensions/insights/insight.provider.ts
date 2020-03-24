@@ -5,10 +5,6 @@ import { InsightManager } from './insight-manager';
 import { Insight } from './insight';
 import InsightsCmd from './insights.cmd';
 
-export type InsightConfig = {
-  silence: boolean;
-};
-
 export type InsightDeps = [ComponentGraph, BitCli];
 
 export async function provide([componentGraph, cli]: InsightDeps) {
