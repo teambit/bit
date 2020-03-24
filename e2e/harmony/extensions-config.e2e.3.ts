@@ -47,16 +47,16 @@ describe.skip('harmony extension config', function() {
     let localBeforeTag;
 
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.createNewComponentExtension('my-ext', undefined, config);
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
+      helper.scopeHelper.initWorkspace();
+      helper.fixtures.copyFixtureExtensions('dummy-extension');
+      helper.command.addComponent('dummy-extension');
+      helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
       localBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('extension is new component on the workspace', () => {
       it('should not allow tagging the component without tagging the extensions', () => {
         output = helper.general.runWithTryCatch('bit tag bar/foo');
-        expect(output).to.have.string('has a dependency "my-ext"');
+        expect(output).to.have.string('has a dependency "dummy-extension"');
         expect(output).to.have.string('this dependency was not included in the tag command');
       });
       describe('tagging extension and component together', () => {
@@ -76,11 +76,11 @@ describe.skip('harmony extension config', function() {
         });
         it('should insert extensions into the component dev deps', () => {
           expect(componentModel.devDependencies).to.be.of.length(1);
-          expect(componentModel.devDependencies[0].id.name).to.equal('my-ext');
+          expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
           expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
         });
         it('should auto tag the component when tagging the extension again', () => {
-          output = helper.command.tagComponent('my-ext', 'message', '-f');
+          output = helper.command.tagComponent('dummy-extension', 'message', '-f');
           expect(output).to.have.string('auto-tagged dependents');
           expect(output).to.have.string('bar/foo@0.0.2');
         });
@@ -89,7 +89,7 @@ describe.skip('harmony extension config', function() {
         let componentModel;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-          helper.command.tagComponent('my-ext');
+          helper.command.tagComponent('dummy-extension');
           helper.command.tagComponent('bar/foo');
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
           const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
@@ -100,7 +100,7 @@ describe.skip('harmony extension config', function() {
         });
         it('should insert extensions into the component dev deps', () => {
           expect(componentModel.devDependencies).to.be.of.length(1);
-          expect(componentModel.devDependencies[0].id.name).to.equal('my-ext');
+          expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
           expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
         });
       });
@@ -118,7 +118,7 @@ describe.skip('harmony extension config', function() {
         });
         it('should block exporting component without exporting the extension', () => {
           output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} bar/foo`);
-          expect(output).to.have.string(`"${helper.scopes.remote}/my-ext@0.0.1" was not found`);
+          expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
         });
         describe('exporting extension and component together', () => {
           before(() => {
@@ -135,7 +135,7 @@ describe.skip('harmony extension config', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeExport);
             helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-            helper.command.exportComponent('my-ext');
+            helper.command.exportComponent('dummy-extension');
             helper.command.exportComponent('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
