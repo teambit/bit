@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Box, Text } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
@@ -51,17 +52,17 @@ export default class FindCycles implements Insight {
   async run(): Promise<InsightResult> {
     const bareResult = await this._runInsight();
     const renderedData = this._renderData(bareResult);
-    const result = {
+    const result: InsightResult = {
       metaData: {
         name: this.name,
         description: this.description
       },
       data: bareResult.data,
-      renderedData: renderedData
+      renderedData
     };
 
-    if (!!bareResult.message) {
-      result['message'] = bareResult.message;
+    if (bareResult.message) {
+      result.message = bareResult.message;
     }
     return result;
   }

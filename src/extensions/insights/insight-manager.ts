@@ -59,7 +59,7 @@ export class InsightManager {
     await Promise.all(
       insightNames.map(async insightName => {
         const insight = this.getByName(insightName);
-        if (!!insight) {
+        if (insight) {
           const insightRes: InsightResult = await insight.run();
           res.push(insightRes);
         }
@@ -74,7 +74,8 @@ export class InsightManager {
    */
   async runAll(): Promise<InsightResult[]> {
     const res: InsightResult[] = [];
-    for (let [name, insight] of this.insights.entries()) {
+    for (const [, insight] of this.insights.entries()) {
+      // eslint-disable-next-line no-await-in-loop
       const insightRes: InsightResult = await insight.run();
       res.push(insightRes);
     }

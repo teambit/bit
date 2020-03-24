@@ -1,5 +1,3 @@
-import { Component } from '../component';
-import { Dependency } from '../../consumer/component/dependencies';
 import { ComponentGraph } from './index';
 
 export class DuplicateDependency {

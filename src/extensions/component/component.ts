@@ -56,7 +56,7 @@ export default class Component {
     return JSON.stringify({
       id: this.id,
       head: this.head
-      //TODO - laly add stringify of this.state and this.tags
+      // TODO - laly add stringify of this.state and this.tags
     });
   }
 

@@ -3,9 +3,6 @@ import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
 import ComponentID from './id';
-import { ModelComponent } from '../../scope/models';
-import Version from '../../version';
-import { BitId } from '../../bit-id';
 
 export default class ComponentFactory {
   constructor(

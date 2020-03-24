@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
@@ -35,20 +36,20 @@ export default class DuplicateDependencies implements Insight {
   }
 
   _formatData(data: any): FormattedEntry[] {
-    let formatted: FormattedEntry[] = [];
+    const formatted: FormattedEntry[] = [];
     for (const [dependency, depData] of data.entries()) {
       const dependents: Dependent[] = this._getDependents(depData.priorVersions);
       formatted.push({
         dependencyId: dependency,
         latestVersion: depData.latestVersionId,
-        dependents: dependents
+        dependents
       });
     }
     return formatted;
   }
 
   _getDependents(priorVersions: VersionSubgraph[]): Dependent[] {
-    let dependents: Dependent[] = [];
+    const dependents: Dependent[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
       pVersion.immediateDependents.forEach((dependent: string) => {
         dependents.push({
@@ -94,17 +95,17 @@ export default class DuplicateDependencies implements Insight {
     const bareResult = await this._runInsight();
     const formattedData = this._formatData(bareResult.data);
     const renderedData = this._renderData(formattedData);
-    const result = {
+    const result: InsightResult = {
       metaData: {
         name: this.name,
         description: this.description
       },
       data: bareResult.data,
-      renderedData: renderedData
+      renderedData
     };
 
-    if (!!bareResult.message) {
-      result['message'] = bareResult.message;
+    if (bareResult.message) {
+      result.message = bareResult.message;
     }
     return result;
   }

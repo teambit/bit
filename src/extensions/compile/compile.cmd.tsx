@@ -1,6 +1,4 @@
 import React from 'react';
-import { Color } from 'ink';
-import { Workspace } from '../workspace';
 import { Command, CLIArgs } from '../cli';
 import { Flags } from '../paper/command';
 import { Compile } from './compile';

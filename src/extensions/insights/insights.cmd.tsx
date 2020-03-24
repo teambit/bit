@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color, Box, Text } from 'ink';
 import { Command, CLIArgs } from '../cli';
 import { Flags } from '../paper/command';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
-import { TemplateFileVinyl } from '../create/create';
 
 export default class InsightsCmd implements Command {
   name: string;
@@ -22,7 +22,6 @@ export default class InsightsCmd implements Command {
 
   async render([names]: CLIArgs, { list }: Flags) {
     if (list) {
-      //return <Color green>There are many insights</Color>
       const results = this.insightManager.listInsights();
       const listItems = results.map(insight => (insight += '\n'));
       return <Color blueBright>{listItems}</Color>;
@@ -34,24 +33,7 @@ export default class InsightsCmd implements Command {
       return <Color blueBright>{results}</Color>;
     }
     const results = await this.insightManager.runAll();
-    // console.log('rendering,',results[0].renderedData)
-    // return results[1].renderedData
-    return (
-      <Box flexDirection="column">
-        {results.map(function(result) {
-          return (
-            <Box key={result.metaData.name} marginBottom={1} flexDirection="column">
-              <Box>
-                <Text bold underline>
-                  {result.metaData.name}
-                </Text>
-              </Box>
-              <Box marginTop={1}>{result.renderedData}</Box>
-            </Box>
-          );
-        })}
-      </Box>
-    );
+    return template(results);
   }
 }
 
