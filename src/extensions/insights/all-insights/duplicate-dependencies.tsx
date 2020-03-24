@@ -14,7 +14,10 @@ type Dependent = {
 type FormattedEntry = {
   dependencyId: string;
   latestVersion: string;
-  dependents: Dependent[];
+  dependents: {
+    id: string;
+    usedVersion: string;
+  }[];
 };
 export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
@@ -69,11 +72,13 @@ export default class DuplicateDependencies implements Insight {
               <Box flexDirection="column">
                 {mainDependency.dependents.map(function(dependent) {
                   return (
-                    <Text key={dependent.id}>
-                      {'  '}
-                      <Color blue>{alignCommandName(dependent.id)}</Color>
-                      {dependent.usedVersion}
-                    </Text>
+                    <Box flexDirection="column" key={dependent.id}>
+                      <Text>
+                        {'  '}
+                        <Color blue>{alignCommandName(dependent.id)}</Color>
+                        {dependent.usedVersion}
+                      </Text>
+                    </Box>
                   );
                 })}
               </Box>

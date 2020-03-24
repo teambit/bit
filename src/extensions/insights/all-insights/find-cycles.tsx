@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
 import { ComponentGraph } from '../../graph/component-graph';
 
@@ -30,7 +30,7 @@ export default class FindCycles implements Insight {
     if (data.data.length === 0) {
       return (
         <Box textWrap="wrap" height={1} key="num_results">
-          No cyclic dependencies
+          <Text> No cyclic dependencies </Text>
         </Box>
       );
     }
