@@ -24,7 +24,8 @@ describe('load extensions', function() {
       helper.scopeHelper.initWorkspace();
       helper.fixtures.copyFixtureExtensions('dummy-extension');
       helper.command.addComponent('dummy-extension');
-      helper.extensions.addExtensionToVariant('affected/*', 'dummy-extension', config);
+      // helper.extensions.addExtensionToVariant('affected/*', 'dummy-extension', config);
+      helper.extensions.setExtensionToVariant('affected/*', 'dummy-extension', config);
       helper.fs.createFile('affected-comp1', 'comp1.js', '');
       helper.command.addComponent('affected-comp1', { i: 'affected/comp1' });
       helper.fs.createFile('not-affected-comp2', 'comp2.js', '');
