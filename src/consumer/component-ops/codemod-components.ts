@@ -4,7 +4,7 @@ import { RelativeComponentsAuthoredEntry } from '../component/dependencies/depen
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
 import DataToPersist from '../component/sources/data-to-persist';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { pathNormalizeToLinux } from '../../utils';
 import { ImportSpecifier } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { Consumer } from '..';
@@ -16,8 +16,11 @@ export type CodemodResult = {
   warnings?: string[];
 };
 
-export async function changeCodeFromRelativeToModulePaths(consumer: Consumer): Promise<CodemodResult[]> {
-  const components = await loadComponents(consumer);
+export async function changeCodeFromRelativeToModulePaths(
+  consumer: Consumer,
+  bitIds: BitId[]
+): Promise<CodemodResult[]> {
+  const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map(component => {
@@ -29,8 +32,8 @@ export async function changeCodeFromRelativeToModulePaths(consumer: Consumer): P
   return codemodResults.filter(c => c.changedFiles.length || c.warnings);
 }
 
-async function loadComponents(consumer: Consumer): Promise<Component[]> {
-  const componentsIds = consumer.bitmapIds;
+async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
+  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
   const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
   invalidComponents.forEach(invalidComp => {
     if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
