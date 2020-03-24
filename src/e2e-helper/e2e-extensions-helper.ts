@@ -34,8 +34,23 @@ export default class ExtensionsHelper {
     this.bitJsonc.addKeyVal(this.scopes.localPath, extName, extConfig);
   }
 
+  // TODO: gilad - refactor
   addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
     this.bitJsonc.addToVariant(this.scopes.localPath, variant, extName, extConfig);
+  }
+
+  /**
+   * This will set the extension as the only extension of the variant
+   * If you want to add new one, use addExtensionToVariant
+   *
+   * @param {string} variant
+   * @param {string} extName
+   * @param {*} [extConfig={}]
+   * @memberof ExtensionsHelper
+   */
+  setExtensionToVariant(variant: string, extName: string, extConfig = {}) {
+    const extensionEntry = { [extName]: extConfig };
+    this.bitJsonc.addToVariant(this.scopes.localPath, variant, 'extensions', extensionEntry);
   }
 
   createNewComponentExtension(name = 'foo-ext', content?: string, config?: any) {
