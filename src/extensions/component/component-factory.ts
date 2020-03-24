@@ -15,11 +15,11 @@ export default class ComponentFactory {
      * instance of the capsule orchestrator
      */
     private isolateEnv: Isolator // private configsRegistry: Registry
-  ) /**
-   * registry for config modifications funcion
-   */
-  {}
+  ) {}
 
+  /**
+   * registry for config modifications function
+   */
   registerAddConfig(extensionId, configFunc: ConfigFunc) {
     // this.configsRegistry.set(extensionId, configFunc);
     ConsumerComponent.registerAddConfigAction(extensionId, configFunc);
