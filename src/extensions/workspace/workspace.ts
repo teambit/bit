@@ -86,12 +86,6 @@ export default class Workspace implements ComponentHost {
   }
 
   private async transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
-    this.componentFactory.registerAddConfig('worksapce', () => {
-      return {
-        conf: 'val'
-      };
-    });
-
     const transformP = consumerComponents.map(consumerComponent => {
       return this.componentFactory.fromLegacyComponent(consumerComponent);
     });
