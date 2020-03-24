@@ -24,8 +24,8 @@ describe('cyclic dependencies', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('comp', 'a.js', fixtureA);
       helper.fs.createFile('comp', 'b.js', fixtureB);
-      helper.command.addComponent('comp/a.js', { i: 'comp/a' });
-      helper.command.addComponent('comp/b.js', { i: 'comp/b' });
+      helper.command.addComponentAllowFiles('comp/a.js', { i: 'comp/a' });
+      helper.command.addComponentAllowFiles('comp/b.js', { i: 'comp/b' });
       output = helper.command.tagAllComponents();
     });
     it('should be able to tag both with no errors', () => {
@@ -99,7 +99,7 @@ describe('cyclic dependencies', function() {
       helper.fs.createFile('comp', 'B2.js', "const B3 = require('./B3'); const A1 = require ('./A1');");
       helper.fs.createFile('comp', 'B3.js', "const B4 = require('./B4')");
       helper.fs.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
-      helper.command.addComponent('comp/*.js', { n: 'comp' });
+      helper.command.addComponentAllowFiles('comp/*.js', { n: 'comp' });
       output = helper.command.tagAllComponents();
     });
     it('should be able to tag with no errors', () => {

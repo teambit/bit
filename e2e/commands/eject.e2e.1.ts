@@ -96,7 +96,7 @@ describe('bit eject command', function() {
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'bar/foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -146,7 +146,7 @@ describe('bit eject command', function() {
           expect(packageJson.dependencies[packageName]).to.equal('0.0.1');
         });
         it('should have the component files as a package (in node_modules)', () => {
-          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'foo.js');
+          const fileInPackage = path.join('node_modules/@ci', `${helper.scopes.remote}.bar.foo`, 'bar/foo.js');
           expect(path.join(helper.scopes.localPath, fileInPackage)).to.be.a.path();
           const fileContent = helper.fs.readFile(fileInPackage);
           expect(fileContent).to.equal(fixtures.fooFixture);
@@ -163,7 +163,7 @@ describe('bit eject command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+          helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
           ejectOutput = helper.command.ejectComponentsParsed('bar/foo bar/foo2');
         });
@@ -177,7 +177,7 @@ describe('bit eject command', function() {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+          helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
           helper.command.tagAllComponents();
           helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
@@ -366,7 +366,7 @@ describe('bit eject command', function() {
             // an intermediate step, make sure the workspace is clean
             const statusOutput = helper.command.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-            helper.fs.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
+            helper.fs.createFile('components/utils/is-string/utils/', 'is-string.js', fixtures.isStringV2);
 
             npmCiRegistry.setCiScopeInBitJson();
             helper.command.tagScope('2.0.0', 'msg', '-a');
@@ -398,7 +398,9 @@ describe('bit eject command', function() {
               expect(result.trim()).to.have.string('got is-type and got is-string v2 and got foo');
             });
             it('should delete the imported component files from the file-system', () => {
-              expect(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();
+              expect(
+                path.join(helper.scopes.localPath, 'components/utils/is-string/utils/is-string.js')
+              ).not.to.be.a.path();
             });
             it('should delete the component from bit.map', () => {
               const bitMap = helper.bitMap.read();
@@ -439,8 +441,14 @@ describe('bit eject command', function() {
               let errorFailure;
               before(() => {
                 const renameMainComponentFile = () => {
-                  const currentFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js');
-                  const renamedFile = path.join(helper.scopes.localPath, 'components/utils/is-string/is-string2.js');
+                  const currentFile = path.join(
+                    helper.scopes.localPath,
+                    'components/utils/is-string/utils/is-string.js'
+                  );
+                  const renamedFile = path.join(
+                    helper.scopes.localPath,
+                    'components/utils/is-string/utils/is-string2.js'
+                  );
                   fs.moveSync(currentFile, renamedFile);
                 };
                 renameMainComponentFile();
@@ -501,7 +509,9 @@ describe('bit eject command', function() {
                 expect(bitJsonNow).to.deep.equal(bitJsonBefore);
               });
               it('should not delete the component files from the filesystem', () => {
-                expect(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js')).to.be.a.file();
+                expect(
+                  path.join(helper.scopes.localPath, 'components/utils/is-string/utils/is-string.js')
+                ).to.be.a.file();
               });
             });
           });

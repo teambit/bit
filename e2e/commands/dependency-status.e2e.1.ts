@@ -17,9 +17,15 @@ describe('bit dependency status', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
-      helper.command.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
-      helper.command.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });
-      helper.command.addComponent('dependency-status-test-files/c.js', { i: 'dependency-status-test-files/c' });
+      helper.command.addComponentAllowFiles('dependency-status-test-files/a.js', {
+        i: 'dependency-status-test-files/a'
+      });
+      helper.command.addComponentAllowFiles('dependency-status-test-files/b.js', {
+        i: 'dependency-status-test-files/b'
+      });
+      helper.command.addComponentAllowFiles('dependency-status-test-files/c.js', {
+        i: 'dependency-status-test-files/c'
+      });
     });
     it('Should print no missing files as all files are mapped', () => {
       const output = helper.command.runCmd('bit dependency-status dependency-status-test-files/b.js');
@@ -31,8 +37,12 @@ describe('bit dependency status', function() {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.copyFixtureComponents('dependency-status');
-      helper.command.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
-      helper.command.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });
+      helper.command.addComponentAllowFiles('dependency-status-test-files/a.js', {
+        i: 'dependency-status-test-files/a'
+      });
+      helper.command.addComponentAllowFiles('dependency-status-test-files/b.js', {
+        i: 'dependency-status-test-files/b'
+      });
     });
     it('Should print missing files which are not mapped to bit components', () => {
       const output = helper.command.runCmd('bit dependency-status dependency-status-test-files/b.js');

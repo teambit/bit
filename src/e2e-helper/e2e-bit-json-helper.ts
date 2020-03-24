@@ -17,7 +17,7 @@ export default class BitJsonHelper {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
-  addKeyVal(bitJsonDir: string = this.scopes.localPath, key: string, val: any) {
+  addKeyVal(key: string, val: any, bitJsonDir: string = this.scopes.localPath) {
     const bitJson = this.read(bitJsonDir);
     bitJson[key] = val;
     this.write(bitJson, bitJsonDir);
@@ -28,7 +28,7 @@ export default class BitJsonHelper {
     this.write(bitJson);
   }
   addDefaultScope(scope = this.scopes.remote) {
-    this.addKeyVal(undefined, 'defaultScope', scope);
+    this.addKeyVal('defaultScope', scope);
   }
   getEnvByType(bitJson: Record<string, any>, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];

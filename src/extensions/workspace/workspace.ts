@@ -182,7 +182,7 @@ export default class Workspace implements ComponentHost {
   ): Promise<AddActionResults> {
     const addComponent = new AddComponents(
       { consumer: this.consumer },
-      { componentPaths, id, main, override, allowFiles: false }
+      { componentPaths, id, main, override, allowFiles: false, allowRelativePaths: false }
     );
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
