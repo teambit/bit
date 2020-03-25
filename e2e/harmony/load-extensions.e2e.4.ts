@@ -18,7 +18,6 @@ describe('load extensions', function() {
   describe('variants extensions', () => {
     const config = { key: 'val' };
     let output;
-    let localBeforeTag;
 
     before(() => {
       helper.scopeHelper.initWorkspace();
@@ -30,7 +29,6 @@ describe('load extensions', function() {
       helper.command.addComponent('affected-comp1', { i: 'affected/comp1' });
       helper.fs.createFile('not-affected-comp2', 'comp2.js', '');
       helper.command.addComponent('not-affected-comp2', { i: 'not-affected/comp2' });
-      localBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
 
     it('should load the extension when loading an affected component', () => {
