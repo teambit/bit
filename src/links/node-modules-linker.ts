@@ -170,7 +170,7 @@ export default class NodeModuleLinker {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
       const dest = path.join(linkPath, file);
-      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), file);
+      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), fileWithRootDir);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
         const linkFile = LinkFile.load({
