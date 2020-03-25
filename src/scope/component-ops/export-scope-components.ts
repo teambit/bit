@@ -165,7 +165,7 @@ export async function exportMany({
     componentsAndObjects.forEach(componentObject => scope.sources.put(componentObject));
     await scope.objects.persist();
     // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+    const idsWithRemoteScope: BitId[] = exportedIds.map(id => BitId.parse(id, true).changeVersion(undefined));
     const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
     return {
       exported: idsWithRemoteScopeUniq,
@@ -382,10 +382,20 @@ async function convertToCorrectScope(
         dependency.id = updatedScope;
       }
     });
-    version.flattenedDependencies = getBitIdsWithUpdatedScope(version.flattenedDependencies);
-    version.flattenedDevDependencies = getBitIdsWithUpdatedScope(version.flattenedDevDependencies);
-    version.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(version.flattenedCompilerDependencies);
-    version.flattenedTesterDependencies = getBitIdsWithUpdatedScope(version.flattenedTesterDependencies);
+    const flattenedFields = [
+      'flattenedDependencies',
+      'flattenedDevDependencies',
+      'flattenedCompilerDependencies',
+      'flattenedTesterDependencies'
+    ];
+    flattenedFields.forEach(flattenedField => {
+      const ids: BitIds = version[flattenedField];
+      const needsChange = ids.some(id => id.scope !== remoteScope);
+      if (needsChange) {
+        version[flattenedField] = getBitIdsWithUpdatedScope(ids);
+        hasChanged = true;
+      }
+    });
     return hasChanged;
   }
 

@@ -90,11 +90,9 @@ import ExtensionGetDynamicPackagesError from '../legacy-extensions/exceptions/ex
 import ExtensionGetDynamicConfigError from '../legacy-extensions/exceptions/extension-get-dynamic-config-error';
 import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
-import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir';
-import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
+import { DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -106,7 +104,10 @@ import RemoteResolverError from '../scope/network/exceptions/remote-resolver-err
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
 import { importPendingMsg } from './commands/public-cmds/status-cmd';
-import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/addding-individual-files';
+import { AddingIndividualFiles } from '../consumer/component-ops/add-components/exceptions/adding-individual-files';
+import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
+import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
+import { FailedLoadForTag } from '../consumer/component/exceptions/failed-load-for-tag';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -143,6 +144,10 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
   [
+    OutsideRootDir,
+    err => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`
+  ],
+  [
     AddingIndividualFiles,
     err =>
       `error: adding individual files is blocked ("${err.file}"), and only directories can be added. To force adding files use --allow-files flag`
@@ -159,20 +164,16 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],
-  [InvalidConfigDir, err => `error: the eject path is already part of "${chalk.bold(err.compId)}" path`],
-  [EjectToWorkspace, () => 'error: could not eject config to the workspace root please provide a valid path'],
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [ComponentsPendingImport, () => importPendingMsg],
+  // TODO: improve error
   [
     EjectNoDir,
-    err =>
-      `error: could not eject config for ${chalk.bold(
-        err.compId
-      )}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+    err => `error: could not eject config for ${chalk.bold(err.compId)}, please make sure it's under a track directory`
   ],
   [
     ComponentNotFound,
@@ -277,6 +278,12 @@ To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`
   ],
   [ScopeNotFound, err => `error: scope not found at ${chalk.bold(err.scopePath)}`],
+  [
+    IncorrectRootDir,
+    err => `error: a component ${chalk.bold(err.id)} uses relative-paths (${err.importStatement}).
+please replace to module paths (e.g. @bit/component-name) or use "bit link --rewire" to auto-replace all occurrences.
+an unrecommended alternative is running "bit add" with the id and "--allow-relative-paths" flag to enable relative-paths`
+  ],
   [
     ScopeJsonNotFound,
     err =>
@@ -433,6 +440,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
         err.newId
       )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
+  [FailedLoadForTag, err => err.getErrorMessage()],
   [
     NoFiles,
     err =>
@@ -649,5 +657,6 @@ export default (err: Error): string | undefined => {
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
   err.message = errorMessage;
   logger.error(`user gets the following error: ${errorMessage}`);
+  logger.silly(err.stack);
   return `${chalk.red(errorMessage)}${process.env.BIT_DEBUG ? err.stack : ''}`;
 };

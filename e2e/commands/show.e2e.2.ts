@@ -3,6 +3,7 @@ import * as path from 'path';
 import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import NothingToCompareTo from '../../src/api/consumer/lib/exceptions/nothing-to-compare-to';
 
 const assertArrays = require('chai-arrays');
 
@@ -13,6 +14,7 @@ describe('bit show command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -41,7 +43,10 @@ describe('bit show command', function() {
         "const isString = require('../utils/is-string.js'); const get = require('lodash.get'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.fs.createFile('src', 'mainFile.js', fooBarFixture);
       helper.fs.createFile('src/utils', 'utilFile.js');
-      helper.command.addComponent('src/mainFile.js src/utils/utilFile.js', { m: 'src/mainFile.js', i: 'comp/comp' });
+      helper.command.addComponentAllowFiles('src/mainFile.js src/utils/utilFile.js', {
+        m: 'src/mainFile.js',
+        i: 'comp/comp'
+      });
       helper.command.tagComponent('comp/comp');
     });
 
@@ -370,7 +375,7 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.bitMap.read();
@@ -401,17 +406,18 @@ describe('bit show command', function() {
       helper.scopeHelper.initNewLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
-      helper.command.addComponentDir('bar/', { i: 'bar/foo' });
+      helper.command.addComponent('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
-        expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
+        const error = new NothingToCompareTo('bar/foo');
+        helper.general.expectToThrow(showCmd, error);
       });
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsNew();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.command.showComponent('bar/foo --compare');
@@ -423,8 +429,8 @@ describe('bit show command', function() {
         expect(componentFromFileSystem.mainFile).to.equal(componentFromModel.mainFile);
         expect(componentFromFileSystem.files).to.deep.equal(componentFromModel.files);
 
-        // files should contain the originallySharedDir
-        expect(componentFromModel.mainFile).to.have.string('bar');
+        // files should NOT contain the originallySharedDir (because it was added as a directory)
+        expect(componentFromModel.mainFile).to.not.have.string('bar');
       });
     });
     describe('when importing a component', () => {
@@ -631,9 +637,10 @@ Circle.defaultProps = {
       helper.fs.createFile('bar-dep', 'bar.spec.js', 'require("../bar/foo.js");'); // a dev dependency requires bar/foo
       helper.command.addComponent('bar-dep', { m: 'bar-dep/bar.js', t: 'bar-dep/bar.spec.js' });
       helper.fs.createFile('baz', 'baz.js'); // a component that not related to other dependencies/dependents
-      helper.command.addComponent('baz/baz.js');
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.addComponentAllowFiles('baz/baz.js');
+      helper.command.linkAndRewire();
+      helper.command.tagAllComponentsNew();
+      helper.command.exportAllComponentsAndRewire();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
     });

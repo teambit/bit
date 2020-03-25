@@ -1,15 +1,13 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import Isolator from '../isolator/isolator';
-import Reporter from '../reporter/reporter';
 import Bit from './bit';
 
-export type BitDeps = [Workspace, Scope, Isolator, Reporter];
+export type BitDeps = [Workspace, Scope];
 
 export type BitConfig = {};
 
-export default async function provideBit([workspace, scope, isolator, reporter]: BitDeps) {
-  const bit = new Bit(scope, workspace, isolator, reporter);
+export default async function provideBit([workspace, scope]: BitDeps) {
+  const bit = new Bit(scope, workspace);
   if (workspace) {
     await workspace.loadWorkspaceExtensions();
   }

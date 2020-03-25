@@ -16,7 +16,6 @@ import { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
-import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import { Capsule } from '../../extensions/isolator/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
@@ -327,29 +326,10 @@ async function _runBuild({
         process.chdir(componentRoot);
       }
       if (compiler.action) {
-        const isCompilerDetached = await component.getDetachedCompiler(consumer);
-        const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;
-        // Write config files to tmp folder
-        if (shouldWriteConfig) {
-          tmpFolderFullPath = component.getTmpFolder(consumerPath);
-          if (verbose) {
-            console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
-          }
-          await writeEnvFiles({
-            configDir: component.getTmpFolder(),
-            env: compiler,
-            consumer,
-            component,
-            deleteOldFiles: false,
-            verbose
-          });
-        }
-
         const actionParams = {
           files,
           rawConfig: compiler.rawConfig,
           dynamicConfig: compiler.dynamicConfig,
-          configFiles: compiler.files,
           api: compiler.api,
           context
         };

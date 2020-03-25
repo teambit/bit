@@ -18,11 +18,13 @@ import NpmHelper from './e2e-npm-helper';
 import PackageJsonHelper from './e2e-package-json-helper';
 import ScopeHelper from './e2e-scope-helper';
 import GitHelper from './e2e-git-helper';
+import BitJsoncHelper from './e2e-bit-jsonc-helper';
 
 export default class Helper {
   debugMode: boolean;
   scopes: ScopesData;
   bitJson: BitJsonHelper;
+  bitJsonc: BitJsoncHelper;
   fs: FsHelper;
   command: CommandHelper;
   config: ConfigHelper;
@@ -39,6 +41,7 @@ export default class Helper {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.scopes = new ScopesData(); // generates dirs and scope names
     this.bitJson = new BitJsonHelper(this.scopes);
+    this.bitJsonc = new BitJsoncHelper(this.scopes);
     this.packageJson = new PackageJsonHelper(this.scopes);
     this.fs = new FsHelper(this.scopes);
     this.command = new CommandHelper(this.scopes, this.debugMode);
@@ -51,7 +54,7 @@ export default class Helper {
     this.extensions = new ExtensionsHelper(
       this.scopes,
       this.command,
-      this.bitJson,
+      this.bitJsonc,
       this.scopeHelper,
       this.fixtures,
       this.fs

@@ -20,8 +20,7 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const dirsAbsolute = dirs.map(dir => path.join(consumerPath, dir));
   await installPackages(consumer, dirsAbsolute, verbose, true);
-  const { linksResults } = await linkAllToNodeModules(consumer);
-  return linksResults;
+  return linkAllToNodeModules(consumer);
 }
 
 /**

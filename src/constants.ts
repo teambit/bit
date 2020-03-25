@@ -38,6 +38,8 @@ export const BITS_DIRNAME = 'components';
 
 export const BIT_JSON = 'bit.json';
 
+export const BIT_JSONC = 'bit.jsonc';
+
 export const GIT_IGNORE = '.gitignore';
 
 export const BIT_MAP = '.bitmap';
@@ -92,7 +94,7 @@ export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPE
 
 export const COMPONENT_DIR = 'COMPONENT_DIR';
 
-export const DEFAULT_EJECTED_ENVS_DIR_PATH = `{${COMPONENT_DIR}}`;
+export const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export const DEFAULT_SEPARATOR = '/';
 

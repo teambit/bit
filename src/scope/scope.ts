@@ -250,7 +250,7 @@ export default class Scope {
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure = true): Promise<BitIds> {
-    componentIds = componentIds.map(componentId => componentId.changeVersion(null));
+    componentIds = componentIds.map(componentId => componentId.changeVersion(undefined));
     const components = await this.sources.getMany(componentIds);
     const ids = components.map(component => {
       const getVersion = () => {
@@ -572,6 +572,10 @@ export default class Scope {
     const componentVersion = modelComponent.toComponentVersion(id.version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return componentVersion.toConsumer(this.objects);
+  }
+
+  async getManyConsumerComponents(ids: BitId[]): Promise<Component[]> {
+    return Promise.all(ids.map(id => this.getConsumerComponent(id)));
   }
 
   /**

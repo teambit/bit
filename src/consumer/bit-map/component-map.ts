@@ -12,8 +12,7 @@ import { AddContext } from '../component-ops/add-components/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import ConfigDir from './config-dir';
-import ShowDoctorError from '../../error/show-doctor-error';
+import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined
 // @ts-ignore
@@ -31,7 +30,6 @@ export type ComponentMapData = {
   mainFile: PathLinux;
   rootDir?: PathLinux;
   trackDir?: PathLinux;
-  configDir?: PathLinux | ConfigDir | string;
   origin: ComponentOrigin;
   originallySharedDir?: PathLinux;
   wrapDir?: PathLinux;
@@ -49,38 +47,20 @@ export default class ComponentMap {
   // relative to rootDir for consistency, then, when saving into the model changing them back to
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
-  trackDir: PathLinux | null | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
-  configDir: ConfigDir | null | undefined;
+  trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   origin: ComponentOrigin;
-  originallySharedDir: PathLinux | null | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
-  wrapDir: PathLinux | null | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
+  originallySharedDir: PathLinux | undefined; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   markBitMapChangedCb: Function;
-  exported: boolean | null | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
-  constructor({
-    id,
-    files,
-    mainFile,
-    rootDir,
-    trackDir,
-    configDir,
-    origin,
-    originallySharedDir,
-    wrapDir
-  }: ComponentMapData) {
-    let confDir;
-    if (configDir && typeof configDir === 'string') {
-      confDir = new ConfigDir(configDir);
-    } else if (configDir && configDir instanceof ConfigDir) {
-      confDir = configDir.clone();
-    }
+  exported: boolean | undefined; // relevant for authored components only, it helps finding out whether a component has a scope
+  constructor({ id, files, mainFile, rootDir, trackDir, origin, originallySharedDir, wrapDir }: ComponentMapData) {
     this.id = id;
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
-    this.configDir = confDir;
     this.origin = origin;
     this.originallySharedDir = originallySharedDir;
     this.wrapDir = wrapDir;
@@ -96,7 +76,6 @@ export default class ComponentMap {
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      configDir: this.configDir ? this.configDir.linuxDirPath : undefined,
       origin: this.origin,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
@@ -114,9 +93,7 @@ export default class ComponentMap {
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
-      throw new ShowDoctorError(
-        `unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`
-      );
+      throw new OutsideRootDir(filePath, rootDir);
     }
     return newPath;
   }
@@ -137,11 +114,34 @@ export default class ComponentMap {
     this.markBitMapChangedCb = markAsChangedBinded;
   }
 
-  _findFile(fileName: PathLinux): ComponentMapFile | null | undefined {
+  _findFile(fileName: PathLinux): ComponentMapFile | undefined {
     return this.files.find(file => {
       const filePath = this.rootDir ? pathJoinLinux(this.rootDir, file.relativePath) : file.relativePath;
       return filePath === fileName;
     });
+  }
+
+  changeRootDirAndUpdateFilesAccordingly(newRootDir: PathLinuxRelative) {
+    if (this.rootDir === newRootDir) return;
+    this.files.forEach(file => {
+      const filePathRelativeToConsumer = this.rootDir
+        ? pathJoinLinux(this.rootDir, file.relativePath)
+        : file.relativePath;
+      const newPath = ComponentMap.getPathWithoutRootDir(newRootDir, filePathRelativeToConsumer);
+      if (this.mainFile === file.relativePath) this.mainFile = newPath;
+      file.relativePath = newPath;
+    });
+    this.rootDir = newRootDir;
+    this.trackDir = undefined; // if there is trackDir, it's not needed anymore.
+  }
+
+  addRootDirToDistributedFiles(rootDir: PathOsBased) {
+    this.files.forEach(file => {
+      file.relativePath = file.name;
+    });
+    this.rootDir = pathNormalizeToLinux(rootDir);
+    this.mainFile = path.basename(this.mainFile);
+    this.validate();
   }
 
   updateFileLocation(fileFrom: PathOsBased, fileTo: PathOsBased): PathChange[] {
@@ -235,15 +235,6 @@ export default class ComponentMap {
     }
     for (const file of this.files) {
       if (!file.relativePath.startsWith(this.trackDir)) {
-        // Make sure we are not getting to case where we have config dir with {COMPONENT_DIR} but there is no component dir
-        // This might happen in the following case:
-        // User add a folder to bit which create the track dir
-        // Then the user eject the config to that dir
-        // Then the user adding a new file to that component which is outside of the component dir
-        // This will remove the trackDir, so just before the remove we resolve it
-        if (this.configDir) {
-          this.configDir = this.configDir.getResolved({ componentDir: this.trackDir });
-        }
         this.trackDir = undefined;
         return;
       }
@@ -253,13 +244,14 @@ export default class ComponentMap {
   /**
    * directory to track for changes (such as files added/renamed)
    */
-  getTrackDir(): PathLinux | null | undefined {
+  getTrackDir(): PathLinux | undefined {
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
       return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
     }
     // DO NOT track nested components!
-    return null;
+    return undefined;
   }
 
   /**
@@ -270,42 +262,21 @@ export default class ComponentMap {
     return this.rootDir || '.';
   }
 
+  hasRootDir(): boolean {
+    return Boolean(this.rootDir && this.rootDir !== '.');
+  }
+
   /**
    * directory of the component (root / track)
    */
-  getComponentDir(): PathLinux | null | undefined {
+  getComponentDir(): PathLinux | undefined {
+    if (this.doesAuthorHaveRootDir()) return this.rootDir;
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
     return this.rootDir;
   }
 
-  setConfigDir(val: PathLinux | null | undefined) {
-    if (val === null || val === undefined) {
-      delete this.configDir;
-      this.markBitMapChangedCb();
-      return;
-    }
-    this.markBitMapChangedCb();
-    this.configDir = new ConfigDir(val);
-  }
-
-  async deleteConfigDirIfNotExists() {
-    const resolvedDir = this.getBaseConfigDir();
-    if (resolvedDir) {
-      const isExist = await fs.pathExists(resolvedDir);
-      if (!isExist) {
-        this.setConfigDir(null);
-      }
-    }
-  }
-
-  /**
-   * Get resolved base config dir (the dir where the bit.json is) after resolving the DSL
-   */
-  getBaseConfigDir(): PathLinux | null | undefined {
-    if (!this.configDir) return null;
-    const componentDir = this.getComponentDir();
-    const configDir = this.configDir && this.configDir.getResolved({ componentDir }).getEnvTypeCleaned().linuxDirPath;
-    return configDir;
+  doesAuthorHaveRootDir(): boolean {
+    return Boolean(this.origin === COMPONENT_ORIGINS.AUTHORED && this.rootDir && this.rootDir !== '.');
   }
 
   /**
@@ -324,6 +295,7 @@ export default class ComponentMap {
         override: false, // this makes sure to not override existing files of componentMap
         trackDirFeature: true,
         allowFiles: true,
+        allowRelativePaths: false,
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
@@ -377,9 +349,6 @@ export default class ComponentMap {
     }
     if (this.rootDir && !isValidPath(this.rootDir)) {
       throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
-    }
-    if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
     }
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);

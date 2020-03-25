@@ -10,6 +10,7 @@ describe('flow of a long-dependencies-chain', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -42,7 +43,7 @@ describe('flow of a long-dependencies-chain', function() {
           }
 
           helper.fs.createFile(dir, `${file}.js`, impl);
-          helper.command.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
+          helper.command.addComponentAllowFiles(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
           helper.command.tagComponent(`${dir}/${file}`);
           helper.command.exportComponent(`${dir}/${file}`);
         }

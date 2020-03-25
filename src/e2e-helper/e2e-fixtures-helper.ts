@@ -43,15 +43,27 @@ export default class FixtureHelper {
   }
 
   addComponentBarFoo() {
-    return this.command.addComponent('bar/foo.js', { i: 'bar/foo' });
+    return this.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo' });
+  }
+
+  addComponentBarFooLegacy() {
+    return this.command.addComponentLegacy('bar/foo.js', { i: 'bar/foo' });
   }
 
   addComponentUtilsIsType() {
-    return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
+    return this.command.addComponentAllowFiles('utils/is-type.js', { i: 'utils/is-type' });
+  }
+
+  addComponentUtilsIsTypeLegacy() {
+    return this.command.addComponentLegacy('utils/is-type.js', { i: 'utils/is-type' });
   }
 
   addComponentUtilsIsString() {
-    return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
+    return this.command.addComponentAllowFiles('utils/is-string.js', { i: 'utils/is-string' });
+  }
+
+  addComponentUtilsIsStringLegacy() {
+    return this.command.addComponentLegacy('utils/is-string.js', { i: 'utils/is-string' });
   }
 
   tagComponentBarFoo() {
@@ -64,6 +76,12 @@ export default class FixtureHelper {
   copyFixtureComponents(dir = '', cwd: string = this.scopes.localPath) {
     const sourceDir = path.join(this.getFixturesDir(), 'components', dir);
     fs.copySync(sourceDir, cwd);
+  }
+
+  copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath) {
+    const sourceDir = path.join(this.getFixturesDir(), 'extensions', dir);
+    const target = path.join(cwd, dir);
+    fs.copySync(sourceDir, target);
   }
 
   copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
@@ -114,6 +132,37 @@ export default class FixtureHelper {
   }
 
   /**
+   * important: use only this function. ignore other populateWorkspaceWith* functions, they're for
+   * legacy code (which adds files instead of directory).
+   *
+   * it creates and adds components that require each other.
+   * e.g. when creating 3 components, the workspace is: comp1 => comp2 => comp3.
+   * meaning, comp1 requires comp2 and comp2 requires comp2.
+   *
+   * it also adds app.js file.
+   * in the case of the 3 components above, the output is: "comp1 and comp2 and comp3".
+   *
+   * @returns the expected output in case "node app.js" is running
+   */
+  populateComponents(numOfComponents = 3): string {
+    const getImp = index => {
+      if (index === numOfComponents) return `module.exports = () => 'comp${index}';`;
+      const nextComp = `comp${index + 1}`;
+      return `const ${nextComp} = require('../${nextComp}');
+module.exports = () => 'comp${index} and ' + ${nextComp}();`;
+    };
+    for (let i = 1; i <= numOfComponents; i += 1) {
+      this.fs.outputFile(path.join(`comp${i}`, `index.js`), getImp(i));
+      this.command.addComponent(`comp${i}`);
+    }
+    this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
+    return Array(numOfComponents)
+      .fill(null)
+      .map((val, key) => `comp${key + 1}`)
+      .join(' and ');
+  }
+
+  /**
    * populates the local workspace with the following components:
    * 'utils/is-string' => requires a file from 'utils/is-type' component
    * 'utils/is-type'
@@ -159,13 +208,16 @@ export default class FixtureHelper {
    * to add more components to the .tgz file, extract it, add it as a remote, then from your
    * workspace import the component you want and fork it into this remote, e.g.
    * # extract the file into `/tmp` so then the scope is in `/tmp/global-remote`.
+   * cp e2e/fixtures/scopes/global-remote.tgz /tmp/
+   * cd tmp && tar -xzvf global-remote.tgz
    * # go to your workspace and run the following
    * bit remote add file:///tmp/global-remote
    * bit import bit.envs/compilers/typescript
    * bit export global-remote bit.envs/compilers/typescript --include-dependencies --force --rewire
-   * # then, cd into /tmp/global-remote and tar the directory
-   * tar -czf global-remote.tgz global-remote
+   * # then, cd into /tmp and tar the directory
+   * cd /tmp && tar -czf global-remote.tgz global-remote
    * # copy the file to the fixtures/scopes directory.
+   * cp /tmp/global-remote.tgz e2e/fixtures/scopes/
    */
   ensureGlobalRemoteScope() {
     if (fs.existsSync(this.scopes.globalRemotePath)) return;

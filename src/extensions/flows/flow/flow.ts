@@ -10,7 +10,7 @@ export class Flow {
   constructor(private tasks: string[]) {}
 
   async execute(capsule: Capsule) {
-    const id = capsule.id;
+    const id = capsule.component.id.toString();
     const startTime = new Date();
     const subject = new ReplaySubject();
     subject.next({
@@ -53,7 +53,7 @@ export class Flow {
     for (let i = index + 1; i < this.tasks.length; ++i) {
       this.result.push({
         type: 'task:error',
-        id: `${capsule.id}:${this.tasks[i]}`,
+        id: `${capsule.component.id.toString()}:${this.tasks[i]}`,
         value: new Error(`Error by ${data.id}`),
         errorBy: data
       });
@@ -67,7 +67,7 @@ export class Flow {
     const endTime = new Date();
     subject[isError ? 'error' : 'next']({
       type: 'flow:result',
-      id: capsule.id,
+      id: capsule.component.id.toString(),
       value: this.result,
       endTime,
       duration: endTime.getTime() - start.getTime()

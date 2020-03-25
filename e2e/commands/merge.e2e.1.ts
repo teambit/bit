@@ -18,6 +18,7 @@ describe('bit merge command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
@@ -402,7 +403,7 @@ describe('bit merge command', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('bar', 'foo2.js');
-        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
+        helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo' });
         scopeWithAddedFile = helper.scopeHelper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -481,7 +482,7 @@ describe('bit merge command', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('bar', 'foo2.js');
-        helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
+        helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo' });
         helper.command.tagAllComponents(); // 0.0.3
         fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo2.js'));
         helper.fixtures.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict

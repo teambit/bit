@@ -7,6 +7,8 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { BitId } from '../../bit-id';
 import { pathNormalizeToLinux } from '../../utils';
 import { ImportSpecifier } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
+import { Consumer } from '..';
+import IncorrectRootDir from '../component/exceptions/incorrect-root-dir';
 
 export type CodemodResult = {
   id: BitId;
@@ -14,7 +16,8 @@ export type CodemodResult = {
   warnings?: string[];
 };
 
-export async function changeCodeFromRelativeToModulePaths(components: Component[]): Promise<CodemodResult[]> {
+export async function changeCodeFromRelativeToModulePaths(consumer: Consumer): Promise<CodemodResult[]> {
+  const components = await loadComponents(consumer);
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map(component => {
@@ -24,6 +27,16 @@ export async function changeCodeFromRelativeToModulePaths(components: Component[
   });
   await dataToPersist.persistAllToFS();
   return codemodResults.filter(c => c.changedFiles.length || c.warnings);
+}
+
+async function loadComponents(consumer: Consumer): Promise<Component[]> {
+  const componentsIds = consumer.bitmapIds;
+  const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
+  invalidComponents.forEach(invalidComp => {
+    if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
+    else throw invalidComp.error;
+  });
+  return components;
 }
 
 function codemodComponent(component: Component): { files: SourceFile[]; warnings?: string[] } {
@@ -48,7 +61,10 @@ function codemodComponent(component: Component): { files: SourceFile[]; warnings
         return;
       }
       const packageName = componentIdToPackageName(id, component.bindingPrefix, component.defaultScope);
-      newFileString = replacePackageName(newFileString, relativeEntry.importSource, packageName);
+      const cssFamily = ['.css', '.scss', '.less', '.sass'];
+      const isCss = cssFamily.includes(file.extname);
+      const packageNameSupportCss = isCss ? `~${packageName}` : packageName;
+      newFileString = replacePackageName(newFileString, relativeEntry.importSource, packageNameSupportCss);
     });
     if (fileBefore !== newFileString) {
       // @ts-ignore

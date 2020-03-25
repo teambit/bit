@@ -1,7 +1,9 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { difference, groupBy } from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
+import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
@@ -17,16 +19,25 @@ import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../workspace-config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
+import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 
 /**
  * API of the Bit Workspace
  */
 export default class Workspace implements ComponentHost {
+  owner?: string;
+  componentsScopeDirsMap: ComponentScopeDirMap;
+
   constructor(
     /**
      * private access to the legacy consumer instance.
      */
     readonly consumer: Consumer,
+
+    /**
+     * Workspace's configuration
+     */
+    readonly config: WorkspaceConfig,
 
     /**
      * access to the Workspace's `Scope` instance
@@ -48,13 +59,10 @@ export default class Workspace implements ComponentHost {
      * private reference to the instance of Harmony.
      */
     private harmony: Harmony
-  ) {}
-
-  /**
-   * Workspace's configuration
-   */
-  get config() {
-    return this.consumer.config;
+  ) {
+    const workspaceExtConfig = this.config.getExtensionConfig('workspace');
+    this.owner = workspaceExtConfig?.owner;
+    this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
   }
 
   /**
@@ -74,15 +82,14 @@ export default class Workspace implements ComponentHost {
    */
   async list() {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    return consumerComponents.map(consumerComponent => {
-      return this.componentFactory.fromLegacyComponent(consumerComponent);
-    });
+    return this.transformLegacyComponents(consumerComponents);
   }
 
-  private transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
-    return consumerComponents.map(consumerComponent => {
+  private async transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
+    const transformP = consumerComponents.map(consumerComponent => {
       return this.componentFactory.fromLegacyComponent(consumerComponent);
     });
+    return Promise.all(transformP);
   }
 
   /**
@@ -137,6 +144,7 @@ export default class Workspace implements ComponentHost {
    */
   async get(id: string | BitId): Promise<Component | undefined> {
     const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+    if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
@@ -146,7 +154,8 @@ export default class Workspace implements ComponentHost {
    */
   async getMany(ids: Array<BitId | string>) {
     const componentIds = ids.map(id => (typeof id === 'string' ? this.consumer.getParsedId(id) : id));
-    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
+    const idsWithoutEmpty = compact(componentIds);
+    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(idsWithoutEmpty));
     // @ts-ignore
     return this.transformLegacyComponents(legacyComponents.components);
   }
@@ -167,7 +176,7 @@ export default class Workspace implements ComponentHost {
   ): Promise<AddActionResults> {
     const addComponent = new AddComponents(
       { consumer: this.consumer },
-      { componentPaths, id, main, override, allowFiles: false }
+      { componentPaths, id, main, override, allowFiles: false, allowRelativePaths: false }
     );
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
@@ -177,8 +186,8 @@ export default class Workspace implements ComponentHost {
   }
 
   async loadWorkspaceExtensions() {
-    const extensionsConfig = this.config.extensions || {};
-    const extensionsConfigGroups = this.groupByCoreExtensions(ExtensionConfigList.fromObject(extensionsConfig));
+    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
+    const extensionsConfigGroups = this.groupByCoreExtensions(extensionsConfig);
     // Do not load workspace extension again
     const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true.filter(
       config => config.id !== 'workspace'
@@ -220,8 +229,8 @@ export default class Workspace implements ComponentHost {
    * :TODO must be refactored by @gilad
    */
   private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
+    // const extensionsIds = extensionsConfig.ids;
     if (!extensionsIds || !extensionsIds.length) {
-      this.reporter.end();
       return [];
     }
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
@@ -244,6 +253,7 @@ export default class Workspace implements ComponentHost {
       this.consumer,
       { packageManager: 'yarn' }
     );
+    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
@@ -252,7 +262,6 @@ export default class Workspace implements ComponentHost {
       mod.name = id.toString();
       return mod;
     });
-    this.reporter.end();
     return manifests;
   }
 }

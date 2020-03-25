@@ -1,4 +1,3 @@
-import { ReporterExt } from '../reporter';
 import { provideReporter } from './reporter.provider';
 
 export default {
