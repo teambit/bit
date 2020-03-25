@@ -164,6 +164,7 @@ export default class Repository {
             );
             return null;
           }
+          await this.componentsIndex.deleteFile();
           // $FlowFixMe componentId must be set as it was retrieved from indexPath before
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           throw new OutdatedIndexJson(componentId, indexJsonPath);

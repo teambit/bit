@@ -88,6 +88,10 @@ export default class ComponentsIndex {
     this.index = R.without([found], this.index);
     return true;
   }
+  async deleteFile() {
+    logger.debug(`ComponentsIndex, deleting the index file at ${this.indexPath}`);
+    await fs.remove(this.indexPath);
+  }
   getPath() {
     return this.indexPath;
   }
