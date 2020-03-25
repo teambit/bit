@@ -14,11 +14,11 @@ import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 
 function findComponentNameAndVersionInGraph(graph, name, version) {
-  const componentVersions = graph.nodes().map(n => {
+  const allComponents = graph.nodes().map(n => {
     const node = graph.node(n);
     return node;
   });
-  return componentVersions.find(n => n.version === version);
+  return allComponents.find(n => n.name === name && n.version === version);
 }
 
 export default async function writeComponentsToCapsules(

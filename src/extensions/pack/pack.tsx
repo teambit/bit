@@ -39,9 +39,8 @@ export class Packer {
       return c.id.name === componentBitId.name; // TODO: maxSatisfying semver version
     });
     const capsule = idAndCapsule!.value;
-    // @ts-ignore // TODO: handle null capsule
     outDir = outDir || capsule.wrkDir;
-    const packResult = await npmPack(outDir, outDir, override);
+    const packResult = await npmPack(capsule.wrkDir, outDir, override);
     return packResult;
   }
 }
