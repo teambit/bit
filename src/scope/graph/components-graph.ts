@@ -9,6 +9,7 @@ import { ComponentsAndVersions } from '../scope';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import { Dependency } from '../../consumer/component/dependencies';
+import { Scope } from '..';
 
 export type AllDependenciesGraphs = {
   graphDeps: Graph;
@@ -73,21 +74,45 @@ export async function buildOneGraphForComponents(
   consumer: Consumer,
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
-  const graph = new Graph();
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
   const componentsWithDeps = await Promise.all(
     components.map(component => loadFlattenedDependenciesForCapsule(consumer, component))
   );
   const allComponents: Component[] = R.flatten(componentsWithDeps.map(c => [c.component, ...c.allDependencies]));
 
+  return buildGraphFromComponentsObjects(allComponents, direction);
+}
+
+/**
+ * returns one graph that includes all dependencies types. each edge has a label of the dependency
+ * type. the nodes content is the Component object.
+ */
+export async function buildOneGraphForComponentsUsingScope(
+  ids: BitId[],
+  scope: Scope,
+  direction: 'normal' | 'reverse' = 'normal'
+): Promise<Graph> {
+  const components = await scope.getManyConsumerComponents(ids);
+
+  const loadFlattened = async (component: Component): Promise<Component[]> => {
+    return scope.getManyConsumerComponents(component.getAllFlattenedDependencies());
+  };
+  const dependencies = await Promise.all(components.map(component => loadFlattened(component)));
+  const allComponents: Component[] = [...components, ...R.flatten(dependencies)];
+
+  return buildGraphFromComponentsObjects(allComponents, direction);
+}
+
+function buildGraphFromComponentsObjects(components: Component[], direction: 'normal' | 'reverse' = 'normal'): Graph {
+  const graph = new Graph();
   // set vertices
-  allComponents.forEach(component => {
+  components.forEach(component => {
     const idStr = component.id.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, component);
   });
 
   // set edges
-  allComponents.forEach((component: Component) => {
+  components.forEach((component: Component) => {
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
         const depIdStr = dependency.id.toStringWithoutVersion();

@@ -574,6 +574,10 @@ export default class Scope {
     return componentVersion.toConsumer(this.objects);
   }
 
+  async getManyConsumerComponents(ids: BitId[]): Promise<Component[]> {
+    return Promise.all(ids.map(id => this.getConsumerComponent(id)));
+  }
+
   /**
    * return undefined if component was not found
    */
