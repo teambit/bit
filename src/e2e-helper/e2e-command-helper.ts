@@ -348,8 +348,8 @@ export default class CommandHelper {
   link() {
     return this.runCmd('bit link');
   }
-  linkAndRewire() {
-    return this.runCmd('bit link --rewire');
+  linkAndRewire(ids = '') {
+    return this.runCmd(`bit link ${ids} --rewire`);
   }
   ejectConf(id = 'bar/foo', options: Record<string, any> | null | undefined) {
     const value = options
