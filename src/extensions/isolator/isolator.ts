@@ -9,11 +9,10 @@ import { PackageManager } from '../package-manager';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
 import Consumer from '../../consumer/consumer';
-import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { buildOneGraphForComponents, buildOneGraphForComponentsUsingScope } from '../../scope/graph/components-graph';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -36,15 +35,6 @@ async function createCapsulesFromComponents(components: any[], baseDir, orchOpti
   return capsules;
 }
 
-function findSuccessorsInGraph(graph, seeders) {
-  const depenenciesFromAllIds = flatten(seeders.map(bitId => graph.getSuccessorsByEdgeTypeRecursively(bitId)));
-  const components: ConsumerComponent[] = filter(
-    val => val,
-    uniq(concat(depenenciesFromAllIds, seeders)).map((id: string) => graph.node(id))
-  );
-  return components;
-}
-
 export default class Isolator {
   constructor(private packageManager: PackageManager) {}
   static async provide([packageManager]: IsolatorDeps) {
@@ -57,13 +47,16 @@ export default class Isolator {
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
-  async createNetworkFromScope(seeders: string[], opts?: {}): Promise<Network> {
-    const scope = await loadScope(process.cwd());
-    const graph = await Graph.buildGraphFromScope(scope);
+  async createNetworkFromScope(seeders: string[], scope, opts?: {}): Promise<Network> {
+    // this will create a graph from only the specific components
+    const seedersIds = await Promise.all(seeders.map(seeder => scope.getParsedId(seeder)));
+    const graph = await buildOneGraphForComponentsUsingScope(seedersIds, scope);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(scope.path)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
   async createNetwork(seeders: string[], graph: Graph, baseDir, opts?: {}) {
+    // TODO: properly separate opts into opts intended for writeComponentsToCapsules
+    // and opts intended for createCapsulesFromComponents
     const config = Object.assign(
       {},
       {
@@ -72,7 +65,7 @@ export default class Isolator {
       },
       opts
     );
-    const components = findSuccessorsInGraph(graph, seeders);
+    const components = graph.nodes().map(n => graph.node(n));
     const capsules = await createCapsulesFromComponents(components, baseDir, config);
 
     const capsuleList = new CapsuleList(
@@ -83,7 +76,7 @@ export default class Isolator {
     );
     // const before = await getPackageJSONInCapsules(capsules);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name, opts);
     // const after = await getPackageJSONInCapsules(capsules);
 
     // const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));

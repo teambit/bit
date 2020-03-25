@@ -1,4 +1,5 @@
 import { concat } from 'ramda';
+import semver from 'semver';
 import ConsumerComponent from '../../consumer/component';
 import { Capsule } from './capsule';
 import { getComponentLinks } from '../../links/link-generator';
@@ -12,17 +13,28 @@ import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 
+function findComponentNameAndVersionInGraph(graph, name, version) {
+  const componentVersions = graph.nodes().map(n => {
+    const node = graph.node(n);
+    return node;
+  });
+  return componentVersions.find(n => n.version === version);
+}
+
 export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
   graph: Graph,
   capsules: Capsule[],
   capsuleList: CapsuleList,
-  packageManager: string
+  packageManager: string,
+  opts?: any
 ) {
   const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const dependencies = component.dependencies.get().map(dep => graph.node(dep.id.toString()));
+    const dependencies = component.dependencies.get().map(dep => {
+      return findComponentNameAndVersionInGraph(graph, dep.id.name, dep.id.version);
+    });
     const devDependencies = component.devDependencies.get().map(dep => graph.node(dep.id.toString()));
     const compilerDependencies = component.compilerDependencies.get().map(dep => graph.node(dep.id.toString()));
     const testerDependencies = component.testerDependencies.get().map(dep => graph.node(dep.id.toString()));
@@ -34,27 +46,31 @@ export default async function writeComponentsToCapsules(
       testerDependencies
     });
   });
-  const concreteOpts: ManyComponentsWriterParams = {
-    componentsWithDependencies,
-    writeToPath,
-    override: false,
-    writePackageJson: true,
-    writeConfig: false,
-    writeBitDependencies: true,
-    createNpmLinkFiles: false,
-    saveDependenciesAsComponents: false,
-    writeDists: false,
-    installNpmPackages: false,
-    installPeerDependencies: false,
-    addToRootPackageJson: false,
-    verbose: false,
-    excludeRegistryPrefix: false,
-    silentPackageManagerResult: false,
-    isolated: true,
-    capsulePaths,
-    packageManager
-  };
-  componentsWithDependencies.map(cmp => normalizeComponentDir(cmp));
+  const concreteOpts: ManyComponentsWriterParams = Object.assign(
+    {},
+    {
+      componentsWithDependencies,
+      writeToPath,
+      override: false,
+      writePackageJson: true,
+      writeConfig: false,
+      writeBitDependencies: true,
+      createNpmLinkFiles: false,
+      saveDependenciesAsComponents: false,
+      writeDists: false,
+      installNpmPackages: false,
+      installPeerDependencies: false,
+      addToRootPackageJson: false,
+      verbose: false,
+      excludeRegistryPrefix: false,
+      silentPackageManagerResult: false,
+      isolated: true,
+      capsulePaths,
+      packageManager
+    },
+    opts
+  );
+  componentsWithDependencies.map(cmp => cmp && normalizeComponentDir(cmp));
   const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
   await manyComponentsWriter._populateComponentsFilesToWrite();
   componentsWithDependencies.forEach(componentWithDependencies => {

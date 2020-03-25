@@ -1,13 +1,16 @@
 import path from 'path';
 import execa from 'execa';
 import fs from 'fs-extra';
+import { Isolator } from '../isolator';
 import LegacyScope from '../../scope/scope';
 import IsolatedEnvironment from '../../environment';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 
+import { BitId } from '../../bit-id';
+
 export class Packer {
-  constructor(private scope?: LegacyScope) {}
+  constructor(private isolator: Isolator, private scope?: LegacyScope) {}
 
   async packComponent(
     componentId: string,
@@ -21,24 +24,24 @@ export class Packer {
     if (!scope) {
       throw new ScopeNotFound(scopePath);
     }
-    // TODO: change to use the new capsule
-    const isolatedEnvironment = new IsolatedEnvironment(scope, undefined);
-    await isolatedEnvironment.create();
-    const isolatePath = isolatedEnvironment.path;
-    const isolateOpts = {
-      writeBitDependencies: true,
-      createNpmLinkFiles: true,
-      installPackages: false,
-      noPackageJson: false,
+    const componentBitId = BitId.parse(componentId);
+    const network = await this.isolator.createNetworkFromScope([componentBitId.toString()], scope, {
       excludeRegistryPrefix: !prefix,
-      saveDependenciesAsComponents: false
-    };
-    await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
-    outDir = outDir || isolatePath;
-    const packResult = await npmPack(isolatePath, outDir, override);
-    if (!keep) {
-      await isolatedEnvironment.destroy();
-    }
+      createNpmLinkFiles: true
+    });
+    const idAndCapsule = network.capsules.find(c => {
+      if (componentBitId.name && componentBitId.version === 'latest') {
+        return c.id.name === componentBitId.name; // TODO: maxSatisfying semver version
+      }
+      if (componentBitId.name && componentBitId.version) {
+        return c.id.name === componentBitId.name && c.id.version === componentBitId.version;
+      }
+      return c.id.name === componentBitId.name; // TODO: maxSatisfying semver version
+    });
+    const capsule = idAndCapsule!.value;
+    // @ts-ignore // TODO: handle null capsule
+    outDir = outDir || capsule.wrkDir;
+    const packResult = await npmPack(outDir, outDir, override);
     return packResult;
   }
 }

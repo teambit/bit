@@ -9,6 +9,7 @@ import State from './state';
 import Snap, { Author } from './snap';
 import Isolator from '../isolator/isolator';
 import { loadConsumerIfExist } from '../../consumer';
+import { loadScope } from '../../scope';
 
 /**
  * in-memory representation of a component.
@@ -68,7 +69,7 @@ export default class Component {
     const consumer = await loadConsumerIfExist();
     const isolatedEnvironment = consumer
       ? await this.isolator.createNetworkFromConsumer([id], consumer)
-      : await this.isolator.createNetworkFromScope([id]);
+      : await this.isolator.createNetworkFromScope([id], await loadScope());
     return isolatedEnvironment.capsules[id];
   }
 

@@ -27,11 +27,12 @@ export default class Graph extends GraphLib {
     return successorsList;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromScope(scope: Scope): Promise<Graph> {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
+
     await this.addScopeComponentsAsNodes(allModelComponents, graph);
+    return graph;
   }
 
   static _addDependenciesToGraph(id: BitId, graph: Graph, component: Version | Component): void {
