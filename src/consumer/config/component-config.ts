@@ -10,6 +10,7 @@ import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
+import logger from '../../logger/logger';
 
 type ConfigProps = {
   lang?: string;
@@ -129,7 +130,7 @@ export default class ComponentConfig extends AbstractConfig {
     componentConfig: Record<string, any>,
     workspaceConfig: WorkspaceConfig | undefined
   ): ComponentConfig {
-    const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : {};
+    const plainWorkspaceConfig = workspaceConfig ? workspaceConfig._legacyPlainObject() : undefined;
     let workspaceConfigToMerge;
     if (plainWorkspaceConfig) {
       workspaceConfigToMerge = filterObject(plainWorkspaceConfig, (val, key) => key !== 'overrides');
@@ -228,11 +229,16 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   static async runOnLoadEvent(componentConfigLoadingRegistry, config) {
-    const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(extId => {
+    const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(async extId => {
       const func = componentConfigLoadingRegistry[extId];
       return func(config);
     });
-    return Promise.all(onLoadSubscribersP);
+    try {
+      await Promise.all(onLoadSubscribersP);
+    } catch (err) {
+      logger.warn('extension on load event throw an error');
+      logger.warn(err);
+    }
   }
 }
 

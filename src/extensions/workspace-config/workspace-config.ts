@@ -27,7 +27,7 @@ export type LegacyInitProps = {
 
 export type WorkspaceConfigFileInputProps = {
   workspace: WorkspaceSettingsProps;
-  components?: ConsumerOverrides;
+  variants?: ConsumerOverrides;
 };
 export type WorkspaceConfigFileProps = {
   $schema: string;
@@ -98,7 +98,7 @@ export default class WorkspaceConfig {
    */
   get componentsConfig(): ConsumerOverrides | undefined {
     if (this.data) {
-      return ConsumerOverrides.load(this.data.components);
+      return ConsumerOverrides.load(this.data.variants);
     }
     // legacy configs
     return this.legacyConfig?.overrides;
@@ -107,7 +107,6 @@ export default class WorkspaceConfig {
   getComponentConfig(componentId: BitId): ConsumerOverridesOfComponent {
     const componentsConfig = this.componentsConfig;
     const config = componentsConfig?.getOverrideComponentData(componentId) || {};
-
     const plainLegacy = this._legacyPlainObject();
     // Update envs from the root workspace object in case of legacy workspace config
     if (plainLegacy) {
