@@ -13,6 +13,7 @@ import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -51,7 +52,8 @@ export default class Isolator {
   }
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
-    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
+    const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
