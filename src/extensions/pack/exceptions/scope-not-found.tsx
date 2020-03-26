@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
 import { PaperError } from '../../paper';
 

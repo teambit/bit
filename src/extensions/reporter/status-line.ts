@@ -10,6 +10,7 @@ import getColumnCount from './get-column-count';
 const SPACE_BUFFER = 10;
 
 function clearStatusRow() {
+  // eslint-disable-next-line no-console
   console.log(
     `\r${Array(getColumnCount())
       .fill(' ')

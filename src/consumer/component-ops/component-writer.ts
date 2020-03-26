@@ -1,5 +1,4 @@
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
 import * as path from 'path';

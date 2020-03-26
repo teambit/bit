@@ -1,4 +1,3 @@
-import { Harmony } from '@teambit/harmony';
 // import WorkspaceConfig from './workspace-config';
 import { getConsumerInfo } from '../../consumer/consumer-locator';
 
@@ -6,7 +5,7 @@ export type WorkspaceConfigDeps = [];
 
 export type WorkspaceConfigConfig = {};
 
-export default async function provideWorkspaceConfig(_deps: WorkspaceConfigDeps, harmony: Harmony) {
+export default async function provideWorkspaceConfig() {
   // Using the getConsumerInfo since it is doing propagation until it finds the config
   try {
     const workspaceInfo = await getConsumerInfo(process.cwd());

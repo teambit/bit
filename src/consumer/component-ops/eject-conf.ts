@@ -1,4 +1,3 @@
-import * as path from 'path';
 import ConsumerComponent from '../component/consumer-component';
 import ComponentConfig from '../config';
 import Consumer from '../consumer';
@@ -34,9 +33,6 @@ export async function getEjectConfDataToPersist(
   }
 
   const id = component.id.toStringWithoutVersion();
-
-  const consumerPath: PathOsBased = consumer.getPath();
-  const bitJsonDirFullPath = path.normalize(path.join(consumerPath, componentDir));
   const bitJson = getBitJsonToWrite(component);
   const jsonFilesToWrite = await bitJson.prepareToWrite({
     workspaceDir: consumer.getPath(),

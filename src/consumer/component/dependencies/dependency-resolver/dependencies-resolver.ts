@@ -16,7 +16,6 @@ import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import { RelativePath } from '../dependency';
 import EnvExtension from '../../../../legacy-extensions/env-extension';
-import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -461,6 +460,7 @@ export default class DependencyResolver {
     return this.consumer.bitMap.getComponentIdByPath(newDepFile);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
     const dependency = this.componentFromModel
       .getAllDependencies()

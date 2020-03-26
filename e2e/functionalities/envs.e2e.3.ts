@@ -196,7 +196,6 @@ describe.skip('envs', function() {
     describe('detach envs from consumer config', () => {
       let fullComponentFolder;
       let compId;
-      let scopeAfterDetach;
       before(() => {
         // Change the component envs in imported environment to make sure they are detached
         helper.scopeHelper.reInitLocalScope();
@@ -214,7 +213,6 @@ describe.skip('envs', function() {
         componentFilesystem = helper.command.showComponentParsed('comp/my-comp');
         compilerLoaded = componentFilesystem.compiler;
         testerLoaded = componentFilesystem.tester;
-        scopeAfterDetach = helper.scopeHelper.cloneLocalScope();
       });
       after(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScopeBeforeChanges);
@@ -640,8 +638,6 @@ describe.skip('envs', function() {
       describe('eject conf', () => {
         let fullComponentFolder;
         let bitJsonPath;
-        let babelrcPath;
-        let mochaConfPath;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
           fullComponentFolder = path.join(helper.scopes.localPath, componentFolder);
@@ -658,9 +654,6 @@ describe.skip('envs', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
             bitJsonPath = path.join(fullComponentFolder, 'bit.json');
-            babelrcPath = path.join(fullComponentFolder, '.babelrc');
-            mochaConfPath = path.join(fullComponentFolder, 'mocha-config.opts');
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             helper.command.ejectConf('comp/my-comp');
           });
           it('should write the bit.json to the component folder', () => {
@@ -669,18 +662,8 @@ describe.skip('envs', function() {
         });
       });
       describe('inject conf', () => {
-        let fullComponentFolder;
-        let bitJsonPath;
-        let babelRcPath;
-        let mochaConfigPath;
-        let componentMap;
-        let compilerFolder;
-        let testerFolder;
-        let compId;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(importedScopeBeforeChanges);
-          fullComponentFolder = path.join(helper.scopes.localPath, componentFolder);
-          compId = `${helper.scopes.remote}/comp/my-comp@0.0.1`;
         });
         describe('negative tests', () => {
           it('should show error if the component id does not exist', () => {
@@ -705,9 +688,6 @@ describe.skip('envs', function() {
       let bitJsonPath;
 
       describe('with default ejectedEnvsDirectory', () => {
-        const envFilesFolder = componentFolder;
-        const compilerFilesFolder = envFilesFolder;
-        const testerFilesFolder = envFilesFolder;
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.scopeHelper.addRemoteScope();

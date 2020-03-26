@@ -15,7 +15,7 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
 import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';

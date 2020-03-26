@@ -740,7 +740,6 @@ export default class Component {
         if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
-          const isTesterDetached = await component.getDetachedTester(consumer);
 
           const context: Record<string, any> = {
             componentObject: component.toObject(),

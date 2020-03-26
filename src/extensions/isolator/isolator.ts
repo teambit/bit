@@ -1,7 +1,7 @@
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
-import { flatten, filter, uniq, concat, map, equals } from 'ramda';
+import { flatten, filter, uniq, concat, map } from 'ramda';
 import { CACHE_ROOT } from '../../constants';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
