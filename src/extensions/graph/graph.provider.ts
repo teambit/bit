@@ -1,9 +1,10 @@
 import { Workspace } from '../workspace';
-import { ComponentGraph } from './component-graph';
+import { Scope } from '../scope';
 import { ComponentFactory } from '../component';
+import { GraphBuilder } from './graph-builder';
 
-export type GraphDeps = [Workspace, ComponentFactory];
+export type GraphDeps = [Workspace, Scope, ComponentFactory];
 
-export async function provide([workspace, componentFactory]: GraphDeps) {
-  return ComponentGraph.build(workspace, componentFactory);
+export async function provide([workspace, scope, componentFactory]: GraphDeps) {
+  return new GraphBuilder(componentFactory, workspace, scope);
 }

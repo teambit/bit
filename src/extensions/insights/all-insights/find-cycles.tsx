@@ -2,19 +2,26 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
-import { ComponentGraph } from '../../graph/component-graph';
+import { GraphBuilder } from '../../graph';
 
 export const INSIGHT_NAME = 'findCycles';
 
 export default class FindCycles implements Insight {
   name = INSIGHT_NAME;
   description = 'Get all cyclic dependencies in component graph';
-  graph: ComponentGraph;
-  constructor(graph: ComponentGraph) {
-    this.graph = graph;
+  graphBuilder: GraphBuilder;
+  constructor(graphBuilder: GraphBuilder) {
+    this.graphBuilder = graphBuilder;
   }
   async _runInsight(): Promise<RawResult> {
-    const cycles = this.graph.findCycles();
+    const graph = await this.graphBuilder.getGraph();
+    if (!graph) {
+      return {
+        message: '',
+        data: undefined
+      };
+    }
+    const cycles = graph.findCycles();
     if (cycles.length === 1) {
       return {
         message: `Found ${cycles.length} cycle.`,

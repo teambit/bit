@@ -18,7 +18,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     super(nodes, edges);
     this.versionMap = new Map();
   }
-  static buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Graph<Component, Dependency> {
+  static buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): ComponentGraph {
     const newGraph = new ComponentGraph();
     legacyGraph.nodes().forEach(nodeId => {
       newGraph.setNode(nodeId, componentFactory.fromLegacyComponent(legacyGraph.node(nodeId)));

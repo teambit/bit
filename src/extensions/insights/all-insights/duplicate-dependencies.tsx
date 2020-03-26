@@ -2,7 +2,7 @@
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
-import { ComponentGraph } from '../../graph/component-graph';
+import { GraphBuilder } from '../../graph';
 import { VersionSubgraph } from '../../graph/duplicate-dependency';
 
 export const INSIGHT_NAME = 'duplicateDependencies';
@@ -23,12 +23,19 @@ type FormattedEntry = {
 export default class DuplicateDependencies implements Insight {
   name = INSIGHT_NAME;
   description = 'Get all duplicate dependencies in component graph';
-  graph: ComponentGraph;
-  constructor(graph: ComponentGraph) {
-    this.graph = graph;
+  graphBuilder: GraphBuilder;
+  constructor(graphBuilder: GraphBuilder) {
+    this.graphBuilder = graphBuilder;
   }
   async _runInsight(): Promise<RawResult> {
-    const duplicates = this.graph.findDuplicateDependencies();
+    const graph = await this.graphBuilder.getGraph();
+    if (!graph) {
+      return {
+        message: '',
+        data: undefined
+      };
+    }
+    const duplicates = graph.findDuplicateDependencies();
     return {
       message: `Found ${[...duplicates.keys()].length} duplicate dependencies.`,
       data: duplicates
