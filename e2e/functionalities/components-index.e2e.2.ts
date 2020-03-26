@@ -149,17 +149,14 @@ describe('scope components index mechanism', function() {
         helper.general.writeIndexJson(indexJsonWithBarFoo);
         // now, index.json has barFoo, however the scope doesn't have it
       });
-      it('bit status should throw an error', () => {
+      it('bit status should throw an error for the first time and then should work on the second run', () => {
         // used to show "Cannot read property 'scope' of null"
         const error = new OutdatedIndexJson('bar/foo', helper.general.indexJsonPath());
         const statusCmd = () => helper.command.status();
         helper.general.expectToThrow(statusCmd, error);
-      });
-      it('bit ls should throw an error', () => {
-        // used to show "Cannot read property 'toBitIdWithLatestVersion' of null"
-        const error = new OutdatedIndexJson('bar/foo', helper.general.indexJsonPath());
-        const statusCmd = () => helper.command.status();
-        helper.general.expectToThrow(statusCmd, error);
+
+        const secondRun = () => helper.command.status();
+        expect(secondRun).not.to.throw();
       });
     });
   });
