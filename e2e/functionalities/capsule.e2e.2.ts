@@ -4,7 +4,7 @@ import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
-import { AUTO_GENERATED_STAMP, COMPILER_ENV_TYPE } from '../../src/constants';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 

@@ -1,23 +1,8 @@
-import { omit, pick, find, forEachObjIndexed } from 'ramda';
+import { omit } from 'ramda';
 import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
-// TODO: get the types in a better way
-// import { BitId } from '../../bit-id';
 import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
 import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from './extension-config-list';
-
-// TODO: consider moving to workspace extension
-// const WORKSPACE_EXT_PROPS = [
-//   'componentsDefaultDirectory',
-//   'defaultScope',
-//   'dependenciesDirectory',
-//   'saveDependenciesAsComponents',
-//   'useWorkspaces',
-//   'manageWorkspaces',
-//   'bindingPrefix',
-//   'distEntry',
-//   'distTarget'
-// ];
 
 const LEGACY_PROPS = [
   'dependenciesDirectory',

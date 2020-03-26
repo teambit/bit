@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, Text, Box } from 'ink';
 import { Command, CLIArgs } from '../cli';
 import { Create } from './create';
@@ -26,6 +28,7 @@ export class CreateCmd implements Command {
       </li>
     ));
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const AddedComponent = () => (
       <Box padding={1} flexDirection="column">
         <Box>

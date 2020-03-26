@@ -1,8 +1,8 @@
 import { PathLinux } from '../../utils/path';
-import CompilerExtension from '../../legacy-extensions/compiler-extension';
-import TesterExtension from '../../legacy-extensions/tester-extension';
-import { CustomResolvedPath } from '../../consumer/component/consumer-component';
-import { ComponentOverridesData } from '../../consumer/config/component-overrides';
+// import CompilerExtension from '../../legacy-extensions/compiler-extension';
+// import TesterExtension from '../../legacy-extensions/tester-extension';
+// import { CustomResolvedPath } from '../../consumer/component/consumer-component';
+// import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 
 export type ExtensionConfig = { [name: string]: any };
 

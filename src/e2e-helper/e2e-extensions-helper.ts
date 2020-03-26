@@ -1,5 +1,3 @@
-import * as path from 'path';
-import fs from 'fs-extra';
 import CommandHelper from './e2e-command-helper';
 import BitJsoncHelper from './e2e-bit-jsonc-helper';
 import ScopesData from './e2e-scopes';
