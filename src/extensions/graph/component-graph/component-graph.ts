@@ -1,7 +1,7 @@
 import { Graph } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
 import Component from '../../component/component';
-import { Dependency } from '../index';
+import { Dependency } from '../dependency';
 import { Workspace } from '../../workspace';
 import { buildOneGraphForComponents } from '../../../scope/graph/components-graph';
 import ComponentFactory from '../../component/component-factory';
