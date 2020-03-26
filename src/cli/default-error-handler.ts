@@ -92,7 +92,7 @@ import ExtensionInitError from '../legacy-extensions/exceptions/extension-init-e
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
+import { DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../legacy-extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';

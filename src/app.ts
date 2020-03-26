@@ -1,7 +1,6 @@
 import Bluebird from 'bluebird';
 import harmony, { HarmonyError } from '@teambit/harmony';
 import HooksManager from './hooks';
-import { WorkspaceConfigExt } from './extensions/workspace-config';
 import defaultHandleError, { findErrorDefinition } from './cli/default-error-handler';
 import { logErrAndExit } from './cli/command-registry';
 import { BitExt } from './extensions/bit';

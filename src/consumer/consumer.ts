@@ -9,12 +9,7 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import LegacyWorkspaceConfig from './config/workspace-config';
-import {
-  WorkspaceConfig,
-  WorkspaceConfigFileProps,
-  WorkspaceConfigFileInputProps
-} from '../extensions/workspace-config';
+import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {

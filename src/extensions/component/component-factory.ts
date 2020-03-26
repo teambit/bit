@@ -1,11 +1,9 @@
 /* eslint-disable max-classes-per-file */
-import { mergeAll } from 'ramda';
 import Isolator from '../isolator/isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
 import ComponentID from './id';
-import { BitId } from '../../bit-id';
 
 export type ConfigFunc = () => any;
 
@@ -28,17 +26,9 @@ export default class ComponentFactory {
   create() {}
 
   /**
-   * instantiate a component object from a legacy `ComponentVersions` type object.
-   */
-  fromComponentVersions() {}
-
-  /**
    * instantiate a component object from a legacy `ConsumerComponent` type object.
    */
-  async fromLegacyComponent(legacyComponent: ConsumerComponent): Promise<Component> {
-    // console.log('im here')
-    // const extensionsConfigModificationsObject = await this.getConfigFromExtensions(legacyComponent);
-    // console.log(extensionsConfigModificationsObject)
+  fromLegacyComponent(legacyComponent: ConsumerComponent): Component {
     return new Component(
       ComponentID.fromLegacy(legacyComponent.id),
       null,

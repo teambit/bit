@@ -12,7 +12,6 @@ import { AddContext } from '../component-ops/add-components/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
-import ShowDoctorError from '../../error/show-doctor-error';
 import OutsideRootDir from './exceptions/outside-root-dir';
 
 // TODO: should be better defined

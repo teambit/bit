@@ -7,9 +7,10 @@ import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
 import TestExt from '../test/test.manifest';
-import { GraphExt } from '../graph';
+import { ComponentGraphExt } from '../graph';
 import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';
+import { InsightsExt } from '../insights';
 import { PackExt } from '../pack';
 
 export default {
@@ -22,9 +23,10 @@ export default {
     CompileExt,
     TestExt,
     ComposerExt,
-    GraphExt,
     InstallExt,
-    CreateExt
+    CreateExt,
+    InsightsExt,
+    ComponentGraphExt
   ],
   provider: provideBit
 } as ExtensionManifest;

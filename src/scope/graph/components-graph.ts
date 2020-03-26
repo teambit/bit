@@ -108,7 +108,7 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   const graph = new Graph();
   // set vertices
   components.forEach(component => {
-    const idStr = component.id.toStringWithoutVersion();
+    const idStr = component.id.toString();
     if (!graph.hasNode(idStr)) graph.setNode(idStr, component);
   });
 
@@ -116,11 +116,11 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   components.forEach((component: Component) => {
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
-        const depIdStr = dependency.id.toStringWithoutVersion();
+        const depIdStr = dependency.id.toString();
         if (direction === 'normal') {
-          graph.setEdge(component.id.toStringWithoutVersion(), depIdStr, depType);
+          graph.setEdge(component.id.toString(), depIdStr, depType);
         } else {
-          graph.setEdge(depIdStr, component.id.toStringWithoutVersion(), depType);
+          graph.setEdge(depIdStr, component.id.toString(), depType);
         }
       });
     });

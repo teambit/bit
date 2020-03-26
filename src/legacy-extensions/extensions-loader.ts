@@ -1,5 +1,5 @@
 import * as path from 'path';
-import R, { filter } from 'ramda';
+import R from 'ramda';
 import fs from 'fs-extra';
 import Extension from './extension';
 import { LoadArgsProps } from './extension';
@@ -19,7 +19,7 @@ const _getGlobalBitJson = async (throws: boolean) => {
   return (
     fs
       .readJson(globalBitJsonPath, { throws })
-      // Implementing the catch my self since the throws: false not really workging
+      // Implementing the catch my self since the throws: false not really working
       .catch(e => {
         if (throws) {
           throw e;
