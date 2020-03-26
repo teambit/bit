@@ -399,4 +399,42 @@ console.log(isType());`;
       });
     });
   });
+  describe('rewire with internal paths', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fs.createFile('src/utils', 'is-type.js', '');
+      helper.fs.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
+      helper.command.addComponentAllowFiles('src/utils/is-type.js src/utils/is-type-internal.js', {
+        i: 'utils/is-type',
+        m: 'src/utils/is-type.js'
+      });
+
+      const isStringFixture =
+        "const isType = require('./is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.fs.createFile('src/utils', 'is-string.js', '');
+      helper.fs.createFile('src/utils', 'is-string-internal.js', isStringFixture);
+      helper.command.addComponentAllowFiles('src/utils/is-string.js src/utils/is-string-internal.js', {
+        i: 'utils/is-string',
+        m: 'src/utils/is-string.js'
+      });
+
+      const barFooFixture =
+        "const isString = require('../utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.fs.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.command.addComponentAllowFiles('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      output = helper.command.linkAndRewire();
+    });
+    it('should not link', () => {
+      expect(output).to.have.string('rewired 0 components');
+    });
+    it('should show a warning explaining why they were not rewired and what needs to be done', () => {
+      expect(output).to.have.string(
+        '"src/bar/foo.js" requires "utils/is-string" through an internal file ("../utils/is-string-internal"), which makes it difficult to change the import, please change your code to export the internal file from the main file'
+      );
+      expect(output).to.have.string(
+        '"src/utils/is-string-internal.js" requires "utils/is-type" through an internal file ("./is-type-internal"), which makes it difficult to change the import, please change your code to export the internal file from the main file'
+      );
+    });
+  });
 });

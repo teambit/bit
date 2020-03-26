@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import Component from '../component/consumer-component';
 import { SourceFile } from '../component/sources';
 import { RelativeComponentsAuthoredEntry } from '../component/dependencies/dependency-resolver/dependencies-resolver';
@@ -24,7 +25,7 @@ export async function changeCodeFromRelativeToModulePaths(
   const componentsWithRelativeIssues = components.filter(c => c.issues && c.issues.relativeComponentsAuthored);
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map(component => {
-    const { files, warnings } = codemodComponent(component);
+    const { files, warnings } = codemodComponent(consumer, component);
     dataToPersist.addManyFiles(files);
     return { id: component.id, changedFiles: files.map(f => f.relative), warnings };
   });
@@ -42,7 +43,7 @@ async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Comp
   return components;
 }
 
-function codemodComponent(component: Component): { files: SourceFile[]; warnings?: string[] } {
+function codemodComponent(consumer: Consumer, component: Component): { files: SourceFile[]; warnings?: string[] } {
   const issues = component.issues;
   const files: SourceFile[] = [];
   if (!issues || !issues.relativeComponentsAuthored) return { files };
@@ -55,11 +56,23 @@ function codemodComponent(component: Component): { files: SourceFile[]; warnings
     let newFileString = fileBefore;
     relativeInstances.forEach((relativeEntry: RelativeComponentsAuthoredEntry) => {
       const id = relativeEntry.componentId;
+      const depComponentMap = consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
+      if (depComponentMap?.mainFile && depComponentMap?.mainFile !== relativeEntry.destFile) {
+        warnings.push(
+          chalk.yellow(
+            `"${file.relative}" requires "${id.toString()}" through an internal file ("${
+              relativeEntry.importSource
+            }"), which makes it difficult to change the import, please change your code to export the internal file from the main file`
+          )
+        );
+        return;
+      }
+
       if (isLinkFileHasDifferentImportType(relativeEntry.importSpecifiers)) {
         warnings.push(
           `"${file.relative}" requires "${id.toString()}" through a link-file ("${
             relativeEntry.importSource
-          }") and not directly, which makes it difficult change the import, please change your code to require the component directly`
+          }") and not directly, which makes it difficult to change the import, please change your code to require the component directly`
         );
         return;
       }

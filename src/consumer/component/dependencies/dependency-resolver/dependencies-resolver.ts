@@ -10,7 +10,7 @@ import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../uti
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
 import { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
-import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
+import { PathLinux, PathOsBased, PathLinuxRelative, PathRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
@@ -58,6 +58,7 @@ export type RelativeComponentsAuthoredEntry = {
   importSource: string;
   componentId: BitId;
   importSpecifiers: ImportSpecifier[] | undefined;
+  destFile: PathRelative;
 };
 
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
@@ -664,6 +665,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       originFile,
       componentId,
       depFileObject.importSource,
+      depFileObject.file,
       depsPaths.importSpecifiers
     );
 
@@ -1235,15 +1237,16 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsAuthoredIssues(
-    originFile,
-    componentId,
+    originFile: string,
+    componentId: BitId,
     importSource: string,
+    destFile: string,
     importSpecifiers: ImportSpecifier[] | undefined
   ) {
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }
-    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId, importSpecifiers });
+    this.issues.relativeComponentsAuthored[originFile].push({ importSource, componentId, importSpecifiers, destFile });
   }
   _pushToMissingBitsIssues(originFile: PathLinuxRelative, componentId: BitId) {
     this.issues.missingBits[originFile]

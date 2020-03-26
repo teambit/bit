@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- warn about running `bit link --rewire` for internal files, suggest to export them from the main file
 - support running `bit link` for specific components
 - fix capsule to not hang forever when running build/tag/isolate and npm emits errors
 - [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
