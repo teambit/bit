@@ -665,7 +665,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       originFile,
       componentId,
       depFileObject.importSource,
-      depFileObject.file,
+      depsPaths.sourceRelativePath,
       depsPaths.importSpecifiers
     );
 

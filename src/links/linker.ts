@@ -15,11 +15,16 @@ import { BitIds, BitId } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
+import IncorrectRootDir from '../consumer/component/exceptions/incorrect-root-dir';
 
 export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
   const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
-  const { components } = await consumer.loadComponents(componentsIds);
+  const { components, invalidComponents } = await consumer.loadComponents(componentsIds, false);
+  invalidComponents.forEach(invalidComp => {
+    if (invalidComp.error instanceof IncorrectRootDir) components.push(invalidComp.component as Component);
+    else throw invalidComp.error;
+  });
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   return nodeModuleLinker.link();
 }

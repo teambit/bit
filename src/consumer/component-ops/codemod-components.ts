@@ -70,9 +70,11 @@ function codemodComponent(consumer: Consumer, component: Component): { files: So
 
       if (isLinkFileHasDifferentImportType(relativeEntry.importSpecifiers)) {
         warnings.push(
-          `"${file.relative}" requires "${id.toString()}" through a link-file ("${
-            relativeEntry.importSource
-          }") and not directly, which makes it difficult to change the import, please change your code to require the component directly`
+          chalk.yellow(
+            `"${file.relative}" requires "${id.toString()}" through a link-file ("${
+              relativeEntry.importSource
+            }") and not directly, which makes it difficult to change the import, please change your code to require the component directly`
+          )
         );
         return;
       }
