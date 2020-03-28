@@ -2,7 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { customResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
+import { CustomResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
@@ -12,7 +12,6 @@ import { Dependencies, Dependency } from '../../consumer/component/dependencies'
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
 import { CompilerExtensionModel } from '../../legacy-extensions/compiler-extension';
 import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
-import ExtensionFile from '../../legacy-extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
@@ -39,20 +38,20 @@ export type DistFileModel = SourceFileModel;
 export type Log = {
   message: string;
   date: string;
-  username: string | null | undefined;
-  email: string | null | undefined;
+  username: string | undefined;
+  email: string | undefined;
 };
 
 export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists?: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinux | null | undefined;
-  compiler?: CompilerExtensionModel | null | undefined;
-  tester?: TesterExtensionModel | null | undefined;
+  dists?: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinux | undefined;
+  compiler?: CompilerExtensionModel | undefined;
+  tester?: TesterExtensionModel | undefined;
   log: Log;
   ci?: CiProps;
-  specsResults?: Results | null | undefined;
+  specsResults?: Results | undefined;
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
@@ -74,7 +73,8 @@ export type VersionProps = {
   compilerPackageDependencies?: EnvPackages;
   testerPackageDependencies?: EnvPackages;
   bindingPrefix?: string;
-  customResolvedPaths?: customResolvedPath[];
+  ignoreSharedDir?: boolean;
+  customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
   extensions?: ExtensionData[];
@@ -87,14 +87,14 @@ export type VersionProps = {
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
-  dists: Array<DistFileModel> | null | undefined;
-  mainDistFile: PathLinuxRelative | null | undefined;
-  compiler: CompilerExtensionModel | null | undefined;
-  tester: TesterExtensionModel | null | undefined;
+  dists: Array<DistFileModel> | undefined;
+  mainDistFile: PathLinuxRelative | undefined;
+  compiler: CompilerExtensionModel | undefined;
+  tester: TesterExtensionModel | undefined;
   log: Log;
   ci: CiProps | {};
-  specsResults: Results | null | undefined;
-  docs: Doclet[] | null | undefined;
+  specsResults: Results | undefined;
+  docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -114,8 +114,9 @@ export default class Version extends BitObject {
   peerPackageDependencies: { [key: string]: string };
   compilerPackageDependencies: EnvPackages;
   testerPackageDependencies: EnvPackages;
-  bindingPrefix: string | null | undefined;
-  customResolvedPaths: customResolvedPath[] | null | undefined;
+  bindingPrefix: string | undefined;
+  ignoreSharedDir: boolean | undefined;
+  customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
   extensions: ExtensionData[];
@@ -146,6 +147,7 @@ export default class Version extends BitObject {
     this.compilerPackageDependencies = props.compilerPackageDependencies || {};
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
+    this.ignoreSharedDir = props.ignoreSharedDir;
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
@@ -283,9 +285,7 @@ export default class Version extends BitObject {
     };
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
-    const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
-    const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
+    return [...dists, ...files].filter(ref => ref);
   }
 
   toObject() {
@@ -311,9 +311,6 @@ export default class Version extends BitObject {
         config: env.config,
         files: []
       };
-      if (env.files && !R.isEmpty(env.files)) {
-        result.files = env.files.map(ExtensionFile.fromModelObjectToObject);
-      }
       return result;
     };
 
@@ -334,6 +331,7 @@ export default class Version extends BitObject {
         mainDistFile: this.mainDistFile,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
+        ignoreSharedDir: this.ignoreSharedDir,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
@@ -399,6 +397,7 @@ export default class Version extends BitObject {
       files,
       compiler,
       bindingPrefix,
+      ignoreSharedDir,
       tester,
       log,
       docs,
@@ -486,6 +485,7 @@ export default class Version extends BitObject {
       mainDistFile,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
+      ignoreSharedDir: ignoreSharedDir || undefined,
       tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
@@ -548,11 +548,11 @@ export default class Version extends BitObject {
     flattenedCompilerDependencies: BitIds;
     flattenedTesterDependencies: BitIds;
     message: string;
-    dists: Array<DistFileModel> | null | undefined;
+    dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
-    specsResults: Results | null | undefined;
-    username: string | null | undefined;
-    email: string | null | undefined;
+    specsResults: Results | undefined;
+    username: string | undefined;
+    email: string | undefined;
   }) {
     const parseFile = file => {
       return {
@@ -573,7 +573,7 @@ export default class Version extends BitObject {
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
-      dists: dists ? dists.map(parseFile) : null,
+      dists: dists ? dists.map(parseFile) : undefined,
       mainDistFile,
       compiler,
       bindingPrefix: component.bindingPrefix,
@@ -606,6 +606,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
+      ignoreSharedDir: component.ignoreSharedDir,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -614,11 +615,11 @@ export default class Version extends BitObject {
     });
   }
 
-  setSpecsResults(specsResults: Results | null | undefined) {
+  setSpecsResults(specsResults: Results | undefined) {
     this.specsResults = specsResults;
   }
 
-  setDist(dist: Source | null | undefined) {
+  setDist(dist: Source | undefined) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {
@@ -654,8 +655,7 @@ function parseEnv(env) {
   }
   return {
     name: env.name,
-    config: env.config,
-    files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
+    config: env.config
   };
 }
 

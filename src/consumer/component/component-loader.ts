@@ -92,7 +92,19 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    let component;
+    let component: Component;
+    const handleError = error => {
+      if (throwOnFailure) throw error;
+
+      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
+        id: id.toString()
+      });
+      if (Component.isComponentInvalidByErrorType(error)) {
+        invalidComponents.push({ id, error, component });
+        return null;
+      }
+      throw error;
+    };
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
@@ -101,20 +113,11 @@ export default class ComponentLoader {
         consumer: this.consumer
       });
     } catch (err) {
-      if (throwOnFailure) throw err;
-
-      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
-        id: id.toString()
-      });
-      if (Component.isComponentInvalidByErrorType(err)) {
-        invalidComponents.push({ id, error: err });
-        return null;
-      }
-      throw err;
+      return handleError(err);
     }
     component.loadedFromFileSystem = true;
-    component.originallySharedDir = componentMap.originallySharedDir || null;
-    component.wrapDir = componentMap.wrapDir || null;
+    component.originallySharedDir = componentMap.originallySharedDir || undefined;
+    component.wrapDir = componentMap.wrapDir || undefined;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     await this._handleOutOfSyncScenarios(component);
@@ -144,7 +147,12 @@ export default class ComponentLoader {
       addExtensionsAsDevDependencies(component);
       updateDependenciesVersions(this.consumer, component);
     };
-    await loadDependencies();
+    try {
+      await loadDependencies();
+    } catch (err) {
+      return handleError(err);
+    }
+
     return component;
   }
 
@@ -165,7 +173,7 @@ export default class ComponentLoader {
     }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(undefined));
       if (modelComponent) {
         // the scope has this component but not the version used in .bitmap, sync .bitmap with
         // latest version from the scope
@@ -174,7 +182,7 @@ export default class ComponentLoader {
         component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
-        newId = currentId.changeVersion(null);
+        newId = currentId.changeVersion(undefined);
       }
     }
 
@@ -210,13 +218,19 @@ export default class ComponentLoader {
     return remoteComponent.component;
   }
 
+  clearComponentsCache() {
+    this._componentsCache = {};
+    this._componentsCacheForCapsule = {};
+    this.cacheResolvedDependencies = {};
+  }
+
   _isAngularProject(): boolean {
     return Boolean(
-      this.consumer.config.packageJsonObject &&
+      this.consumer.packageJson &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies &&
+        this.consumer.packageJson.dependencies &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
+        this.consumer.packageJson.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }
 

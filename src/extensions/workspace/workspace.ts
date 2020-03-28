@@ -1,25 +1,43 @@
+import { Harmony, ExtensionManifest } from '@teambit/harmony';
+import { difference, groupBy } from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
+import { WorkspaceConfig } from '../workspace-config';
 import { Component, ComponentFactory } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
+import { Reporter } from '../reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
 import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
+import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import GeneralError from '../../error/general-error';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../workspace-config/extension-config-list';
+import { coreConfigurableExtensions } from './core-configurable-extensions';
+import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 
 /**
  * API of the Bit Workspace
  */
 export default class Workspace implements ComponentHost {
+  owner?: string;
+  componentsScopeDirsMap: ComponentScopeDirMap;
+
   constructor(
     /**
      * private access to the legacy consumer instance.
      */
     readonly consumer: Consumer,
+
+    /**
+     * Workspace's configuration
+     */
+    readonly config: WorkspaceConfig,
 
     /**
      * access to the Workspace's `Scope` instance
@@ -33,14 +51,18 @@ export default class Workspace implements ComponentHost {
 
     readonly isolateEnv: Isolator,
 
-    private componentList: ComponentsList = new ComponentsList(consumer)
-  ) {}
+    private reporter: Reporter,
 
-  /**
-   * Workspace's configuration
-   */
-  get config() {
-    return this.consumer.config;
+    private componentList: ComponentsList = new ComponentsList(consumer),
+
+    /**
+     * private reference to the instance of Harmony.
+     */
+    private harmony: Harmony
+  ) {
+    const workspaceExtConfig = this.config.getExtensionConfig('workspace');
+    this.owner = workspaceExtConfig?.owner;
+    this.componentsScopeDirsMap = workspaceExtConfig?.components || [];
   }
 
   /**
@@ -60,15 +82,14 @@ export default class Workspace implements ComponentHost {
    */
   async list() {
     const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    return consumerComponents.map(consumerComponent => {
-      return this.componentFactory.fromLegacyComponent(consumerComponent);
-    });
+    return this.transformLegacyComponents(consumerComponents);
   }
 
-  private transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
-    return consumerComponents.map(consumerComponent => {
+  private async transformLegacyComponents(consumerComponents: ConsumerComponent[]) {
+    const transformP = consumerComponents.map(consumerComponent => {
       return this.componentFactory.fromLegacyComponent(consumerComponent);
     });
+    return Promise.all(transformP);
   }
 
   /**
@@ -123,6 +144,7 @@ export default class Workspace implements ComponentHost {
    */
   async get(id: string | BitId): Promise<Component | undefined> {
     const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+    if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);
   }
@@ -132,7 +154,8 @@ export default class Workspace implements ComponentHost {
    */
   async getMany(ids: Array<BitId | string>) {
     const componentIds = ids.map(id => (typeof id === 'string' ? this.consumer.getParsedId(id) : id));
-    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(componentIds));
+    const idsWithoutEmpty = compact(componentIds);
+    const legacyComponents = await this.consumer.loadComponents(BitIds.fromArray(idsWithoutEmpty));
     // @ts-ignore
     return this.transformLegacyComponents(legacyComponents.components);
   }
@@ -151,11 +174,94 @@ export default class Workspace implements ComponentHost {
     main?: string,
     override = false
   ): Promise<AddActionResults> {
-    const addComponent = new AddComponents({ consumer: this.consumer }, { componentPaths, id, main, override });
+    const addComponent = new AddComponents(
+      { consumer: this.consumer },
+      { componentPaths, id, main, override, allowFiles: false, allowRelativePaths: false }
+    );
     const addResults = await addComponent.add();
     // @todo: the legacy commands have `consumer.onDestroy()` on command completion, it writes the
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
     await this.consumer.bitMap.write();
     return addResults;
+  }
+
+  async loadWorkspaceExtensions() {
+    const extensionsConfig = this.config.workspaceSettings.extensionsConfig;
+    const extensionsConfigGroups = this.groupByCoreExtensions(extensionsConfig);
+    // Do not load workspace extension again
+    const coreExtensionsWithoutWorkspaceConfig = extensionsConfigGroups.true.filter(
+      config => config.id !== 'workspace'
+    );
+    const coreExtensionsManifests = coreExtensionsWithoutWorkspaceConfig.map(
+      configEntry => coreConfigurableExtensions[configEntry.id]
+    );
+    const externalExtensionsWithoutLegacy = extensionsConfigGroups.false._filterLegacy();
+    const externalExtensionsManifests = await this.resolveExtensions(externalExtensionsWithoutLegacy.ids);
+    await this.loadExtensions([...coreExtensionsManifests, ...externalExtensionsManifests]);
+  }
+
+  private groupByCoreExtensions(
+    extensionsConfig: ExtensionConfigList
+  ): { true: ExtensionConfigList; false: ExtensionConfigList } {
+    const coreNames = Object.keys(coreConfigurableExtensions);
+    const isCore = (config: ExtensionConfigEntry): boolean => {
+      return coreNames.includes(config.id);
+    };
+    const groups = groupBy(isCore, extensionsConfig);
+    groups.false = ExtensionConfigList.fromArray(groups.false);
+    groups.true = ExtensionConfigList.fromArray(groups.true);
+    return groups;
+  }
+
+  async loadExtensionsByConfig(extensionsConfig: ExtensionConfigList) {
+    const extensionsManifests = await this.resolveExtensions(extensionsConfig.ids);
+    if (extensionsManifests && extensionsManifests.length) {
+      await this.loadExtensions(extensionsManifests);
+    }
+  }
+
+  private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
+    await this.harmony.set(extensionsManifests);
+  }
+
+  /**
+   * load all of bit's extensions.
+   * :TODO must be refactored by @gilad
+   */
+  private async resolveExtensions(extensionsIds: string[]): Promise<ExtensionManifest[]> {
+    // const extensionsIds = extensionsConfig.ids;
+    if (!extensionsIds || !extensionsIds.length) {
+      return [];
+    }
+    const allRegisteredExtensionIds = this.harmony.extensionsIds;
+    const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
+    let extensionsComponents;
+    // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
+    try {
+      extensionsComponents = await this.getMany(nonRegisteredExtensions);
+    } catch (e) {
+      if (e instanceof MissingBitMapComponent) {
+        throw new GeneralError(
+          `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`
+        );
+      }
+    }
+
+    this.reporter.startPhase('Resolving extensions');
+    const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
+      extensionsComponents.map(c => c.id.toString()),
+      this.consumer,
+      { packageManager: 'yarn' }
+    );
+    this.reporter.end();
+
+    const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
+      const extPath = value.wrkDir;
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const mod = require(extPath);
+      mod.name = id.toString();
+      return mod;
+    });
+    return manifests;
   }
 }

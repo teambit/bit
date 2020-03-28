@@ -11,7 +11,7 @@ import { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ShowDoctorError from '../error/show-doctor-error';
 
-type PackageManagerResults = { stdout: string; stderr: string };
+export type PackageManagerResults = { stdout: string; stderr: string };
 
 const objectToArray = obj => map(join('@'), toPairs(obj));
 const rejectNils = R.reject(isNil);
@@ -69,10 +69,10 @@ type installArgs = {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   modules?: string[] | { [key: string]: number | string };
-  packageManager: 'librarian' | 'npm' | 'yarn';
-  packageManagerArgs: string[];
-  packageManagerProcessOptions: Record<string, any>;
-  useWorkspaces: boolean;
+  packageManager?: 'librarian' | 'npm' | 'yarn';
+  packageManagerArgs?: string[];
+  packageManagerProcessOptions?: Record<string, any>;
+  useWorkspaces?: boolean;
   dirs: string[];
   rootDir: string | null | undefined; // Used for yarn workspace
   installRootPackageJson: boolean;

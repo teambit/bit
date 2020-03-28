@@ -20,6 +20,7 @@ describe('run bit init', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -84,9 +85,9 @@ describe('run bit init', function() {
       helper.scopeHelper.cleanLocalScope();
       helper.scopeHelper.initLocalScopeWithOptions({
         '-default-directory': 'my-comps',
-        '-package-manager': 'yarn',
-        '-compiler': 'my-compiler',
-        '-tester': 'my-tester'
+        '-package-manager': 'yarn'
+        // '-compiler': 'my-compiler',
+        // '-tester': 'my-tester'
       });
       bitJson = helper.bitJson.read();
     });
@@ -96,10 +97,12 @@ describe('run bit init', function() {
     it('should set the package manager to yarn', () => {
       expect(bitJson.packageManager).to.equal('yarn');
     });
-    it('should set the compiler to my-compiler', () => {
+    // Disabled until supported by the new config
+    it.skip('should set the compiler to my-compiler', () => {
       expect(bitJson.env.compiler).to.equal('my-compiler');
     });
-    it('should set the tester to my-tester', () => {
+    // Disabled until supported by the new config
+    it.skip('should set the tester to my-tester', () => {
       expect(bitJson.env.tester).to.equal('my-tester');
     });
   });

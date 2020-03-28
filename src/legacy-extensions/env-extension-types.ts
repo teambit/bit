@@ -1,6 +1,4 @@
-import { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
-import ExtensionFile from './extension-file';
 import { PathOsBased } from '../utils/path';
 
 /**
@@ -16,7 +14,7 @@ export type EnvType = 'compiler' | 'tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType;
-  dynamicPackageDependencies?: Record<string, any> | null | undefined;
+  dynamicPackageDependencies?: Record<string, any> | undefined;
 };
 
 export type EnvExtensionOptions = BaseExtensionOptions;
@@ -24,14 +22,9 @@ export type EnvExtensionOptions = BaseExtensionOptions;
 export type EnvLoadArgsProps = BaseLoadArgsProps &
   EnvExtensionExtraProps & {
     bitJsonPath: PathOsBased;
-    files: string[];
   };
 
-export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps & { files: ExtensionFile[] };
+export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps;
 
-export type EnvExtensionModel = BaseExtensionModel & {
-  files?: ExtensionFileModel[];
-};
-export type EnvExtensionSerializedModel = BaseExtensionModel & {
-  files?: ExtensionFileSerializedModel[];
-};
+export type EnvExtensionModel = BaseExtensionModel;
+export type EnvExtensionSerializedModel = BaseExtensionModel;

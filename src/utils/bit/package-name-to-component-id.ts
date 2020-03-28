@@ -49,7 +49,6 @@ import GeneralError from '../../error/general-error';
  * component 2. when you specify bit add --id foo/bar, it actually adds the files to component 1,
  * assuming you used the entire name of the component 1 including the scope.
  */
-// eslint-disable-next-line import/prefer-default-export
 export function packageNameToComponentId(consumer: Consumer, packageName: string, bindingPrefix: string): BitId {
   const componentName = getComponentName(packageName, bindingPrefix);
 
@@ -105,8 +104,8 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
     return idWithScopeWithDot;
   }
 
-  function _idConsiderDefaultScope(): BitId | null {
-    const defaultScope = consumer.config.defaultScope;
+  function _idConsiderDefaultScope(): BitId | undefined {
+    const defaultScope = consumer.config.workspaceSettings?.defaultScope;
     if (defaultScope && componentName.startsWith(`${defaultScope}.`)) {
       const idWithDefaultScope = createBitIdAssumeDefaultScope(defaultScope, nameSplit);
       const bitmapHasExact = allBitIds.hasWithoutVersion(idWithDefaultScope);
@@ -115,7 +114,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
       if (idWithRemovedScope) return idWithRemovedScope;
       // otherwise, the component is not in .bitmap, continue with other strategies.
     }
-    return null;
+    return undefined;
   }
 }
 

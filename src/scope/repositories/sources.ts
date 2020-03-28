@@ -153,7 +153,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       return component.loadVersion(component.latest(), objectRepo).then(version => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : null;
+        const dist = source.dist ? Source.from(Buffer.from(source.dist.toString())) : undefined;
         version.setDist(dist);
         objectRepo.add(dist).add(version);
         return objectRepo.persist();
@@ -313,7 +313,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedTesterDependencies,
       specsResults
     });
-    component.addVersion(version, source.version);
+    if (source.version) {
+      component.addVersion(version, source.version);
+    }
     objectRepo.add(version).add(component);
 
     files.forEach(file => objectRepo.add(file.file));

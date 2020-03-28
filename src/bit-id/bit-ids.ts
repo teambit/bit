@@ -48,7 +48,7 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
-  searchWithoutScopeAndVersion(bitId: BitId): BitId | null | undefined {
+  searchWithoutScopeAndVersion(bitId: BitId): BitId | undefined {
     return this.find(id => id.hasSameName(bitId));
   }
 

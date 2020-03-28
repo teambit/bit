@@ -50,7 +50,7 @@ export default class ComponentOverrides {
   static loadFromConsumer(
     overridesFromConsumer: ConsumerOverridesOfComponent | null | undefined,
     overridesFromModel: ComponentOverridesData | null | undefined,
-    componentConfig: ComponentConfig | null | undefined,
+    componentConfig: ComponentConfig | undefined,
     isAuthor: boolean
   ): ComponentOverrides {
     const getFromComponent = (): ComponentOverridesData | null | undefined => {
@@ -70,7 +70,7 @@ export default class ComponentOverrides {
         return; // do nothing
       }
       if (
-        isObjectAndNotArray(overridesFromComponent[field]) && // $FlowFixMe
+        isObjectAndNotArray(overridesFromComponent[field]) &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         isObjectAndNotArray(overridesFromConsumer[field])
       ) {
@@ -89,12 +89,12 @@ export default class ComponentOverrides {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
   get componentOverridesData() {
     const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
     return R.pickBy(isNotSystemField, this.overrides);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+
   get componentOverridesPackageJsonData() {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
     return R.pickBy(isPackageJsonField, this.overrides);
@@ -175,7 +175,6 @@ export default class ComponentOverrides {
       Object.keys(this.overrides[field]).forEach(rule => {
         if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
         const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
-        // $FlowFixMe we made sure that sharedDir is not empty
         const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
         const value = this.overrides[field][rule];
         delete this.overrides[field][rule];
@@ -199,9 +198,6 @@ export default class ComponentOverrides {
   }
   static getAllFilesPaths(overrides: Record<string, any>): string[] {
     if (!overrides) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);
     return Object.keys(allDeps)
       .filter(rule => rule.startsWith(OVERRIDE_FILE_PREFIX))

@@ -17,6 +17,7 @@ chai.use(require('chai-fs'));
     let npmCiRegistry;
     before(() => {
       helper = new Helper();
+      helper.command.setFeatures('legacy-workspace-config');
     });
     after(() => {
       helper.scopeHelper.destroy();
@@ -34,9 +35,9 @@ chai.use(require('chai-fs'));
         helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
         // creating a dev dependency for bar/foo to make sure the links are not generated. (see bug #1614)
         helper.fs.createFile('fixtures', 'mock.json');
-        helper.command.addComponent('fixtures');
+        helper.command.addComponentAllowFiles('fixtures');
         helper.fs.createFile('bar', 'foo.spec.js', "require('../fixtures/mock.json');");
-        helper.command.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
+        helper.command.addComponentAllowFiles('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
         helper.command.tagAllComponents();
         helper.command.tagAllComponents('-s 0.0.2');
         helper.command.exportAllComponents();
@@ -48,7 +49,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-string');
         helper.command.importComponent('fixtures');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
@@ -77,7 +77,7 @@ chai.use(require('chai-fs'));
         });
         describe('isolating a component that requires Bit component as a package (no objects for the component)', () => {
           before(() => {
-            helper.command.addComponent('app.js');
+            helper.command.addComponentAllowFiles('app.js');
             helper.bitJson.modifyField('bindingPrefix', '@ci');
             helper.scopeHelper.addRemoteScope();
           });
@@ -105,8 +105,8 @@ chai.use(require('chai-fs'));
         });
         it('should install the dependencies using NPM', () => {
           const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
-          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
-          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string/utils`, 'is-string.js')).to.be.a.file();
+          expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type/utils`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
           const output = helper.command.runCmd('bit status');
@@ -128,8 +128,8 @@ chai.use(require('chai-fs'));
           });
           it('should install the dependencies using NPM', () => {
             const basePath = path.join(helper.scopes.localPath, 'components/bar/foo/node_modules/@ci');
-            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string`, 'is-string.js')).to.be.a.file();
-            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-string/utils`, 'is-string.js')).to.be.a.file();
+            expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type/utils`, 'is-type.js')).to.be.a.file();
           });
           it('bit status should not show any error', () => {
             const output = helper.command.runCmd('bit status');
@@ -277,7 +277,7 @@ chai.use(require('chai-fs'));
             helper.npm.initNpm(subPkgDir);
             helper.command.runCmd(`npm install @ci/${helper.scopes.remote}.bar.foo`, subPkgDir);
             helper.fs.outputFile('sub-pkg/comp/comp.js', `require('@ci/${helper.scopes.remote}.bar.foo');`);
-            helper.command.addComponent('sub-pkg/comp/comp.js');
+            helper.command.addComponentAllowFiles('sub-pkg/comp/comp.js');
           });
           it('bit status should not show the dependency as missing', () => {
             const status = helper.command.statusJson();
@@ -302,7 +302,7 @@ chai.use(require('chai-fs'));
               path.join(barFooDir, 'foo1.spec.js'),
               `require('@ci/${helper.scopes.remote}.utils.is-string');`
             ); // add another spec with same dep
-            helper.command.addComponent('-t components/bar/foo/bar/foo1.spec.js -i bar/foo');
+            helper.command.addComponentAllowFiles('-t components/bar/foo/bar/foo1.spec.js -i bar/foo');
           });
           it('bit show should not show the same devDependency twice', () => {
             const show = helper.command.showComponentParsed('bar/foo');
@@ -318,6 +318,7 @@ chai.use(require('chai-fs'));
     describe('components with nested dependencies and compiler', () => {
       before(async () => {
         helper = new Helper();
+        helper.command.setFeatures('legacy-workspace-config');
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -337,7 +338,6 @@ chai.use(require('chai-fs'));
         helper.command.importComponent('utils/is-type');
         helper.command.importComponent('utils/is-string');
 
-        helper.extensions.importNpmPackExtension();
         helper.scopeHelper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');

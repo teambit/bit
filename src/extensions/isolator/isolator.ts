@@ -1,7 +1,7 @@
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
-import { flatten, filter, uniq, concat, map, equals } from 'ramda';
+import { flatten, filter, uniq, concat, map } from 'ramda';
 import { CACHE_ROOT } from '../../constants';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
@@ -13,6 +13,7 @@ import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -51,7 +52,8 @@ export default class Isolator {
   }
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
-    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
+    const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
@@ -79,18 +81,20 @@ export default class Isolator {
         return { id, value: c };
       })
     );
-    const before = await getPackageJSONInCapsules(capsules);
+    // const before = await getPackageJSONInCapsules(capsules);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
-    const after = await getPackageJSONInCapsules(capsules);
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
+    // const after = await getPackageJSONInCapsules(capsules);
 
-    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
+    // const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));
 
+    const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
       await this.packageManager.runInstall(toInstall);
     }
+
     return {
       capsules: capsuleList,
       components: graph

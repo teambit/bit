@@ -12,27 +12,27 @@ import versionParser from '../version/version-parser';
 
 export type BitIdProps = {
   scope?: string | null | undefined;
-  box?: string | null | undefined;
+  box?: string | undefined;
   name: string;
-  version?: string | null | undefined;
+  version?: string | undefined;
 };
 
 export type BitIdStr = string;
 
 export default class BitId {
   readonly scope: string | null | undefined;
-  readonly box: string | null | undefined;
+  readonly box: string | undefined;
   readonly name: string;
-  readonly version: string | null | undefined;
+  readonly version: string | undefined;
 
   constructor({ scope, box, name, version }: BitIdProps) {
     // don't validate the id parts using isValidIdChunk here. we instance this class tons of times
     // and running regex so many times impact the performance
     if (!name) throw new InvalidName(name);
     this.scope = scope || null;
-    this.box = null;
+    this.box = undefined;
     this.name = box ? `${box}/${name}` : name;
-    this.version = version || null;
+    this.version = version || undefined;
     Object.freeze(this);
   }
 
@@ -44,7 +44,7 @@ export default class BitId {
     return new BitId({ scope: newScope, name: this.name, version: this.version });
   }
 
-  changeVersion(newVersion: string | null | undefined): BitId {
+  changeVersion(newVersion: string | undefined): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: newVersion });
   }
 
@@ -171,7 +171,7 @@ export default class BitId {
       }
 
       return {
-        scope: null,
+        scope: undefined,
         name: id
       };
     };
@@ -200,7 +200,7 @@ export default class BitId {
       if (!isValidIdChunk(name, false) || !isValidIdChunk(box, false) || !isValidScopeName(scope)) {
         throw new InvalidIdChunk(`${scope}/${box}/${name}`);
       }
-      // $FlowFixMe (in this case the realScopeName is not null)
+      // $FlowFixMe (in this case the realScopeName is not undefined)
       return new BitId({
         scope,
         box,

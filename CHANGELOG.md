@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix capsule to not hang forever when running build/tag/isolate and npm emits errors
+- [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
+- stabilize capsule by writing the same paths as the workspace relative to the component rootDir
+- stabilize Bit by eliminating the removal of shared directory upon import and having rootDir for authored components
+- fix `bit link --rewire` for css/sass/less files
+- [#2171](https://github.com/teambit/bit/issues/2171) - fix ComponentNotFound when using `bit export` with no args and a flattened dependency was converted from no-scope to a remote-scope
+- add infrastructure for feature-toggle
+- deprecate files overrides (using file:// prefix)
+- disallow adding individual files by `bit add` unless `--allow-files` flag is used
+- introduce `bit link --rewire` to change relative paths in the source code to module paths
+- prevent tagging components that require each other by relative paths (bypassable by `--allow-relative-paths`)
+- prevent exporting components when import/require uses a module path with no scope-name
 - fix components dependencies detection to resolve from package.json if not exist on the fs
 
 ## [[14.7.6] - 2020-02-23](https://github.com/teambit/bit/releases/tag/v14.7.6)

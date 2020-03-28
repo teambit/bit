@@ -11,6 +11,7 @@ describe('components that are not synced between the scope and the consumer', fu
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();

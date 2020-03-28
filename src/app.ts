@@ -27,9 +27,9 @@ try {
       return cli?.instance.run();
     })
     .catch(err => {
-      console.log(err);
-      const errorHandlerExist = findErrorDefinition(err.originalError);
-      const handledError = errorHandlerExist ? defaultHandleError(err.originalError) : err;
+      const originalError = err.originalError || err;
+      const errorHandlerExist = findErrorDefinition(originalError);
+      const handledError = errorHandlerExist ? defaultHandleError(originalError) : err;
       logErrAndExit(handledError, process.argv[1] || '');
     });
   // Catching errors from the load phase

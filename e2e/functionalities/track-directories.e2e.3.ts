@@ -3,6 +3,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
 
 //  track directories functionality = add/rename files to rootDir or trackDir
 describe('track directories functionality', function() {
@@ -10,6 +11,7 @@ describe('track directories functionality', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -22,10 +24,11 @@ describe('track directories functionality', function() {
       helper.command.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.scopeHelper.cloneLocalScope();
     });
-    it('should add the directory as trackDir in bitmap file', () => {
+    it('should add the directory as rootDir in bitmap file', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/bar');
-      expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
+      expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
+      expect(bitMap['utils/bar']).to.not.have.property('trackDir'); // this functionality had been removed
     });
     describe('creating another file in the same directory', () => {
       let statusOutput;
@@ -41,8 +44,8 @@ describe('track directories functionality', function() {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         const files = bitMap['utils/bar'].files;
-        expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
-        expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+        expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
+        expect(files).to.deep.include({ relativePath: 'foo2.js', test: false, name: 'foo2.js' });
       });
       describe('rename a non-main file', () => {
         before(() => {
@@ -55,9 +58,9 @@ describe('track directories functionality', function() {
           const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/bar');
           const files = bitMap['utils/bar'].files;
-          expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
-          expect(files).to.not.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
-          expect(files).to.deep.include({ relativePath: 'utils/bar/foo3.js', test: false, name: 'foo3.js' });
+          expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
+          expect(files).to.not.deep.include({ relativePath: 'foo2.js', test: false, name: 'foo2.js' });
+          expect(files).to.deep.include({ relativePath: 'foo3.js', test: false, name: 'foo3.js' });
           expect(files).to.have.lengthOf(2);
         });
       });
@@ -76,8 +79,8 @@ describe('track directories functionality', function() {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
         const files = bitMap['utils/bar'].files;
-        expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
-        expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+        expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
+        expect(files).to.deep.include({ relativePath: 'foo2.js', test: false, name: 'foo2.js' });
       });
     });
     describe('rename the file which is a main file', () => {
@@ -95,7 +98,7 @@ describe('track directories functionality', function() {
       it('should not rename the file in bitmap file', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
-        expect(bitMap['utils/bar'].files[0].relativePath).to.equal('utils/bar/foo.js');
+        expect(bitMap['utils/bar'].files[0].relativePath).to.equal('foo.js');
       });
     });
     describe('tagging the component', () => {
@@ -103,12 +106,12 @@ describe('track directories functionality', function() {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagAllComponents();
       });
-      it('should save the files with relativePaths relative to consumer root', () => {
+      it('should save the files with relativePaths relative to the rootDir', () => {
         const output = helper.command.catComponent('utils/bar@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(output.files[0].relativePath).to.equal('utils/bar/foo.js');
+        expect(output.files[0].relativePath).to.equal('foo.js');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(output.mainFile).to.equal('utils/bar/foo.js');
+        expect(output.mainFile).to.equal('foo.js');
       });
       describe('then adding a new file to the directory', () => {
         let statusOutput;
@@ -123,8 +126,8 @@ describe('track directories functionality', function() {
           const bitMap = helper.bitMap.read();
           expect(bitMap).to.have.property('utils/bar@0.0.1');
           const files = bitMap['utils/bar@0.0.1'].files;
-          expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
-          expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+          expect(files).to.deep.include({ relativePath: 'foo.js', test: false, name: 'foo.js' });
+          expect(files).to.deep.include({ relativePath: 'foo2.js', test: false, name: 'foo2.js' });
         });
       });
     });
@@ -133,15 +136,59 @@ describe('track directories functionality', function() {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.fs.createFile('utils', 'a.js');
-        output = helper.command.addComponent('utils/a.js --id utils/bar');
       });
-      it('should add the file successfully', () => {
-        expect(output).to.have.string('added utils/a.js');
+      describe('without --allow-files flag', () => {
+        it('should throw an error', () => {
+          const addFunc = () => helper.command.addComponent('utils/a.js', { i: 'utils/bar' });
+          const error = new AddingIndividualFiles(path.normalize('utils/a.js'));
+          helper.general.expectToThrow(addFunc, error);
+        });
       });
-      it('should remove the trackDir property from bitmap file', () => {
+      describe('with --allow-files flag', () => {
+        before(() => {
+          output = helper.general.runWithTryCatch('bit add utils/a.js --id utils/bar --allow-files');
+        });
+        // the decision has been made to throw an error in this case.
+        it.skip('should add the file successfully', () => {
+          expect(output).to.have.string('added utils/a.js');
+        });
+        // the decision has been made to throw an error in this case.
+        it.skip('should reset the rootDir to "."', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap).to.have.property('utils/bar');
+          expect(bitMap['utils/bar'].rootDir).equal('.');
+          expect(bitMap['utils/bar']).to.not.have.property('trackDir');
+        });
+        it('should throw an error suggesting to add the directory containing these files', () => {
+          expect(output).to.have.string('unable to add individual files outside the root dir');
+          expect(output).to.have.string(
+            "you can add the directory these files are located at and it'll change the root dir of the component accordingly"
+          );
+        });
+      });
+    });
+    describe('adding a parent directory', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.fs.outputFile('utils/qux/qux.js');
+        output = helper.command.addComponent('utils --id utils/bar');
+      });
+      it('should add the files in that directory successfully', () => {
+        expect(output).to.have.string('added qux/qux.js');
+      });
+      it('should change the rootDir to the newly added dir', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property('utils/bar');
+        expect(bitMap['utils/bar'].rootDir).equal('utils');
         expect(bitMap['utils/bar']).to.not.have.property('trackDir');
+      });
+      it('should change the files according to the new rootDir', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('utils/bar');
+        const files = bitMap['utils/bar'].files.map(f => f.relativePath);
+        expect(files).to.include('bar/foo.js');
+        expect(files).to.not.include('foo.js');
       });
     });
     describe('importing the component', () => {
@@ -152,10 +199,10 @@ describe('track directories functionality', function() {
         helper.command.exportAllComponents();
         helper.command.importComponent('utils/bar');
       });
-      it('should not remove the trackDir property from bitmap file', () => {
+      it('should not change the rootDir', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/bar@0.0.1`);
-        expect(bitMap[`${helper.scopes.remote}/utils/bar@0.0.1`]).to.have.property('trackDir');
+        expect(bitMap[`${helper.scopes.remote}/utils/bar@0.0.1`].rootDir).to.equal('utils/bar');
       });
     });
   });
@@ -167,16 +214,16 @@ describe('track directories functionality', function() {
       helper.fs.createFile('utils/baz', 'index.js');
       helper.command.addComponent('utils/*', { n: 'utils' });
     });
-    it('should add trackDir property for each one of the directories', () => {
+    it('should add rootDir property for each one of the directories', () => {
       const bitMap = helper.bitMap.read();
-      expect(bitMap['utils/foo']).to.have.property('trackDir');
-      expect(bitMap['utils/foo'].trackDir).to.equal('utils/foo');
+      expect(bitMap['utils/foo']).to.have.property('rootDir');
+      expect(bitMap['utils/foo'].rootDir).to.equal('utils/foo');
 
-      expect(bitMap['utils/bar']).to.have.property('trackDir');
-      expect(bitMap['utils/bar'].trackDir).to.equal('utils/bar');
+      expect(bitMap['utils/bar']).to.have.property('rootDir');
+      expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
 
-      expect(bitMap['utils/baz']).to.have.property('trackDir');
-      expect(bitMap['utils/baz'].trackDir).to.equal('utils/baz');
+      expect(bitMap['utils/baz']).to.have.property('rootDir');
+      expect(bitMap['utils/baz'].rootDir).to.equal('utils/baz');
     });
   });
   describe('add directory with tests', () => {
@@ -190,14 +237,14 @@ describe('track directories functionality', function() {
     });
     it('should track the directories without changing the test files', () => {
       const bitMap = helper.bitMap.read();
-      expect(bitMap['utils/bar']).to.have.property('trackDir');
+      expect(bitMap['utils/bar']).to.have.property('rootDir');
       expect(bitMap['utils/bar'].files).to.deep.include({
-        relativePath: 'utils/bar/foo.spec.js',
+        relativePath: 'foo.spec.js',
         test: true,
         name: 'foo.spec.js'
       });
       expect(bitMap['utils/bar'].files).to.deep.include({
-        relativePath: 'utils/bar/foo2.js',
+        relativePath: 'foo2.js',
         test: false,
         name: 'foo2.js'
       });
@@ -208,13 +255,15 @@ describe('track directories functionality', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.fs.createFile('utils/bar', 'foo2.js');
-      helper.command.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
+      helper.command.addComponentAllowFiles('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.command.runCmd('bit status');
     });
-    it('should not add the trackDir property', () => {
+    it('should set the rootDir to "."', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('utils/bar');
       expect(bitMap['utils/bar']).to.not.have.property('trackDir');
+      expect(bitMap['utils/bar']).to.have.property('rootDir');
+      expect(bitMap['utils/bar'].rootDir).to.equal('.');
     });
     it('should not add the excluded file', () => {
       const bitMap = helper.bitMap.read();

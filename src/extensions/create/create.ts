@@ -24,7 +24,8 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
-    const templateExtName = this.workspace.config.extensions.create?.template;
+    const config = this.workspace.config.workspaceSettings.getExtensionConfig('create');
+    const templateExtName = config?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
     }
@@ -33,12 +34,16 @@ export class Create {
     const nameSplit = name.split('/');
     const compName = nameSplit.pop(); // last item is the name, the rest are the namespace
     const templateResults = this.getTemplateResults(templateFunc, compName as string, templateExtName);
-    const writtenFiles = await this.writeComponentFiles(name, templateResults.files);
-    return this.workspace.add(writtenFiles, name, templateResults.main);
+    const componentPath = this.getComponentPath(name);
+    await this.writeComponentFiles(componentPath, templateResults.files);
+    return this.workspace.add([componentPath], name, templateResults.main);
   }
 
   private getComponentPath(name: string) {
-    return composeComponentPath(new BitId({ name }), this.workspace.config.componentsDefaultDirectory);
+    return composeComponentPath(
+      new BitId({ name }),
+      this.workspace.config.workspaceSettings.componentsDefaultDirectory
+    );
   }
 
   private getTemplateResults(templateFunc: Function, compName: string, templateExtName: string): TemplateFuncResult {
@@ -57,8 +62,10 @@ export class Create {
   /**
    * writes the generated template files to the default directory set in the workspace config
    */
-  private async writeComponentFiles(name: string, templateFiles: TemplateFile[]): Promise<PathOsBasedRelative[]> {
-    const componentPath = this.getComponentPath(name);
+  private async writeComponentFiles(
+    componentPath: string,
+    templateFiles: TemplateFile[]
+  ): Promise<PathOsBasedRelative[]> {
     const dataToPersist = new DataToPersist();
     const vinylFiles = templateFiles.map(templateFile => {
       const templateFileVinyl = new TemplateFileVinyl({

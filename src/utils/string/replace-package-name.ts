@@ -8,7 +8,7 @@ const doubleQuotes = '"';
  *
  * Read this regex `(${quoteType}~?)${oldName}(/|${quoteType})` as follows:
  * (${quoteType}~?) => string starts with a quote, and then zero or one tilda (~). this whole part got replaced by $1
- * ${oldName} => this is the only part in the string that really got changed, all other are preserved
+ * ${oldName} => this is the only part in the string that really get changed, all other are preserved
  * (/|${quoteType}) => string that is either a slash or a quote. (must be one of the two). this whole part got replace by $2
  */
 export default function replacePackageName(str: string, oldName: string, newName: string): string {

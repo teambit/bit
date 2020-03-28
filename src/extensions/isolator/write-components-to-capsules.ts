@@ -16,7 +16,8 @@ export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
   graph: Graph,
   capsules: Capsule[],
-  capsuleList: CapsuleList
+  capsuleList: CapsuleList,
+  packageManager: string
 ) {
   const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
@@ -50,7 +51,8 @@ export default async function writeComponentsToCapsules(
     excludeRegistryPrefix: false,
     silentPackageManagerResult: false,
     isolated: true,
-    capsulePaths
+    capsulePaths,
+    packageManager
   };
   componentsWithDependencies.map(cmp => normalizeComponentDir(cmp));
   const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

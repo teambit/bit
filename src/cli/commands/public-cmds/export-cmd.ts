@@ -34,7 +34,7 @@ export default class Export extends Command {
     [
       'r',
       'rewire',
-      'EXPERIMENTAL. when exporting to a different scope, replace import/require statements in the source code to the new scope'
+      'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope'
     ],
     ['', 'all-versions', 'export not only staged versions but all of them'],
     ['f', 'force', 'force changing a component remote without asking for a confirmation']
@@ -62,11 +62,6 @@ export default class Export extends Command {
     if (includeDependencies && !remote) {
       throw new GeneralError(
         'to use --includeDependencies, please specify a remote (the default remote gets already the dependencies)'
-      );
-    }
-    if (rewire && !includeDependencies) {
-      throw new GeneralError(
-        'to use --rewire, please enter --include-dependencies as well (there is no point of changing the require/import of dependencies without changing themselves)'
       );
     }
     return exportAction({

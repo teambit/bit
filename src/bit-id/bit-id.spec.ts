@@ -59,7 +59,7 @@ describe('Bit-id', () => {
     it('should accept an empty parameter to remove the version', () => {
       const bitId = new BitId({ scope: 'my-scope', name: 'my-name', version: '0.0.1' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(bitId.changeVersion()).to.have.property('version').that.is.null;
+      expect(bitId.changeVersion()).to.have.property('version').that.is.undefined;
     });
   });
   describe('hasScope', () => {
@@ -124,14 +124,14 @@ describe('Bit-id', () => {
       const bitId = BitId.parse('scope/my/long/comp/id', true);
       expect(bitId.scope).to.equal('scope');
       expect(bitId.name).to.equal('my/long/comp/id');
-      expect(bitId.box).to.be.null;
+      expect(bitId.box).to.be.undefined;
       expect(bitId.version).to.equal('latest');
     });
     it('should parse id without scope correctly', () => {
       const bitId = BitId.parse('scope/my/long/comp/id', false);
       expect(bitId.scope).to.be.null;
       expect(bitId.name).to.equal('scope/my/long/comp/id');
-      expect(bitId.box).to.be.null;
+      expect(bitId.box).to.be.undefined;
       expect(bitId.version).to.equal('latest');
     });
     it('should throw for an invalid id', () => {

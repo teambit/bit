@@ -1,7 +1,7 @@
 import { ExtensionManifest } from '@teambit/harmony';
 
 export const DependencyResolver: ExtensionManifest = {
-  name: 'DependencyResolver',
+  name: 'dependencyResolver',
   dependencies: [],
   provider: async () => {}
 };

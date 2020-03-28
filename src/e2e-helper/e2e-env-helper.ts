@@ -41,10 +41,23 @@ export default class EnvHelper {
     return this.command.runCmd(`bit import ${id} --compiler`);
   }
 
-  importTypescriptCompiler() {
+  importTypescriptCompiler(version = '3.0.0') {
     this.fixtures.ensureGlobalRemoteScope();
     this.scopeHelper.addGlobalRemoteScope();
-    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@3.0.0`);
+    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@${version}`);
+  }
+
+  getTypeScriptSettingsForES5() {
+    return {
+      rawConfig: {
+        tsconfig: {
+          compilerOptions: {
+            target: 'ES5',
+            module: 'CommonJS'
+          }
+        }
+      }
+    };
   }
 
   importDummyCompiler(dummyType = 'dummy') {
@@ -86,7 +99,7 @@ export default class EnvHelper {
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
-    this.command.runCmd('bit add compiler.js -i compilers/dummy', tempScopePath);
+    this.command.addComponentAllowFiles('compiler.js', { i: 'compilers/dummy' }, tempScopePath);
     this.command.runCmd('bit tag compilers/dummy -m msg', tempScopePath);
 
     fs.emptyDirSync(this.scopes.envPath);
@@ -121,7 +134,7 @@ export default class EnvHelper {
       }
     });
     this.command.runCmd('npm install', tempScopePath);
-    this.command.runCmd('bit add tester.js -i testers/dummy', tempScopePath);
+    this.command.addComponentAllowFiles('tester.js', { i: 'testers/dummy' }, tempScopePath);
     this.command.runCmd('bit tag testers/dummy -m msg', tempScopePath);
 
     fs.emptyDirSync(this.scopes.envPath);
@@ -169,7 +182,7 @@ export default class EnvHelper {
     ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
     ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
 
-    this.command.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
+    this.command.addComponentAllowFiles('compiler.js', { i: 'compilers/babel' }, tempScopePath);
     this.command.runCmd('bit tag compilers/babel -m msg', tempScopePath);
 
     fs.emptyDirSync(this.scopes.envPath);

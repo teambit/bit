@@ -1,5 +1,4 @@
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import semver from 'semver';
 import * as path from 'path';
@@ -9,20 +8,13 @@ import { ComponentOrigin } from '../bit-map/component-map';
 import Consumer from '../consumer';
 import logger from '../../logger/logger';
 import { pathNormalizeToLinux, getPathRelativeRegardlessCWD } from '../../utils/path';
-import {
-  COMPONENT_ORIGINS,
-  COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
-  DEFAULT_EJECTED_ENVS_DIR_PATH,
-  COMPONENT_DIST_PATH_TEMPLATE
-} from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import BitMap from '../bit-map/bit-map';
-import ConfigDir from '../bit-map/config-dir';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
@@ -33,12 +25,11 @@ export type ComponentWriterProps = {
   component: Component;
   writeToPath: PathOsBasedRelative;
   writeConfig?: boolean;
-  configDir?: string;
   writePackageJson?: boolean;
   override?: boolean;
   isolated?: boolean;
   origin: ComponentOrigin;
-  consumer: Consumer | null | undefined;
+  consumer: Consumer | undefined;
   bitMap: BitMap;
   writeBitDependencies?: boolean;
   deleteBitDirContent?: boolean;
@@ -51,23 +42,21 @@ export default class ComponentWriter {
   component: Component;
   writeToPath: PathOsBasedRelative;
   writeConfig: boolean;
-  configDir: string | null | undefined;
   writePackageJson: boolean;
   override: boolean;
-  isolated: boolean | null | undefined;
+  isolated: boolean | undefined;
   origin: ComponentOrigin;
-  consumer: Consumer | null | undefined; // when using capsule, the consumer is not defined
+  consumer: Consumer | undefined; // when using capsule, the consumer is not defined
   bitMap: BitMap;
   writeBitDependencies: boolean;
-  deleteBitDirContent: boolean | null | undefined;
-  existingComponentMap: ComponentMap | null | undefined;
+  deleteBitDirContent: boolean | undefined;
+  existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   capsulePaths?: CapsulePaths;
   constructor({
     component,
     writeToPath,
     writeConfig = false,
-    configDir,
     writePackageJson = true,
     override = true,
     isolated = false,
@@ -83,7 +72,6 @@ export default class ComponentWriter {
     this.component = component;
     this.writeToPath = writeToPath;
     this.writeConfig = writeConfig;
-    this.configDir = configDir;
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.isolated = isolated;
@@ -118,7 +106,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async populateComponentsFilesToWrite(): Promise<Record<string, any>> {
+  async populateComponentsFilesToWrite(packageManager?: string): Promise<Record<string, any>> {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -133,11 +121,11 @@ export default class ComponentWriter {
     this._updateBitMapIfNeeded();
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
-    await this.populateFilesToWriteToComponentDir();
+    await this.populateFilesToWriteToComponentDir(packageManager);
     return this.component;
   }
 
-  async populateFilesToWriteToComponentDir() {
+  async populateFilesToWriteToComponentDir(packageManager?: string) {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
@@ -146,8 +134,7 @@ export default class ComponentWriter {
     const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
-      const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap, resolvedConfigDir);
+      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap);
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
@@ -164,7 +151,8 @@ export default class ComponentWriter {
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsulePaths
+        this.capsulePaths,
+        packageManager
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
@@ -177,12 +165,11 @@ export default class ComponentWriter {
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
       }
 
-      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
-      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
+      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
+      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject() : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
-      await this._populateEnvFilesIfNeeded();
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
@@ -198,54 +185,24 @@ export default class ComponentWriter {
     }
   }
 
-  addComponentToBitMap(rootDir: string | null | undefined): ComponentMap {
+  addComponentToBitMap(rootDir: string | undefined): ComponentMap {
     const filesForBitMap = this.component.files.map(file => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
-    const getConfigDir = () => {
-      if (this.configDir) return this.configDir;
-      if (this.component.componentMap) return this.component.componentMap.configDir;
-      return undefined;
-    };
 
     return this.bitMap.addComponent({
       componentId: this.component.id,
       files: filesForBitMap,
-      mainFile: pathNormalizeToLinux(this.component.mainFile), // $FlowFixMe
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      rootDir, // $FlowFixMe
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      configDir: getConfigDir(),
+      mainFile: pathNormalizeToLinux(this.component.mainFile),
+      rootDir,
       origin: this.origin,
       trackDir: this.existingComponentMap && this.existingComponentMap.trackDir,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
-  }
-
-  async _populateEnvFilesIfNeeded() {
-    [this.component.compiler, this.component.tester].forEach(env => {
-      if (!env) return;
-      env.populateDataToPersist({
-        configDir: this.writeToPath,
-        consumer: this.consumer,
-        deleteOldFiles: false,
-        verbose: false,
-        envType: env.envType
-      });
-      this.component.dataToPersist.merge(env.dataToPersist);
-    });
-
-    const areThereEnvFiles =
-      (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
-      (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
-    if (areThereEnvFiles && !this.writeConfig && !this.configDir && this.component.componentMap) {
-      this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
-      this.component.componentMap.setConfigDir(this.configDir);
-    }
   }
 
   /**
@@ -338,25 +295,23 @@ export default class ComponentWriter {
       // $FlowFixMe this.component.componentMap is set
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const context = { componentDir: this.component.componentMap.getRootDir() };
-      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
-      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
-      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
-      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : undefined;
+      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : undefined;
+      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : undefined;
+      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : undefined;
       return (
         EnvExtension.areEnvsDifferent(
-          compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+          compilerFromConsumer ? compilerFromConsumer.toModelObject() : undefined,
           compilerFromComponent
         ) ||
         EnvExtension.areEnvsDifferent(
-          testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+          testerFromConsumer ? testerFromConsumer.toModelObject() : undefined,
           testerFromComponent
         )
       );
     };
-    // $FlowFixMe this.component.componentMap is set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (this.component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
-      this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
+    if (this.component.componentMap?.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
+      this.consumer?.config?.componentsConfig?.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
@@ -436,7 +391,7 @@ export default class ComponentWriter {
       directDependentIds.map(dependentId => {
         const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
         const relativeLinkPath = this.consumer
-          ? getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id)
+          ? getNodeModulesPathOfComponent(this.consumer.config.workspaceSettings._bindingPrefix, this.component.id)
           : null;
         const nodeModulesLinkAbs =
           this.consumer && dependentComponentMap && relativeLinkPath
@@ -450,13 +405,8 @@ export default class ComponentWriter {
     );
   }
 
-  _getConfigDir() {
-    if (this.configDir) return this.configDir;
-    if (this.consumer) return this.consumer.dirStructure.ejectedEnvsDirStructure;
-    return new ConfigDir(DEFAULT_EJECTED_ENVS_DIR_PATH);
-  }
-
   _getNextPatchVersion() {
-    return semver.inc(this.component.version, 'prerelease') || '0.0.1-0';
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return semver.inc(this.component.version!, 'prerelease') || '0.0.1-0';
   }
 }

@@ -3,7 +3,10 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
-import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
+import {
+  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
+  componentIssuesLabels
+} from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -12,6 +15,7 @@ describe('workspace config', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -75,8 +79,8 @@ describe('workspace config', function() {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fs.createFile('', 'foo.js');
         helper.fs.createFile('', 'bar.js', "require('./foo');");
-        helper.command.addComponent('foo.js');
-        helper.command.addComponent('bar.js');
+        helper.command.addComponentAllowFiles('foo.js');
+        helper.command.addComponentAllowFiles('bar.js');
         helper.command.tagAllComponents();
         helper.command.tagScope('2.0.0');
         localScope = helper.scopeHelper.cloneLocalScope();
@@ -196,9 +200,9 @@ describe('workspace config', function() {
         helper.fs.createFile('foo-dir', 'foo1.js');
         helper.fs.createFile('foo-dir', 'foo2.js');
         helper.fs.createFile('bar-dir', 'bar.js', "require('../foo-dir/foo1'); require('../foo-dir/foo2'); ");
-        helper.command.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
-        helper.command.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
-        helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+        helper.command.addComponentAllowFiles('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
+        helper.command.addComponentAllowFiles('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
+        helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
         scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
         remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
@@ -214,6 +218,12 @@ describe('workspace config', function() {
           };
           helper.bitJson.addOverrides(overrides);
           showBar = helper.command.showComponentParsed('bar');
+        });
+        it('should show a warning saying that this feature is deprecated', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string(
+            'warning: file overrides (using "file://") is deprecated and will be removed on the next major version'
+          );
         });
         it('should not add any dependency to the component', () => {
           expect(showBar.dependencies).to.have.lengthOf(0);
@@ -399,6 +409,7 @@ describe('workspace config', function() {
           );
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.have.string(statusFailureMsg);
 
@@ -446,6 +457,7 @@ describe('workspace config', function() {
           showBar = helper.command.showComponentParsed('bar');
         });
         it('bit status should not show the component as missing component', () => {
+          helper.command.linkAndRewire();
           const status = helper.command.status();
           expect(status).to.not.have.string(statusFailureMsg);
         });
@@ -494,7 +506,7 @@ describe('workspace config', function() {
         before(() => {
           helper.scopeHelper.reInitLocalScope();
           helper.fs.createFile('bar-dir', 'bar.js', "require('non-exist-package')");
-          helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+          helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
 
           // an intermediate step, make sure bit status shows the component with an issue of a missing file
           const status = helper.command.status();
@@ -530,7 +542,7 @@ describe('workspace config', function() {
             'bar.js',
             "require('existing-package'); require('another-existing-package');"
           );
-          helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+          helper.command.addComponentAllowFiles('bar-dir/bar.js', { i: 'bar' });
           const overrides = {
             bar: {
               dependencies: {
@@ -563,7 +575,11 @@ describe('workspace config', function() {
             'bar.spec.js',
             "require('existing-package'); require('another-existing-package');"
           );
-          helper.command.addComponent('bar-dir/*', { i: 'bar', m: 'bar-dir/bar.js', t: 'bar-dir/bar.spec.js' });
+          helper.command.addComponentAllowFiles('bar-dir/*', {
+            i: 'bar',
+            m: 'bar-dir/bar.js',
+            t: 'bar-dir/bar.spec.js'
+          });
 
           const overrides = {
             bar: {
@@ -632,9 +648,9 @@ describe('workspace config', function() {
         helper.fs.createFile('', 'foo1.js');
         helper.fs.createFile('', 'foo2.js');
         helper.fs.createFile('', 'bar.js');
-        helper.command.addComponent('foo1.js');
-        helper.command.addComponent('foo2.js');
-        helper.command.addComponent('bar.js');
+        helper.command.addComponentAllowFiles('foo1.js');
+        helper.command.addComponentAllowFiles('foo2.js');
+        helper.command.addComponentAllowFiles('bar.js');
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
         helper.fs.createFile(
@@ -1000,8 +1016,8 @@ describe('workspace config', function() {
         });
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
-          const output = helper.command.status();
-          expect(output).to.have.string('missing package dependencies');
+          const output = helper.command.status().replace(/\n/g, '');
+          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
@@ -1012,8 +1028,8 @@ describe('workspace config', function() {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
+          helper.command.addComponentAllowFiles('bar.js');
+          helper.command.addComponentAllowFiles('foo.js');
           const overrides = {
             bar: {
               dependencies: {
@@ -1143,8 +1159,8 @@ describe('workspace config', function() {
           helper.scopeHelper.setNewLocalAndRemoteScopes();
           helper.fs.createFile('', 'bar.js');
           helper.fs.createFile('', 'foo.js');
-          helper.command.addComponent('bar.js');
-          helper.command.addComponent('foo.js');
+          helper.command.addComponentAllowFiles('bar.js');
+          helper.command.addComponentAllowFiles('foo.js');
           const overrides = {
             bar: {
               dependencies: {
@@ -1212,7 +1228,7 @@ describe('workspace config', function() {
           helper.fs.createFile('bar', 'foo-default.js');
           helper.fs.createFile('bar', 'foo1.js');
           helper.fs.createFile('bar', 'foo2.js');
-          helper.command.addComponent('bar/*');
+          helper.command.addComponentAllowFiles('bar/*');
           const bitJson = helper.bitJson.read();
           bitJson.env = { compiler: 'my-scope/default-compiler@0.0.1' };
           bitJson.overrides = {
@@ -1281,14 +1297,15 @@ describe('workspace config', function() {
         });
       });
     });
+    // legacy test in order to check the originallySharedDir
     describe('ignoring files with originallySharedDir', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         const fooFixture = 'require("../utils/is-string");';
         helper.fs.createFile('src/bar', 'foo.js', fooFixture);
         helper.fs.createFile('src/utils', 'is-string.js');
-        helper.command.addComponent('src/bar/foo.js');
-        helper.command.addComponent('src/utils/is-string.js');
+        helper.command.addComponentLegacy('src/bar/foo.js');
+        helper.command.addComponentLegacy('src/utils/is-string.js');
         const overrides = {
           foo: {
             dependencies: {
@@ -1297,7 +1314,7 @@ describe('workspace config', function() {
           }
         };
         helper.bitJson.addOverrides(overrides);
-        helper.command.tagAllComponents();
+        helper.command.tagAllComponentsLegacy();
         // intermediate step, make sure the dependency is-string is ignored
         const foo = helper.command.catComponent('foo@latest');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1328,7 +1345,7 @@ describe('workspace config', function() {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.command.tagAllComponents();
+          helper.command.tagAllComponentsLegacy();
         });
         it('should add back the sharedDir into the overrides', () => {
           const catFoo = helper.command.catComponent(`${helper.scopes.remote}/foo@latest`);
@@ -1497,7 +1514,7 @@ describe('workspace config', function() {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fs.outputFile('baz.js');
-        helper.command.addComponent('baz.js');
+        helper.command.addComponentAllowFiles('baz.js');
         overrides = {
           '*': {
             scripts: {
