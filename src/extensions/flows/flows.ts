@@ -60,6 +60,7 @@ export class Flows {
       });
     });
   }
+
   async runMultiple(flowsWithIds: IdsAndFlows, capsules: Capsule[], options?: Partial<ExecutionOptions>) {
     const getFlow = (id: ComponentID) => {
       const value = flowsWithIds.getValue(id._legacy);

@@ -1,6 +1,6 @@
 **Flows**
 ---------
-Run user flows on a network of dependent component
+Run user flows on a network of dependent components.
 
 **Product**
 - Provides a `bit run` command to execute flows over networks.
