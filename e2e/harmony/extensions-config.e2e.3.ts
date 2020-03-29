@@ -47,7 +47,7 @@ describe('harmony extension config', function() {
     let localBeforeTag;
 
     before(() => {
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.copyFixtureExtensions('dummy-extension');
