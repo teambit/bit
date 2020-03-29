@@ -48,9 +48,11 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      ComponentConfig.registerOnComponentConfigLoading('workspace', async componentConfig => {
+      ComponentConfig.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
         const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
-        return workspace.loadExtensionsByConfig(extensionsConfig);
+        // Do not try to load extension for itself (usually happen when using '*' pattern)
+        const configWithoutSelf = extensionsConfig.remove(id.toString());
+        return workspace.loadExtensionsByConfig(configWithoutSelf);
       });
       return workspace;
     }

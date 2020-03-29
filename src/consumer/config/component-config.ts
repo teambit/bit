@@ -29,7 +29,7 @@ export default class ComponentConfig extends AbstractConfig {
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
   static componentConfigLoadingRegistry: { [extId: string]: Function } = {};
-  static registerOnComponentConfigLoading(extId, func: (config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
@@ -124,7 +124,6 @@ export default class ComponentConfig extends AbstractConfig {
     } else {
       workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
     }
-    // plainWorkspaceConfig = plainWorkspaceConfig || {};
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
     return ComponentConfig.fromPlainObject(mergedObject);
@@ -209,7 +208,7 @@ export default class ComponentConfig extends AbstractConfig {
       workspaceConfig
     );
 
-    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentConfig);
+    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
     componentConfig.path = bitJsonPath;
     const extensionsAddedConfig = await getConfigFromExtensions(
       componentId,
@@ -223,10 +222,10 @@ export default class ComponentConfig extends AbstractConfig {
     return componentConfig;
   }
 
-  static async runOnLoadEvent(componentConfigLoadingRegistry, config) {
+  static async runOnLoadEvent(componentConfigLoadingRegistry, id, config) {
     const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(async extId => {
       const func = componentConfigLoadingRegistry[extId];
-      return func(config);
+      return func(id, config);
     });
     try {
       await Promise.all(onLoadSubscribersP);

@@ -26,6 +26,10 @@ export class ExtensionConfigList extends Array<ExtensionConfigEntry> {
     return res;
   }
 
+  remove(id: string) {
+    return ExtensionConfigList.fromArray(this.filter(ext => ext.id !== id));
+  }
+
   _filterLegacy(): ExtensionConfigList {
     return ExtensionConfigList.fromArray(this.filter(ext => !ext.config.__legacy));
   }
