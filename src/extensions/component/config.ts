@@ -1,10 +1,9 @@
 import { PathLinux } from '../../utils/path';
+import { ExtensionDataList } from '../../consumer/config/extension-data';
 // import CompilerExtension from '../../legacy-extensions/compiler-extension';
 // import TesterExtension from '../../legacy-extensions/tester-extension';
 // import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 // import { ComponentOverridesData } from '../../consumer/config/component-overrides';
-
-export type ExtensionConfig = { [name: string]: any };
 
 /**
  * in-memory represnentation of the component configuration.
@@ -38,6 +37,6 @@ export default class Config {
     /**
      * configured extensions
      */
-    readonly extensions: ExtensionConfig
+    readonly extensions: ExtensionDataList
   ) {}
 }

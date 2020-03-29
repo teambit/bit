@@ -17,7 +17,7 @@ import { PathOsBasedRelative } from '../../utils/path';
 import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import GeneralError from '../../error/general-error';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../workspace-config/extension-config-list';
+import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 

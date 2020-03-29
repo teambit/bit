@@ -70,19 +70,11 @@ import ExtensionIsolateResult from '../../legacy-extensions/extension-isolate-re
 import { Capsule } from '../../extensions/isolator/capsule';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import IncorrectRootDir from './exceptions/incorrect-root-dir';
+import { ExtensionDataList } from '../config/extension-data';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
 export type InvalidComponent = { id: BitId; error: Error; component: Component | undefined };
-
-// TODO: Change id to bitId
-export type ExtensionData = {
-  id?: string; // Here for backward compatibility. don't use it
-  extensionId?: BitId; // Used to store external extensions
-  name?: string; // Used to store core extensions
-  data?: { [key: string]: any };
-  config?: { [key: string]: any };
-};
 
 export type ComponentProps = {
   name: string;
@@ -122,7 +114,7 @@ export type ComponentProps = {
   origin: ComponentOrigin;
   log?: Log;
   scopesList?: ScopeListItem[];
-  extensions: ExtensionData[];
+  extensions: ExtensionDataList;
   extensionsAddedConfig: any;
   componentFromModel?: Component;
 };
@@ -201,7 +193,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
-  extensions: ExtensionData[] = [];
+  extensions: ExtensionDataList = new ExtensionDataList();
   extensionsAddedConfig: any;
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -988,25 +980,6 @@ export default class Component {
     });
   }
 
-  addExtensionValue(extensionId: string, key: string, value: any): void {
-    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
-    if (existingExtension) {
-      if (!existingExtension.data) {
-        existingExtension.data = {};
-      }
-      existingExtension.data[key] = value;
-    } else {
-      const extension = { id: extensionId, data: { [key]: value } };
-      this.extensions.push(extension);
-    }
-  }
-
-  getExtensionValue(extensionId: string, key: string): any {
-    const existingExtension = this.extensions.find(e => e.extensionId?.toString() === extensionId);
-    if (!existingExtension) return undefined;
-    return existingExtension.data ? existingExtension.data[key] : undefined;
-  }
-
   /**
    * Recalculate docs property based on the source files
    * used usually when setting the source files manually
@@ -1195,6 +1168,7 @@ export default class Component {
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
     const componentConfig = await ComponentConfig.load({
+      consumer,
       componentId: id,
       componentDir,
       workspaceDir: consumerPath,
@@ -1202,7 +1176,7 @@ export default class Component {
       addConfigRegistry: this.addConfigRegistry
     });
 
-    const extensions: ExtensionData[] = componentConfig.parsedExtensions(consumer, id);
+    const extensions: ExtensionDataList = componentConfig.extensions;
     const extensionsAddedConfig = componentConfig.extensionsAddedConfig;
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
