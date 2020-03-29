@@ -54,6 +54,14 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     }, this);
   }
 
+  remove(id: BitId) {
+    return ExtensionDataList.fromArray(
+      this.filter(entry => {
+        return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
+      })
+    );
+  }
+
   toConfigObject() {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
