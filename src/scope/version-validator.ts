@@ -14,7 +14,7 @@ import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependenc
 import { DEPENDENCIES_FIELDS } from '../constants';
 import GeneralError from '../error/general-error';
 import { PathLinux } from '../utils/path';
-import { ExtensionData } from '../consumer/component/consumer-component';
+import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -113,13 +113,13 @@ export default function validateVersionInstance(version: Version): void {
     validateType(message, file.file.hash, `${field}.file.hash`, 'string');
   };
 
-  const _validateExtension = (extension: ExtensionData) => {
+  const _validateExtension = (extension: ExtensionDataEntry) => {
     if (extension.extensionId) {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
   };
 
-  const _validateExtensions = (extensions: ExtensionData[]) => {
+  const _validateExtensions = (extensions: ExtensionDataList) => {
     if (extensions) {
       extensions.map(_validateExtension);
     }

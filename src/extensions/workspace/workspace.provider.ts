@@ -7,7 +7,7 @@ import { Isolator } from '../isolator';
 import { Reporter } from '../reporter';
 import { WorkspaceConfig } from '../workspace-config';
 import ComponentConfig from '../../consumer/config/component-config';
-import { ExtensionConfigList } from '../workspace-config/extension-config-list';
+import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 
 export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 

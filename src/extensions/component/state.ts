@@ -33,14 +33,8 @@ export default class State {
   dependencyGraph() {}
 
   static fromLegacy(consumerComponent: ConsumerComponent) {
-    let extensions = {};
-    if (consumerComponent.bitJson) {
-      // @ts-ignore
-      extensions = consumerComponent.overrides.overrides.extensions || consumerComponent.bitJson.extensions || {};
-    }
-
     return new State(
-      new Config(consumerComponent.mainFile, extensions),
+      new Config(consumerComponent.mainFile, consumerComponent.extensions),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent

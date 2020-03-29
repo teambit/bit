@@ -2,7 +2,7 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, getStringifyArgs } from '../../utils';
-import { CustomResolvedPath, ExtensionData } from '../../consumer/component/consumer-component';
+import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import { Doclet } from '../../jsdoc/types';
@@ -19,6 +19,7 @@ import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { EnvPackages } from '../../legacy-extensions/env-extension';
+import { ExtensionDataList, ExtensionDataEntry } from '../../consumer/config/extension-data';
 
 type CiProps = {
   error: Record<string, any>;
@@ -77,7 +78,7 @@ export type VersionProps = {
   customResolvedPaths?: CustomResolvedPath[];
   overrides: ComponentOverridesData;
   packageJsonChangedProps?: Record<string, any>;
-  extensions?: ExtensionData[];
+  extensions?: ExtensionDataList;
 };
 
 /**
@@ -119,7 +120,7 @@ export default class Version extends BitObject {
   customResolvedPaths: CustomResolvedPath[] | undefined;
   overrides: ComponentOverridesData;
   packageJsonChangedProps: Record<string, any>;
-  extensions: ExtensionData[];
+  extensions: ExtensionDataList;
 
   constructor(props: VersionProps) {
     super();
@@ -151,7 +152,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
-    this.extensions = props.extensions || [];
+    this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.validateVersion();
   }
 
@@ -465,17 +466,26 @@ export default class Version extends BitObject {
       };
     };
     // @ts-ignore
-    const _getExtensions = (exts = []): ExtensionData[] => {
+    const _getExtensions = (exts = []): ExtensionDataList => {
       if (exts.length) {
         const newExts = exts.map((extension: any) => {
           if (extension.extensionId) {
-            extension.extensionId = new BitId(extension.extensionId);
+            const extensionId = new BitId(extension.extensionId);
+            const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
+            return entry;
           }
-          return extension;
+          const entry = new ExtensionDataEntry(
+            extension.id,
+            undefined,
+            extension.name,
+            extension.config,
+            extension.data
+          );
+          return entry;
         });
-        return newExts;
+        return ExtensionDataList.fromArray(newExts);
       }
-      return [];
+      return new ExtensionDataList();
     };
 
     return new Version({

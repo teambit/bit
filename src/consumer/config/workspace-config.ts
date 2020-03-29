@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
-import { Extensions, Compilers, Testers } from './abstract-config';
+import { Compilers, Testers } from './abstract-config';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
@@ -17,6 +17,7 @@ import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
+import { ExtensionDataList } from './extension-data';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -31,7 +32,7 @@ export type WorkspaceConfigProps = {
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
   bindingPrefix?: string;
-  extensions?: Extensions;
+  extensions?: ExtensionDataList;
   packageManager?: 'librarian' | 'npm' | 'yarn';
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
