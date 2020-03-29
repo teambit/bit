@@ -49,7 +49,7 @@ export default async function provideWorkspace(
         harmony
       );
       ComponentConfig.registerOnComponentConfigLoading('workspace', async componentConfig => {
-        const extensionsConfig = ExtensionConfigList.fromObject(componentConfig.extensions);
+        const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
         return workspace.loadExtensionsByConfig(extensionsConfig);
       });
       return workspace;

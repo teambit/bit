@@ -2,6 +2,7 @@
 import { find, forEachObjIndexed } from 'ramda';
 import { BitId } from '../../bit-id';
 import Consumer from '../consumer';
+import { ExtensionConfigList } from './extension-config-list';
 
 export class ExtensionDataEntry {
   constructor(
@@ -57,6 +58,16 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     const res = {};
     this.forEach(entry => (res[entry.stringId] = entry.config));
     return res;
+  }
+
+  toExtensionConfigList(): ExtensionConfigList {
+    const arr = this.map(entry => {
+      return {
+        id: entry.stringId,
+        config: entry.config
+      };
+    });
+    return ExtensionConfigList.fromArray(arr);
   }
 
   _filterLegacy(): ExtensionDataList {
