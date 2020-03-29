@@ -3,7 +3,7 @@ import AbstractConfig from './abstract-config';
 import { Compilers, Testers } from './abstract-config';
 import { WorkspaceConfig } from '../../extensions/workspace-config';
 import { PathOsBasedRelative } from '../../utils/path';
-import Component, { ExtensionData } from '../component/consumer-component';
+import Component from '../component/consumer-component';
 import { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 import PackageJsonFile from '../component/package-json-file';
@@ -11,13 +11,14 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import logger from '../../logger/logger';
+import { ExtensionDataList, ExtensionDataEntry } from './extension-data';
 
 type ConfigProps = {
   lang?: string;
   compiler?: string | Compilers;
   tester?: string | Testers;
   bindingPrefix: string;
-  extensions?: Record<string, any>;
+  extensions?: ExtensionDataList;
   overrides?: ComponentOverridesData;
 };
 
@@ -28,7 +29,7 @@ export default class ComponentConfig extends AbstractConfig {
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
   static componentConfigLoadingRegistry: { [extId: string]: Function } = {};
-  static registerOnComponentConfigLoading(extId, func: (config) => any) {
+  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
   }
 
@@ -54,21 +55,6 @@ export default class ComponentConfig extends AbstractConfig {
       return true;
     };
     return filterObject(componentObject, isPropDefaultOrEmpty);
-  }
-
-  parsedExtensions(consumer: Consumer, currentId: BitId): ExtensionData[] {
-    const res: ExtensionData[] = [];
-    R.forEachObjIndexed((extConfig, extName) => {
-      const extensionId = consumer.getParsedIdIfExist(extName);
-      // Store config for core extensions
-      if (!extensionId) {
-        res.push({ name: extName, config: extConfig });
-        // Do not put the extension inside the extension itself
-      } else if (currentId.name !== extensionId.name) {
-        res.push({ extensionId, config: extConfig });
-      }
-    }, this.extensions);
-    return res;
   }
 
   validate(bitJsonPath: string) {
@@ -126,6 +112,7 @@ export default class ComponentConfig extends AbstractConfig {
    * This only used for legacy props that were defined in the root like compiler / tester
    */
   static mergeWithWorkspaceRootConfigs(
+    consumer: Consumer,
     componentId: BitId,
     componentConfig: Record<string, any>,
     workspaceConfig: WorkspaceConfig | undefined
@@ -137,8 +124,8 @@ export default class ComponentConfig extends AbstractConfig {
     } else {
       workspaceConfigToMerge = workspaceConfig?.getComponentConfig(componentId);
     }
-    // plainWorkspaceConfig = plainWorkspaceConfig || {};
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
+    mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 
@@ -152,12 +139,14 @@ export default class ComponentConfig extends AbstractConfig {
    * @param {*} workspaceConfig
    */
   static async load({
+    consumer,
     componentId,
     componentDir,
     workspaceDir,
     workspaceConfig,
     addConfigRegistry
   }: {
+    consumer: Consumer;
     componentId: BitId;
     componentDir: PathOsBasedRelative | undefined;
     workspaceDir: PathOsBasedRelative;
@@ -212,9 +201,14 @@ export default class ComponentConfig extends AbstractConfig {
     const [bitJsonConfig, packageJsonConfig] = await Promise.all([loadBitJson(), loadPackageJson()]);
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(componentId, config, workspaceConfig);
+    const componentConfig = ComponentConfig.mergeWithWorkspaceRootConfigs(
+      consumer,
+      componentId,
+      config,
+      workspaceConfig
+    );
 
-    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentConfig);
+    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
     componentConfig.path = bitJsonPath;
     const extensionsAddedConfig = await getConfigFromExtensions(
       componentId,
@@ -228,10 +222,10 @@ export default class ComponentConfig extends AbstractConfig {
     return componentConfig;
   }
 
-  static async runOnLoadEvent(componentConfigLoadingRegistry, config) {
+  static async runOnLoadEvent(componentConfigLoadingRegistry, id, config) {
     const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(async extId => {
       const func = componentConfigLoadingRegistry[extId];
-      return func(config);
+      return func(id, config);
     });
     try {
       await Promise.all(onLoadSubscribersP);

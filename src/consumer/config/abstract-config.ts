@@ -21,6 +21,7 @@ import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import { AbstractVinyl } from '../component/sources';
+import { ExtensionDataList } from './extension-data';
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -41,7 +42,6 @@ export type TesterExtensionObject = EnvExtensionObject;
 
 export type CompilerExtensionObject = EnvExtensionObject;
 
-export type Extensions = { [extensionName: string]: { [key: string]: any } };
 export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
@@ -55,7 +55,7 @@ export type AbstractConfigProps = {
   testerDependencies?: Record<string, any>;
   lang?: string;
   bindingPrefix?: string;
-  extensions?: Extensions;
+  extensions?: ExtensionDataList;
 };
 
 /**
@@ -79,7 +79,7 @@ export default class AbstractConfig {
   testerDependencies: { [key: string]: string };
   lang: string;
   bindingPrefix: string;
-  extensions: Extensions;
+  extensions: ExtensionDataList;
   writeToPackageJson = false;
   writeToBitJson = false;
 
@@ -88,7 +88,7 @@ export default class AbstractConfig {
     this._tester = props.tester || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.extensions = props.extensions || DEFAULT_EXTENSIONS;
+    this.extensions = props.extensions || new ExtensionDataList();
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -181,7 +181,7 @@ export default class AbstractConfig {
           tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
-        extensions: this.extensions
+        extensions: this.extensions.toConfigObject()
       },
       isPropDefaultOrNull
     );

@@ -5,7 +5,7 @@ import pMapSeries from 'p-map-series';
 import { Scope } from '..';
 import Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import Component, { ExtensionData } from '../../consumer/component/consumer-component';
+import Component from '../../consumer/component/consumer-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -21,9 +21,10 @@ import { AutoTagResult } from './auto-tag';
 import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { ExtensionDataEntry } from '../../consumer/config/extension-data';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency: Dependency | ExtensionData, idFieldName = 'id') => {
+  const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
     const foundDependency = componentsToTag.find(component =>
       component.id.isEqualWithoutVersion(dependency[idFieldName])
     );

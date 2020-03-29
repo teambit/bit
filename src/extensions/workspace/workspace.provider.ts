@@ -7,7 +7,7 @@ import { Isolator } from '../isolator';
 import { Reporter } from '../reporter';
 import { WorkspaceConfig } from '../workspace-config';
 import ComponentConfig from '../../consumer/config/component-config';
-import { ExtensionConfigList } from '../workspace-config/extension-config-list';
+import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 
 export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 
@@ -48,9 +48,11 @@ export default async function provideWorkspace(
         undefined,
         harmony
       );
-      ComponentConfig.registerOnComponentConfigLoading('workspace', async componentConfig => {
-        const extensionsConfig = ExtensionConfigList.fromObject(componentConfig.extensions);
-        return workspace.loadExtensionsByConfig(extensionsConfig);
+      ComponentConfig.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
+        const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
+        // Do not try to load extension for itself (usually happen when using '*' pattern)
+        const configWithoutSelf = extensionsConfig.remove(id.toString());
+        return workspace.loadExtensionsByConfig(configWithoutSelf);
       });
       return workspace;
     }
