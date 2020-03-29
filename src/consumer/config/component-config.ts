@@ -126,6 +126,8 @@ export default class ComponentConfig extends AbstractConfig {
     }
     const mergedObject = R.merge(workspaceConfigToMerge, componentConfig);
     mergedObject.extensions = ExtensionDataList.fromObject(mergedObject.extensions, consumer);
+    // Do not try to load extension for itself (usually happen when using '*' pattern)
+    mergedObject.extensions = mergedObject.extensions.remove(componentId);
     return ComponentConfig.fromPlainObject(mergedObject);
   }
 

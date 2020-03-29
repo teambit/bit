@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // Skipped until we implement the loading extensions from variants
-describe.skip('harmony extension config', function() {
+describe('harmony extension config', function() {
   this.timeout(0);
   const helper = new Helper();
 
@@ -24,7 +24,7 @@ describe.skip('harmony extension config', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.extensions.addExtensionToVariant('*', 'Scope', config);
+      helper.extensions.setExtensionToVariant('*', 'Scope', config);
       helper.command.tagAllComponents();
       componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
       extensionData = componentVersionModel.extensions;
@@ -48,9 +48,11 @@ describe.skip('harmony extension config', function() {
 
     before(() => {
       helper.scopeHelper.initWorkspace();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.copyFixtureExtensions('dummy-extension');
       helper.command.addComponent('dummy-extension');
-      helper.extensions.addExtensionToVariant('*', 'dummy-extension', config);
+      helper.extensions.setExtensionToVariant('*', 'dummy-extension', config);
       localBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('extension is new component on the workspace', () => {
