@@ -1,11 +1,10 @@
 import doctrine from 'doctrine';
+import * as reactDocs from 'react-docgen';
 import { PathOsBased } from '../../utils/path';
 import { pathNormalizeToLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Doclet } from '../types';
 import extractDataRegex from '../extract-data-regex';
-
-const reactDocs = require('react-docgen');
 
 function formatProperties(props) {
   const parseDescription = description => {
@@ -58,7 +57,7 @@ function fromReactDocs({ description, displayName, props, methods }, filePath): 
   };
 }
 
-function stringifyType(prop: { name: string; value?: any }): string {
+function stringifyType(prop: { name: string; value?: any; raw?: string }): string {
   const { name } = prop;
   let transformed;
 
@@ -84,7 +83,7 @@ function stringifyType(prop: { name: string; value?: any }): string {
       transformed = prop.value;
       break;
     case 'union':
-      transformed = prop.value.map(p => stringifyType(p)).join(' | ');
+      transformed = prop.value ? prop.value.map(p => stringifyType(p)).join(' | ') : prop.raw;
       break;
     case 'arrayOf':
       transformed = `${stringifyType(prop.value)}[]`;

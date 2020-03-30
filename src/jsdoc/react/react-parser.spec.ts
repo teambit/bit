@@ -17,7 +17,7 @@ describe('React docs Parser', () => {
     describe('React Docs', () => {
       let doclet;
       before(async () => {
-        const file = path.join(fixtures, 'react-docs.js');
+        const file = path.join(fixtures, 'react/react-docs.js');
         doclet = await parser(fs.readFileSync(file).toString());
         expect(doclet).to.be.an('object');
       });
@@ -49,6 +49,31 @@ describe('React docs Parser', () => {
           .to.have.property('properties')
           .that.is.an('array');
         expect(doclet.properties[0].description).to.equal('Button text.');
+      });
+    });
+    describe('elevation', () => {
+      let doclet;
+      before(async () => {
+        const file = path.join(fixtures, 'react/elevation.tsx');
+        doclet = await parser(fs.readFileSync(file).toString());
+        expect(doclet).to.be.an('object');
+      });
+      it('should have properties parsed', () => {
+        expect(doclet).to.have.property('properties');
+        expect(doclet.properties)
+          .to.be.an('array')
+          .with.lengthOf(1);
+      });
+      it('should parse the description correctly', () => {
+        expect(doclet)
+          .to.have.property('description')
+          .that.is.equal('A wrapper resembling a physical card, grouping elements and improve readability.');
+      });
+      it('should parse the properties type correctly', () => {
+        expect(doclet)
+          .to.have.property('properties')
+          .that.is.an('array');
+        expect(doclet.properties[0].type).to.equal("'none' | 'low' | 'medium' | 'high'");
       });
     });
   });
