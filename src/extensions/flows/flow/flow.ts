@@ -18,7 +18,7 @@ export class Flow {
       id,
       value: startTime
     });
-    if (this.tasks.length) {
+    if (this.tasks && this.tasks.length) {
       this.execSequence(capsule, subject, startTime, 0);
     } else {
       setImmediate(() => this.handleDone(subject, capsule, startTime));
