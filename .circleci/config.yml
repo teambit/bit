@@ -180,7 +180,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg@4.4.3'
+        run: 'sudo npm i -g pkg@4.4.5'
       # -
       #   run:
       #     name: 'save pkg targets names'
@@ -188,8 +188,8 @@ jobs:
       -
         restore_cache:
           keys:
-            # - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
-            - pkg-cache-v2
+            # - 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            - pkg-cache-v3
       -
         run:
           name: 'set pkg path'
@@ -204,12 +204,12 @@ jobs:
           command: 'cd bit && npm run pkg:all'
       # -
       #   save_cache:
-      #     key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+      #     key: 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
       #     paths:
       #       - ~/pkg-cache
       -
         save_cache:
-          key: pkg-cache-v2
+          key: pkg-cache-v3
           paths:
             - /home/circleci/pkg-cache
       # -
@@ -700,11 +700,12 @@ workflows:
         generate_types:
           requires:
             - build
-      -
-        pack:
-          requires:
-            - build
-            - build_bit_javascript
+      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
+      # -
+      #   pack:
+      #     requires:
+      #       - build
+      #       - build_bit_javascript
       -
         e2e_test:
           filters:
