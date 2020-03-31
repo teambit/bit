@@ -247,7 +247,6 @@ export default class Workspace implements ComponentHost {
       }
     }
 
-    this.reporter.startPhase('Resolving extensions');
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
       this.consumer,
@@ -256,6 +255,8 @@ export default class Workspace implements ComponentHost {
     this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
+      this.reporter.startPhase(`Resolving extension ${id.toString()}`);
+
       const extPath = value.wrkDir;
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const mod = require(extPath);
