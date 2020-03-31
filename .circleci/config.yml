@@ -180,7 +180,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg@4.4.3'
+        run: 'sudo npm i -g pkg@4.4.5'
       # -
       #   run:
       #     name: 'save pkg targets names'
