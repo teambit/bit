@@ -19,6 +19,7 @@ describe('React docs Parser', () => {
       before(async () => {
         const file = path.join(fixtures, 'react/react-docs.js');
         const doclets = await parser(fs.readFileSync(file).toString());
+        // @ts-ignore
         doclet = doclets[0];
       });
       it('should have properties parsed', () => {
@@ -56,6 +57,7 @@ describe('React docs Parser', () => {
       before(async () => {
         const file = path.join(fixtures, 'react/elevation.tsx');
         const doclets = await parser(fs.readFileSync(file).toString());
+        // @ts-ignore
         doclet = doclets[0];
         expect(doclet).to.be.an('object');
       });

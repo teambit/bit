@@ -1320,7 +1320,7 @@ export default class Component {
   }
 }
 
-function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
+function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet[]>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }
