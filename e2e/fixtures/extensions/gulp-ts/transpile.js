@@ -9,7 +9,7 @@ function transpile() {
   const tsProject = ts.createProject(tsconfig);
 
   gulp.task('default', () => {
-    const tsResult = gulp.src(['*.ts', '*.tsx']).pipe(tsProject());
+    const tsResult = gulp.src(['**/*.ts', '**/*.tsx']).pipe(tsProject());
 
     return merge([tsResult.dts.pipe(gulp.dest('dist')), tsResult.js.pipe(gulp.dest('dist'))]);
   });
