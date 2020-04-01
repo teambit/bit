@@ -86,12 +86,14 @@ export default class Isolator {
 
     await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
     const after = await getPackageJSONInCapsules(capsules, packageManager);
-    const toInstall = capsules.filter(
-      (item, i) =>
+    const toInstall = capsules.filter((item, i) => {
+      console.log(after[i].packageManager);
+      return (
         !equals(before[i], after[i]) ||
         after[i].packageManager === '' ||
         !isOldPackageManager(after[i].packageManager, config, packageManager)
-    );
+      );
+    });
 
     //  const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
@@ -129,7 +131,13 @@ function isOldPackageManager(
   config: { installPackages: boolean; packageManager: undefined },
   packageManager: PackageManager
 ) {
-  return config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
+  const res = config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
+  if (!res) {
+    console.log('not old');
+  } else {
+    console.log('old');
+  }
+  return res;
 }
 
 async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager) {
