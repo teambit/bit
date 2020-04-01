@@ -93,20 +93,24 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
   return transformed;
 }
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | undefined> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[] | undefined> {
   const doclets: Array<Doclet> = [];
   try {
-    const componentInfo = reactDocs.parse(data, undefined, undefined, { configFile: false });
-    if (componentInfo) {
-      const formatted = fromReactDocs(componentInfo, filePath);
-      formatted.args = [];
-      // this is a workaround to get the 'example' tag parsed when using react-docs
-      // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
-      // the @description tag.
-      extractDataRegex(formatted.description, doclets, filePath);
-      formatted.description = doclets[0].description;
-      formatted.examples = doclets[0].examples;
-      return formatted;
+    const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllComponentDefinitions, undefined, {
+      configFile: false
+    });
+    if (componentsInfo) {
+      return componentsInfo.map(componentInfo => {
+        const formatted = fromReactDocs(componentInfo, filePath);
+        formatted.args = [];
+        // this is a workaround to get the 'example' tag parsed when using react-docs
+        // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
+        // the @description tag.
+        extractDataRegex(formatted.description, doclets, filePath);
+        formatted.description = doclets[0].description;
+        formatted.examples = doclets[0].examples;
+        return formatted;
+      });
     }
   } catch (err) {
     logger.silly(`failed parsing docs using docgen on path ${filePath} with error`, err);

@@ -808,7 +808,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - prod
     jobs:
       - checkout_code
       -
@@ -830,7 +830,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - prod
     jobs:
       - checkout_code
       - set_ssh_key
