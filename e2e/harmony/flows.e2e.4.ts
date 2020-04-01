@@ -14,7 +14,7 @@ describe('flows functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('running build task', () => {
+  describe.skip('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.initWorkspace();
