@@ -1,18 +1,15 @@
 import { loadConsumerIfExist } from '../../../consumer';
-import Network, { Options } from '../../../extensions/network/network';
-import capsuleOrchestrator from '../../../extensions/network/orchestrator/orchestrator';
-import { CapsuleOptions } from '../../../extensions/network/orchestrator/types';
-import CapsuleList from '../../../extensions/network/capsule-list';
+import Isolator from '../../../extensions/isolator/isolator';
+import CapsuleList from '../../../extensions/isolator/capsule-list';
 import { PackageManager } from '../../../extensions/package-manager';
+import { Reporter } from '../../../extensions/reporter';
 
-export default (async function capsuleIsolate(
-  bitIds: string[],
-  capsuleOptions: CapsuleOptions,
-  options: Options
-): Promise<CapsuleList> {
+export default (async function capsuleIsolate(bitIds: string[], capsuleOptions: {}): Promise<CapsuleList> {
   const consumer = await loadConsumerIfExist();
   if (!consumer) throw new Error('no consumer found');
-  await capsuleOrchestrator.buildPools();
-  const network = new Network(capsuleOrchestrator, new PackageManager('librarian'));
-  return network.create(bitIds, capsuleOptions, options, consumer);
+  const reporter = new Reporter();
+  const packageManager = new PackageManager('librarian', reporter);
+  const network = await Isolator.provide([packageManager]);
+  const isolatedEnvironment = await network.createNetworkFromConsumer(bitIds, consumer, capsuleOptions);
+  return isolatedEnvironment.capsules;
 });

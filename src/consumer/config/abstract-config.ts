@@ -20,6 +20,8 @@ import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+import { AbstractVinyl } from '../component/sources';
+import { ExtensionDataList } from './extension-data';
 
 export type RegularExtensionObject = {
   rawConfig: Record<string, any>;
@@ -40,7 +42,6 @@ export type TesterExtensionObject = EnvExtensionObject;
 
 export type CompilerExtensionObject = EnvExtensionObject;
 
-export type Extensions = { [extensionName: string]: { [key: string]: any } };
 export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
@@ -54,7 +55,7 @@ export type AbstractConfigProps = {
   testerDependencies?: Record<string, any>;
   lang?: string;
   bindingPrefix?: string;
-  extensions?: Extensions;
+  extensions?: ExtensionDataList;
 };
 
 /**
@@ -78,7 +79,7 @@ export default class AbstractConfig {
   testerDependencies: { [key: string]: string };
   lang: string;
   bindingPrefix: string;
-  extensions: Extensions;
+  extensions: ExtensionDataList;
   writeToPackageJson = false;
   writeToBitJson = false;
 
@@ -87,32 +88,28 @@ export default class AbstractConfig {
     this._tester = props.tester || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.extensions = props.extensions || DEFAULT_EXTENSIONS;
+    this.extensions = props.extensions || new ExtensionDataList();
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get compiler(): Compilers | null | undefined {
+  get compiler(): Compilers | undefined {
     const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set compiler(compiler: string | Compilers) {
     this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get tester(): Testers | null | undefined {
+  get tester(): Testers | undefined {
     const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set tester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
@@ -184,7 +181,7 @@ export default class AbstractConfig {
           tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
-        extensions: this.extensions
+        extensions: this.extensions.toConfigObject()
       },
       isPropDefaultOrNull
     );
@@ -211,22 +208,32 @@ export default class AbstractConfig {
   }: {
     workspaceDir: PathOsBasedAbsolute;
     componentDir?: PathOsBasedRelative;
-  }): Promise<JSONFile[]> {
+  }): Promise<AbstractVinyl[]> {
+    const files = await this.toVinyl({ workspaceDir, componentDir });
+    return files;
+  }
+
+  async toVinyl({
+    workspaceDir,
+    componentDir = '.'
+  }: {
+    workspaceDir: PathOsBasedAbsolute;
+    componentDir?: PathOsBasedRelative;
+  }): Promise<AbstractVinyl[]> {
     const plainObject = this.toPlainObject();
-    const JsonFiles = [];
+    const jsonFiles: AbstractVinyl[] = [];
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      JsonFiles.push(packageJsonFile.toVinylFile());
+      jsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);
       const params = { base: componentDir, override: true, path: bitJsonPath, content: plainObject };
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      JsonFiles.push(JSONFile.load(params));
+      const bitJsonFile = JSONFile.load(params);
+      jsonFiles.push(bitJsonFile);
     }
-    return JsonFiles;
+    return jsonFiles;
   }
 
   static composeBitJsonPath(bitPath: PathOsBased): PathOsBased {

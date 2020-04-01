@@ -7,6 +7,7 @@ describe('bit doctor - git exec validation', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {

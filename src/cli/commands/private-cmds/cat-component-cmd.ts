@@ -1,4 +1,4 @@
-import Command, { CommandOption } from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { catComponent } from '../../../api/scope';
 
 export default class CatComponent extends Command {
@@ -6,8 +6,10 @@ export default class CatComponent extends Command {
   description = 'cat a bit object by component-id';
   private = true;
   alias = 'cmp';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts: CommandOption[] = [['j', 'json', 'show the output in JSON format']];
+  opts = [
+    // json is also the default for this command. it's only needed to suppress the logger.console
+    ['j', 'json', 'json format']
+  ] as CommandOptions;
 
   action([id]: [string]): Promise<any> {
     return catComponent(id);

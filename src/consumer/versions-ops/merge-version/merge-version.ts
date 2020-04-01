@@ -146,7 +146,6 @@ async function applyVersion(
 
   // update files according to the merge results
   const modifiedStatus = applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
-
   const componentWriter = ComponentWriter.getInstance({
     component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -163,9 +162,6 @@ async function applyVersion(
 
   consumer.bitMap.removeComponent(component.id);
   componentWriter.origin = componentMap.origin;
-  // $FlowFixMe todo: fix this. does configDir should be a string or ConfigDir?
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  componentWriter.configDir = componentMap.configDir;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };

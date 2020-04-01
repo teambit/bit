@@ -2,7 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
 import { BitId } from '../../../../bit-id';
-import Component, { ExtensionData } from '../../../component/consumer-component';
+import Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
 import { PathLinux } from '../../../../utils/path';
@@ -10,6 +10,7 @@ import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-
 import Dependencies from '../dependencies';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import Dependency from '../dependency';
+import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension-data';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -55,7 +56,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
       return null;
     };
-    const getFromComponentConfig = () => idFromComponentConfig || null;
+    const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     const getFromModel = () => idFromModel || null;
     const getFromPackageJson = () => idFromPackageJson || null;
@@ -91,7 +92,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     dependencies.get().forEach(updateDependency);
   }
 
-  function updateExtension(extension: ExtensionData) {
+  function updateExtension(extension: ExtensionDataEntry) {
     if (extension.extensionId) {
       const resolvedVersion = resolveVersion(extension.extensionId);
       if (resolvedVersion) {
@@ -99,7 +100,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       }
     }
   }
-  function updateExtensions(extensions: ExtensionData[]) {
+  function updateExtensions(extensions: ExtensionDataList) {
     extensions.forEach(updateExtension);
   }
 
@@ -161,13 +162,13 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromComponentConfig(componentId: BitId): BitId | null | undefined {
+  function getIdFromComponentConfig(componentId: BitId): BitId | undefined {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
-    if (R.isEmpty(dependencies)) return null;
+    if (R.isEmpty(dependencies)) return undefined;
     const dependency = Object.keys(dependencies).find(
       idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
     );
-    if (!dependency) return null;
+    if (!dependency) return undefined;
     return componentId.changeVersion(dependencies[dependency]);
   }
 }

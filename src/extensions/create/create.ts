@@ -1,8 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 import path from 'path';
+import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '../workspace';
-import { ExtensionManifest, Harmony } from '../../harmony';
-import { ExtensionNotFound } from '../scripts/exceptions';
 import { BitId } from '../../bit-id';
 import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
@@ -25,7 +24,8 @@ export class Create {
   }
 
   async create(name: string): Promise<AddActionResults> {
-    const templateExtName = this.workspace.config.extensions.create?.template;
+    const config = this.workspace.config.workspaceSettings.getExtensionConfig('create');
+    const templateExtName = config?.template;
     if (!templateExtName) {
       throw new Error(`please add the following configuration: "create: { "template": "your-template-extension" }" `);
     }
@@ -34,12 +34,16 @@ export class Create {
     const nameSplit = name.split('/');
     const compName = nameSplit.pop(); // last item is the name, the rest are the namespace
     const templateResults = this.getTemplateResults(templateFunc, compName as string, templateExtName);
-    const writtenFiles = await this.writeComponentFiles(name, templateResults.files);
-    return this.workspace.add(writtenFiles, name, templateResults.main);
+    const componentPath = this.getComponentPath(name);
+    await this.writeComponentFiles(componentPath, templateResults.files);
+    return this.workspace.add([componentPath], name, templateResults.main);
   }
 
   private getComponentPath(name: string) {
-    return composeComponentPath(new BitId({ name }), this.workspace.config.componentsDefaultDirectory);
+    return composeComponentPath(
+      new BitId({ name }),
+      this.workspace.config.workspaceSettings.componentsDefaultDirectory
+    );
   }
 
   private getTemplateResults(templateFunc: Function, compName: string, templateExtName: string): TemplateFuncResult {
@@ -58,8 +62,10 @@ export class Create {
   /**
    * writes the generated template files to the default directory set in the workspace config
    */
-  private async writeComponentFiles(name: string, templateFiles: TemplateFile[]): Promise<PathOsBasedRelative[]> {
-    const componentPath = this.getComponentPath(name);
+  private async writeComponentFiles(
+    componentPath: string,
+    templateFiles: TemplateFile[]
+  ): Promise<PathOsBasedRelative[]> {
     const dataToPersist = new DataToPersist();
     const vinylFiles = templateFiles.map(templateFile => {
       const templateFileVinyl = new TemplateFileVinyl({
@@ -82,7 +88,7 @@ const DEFAULT_TEMPLATE = name => [
 ];
 
 export class Registry {
-  constructor(private harmony: Harmony<unknown>) {}
+  constructor(private harmony: Harmony) {}
 
   private templates = {};
 
@@ -91,7 +97,7 @@ export class Registry {
    */
   get(name: string) {
     const scripts = this.templates[name];
-    if (!scripts) throw new ExtensionNotFound();
+    if (!scripts) throw new Error();
     return this.templates[name] || DEFAULT_TEMPLATE;
   }
 
@@ -100,7 +106,7 @@ export class Registry {
    */
   set(manifest: ExtensionManifest, templateFunc: TemplateFunc) {
     const extension = this.harmony.get(manifest.name);
-    if (!extension) throw new ExtensionNotFound(manifest.name);
+    if (!extension) throw new Error(manifest.name);
     if (!this.templates[extension.name]) this.templates[extension.name] = {};
     this.templates[extension.name] = templateFunc;
     return this;

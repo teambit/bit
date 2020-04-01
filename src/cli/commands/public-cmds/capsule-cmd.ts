@@ -1,15 +1,18 @@
 // eslint-disable-next-line max-classes-per-file
 import _ from 'lodash';
 import Command from '../../command';
-import { capsuleIsolate, sshIntoCapsule } from '../../../api/consumer';
-import { ComponentCapsule } from '../../../extensions/capsule/component-capsule';
-import capsuleOrchestrator from '../../../extensions/network/orchestrator/orchestrator';
-import { ListResults } from '../../../extensions/network/orchestrator/types';
+import { loadConsumerIfExist } from '../../../consumer';
+import { capsuleIsolate } from '../../../api/consumer';
+import { Capsule } from '../../../extensions/isolator/capsule';
+import { Reporter } from '../../../extensions/reporter';
+import { PackageManager } from '../../../extensions/package-manager';
+import { Isolator } from '../../../extensions/isolator';
+import { ListResults } from '../../../extensions/isolator/isolator';
 import { render } from '../../../utils';
 
 export class CapsuleList extends Command {
   // first command is supposed to be the action and the rest is the bitIds
-  name = 'capsule-list [workspace]';
+  name = 'capsule-list';
   description = `list all capsules`;
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -17,51 +20,18 @@ export class CapsuleList extends Command {
   loader = true;
   migration = true;
 
-  action([workspace]: [string]): Promise<ListResults[] | ListResults> {
-    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
-    return capsuleOrchestrator.list(workspace);
+  async action(): Promise<ListResults[] | ListResults> {
+    const consumer = await loadConsumerIfExist();
+    if (!consumer) throw new Error('no consumer found');
+    const reporter = new Reporter();
+    const packageManager = new PackageManager('librarian', reporter);
+    // const capsule = await Capsule.provide();
+    const isolatorExt = await Isolator.provide([packageManager]);
+    return isolatorExt.list(consumer);
   }
 
   report(capsuleListByWorkspace: ListResults[] | ListResults, ...args): string {
     if (args[1].json) return JSON.stringify(capsuleListByWorkspace, null, '  ');
-    return render(capsuleListByWorkspace);
-  }
-}
-export class CapsuleSSH extends Command {
-  // first command is supposed to be the action and the rest is the bitIds
-  name = 'connect <capsule>';
-  description = `connect to capsule`;
-  alias = 'c';
-  opts = [];
-  loader = true;
-  migration = true;
-
-  action([capsule]: [string]): Promise<any[]> {
-    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
-    return sshIntoCapsule(capsule);
-  }
-
-  // report(capsuleListByWorkspace: ListResults[]): string {
-  report(): string {
-    return '';
-  }
-}
-
-export class CapsuleDescribe extends Command {
-  // first command is supposed to be the action and the rest is the bitIds
-  name = 'capsule-describe <capsule>';
-  description = `describe capsule`;
-  alias = 'd';
-  opts = [];
-  loader = true;
-  migration = true;
-
-  action([capsule]: [string]): Promise<any[]> {
-    if (!capsuleOrchestrator) throw new Error(`can't run command in non consumer environment`);
-    return capsuleOrchestrator.describe(capsule);
-  }
-
-  report(capsuleListByWorkspace: ListResults[]): string {
     return render(capsuleListByWorkspace);
   }
 }
@@ -95,41 +65,17 @@ export class CapsuleCreate extends Command {
     }
   ): Promise<any> {
     return Promise.resolve(
-      capsuleIsolate(
-        values,
-        _.omitBy({ baseDir, installPackages }, _.isNil),
-        _.omitBy({ alwaysNew, name: id }, _.isNil)
-      )
+      capsuleIsolate(values, _.omitBy({ baseDir, installPackages, alwaysNew, name: id }, _.isNil))
     );
   }
 
-  report(capsuleObj: { [bitId: string]: ComponentCapsule }): string {
+  report(capsuleObj: { [bitId: string]: Capsule }): string {
     const createdCapsules = Object.values(capsuleObj).map(capsule => {
       return {
-        bitId: capsule.bitId.toString(),
+        bitId: capsule.component.id.toString(),
         wrkDir: capsule.wrkDir
       };
     });
     return render(createdCapsules);
   }
 }
-/* export default class Capsule extends Command {
-  name = 'capsule';
-  description = ``;
-  alias = '';
-  // @ts-ignore
-  commands = [];
-  subCommands=[new CapsuleCreate(), new CapsuleList(), new CapsuleDescribe()]
-  opts = [];
-  migration = false;
-
-  action(): Promise<any> {
-    return Promise.resolve()
-  }
-
-  report(conf: { [key: string]: string }): string {
-    return '';
-  }
-
-
-} */

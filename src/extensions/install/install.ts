@@ -1,34 +1,60 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { FailedToInstall } from './failed-to-install';
 import { Workspace } from '../workspace';
 import { PackageManager } from '../package-manager';
+import { Reporter } from '../reporter';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../../constants';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX, DEFAULT_PACKAGE_MANAGER } from '../../constants';
+
+async function symlinkCapsulesInNodeModules(isolatedEnvs) {
+  await Promise.all(
+    isolatedEnvs.map(async e => {
+      const componentPackageName = componentIdToPackageName(
+        e.component.id.legacyComponentId,
+        DEFAULT_REGISTRY_DOMAIN_PREFIX
+      );
+      const linkPath = path.join(process.cwd(), 'node_modules', componentPackageName);
+      await fs.mkdirp(path.dirname(linkPath));
+      await fs.symlink(e.capsule.wrkDir, linkPath);
+    })
+  );
+}
+
+async function removeExistingLinksInNodeModules(isolatedEnvs) {
+  await Promise.all(
+    isolatedEnvs.map(async e => {
+      const componentPackageName = componentIdToPackageName(
+        e.component.id.legacyComponentId,
+        DEFAULT_REGISTRY_DOMAIN_PREFIX
+      );
+      try {
+        await fs.unlink(path.join(process.cwd(), 'node_modules', componentPackageName));
+      } catch (err) {
+        // if the symlink does not exist - no problem
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+    })
+  );
+}
 
 export class Install {
-  constructor(private workspace: Workspace, private packageManager: PackageManager) {}
+  constructor(private workspace: Workspace, private packageManager: PackageManager, private reporter: Reporter) {}
   async install() {
-    try {
+    this.reporter.startPhase('Installing');
+    {
       const components = await this.workspace.list();
       const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      const packageManagerName = this.workspace.consumer.config.packageManager;
-
-      const packageJson = await fs.readJson(path.join(process.cwd(), 'package.json'));
-      packageJson.dependencies = packageJson.dependencies || {};
-      isolatedEnvs.forEach(e => {
-        const componentPackageName = componentIdToPackageName(e.capsule.config.bitId, DEFAULT_REGISTRY_DOMAIN_PREFIX);
-        const depFilePath = `file:${e.capsule.wrkDir}`;
-        packageJson.dependencies[componentPackageName] = depFilePath;
-      });
-      await fs.writeFile(path.join(process.cwd(), 'package.json'), JSON.stringify(packageJson, null, 2));
-
+      const packageManagerName =
+        this.workspace.consumer.config.workspaceSettings.packageManager || DEFAULT_PACKAGE_MANAGER;
+      await removeExistingLinksInNodeModules(isolatedEnvs);
       await this.packageManager.runInstallInFolder(process.cwd(), {
         packageManager: packageManagerName
       });
+      await symlinkCapsulesInNodeModules(isolatedEnvs);
+      this.reporter.end();
       return isolatedEnvs;
-    } catch (e) {
-      throw new FailedToInstall(e.message);
     }
   }
 }

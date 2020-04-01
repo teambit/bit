@@ -1,11 +1,10 @@
-import { ComponentFactoryExt } from '../component';
-import { Graph } from './graph';
-import { BitCliExt } from '../cli';
+import { provide } from './graph.provider';
 import { WorkspaceExt } from '../workspace';
+import { ScopeExt } from '../scope';
+import { ComponentFactoryExt } from '../component';
 
 export default {
   name: 'graph',
-  dependencies: [ComponentFactoryExt, BitCliExt, WorkspaceExt],
-  config: {},
-  provider: Graph.provide
+  dependencies: [WorkspaceExt, ScopeExt, ComponentFactoryExt],
+  provider: provide
 };

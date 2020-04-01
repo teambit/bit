@@ -1,11 +1,11 @@
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
+import { FlowsExt } from '../flows';
 import { provideCompile } from './compile.provider';
-import { ScriptsExt } from '../scripts';
 import { ScopeExt } from '../scope';
 
 export default {
   name: 'compile',
-  dependencies: [BitCliExt, WorkspaceExt, ScriptsExt, ScopeExt],
+  dependencies: [BitCliExt, WorkspaceExt, FlowsExt, ScopeExt],
   provider: provideCompile
 };

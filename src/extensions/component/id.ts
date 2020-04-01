@@ -5,7 +5,8 @@ export default class ComponentID {
     /**
      * legacy bit component id
      */
-    private legacyComponentId: BitId
+    // private legacyComponentId: BitId
+    public legacyComponentId: BitId
   ) {}
 
   /**

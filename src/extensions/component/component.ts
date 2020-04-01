@@ -7,7 +7,8 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import Network from '../network/network';
+import Isolator from '../isolator/isolator';
+import { loadConsumerIfExist } from '../../consumer';
 
 /**
  * in-memory representation of a component.
@@ -34,7 +35,7 @@ export default class Component {
      */
     readonly tags: TagMap = new TagMap(),
 
-    private network: Network
+    private isolator: Isolator
   ) {}
 
   /**
@@ -51,6 +52,14 @@ export default class Component {
     return this.state.filesystem;
   }
 
+  stringify(): string {
+    return JSON.stringify({
+      id: this.id,
+      head: this.head
+      // TODO - laly add stringify of this.state and this.tags
+    });
+  }
+
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed
    * here through an external extension.
@@ -64,8 +73,11 @@ export default class Component {
    */
   async isolate() {
     const id = this.id.toString();
-    const capsulesList = await this.network.create([id]);
-    return capsulesList[id];
+    const consumer = await loadConsumerIfExist();
+    const isolatedEnvironment = consumer
+      ? await this.isolator.createNetworkFromConsumer([id], consumer)
+      : await this.isolator.createNetworkFromScope([id]);
+    return isolatedEnvironment.capsules[id];
   }
 
   capsule() {}
@@ -77,7 +89,7 @@ export default class Component {
     if (!this.isModified()) throw new NothingToSnap();
     const snap = Snap.create(this, author, message);
 
-    return new Component(this.id, snap, snap.state, this.tags, this.network);
+    return new Component(this.id, snap, snap.state, this.tags, this.isolator);
   }
 
   /**

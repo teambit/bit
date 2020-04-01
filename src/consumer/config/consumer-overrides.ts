@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
@@ -6,7 +7,8 @@ import { validateUserInputType } from '../../utils/validate-type';
 import Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import AbstractConfig from './abstract-config';
-import { DEPENDENCIES_FIELDS } from '../../constants';
+import { DEPENDENCIES_FIELDS, OVERRIDE_FILE_PREFIX } from '../../constants';
+import logger from '../../logger/logger';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Record<string, any>;
@@ -213,6 +215,14 @@ the following fields are not allowed: ${overridesForbiddenFields.join(', ')}.`);
       validateUserInputType(message, override[field], `overrides.${id}.${field}`, 'object');
       Object.keys(override[field]).forEach(rule => {
         validateUserInputType(message, override[field][rule], `overrides.${id}.${field}.${rule}`, 'string');
+        if (rule.startsWith(OVERRIDE_FILE_PREFIX)) {
+          // @todo: once v15 is out, this warning should be replaced by an error
+          logger.console(
+            chalk.yellow(
+              `warning: file overrides (using "${OVERRIDE_FILE_PREFIX}") is deprecated and will be removed on the next major version`
+            )
+          );
+        }
       });
     }
     function validateEnv(override: Record<string, any>, id: string) {

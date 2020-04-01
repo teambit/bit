@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color, AppContext } from 'ink';
 import React from 'react';
 import { Command, PaperOptions, GenericObject } from '../paper/command';

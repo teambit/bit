@@ -28,7 +28,8 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     const id = listScopeResult.id.toStringWithoutVersion();
     let version = listScopeResult.id.version;
     if (!json && showRemoteVersion) {
-      const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version) ? 'red' : null;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
@@ -42,7 +43,8 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     if (showRemoteVersion) {
       let remoteVersion = listScopeResult.remoteVersion || 'N/A';
       const color =
-        listScopeResult.remoteVersion && semver.gt(listScopeResult.id.version, listScopeResult.remoteVersion)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        listScopeResult.remoteVersion && semver.gt(listScopeResult.id.version!, listScopeResult.remoteVersion)
           ? 'red'
           : null;
       remoteVersion = color ? c[color](remoteVersion) : remoteVersion;
@@ -70,6 +72,10 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
   }
   const rows = listScopeResults.map(tabulateComponent);
 
-  const table = new Table(header, rows.map(row => R.values(row)), opts);
+  const table = new Table(
+    header,
+    rows.map(row => R.values(row)),
+    opts
+  );
   return table.render();
 };

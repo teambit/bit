@@ -1,25 +1,33 @@
+import { Harmony } from '@teambit/harmony';
 import { Scope } from '../scope/';
 import Workspace from './workspace';
 import { ComponentFactory } from '../component';
 import { loadConsumerIfExist } from '../../consumer';
-import { Network } from '../network';
+import { Isolator } from '../isolator';
+import { Reporter } from '../reporter';
+import { WorkspaceConfig } from '../workspace-config';
+import ComponentConfig from '../../consumer/config/component-config';
+import { ExtensionConfigList } from '../../consumer/config/extension-config-list';
 
-export type WorkspaceDeps = [Scope, ComponentFactory, Network];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 
-export type WorkspaceConfig = {
+export type WorkspaceCoreConfig = {
   /**
-   * default scope for the Workspace, defaults to none.
+   * sets the default location of components.
    */
-  defaultScope: string;
+  componentsDefaultDirectory: string;
 
   /**
    * default scope for components to be exported to. absolute require paths for components
    * will be generated accordingly.
    */
-  components: string;
+  defaultScope: string;
 };
 
-export default async function provideWorkspace(config: WorkspaceConfig, [scope, component, network]: WorkspaceDeps) {
+export default async function provideWorkspace(
+  [workspaceConfig, scope, component, isolator, reporter]: WorkspaceDeps,
+  harmony: Harmony
+) {
   // don't use loadConsumer() here because the consumer might not be available.
   // also, this loadConsumerIfExist() is wrapped with try/catch in order not to break when the
   // consumer can't be loaded due to .bitmap or bit.json issues which are fixed on a later phase
@@ -30,7 +38,20 @@ export default async function provideWorkspace(config: WorkspaceConfig, [scope, 
   try {
     const consumer = await loadConsumerIfExist();
     if (consumer) {
-      const workspace = new Workspace(consumer, scope, component, network);
+      const workspace = new Workspace(
+        consumer,
+        workspaceConfig,
+        scope,
+        component,
+        isolator,
+        reporter,
+        undefined,
+        harmony
+      );
+      ComponentConfig.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
+        const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
+        return workspace.loadExtensionsByConfig(extensionsConfig);
+      });
       return workspace;
     }
 

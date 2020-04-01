@@ -1,9 +1,8 @@
-import { NetworkExt } from '../network';
+import { IsolatorExt } from '../isolator';
 import componentProvider from './component.provider';
 
 export default {
   name: 'ComponentFactory',
-  dependencies: [NetworkExt],
-  config: {},
+  dependencies: [IsolatorExt],
   provider: componentProvider
 };

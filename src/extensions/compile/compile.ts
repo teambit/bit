@@ -5,16 +5,17 @@ import { BitId } from '../../bit-id';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
-import { ComponentCapsule } from '../capsule/component-capsule';
+import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scripts } from '../scripts';
 import { IdsAndScripts } from '../scripts/ids-and-scripts';
 import { Scope } from '../scope';
+import { Flows } from '../flows';
+import { IdsAndFlows } from '../flows/flows';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
   component: Component;
-  capsule: ComponentCapsule;
+  capsule: Capsule;
 };
 
 type ReportResults = {
@@ -26,7 +27,7 @@ type ReportResults = {
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
 export class Compile {
-  constructor(private workspace: Workspace, private scripts: Scripts, private scope: Scope) {
+  constructor(private workspace: Workspace, private scripts: Flows, private scope: Scope) {
     this.workspace = workspace;
     this.scripts = scripts;
     this.scope = scope;
@@ -64,13 +65,17 @@ export class Compile {
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
     const idsAndScriptsArr = componentAndCapsules
       .map(c => {
-        const compiler = c.component.config?.extensions?.compile?.compiler;
-        return { id: c.consumerComponent.id, value: compiler ? [compiler] : [] };
+        const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+        const compiler = compileConfig ? [compileConfig.compiler] : [];
+        return { id: c.consumerComponent.id, value: compiler };
       })
       .filter(i => i.value);
-    const idsAndScripts = new IdsAndScripts(...idsAndScriptsArr);
+    const idsAndScripts = new IdsAndFlows(...idsAndScriptsArr);
     const resolvedComponents = await getResolvedComponents(componentsIds, this.workspace);
-    return this.scripts.runMultiple(idsAndScripts, resolvedComponents);
+    return this.scripts.runMultiple(
+      idsAndScripts,
+      resolvedComponents.map(cap => cap.capsule)
+    );
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {

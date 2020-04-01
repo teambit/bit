@@ -1,32 +1,32 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
 import { ScopeExt } from '../scope';
-import { NetworkExt } from '../network';
 import provideBit from './bit.provider';
-import { ScriptsExt } from '../scripts';
 import { ComposerExt } from '../composer';
-import { ReactExtension } from '../react/react.manifest';
 import { InstallExt } from '../install';
 
 import CompileExt from '../compile/compile.manifest';
 import TestExt from '../test/test.manifest';
-import { GraphExt } from '../graph';
+import { ComponentGraphExt } from '../graph';
 import { CreateExt } from '../create';
+import { FlowsExt } from '../flows';
+import { InsightsExt } from '../insights';
+import { PackExt } from '../pack';
 
 export default {
   name: 'Bit',
   dependencies: [
     WorkspaceExt,
     ScopeExt,
-    NetworkExt,
-    ScriptsExt,
+    FlowsExt,
+    PackExt,
     CompileExt,
     TestExt,
     ComposerExt,
-    ReactExtension,
-    GraphExt,
     InstallExt,
-    CreateExt
+    CreateExt,
+    InsightsExt,
+    ComponentGraphExt
   ],
-  config: {},
   provider: provideBit
-};
+} as ExtensionManifest;

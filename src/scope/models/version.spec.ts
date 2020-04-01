@@ -206,10 +206,6 @@ describe('Version', () => {
       version.compiler.name = 'scope/pref/aaa@latest';
       expect(validateFunc).to.throw('does not have a version');
     });
-    it('compiler.files should have name attribute', () => {
-      version.compiler.files[0] = 'string';
-      expect(validateFunc).to.throw('missing the name attribute');
-    });
     it('if a compiler is string, it should be a valid bit-id', () => {
       version.compiler = 'this/is\\invalid?!/bit/id';
       expect(validateFunc).to.throw('the environment-id has an invalid Bit id');

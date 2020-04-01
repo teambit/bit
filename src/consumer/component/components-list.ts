@@ -61,7 +61,7 @@ export default class ComponentsList {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
-          version: componentObjects.scope ? componentObjects.latest() : null
+          version: componentObjects.scope ? componentObjects.latest() : undefined
         });
       });
     }
@@ -103,7 +103,8 @@ export default class ComponentsList {
       const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
       if (!modelComponent) return false;
       const latestVersion = modelComponent.latest();
-      if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version!)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.latestVersion = latestVersion;
         return true;
@@ -174,7 +175,8 @@ export default class ComponentsList {
     const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
     const warnings = [];
     tagPendingComponentsLatest.forEach(componentId => {
-      if (semver.gt(componentId.version, version)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      if (semver.gt(componentId.version!, version)) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }

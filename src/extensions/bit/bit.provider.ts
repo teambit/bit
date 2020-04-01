@@ -1,21 +1,15 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
-import Network from '../network/network';
 import Bit from './bit';
-import { Harmony } from '../../harmony';
 
-export type BitDeps = [Workspace, Scope, Network];
+export type BitDeps = [Workspace, Scope];
 
 export type BitConfig = {};
 
-export default async function provideBit(
-  config: BitConfig,
-  [workspace, scope, capsule]: BitDeps,
-  harmony: Harmony<unknown>
-) {
-  const bit = new Bit(scope, workspace, capsule, harmony);
-  await bit.loadExtensions();
-  bit.onExtensionsLoaded.next();
-
+export default async function provideBit([workspace, scope]: BitDeps) {
+  const bit = new Bit(scope, workspace);
+  if (workspace) {
+    await workspace.loadWorkspaceExtensions();
+  }
   return bit;
 }

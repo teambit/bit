@@ -7,6 +7,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
+// Skipped until we implement the loading extensions from variants
 describe('harmony extension config', function() {
   this.timeout(0);
   const helper = new Helper();
@@ -23,7 +24,7 @@ describe('harmony extension config', function() {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.extensions.addExtensionToWorkspaceConfig('Scope', config);
+      helper.extensions.setExtensionToVariant('*', 'Scope', config);
       helper.command.tagAllComponents();
       componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
       extensionData = componentVersionModel.extensions;
@@ -46,21 +47,19 @@ describe('harmony extension config', function() {
     let localBeforeTag;
 
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.extensions.createNewComponentExtension('my-ext', undefined, config);
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
+      helper.fixtures.copyFixtureExtensions('dummy-extension');
+      helper.command.addComponent('dummy-extension');
+      helper.extensions.setExtensionToVariant('*', 'dummy-extension', config);
       localBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('extension is new component on the workspace', () => {
       it('should not allow tagging the component without tagging the extensions', () => {
         output = helper.general.runWithTryCatch('bit tag bar/foo');
-        expect(output).to.have.string('has a dependency "my-ext"');
+        expect(output).to.have.string('has a dependency "dummy-extension"');
         expect(output).to.have.string('this dependency was not included in the tag command');
-      });
-      it('should load the extension successfully with config', () => {
-        const status = helper.command.status();
-        expect(status).to.have.string(`hi there from an extension, got config: ${JSON.stringify(config)}`);
       });
       describe('tagging extension and component together', () => {
         let componentModel;
@@ -68,7 +67,7 @@ describe('harmony extension config', function() {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.command.tagAllComponents();
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging with the component', () => {
@@ -79,11 +78,11 @@ describe('harmony extension config', function() {
         });
         it('should insert extensions into the component dev deps', () => {
           expect(componentModel.devDependencies).to.be.of.length(1);
-          expect(componentModel.devDependencies[0].id.name).to.equal('my-ext');
+          expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
           expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
         });
         it('should auto tag the component when tagging the extension again', () => {
-          output = helper.command.tagComponent('my-ext', 'message', '-f');
+          output = helper.command.tagComponent('dummy-extension', 'message', '-f');
           expect(output).to.have.string('auto-tagged dependents');
           expect(output).to.have.string('bar/foo@0.0.2');
         });
@@ -92,10 +91,10 @@ describe('harmony extension config', function() {
         let componentModel;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
-          helper.command.tagComponent('my-ext');
+          helper.command.tagComponent('dummy-extension');
           helper.command.tagComponent('bar/foo');
           const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+          const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
           componentModel = JSON.parse(componentModelStrWithoutExtString);
         });
         it('should have version for extension in the component models when tagging the extension before component', () => {
@@ -103,7 +102,7 @@ describe('harmony extension config', function() {
         });
         it('should insert extensions into the component dev deps', () => {
           expect(componentModel.devDependencies).to.be.of.length(1);
-          expect(componentModel.devDependencies[0].id.name).to.equal('my-ext');
+          expect(componentModel.devDependencies[0].id.name).to.equal('dummy-extension');
           expect(componentModel.devDependencies[0].id.version).to.equal('0.0.1');
         });
       });
@@ -121,13 +120,13 @@ describe('harmony extension config', function() {
         });
         it('should block exporting component without exporting the extension', () => {
           output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} bar/foo`);
-          expect(output).to.have.string(`"${helper.scopes.remote}/my-ext@0.0.1" was not found`);
+          expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
         });
         describe('exporting extension and component together', () => {
           before(() => {
             helper.command.exportAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
           });
           it('should update extension scope in the component when exporting together', () => {
@@ -138,10 +137,10 @@ describe('harmony extension config', function() {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeExport);
             helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-            helper.command.exportComponent('my-ext');
+            helper.command.exportComponent('dummy-extension');
             helper.command.exportComponent('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
-            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('\n') + 1);
+            const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
           });
 
