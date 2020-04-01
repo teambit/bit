@@ -67,7 +67,8 @@ export class Flow {
     const endTime = new Date();
     subject[isError ? 'error' : 'next']({
       type: 'flow:result',
-      id: capsule.component.id.toString(),
+      id: capsule.component.id,
+      capsule,
       value: this.result,
       endTime,
       duration: endTime.getTime() - start.getTime()
