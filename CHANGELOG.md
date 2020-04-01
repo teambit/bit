@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [[14.7.7-dev.2] - 2020-03-31]
+## [[14.7.7-dev.3] - 2020-03-31]
 
 - support react-docs of multiple exports
+
+## [[14.7.7-dev.2] - 2020-03-31]
+
 - [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
 
 ## [[14.7.7-dev.1] - 2020-03-24]
