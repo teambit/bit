@@ -1,11 +1,13 @@
+/* eslint-disable no-empty */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import path from 'path';
+import path, { join } from 'path';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '../reporter';
 import { Capsule } from '../isolator/capsule';
 import { pipeOutput } from '../../utils/child_process';
+import fsOutputFile from '../../utils/fs-output-file';
 
 export type installOpts = {
   packageManager?: string;
@@ -45,6 +47,36 @@ export default class PackageManager {
 
   get name() {
     return this.packageManagerName;
+  }
+  async checkIfFileExistsInCapsule(capsule: Capsule, file: string) {
+    const pathToFile = join(capsule.wrkDir, file);
+    try {
+      await capsule.fs.promises.access(pathToFile);
+      return true;
+    } catch (e) {}
+    return false;
+  }
+  async checkPackageManagerInCapsule(capsule: Capsule): Promise<string> {
+    const isYarn = await this.checkIfFileExistsInCapsule(capsule, 'yarn.lock');
+    if (isYarn) return 'yarn';
+
+    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'package-lock.json');
+    if (isNPM) return 'npm';
+
+    const isLib = await this.checkIfFileExistsInCapsule(capsule, 'librarian-manifests.json');
+    if (isLib) return 'librarian';
+
+    return '';
+  }
+  async removeLockFilesInCapsule(capsule: Capsule) {
+    async function safeUnlink(toRemove: string) {
+      try {
+        await capsule.fs.promises.unlink(join(capsule.wrkDir, toRemove));
+      } catch (e) {}
+    }
+    await safeUnlink('yarn.lock');
+    await safeUnlink('package-lock.json');
+    await safeUnlink('librarian-manifests.json');
   }
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;

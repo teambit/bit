@@ -1,7 +1,7 @@
 import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
-import { flatten, filter, uniq, concat, map } from 'ramda';
+import { flatten, filter, uniq, concat, map, equals } from 'ramda';
 import { CACHE_ROOT } from '../../constants';
 import { Component } from '../component';
 import ConsumerComponent from '../../consumer/component';
@@ -81,14 +81,25 @@ export default class Isolator {
         return { id, value: c };
       })
     );
-    // const before = await getPackageJSONInCapsules(capsules);
+    const packageManager = this.packageManager;
+    const before = await getPackageJSONInCapsules(capsules, packageManager);
 
     await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
-    // const after = await getPackageJSONInCapsules(capsules);
-
-    // const toInstall = capsules.filter((_item, i) => !equals(before[i], after[i]));
-
-    const toInstall = capsules;
+    const after = await getPackageJSONInCapsules(capsules, packageManager);
+    const toInstall = capsules.filter((item, i) => {
+      console.log(after[i].packageManager);
+      return (
+        !equals(before[i], after[i]) ||
+        after[i].packageManager === '' ||
+        !isOldPackageManager(after[i].packageManager, config, packageManager)
+      );
+    });
+    //   await Promise.all(
+    //   capsules
+    //     .filter((_, i) => !isOldPackageManager(config, after, i, packageManager))
+    //     .map(capsule => packageManager.removeLockFilesInCapsule(capsule))
+    // );
+    //  const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
@@ -119,17 +130,34 @@ export default class Isolator {
   }
 }
 
-async function getPackageJSONInCapsules(capsules: Capsule[]) {
+function isOldPackageManager(
+  name: string,
+  config: { installPackages: boolean; packageManager: undefined },
+  packageManager: PackageManager
+) {
+  const res = config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
+  if (!res) {
+    console.log('not old');
+  } else {
+    console.log('old');
+  }
+  return res;
+}
+
+async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager) {
   const resolvedJsons = await Promise.all(
     capsules.map(async capsule => {
       const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
       let capsuleJson: any = null;
+      let packageManager = '';
+
       try {
         capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
-        return JSON.parse(capsuleJson);
+        packageManager = await pm.checkPackageManagerInCapsule(capsule);
+        return { capsuleJson: JSON.parse(capsuleJson), packageManager };
         // eslint-disable-next-line no-empty
       } catch (e) {}
-      return capsuleJson;
+      return { capsuleJson, packageManager };
     })
   );
   return resolvedJsons;
