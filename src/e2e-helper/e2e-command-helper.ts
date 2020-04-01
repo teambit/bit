@@ -258,6 +258,12 @@ export default class CommandHelper {
     return this.runCmd(`bit isolate ${id} --use-capsule --directory ${capsuleDir}`);
   }
 
+  getCapsuleOfComponent(id: string) {
+    const capsulesJson = this.runCmd('bit capsule-list -j');
+    const capsules = JSON.parse(capsulesJson);
+    return capsules.capsules.find(c => c.endsWith(id));
+  }
+
   importExtension(id: string) {
     return this.runCmd(`bit import ${id} --extension`);
   }
