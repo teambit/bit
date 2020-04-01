@@ -99,7 +99,7 @@ result.value [
       })
       .filter(i => i.value);
     const idsAndFlows = new IdsAndFlows(...idsAndScriptsArr);
-    return this.flows.runMultiple(idsAndFlows);
+    return this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
