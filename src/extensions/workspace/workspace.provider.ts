@@ -51,7 +51,8 @@ export default async function provideWorkspace(
       );
       ComponentConfig.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
         const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
-        return workspace.loadExtensionsByConfig(extensionsConfig);
+        const res = await workspace.loadExtensionsByConfig(extensionsConfig);
+        return res;
       });
       return workspace;
     }
