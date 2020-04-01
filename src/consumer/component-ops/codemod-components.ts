@@ -6,7 +6,7 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import replacePackageName from '../../utils/string/replace-package-name';
 import DataToPersist from '../component/sources/data-to-persist';
 import { BitId, BitIds } from '../../bit-id';
-import { pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import { ImportSpecifier } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 import { Consumer } from '..';
 import IncorrectRootDir from '../component/exceptions/incorrect-root-dir';
@@ -57,7 +57,12 @@ function codemodComponent(consumer: Consumer, component: Component): { files: So
     relativeInstances.forEach((relativeEntry: RelativeComponentsAuthoredEntry) => {
       const id = relativeEntry.componentId;
       const depComponentMap = consumer.bitMap.getComponentIfExist(relativeEntry.componentId);
-      if (depComponentMap?.mainFile && depComponentMap?.mainFile !== relativeEntry.destFile) {
+      const getDepMainFile = () => {
+        if (!depComponentMap) return '';
+        if (!depComponentMap.hasRootDir()) return depComponentMap.mainFile;
+        return pathJoinLinux(depComponentMap.rootDir as string, depComponentMap.mainFile);
+      };
+      if (getDepMainFile() !== relativeEntry.destFile) {
         warnings.push(
           chalk.yellow(
             `"${file.relative}" requires "${id.toString()}" through an internal file ("${

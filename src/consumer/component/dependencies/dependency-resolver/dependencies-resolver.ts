@@ -10,7 +10,7 @@ import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../uti
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
 import { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
-import { PathLinux, PathOsBased, PathLinuxRelative, PathRelative } from '../../../../utils/path';
+import { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
@@ -58,7 +58,7 @@ export type RelativeComponentsAuthoredEntry = {
   importSource: string;
   componentId: BitId;
   importSpecifiers: ImportSpecifier[] | undefined;
-  destFile: PathRelative;
+  destFile: PathLinuxRelative;
 };
 
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
