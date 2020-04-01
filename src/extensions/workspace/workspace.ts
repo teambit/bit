@@ -287,6 +287,7 @@ export default class Workspace implements ComponentHost {
         legacyLogger.warn(`${warning} error: ${e.message}`);
         legacyLogger.silly(e.stack);
       }
+      return undefined;
     });
     this.reporter.end();
 
