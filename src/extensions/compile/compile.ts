@@ -7,7 +7,6 @@ import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
 import { Capsule } from '../isolator/capsule';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { IdsAndScripts } from '../scripts/ids-and-scripts';
 import { Scope } from '../scope';
 import { Flows } from '../flows';
 import { IdsAndFlows } from '../flows/flows';
@@ -27,9 +26,9 @@ type ReportResults = {
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
 export class Compile {
-  constructor(private workspace: Workspace, private scripts: Flows, private scope: Scope) {
+  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
     this.workspace = workspace;
-    this.scripts = scripts;
+    this.flows = flows;
     this.scope = scope;
 
     const func = this.compileDuringBuild.bind(this);
@@ -70,12 +69,8 @@ export class Compile {
         return { id: c.consumerComponent.id, value: compiler };
       })
       .filter(i => i.value);
-    const idsAndScripts = new IdsAndFlows(...idsAndScriptsArr);
-    const resolvedComponents = await getResolvedComponents(componentsIds, this.workspace);
-    return this.scripts.runMultiple(
-      idsAndScripts,
-      resolvedComponents.map(cap => cap.capsule)
-    );
+    const idsAndFlows = new IdsAndFlows(...idsAndScriptsArr);
+    return this.flows.runMultiple(idsAndFlows);
   }
 
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
