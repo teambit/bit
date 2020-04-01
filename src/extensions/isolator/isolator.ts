@@ -94,7 +94,11 @@ export default class Isolator {
         !isOldPackageManager(after[i].packageManager, config, packageManager)
       );
     });
-
+    //   await Promise.all(
+    //   capsules
+    //     .filter((_, i) => !isOldPackageManager(config, after, i, packageManager))
+    //     .map(capsule => packageManager.removeLockFilesInCapsule(capsule))
+    // );
     //  const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
