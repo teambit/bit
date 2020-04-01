@@ -87,20 +87,13 @@ export default class Isolator {
     await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
     const after = await getPackageJSONInCapsules(capsules, packageManager);
     const toInstall = capsules.filter(
-      (_item, i) =>
+      (item, i) =>
         !equals(before[i], after[i]) ||
         after[i].packageManager === '' ||
-        !isOldPackageManager(config, after, i, packageManager)
+        !isOldPackageManager(after[i].packageManager, config, packageManager)
     );
 
-    // if packageManager change remove old lock file
-    await Promise.all(
-      capsules
-        .filter((_, i) => !isOldPackageManager(config, after, i, packageManager))
-        .map(capsule => packageManager.removeLockFilesInCapsule(capsule))
-    );
-
-    // const toInstall = capsules;
+    //  const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
@@ -132,14 +125,11 @@ export default class Isolator {
 }
 
 function isOldPackageManager(
+  name: string,
   config: { installPackages: boolean; packageManager: undefined },
-  after: { capsuleJson: any; packageManager: string }[],
-  i: number,
   packageManager: PackageManager
 ) {
-  return config.packageManager
-    ? after[i].packageManager === config.packageManager
-    : after[i].packageManager === packageManager.packageManagerName;
+  return config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
 }
 
 async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager) {
