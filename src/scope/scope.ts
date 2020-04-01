@@ -296,12 +296,13 @@ export default class Scope {
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
     const ids = components.map(c => c.id);
-    const resultsFromCompileExt = await Promise.all(this.onBuild.map(func => func(ids)));
-    if (resultsFromCompileExt.length) {
+    const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
+    // @todo: currently it makes sure that all components have results, it probably should split the work
+    if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
       // the compile extension is registered. forget the legacy build function and work only with the extension
       // @todo: should it be flattened? what if multiple extensions call this hook
       // @ts-ignore
-      return this._buildResultsFromExtension(components, R.flatten(resultsFromCompileExt));
+      return this._buildResultsFromExtension(components, resultsFromCompileExt);
     }
     const build = async (component: Component) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
