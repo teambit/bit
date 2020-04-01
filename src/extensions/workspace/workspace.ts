@@ -247,13 +247,15 @@ export default class Workspace implements ComponentHost {
       }
     }
 
-    this.reporter.startPhase('Resolving extensions');
+    if (extensionsComponents.length > 0) {
+      this.reporter.startPhase('Resolving extensions');
+      // TODO: should we also not call createNetworkFromConsumer in this case?
+    }
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
       this.consumer,
       { packageManager: 'yarn' }
     );
-    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
