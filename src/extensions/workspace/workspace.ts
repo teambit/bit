@@ -9,7 +9,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { Reporter } from '../reporter';
+import { Reporter, Logger } from '../reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -20,7 +20,8 @@ import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
-
+import legacyLogger from '../../logger/logger';
+import { UNABLE_TO_LOAD_EXTENSION } from '../../constants';
 /**
  * API of the Bit Workspace
  */
@@ -52,6 +53,8 @@ export default class Workspace implements ComponentHost {
     readonly isolateEnv: Isolator,
 
     private reporter: Reporter,
+
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -253,15 +256,23 @@ export default class Workspace implements ComponentHost {
       this.consumer,
       { packageManager: 'yarn' }
     );
-    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const mod = require(extPath);
-      mod.name = id.toString();
-      return mod;
+      try {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const mod = require(extPath);
+        mod.name = id.toString();
+        return mod;
+      } catch (e) {
+        this.logger.warn(UNABLE_TO_LOAD_EXTENSION(id.toString()));
+        legacyLogger.warn(`couldn't load extension ${id.toString()}, error: ${e.message}`);
+        legacyLogger.silly(e.stack);
+      }
     });
-    return manifests;
+    this.reporter.end();
+
+    // Remove empty manifests as a result of loading issue
+    return manifests.filter(manifest => manifest);
   }
 }
