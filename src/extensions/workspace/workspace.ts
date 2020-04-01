@@ -126,7 +126,7 @@ export default class Workspace implements ComponentHost {
       components.map(c => c.id.toString()),
       this.consumer,
       {
-        packageManager: 'npm'
+        packageManager: 'yarn'
       }
     );
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
