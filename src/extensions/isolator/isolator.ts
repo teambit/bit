@@ -136,11 +136,6 @@ function isOldPackageManager(
   packageManager: PackageManager
 ) {
   const res = config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
-  if (!res) {
-    console.log('not old');
-  } else {
-    console.log('old');
-  }
   return res;
 }
 
