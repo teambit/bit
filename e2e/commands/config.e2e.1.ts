@@ -35,7 +35,7 @@ describe('bit config', function() {
 
     it('should delete the config correctly', () => {
       const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(delOutput).to.be.equal('deleted successfully\n');
+      expect(delOutput).to.have.string('deleted successfully\n');
       expect(confVal).to.not.have.string('conf.value');
     });
   });
@@ -52,19 +52,19 @@ describe('bit config', function() {
     });
     it('should read config from bit if exists', () => {
       const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(confVal).to.be.equal('bit-value\n');
+      expect(confVal).to.have.string('bit-value\n');
     });
     it('should read config from git-local if not exists in bit', () => {
       helper.command.runCmd('bit config del conf.key');
       const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(confVal).to.be.equal('git-local-val\n');
+      expect(confVal).to.have.string('git-local-val\n');
     });
     it('should read config from git-global if not exists in bit and git-local', () => {
       helper.git.unsetGitConfig('conf.key', 'local');
       const confVal = helper.command.runCmd('bit config get conf.key');
       // Clean the global env
       helper.git.unsetGitConfig('conf.key', 'global');
-      expect(confVal).to.be.equal('git-global-val\n');
+      expect(confVal).to.have.string('git-global-val\n');
     });
     // Commented because of permission issue
     // it('should read config from git-system if not exists in bit', () => {
