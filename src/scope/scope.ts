@@ -300,7 +300,6 @@ export default class Scope {
     // @todo: currently it makes sure that all components have results, it probably should split the work
     if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
       // the compile extension is registered. forget the legacy build function and work only with the extension
-      // @todo: should it be flattened? what if multiple extensions call this hook
       // @ts-ignore
       return this._buildResultsFromExtension(components, resultsFromCompileExt);
     }

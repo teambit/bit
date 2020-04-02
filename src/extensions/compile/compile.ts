@@ -17,12 +17,6 @@ export type ComponentAndCapsule = {
   capsule: Capsule;
 };
 
-type ReportResults = {
-  component: ResolvedComponent;
-  result: { dir: string }[] | null;
-  started: boolean;
-};
-
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
 export class Compile {
