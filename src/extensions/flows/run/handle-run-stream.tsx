@@ -17,11 +17,9 @@ export async function handleRunStream(stream: ReplaySubject<any>, reporter: Repo
         }
       },
       complete() {
-        reporter.end();
         resolve(summary);
       },
       error() {
-        reporter.end();
         resolve(summary);
       }
     })

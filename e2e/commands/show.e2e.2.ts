@@ -559,7 +559,7 @@ describe('bit show command', function() {
       helper.command.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {
-      output = helper.command.runCmd('bit show bar/foo -v');
+      output = helper.command.runCmd('bit show bar/foo -v --json');
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({

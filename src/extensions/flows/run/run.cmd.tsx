@@ -34,6 +34,7 @@ export class RunCmd implements Command {
     const result = await this.flows.runStream(comps, flow as string, { concurrency: concurrencyN, caching: !noCache });
 
     const report = await handleRunStream(result, this.reporter, verbose as boolean);
+    this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;
   }
