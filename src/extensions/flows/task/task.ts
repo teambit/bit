@@ -33,10 +33,7 @@ export class Task {
 }
 
 function createHostScript(capsule: Capsule, task: string) {
-  const parts = task
-    .trim()
-    .slice(1)
-    .split(':');
+  const parts = task.trim().split(':');
   const host = '__bit_container.js';
   const containerScript = getContainerScript();
   capsule.fs.writeFileSync(host, containerScript, { encoding: 'utf8' });
