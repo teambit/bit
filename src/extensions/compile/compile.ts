@@ -31,8 +31,8 @@ export class Compile {
     this.flows = flows;
     this.scope = scope;
 
-    const func = this.compileDuringBuild.bind(this);
-    if (this.scope?.onBuild) this.scope.onBuild.push(func);
+    // const func = this.compileDuringBuild.bind(this);
+    // if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
