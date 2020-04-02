@@ -34,7 +34,6 @@ export type ImportOptions = {
   writeToPath?: string;
   writePackageJson: boolean; // default: true
   writeConfig: boolean; // default: false
-  configDir?: string;
   writeDists: boolean; // default: true
   override: boolean; // default: false
   installNpmPackages: boolean; // default: true
@@ -75,7 +74,7 @@ export default class ImportComponents {
 
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
-    this.options.saveDependenciesAsComponents = this.consumer.config.saveDependenciesAsComponents;
+    this.options.saveDependenciesAsComponents = this.consumer.config.workspaceSettings._saveDependenciesAsComponents;
     if (!this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
@@ -117,7 +116,8 @@ export default class ImportComponents {
         c =>
           !c.component.id.isEqual(comp.component.id) &&
           c.component.id.isEqualWithoutVersion(comp.component.id) &&
-          semver.gt(c.component.id.version, comp.component.id.version)
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          semver.gt(c.component.id.version!, comp.component.id.version!)
       );
       return !sameIdHigherVersion;
     });
@@ -448,10 +448,6 @@ export default class ImportComponents {
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
-    if (this.options.writeConfig && !this.options.configDir) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
-    }
     const manyComponentsWriter = new ManyComponentsWriter({
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
@@ -459,7 +455,6 @@ export default class ImportComponents {
       writePackageJson: this.options.writePackageJson,
       addToRootPackageJson: this.options.writePackageJson, // no point to add to root if it doesn't have package.json
       writeConfig: this.options.writeConfig,
-      configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       verbose: this.options.verbose,

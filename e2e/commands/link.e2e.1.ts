@@ -2,6 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -10,6 +11,7 @@ describe('bit link', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
 
   after(() => {
@@ -176,7 +178,7 @@ console.log(isType());`;
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar2', 'foo2.js');
       helper.fixtures.addComponentBarFoo();
-      helper.command.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
+      helper.command.addComponentAllowFiles('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScope();
@@ -247,7 +249,7 @@ console.log(isType());`;
       helper.command.importComponent('utils/is-string');
       const isStringFixture2 = `const isString = require('@bitTest2/${helper.scopes.remote}.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.fs.createFile('test', 'is-string2.js', isStringFixture2);
-      helper.command.addComponent('test/is-string2.js', { i: 'test/is-string2' });
+      helper.command.addComponentAllowFiles('test/is-string2.js', { i: 'test/is-string2' });
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -311,6 +313,77 @@ console.log(isType());`;
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+      });
+    });
+  });
+  describe('rewire', () => {
+    let beforeLink;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateWorkspaceWithThreeComponents();
+      helper.fs.outputFile('app.js', fixtures.appPrintBarFooAuthor);
+      beforeLink = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('with no defaultScope', () => {
+      let output;
+      before(() => {
+        output = helper.command.linkAndRewire();
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string('@bit/utils.is-string');
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should show results from the rewire step', () => {
+        expect(output).to.have.string('rewired');
+      });
+    });
+    describe('with defaultScope', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeLink);
+        helper.bitJson.addDefaultScope();
+        helper.command.linkAndRewire();
+      });
+      it('should change the require statement to be module path with no-scope', () => {
+        const barFoo = helper.fs.readFile('bar/foo.js');
+        expect(barFoo).to.have.string(`@bit/${helper.scopes.remote}.utils.is-string`);
+        expect(barFoo).to.not.have.string('../utils/is-string.js');
+      });
+      it('the app should work after changing the code', () => {
+        const result = helper.command.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+    describe('with css files in one dir and extension', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.outputFile('foo/foo.css', 'h1 { color:green; }');
+        helper.fs.outputFile('bar/bar.css', '@import "../foo/foo.css";');
+        helper.command.addComponent('foo');
+        helper.command.addComponent('bar');
+        helper.command.linkAndRewire();
+      });
+      it('should add a tilda before the package name', () => {
+        const bar = helper.fs.readFile('bar/bar.css');
+        expect(bar).to.have.string('@import "~@bit/foo"');
+      });
+    });
+    describe('with sass files in the same dir and no extension', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fs.outputFile('foo.sass', 'h1 { color:green; }');
+        helper.fs.outputFile('bar.sass', '@import "foo";');
+        helper.command.addComponentAllowFiles('foo.sass');
+        helper.command.addComponentAllowFiles('bar.sass');
+        helper.command.linkAndRewire();
+      });
+      it('should add a tilda before the package name', () => {
+        const bar = helper.fs.readFile('bar.sass');
+        expect(bar).to.have.string('@import "~@bit/foo"');
       });
     });
   });

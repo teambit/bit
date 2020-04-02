@@ -8,6 +8,7 @@ describe('bit untag command', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -166,9 +167,9 @@ describe('bit untag command', function() {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fs.createFile('bar', 'foo2.js');
-      helper.command.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
       helper.fs.createFile('bar', 'foo3.js');
-      helper.command.addComponent('bar/foo3.js', { i: 'bar/foo3' });
+      helper.command.addComponentAllowFiles('bar/foo3.js', { i: 'bar/foo3' });
       helper.command.tagAllComponents();
       helper.command.exportComponent('bar/foo3');
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -193,7 +194,7 @@ describe('bit untag command', function() {
       let untagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        helper.command.runCmd('bit tag --scope 0.0.5');
+        helper.command.tagScope('0.0.5');
         untagOutput = helper.command.runCmd('bit untag 0.0.5 --all');
       });
       it('should display a descriptive successful message', () => {
@@ -250,7 +251,7 @@ describe('bit untag command', function() {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.exportAllComponents();
-          helper.command.runCmd('bit tag -s 1.0.5');
+          helper.command.tagScope('1.0.5');
           try {
             output = helper.command.runCmd('bit untag utils/is-type');
           } catch (err) {
@@ -352,7 +353,7 @@ describe('bit untag command', function() {
       describe('modify, tag and then untag all', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js'));
+          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/utils/is-string.js'));
           helper.command.tagAllComponents();
           helper.command.runCmd('bit untag --all');
         });

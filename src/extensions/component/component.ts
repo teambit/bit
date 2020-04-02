@@ -52,6 +52,14 @@ export default class Component {
     return this.state.filesystem;
   }
 
+  stringify(): string {
+    return JSON.stringify({
+      id: this.id,
+      head: this.head
+      // TODO - laly add stringify of this.state and this.tags
+    });
+  }
+
   /**
    * dependency graph of the component current. ideally package dependencies would be also placed
    * here through an external extension.

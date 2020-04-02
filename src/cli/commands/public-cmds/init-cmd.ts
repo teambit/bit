@@ -9,6 +9,7 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import clean from '../../../utils/object-clean';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
+import { WorkspaceConfigFileInputProps } from '../../../extensions/workspace-config/workspace-config';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -30,8 +31,9 @@ export default class Init extends Command {
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
     ],
-    ['c', 'compiler <compiler>', 'set up compiler'],
-    ['t', 'tester <tester>', 'set up tester'],
+    // Disabled until supported by the new config
+    // ['c', 'compiler <compiler>', 'set up compiler'],
+    // ['t', 'tester <tester>', 'set up tester'],
     ['d', 'default-directory <default-directory>', 'set up default directory to import components into'],
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
@@ -44,25 +46,17 @@ export default class Init extends Command {
       return initInteractive();
     }
     const {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bare,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       shared,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       standalone,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       reset,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       resetHard,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       force,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       compiler,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       tester,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       defaultDirectory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageManager
     } = flags;
     if (path) path = pathlib.resolve(path);
@@ -78,14 +72,17 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    const workspaceConfigProps = {
-      compiler,
-      tester,
-      componentsDefaultDirectory: defaultDirectory,
-      packageManager,
-      run: {}
+    const workspaceConfigFileProps: WorkspaceConfigFileInputProps = {
+      workspace: {
+        workspace: {
+          defaultDirectory
+        },
+        dependencyResolver: {
+          packageManager
+        }
+      }
     };
-    return init(path, standalone, reset, resetHard, force, workspaceConfigProps).then(
+    return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,

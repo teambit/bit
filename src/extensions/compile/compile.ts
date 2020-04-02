@@ -28,8 +28,9 @@ export class Compile {
     // we need to figure out where to store the specific compiler extensions
     const idsAndScriptsArr = componentAndCapsules
       .map(c => {
-        const compiler = c.component.config?.extensions?.compile?.compiler;
-        return { id: c.consumerComponent.id, value: compiler ? [compiler] : [] };
+        const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+        const compiler = compileConfig ? [compileConfig.compiler] : [];
+        return { id: c.consumerComponent.id, value: compiler };
       })
       .filter(i => i.value);
     const idsAndScripts = new IdsAndFlows(...idsAndScriptsArr);

@@ -13,15 +13,11 @@ import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 import ImportComponents from '../../../consumer/component-ops/import-components';
 
-const key = R.compose(
-  R.head,
-  R.keys
-);
+const key = R.compose(R.head, R.keys);
 
 export type EnvironmentOptions = {
   tester: boolean;
   compiler: boolean;
-  extension: boolean;
 };
 
 export default (async function importAction(
@@ -37,37 +33,17 @@ export default (async function importAction(
     const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envComponents[0].component.id.toString();
-    function writeConfigIfNeeded() {
+    async function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        consumer.config.compiler = id;
+        consumer.config._setCompiler(id);
         Analytics.setExtraData('build_env', id);
-        return consumer.config.write({ workspaceDir: consumer.getPath() });
+        const res = consumer.config.write({ workspaceDir: consumer.getPath() });
+        return res;
       }
 
       if (environmentOptions.tester) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        consumer.config.tester = id;
+        consumer.config._setTester(id);
         Analytics.setExtraData('test_env', id);
-        return consumer.config.write({ workspaceDir: consumer.getPath() });
-      }
-
-      if (environmentOptions.extension) {
-        const idWithoutVersion = BitId.getStringWithoutVersion(id);
-        // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.config.extensions).find(ext => {
-          return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
-        });
-        if (oldVersion) {
-          consumer.config.extensions[id] = consumer.config.extensions[oldVersion];
-          delete consumer.config.extensions[oldVersion];
-          return consumer.config.write({ workspaceDir: consumer.getPath() });
-        }
-        consumer.config.extensions[id] = {
-          options: {},
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          config: {}
-        };
         return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
@@ -79,7 +55,7 @@ export default (async function importAction(
 
   const consumer: Consumer = await loadConsumer();
   consumer.packageManagerArgs = packageManagerArgs;
-  if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
+  if (environmentOptions.tester || environmentOptions.compiler) {
     return importEnvironment(consumer);
   }
   const importComponents = new ImportComponents(consumer, importOptions);
@@ -157,12 +133,7 @@ function warnForPackageDependencies({ dependencies, consumer, installNpmPackages
 
   const getNameAndVersion = pj => ({ [pj.name]: pj.version });
   const nodeModules = R.mergeAll(
-    glob.sync(path.join(projectDir, 'node_modules', '*')).map(
-      R.compose(
-        getNameAndVersion,
-        getPackageJson
-      )
-    )
+    glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
   // eslint-disable-next-line

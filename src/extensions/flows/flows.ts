@@ -9,6 +9,8 @@ import BitIdAndValueArray from '../../bit-id/bit-id-and-value-array';
 import { ExecutionOptions } from './network/options';
 import { BitId } from '../../bit-id';
 import { Capsule } from '../isolator/capsule';
+import { PostFlow, getWorkspaceGraph } from './network/network';
+import { getExecutionCache } from './cache';
 
 export class Flows {
   constructor(private workspace: Workspace) {}
@@ -16,36 +18,34 @@ export class Flows {
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
-  createNetwork(seeders: ComponentID[], getFlow: GetFlow) {
-    return new Network(this.workspace, seeders, getFlow);
+  createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow) {
+    return new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
   }
 
-  createNetworkByFlowName(seeders: ComponentID[], name = 'build') {
-    const getFlow = async (seed: ComponentID | BitId) => {
+  createNetworkByFlowName(seeders: ComponentID[], name = 'build', options: ExecutionOptions) {
+    const getFlow = async (capsule: Capsule) => {
+      const seed = capsule.component.id;
       const id = seed instanceof BitId ? seed : seed._legacy;
       const component = await this.workspace.get(id);
       if (!component) {
         return new Flow([]);
       }
-      // const tasks = component.config.extensions.flows[name] || [];
-      const tasks = path(['config', 'extensions', 'flows', name], component) || [];
-      const flow = new Flow(tasks);
+      const isCached = await getExecutionCache().compareToCache(capsule, name);
+      const flowsConfig = component.config.extensions.findCoreExtension('flows')?.config;
+      const tasks = flowsConfig && flowsConfig.tasks ? flowsConfig.tasks[name] : [];
+      const flow = isCached && options.caching ? new Flow([]) : new Flow(tasks);
+
       return flow;
     };
-    return this.createNetwork(seeders, getFlow);
+    const postFlow = async (capsule: Capsule) => {
+      const cache = getExecutionCache();
+      return cache.saveHashValue(capsule, name);
+    };
+    return this.createNetwork(seeders, getFlow, postFlow);
   }
 
   async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
-    network = network || this.createNetworkByFlowName(seeders, name);
-    const opts = Object.assign(
-      {
-        caching: true,
-        concurrency: 4,
-        traverse: 'both'
-      },
-      options
-    );
-    const resultStream = await network.execute(opts);
+    const resultStream = await this.runStream(seeders, name, options, network);
     return new Promise((resolve, reject) => {
       resultStream.subscribe({
         next(data: any) {
@@ -61,13 +61,30 @@ export class Flows {
     });
   }
 
+  async runStream(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+    const opts: ExecutionOptions = Object.assign(
+      {
+        caching: true,
+        concurrency: 4,
+        traverse: 'both'
+      },
+      options
+    );
+    network = network || this.createNetworkByFlowName(seeders, name, opts);
+    const resultStream = await network.execute(opts);
+    return resultStream;
+  }
+
   async runMultiple(flowsWithIds: IdsAndFlows, capsules: Capsule[], options?: Partial<ExecutionOptions>) {
-    const getFlow = (id: ComponentID) => {
+    const getFlow = (capsule: Capsule) => {
+      const id = capsule.component.id;
       const value = flowsWithIds.getValue(id._legacy);
       return Promise.resolve(new Flow(value || []));
     };
+    const postFlow = (_capsule: Capsule) => Promise.resolve();
+
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
-    const network = this.createNetwork(ids, getFlow);
+    const network = this.createNetwork(ids, getFlow, postFlow);
     return this.run(ids, '', options || {}, network);
   }
 }

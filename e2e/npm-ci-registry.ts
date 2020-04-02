@@ -2,7 +2,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import execa from 'execa';
-import tar from 'tar';
 import { ChildProcess } from 'child_process';
 import Helper from '../src/e2e-helper/e2e-helper';
 
@@ -19,9 +18,8 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * To get it work, the following steps are mandatory.
  * 1. before tagging the components, run `this.setCiScopeInBitJson()`.
  * 2. import the components to a new scope.
- * 3. run `helper.extensions.importNpmPackExtension();`
- * 4. run `helper.scopeHelper.removeRemoteScope();` otherwise, it'll save components as dependencies
- * 5. run `this.publishComponent(your-component)`.
+ * 3. run `helper.scopeHelper.removeRemoteScope();` otherwise, it'll save components as dependencies
+ * 4. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
  *
  * in case you need to init ciRegistry a few times on the same e2e-test file, it's better to
@@ -121,16 +119,15 @@ EOD`;
     const componentFullName = componentName.startsWith(this.helper.scopes.remote)
       ? componentName
       : `${this.helper.scopes.remote}/${componentName}`;
-    const result = this.helper.command.runCmd(
-      `bit npm-pack ${componentFullName}@${componentVersion} -o -k -j -d ${packDir}`
-    );
-    if (this.helper.debugMode) console.log('npm pack result ', result);
-    const resultParsed = JSON.parse(result);
-    if (!resultParsed || !resultParsed.tarPath) {
-      throw new Error('npm pack results are invalid');
-    }
-    const tarballFilePath = resultParsed.tarPath;
-    tar.x({ file: tarballFilePath, C: packDir, sync: true });
+    const componentId = `${componentFullName}@${componentVersion}`;
+    const options = {
+      o: '',
+      k: '',
+      p: '',
+      j: '',
+      d: packDir
+    };
+    this.helper.command.packComponent(componentId, options, true);
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
@@ -144,7 +141,6 @@ EOD`;
     this.helper.scopeHelper.reInitLocalScope();
     this.helper.scopeHelper.addRemoteScope();
     this.helper.command.importComponent('* --objects');
-    this.helper.extensions.importNpmPackExtension();
     const remoteComponents = this.helper.command.listRemoteScopeParsed();
     const remoteIds = remoteComponents.map(c => c.id);
     this.helper.scopeHelper.removeRemoteScope();

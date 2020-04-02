@@ -1,6 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Color } from 'ink';
-import { Workspace } from '../workspace';
 import { Command, CLIArgs } from '../cli';
 import { Flags } from '../paper/command';
 import { Compile } from './compile';

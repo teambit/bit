@@ -1,1 +1,1 @@
-module.exports = require('./react.manifest');
+module.exports = require('./gulp-ts.manifest');

@@ -10,6 +10,7 @@ describe.skip('permissions', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -18,7 +19,7 @@ describe.skip('permissions', function() {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      const output = helper.command.runCmd('sudo bit add bar/foo.js');
+      const output = helper.command.runCmd('sudo bit add bar/foo.js --allow-files');
       expect(output).to.have.string('Warning');
       expect(output).to.have.string('root');
     });

@@ -15,7 +15,7 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
 import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
@@ -24,6 +24,7 @@ import { getManipulateDirForComponentWithDependencies } from '../consumer/compon
 import GeneralError from '../error/general-error';
 import { PathOsBased } from '../utils/path';
 import loader from '../cli/loader';
+import { PackageManagerResults } from '../npm-client/npm-client';
 
 export interface IsolateOptions {
   writeToPath?: PathOsBased; // Path to write the component to
@@ -240,7 +241,7 @@ export default class Isolator {
   }
 
   async _getNpmVersion() {
-    const versionString = await this.capsuleExec('npm --version');
+    const { stdout: versionString } = await this.capsuleExec('npm --version');
     const validVersion = semver.coerce(versionString);
     return validVersion ? validVersion.raw : null;
   }
@@ -268,20 +269,27 @@ export default class Isolator {
     this._npmVersionHasValidated = true;
   }
 
-  async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<string> {
+  async capsuleExec(cmd: string, options?: Record<string, any> | null | undefined): Promise<PackageManagerResults> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const execResults = await this.capsule.exec({ command: cmd.split(' '), options });
-    let output = '';
+    let stdout = '';
+    let stderr = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {
-        output += data;
+        stdout += data;
       });
       execResults.stdout.on('error', (error: string) => {
         return reject(error);
       });
       // @ts-ignore
       execResults.on('close', () => {
-        return resolve(output);
+        return resolve({ stdout, stderr });
+      });
+      execResults.stderr.on('error', (error: string) => {
+        return reject(error);
+      });
+      execResults.stderr.on('data', (data: string) => {
+        stderr += data;
       });
     });
   }
@@ -326,7 +334,9 @@ export default class Isolator {
   async _getNpmListOutput(packageManager: string): Promise<string> {
     const args = [packageManager, 'list', '-j'];
     try {
-      return await this.capsuleExec(args.join(' '), { cwd: this.componentRootDir });
+      const { stdout, stderr } = await this.capsuleExec(args.join(' '), { cwd: this.componentRootDir });
+      if (stderr && stderr.startsWith('{')) return stderr;
+      return stdout;
     } catch (err) {
       if (err && err.startsWith('{')) return err; // it's probably a valid json with errors, that's fine, parse it.
       throw err;

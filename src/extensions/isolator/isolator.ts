@@ -13,6 +13,7 @@ import { loadScope } from '../../scope';
 import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
+import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -51,7 +52,8 @@ export default class Isolator {
   }
 
   async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
-    const graph = await Graph.buildGraphFromWorkspace(consumer);
+    const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
+    const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
@@ -79,18 +81,31 @@ export default class Isolator {
         return { id, value: c };
       })
     );
-    const before = await getPackageJSONInCapsules(capsules);
+    const packageManager = this.packageManager;
+    const before = await getPackageJSONInCapsules(capsules, packageManager);
 
-    await writeComponentsToCapsules(components, graph, capsules, capsuleList);
-    const after = await getPackageJSONInCapsules(capsules);
-
-    const toInstall = capsules.filter((item, i) => !equals(before[i], after[i]));
-
+    await writeComponentsToCapsules(components, graph, capsules, capsuleList, this.packageManager.name);
+    const after = await getPackageJSONInCapsules(capsules, packageManager);
+    const toInstall = capsules.filter((item, i) => {
+      console.log(after[i].packageManager);
+      return (
+        !equals(before[i], after[i]) ||
+        after[i].packageManager === '' ||
+        !isOldPackageManager(after[i].packageManager, config, packageManager)
+      );
+    });
+    //   await Promise.all(
+    //   capsules
+    //     .filter((_, i) => !isOldPackageManager(config, after, i, packageManager))
+    //     .map(capsule => packageManager.removeLockFilesInCapsule(capsule))
+    // );
+    //  const toInstall = capsules;
     if (config.installPackages && config.packageManager) {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
       await this.packageManager.runInstall(toInstall);
     }
+
     return {
       capsules: capsuleList,
       components: graph
@@ -115,17 +130,29 @@ export default class Isolator {
   }
 }
 
-async function getPackageJSONInCapsules(capsules: Capsule[]) {
+function isOldPackageManager(
+  name: string,
+  config: { installPackages: boolean; packageManager: undefined },
+  packageManager: PackageManager
+) {
+  const res = config.packageManager ? name === config.packageManager : name === packageManager.packageManagerName;
+  return res;
+}
+
+async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager) {
   const resolvedJsons = await Promise.all(
     capsules.map(async capsule => {
       const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
       let capsuleJson: any = null;
+      let packageManager = '';
+
       try {
         capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
-        return JSON.parse(capsuleJson);
+        packageManager = await pm.checkPackageManagerInCapsule(capsule);
+        return { capsuleJson: JSON.parse(capsuleJson), packageManager };
         // eslint-disable-next-line no-empty
       } catch (e) {}
-      return capsuleJson;
+      return { capsuleJson, packageManager };
     })
   );
   return resolvedJsons;

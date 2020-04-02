@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
-import { Extensions, Compilers, Testers } from './abstract-config';
+import { Compilers, Testers } from './abstract-config';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
-  DEFAULT_EJECTED_ENVS_DIR_PATH,
-  DEFAULT_PACKAGE_MANAGER
+  DEFAULT_PACKAGE_MANAGER,
+  DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
 import { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
@@ -17,23 +17,22 @@ import { isValidPath } from '../../utils';
 import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
+import { ExtensionDataList } from './extension-data';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
-const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 export type WorkspaceConfigProps = {
   compiler?: string | Compilers;
   tester?: string | Testers;
   saveDependenciesAsComponents?: boolean;
   lang?: string;
-  distTarget?: string | null | undefined;
-  distEntry?: string | null | undefined;
+  distTarget?: string | undefined;
+  distEntry?: string | undefined;
   componentsDefaultDirectory?: string;
   dependenciesDirectory?: string;
-  ejectedEnvsDirectory?: string;
   bindingPrefix?: string;
-  extensions?: Extensions;
+  extensions?: ExtensionDataList;
   packageManager?: 'librarian' | 'npm' | 'yarn';
   packageManagerArgs?: string[];
   packageManagerProcessOptions?: Record<string, any>;
@@ -45,23 +44,22 @@ export type WorkspaceConfigProps = {
 };
 
 export default class WorkspaceConfig extends AbstractConfig {
-  distTarget: string | null | undefined; // path where to store build artifacts
+  distTarget: string | undefined; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
-  distEntry: string | null | undefined;
+  distEntry: string | undefined;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
-  ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'librarian' | 'npm' | 'yarn'; // package manager client to use
-  packageManagerArgs: string[] | null | undefined; // package manager client to use
-  packageManagerProcessOptions: Record<string, any> | null | undefined; // package manager process options
+  packageManagerArgs: string[] | undefined; // package manager client to use
+  packageManagerProcessOptions: Record<string, any> | undefined; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
-  resolveModules: ResolveModulesConfig | null | undefined;
+  resolveModules: ResolveModulesConfig | undefined;
   overrides: ConsumerOverrides;
   packageJsonObject: Record<string, any> | null | undefined; // workspace package.json if exists (parsed)
-  defaultScope: string | null | undefined; // default remote scope to export to
+  defaultScope: string | undefined; // default remote scope to export to
 
   constructor({
     compiler,
@@ -72,7 +70,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     distEntry,
     componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
-    ejectedEnvsDirectory = DEFAULT_EJECTED_ENVS_DIR_PATH,
     bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
@@ -97,7 +94,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       this.componentsDefaultDirectory = `${this.componentsDefaultDirectory}/{name}`;
     }
     this.dependenciesDirectory = dependenciesDirectory;
-    this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
@@ -114,7 +110,6 @@ export default class WorkspaceConfig extends AbstractConfig {
     let consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
-      ejectedEnvsDirectory: this.ejectedEnvsDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
@@ -136,7 +131,6 @@ export default class WorkspaceConfig extends AbstractConfig {
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
-      if (key === 'ejectedEnvsDirectory') return val !== DEFAULT_EJECTED_ENVS_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
@@ -197,8 +191,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesDirectory,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      ejectedEnvsDirectory,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dist,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       bindingPrefix,
@@ -233,7 +225,6 @@ export default class WorkspaceConfig extends AbstractConfig {
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
-      ejectedEnvsDirectory,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
@@ -248,6 +239,14 @@ export default class WorkspaceConfig extends AbstractConfig {
   }
 
   static async load(dirPath: string): Promise<WorkspaceConfig> {
+    const res = await this.loadIfExist(dirPath);
+    if (!res) {
+      throw new BitConfigNotFound();
+    }
+    return res;
+  }
+
+  static async loadIfExist(dirPath: string): Promise<WorkspaceConfig | undefined> {
     const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
     const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
 
@@ -260,7 +259,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
-    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
+    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) return undefined;
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const workspaceConfig = this.fromPlainObject(config);
@@ -270,6 +269,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     workspaceConfig.packageJsonObject = packageJsonFile;
     return workspaceConfig;
   }
+
   static async loadBitJson(bitJsonPath: string): Promise<Record<string, any> | null | undefined> {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
@@ -291,8 +291,8 @@ export default class WorkspaceConfig extends AbstractConfig {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory } = object;
-    const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory };
+    const { componentsDefaultDirectory, dependenciesDirectory } = object;
+    const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory };
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {

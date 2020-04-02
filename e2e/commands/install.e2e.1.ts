@@ -117,7 +117,7 @@ describe.skip('run bit install', function() {
           expect(output).to.have.string('successfully ran npm install at components/bar/foo');
         });
         it('should link only the specified id and its dependencies', () => {
-          expect(output).to.have.string('found 2 components'); // 1 is for bar/foo and 2 for its dep is-string
+          expect(output).to.have.string('linked 2 components'); // 1 is for bar/foo and 2 for its dep is-string
         });
         it('all links should be in place', () => {
           const result = helper.command.runCmd('node app.js');

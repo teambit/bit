@@ -12,6 +12,7 @@ describe('dev-dependencies functionality', function() {
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures('legacy-workspace-config');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -36,7 +37,7 @@ describe('dev-dependencies functionality', function() {
 
         helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
         helper.npm.installNpmPackage('chai', '4.1.2');
-        helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
         helper.command.tagAllComponents();
         barFoo = helper.command.catComponent('bar/foo@0.0.1');
@@ -93,7 +94,7 @@ describe('foo', () => {
 });`
         );
         helper.npm.installNpmPackage('chai', '4.1.2');
-        helper.command.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.command.addComponentAllowFiles('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.command.build(); // needed for building the dependencies
         localScope = helper.scopeHelper.cloneLocalScope();
         helper.command.tagAllComponents();
@@ -182,7 +183,7 @@ describe('foo', () => {
       helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.addComponentUtilsIsType();
-      helper.command.addComponent('utils/is-string.js', {
+      helper.command.addComponentAllowFiles('utils/is-string.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js'
@@ -213,6 +214,7 @@ describe('foo', () => {
       helper.command.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.fixtures.addComponentUtilsIsString();
       helper.fixtures.addComponentUtilsIsType();
+      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       barFoo = helper.command.catComponent('bar/foo@latest');
 

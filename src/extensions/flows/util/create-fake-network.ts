@@ -8,6 +8,7 @@ import { Consumer } from '../../../consumer';
 import { Workspace } from '../../..';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
 import { Flow } from '../flow';
+import { Capsule } from '../../isolator/capsule';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };
@@ -19,7 +20,7 @@ export async function createTestNetworkStream(testCase: GraphTestCase) {
   const fakeGetGraph = createGetGraphFn(testCase);
   const fakeWorkSpace = createFakeWorkSpace(fakeGetGraph);
   const ids = testCase.input.map(val => new ComponentID(BitId.parse(val)));
-  const getFlow = (id: ComponentID) => Promise.resolve(new Flow([`echo hello-${id}`]));
+  const getFlow = (id: Capsule) => Promise.resolve(new Flow([`echo hello-${id.component.id}`]));
 
   const network = new Network(fakeWorkSpace, ids, getFlow, fakeGetGraph);
   return network.execute(testCase.options);
