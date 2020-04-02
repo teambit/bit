@@ -45,12 +45,14 @@ export default async function provideWorkspace(
         component,
         isolator,
         reporter,
+        reporter.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );
       ComponentConfig.registerOnComponentConfigLoading('workspace', async (id, componentConfig) => {
         const extensionsConfig = componentConfig.extensions.toExtensionConfigList();
-        return workspace.loadExtensionsByConfig(extensionsConfig);
+        const res = await workspace.loadExtensionsByConfig(extensionsConfig);
+        return res;
       });
       return workspace;
     }

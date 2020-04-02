@@ -9,7 +9,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { Reporter } from '../reporter';
+import { Reporter, Logger } from '../reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -20,7 +20,8 @@ import GeneralError from '../../error/general-error';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
-
+import legacyLogger from '../../logger/logger';
+import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
 /**
  * API of the Bit Workspace
  */
@@ -52,6 +53,8 @@ export default class Workspace implements ComponentHost {
     readonly isolateEnv: Isolator,
 
     private reporter: Reporter,
+
+    private logger: Logger,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
@@ -221,7 +224,17 @@ export default class Workspace implements ComponentHost {
   }
 
   private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
-    await this.harmony.set(extensionsManifests);
+    this.reporter.startPhase('running extensions');
+    try {
+      await this.harmony.set(extensionsManifests);
+      this.reporter.end();
+    } catch (e) {
+      const ids = extensionsManifests.map(manifest => manifest.name);
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
+      this.logger.warn(warning);
+      legacyLogger.warn(`${warning} error: ${e.message}`);
+      legacyLogger.silly(e.stack);
+    }
   }
 
   /**
@@ -233,35 +246,52 @@ export default class Workspace implements ComponentHost {
     if (!extensionsIds || !extensionsIds.length) {
       return [];
     }
+
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
     const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
     let extensionsComponents;
+    this.reporter.startPhase('Resolving extensions');
     // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
     try {
       extensionsComponents = await this.getMany(nonRegisteredExtensions);
     } catch (e) {
+      let errorMessage = e.message;
       if (e instanceof MissingBitMapComponent) {
-        throw new GeneralError(
-          `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`
-        );
+        errorMessage = `could not find an extension "${e.id}" or a known config with this name defined in the workspace config`;
       }
+
+      const ids = nonRegisteredExtensions;
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
+      this.logger.warn(warning);
+      legacyLogger.warn(warning);
+      legacyLogger.warn(`error: ${errorMessage}`);
+      legacyLogger.silly(e.stack);
     }
 
-    this.reporter.startPhase('Resolving extensions');
     const isolatedNetwork = await this.isolateEnv.createNetworkFromConsumer(
       extensionsComponents.map(c => c.id.toString()),
       this.consumer,
       { packageManager: 'yarn' }
     );
-    this.reporter.end();
 
     const manifests = isolatedNetwork.capsules.map(({ value, id }) => {
       const extPath = value.wrkDir;
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const mod = require(extPath);
-      mod.name = id.toString();
-      return mod;
+      try {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const mod = require(extPath);
+        mod.name = id.toString();
+        return mod;
+      } catch (e) {
+        const warning = UNABLE_TO_LOAD_EXTENSION(id.toString());
+        this.logger.warn(warning);
+        legacyLogger.warn(`${warning} error: ${e.message}`);
+        legacyLogger.silly(e.stack);
+      }
+      return undefined;
     });
-    return manifests;
+    this.reporter.end();
+
+    // Remove empty manifests as a result of loading issue
+    return manifests.filter(manifest => manifest);
   }
 }

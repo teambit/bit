@@ -62,7 +62,7 @@ export class ExecutionCache {
 }
 
 export function getExecutionCache() {
-  const pathToCache = join(CACHE_ROOT, 'cache-flow.json');
+  const pathToCache = join(CACHE_ROOT, 'capsules', 'cache-flow.json');
   return new ExecutionCache(pathToCache);
 }
 

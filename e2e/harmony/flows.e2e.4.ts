@@ -14,7 +14,7 @@ describe('flows functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.skip('running build task', () => {
+  describe('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.initWorkspace();
@@ -61,9 +61,13 @@ describe('flows functionality', function() {
       helper.command.runCmd('bit link');
       taskOutput = helper.command.runTask('build help --no-cache');
     });
-    // @todo: improve!
-    it('should do something useful', () => {
-      expect(taskOutput).to.have.string('result');
+    it('should output results', () => {
+      expect(taskOutput).to.have.string('Hello Report!');
+    });
+    it('should write dists files', () => {
+      const helpCapsule = helper.command.getCapsuleOfComponent('help');
+      expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
+      expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
     });
   });
 });
