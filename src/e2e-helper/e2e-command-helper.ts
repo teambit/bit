@@ -261,7 +261,9 @@ export default class CommandHelper {
   getCapsuleOfComponent(id: string) {
     const capsulesJson = this.runCmd('bit capsule-list -j');
     const capsules = JSON.parse(capsulesJson);
-    return capsules.capsules.find(c => c.endsWith(id));
+    const capsulePath = capsules.capsules.find(c => c.endsWith(id));
+    if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
+    return capsulePath;
   }
 
   importExtension(id: string) {
