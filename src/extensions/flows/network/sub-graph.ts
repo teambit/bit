@@ -21,9 +21,9 @@ export function createSubGraph(components: Component[], options: ExecutionOption
       })
     )
   );
+
   return graph.nodes().reduce((g, curr) => {
-    // eslint-disable-next-line no-bitwise
-    if (!~shouldStay.indexOf(curr)) {
+    if (!shouldStay.includes(curr)) {
       g.removeNode(curr);
     }
     return graph;

@@ -75,10 +75,11 @@ export class Flows {
     return resultStream;
   }
 
-  async runMultiple(flowsWithIds: IdsAndFlows, capsules: Capsule[], options?: Partial<ExecutionOptions>) {
+  async runMultiple(flowsWithIds: IdsAndFlows, options?: Partial<ExecutionOptions>) {
     const getFlow = (capsule: Capsule) => {
       const id = capsule.component.id;
-      const value = flowsWithIds.getValue(id._legacy);
+      // @ts-ignore for some reason the capsule.component here is ConsumerComponent
+      const value = flowsWithIds.getValue(id);
       return Promise.resolve(new Flow(value || []));
     };
     const postFlow = (_capsule: Capsule) => Promise.resolve();

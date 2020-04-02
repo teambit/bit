@@ -272,7 +272,7 @@ export default class Dists {
   toDistFilesModel(
     consumer: Consumer,
     originallySharedDir: PathLinux | null | undefined,
-    compiler: CompilerExtension | null | undefined
+    isCompileSet: boolean
   ): { dists?: DistFileModel[]; mainDistFile?: PathOsBasedRelative | null | undefined } {
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
@@ -288,7 +288,7 @@ export default class Dists {
       return pathNormalizeToLinux(withDistEntry);
     };
 
-    if (this.isEmpty() || !compiler) return {};
+    if (this.isEmpty() || !isCompileSet) return {};
 
     const dists = this.get().map(dist => {
       return {
