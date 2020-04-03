@@ -667,6 +667,7 @@ export default class Component {
 
     const testerFilePath = tester.filePath;
 
+    // eslint-disable-next-line complexity
     const run = async (component: Component, cwd?: PathOsBased) => {
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
@@ -1132,6 +1133,7 @@ export default class Component {
     return this.fromObject(object);
   }
 
+  // eslint-disable-next-line complexity
   static async loadFromFileSystem({
     bitDir,
     componentMap,

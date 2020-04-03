@@ -546,6 +546,7 @@ export default class DependencyResolver {
   }
 
   // return true if the dep file is untracked
+  // eslint-disable-next-line complexity
   processOneDepFile(
     originFile: PathLinuxRelative,
     depFile: string,

@@ -22,6 +22,9 @@ module.exports = {
     // 'unicorn'
   ],
   rules: {
+    complexity: ['error', { max: 25 }],
+    'no-console': ['error'],
+    '@typescript-eslint/no-unused-vars': ['error', { args: 'after-used' }],
     '@typescript-eslint/no-use-before-define': [
       'error',
       { functions: false, classes: true, variables: true, typedefs: true }

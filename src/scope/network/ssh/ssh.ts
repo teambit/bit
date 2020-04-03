@@ -326,6 +326,7 @@ export default class SSH implements Network {
     });
   }
 
+  // eslint-disable-next-line complexity
   errorHandler(code: number, err: string) {
     let parsedError;
     try {
