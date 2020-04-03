@@ -11,6 +11,7 @@ import CapsuleList from './capsule-list';
 import CapsulePaths from './capsule-paths';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
+import { Dependencies } from '../../consumer/component/dependencies';
 
 export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],
@@ -19,13 +20,19 @@ export default async function writeComponentsToCapsules(
   capsuleList: CapsuleList,
   packageManager: string
 ) {
+  components = components.map(c => c.clone());
   const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const dependencies = component.dependencies.get().map(dep => graph.node(dep.id.toString()));
-    const devDependencies = component.devDependencies.get().map(dep => graph.node(dep.id.toString()));
-    const compilerDependencies = component.compilerDependencies.get().map(dep => graph.node(dep.id.toString()));
-    const testerDependencies = component.testerDependencies.get().map(dep => graph.node(dep.id.toString()));
+    const getDeps = (dependencies: Dependencies) =>
+      dependencies
+        .get()
+        .map(dep => graph.node(dep.id.toString()))
+        .map(c => c.clone());
+    const dependencies = getDeps(component.dependencies);
+    const devDependencies = getDeps(component.devDependencies);
+    const compilerDependencies = getDeps(component.compilerDependencies);
+    const testerDependencies = getDeps(component.testerDependencies);
     return new ComponentWithDependencies({
       component,
       dependencies,
