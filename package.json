@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.7.6",
+  "version": "14.7.7-dev.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -167,7 +167,7 @@
     "ramda": "^0.24.1",
     "ramda-adjunct": "^2.25.0",
     "react": "^16.12.0",
-    "react-docgen": "^4.1.1",
+    "react-docgen": "^5.3.0",
     "readable-stream": "^3.6.0",
     "reflect-metadata": "^0.1.13",
     "regenerator-runtime": "^0.11.0",

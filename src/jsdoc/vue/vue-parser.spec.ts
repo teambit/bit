@@ -8,7 +8,7 @@ const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc', 'vue');
 describe('Vue docs Parser', () => {
   describe('Invalid code', () => {
     it('should returns an empty object', async () => {
-      const doclets = await parser('this is an invalid code');
+      const doclets = (await parser('this is an invalid code'))[0];
       expect(doclets).to.be.a('object');
       expect(doclets)
         .to.have.property('methods')
@@ -26,7 +26,7 @@ describe('Vue docs Parser', () => {
     before(async () => {
       const componentFile = path.join(fixtures, 'checkbox.vue');
       const componentFileContent = fs.readFileSync(componentFile).toString();
-      doclet = await parser(componentFileContent, componentFile);
+      doclet = (await parser(componentFileContent, componentFile))[0];
     });
 
     describe('name and description', () => {
