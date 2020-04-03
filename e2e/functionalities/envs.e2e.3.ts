@@ -10,7 +10,6 @@ import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
 import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../src/constants';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
 import ExtensionSchemaError from '../../src/extensions/exceptions/extension-schema-error';
@@ -516,9 +515,7 @@ describe('envs', function() {
         // Restore to clean state of the scope
         helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
         // Make sure the component is not modified before the changes
-        const statusOutput = helper.command.status();
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-        expect(statusOutput).to.not.have.string('modified');
+        helper.command.expectStatusToBeClean();
       });
       describe('changing config files', () => {
         it('should show the component as modified after changing compiler config files', () => {
@@ -607,9 +604,7 @@ describe('envs', function() {
       });
       it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
-        const statusOutput = helper.command.status();
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-        expect(statusOutput).to.not.have.string('modified');
+        helper.command.expectStatusToBeClean();
       });
       it("should add the envPackageDependencies to devDependencies in component's package.json", () => {
         const packageJson = helper.packageJson.readComponentPackageJson('comp/my-comp');
@@ -1469,9 +1464,7 @@ describe('envs', function() {
           });
           // @todo: this has been skipped temporarily since the change of overriding envs via package.json, see PR #1576
           it.skip('should not show the component as modified', () => {
-            const statusOutput = helper.command.status();
-            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-            expect(statusOutput).to.not.have.string('modified');
+            helper.command.expectStatusToBeClean();
           });
         });
         describe('change envs files', () => {
@@ -1599,8 +1592,7 @@ describe('envs with relative paths', function() {
         expect(path.join(helper.scopes.localPath, 'components/bar/foo/dev.config.js')).to.be.a.file();
       });
       it('should not show the component as modified', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });

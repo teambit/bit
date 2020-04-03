@@ -4,7 +4,6 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
@@ -109,8 +108,7 @@ chai.use(require('chai-fs'));
           expect(path.join(basePath, `${helper.scopes.remote}.utils.is-type`, 'is-type.js')).to.be.a.file();
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -155,8 +153,7 @@ chai.use(require('chai-fs'));
             expect(packages).to.include(`@ci/${helper.scopes.remote}.utils.is-type`);
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('bit checkout all components to an older version', () => {
             let checkoutOutput;
@@ -365,8 +362,7 @@ chai.use(require('chai-fs'));
           helper.command.importComponent('bar/foo');
         });
         it('bit status should not show any error', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -394,8 +390,7 @@ chai.use(require('chai-fs'));
             helper.command.importComponent('bar/foo');
           });
           it('bit status should not show any error', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           describe('running bit link after deleting the symlink from dist directory', () => {
             let symlinkPath;

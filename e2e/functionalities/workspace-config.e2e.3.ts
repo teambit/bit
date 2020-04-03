@@ -1,7 +1,7 @@
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 
@@ -693,8 +693,7 @@ describe('workspace config', function() {
             expect(packageJson.bit.overrides.dependencies[`${OVERRIDE_COMPONENT_PREFIX}foo2`]).to.equal('-');
           });
           it('bit status should not show the component as modified', () => {
-            const status = helper.command.status();
-            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           it('bit diff should not show any diff', () => {
             const diff = helper.command.diff('bar');
@@ -707,8 +706,7 @@ describe('workspace config', function() {
               helper.packageJson.write(packageJson, barRoot);
             });
             it('bit status should show the component as modified', () => {
-              const status = helper.command.status();
-              expect(status).to.not.have.string(statusWorkspaceIsCleanMsg);
+              helper.command.expectStatusToBeClean();
             });
             it('should show the previously ignored dependency as a missing component', () => {
               const status = helper.command.status();
@@ -779,8 +777,7 @@ describe('workspace config', function() {
           scopeAfterReImport = helper.scopeHelper.cloneLocalScope();
         });
         it('bit status should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should save the new overrides to the consumer config', () => {
           const bitJson = helper.bitJson.read();
@@ -1073,8 +1070,7 @@ describe('workspace config', function() {
               });
             });
             it('bit status should show a clean state', () => {
-              const status = helper.command.status();
-              expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+              helper.command.expectStatusToBeClean();
             });
             describe('changing the component name in the overrides to a package syntax', () => {
               before(() => {
@@ -1116,8 +1112,7 @@ describe('workspace config', function() {
                   helper.command.importComponent('bar');
                 });
                 it('bit status should show a clean state', () => {
-                  const status = helper.command.status();
-                  expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+                  helper.command.expectStatusToBeClean();
                 });
                 it('should remove the added dependencies from consumer-config', () => {
                   const bitJson = helper.bitJson.read();
@@ -1199,8 +1194,7 @@ describe('workspace config', function() {
             expect(packageJson.bit.overrides.dependencies).to.deep.equal({ [`${OVERRIDE_COMPONENT_PREFIX}foo`]: '+' });
           });
           it('bit status should show a clean state', () => {
-            const status = helper.command.status();
-            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
       });
@@ -1383,8 +1377,7 @@ describe('workspace config', function() {
           helper.bitJson.addOverrides(overrides);
         });
         it('bit status should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('bit diff should not show any diff', () => {
           const diff = helper.command.diff('bar/foo');
@@ -1431,8 +1424,7 @@ describe('workspace config', function() {
             .that.equals('my-bin-file.js');
         });
         it('should not show the component as modified', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         describe('changing the value in the package.json directly (not inside overrides)', () => {
           before(() => {
