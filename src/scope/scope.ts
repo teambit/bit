@@ -306,6 +306,7 @@ export default class Scope {
     const build = async (component: Component) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
+      component.dists.writeDistsFiles = true;
       const buildResults = await component.dists.writeDists(component, consumer, false);
       if (component.compiler) loader.succeed();
       return { component: component.id.toString(), buildResults };
