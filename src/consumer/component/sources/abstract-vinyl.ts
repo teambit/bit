@@ -24,7 +24,7 @@ export default class AbstractVinyl extends Vinyl {
   }
 
   get relativeDir() {
-    return this.dirname.replace(this.cwd, '');
+    return path.dirname(this.relative);
   }
 
   // Update the base path and keep the relative value to be the same

@@ -46,6 +46,7 @@ import { BitIdStr } from '../bit-id/bit-id';
 import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
+import { Dist } from '../consumer/component/sources';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -99,6 +100,8 @@ export default class Scope {
     this.objects = scopeProps.objects;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
   }
+
+  public onBuild: Function[] = []; // enable extensions to hook during the build process
 
   /**
    * import components to the `Scope.
@@ -292,6 +295,14 @@ export default class Scope {
       loader.start(BEFORE_RUNNING_BUILD);
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
+    const ids = components.map(c => c.id);
+    const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
+    // @todo: currently it makes sure that all components have results, it probably should split the work
+    if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
+      // the compile extension is registered. forget the legacy build function and work only with the extension
+      // @ts-ignore
+      return this._buildResultsFromExtension(components, resultsFromCompileExt);
+    }
     const build = async (component: Component) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
@@ -304,6 +315,37 @@ export default class Scope {
     const buildResults = await pMapSeries(components, build);
     await pMapSeries(components, writeLinks);
     return buildResults;
+  }
+
+  _buildResultsFromExtension(
+    components: Component[],
+    extensionsResults: Array<{ id: BitId; dists?: Array<{ path: string; content: string }> }>
+  ) {
+    return components
+      .map(component => {
+        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
+        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
+        const builtFiles = resultFromCompiler.dists;
+        builtFiles.forEach(file => {
+          if (!file.path || !file.content || typeof file.content !== 'string') {
+            throw new GeneralError(
+              'compile interface expects to get files in a form of { path: string, content: string }'
+            );
+          }
+        });
+        // @todo: once tag is working, check if anything is missing here. currently the path is a
+        // relative path with "dist", but can be easily changed from the compile extension
+        const distsFiles = builtFiles.map(file => {
+          return new Dist({
+            path: file.path,
+            contents: Buffer.from(file.content)
+          });
+        });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        component.setDists(distsFiles);
+        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
+      })
+      .filter(x => x);
   }
 
   /**

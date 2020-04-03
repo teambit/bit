@@ -215,10 +215,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         test: file.test
       };
     });
+    // @todo: is this the best way to find out whether a compiler is set?
+    const isCompileSet = Boolean(
+      consumerComponent.compiler || clonedComponent.extensions.some(e => e.name === 'compile')
+    );
     const { dists, mainDistFile } = clonedComponent.dists.toDistFilesModel(
       consumer,
       consumerComponent.originallySharedDir,
-      consumerComponent.compiler
+      isCompileSet
     );
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
