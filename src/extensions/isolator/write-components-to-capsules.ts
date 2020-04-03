@@ -71,10 +71,7 @@ export default async function writeComponentsToCapsules(
       createNpmLinkFiles: false,
       bitMap: manyComponentsWriter.bitMap
     });
-    componentWithDependencies.component.dataToPersist.files = concat(
-      links.files,
-      componentWithDependencies.component.dataToPersist.files
-    );
+    componentWithDependencies.component.dataToPersist.addManyFiles(links.files);
   });
   // write data to capsule
   await Promise.all(
