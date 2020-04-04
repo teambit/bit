@@ -3,7 +3,6 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 
 chai.use(require('chai-fs'));
@@ -543,8 +542,7 @@ describe('auto tagging functionality', function() {
       helper.command.importComponent('bar/c');
 
       // as an intermediate step, make sure the re-link done by import C, didn't break anything
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
 
       helper.fs.createFile('components/bar/c', 'c.js', 'console.log("I am C v2")');
     });

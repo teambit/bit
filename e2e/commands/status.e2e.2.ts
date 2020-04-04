@@ -6,7 +6,6 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import {
   statusInvalidComponentsMsg,
-  statusWorkspaceIsCleanMsg,
   statusFailureMsg,
   importPendingMsg
 } from '../../src/cli/commands/public-cmds/status-cmd';
@@ -45,8 +44,7 @@ describe('bit status command', function() {
       helper.scopeHelper.initWorkspace();
     });
     it('should indicate that there are no components', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
 
@@ -57,8 +55,7 @@ describe('bit status command', function() {
       helper.fs.createFile(path.join('components', 'bar'), 'foo.js');
     });
     it('should indicate that there are no components and should not throw an error', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('when a component is created and added but not tagged', () => {

@@ -98,7 +98,7 @@ export default class PackageManager {
           installProc.stdout!.on('data', d => reporter.info(d.toString()));
           installProc.stderr!.on('data', d => reporter.warn(d.toString()));
           installProc.on('error', e => {
-            console.error('error', e);
+            console.error('error', e); // eslint-disable-line no-console
           });
           await installProc;
           linkBitBinInCapsule(capsule);
@@ -115,7 +115,7 @@ export default class PackageManager {
           installProc.stdout!.on('data', d => reporter.info(d.toString()));
           installProc.stderr!.on('data', d => reporter.warn(d.toString()));
           installProc.on('error', e => {
-            console.log('error:', e);
+            console.log('error:', e); // eslint-disable-line no-console
           });
           await installProc;
           linkBitBinInCapsule(capsule);

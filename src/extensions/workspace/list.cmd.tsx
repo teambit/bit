@@ -20,7 +20,9 @@ export class ListCmd implements Command {
 
   options = [];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async render(params: any, options: { [key: string]: any }) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const list = await this.workspace.list();
     return <Color green>hi there</Color>;
   }
