@@ -706,7 +706,8 @@ describe('workspace config', function() {
               helper.packageJson.write(packageJson, barRoot);
             });
             it('bit status should show the component as modified', () => {
-              helper.command.expectStatusToBeClean();
+              const status = helper.command.status();
+              expect(status).to.have.string('modified components');
             });
             it('should show the previously ignored dependency as a missing component', () => {
               const status = helper.command.status();
