@@ -1,4 +1,3 @@
-import { concat } from 'ramda';
 import ConsumerComponent from '../../consumer/component';
 import { Capsule } from './capsule';
 import { getComponentLinks } from '../../links/link-generator';
