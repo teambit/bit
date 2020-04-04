@@ -11,7 +11,6 @@ import { BitId } from '../../../bit-id';
 import Component from '../consumer-component';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import Source from '../../../scope/models/source';
-import CompilerExtension from '../../../legacy-extensions/compiler-extension';
 import { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
 import { WorkspaceConfig } from '../../../extensions/workspace-config';

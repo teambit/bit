@@ -2,7 +2,6 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 describe('peer-dependencies functionality', function() {
   this.timeout(0);
@@ -54,8 +53,7 @@ describe('peer-dependencies functionality', function() {
         helper.npm.addNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
       });
       it('should not be shown as modified', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
       describe('and the package.json of the component was changed to remove the peerDependencies', () => {
         before(() => {
@@ -74,8 +72,7 @@ describe('peer-dependencies functionality', function() {
           fs.removeSync(path.join(helper.scopes.localPath, 'components/bar/foo/package.json'));
         });
         it('should not be shown as modified', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
     });

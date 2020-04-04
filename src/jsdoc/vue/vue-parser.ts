@@ -66,7 +66,7 @@ function fromVueDocs({ name, description, props, methods, computed }, filePath):
   };
 }
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet | []> {
+export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[]> {
   const options = {
     filecontent: data
   };
@@ -89,7 +89,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
           try {
             const vueDocs = await vuedoc.parse(options);
             const formattedDocs = fromVueDocs(vueDocs, filePath);
-            resolve(formattedDocs);
+            resolve([formattedDocs]);
           } catch (e) {
             logger.debug(`failed parsing vue docs on path ${filePath} with error`, e);
             // never mind, ignore the doc of this source
