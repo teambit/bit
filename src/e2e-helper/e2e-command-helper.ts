@@ -204,6 +204,13 @@ export default class CommandHelper {
     return JSON.parse(status);
   }
 
+  expectStatusToBeClean() {
+    const statusJson = this.statusJson();
+    Object.keys(statusJson).forEach(key => {
+      expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
+    });
+  }
+
   statusComponentIsStaged(id: string): boolean {
     const status = this.statusJson();
     return status.stagedComponents.includes(id);

@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixtureA = `const b = require('./b');
 console.log('got ' + b() + ' and got A')`;
@@ -70,8 +69,7 @@ describe('cyclic dependencies', function() {
           expect(list).to.have.string('comp/b');
         });
         it('should not show a clean workspace', () => {
-          const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
     });
@@ -265,8 +263,7 @@ describe('cyclic dependencies', function() {
           expect(list).to.have.string('comp/a1');
         });
         it('should not show a clean workspace', () => {
-          const statusOutput = helper.command.runCmd('bit status');
-          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
       });
     });

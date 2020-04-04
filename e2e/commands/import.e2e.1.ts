@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg, statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
@@ -1542,7 +1542,7 @@ console.log(barFoo.default());`;
         const output = helper.command.runCmd('bit status');
         expect(output).to.not.have.string('utils/is-string');
         expect(output).to.not.have.string('utils/is-type');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
       it('should not break the is-string component', () => {
         helper.fs.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', fixtures.isTypeV2);
@@ -1854,8 +1854,7 @@ console.log(barFoo.default());`;
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
     it('should not show any of the components as new or modified or deleted or staged', () => {
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {
@@ -1926,8 +1925,7 @@ console.log(barFoo.default());`;
         expect(output).to.have.string('successfully imported one component');
       });
       it('bit status should show a clean state', () => {
-        const statusOutput = helper.command.runCmd('bit status');
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });

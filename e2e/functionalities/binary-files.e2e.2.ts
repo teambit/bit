@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
@@ -132,8 +131,7 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('import a PNG file as a dependency with custom-resolve-modules', () => {
@@ -171,8 +169,7 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
@@ -237,8 +234,7 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
@@ -324,8 +320,7 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
@@ -423,8 +418,7 @@ describe('binary files', function() {
       expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
-      const status = helper.command.status();
-      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;

@@ -1,11 +1,7 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import {
-  statusFailureMsg,
-  statusInvalidComponentsMsg,
-  statusWorkspaceIsCleanMsg
-} from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg, statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -153,8 +149,7 @@ describe('environments with dependencies', function() {
           expect(output).to.have.string('webpack/base');
         });
         it('should not show the component as modified', () => {
-          const output = helper.command.runCmd('bit status');
-          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          helper.command.expectStatusToBeClean();
         });
         it('should generate the links for environment components', () => {
           const linkFile = path.join(helper.scopes.localPath, 'components/bar/foo/base.config.js');
@@ -174,8 +169,7 @@ describe('environments with dependencies', function() {
             helper.command.ejectConf('bar/foo');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
         // @todo: this has been skipped temporarily since the change of overriding envs via package.json, see PR #1576
@@ -186,8 +180,7 @@ describe('environments with dependencies', function() {
             helper.command.ejectConf('bar/foo -p my-conf-dir');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
         // @todo: this has been skipped temporarily since the change of overriding envs via package.json, see PR #1576
@@ -198,8 +191,7 @@ describe('environments with dependencies', function() {
             helper.command.ejectConf('bar/foo -p {COMPONENT_DIR}/my-inner-dir');
           });
           it('still should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
         });
         describe('importing with --conf flag', () => {
@@ -213,8 +205,7 @@ describe('environments with dependencies', function() {
             helper.command.importComponent('bar/foo --conf');
           });
           it('should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           it('should generate the links for environment component', () => {
             expect(linkFile).to.be.a.file();
@@ -237,8 +228,7 @@ describe('environments with dependencies', function() {
             helper.command.importComponent('bar/foo --conf my-config-dir');
           });
           it('should not show the component as modified', () => {
-            const output = helper.command.runCmd('bit status');
-            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+            helper.command.expectStatusToBeClean();
           });
           it('should generate the links for environment component', () => {
             const linkFile = path.join(helper.scopes.localPath, 'my-config-dir/base.config.js');

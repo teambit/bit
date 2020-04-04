@@ -2,7 +2,6 @@ import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -198,8 +197,7 @@ describe('foo', () => {
       expect(output).to.have.string('successfully imported');
     });
     it('bit status should show a clean state', () => {
-      const statusOutput = helper.command.runCmd('bit status');
-      expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
     });
   });
   describe('dev-dependency that requires prod-dependency', () => {
