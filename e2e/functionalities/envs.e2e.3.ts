@@ -7,7 +7,6 @@ import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject
 import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import { BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../src/constants';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
 import ExtensionSchemaError from '../../src/legacy-extensions/exceptions/extension-schema-error';
@@ -464,9 +463,7 @@ describe.skip('envs', function() {
         // Restore to clean state of the scope
         helper.scopeHelper.getClonedLocalScope(authorScopeBeforeChanges);
         // Make sure the component is not modified before the changes
-        const statusOutput = helper.command.status();
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-        expect(statusOutput).to.not.have.string('modified');
+        helper.command.expectStatusToBeClean();
       });
       describe('changing envs raw config', () => {
         it('should show the component as modified after changing compiler raw config', () => {
@@ -524,9 +521,7 @@ describe.skip('envs', function() {
       });
       it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
-        const statusOutput = helper.command.status();
-        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-        expect(statusOutput).to.not.have.string('modified');
+        helper.command.expectStatusToBeClean();
       });
       it("should add the envPackageDependencies to devDependencies in component's package.json", () => {
         const packageJson = helper.packageJson.readComponentPackageJson('comp/my-comp');
