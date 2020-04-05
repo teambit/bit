@@ -71,7 +71,8 @@ export default class Environment {
       installProdPackagesOnly: opts.installProdPackagesOnly,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
-      silentPackageManagerResult: opts.silentPackageManagerResult
+      silentPackageManagerResult: opts.silentPackageManagerResult,
+      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig
     };
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await manyComponentsWriter.writeAll();
