@@ -5,9 +5,8 @@ module.exports = {
   dependencies: [ComponentFactoryExt],
   provider: async ([component]) => {
     console.log('simple config runs');
-    console.log('got comp ext', component);
     component.registerAddConfig('simple-config', config => {
-      console.log('old config', config);
+      console.log('config registration hook is running');
     });
   }
 };

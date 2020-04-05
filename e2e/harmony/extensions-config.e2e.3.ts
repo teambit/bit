@@ -156,7 +156,7 @@ describe('harmony extension config', function() {
   describe('config added by extension', function() {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
-    // let output;
+    let output;
     let localBeforeExtensions;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
@@ -171,6 +171,10 @@ describe('harmony extension config', function() {
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
         helper.extensions.setExtensionToVariant('*', 'simple-config', config);
+      });
+      it('should run the add config hook', function() {
+        output = helper.command.showComponent();
+        expect(output).to.have.string('config registration hook is running');
       });
       it('should have the updated config in the package.json of the component in capsule', function() {
         helper.command.showComponent();
