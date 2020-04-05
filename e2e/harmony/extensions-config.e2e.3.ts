@@ -185,6 +185,7 @@ describe('harmony extension config', function() {
       it('should have the updated config in another extension asks for the component', function() {});
     });
     describe.skip('conflict between few extensions on simple config', function() {});
+    describe.skip('conflict between extension and user overrides ', function() {});
     describe.skip('extensions that add another extensions', function() {});
     describe.skip('extensions that add dependencies', function() {});
     describe.skip('extensions that add dependencies overrides', function() {});
