@@ -157,12 +157,12 @@ describe('harmony extension config', function() {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
     let output;
-    let localBeforeExtensions;
+    // let localBeforeExtensions;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      localBeforeExtensions = helper.scopeHelper.cloneLocalScope();
+      // localBeforeExtensions = helper.scopeHelper.cloneLocalScope();
     });
 
     describe('extension that add simple config', function() {
