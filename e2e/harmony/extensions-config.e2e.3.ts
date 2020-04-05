@@ -177,7 +177,10 @@ describe('harmony extension config', function() {
         expect(output).to.have.string('config registration hook is running');
       });
       it('should have the updated config in the package.json of the component in capsule', function() {
-        helper.command.showComponent();
+        const capsuleDir = helper.general.generateRandomTmpDirName();
+        helper.command.isolateComponentWithCapsule('bar/foo', capsuleDir);
+        const packageJson = helper.packageJson.read(capsuleDir);
+        expect(packageJson).to.have.property('my-custom-key', 'my-custom-val');
       });
       it('should have the updated config in another extension asks for the component', function() {});
     });
