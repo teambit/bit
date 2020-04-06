@@ -157,12 +157,12 @@ describe('harmony extension config', function() {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
     let output;
-    // let localBeforeExtensions;
+    let localBeforeExtensions;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      // localBeforeExtensions = helper.scopeHelper.cloneLocalScope();
+      localBeforeExtensions = helper.scopeHelper.cloneLocalScope();
     });
 
     describe('extension that add simple config', function() {
@@ -182,11 +182,30 @@ describe('harmony extension config', function() {
         const packageJson = helper.packageJson.read(capsuleDir);
         expect(packageJson).to.have.property('my-custom-key', 'my-custom-val');
       });
-      it('should have the updated config in another extension asks for the component', function() {});
+      it.skip('should have the updated config in another extension asks for the component', function() {});
     });
     describe.skip('conflict between few extensions on simple config', function() {});
     describe.skip('conflict between extension and user overrides ', function() {});
-    describe.skip('extensions that add another extensions', function() {});
+    describe('extensions that add another extensions', function() {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localBeforeExtensions);
+        const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'nested-extensions');
+        helper.fixtures.copyFixtureExtensions(extensionFolder);
+        helper.command.addComponent(`${extensionFolder}/*`);
+        helper.extensions.setExtensionToVariant('*', 'nested-extension-level1', config);
+        output = helper.command.showComponent();
+      });
+      it('should runs all nested extensions', () => {
+        expect(output).to.have.string('nested-extension-level1 runs');
+        expect(output).to.have.string('nested-extension-level2 runs');
+        expect(output).to.have.string('nested-extension-level3 runs');
+      });
+      it('should runs add config hook for all nested extensions', () => {
+        expect(output).to.have.string('config registration hook is running for level 1');
+        expect(output).to.have.string('config registration hook is running for level 2');
+      });
+      it.skip('should have access for nested extension to the config set by higher level', () => {});
+    });
     describe.skip('extensions that add dependencies', function() {});
     describe.skip('extensions that add dependencies overrides', function() {});
   });
