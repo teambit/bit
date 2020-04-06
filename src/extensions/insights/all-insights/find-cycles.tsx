@@ -37,22 +37,18 @@ export default class FindCycles implements Insight {
   _renderData(data: any) {
     if (data.data.length === 0) {
       return (
-        <Box textWrap="wrap" height={1} key="num_results">
-          <Text> No cyclic dependencies </Text>
-        </Box>
+        <div>
+          <Text>No cyclic dependencies</Text>
+        </div>
       );
     }
     return (
-      <Box textWrap="wrap" key="find_cycles">
-        <Box key="data" height={1}>
-          <Box textWrap="wrap" height={1}>
-            {data.message}
-          </Box>
-          <Box textWrap="wrap" height={1}>
-            {data.data}
-          </Box>
-        </Box>
-      </Box>
+      <div>
+        <div key="data">
+          <div>{data.message}</div>
+          <div>{data.data}</div>
+        </div>
+      </div>
     );
   }
 

@@ -36,8 +36,15 @@ export default class DuplicateDependencies implements Insight {
       };
     }
     const duplicates = graph.findDuplicateDependencies();
+    const lenDependencies = [...duplicates.keys()].length;
+    if (lenDependencies === 1) {
+      return {
+        message: `Found ${lenDependencies} duplicate dependency.`,
+        data: duplicates
+      };
+    }
     return {
-      message: `Found ${[...duplicates.keys()].length} duplicate dependencies.`,
+      message: `Found ${lenDependencies} duplicate dependencies.`,
       data: duplicates
     };
   }
@@ -70,30 +77,28 @@ export default class DuplicateDependencies implements Insight {
 
   _renderData(data: FormattedEntry[]) {
     const element = (
-      <Box flexDirection="column" key="duplicate_dependencies">
+      <div key="duplicate_dependencies">
         {data.map(function(mainDependency) {
           return (
-            <Box key={mainDependency.dependencyId} flexDirection="column" marginBottom={1}>
-              <Text bold underline key={`group_${mainDependency.dependencyId}`}>
-                {mainDependency.dependencyId}
-              </Text>
-              <Box flexDirection="column">
+            <div key={mainDependency.dependencyId}>
+              <Text>dependency: {mainDependency.dependencyId}</Text>
+              <Text>latest version: {mainDependency.latestVersion}</Text>
+              <div>
+                <Text>dependents that don't use latest version:</Text>
                 {mainDependency.dependents.map(function(dependent) {
                   return (
-                    <Box flexDirection="column" key={dependent.id}>
+                    <div key={dependent.id}>
                       <Text>
-                        {'  '}
-                        <Color blue>{alignCommandName(dependent.id)}</Color>
-                        {dependent.usedVersion}
+                        <Color redBright>{dependent.id}</Color> uses <Color redBright>{dependent.usedVersion}</Color>
                       </Text>
-                    </Box>
+                    </div>
                   );
                 })}
-              </Box>
-            </Box>
+              </div>
+            </div>
           );
         })}
-      </Box>
+      </div>
     );
     return element;
   }
@@ -116,8 +121,4 @@ export default class DuplicateDependencies implements Insight {
     }
     return result;
   }
-}
-
-function alignCommandName(name: string, sizeToAlign = 20) {
-  return `${name}${new Array(sizeToAlign).join(' ')}`;
 }
