@@ -16,7 +16,6 @@ export type installOpts = {
 function deleteBitBinFromPkgJson(capsule: Capsule) {
   const packageJsonPath = 'package.json';
   const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-  // console.log("deleteBitBinFromPkgJson -> pjsonString", pjsonString)
   if (pjsonString) {
     let packageJson;
     try {
