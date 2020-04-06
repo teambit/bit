@@ -234,9 +234,9 @@ console.log(isType());`;
       // is-string
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
-      helper.bitJson.modifyField('bindingPrefix', 'bitTest');
+      helper.bitJson.modifyField('bindingPrefix', '@bitTest');
       helper.command.importComponent('utils/is-type');
-      const isStringFixture = `const isType = require('bitTest/${helper.scopes.remote}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
+      const isStringFixture = `const isType = require('@bitTest/${helper.scopes.remote}.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.fs.createFile('utils', 'is-string.js', isStringFixture);
       helper.fixtures.addComponentUtilsIsString();
       helper.command.tagAllComponents();
@@ -282,7 +282,7 @@ console.log(isType());`;
           helper.scopes.localPath,
           'node_modules',
           '@bitTest2',
-          `${helper.scopes.remote}.test.is-string2/node_modules/@bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/bitTest`
+          `${helper.scopes.remote}.test.is-string2/node_modules/@bitTest2/${helper.scopes.remote}.utils.is-string/node_modules/@bitTest`
         )
       ).to.be.a.path();
     });
