@@ -58,7 +58,8 @@ export default async function writeComponentsToCapsules(
     silentPackageManagerResult: false,
     isolated: true,
     capsulePaths,
-    packageManager
+    packageManager,
+    applyExtensionsAddedConfig: true
   };
   componentsWithDependencies.map(cmp => normalizeComponentDir(cmp));
   const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

@@ -44,6 +44,7 @@ export interface ManyComponentsWriterParams {
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   capsulePaths?: CapsulePaths;
+  applyExtensionsAddedConfig?: boolean;
 }
 
 /**
@@ -83,6 +84,8 @@ export default class ManyComponentsWriter {
   basePath?: string;
   capsulePaths?: CapsulePaths;
   pacackgeManager?: string;
+  // Apply config added by extensions
+  applyExtensionsAddedConfig?: boolean;
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
@@ -107,6 +110,7 @@ export default class ManyComponentsWriter {
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.capsulePaths = params.capsulePaths;
     this.pacackgeManager = params.packageManager;
+    this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: boolean | null | undefined, defaultValue: boolean): boolean {
@@ -224,6 +228,7 @@ export default class ManyComponentsWriter {
       consumer: this.consumer,
       bitMap: this.bitMap,
       isolated: this.isolated,
+      applyExtensionsAddedConfig: this.applyExtensionsAddedConfig,
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
   }
