@@ -60,7 +60,8 @@ function getContainerScript() {
   try {
     userTask = require(pathToTask);
   } catch (e) {
-    handleError(new Error('script-container can not find user task'));
+    process.send ? process.send(e) : console.error(e);
+    handleError({ message: 'script-container can not find user task at ' + pathToTask });
   }
 
   const toExecute = userTask.default || userTask;
@@ -74,10 +75,13 @@ function getContainerScript() {
       .then(userTaskResult => {
         process.on('beforeExit', async code => {
           const toSend = userTaskResult || { exitCode: code };
-          process.send ? process.send(toSend) : Promise.resolve();
+          process.send ? process.send(toSend) : console.log(toSend);
         });
       })
-      .catch(handleError);
+      .catch(err => {
+        process.send ? process.send(err) : console.error(err);
+        handleError(err);
+      });
   }
   `;
 }

@@ -73,7 +73,7 @@ result.value [
       const distFilesObjects = distFiles.map(distFilePath => {
         const distPath = path.join(distDir, distFilePath);
         return {
-          path: distPath,
+          path: distFilePath,
           content: result.capsule.fs.readFileSync(distPath).toString()
         };
       });
