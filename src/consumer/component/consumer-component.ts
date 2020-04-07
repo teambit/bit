@@ -664,6 +664,7 @@ export default class Component {
 
     const testerFilePath = tester.filePath;
 
+    // eslint-disable-next-line complexity
     const run = async (component: Component, cwd?: PathOsBased) => {
       cwd = component._capsuleDir || cwd;
       if (cwd) {
@@ -1104,6 +1105,7 @@ export default class Component {
     return this.fromObject(object);
   }
 
+  // eslint-disable-next-line complexity
   static async loadFromFileSystem({
     bitDir,
     componentMap,
@@ -1283,7 +1285,7 @@ export default class Component {
   }
 }
 
-function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet | []>> {
+function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet[]>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return files.map(file => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
 }

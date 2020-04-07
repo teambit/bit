@@ -7,7 +7,6 @@ import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON, CURRENT_UPSTREAM } from
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
 import { InvalidBitJson } from '../../src/consumer/config/exceptions';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InvalidPackageJson from '../../src/consumer/config/exceptions/invalid-package-json';
 
 const assertArrays = require('chai-arrays');
@@ -323,8 +322,7 @@ describe('run bit init', function() {
         expect(path.join(helper.scopes.localPath, 'bar/foo.js')).to.be.a.file();
       });
       it('bit status should show nothing-to-tag', () => {
-        const output = helper.command.runCmd('bit status');
-        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        helper.command.expectStatusToBeClean();
       });
     });
   });

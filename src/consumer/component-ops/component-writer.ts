@@ -36,6 +36,7 @@ export type ComponentWriterProps = {
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
   capsulePaths?: CapsulePaths;
+  applyExtensionsAddedConfig?: boolean;
 };
 
 export default class ComponentWriter {
@@ -53,6 +54,7 @@ export default class ComponentWriter {
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   capsulePaths?: CapsulePaths;
+  applyExtensionsAddedConfig?: boolean;
   constructor({
     component,
     writeToPath,
@@ -67,7 +69,8 @@ export default class ComponentWriter {
     deleteBitDirContent,
     existingComponentMap,
     capsulePaths,
-    excludeRegistryPrefix = false
+    excludeRegistryPrefix = false,
+    applyExtensionsAddedConfig = false
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -83,6 +86,7 @@ export default class ComponentWriter {
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.capsulePaths = capsulePaths;
+    this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -168,6 +172,9 @@ export default class ComponentWriter {
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject() : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
+      if (this.applyExtensionsAddedConfig) {
+        this._mergePackageJsonPropsFromExtensions(packageJson);
+      }
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
@@ -203,6 +210,17 @@ export default class ComponentWriter {
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
+  }
+
+  /**
+   * these changes were added by extensions
+   */
+  _mergePackageJsonPropsFromExtensions(packageJson: PackageJsonFile) {
+    // The special keys will be merged in other place
+    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
+    if (!this.component.extensionsAddedConfig || R.isEmpty(this.component.extensionsAddedConfig)) return;
+    const valuesToMerge = R.omit(specialKeys, this.component.extensionsAddedConfig);
+    packageJson.mergePackageJsonObject(valuesToMerge);
   }
 
   /**

@@ -13,16 +13,19 @@ export type installOpts = {
   packageManager?: string;
 };
 
-function deleteBitBinFromPkgJson(capsule) {
-  // try {
+function deleteBitBinFromPkgJson(capsule: Capsule) {
   const packageJsonPath = 'package.json';
   const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
   if (pjsonString) {
-    const packageJson = JSON.parse(pjsonString);
+    let packageJson;
+    try {
+      packageJson = JSON.parse(pjsonString);
+    } catch (err) {
+      throw new Error(`failed parsing the package.json file at ${capsule.wrkDir}`);
+    }
     delete packageJson.dependencies['bit-bin'];
     capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
   }
-  // } catch (e) {}
 }
 
 function linkBitBinInCapsule(capsule) {
@@ -94,7 +97,7 @@ export default class PackageManager {
           installProc.stdout!.on('data', d => reporter.info(d.toString()));
           installProc.stderr!.on('data', d => reporter.warn(d.toString()));
           installProc.on('error', e => {
-            console.error('error', e);
+            console.error('error', e); // eslint-disable-line no-console
           });
           await installProc;
           linkBitBinInCapsule(capsule);
@@ -111,7 +114,7 @@ export default class PackageManager {
           installProc.stdout!.on('data', d => reporter.info(d.toString()));
           installProc.stderr!.on('data', d => reporter.warn(d.toString()));
           installProc.on('error', e => {
-            console.log('error:', e);
+            console.log('error:', e); // eslint-disable-line no-console
           });
           await installProc;
           linkBitBinInCapsule(capsule);

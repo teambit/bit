@@ -180,7 +180,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg@4.4.3'
+        run: 'sudo npm i -g pkg@4.4.6'
       # -
       #   run:
       #     name: 'save pkg targets names'
@@ -188,8 +188,8 @@ jobs:
       -
         restore_cache:
           keys:
-            # - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
-            - pkg-cache-v2
+            # - 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            - pkg-cache-v3
       -
         run:
           name: 'set pkg path'
@@ -204,12 +204,12 @@ jobs:
           command: 'cd bit && npm run pkg:all'
       # -
       #   save_cache:
-      #     key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+      #     key: 'pkg-cache-v3-{{ checksum "/home/circleci/pkg-target.txt" }}'
       #     paths:
       #       - ~/pkg-cache
       -
         save_cache:
-          key: pkg-cache-v2
+          key: pkg-cache-v3
           paths:
             - /home/circleci/pkg-cache
       # -
@@ -807,7 +807,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - prod
     jobs:
       - checkout_code
       -
@@ -829,7 +829,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - prod
     jobs:
       - checkout_code
       - set_ssh_key

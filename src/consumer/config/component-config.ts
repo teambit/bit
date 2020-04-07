@@ -11,7 +11,7 @@ import ShowDoctorError from '../../error/show-doctor-error';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import logger from '../../logger/logger';
-import { ExtensionDataList, ExtensionDataEntry } from './extension-data';
+import { ExtensionDataList } from './extension-data';
 
 type ConfigProps = {
   lang?: string;

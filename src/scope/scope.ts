@@ -47,6 +47,7 @@ import { ComponentLogs } from './models/model-component';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import VersionDependencies from './version-dependencies';
 import { Dist } from '../consumer/component/sources';
+import { LEGACY_SHARED_DIR_FEATURE, isFeatureEnabled } from '../api/consumer/lib/feature-toggle';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -296,13 +297,19 @@ export default class Scope {
       if (components.length > 1) loader.stopAndPersist({ text: `${BEFORE_RUNNING_BUILD}...` });
     }
     const ids = components.map(c => c.id);
-    const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
-    // @todo: currently it makes sure that all components have results, it probably should split the work
-    if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
-      // the compile extension is registered. forget the legacy build function and work only with the extension
-      // @ts-ignore
-      return this._buildResultsFromExtension(components, resultsFromCompileExt);
+    // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
+    // for authored and will change the component files.
+    if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
+      const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
+      // @todo: currently it makes sure that all components have results, it probably should split the work
+      if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
+        logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the new build mechanism (compile extension)');
+        // the compile extension is registered. forget the legacy build function and work only with the extension
+        // @ts-ignore
+        return this._buildResultsFromExtension(components, resultsFromCompileExt);
+      }
     }
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });

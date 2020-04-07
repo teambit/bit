@@ -3,7 +3,6 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 
 chai.use(require('chai-fs'));
@@ -398,15 +397,17 @@ describe('auto tagging functionality', function() {
       });
     });
   });
+  // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
   describe('with cyclic dependencies', () => {
     let scopeBeforeTag;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.bitJson.addKeyVal('packageManager', 'yarn');
       helper.fs.createFile('bar', 'a.js', 'require("./b")');
       helper.fs.createFile('bar', 'b.js', 'require("./c")');
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
       helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
-      helper.command.tagAllComponents();
+      helper.command.tagAllComponentsLegacy();
       helper.fs.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
@@ -418,7 +419,7 @@ describe('auto tagging functionality', function() {
     describe('tagging the components with auto-version-bump', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.command.tagAllComponents();
+        tagOutput = helper.command.tagAllComponentsLegacy();
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -469,7 +470,7 @@ describe('auto tagging functionality', function() {
       let tagOutput;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-        tagOutput = helper.command.tagAllComponents(undefined, '2.0.0');
+        tagOutput = helper.command.tagAllComponentsLegacy(undefined, '2.0.0');
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -543,8 +544,7 @@ describe('auto tagging functionality', function() {
       helper.command.importComponent('bar/c');
 
       // as an intermediate step, make sure the re-link done by import C, didn't break anything
-      const output = helper.command.runCmd('bit status');
-      expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+      helper.command.expectStatusToBeClean();
 
       helper.fs.createFile('components/bar/c', 'c.js', 'console.log("I am C v2")');
     });
