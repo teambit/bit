@@ -19,7 +19,6 @@ export default class ComponentFactory {
    * registry for config modifications function
    */
   registerAddConfig(extensionId, configFunc: ConfigFunc) {
-    // this.configsRegistry.set(extensionId, configFunc);
     ConsumerComponent.registerAddConfigAction(extensionId, configFunc);
   }
 

@@ -120,9 +120,12 @@ export type ComponentProps = {
 };
 
 export default class Component {
-  static addConfigRegistry: { [extId: string]: Function } = {};
+  // Just a proxy to the component config so extension won't need to access the old config directly
   static registerAddConfigAction(extId, func: () => any) {
-    this.addConfigRegistry[extId] = func;
+    ComponentConfig.registerAddConfigAction(extId, func);
+  }
+  static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
+    ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
 
   name: string;
@@ -1174,8 +1177,7 @@ export default class Component {
       componentId: id,
       componentDir,
       workspaceDir: consumerPath,
-      workspaceConfig,
-      addConfigRegistry: this.addConfigRegistry
+      workspaceConfig
     });
 
     const extensions: ExtensionDataList = componentConfig.extensions;

@@ -327,7 +327,7 @@ describe('auto tagging functionality', function() {
       helper.fs.createFile('bar', 'd.js', 'require("./e")');
       helper.fs.createFile('bar', 'e.js', 'console.log("I am E v1")');
       helper.command.addComponentAllowFiles('bar/*.js', { n: 'bar' });
-      helper.command.tagAllComponents();
+      helper.command.tagAllComponentsLegacy();
       helper.command.exportAllComponents();
 
       helper.scopeHelper.reInitLocalScope();
