@@ -108,8 +108,8 @@ export default class PackageManager {
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
           const reporter = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ npm install --no-package-lock'); // TODO: better
+          const installProc = execa('npm', ['install'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+          reporter.info('$ npm install');
           reporter.info('');
           installProc.stdout!.on('data', d => reporter.info(d.toString()));
           installProc.stderr!.on('data', d => reporter.warn(d.toString()));
