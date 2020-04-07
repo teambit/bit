@@ -32,6 +32,8 @@ export class Flow {
     subject.next(task);
     task.subscribe({
       next(data) {
+        // uncomment to get the errors coming from the task. as of now, there is no better way to get them
+        // console.log("Flow -> next -> data", data)
         if (data.type === 'task:result') {
           that.result.push(data);
           if (data.code) {

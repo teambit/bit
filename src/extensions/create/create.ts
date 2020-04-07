@@ -97,7 +97,7 @@ export class Registry {
    */
   get(name: string) {
     const scripts = this.templates[name];
-    if (!scripts) throw new Error();
+    if (!scripts) throw new Error('no scripts found');
     return this.templates[name] || DEFAULT_TEMPLATE;
   }
 

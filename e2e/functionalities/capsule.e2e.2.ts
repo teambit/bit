@@ -5,6 +5,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -343,7 +344,7 @@ describe('capsule', function() {
           helper.command.addComponentAllowFiles('circle/comp-b.js');
           helper.command.addComponentAllowFiles('circle/comp-c.js');
           helper.command.addComponentAllowFiles('circle/comp-d.js'); // comp-d has no deps, so is not part of the circle
-          buildOutput = helper.general.runWithTryCatch('bit build comp-a');
+          buildOutput = helper.general.runWithTryCatch('bit build comp-a', undefined, LEGACY_SHARED_DIR_FEATURE);
         });
         it('should throw an error saying there is cyclic dependencies', () => {
           expect(buildOutput).to.have.string('cyclic dependencies');

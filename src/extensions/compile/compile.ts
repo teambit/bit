@@ -25,8 +25,8 @@ export class Compile {
     this.flows = flows;
     this.scope = scope;
 
-    // const func = this.compileDuringBuild.bind(this);
-    // if (this.scope?.onBuild) this.scope.onBuild.push(func);
+    const func = this.compileDuringBuild.bind(this);
+    if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
@@ -73,7 +73,7 @@ result.value [
       const distFilesObjects = distFiles.map(distFilePath => {
         const distPath = path.join(distDir, distFilePath);
         return {
-          path: distPath,
+          path: distFilePath,
           content: result.capsule.fs.readFileSync(distPath).toString()
         };
       });
