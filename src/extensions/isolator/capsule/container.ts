@@ -68,6 +68,10 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     subprocessP.on('close', function(statusCode) {
       exec.setStatus(statusCode);
     });
+
+    subprocessP.on('exit', function(code) {
+      exec.setStatus(code!);
+    });
     return exec;
   }
 
