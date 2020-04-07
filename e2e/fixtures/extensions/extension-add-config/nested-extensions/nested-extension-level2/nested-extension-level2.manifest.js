@@ -8,7 +8,7 @@ module.exports = {
     component.registerAddConfig('nested-extension-level2', config => {
       console.log('config registration hook is running for level 2');
       return {
-        'my-custom-key-2': 'my-custom-val-2',
+        'my-custom-key-l2': 'my-custom-val-l2',
         extensions: {
           'nested-extension-level3': {
             'config-key-for-l3': 'config-val-for-l3'

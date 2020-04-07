@@ -192,7 +192,7 @@ describe('harmony extension config', function() {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'nested-extensions');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(`${extensionFolder}/*`);
-        helper.extensions.setExtensionToVariant('*', 'nested-extension-level1', config);
+        helper.extensions.setExtensionToVariant('bar/foo', 'nested-extension-level1', config);
         output = helper.command.showComponent();
       });
       it('should runs all nested extensions', () => {
@@ -203,8 +203,11 @@ describe('harmony extension config', function() {
       it('should runs add config hook for all nested extensions', () => {
         expect(output).to.have.string('config registration hook is running for level 1');
         expect(output).to.have.string('config registration hook is running for level 2');
+        expect(output).to.have.string('config registration hook is running for level 3');
       });
-      it.skip('should have access for nested extension to the config set by higher level', () => {});
+      it.skip('should only run add config event if the same extension added by many extensions', () => {});
+      // In case an extension added another extension with config. the added extension should have access to this config
+      it.skip('should have access for nested extension to the config set by a higher level', () => {});
     });
     describe.skip('extensions that add dependencies', function() {});
     describe.skip('extensions that add dependencies overrides', function() {});

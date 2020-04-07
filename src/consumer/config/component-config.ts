@@ -22,15 +22,22 @@ type ConfigProps = {
   overrides?: ComponentOverridesData;
 };
 
+type ConfigLoadRegistry = { [extId: string]: Function };
+type AddConfigRegistry = { [extId: string]: Function };
+
 export default class ComponentConfig extends AbstractConfig {
   overrides: ComponentOverridesData | null | undefined;
   componentHasWrittenConfig = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;
   extensionsAddedConfig: { [prop: string]: any } | undefined;
 
-  static componentConfigLoadingRegistry: { [extId: string]: Function } = {};
+  static componentConfigLoadingRegistry: ConfigLoadRegistry = {};
   static registerOnComponentConfigLoading(extId, func: (id, config) => any) {
     this.componentConfigLoadingRegistry[extId] = func;
+  }
+  static addConfigRegistry: AddConfigRegistry = {};
+  static registerAddConfigAction(extId, func: () => any) {
+    this.addConfigRegistry[extId] = func;
   }
 
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
@@ -69,6 +76,19 @@ export default class ComponentConfig extends AbstractConfig {
         `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
       );
     }
+  }
+
+  /**
+   * Return extension defined by the user and by other extensions
+   *
+   * @returns {ExtensionDataList}
+   * @memberof ComponentConfig
+   */
+  allExtensions(): ExtensionDataList {
+    if (!this.extensionsAddedConfig || !this.extensionsAddedConfig.extensions) {
+      return this.extensions;
+    }
+    return ExtensionDataList.fromArray([...this.extensionsAddedConfig.extensions, ...this.extensions]);
   }
 
   static fromPlainObject(object: Record<string, any>): ComponentConfig {
@@ -145,15 +165,13 @@ export default class ComponentConfig extends AbstractConfig {
     componentId,
     componentDir,
     workspaceDir,
-    workspaceConfig,
-    addConfigRegistry
+    workspaceConfig
   }: {
     consumer: Consumer;
     componentId: BitId;
     componentDir: PathOsBasedRelative | undefined;
     workspaceDir: PathOsBasedRelative;
     workspaceConfig: WorkspaceConfig;
-    addConfigRegistry: { [extId: string]: Function };
   }): Promise<ComponentConfig> {
     let bitJsonPath;
     let componentHasWrittenConfig = false;
@@ -210,21 +228,112 @@ export default class ComponentConfig extends AbstractConfig {
       workspaceConfig
     );
 
-    await this.runOnLoadEvent(this.componentConfigLoadingRegistry, componentId, componentConfig);
     componentConfig.path = bitJsonPath;
-    const extensionsAddedConfig = await getConfigFromExtensions(
+    await this.recursivelyRunOnLoadEvent(
       componentId,
-      componentConfig.extensions,
-      addConfigRegistry
+      consumer,
+      this.componentConfigLoadingRegistry,
+      componentConfig,
+      [],
+      {}
     );
-    componentConfig.extensionsAddedConfig = extensionsAddedConfig;
+    if (componentConfig.extensionsAddedConfig?.extensions) {
+      componentConfig.extensionsAddedConfig.extensions = ExtensionDataList.fromObject(
+        componentConfig.extensionsAddedConfig?.extensions.extensions,
+        consumer
+      );
+    }
     componentConfig.componentHasWrittenConfig = componentHasWrittenConfig;
     // @ts-ignore seems to be a bug in ts v3.7.x, it doesn't recognize Promise.all array correctly
     componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
 
-  static async runOnLoadEvent(componentConfigLoadingRegistry, id, config) {
+  // TODO: Refactor this function, it's very complicated
+
+  /**
+   * This will run the on load event recursively
+   * It will check if an extension added another extension that not yet loaded and if yes will re-trigger
+   * the on load even (to give the possibility for new extension to register to add their own config for the component)
+   * For example extension1 add extension2. and extension2 want's to add new config to the component (maybe even another extension)
+   *
+   * This method mutate the config during the process!!!
+   *
+   * @static
+   * @param {BitId} id The component id
+   * @param {Consumer} consumer
+   * @param {ConfigLoadRegistry} componentConfigLoadingRegistry all subscribers to the config load event
+   * @param {ComponentConfig} config The config calculated by the component package.json, models and workspace config (without the extensions added config)
+   * @param {string[]} [alreadyLoadedExtensions=[]] Extensions that already loaded (and run the addConfig event) as part of the process
+   * @param {*} accumulativeAddedConfig An accumulator of the config added by all the extensions loaded so far
+   * @returns {Promise<any>}
+   * @memberof ComponentConfig
+   */
+  static async recursivelyRunOnLoadEvent(
+    id: BitId,
+    consumer: Consumer,
+    componentConfigLoadingRegistry: ConfigLoadRegistry,
+    config: ComponentConfig,
+    alreadyLoadedExtensions: string[] = [],
+    accumulativeAddedConfig: any
+  ): Promise<any> {
+    await this.runOnLoadEvent(componentConfigLoadingRegistry, id, config);
+    // We should only ask for new config from extension applied on the component
+    // (added to the variant by the user or added by one of those extension)
+    const extensionsAppliedOnTheComponent = config.allExtensions().ids;
+    // The registry is singleton for all component so we need to filter it by extension relevant for the component
+    const AddConfigRegistryForComponentOnly = R.pick(extensionsAppliedOnTheComponent, this.addConfigRegistry);
+    // No reason to run the function for extension already loaded (prevent infinite loops and performance issues)
+    const AddConfigRegistryWithoutAlreadyLoadedAndSelf = R.omit(
+      [...alreadyLoadedExtensions, id.toString()],
+      AddConfigRegistryForComponentOnly
+    );
+    const extensionsAddedConfig = await getConfigFromExtensions(
+      // Taking it from the class itself since extensions that added by extension might change it
+      AddConfigRegistryWithoutAlreadyLoadedAndSelf
+    );
+    const addedExtension = extensionsAddedConfig.extensions ? Object.keys(extensionsAddedConfig.extensions) : [];
+    const newExtensions = R.difference(addedExtension, alreadyLoadedExtensions);
+    const mergedAddedConfig = mergeExtensionsConfig([extensionsAddedConfig, accumulativeAddedConfig]);
+    // Mutate the real config since there are events who need on updated config
+    // We clone it because we need the original one to stay in the original format
+    config.extensionsAddedConfig = R.clone(mergedAddedConfig);
+    // TODO: move this transformation into the mergedAddedConfig object
+    // It doesn't run on the merged because then the mergeExtensionsConfig will break next time
+    // we should support merging ExtensionDataList as well
+    if (config.extensionsAddedConfig?.extensions) {
+      config.extensionsAddedConfig.extensions = ExtensionDataList.fromObject(
+        config.extensionsAddedConfig.extensions,
+        consumer
+      );
+    }
+    // There are new extension needed to be load
+    if (newExtensions.length) {
+      // const mergedExtensions = alreadyLoadedExtensions.concat(newExtensions);
+      const justLoadedExtensions = Object.keys(AddConfigRegistryWithoutAlreadyLoadedAndSelf);
+      alreadyLoadedExtensions = alreadyLoadedExtensions.concat(justLoadedExtensions);
+      return this.recursivelyRunOnLoadEvent(
+        id,
+        consumer,
+        componentConfigLoadingRegistry,
+        config,
+        alreadyLoadedExtensions,
+        mergedAddedConfig
+      );
+    }
+    return mergedAddedConfig;
+  }
+
+  /**
+   * Run all subscribers to the component config load event
+   *
+   * @static
+   * @param {ConfigLoadRegistry} componentConfigLoadingRegistry
+   * @param {BitId} id
+   * @param {*} config
+   * @memberof ComponentConfig
+   */
+  static async runOnLoadEvent(componentConfigLoadingRegistry: ConfigLoadRegistry, id: BitId, config: any) {
     const onLoadSubscribersP = Object.keys(componentConfigLoadingRegistry).map(async extId => {
       const func = componentConfigLoadingRegistry[extId];
       return func(id, config);
@@ -238,7 +347,13 @@ export default class ComponentConfig extends AbstractConfig {
   }
 }
 
-async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, configsRegistry) {
+/**
+ * Runs all the functions from the registry and merged their results
+ *
+ * @param {AddConfigRegistry} configsRegistry
+ * @returns {Promise<any>} A merge results of the added config by all the extensions
+ */
+async function getConfigFromExtensions(configsRegistry: AddConfigRegistry): Promise<any> {
   const extensionsConfigModificationsP = Object.keys(configsRegistry).map(extId => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
@@ -249,7 +364,13 @@ async function getConfigFromExtensions(id: BitId, rawExtensionConfig: any, confi
   return extensionsConfigModificationsObject;
 }
 
-function mergeExtensionsConfig(configs: any[]) {
+/**
+ * Merge added configs from many extensions
+ *
+ * @param {any[]} configs
+ * @returns A merge results of all config
+ */
+function mergeExtensionsConfig(configs: any[]): any {
   return configs.reduce((prev, curr) => {
     return R.mergeDeepLeft(prev, curr);
   }, {});
