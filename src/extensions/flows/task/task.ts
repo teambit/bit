@@ -53,7 +53,7 @@ function getContainerScript() {
     if (!index) {
       return false;
     }
-    return __filename.endsWith(arr[index - 1]);
+    return __filename.endsWith(arr[index - 1]) || arr[index - 1].endsWith(__filename);
   });
 
   let userTask;
