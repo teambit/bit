@@ -16,7 +16,7 @@ describe('compile extension', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('compile from the cmd', () => {
+  describe('workspace with a new compiler extension', () => {
     before(async () => {
       helper.scopeHelper.initWorkspace();
 
@@ -56,12 +56,30 @@ describe('compile extension', function() {
       helper.command.runCmd('npm i');
 
       helper.command.runCmd('bit link');
-      helper.command.runCmd('bit compile');
     });
-    it('should write dists files', () => {
-      const helpCapsule = helper.command.getCapsuleOfComponent('help');
-      expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
-      expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
+    describe('compile from the cmd', () => {
+      before(() => {
+        helper.command.runCmd('bit compile');
+      });
+      it('should write dists files inside the capsule', () => {
+        const helpCapsule = helper.command.getCapsuleOfComponent('help');
+        expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
+        expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
+      });
+    });
+    describe('tag the component', () => {
+      before(() => {
+        // @todo: fix this. currently it needs to tag all then help.
+        helper.command.tagAllComponents();
+        helper.command.tagComponent('help -f');
+      });
+      it('should save the dists in the objects', () => {
+        const catHelp = helper.command.catComponent('help@latest');
+        expect(catHelp).to.have.property('dists');
+        const dists = catHelp.dists;
+        const files = dists.map(d => d.relativePath);
+        expect(files).to.include('help.js');
+      });
     });
   });
 });

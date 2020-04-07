@@ -738,6 +738,7 @@ describe('bit export command', function() {
           expect(output).to.have.string('exported the following 2 component');
         });
       });
+      // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
       describe('circular dependencies between the scopes', () => {
         let output;
         before(() => {
@@ -746,7 +747,7 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo1.js', "require('./foo2');");
           helper.fs.outputFile('foo2.js', "require('./foo1');");
-          helper.command.tagScope('3.0.0');
+          helper.command.tagScopeLegacy('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.general.runWithTryCatch('bit export');
         });
@@ -779,6 +780,7 @@ describe('bit export command', function() {
           );
         });
       });
+      // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
       describe('circular dependencies within the same scope and a non-circular dependency between the scopes', () => {
         let output;
         before(() => {
@@ -787,11 +789,11 @@ describe('bit export command', function() {
           helper.scopeHelper.getClonedScope(anotherRemoteScopeBefore, anotherRemotePath);
           helper.fs.outputFile('foo3.js', '');
           helper.command.addComponentAllowFiles('foo3.js');
-          helper.command.tagAllComponents();
+          helper.command.tagAllComponentsLegacy();
           helper.command.runCmd(`bit export ${anotherRemote} foo3`);
           helper.fs.outputFile('foo2.js', "require('./foo3');");
           helper.fs.outputFile('foo3.js', "require('./foo2');");
-          helper.command.tagScope('3.0.0');
+          helper.command.tagScopeLegacy('3.0.0');
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.command.export();
         });
