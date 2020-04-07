@@ -304,7 +304,7 @@ chai.use(require('chai-fs'));
             expect(show.devDependencies).to.have.lengthOf(1);
           });
           it('bit tag should tag them successfully', () => {
-            const tag = helper.command.tagAllComponents();
+            const tag = helper.command.tagAllComponentsLegacy();
             expect(tag).to.have.string('1 component(s) tagged');
           });
         });
