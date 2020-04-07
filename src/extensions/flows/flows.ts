@@ -33,6 +33,7 @@ export class Flows {
       const isCached = await getExecutionCache().compareToCache(capsule, name);
       const flowsConfig = component.config.extensions.findCoreExtension('flows')?.config;
       const tasks = flowsConfig && flowsConfig.tasks ? flowsConfig.tasks[name] : [];
+      console.log('tasks', tasks, 'for', capsule.wrkDir);
       const flow = isCached && options.caching ? new Flow([]) : new Flow(tasks);
 
       return flow;
@@ -50,6 +51,7 @@ export class Flows {
       resultStream.subscribe({
         next(data: any) {
           if (data.type === 'network:result') {
+            console.log('data:', data.value);
             resolve(data);
           }
         },

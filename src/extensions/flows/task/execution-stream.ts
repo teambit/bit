@@ -27,6 +27,7 @@ export function createExecutionStream(exec: ContainerExec, id: string, time: Dat
   });
 
   exec.on('message', function(data) {
+    console.log('message!!!!!!!!!!!!!!!!!!!!!!!!');
     message = data;
   });
 

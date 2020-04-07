@@ -88,7 +88,7 @@ export class Network {
                   }
                 },
                 error(err) {
-                  handleNetworkError(seed, graph, visitedCache, new Error(err.message));
+                  handleNetworkError(seed, graph, visitedCache, err);
                   resolve();
                 }
               })
@@ -153,7 +153,8 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
       // graph.removeNode(dependent);
     })
     .forEach(dependent => graph.removeNode(dependent));
-  visitedCache[seed].result = new Error(err.message);
+  console.log('err.message', err.message);
+  visitedCache[seed].result = err;
   graph.removeNode(seed);
 }
 

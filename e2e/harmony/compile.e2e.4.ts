@@ -73,7 +73,7 @@ describe('compile extension', function() {
         helper.command.tagAllComponents();
         helper.command.tagComponent('help -f');
       });
-      it('should save the dists in the objects', () => {
+      it.only('should save the dists in the objects', () => {
         const catHelp = helper.command.catComponent('help@latest');
         expect(catHelp).to.have.property('dists');
         const dists = catHelp.dists;

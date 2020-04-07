@@ -66,10 +66,12 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     subprocessP.stderr?.pipe(exec.stderr);
     subprocessP.stdout?.pipe(exec.stdout);
     subprocessP.on('close', function(statusCode) {
+      console.log('done');
       exec.setStatus(statusCode);
     });
 
     subprocessP.on('exit', function(code) {
+      console.log('done');
       exec.setStatus(code!);
     });
     return exec;
