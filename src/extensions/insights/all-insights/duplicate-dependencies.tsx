@@ -4,8 +4,9 @@ import { Color, Box, Text, render } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
 import { GraphBuilder } from '../../graph';
 import { VersionSubgraph } from '../../graph/duplicate-dependency';
+import NoDataForInsight from '../exceptions/no-data-for-insight';
 
-export const INSIGHT_NAME = 'duplicateDependencies';
+export const INSIGHT_NAME = 'duplicate dependencies';
 
 type Dependent = {
   id: string;
@@ -77,7 +78,7 @@ export default class DuplicateDependencies implements Insight {
 
   _renderData(data: FormattedEntry[]) {
     const element = (
-      <div key="duplicate_dependencies">
+      <div>
         {data.map(function(mainDependency) {
           return (
             <div key={mainDependency.dependencyId}>
