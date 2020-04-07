@@ -126,10 +126,7 @@ export default class Workspace implements ComponentHost {
     const components = await this.getMany(ids);
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
-      this.consumer,
-      {
-        packageManager: 'npm'
-      }
+      this.consumer
     );
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
