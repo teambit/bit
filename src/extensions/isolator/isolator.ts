@@ -148,6 +148,7 @@ async function getPackageJSONInCapsules(capsules: Capsule[], pm: PackageManager)
       try {
         capsuleJson = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
         packageManager = await pm.checkPackageManagerInCapsule(capsule);
+        // console.log('packageMannagr in ', capsule.wrkDir, ':', packageManager || 'ERRROR!!!')
         return { capsuleJson: JSON.parse(capsuleJson), packageManager };
         // eslint-disable-next-line no-empty
       } catch (e) {}

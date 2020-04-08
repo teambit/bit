@@ -62,12 +62,10 @@ export default class PackageManager {
   async checkPackageManagerInCapsule(capsule: Capsule): Promise<string> {
     const isYarn = await this.checkIfFileExistsInCapsule(capsule, 'yarn.lock');
     if (isYarn) return 'yarn';
-
-    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'package-lock.json');
-    if (isNPM) return 'npm';
-
     const isLib = await this.checkIfFileExistsInCapsule(capsule, 'librarian-manifests.json');
     if (isLib) return 'librarian';
+    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'node_modules');
+    if (isNPM) return 'npm';
 
     return '';
   }

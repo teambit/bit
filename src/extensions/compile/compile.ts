@@ -21,17 +21,12 @@ type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: strin
 
 export class Compile {
   constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
-    this.workspace = workspace;
-    this.flows = flows;
-    this.scope = scope;
-
     const func = this.compileDuringBuild.bind(this);
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
     const reportResults = await this.compile(ids.map(id => id.toString()));
-    // the types are terrible. here is an example of such:
     /**
      * {
     result: {
