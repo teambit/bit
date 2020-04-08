@@ -18,6 +18,13 @@ export class Flows {
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
+
+  /**
+   *
+   * @param seeders
+   * @param getFlow
+   * @param postFlow
+   */
   createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow) {
     return new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
   }

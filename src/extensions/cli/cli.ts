@@ -1,6 +1,16 @@
-import { Paper, Command } from '../paper';
+import { Hook, hook, Extension } from '@teambit/harmony';
+import { PaperExt, Command, Paper } from '../paper';
+import { CLIProvider } from './cli.provider';
 
+@Extension({
+  dependencies: [PaperExt]
+})
 export class BitCli {
+  /**
+   * hook for registring new CLI events
+   */
+  @hook commands = Hook.create<Command>();
+
   constructor(
     /**
      * bit's legacy command registry
@@ -17,5 +27,9 @@ export class BitCli {
 
   register(command: Command) {
     return this.paper.register(command);
+  }
+
+  static provider([paper]: [Paper]) {
+    return CLIProvider([paper]);
   }
 }

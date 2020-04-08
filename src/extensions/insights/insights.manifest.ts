@@ -1,10 +1,10 @@
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
-import { BitCliExt } from '../cli';
+import { BitCli } from '../cli';
 
 export default {
   name: 'insights',
-  dependencies: [ComponentGraphExt, BitCliExt],
+  dependencies: [ComponentGraphExt, BitCli],
   config: {
     silence: false
   },

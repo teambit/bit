@@ -1,10 +1,10 @@
 import packProvider from './pack.provider';
 import { ScopeExt } from '../scope';
-import { BitCliExt } from '../cli';
+import { BitCli } from '../cli';
 
 export default {
   name: 'pack',
-  dependencies: [BitCliExt, ScopeExt],
+  dependencies: [BitCli, ScopeExt],
   config: {},
   provider: packProvider
 };
