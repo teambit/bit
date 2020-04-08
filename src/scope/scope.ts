@@ -300,14 +300,7 @@ export default class Scope {
     // don't run this hook if the legacy-shared-dir is enabled. otherwise, it'll remove shared-dir
     // for authored and will change the component files.
     if (!isFeatureEnabled(LEGACY_SHARED_DIR_FEATURE)) {
-      const resultsFromCompileExt = R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
-      // @todo: currently it makes sure that all components have results, it probably should split the work
-      if (resultsFromCompileExt.length && resultsFromCompileExt.every(r => r.dists)) {
-        logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the new build mechanism (compile extension)');
-        // the compile extension is registered. forget the legacy build function and work only with the extension
-        // @ts-ignore
-        return this._buildResultsFromExtension(components, resultsFromCompileExt);
-      }
+      return R.flatten(await Promise.all(this.onBuild.map(func => func(ids))));
     }
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: Component) => {

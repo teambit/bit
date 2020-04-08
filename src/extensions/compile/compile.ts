@@ -1,4 +1,5 @@
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
@@ -10,6 +11,11 @@ import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scope } from '../scope';
 import { Flows } from '../flows';
 import { IdsAndFlows } from '../flows/flows';
+import loader from '../../cli/loader';
+import { Dist } from '../../consumer/component/sources';
+import GeneralError from '../../error/general-error';
+
+type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;
@@ -29,34 +35,40 @@ export class Compile {
     if (this.scope?.onBuild) this.scope.onBuild.push(func);
   }
 
-  async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
-    const reportResults = await this.compile(ids.map(id => id.toString()));
-    // the types are terrible. here is an example of such:
-    /**
-     * {
-    result: {
-      type: 'flow:result',
-      id: [BitId],
-      capsule: [Capsule],
-      value: [],
-      endTime: 2020-04-01T19:48:13.041Z,
-      duration: 2
-    },
-    visited: true
-  },
-
-  value can be:
-result.value [
-  {
-    type: 'task:result',
-    id: 'help:#@bit/bit.evangalist.extensions.react-ts:transpile',
-    value: { dir: 'dist' },
-    endTime: 2020-04-01T19:48:18.830Z,
-    duration: 5785,
-    code: 0
+  async compileDuringBuild(ids: BitId[]): Promise<BuildResult[]> {
+    return this.compile(ids.map(id => id.toString()));
   }
-]
-     */
+
+  async compile(componentsIds: string[]): Promise<BuildResult[]> {
+    const componentsAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
+    const idsAndFlows = new IdsAndFlows();
+    const componentsWithLegacyCompilers: ComponentAndCapsule[] = [];
+    componentsAndCapsules.forEach(c => {
+      const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+      const compiler = compileConfig ? [compileConfig.compiler] : [];
+      if (compileConfig) {
+        idsAndFlows.push({ id: c.consumerComponent.id, value: compiler });
+      } else {
+        componentsWithLegacyCompilers.push(c);
+      }
+    });
+    let newCompilersResult: BuildResult[] = [];
+    let oldCompilersResult: BuildResult[] = [];
+    if (idsAndFlows.length) {
+      newCompilersResult = await this.compileWithNewCompilers(
+        idsAndFlows,
+        componentsAndCapsules.map(c => c.consumerComponent)
+      );
+    }
+    if (componentsWithLegacyCompilers.length) {
+      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers);
+    }
+
+    return [...newCompilersResult, ...oldCompilersResult];
+  }
+
+  async compileWithNewCompilers(idsAndFlows: IdsAndFlows, components: ConsumerComponent[]): Promise<BuildResult[]> {
+    const reportResults = await this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
     // @ts-ignore please fix once flows.run() get types
     const resultsP: buildHookResult[] = Object.values(reportResults.value).map((reportResult: any) => {
       const result = reportResult.result;
@@ -79,23 +91,63 @@ result.value [
       });
       return { id, dists: distFilesObjects };
     });
-    return Promise.all(resultsP);
-  }
-
-  // @todo: what is the return type here?
-  async compile(componentsIds: string[]) {
-    const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
-    const idsAndScriptsArr = componentAndCapsules
-      .map(c => {
-        const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
-        const compiler = compileConfig ? [compileConfig.compiler] : [];
-        return { id: c.consumerComponent.id, value: compiler };
+    const extensionsResults = await Promise.all(resultsP);
+    // @ts-ignore
+    return components
+      .map(component => {
+        const resultFromCompiler = extensionsResults.find(r => component.id.isEqualWithoutVersion(r.id));
+        if (!resultFromCompiler || !resultFromCompiler.dists) return null;
+        const builtFiles = resultFromCompiler.dists;
+        builtFiles.forEach(file => {
+          if (!file.path || !file.content || typeof file.content !== 'string') {
+            throw new GeneralError(
+              'compile interface expects to get files in a form of { path: string, content: string }'
+            );
+          }
+        });
+        // @todo: once tag is working, check if anything is missing here. currently the path is a
+        // relative path with "dist", but can be easily changed from the compile extension
+        const distsFiles = builtFiles.map(file => {
+          return new Dist({
+            path: file.path,
+            contents: Buffer.from(file.content)
+          });
+        });
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        component.setDists(distsFiles);
+        return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
       })
-      .filter(i => i.value);
-    const idsAndFlows = new IdsAndFlows(...idsAndScriptsArr);
-    return this.flows.runMultiple(idsAndFlows, { traverse: 'only' });
+      .filter(x => x);
   }
 
+  async compileWithLegacyCompilers(componentsAndCapsules: ComponentAndCapsule[]): Promise<BuildResult[]> {
+    const build = async (componentAndCapsules: ComponentAndCapsule) => {
+      const component = componentAndCapsules.consumerComponent;
+      if (component.compiler) loader.start(`building component - ${component.id}`);
+      await component.build({
+        scope: this.workspace.consumer.scope,
+        consumer: this.workspace.consumer
+      });
+      if (component.dists.isEmpty() || !component.dists.writeDistsFiles) {
+        return { component: component.id.toString(), buildResults: null };
+      }
+      const dataToPersist = new DataToPersist();
+      const filesToAdd = component.dists.get().map(file => {
+        file.updatePaths({ newBase: 'dist' });
+        return file;
+      });
+      dataToPersist.addManyFiles(filesToAdd);
+      await dataToPersist.persistAllToCapsule(componentAndCapsules.capsule);
+      const buildResults = component.dists.get().map(d => d.path);
+      if (component.compiler) loader.succeed();
+      return { component: component.id.toString(), buildResults };
+    };
+
+    const buildResults = await pMapSeries(componentsAndCapsules, build);
+    return buildResults;
+  }
+
+  // @todo: remove
   async legacyCompile(componentsIds: string[], params: { verbose: boolean; noCache: boolean }) {
     const populateDistTask = this.populateComponentDist.bind(this, params);
     const writeDistTask = this.writeComponentDist.bind(this);

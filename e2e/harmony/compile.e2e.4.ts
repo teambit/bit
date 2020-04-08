@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { LEGACY_WORKSPACE_CONFIG } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -80,6 +81,24 @@ describe('compile extension', function() {
         const files = dists.map(d => d.relativePath);
         expect(files).to.include('help.js');
       });
+    });
+  });
+  describe('workspace with a legacy compiler', () => {
+    before(() => {
+      helper.command.setFeatures(LEGACY_WORKSPACE_CONFIG);
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents();
+      helper.env.importDummyCompiler();
+      helper.command.linkAndRewire();
+      helper.command.runCmd('bit compile');
+    });
+    it('should not change the files locally on the workspace', () => {
+      expect(path.join(helper.scopes.localPath, 'dist')).not.to.be.a.path();
+    });
+    it('should write the dists on the capsule', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp1');
+      expect(path.join(comp1Capsule, 'dist')).to.be.a.path();
+      expect(path.join(comp1Capsule, 'dist/index.js')).to.be.a.file();
     });
   });
 });

@@ -34,3 +34,5 @@ export const isFeatureEnabled: IsFeatureEnabled = (featureName: string): boolean
 };
 
 export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
+
+export const LEGACY_WORKSPACE_CONFIG = 'legacy-workspace-config';
