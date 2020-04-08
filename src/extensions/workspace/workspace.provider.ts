@@ -43,7 +43,6 @@ export default async function provideWorkspace(
         scope,
         component,
         isolator,
-        reporter,
         reporter.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony

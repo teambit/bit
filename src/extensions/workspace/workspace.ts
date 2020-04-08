@@ -9,7 +9,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { Reporter, Logger } from '../reporter';
+import { Logger } from '../reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -50,8 +50,6 @@ export default class Workspace implements ComponentHost {
     private componentFactory: ComponentFactory,
 
     readonly isolateEnv: Isolator,
-
-    private reporter: Reporter,
 
     private logger: Logger,
 
@@ -223,10 +221,8 @@ export default class Workspace implements ComponentHost {
   }
 
   private async loadExtensions(extensionsManifests: ExtensionManifest[]) {
-    this.reporter.startPhase('running extensions');
     try {
       await this.harmony.set(extensionsManifests);
-      this.reporter.end();
     } catch (e) {
       const ids = extensionsManifests.map(manifest => manifest.name);
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
@@ -249,7 +245,6 @@ export default class Workspace implements ComponentHost {
     const allRegisteredExtensionIds = this.harmony.extensionsIds;
     const nonRegisteredExtensions = difference(extensionsIds, allRegisteredExtensionIds);
     let extensionsComponents;
-    this.reporter.startPhase('Resolving extensions');
     // TODO: improve this, instead of catching an error, add some api in workspace to see if something from the list is missing
     try {
       extensionsComponents = await this.getMany(nonRegisteredExtensions);
@@ -288,7 +283,6 @@ export default class Workspace implements ComponentHost {
       }
       return undefined;
     });
-    this.reporter.end();
 
     // Remove empty manifests as a result of loading issue
     return manifests.filter(manifest => manifest);
