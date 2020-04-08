@@ -87,7 +87,6 @@ export default class PackageManager {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     if (packageManager === 'yarn') {
-      console.log('yarn!!!!!!!!!!!!!!!!!!!');
       await Promise.all(
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
@@ -105,7 +104,6 @@ export default class PackageManager {
         })
       );
     } else if (packageManager === 'npm') {
-      console.log('npm!!!!');
       await Promise.all(
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
