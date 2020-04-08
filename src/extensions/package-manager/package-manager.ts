@@ -88,12 +88,12 @@ export default class PackageManager {
       await Promise.all(
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
+          const logger = this.reporter.createLogger(capsule.component.id.toString());
           const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ yarn'); // TODO: better
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
+          logger.info('$ yarn'); // TODO: better
+          logger.info('');
+          installProc.stdout!.on('data', d => logger.info(d.toString()));
+          installProc.stderr!.on('data', d => logger.warn(d.toString()));
           installProc.on('error', e => {
             console.error('error', e); // eslint-disable-line no-console
           });
@@ -105,12 +105,12 @@ export default class PackageManager {
       await Promise.all(
         capsules.map(async capsule => {
           deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
+          const logger = this.reporter.createLogger(capsule.component.id.toString());
           const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ npm install --no-package-lock');
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
+          logger.info('$ npm install --no-package-lock'); // TODO: better
+          logger.info('');
+          installProc.stdout!.on('data', d => logger.info(d.toString()));
+          installProc.stderr!.on('data', d => logger.warn(d.toString()));
           installProc.on('error', e => {
             console.log('error:', e); // eslint-disable-line no-console
           });
@@ -125,14 +125,14 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    const reporter = this.reporter.createLogger(folder);
+    const logger = this.reporter.createLogger(folder);
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
       await new Promise((resolve, reject) => {
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logger.info(d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logger.warn(d.toString()));
         child.on('error', e => reject(e));
         child.on('close', () => {
           // TODO: exit status
@@ -149,13 +149,13 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      reporter.info('$ npm install');
-      reporter.info('');
+      logger.info('$ npm install');
+      logger.info('');
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logger.info(d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logger.warn(d.toString()));
         child.on('error', e => {
           reject(e);
         });

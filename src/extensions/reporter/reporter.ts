@@ -41,6 +41,16 @@ export default class Reporter {
   suppressOutput() {
     this.outputShouldBeSuppressed = true;
   }
+  setStatusText(text) {
+    this.statusLine.reRender(text);
+  }
+  info(...messages) {
+    if (this.shouldWriteOutput) {
+      this.statusLine.stopSpinner();
+      console.log(messages); // TODO: default color/style
+      this.statusLine.reRender(this.phaseName);
+    }
+  }
   createLogger(id) {
     const logger = new Logger();
     this.statusLine.addId(id);
