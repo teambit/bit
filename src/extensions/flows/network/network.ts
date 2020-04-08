@@ -153,7 +153,6 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
       // graph.removeNode(dependent);
     })
     .forEach(dependent => graph.removeNode(dependent));
-  console.log('err.message', err.message);
   visitedCache[seed].result = err;
   graph.removeNode(seed);
 }

@@ -27,7 +27,6 @@ export class Compile {
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
     const reportResults = await this.compile(ids.map(id => id.toString()));
-    console.log('~~~~~~~~~~~~~~~~~~~~~~~~', reportResults);
     /**
      * {
     result: {
