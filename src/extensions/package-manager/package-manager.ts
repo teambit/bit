@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
+import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '../reporter';
@@ -62,12 +63,10 @@ export default class PackageManager {
   async checkPackageManagerInCapsule(capsule: Capsule): Promise<string> {
     const isYarn = await this.checkIfFileExistsInCapsule(capsule, 'yarn.lock');
     if (isYarn) return 'yarn';
-
-    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'package-lock.json');
-    if (isNPM) return 'npm';
-
     const isLib = await this.checkIfFileExistsInCapsule(capsule, 'librarian-manifests.json');
     if (isLib) return 'librarian';
+    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'node_modules');
+    if (isNPM) return 'npm';
 
     return '';
   }
@@ -87,39 +86,37 @@ export default class PackageManager {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     if (packageManager === 'yarn') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ yarn'); // TODO: better
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
-          installProc.on('error', e => {
-            console.error('error', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        const logger = this.reporter.createLogger(capsule.component.id.toString());
+        const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logger.info('$ yarn'); // TODO: better
+        logger.info('');
+        installProc.stdout!.on('data', d => logger.info(d.toString()));
+        installProc.stderr!.on('data', d => logger.warn(d.toString()));
+        installProc.on('error', e => {
+          console.error('error', e); // eslint-disable-line no-console
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else if (packageManager === 'npm') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ npm install --no-package-lock'); // TODO: better
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
-          installProc.on('error', e => {
-            console.log('error:', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        const logger = this.reporter.createLogger(capsule.component.id.toString());
+        const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logger.info('$ npm install --no-package-lock'); // TODO: better
+        logger.info('');
+        installProc.stdout!.on('data', d => logger.info(d.toString()));
+        installProc.stderr!.on('data', d => logger.warn(d.toString()));
+        installProc.on('error', e => {
+          console.log('error:', e); // eslint-disable-line no-console
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
@@ -127,14 +124,14 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    const reporter = this.reporter.createLogger(folder);
+    const logger = this.reporter.createLogger(folder);
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
       await new Promise((resolve, reject) => {
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logger.info(d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logger.warn(d.toString()));
         child.on('error', e => reject(e));
         child.on('close', () => {
           // TODO: exit status
@@ -151,13 +148,13 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      reporter.info('$ npm install');
-      reporter.info('');
+      logger.info('$ npm install');
+      logger.info('');
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logger.info(d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logger.warn(d.toString()));
         child.on('error', e => {
           reject(e);
         });

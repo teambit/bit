@@ -70,7 +70,7 @@ export class Network {
             const flowStream = await flow.execute(capsule);
             stream.next(flowStream);
 
-            return new Promise(resolve =>
+            return new Promise((resolve, reject) =>
               flowStream.subscribe({
                 next(data: any) {
                   if (data.type === 'flow:result') {
@@ -82,13 +82,13 @@ export class Network {
                   if (postFlow) {
                     postFlow(capsule)
                       .then(() => resolve())
-                      .catch(() => resolve());
+                      .catch(e => reject(e));
                   } else {
                     resolve();
                   }
                 },
                 error(err) {
-                  handleNetworkError(seed, graph, visitedCache, new Error(err.message));
+                  handleNetworkError(seed, graph, visitedCache, err);
                   resolve();
                 }
               })
@@ -153,7 +153,7 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
       // graph.removeNode(dependent);
     })
     .forEach(dependent => graph.removeNode(dependent));
-  visitedCache[seed].result = new Error(err.message);
+  visitedCache[seed].result = err;
   graph.removeNode(seed);
 }
 

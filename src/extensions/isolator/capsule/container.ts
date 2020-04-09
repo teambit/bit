@@ -65,9 +65,12 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     subprocessP.stderr?.pipe(exec.stderr);
     subprocessP.stdout?.pipe(exec.stdout);
-    subprocessP.on('close', function(statusCode) {
-      exec.setStatus(statusCode);
+    ['close', 'exit'].forEach(function(eventName: string) {
+      subprocessP.on(eventName, function(statusCode) {
+        exec.setStatus(statusCode);
+      });
     });
+
     return exec;
   }
 

@@ -42,19 +42,27 @@ async function removeExistingLinksInNodeModules(isolatedEnvs) {
 export class Install {
   constructor(private workspace: Workspace, private packageManager: PackageManager, private reporter: Reporter) {}
   async install() {
-    this.reporter.startPhase('Installing');
-    {
-      const components = await this.workspace.list();
-      const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
-      const packageManagerName =
-        this.workspace.consumer.config.workspaceSettings.packageManager || DEFAULT_PACKAGE_MANAGER;
-      await removeExistingLinksInNodeModules(isolatedEnvs);
-      await this.packageManager.runInstallInFolder(process.cwd(), {
-        packageManager: packageManagerName
-      });
-      await symlinkCapsulesInNodeModules(isolatedEnvs);
+    try {
+      this.reporter.info('Installing component dependencies');
+      this.reporter.setStatusText('Installing');
+      {
+        const components = await this.workspace.list();
+        this.reporter.info('Isolating Components');
+        const isolatedEnvs = await this.workspace.load(components.map(c => c.id.toString()));
+        const packageManagerName =
+          this.workspace.consumer.config.workspaceSettings.packageManager || DEFAULT_PACKAGE_MANAGER;
+        this.reporter.info('Installing workspace dependencies');
+        await removeExistingLinksInNodeModules(isolatedEnvs);
+        await this.packageManager.runInstallInFolder(process.cwd(), {
+          packageManager: packageManagerName
+        });
+        await symlinkCapsulesInNodeModules(isolatedEnvs);
+        this.reporter.end();
+        return isolatedEnvs;
+      }
+    } catch (e) {
       this.reporter.end();
-      return isolatedEnvs;
+      throw e;
     }
   }
 }
