@@ -24,6 +24,7 @@ import Remotes from '../../remotes/remotes';
 import DependencyGraph from '../../scope/graph/scope-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { Version } from '../../scope/models';
+import { capsuleIsolate } from '../../api/consumer';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -100,8 +101,17 @@ export default class ImportComponents {
     await this._throwForModifiedOrNewDependencies(componentsWithDependencies);
     const componentsWithDependenciesFiltered = this._filterComponentsWithLowerVersions(componentsWithDependencies);
     await this._writeToFileSystem(componentsWithDependenciesFiltered);
+    await await this._createCapsules(componentsWithDependenciesFiltered);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependenciesFiltered, importDetails };
+  }
+
+  async _createCapsules(componentsWithDependencies: ComponentWithDependencies[]) {
+    const ids = R.flatten(componentsWithDependencies.map(c => [c.component.id, ...c.allDependencies.map(d => d.id)]));
+    return capsuleIsolate(
+      ids.map(id => id.toString()),
+      {}
+    );
   }
 
   /**

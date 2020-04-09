@@ -14,6 +14,8 @@ import CapsuleList from './capsule-list';
 import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { symlinkCapsulesToWorkspace } from './symlink-capsules-to-workspace';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -51,10 +53,12 @@ export default class Isolator {
     return new Isolator(packageManager);
   }
 
-  async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: {}): Promise<Network> {
+  async createNetworkFromConsumer(seeders: string[], consumer: Consumer, opts?: Record<string, any>): Promise<Network> {
     const seedersIds = seeders.map(seeder => consumer.getParsedId(seeder));
     const graph = await buildOneGraphForComponents(seedersIds, consumer);
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(consumer.projectPath)); // TODO: move this logic elsewhere
+    if (!opts) opts = {};
+    opts.consumerPath = consumer.getPath();
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
   async createNetworkFromScope(seeders: string[], opts?: {}): Promise<Network> {
@@ -63,7 +67,7 @@ export default class Isolator {
     const baseDir = path.join(CAPSULES_BASE_DIR, hash(scope.path)); // TODO: move this logic elsewhere
     return this.createNetwork(seeders, graph, baseDir, opts);
   }
-  async createNetwork(seeders: string[], graph: Graph, baseDir, opts?: {}) {
+  async createNetwork(seeders: string[], graph: Graph, baseDir: PathOsBasedAbsolute, opts?: Record<string, any>) {
     const config = Object.assign(
       {},
       {
@@ -103,6 +107,10 @@ export default class Isolator {
       await this.packageManager.runInstall(toInstall, { packageManager: config.packageManager });
     } else if (config.installPackages) {
       await this.packageManager.runInstall(toInstall);
+    }
+
+    if (opts && opts.consumerPath) {
+      await symlinkCapsulesToWorkspace(capsuleList, components, opts.consumerPath);
     }
 
     return {
