@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
+import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '../reporter';
@@ -85,39 +86,37 @@ export default class PackageManager {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     if (packageManager === 'yarn') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const logger = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          logger.info('$ yarn'); // TODO: better
-          logger.info('');
-          installProc.stdout!.on('data', d => logger.info(d.toString()));
-          installProc.stderr!.on('data', d => logger.warn(d.toString()));
-          installProc.on('error', e => {
-            console.error('error', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        const logger = this.reporter.createLogger(capsule.component.id.toString());
+        const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logger.info('$ yarn'); // TODO: better
+        logger.info('');
+        installProc.stdout!.on('data', d => logger.info(d.toString()));
+        installProc.stderr!.on('data', d => logger.warn(d.toString()));
+        installProc.on('error', e => {
+          console.error('error', e); // eslint-disable-line no-console
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else if (packageManager === 'npm') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const logger = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          logger.info('$ npm install --no-package-lock'); // TODO: better
-          logger.info('');
-          installProc.stdout!.on('data', d => logger.info(d.toString()));
-          installProc.stderr!.on('data', d => logger.warn(d.toString()));
-          installProc.on('error', e => {
-            console.log('error:', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        const logger = this.reporter.createLogger(capsule.component.id.toString());
+        const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logger.info('$ npm install --no-package-lock'); // TODO: better
+        logger.info('');
+        installProc.stdout!.on('data', d => logger.info(d.toString()));
+        installProc.stderr!.on('data', d => logger.warn(d.toString()));
+        installProc.on('error', e => {
+          console.log('error:', e); // eslint-disable-line no-console
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
