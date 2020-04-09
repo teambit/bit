@@ -102,16 +102,15 @@ describe('support vue files', function() {
         helper.command.runCmd('npm i fuzzysearch');
       });
 
-      // tests are flaky for some reason.
-      it.skip('should find missing vue dependencies', () => {
+      it('should find missing vue dependencies', () => {
         const output = helper.command.tagAllComponents();
         expect(output).to.have.string('9 component(s) tagged');
       });
-      it.skip('should export tagged components', () => {
+      it('should export tagged components', () => {
         const output = helper.command.exportAllComponents();
         expect(output).to.have.string(`exported 9 components to scope ${helper.scopes.remote}`);
       });
-      it.skip('should import component', () => {
+      it('should import component', () => {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
         const output = helper.command.importComponent('vue/ui-autocomplete');
