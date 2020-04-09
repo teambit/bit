@@ -15,7 +15,7 @@ import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from '../../bit-id';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 import { symlinkCapsulesToWorkspace } from './symlink-capsules-to-workspace';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
+import { PathOsBasedAbsolute } from '../../utils/path';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
