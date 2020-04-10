@@ -80,7 +80,7 @@
     "@babel/runtime": "^7.8.4",
     "@teambit/gitconfig": "^2.0.6",
     "@vuedoc/parser": "^2.0.0-beta.5",
-    "acorn": "^6.4.0",
+    "acorn": "^6.4.1",
     "ajv": "^6.11.0",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
