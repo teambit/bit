@@ -18,16 +18,13 @@ function clearStatusRow() {
   );
 }
 
-import fs from 'fs-extra';
-
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const stdoutProxy = new Proxy(process.stdout, {
-  get: function(obj, prop) {
+  get(obj, prop) {
     if (prop === 'write') {
       return originalStdoutWrite;
-    } else {
-      return obj[prop];
     }
+    return obj[prop];
   }
 });
 
