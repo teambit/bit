@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
+- support running `bit link` for specific components
 - fix capsule to not hang forever when running build/tag/isolate and npm emits errors
 - [#2482](https://github.com/teambit/bit/issues/2482) - delete component's cache upon mismatch
 - stabilize capsule by writing the same paths as the workspace relative to the component rootDir

@@ -700,11 +700,12 @@ workflows:
         generate_types:
           requires:
             - build
-      -
-        pack:
-          requires:
-            - build
-            - build_bit_javascript
+      # disable pack  temporary because of https://github.com/zeit/pkg/issues/883
+      # -
+      #   pack:
+      #     requires:
+      #       - build
+      #       - build_bit_javascript
       -
         e2e_test:
           filters:

@@ -370,8 +370,8 @@ export default class CommandHelper {
   link() {
     return this.runCmd('bit link');
   }
-  linkAndRewire() {
-    return this.runCmd('bit link --rewire');
+  linkAndRewire(ids = '') {
+    return this.runCmd(`bit link ${ids} --rewire`);
   }
 
   packComponent(id: string, options: Record<string, any>, extract = false) {

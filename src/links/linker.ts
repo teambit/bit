@@ -11,13 +11,13 @@ import { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import { BitIds } from '../bit-id';
+import { BitIds, BitId } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
 import { COMPONENT_ORIGINS } from '../constants';
 
-export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
-  const componentsIds = consumer.bitmapIds;
+export async function linkAllToNodeModules(consumer: Consumer, bitIds: BitId[] = []): Promise<LinksResult[]> {
+  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
