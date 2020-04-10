@@ -18,13 +18,37 @@ function clearStatusRow() {
   );
 }
 
+import fs from 'fs-extra';
+
+const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+const stdoutProxy = new Proxy(process.stdout, {
+  get: function(obj, prop) {
+    if (prop === 'write') {
+      return originalStdoutWrite;
+    } else {
+      return obj[prop];
+    }
+  }
+});
+
 export default class StatusLine {
   public buffer = SPACE_BUFFER;
-  private spinner: any = ora({ spinner: 'bouncingBar', stream: process.stdout }).stop();
+  private spinner: any = ora({ spinner: 'bouncingBar', stream: stdoutProxy, isEnabled: true }).stop();
   private spinnerLength = 7; // 6 for spinner, 1 for space after it
   private ids: Array<string> = [];
   constructor() {
     this.reRender = debounce(this.reRender, 100);
+    // @ts-ignore
+    process.stdout.write = (buffer, encoding, callback) => {
+      const wasSpinning = this.spinner.isSpinning;
+      if (wasSpinning) {
+        this.spinner.stop();
+      }
+      originalStdoutWrite(buffer, encoding, callback);
+      if (wasSpinning) {
+        this.spinner.start();
+      }
+    };
   }
   addId(id) {
     this.ids.push(id);
