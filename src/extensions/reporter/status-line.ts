@@ -18,6 +18,10 @@ function clearStatusRow() {
   );
 }
 
+// we send a proxy to the spinner instance rather than proxess.stdout
+// so that we would be able to bypass our monkey-patch of process.stdout
+// this is so that we won't have a case where the stdout "write" method
+// triggers itself through the spinner by doing "spinner.start()" or "spinner.stop()"
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const stdoutProxy = new Proxy(process.stdout, {
   get(obj, prop) {
@@ -36,6 +40,9 @@ export default class StatusLine {
   constructor() {
     this.reRender = debounce(this.reRender, 100);
     // @ts-ignore
+    // here we monkey-patch the process.stdout stream so that whatever is printed
+    // does not break the status line with the spinner, and that this line always
+    // remains at the bottom of the screen
     process.stdout.write = (buffer, encoding, callback) => {
       const wasSpinning = this.spinner.isSpinning;
       if (wasSpinning) {
