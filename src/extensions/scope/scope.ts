@@ -1,21 +1,31 @@
+import { Hook, hook, Extension } from '@teambit/harmony';
+import { loadConsumerIfExist } from '../../consumer';
+import { loadScopeIfExist } from '../../scope/scope-loader';
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
 import { BitIds as ComponentsIds } from '../../bit-id';
 import { Component, ComponentID } from '../component';
 import { ComponentHost } from '../../shared-types';
 
-// eslint-disable-next-line import/prefer-default-export
+export type TagTransformer = () => Component;
+
+@Extension()
 export class Scope implements ComponentHost {
-  public onBuild?: Function[];
+  // @todo remove this once new hook is working.
+  public onBuild?: Function[] = this.legacyScope?.onBuild;
+
+  /**
+   * allows the subscription of a set of component transformers to be applied during `Scope.tag`.
+   * prior to component versioning.
+   */
+  @hook('tag') tagTransformers = Hook.create<TagTransformer>();
+
   constructor(
     /**
      * legacy scope
      */
     readonly legacyScope?: LegacyScope
-  ) {
-    this.legacyScope = legacyScope;
-    this.onBuild = legacyScope?.onBuild;
-  }
+  ) {}
 
   // TODO: support lanes / other kind of objects
   /**
@@ -42,5 +52,26 @@ export class Scope implements ComponentHost {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const componentId = typeof id === 'string' ? ComponentID.fromString(id) : id;
     return undefined;
+  }
+
+  static async provide() {
+    // This is wrapped since there are cases when there is no scope, or something in the scope is invalid
+    // Those will be handled later
+    try {
+      const consumer = await loadConsumerIfExist();
+      let legacyScope;
+      if (consumer) {
+        legacyScope = consumer.scope;
+      } else {
+        legacyScope = await loadScopeIfExist();
+      }
+      if (!legacyScope) {
+        return undefined;
+      }
+
+      return new Scope(legacyScope);
+    } catch {
+      return undefined;
+    }
   }
 }

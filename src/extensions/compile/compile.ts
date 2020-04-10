@@ -1,4 +1,5 @@
 import path from 'path';
+import { Extension, subscribe } from '@teambit/harmony';
 import { Workspace } from '../workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
@@ -19,17 +20,14 @@ export type ComponentAndCapsule = {
 
 type buildHookResult = { id: BitId; dists?: Array<{ path: string; content: string }> };
 
+@Extension()
 export class Compile {
-  constructor(private workspace: Workspace, private flows: Flows, private scope: Scope) {
-    this.workspace = workspace;
-    this.flows = flows;
-    this.scope = scope;
+  constructor(private workspace: Workspace, private flows: Flows) {}
+  // const func = this.compileDuringBuild.bind(this);
+  // if (this.scope?.onBuild) this.scope.onBuild.push(func);
 
-    const func = this.compileDuringBuild.bind(this);
-    if (this.scope?.onBuild) this.scope.onBuild.push(func);
-  }
-
-  async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
+  @subscribe(Scope)
+  async tag(ids: BitId[]): Promise<buildHookResult[]> {
     const reportResults = await this.compile(ids.map(id => id.toString()));
     // the types are terrible. here is an example of such:
     /**

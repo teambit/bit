@@ -1,10 +1,10 @@
 import { provide } from './graph.provider';
 import { WorkspaceExt } from '../workspace';
-import { ScopeExt } from '../scope';
+import { Scope } from '../scope';
 import { ComponentFactoryExt } from '../component';
 
 export default {
   name: 'graph',
-  dependencies: [WorkspaceExt, ScopeExt, ComponentFactoryExt],
+  dependencies: [WorkspaceExt, Scope, ComponentFactoryExt],
   provider: provide
 };

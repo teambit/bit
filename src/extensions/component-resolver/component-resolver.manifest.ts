@@ -1,9 +1,9 @@
 import componentResolverProvider from './component-resolver.provider';
 import { WorkspaceExt } from '../../extensions/workspace';
-import { ScopeExt } from '../scope';
+import { Scope } from '../scope';
 
 export default {
   name: 'ComponentResolver',
-  dependencies: [WorkspaceExt, ScopeExt],
+  dependencies: [WorkspaceExt, Scope],
   provider: componentResolverProvider
 };

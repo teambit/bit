@@ -1,6 +1,6 @@
 import { ExtensionManifest } from '@teambit/harmony';
 import { WorkspaceExt } from '../workspace';
-import { ScopeExt } from '../scope';
+import { Scope } from '../scope';
 import provideBit from './bit.provider';
 import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
@@ -17,7 +17,7 @@ export default {
   name: 'Bit',
   dependencies: [
     WorkspaceExt,
-    ScopeExt,
+    Scope,
     FlowsExt,
     PackExt,
     CompileExt,
