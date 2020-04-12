@@ -774,7 +774,7 @@ workflows:
             - set_bitsrc_registry
   windows_e2e:
     jobs:
-      - checkout_code:
+      - windows_checkout_code:
           filters:
             branches:
               only:
