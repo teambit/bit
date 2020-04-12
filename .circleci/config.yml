@@ -5,8 +5,22 @@ default_image: &default_image
 default_resource_class: &default_resource_class
   resource_class: small
 
+windows_default_resource_size: &windows_default_resource_size
+  size: medium
+
 default_working_dir: &default_working_dir
   working_directory: ~/bit
+
+windows_default_working_dir: &windows_default_working_dir
+  working_directory: .\bit
+
+windows_default_executor_name: &windows_default_executor_name
+  name: win/default
+
+windows_default_executor: &windows_default_executor
+  executor:
+    <<: *windows_default_executor_name
+    <<: *windows_default_resource_size
 
 defaults: &defaults
   <<: *default_image
@@ -23,6 +37,9 @@ semver_tags_only_filters: &semver_tags_only_filters
       only: /^v[0-9]+(\.[0-9]+)*$/
 
 version: 2.1
+
+orbs:
+  win: circleci/windows@2.4.0
 jobs:
   checkout_code:
     <<: *defaults
@@ -661,6 +678,24 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  windows_checkout_code:
+    <<: *windows_default_executor
+    steps:
+      - checkout
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      # -
+      #   run:
+      #     name: 'clone bit-javascript'
+      #     command: ./scripts/clone-bit-javascript.sh
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit
+            - bit-javascript
 workflows:
   version: 2
   build_and_test:
@@ -712,6 +747,7 @@ workflows:
               ignore:
                 - performance-tests
                 - bit-hub-tests
+                - circle-windows
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -736,6 +772,13 @@ workflows:
             - build
             - set_ssh_key
             - set_bitsrc_registry
+  windows_e2e:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only:
+                - circle-windows
   deploy:
     jobs:
       - checkout_code:
