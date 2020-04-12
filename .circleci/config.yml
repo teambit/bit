@@ -825,7 +825,7 @@ jobs:
       #   restore_cache:
       #     keys:
       #       - 'builded-{{ checksum ".circle-sha" }}'
-      -
+      # -
         # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       #   run: 'chmod 400 ~/.ssh/id_rsa'
       # -
@@ -994,6 +994,8 @@ workflows:
       - windows_e2e_test:
           requires:
             - windows_build
+            - windows_set_ssh_key
+            - windows_set_bitsrc_registry
   deploy:
     jobs:
       - checkout_code:
