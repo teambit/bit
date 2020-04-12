@@ -680,8 +680,9 @@ jobs:
           path: bit/junit
   windows_checkout_code:
     <<: *windows_default_executor
+    working_directory: C:\Users\circleci\project\bit
     steps:
-      - run: mkdir bit; cd bit
+      # - run: mkdir bit; cd bit
       - checkout
       # - run: git config --global url.ssh://git@github.com.insteadOf https://github.com
       # - run: git config --global gc.auto 0
