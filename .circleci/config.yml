@@ -682,6 +682,8 @@ jobs:
     <<: *windows_default_executor
     steps:
       # - checkout
+      - run: git config --global url.ssh://git@github.com.insteadOf https://github.com
+      - run: git config --global gc.auto 0
       - run: git clone git@github.com:teambit/bit.git
       -
         run:
@@ -707,8 +709,16 @@ workflows:
             branches:
               ignore:
                 - circle-windows
-      - set_ssh_key
-      - set_bitsrc_registry
+      - set_ssh_key:
+          filters:
+            branches:
+              ignore:
+                - circle-windows
+      - set_bitsrc_registry:
+          filters:
+            branches:
+              ignore:
+                - circle-windows
       -
         install_npm_deps:
           requires:
@@ -753,6 +763,7 @@ workflows:
               ignore:
                 - performance-tests
                 - bit-hub-tests
+                - circle-windows
           requires:
             - set_ssh_key
             - set_bitsrc_registry
