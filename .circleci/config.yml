@@ -694,13 +694,35 @@ jobs:
       #   run:
       #     name: 'clone bit-javascript'
       #     command: ./scripts/clone-bit-javascript.sh
-      - run: dir
       -
         persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
             - bit
             - bit-javascript
+  windows_install_npm_deps:
+    <<: *windows_defaults
+    # skipping the pre-built binaries to make sure we build them by the pack step
+    # testing the install script will be done in different workflow dedicated for this
+    environment:
+      SKIP_FETCH_BINARY: true
+    steps:
+      -
+        attach_workspace:
+          at: .
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'Install npm dependencies'
+          command: 'cd bit; npm install'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/node_modules
 workflows:
   version: 2
   build_and_test:
@@ -796,6 +818,9 @@ workflows:
             branches:
               only:
                 - circle-windows
+      - windows_install_npm_deps:
+          requires:
+            - checkout_code
   deploy:
     jobs:
       - checkout_code:
