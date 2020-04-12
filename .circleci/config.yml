@@ -723,6 +723,149 @@ jobs:
           root: .
           paths:
             - bit/node_modules
+  windows_set_ssh_key:
+    <<: *windows_defaults
+    working_directory: C:\Users\circleci\.ssh
+    steps:
+      -
+        run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> id_rsa'
+      -
+        run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      -
+        run: 'echo "-----END RSA PRIVATE KEY-----" >> id_rsa'
+      -
+        run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      -
+        save_cache:
+          key: windoes_bitsrc-ssh-key-v1
+          paths:
+            - id_rsa
+            - id_rsa.pub
+  windows_set_bitsrc_registry:
+    <<: *windows_defaults
+    steps:
+      # TODO: update this to windows style
+      # prod registry
+      # -
+        # run: npm config set @bit:registry https://node.bit.dev
+      # -
+        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
+      # stage registry
+      -
+        run: 'npm config set @bit:registry https://node-stg.bit.dev'
+      -
+        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
+      -
+        save_cache:
+          # key: bitsrc-registry2
+          key: windows_bitsrc-registry-stg-v1
+          paths:
+            - .npmrc
+  windows_e2e_test:
+    <<: *windows_defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+    parallelism: 25
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'sudo npm i -g yarn'
+      -
+        run:
+          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+          name: 'update npm to latest version'
+          command: 'npm i -g npm@latest'
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
+          command: 'sudo apt-get install expect'
+      # -
+      #   run:
+      #     name: 'create global npm directory (to avoid using sudo for npm link)'
+      #     command: 'mkdir ~/.npm-global'
+      -
+        restore_cache:
+          key: bitsrc-ssh-key3
+      -
+        restore_cache:
+          # key: bitsrc-registry2
+          key: bitsrc-registry-stg-v2
+      -
+        restore_cache:
+          keys:
+            - 'builded-{{ checksum ".circle-sha" }}'
+      -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run: 'cd bit && mkdir junit'
+      # -
+      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      # -
+      #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && sudo npm link ../bit-javascript'
+      -
+        run: which bit
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        # do not change this one, it's important to use the production for getting components bit use for running
+        # if you want the tests to work with stage, you should change the hub domain few lines below
+        run: 'bit config set hub_domain hub.bit.dev'
+      # -
+      #   run:
+      #     name: 'bit import'
+      #     command: 'cd bit && bit import'
+      # -
+      #   run:
+      #     name: 'npm install'
+      #     command: 'cd bit && bit install'
+      -
+        # uncomment to configure circle to run against stg environment
+        run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run:
+          name: 'Run e2e tests'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          # command which support only - for debug purpose
+          # command: cd bit && npm run e2e-test-circle --debug
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      -
+        store_test_results:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: ~/Library/Caches/Bit/logs/debug.log
 workflows:
   version: 2
   build_and_test:
@@ -814,13 +957,19 @@ workflows:
   windows_e2e:
     jobs:
       - windows_checkout_code:
+          # TODO: remove this filter
           filters:
             branches:
               only:
                 - circle-windows
-      - windows_install_npm_deps:
-          requires:
-            - windows_checkout_code
+      - windows_set_ssh_key
+      - windows_set_bitsrc_registry
+      # - windows_install_npm_deps:
+      #     requires:
+      #       - windows_checkout_code
+      # - windows_e2e_test:
+      #     requires:
+      #       - windows_install_npm_deps
   deploy:
     jobs:
       - checkout_code:
