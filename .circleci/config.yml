@@ -690,9 +690,10 @@ jobs:
       #   run:
       #     name: 'clone bit-javascript'
       #     command: ./scripts/clone-bit-javascript.sh
+      - run: dir
       -
         persist_to_workspace:
-          root: .
+          root: C:\Users\circleci\project
           paths:
             - bit
             - bit-javascript
