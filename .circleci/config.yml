@@ -686,6 +686,8 @@ jobs:
     <<: *windows_defaults
     steps:
       - checkout
+      #TODO: remove this
+      - run: npm bin
       -
         run:
           name: 'save SHA to a file'
@@ -846,6 +848,10 @@ jobs:
       #     command: 'cd bit && sudo npm link ../bit-javascript'
       # -
       #   run: which bit
+      # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
+      - run: 'dir C:\Users\circleci\.npm-global\bit"'
+      - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin"'
+      - run: 'dir (npm bin)'
       -
         run: 'bit config set analytics_reporting false'
       -
