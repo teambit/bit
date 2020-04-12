@@ -820,7 +820,7 @@ workflows:
                 - circle-windows
       - windows_install_npm_deps:
           requires:
-            - checkout_code
+            - windows_checkout_code
   deploy:
     jobs:
       - checkout_code:
