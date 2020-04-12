@@ -681,7 +681,8 @@ jobs:
   windows_checkout_code:
     <<: *windows_default_executor
     steps:
-      - checkout
+      # - checkout
+      - run: git clone git@github.com:teambit/bit.git
       -
         run:
           name: 'save SHA to a file'
@@ -702,6 +703,10 @@ workflows:
   build_and_test:
     jobs:
       - checkout_code
+          filters:
+            branches:
+              ignore:
+                - circle-windows
       - set_ssh_key
       - set_bitsrc_registry
       -
@@ -748,7 +753,6 @@ workflows:
               ignore:
                 - performance-tests
                 - bit-hub-tests
-                - circle-windows
           requires:
             - set_ssh_key
             - set_bitsrc_registry
