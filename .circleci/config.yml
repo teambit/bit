@@ -756,6 +756,8 @@ jobs:
       -
         run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
       -
+        run: 'npm config ls'
+      -
         save_cache:
           # key: bitsrc-registry2
           key: windows_bitsrc-registry-stg-v1
