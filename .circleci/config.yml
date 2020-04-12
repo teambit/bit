@@ -849,8 +849,8 @@ jobs:
       # -
       #   run: which bit
       # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
-      - run: 'dir C:\Users\circleci\.npm-global\bit"'
-      - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin"'
+      - run: 'dir C:\Users\circleci\.npm-global\bit'
+      - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin'
       - run: 'dir C:\Users\circleci\project\bit\node_modules\.bin'
       - run: 'dir C:\Users\circleci\.npm-global\node_modules\.bin'
       -
