@@ -688,7 +688,7 @@ jobs:
       # TODO: remove this
       - run: $Env:Path
       # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
-      - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH
+      - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
       - run: $Env:Path
       # - run: Get-ChildItem Env:PATH
       # - run: Get-ChildItem Env:Path
