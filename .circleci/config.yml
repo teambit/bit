@@ -867,7 +867,7 @@ jobs:
       #   run: which bit
       # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
       # - run: 'dir "C:\Program Files\nodejs"'
-      - run: 'dir C:\Users\circleci\.npm-global'
+      # - run: 'dir C:\Users\circleci\.npm-global'
       # - run: 'dir C:\Users\circleci\.npm-global\bit'
       # - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin'
       # - run: 'dir C:\Users\circleci\project\bit\bit\node_modules\.bin'
@@ -897,6 +897,8 @@ jobs:
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
+      - run: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+      - run: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
       -
         run:
           name: 'Run e2e tests'
