@@ -9,9 +9,10 @@ New Extension Checklist
 * RFC - Create a PR with new folder in `src/extensions` which contains:
   - README.md What problem the new API solves.
   - Document API interface which should implement the solution.
+  - Commands decide on command product if needed.s
   - Failing test for at least 1 major happy flow.
-  - Figure out which user facing team members should be contacted.
-  - Review with other team member
+  - Find users for your extension.
+  - Review with another team member
   - Link to github issues related to the problem.
 * Impel - Create PR with implementation emphasis the following.
   - PR must pass all required tests.
@@ -21,7 +22,7 @@ New Extension Checklist
 * Ship
   - Merge to master.
   - Understand when extension will be distributed (NPM, bit.dev etc).
-  - Update user facing team members if needed (**).
+  - Update users of extension (**).
   - Update related github issues with progress if needed ()
 
  (*) Big diff is a code smell or a design issue.
