@@ -799,7 +799,7 @@ jobs:
     <<: *windows_defaults
     environment:
       BITSRC_ENV: stg
-    parallelism: 1
+    parallelism: 10
     steps:
       -
         attach_workspace:
