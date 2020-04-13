@@ -684,11 +684,13 @@ jobs:
           path: bit/junit
   windows_checkout_code:
     <<: *windows_defaults
+    environment:
+      Path: "C:\Users\circleci\.npm-global;$ENV:PATH"
     steps:
       # TODO: remove this
       - run: $Env:Path
       # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
-      - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
+      # - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
       - run: $Env:Path
       # - run: Get-ChildItem Env:PATH
       # - run: Get-ChildItem Env:Path
@@ -797,8 +799,6 @@ jobs:
   windows_e2e_test:
     <<: *windows_defaults
     environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     parallelism: 1
     steps:
