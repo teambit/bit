@@ -689,9 +689,9 @@ jobs:
     steps:
       # TODO: remove this
       - run: $Env:Path
-      - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
-      - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
-      - run: Set-Item -Path Env:Path -Value ($Env:Path + ";C:\Temp")
+      # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
+      # - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
+      # - run: Set-Item -Path Env:Path -Value ($Env:Path + ";C:\Temp")
       - run: setx path "C:\Users\circleci\.npm-global"
       - run: $Env:Path
       # - run: Get-ChildItem Env:PATH
@@ -704,7 +704,8 @@ jobs:
       -
         run:
           name: 'Run e2e tests'
-          command: echo $('circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings')
+          # command: echo $('circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings')
+          command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
       #TODO: enable this after make it work for windows
       # -
       #   run:
