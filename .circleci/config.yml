@@ -694,7 +694,7 @@ jobs:
       # - run: Get-ChildItem Env:Path
       # - run: Get-ChildItem Env:path
       # - run: 'dir C:\Users\circleci\.npm-global'
-      - run: 'dir C:\Program Files\nodejs'
+      - run: 'dir "C:\Program Files\nodejs"'
       # - run: 'dir C:\Users\circleci\.npm-global\node_modules'
       - checkout
       #TODO: remove this
@@ -859,7 +859,7 @@ jobs:
       # -
       #   run: which bit
       # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
-      - run: 'dir C:\Program Files\nodejs'
+      - run: 'dir "C:\Program Files\nodejs"'
       - run: 'dir C:\Users\circleci\.npm-global\bit'
       - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin'
       - run: 'dir C:\Users\circleci\project\bit\bit\node_modules\.bin'
