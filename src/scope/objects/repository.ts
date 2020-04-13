@@ -102,11 +102,11 @@ export default class Repository {
         return parsedObject;
       })
       .catch(err => {
-        if (err.code === 'ENOENT') {
-          logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
-        } else {
+        if (err.code !== 'ENOENT') {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+          throw err;
         }
+        logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
         if (throws) throw err;
         return null;
       });
