@@ -1180,13 +1180,14 @@ export default class Component {
       workspaceConfig
     });
 
-    const extensions: ExtensionDataList = componentConfig.extensions;
-    const extensionsAddedConfig = componentConfig.extensionsAddedConfig;
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {
       componentConfig.mergeWithComponentData(componentFromModel);
     }
+
+    const extensions: ExtensionDataList = componentConfig.extensions;
+    const extensionsAddedConfig = componentConfig.extensionsAddedConfig;
 
     const envsContext = {
       componentDir: bitDir,

@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { find, forEachObjIndexed } from 'ramda';
+import R, { find, forEachObjIndexed } from 'ramda';
 import { BitId } from '../../bit-id';
 import Consumer from '../consumer';
 import { ExtensionConfigList } from './extension-config-list';
@@ -30,6 +30,16 @@ export class ExtensionDataEntry {
   get isLegacy(): boolean {
     if (this.config?.__legacy) return true;
     return false;
+  }
+
+  clone(): ExtensionDataEntry {
+    return new ExtensionDataEntry(
+      this.legacyId,
+      this.extensionId?.clone(),
+      this.name,
+      R.clone(this.config),
+      R.clone(this.data)
+    );
   }
 }
 
@@ -76,6 +86,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
       };
     });
     return ExtensionConfigList.fromArray(arr);
+  }
+
+  clone(): ExtensionDataList {
+    const extensionDataEntries = this.map(extensionData => extensionData.clone());
+    return new ExtensionDataList(...extensionDataEntries);
   }
 
   _filterLegacy(): ExtensionDataList {
