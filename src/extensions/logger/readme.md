@@ -16,4 +16,7 @@ This extension provides a logging API for bit extensions. it solves several logg
 ** Users ** Reporter extension
 ** Related issues *** #2544 #2280
 
+Open issue: Should extension mention who he is when logging or get and instance of the logger with
+this baked inside.
+
 
