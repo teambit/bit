@@ -685,9 +685,9 @@ jobs:
   windows_checkout_code:
     <<: *windows_defaults
     steps:
+      - run: npm bin
       - checkout
       #TODO: remove this
-      - run: npm bin
       -
         run:
           name: 'save SHA to a file'
@@ -851,8 +851,8 @@ jobs:
       # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
       - run: 'dir C:\Users\circleci\.npm-global\bit'
       - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin'
-      - run: 'dir C:\Users\circleci\.npm-global\node_modules\.bin'
       - run: 'dir C:\Users\circleci\project\bit\bit\node_modules\.bin'
+      - run: 'dir C:\Users\circleci\.npm-global\node_modules\.bin'
       -
         run: 'bit config set analytics_reporting false'
       -
