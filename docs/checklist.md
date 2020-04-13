@@ -1,10 +1,11 @@
-Best Practices for APIs in bit
-==============================
+API checklist
+==============
 
-The new bit version harmony facilitates the tech side of creating new APIs in Bit cli by extensions. This document holds the best practices for those extensions.
+The new bit version harmony facilitates the tech side of creating new APIs in Bit cli by extensions.
+This document holds checklists for creating and changing APIs by extensions.
 
-New Extension Process
-=====================
+New Extension Checklist
+=======================
 * RFC - Create a PR with new folder in `src/extensions` which contains:
   - README.md What problem the new API solves.
   - Document API interface which should implement the solution.
@@ -26,9 +27,12 @@ New Extension Process
  (*) Big diff is a code smell or a design issue. Consult early on those.
  (**) Better involve people in RFC phase.
 
-Extension PR
-==============
+Extension PR checklist.
+======================
 Respect semver
-- Fix - if the PR just fixes bugs and no new API are added just roll with it.
-- Patch - Extending an existing extension as PR review for API or open RFC if it's a big change
-- Major - You are breaking the api. Behave like new extension
+
+- Fix: if the PR just fixes bugs and no new API are added just roll with it.
+- Patch:  All patches must be reviewed at least (decide if RFC is needed)
+- Major:  You are breaking the api. Perform new extension checklist.
+
+
