@@ -694,11 +694,13 @@ jobs:
       # - run: 'npm i'
       -
         run:
-          name: 'Run e2e tests'
-          command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+          name: 'write e2e files'
+          command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
+      - run: '$content = get-content spec-files.txt'
+      - run: 'npm run mocha-circleci $content'
       # - run: 'npm run mocha-circleci e2e\api\list.e2e.1.ts'
-      - run: ',@(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings) | %{&"npm run mocha-circleci" $_}'
-      - run: '&"npm run mocha-circleci" @(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings)'
+      # - run: ',@(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings) | %{&"npm run mocha-circleci" $_}'
+      # - run: '&"npm run mocha-circleci" @(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings)'
       #TODO: enable this after make it work for windows
       # -
       #   run:
