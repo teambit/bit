@@ -689,24 +689,14 @@ jobs:
     steps:
       # TODO: remove this
       - run: $Env:Path
-      # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
-      # - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH"
-      # - run: Set-Item -Path Env:Path -Value ($Env:Path + ";C:\Temp")
-      - run: setx path "C:\Users\circleci\.npm-global"
-      - run: $Env:Path
-      - run: 'npm -v'
-      # - run: Get-ChildItem Env:PATH
-      # - run: Get-ChildItem Env:Path
-      # - run: Get-ChildItem Env:path
-      # - run: 'dir C:\Users\circleci\.npm-global'
-      #- run: 'dir "C:\Program Files\nodejs"'
-      # - run: 'dir C:\Users\circleci\.npm-global\node_modules'
+      - run: 'npm i -g mocha'
       - checkout
       -
         run:
           name: 'Run e2e tests'
-          # command: echo $('circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings')
           command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+      - run: '&"npm run mocha-circleci" @(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings)'
+      - run: ',@(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings) | %{&"npm run mocha-circleci" $_}'
       #TODO: enable this after make it work for windows
       # -
       #   run:
@@ -858,22 +848,8 @@ jobs:
         run:
           name: 'npm link bit to global'
           command: cd bit; npm link
+      # this might be required if you try to update npm version
       - run: setx path "C:\Users\circleci\.npm-global"
-      # -
-      #   run:
-      #     name: 'npm link bit-javascript to bit'
-      #     command: 'cd bit && sudo npm link ../bit-javascript'
-      # -
-      #   run: which bit
-      # - run: 'rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"'
-      # - run: 'dir "C:\Program Files\nodejs"'
-      # - run: 'dir C:\Users\circleci\.npm-global'
-      # - run: 'dir C:\Users\circleci\.npm-global\bit'
-      # - run: 'dir C:\Users\circleci\.npm-global\node_modules\bit-bin'
-      # - run: 'dir C:\Users\circleci\project\bit\bit\node_modules\.bin'
-      # - run: 'dir C:\Users\circleci\.npm-global\node_modules\.bin'
-      # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
-      - run: 'which bit'
       -
         run: 'bit config set analytics_reporting false'
       -
@@ -886,14 +862,6 @@ jobs:
         # do not change this one, it's important to use the production for getting components bit use for running
         # if you want the tests to work with stage, you should change the hub domain few lines below
         run: 'bit config set hub_domain hub.bit.dev'
-      # -
-      #   run:
-      #     name: 'bit import'
-      #     command: 'cd bit && bit import'
-      # -
-      #   run:
-      #     name: 'npm install'
-      #     command: 'cd bit && bit install'
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
