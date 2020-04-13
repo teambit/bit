@@ -687,20 +687,21 @@ jobs:
     steps:
       # TODO: remove this
       - run: $Env:Path
-      - run: $Env:path += ";C:\Users\circleci\.npm-global"
+      # - run: '$Env:path += ";C:\Users\circleci\.npm-global"'
+      - run: $ENV:PATH="C:\Users\circleci\.npm-global;$ENV:PATH
       - run: $Env:Path
       # - run: Get-ChildItem Env:PATH
       # - run: Get-ChildItem Env:Path
       # - run: Get-ChildItem Env:path
       # - run: 'dir C:\Users\circleci\.npm-global'
-      - run: 'dir "C:\Program Files\nodejs"'
+      #- run: 'dir "C:\Program Files\nodejs"'
       # - run: 'dir C:\Users\circleci\.npm-global\node_modules'
       - checkout
-      #TODO: remove this
       -
         run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+          name: 'Run e2e tests'
+          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+      #TODO: enable this after make it work for windows
       # -
       #   run:
       #     name: 'clone bit-javascript'
@@ -894,7 +895,7 @@ jobs:
           name: 'Run e2e tests'
           command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
-          # command: cd bit && npm run e2e-test-circle --debug
+          # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
           when: always
