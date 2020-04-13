@@ -18,7 +18,7 @@ describe('compile extension', function() {
   });
   describe('workspace with a new compiler extension', () => {
     before(async () => {
-      helper.scopeHelper.initWorkspace();
+      helper.scopeHelper.initWorkspaceAndRemoteScope();
 
       const sourceDir = path.join(helper.fixtures.getFixturesDir(), 'components');
       const extensionsDir = path.join(helper.fixtures.getFixturesDir(), 'extensions');
@@ -33,13 +33,15 @@ describe('compile extension', function() {
       const bitjsonc = helper.bitJsonc.read();
       bitjsonc.variants.help = {
         extensions: {
-          'extensions/gulp-ts': {},
+          [`${helper.scopes.remote}/extensions/gulp-ts`]: {},
           compile: {
-            compiler: '#@bit/extensions.gulp-ts:transpile'
+            compiler: `#@bit/${helper.scopes.remote}.extensions.gulp-ts:transpile`
           }
         }
       };
       helper.bitJsonc.write(bitjsonc);
+
+      helper.bitJsonc.addDefaultScope();
 
       helper.npm.initNpm();
       const dependencies = {
@@ -56,6 +58,12 @@ describe('compile extension', function() {
       helper.command.runCmd('npm i');
 
       helper.command.runCmd('bit link');
+
+      // @todo: currently, the defaultScope is not enforced, so unless the extension is exported
+      // first, the full-id won't be recognized when loading the extension.
+      // once defaultScope is mandatory, make sure this is working without the next two lines
+      helper.command.tagComponent('extensions/gulp-ts');
+      helper.command.exportComponent('extensions/gulp-ts');
     });
     describe('compile from the cmd', () => {
       before(() => {
@@ -69,9 +77,7 @@ describe('compile extension', function() {
     });
     describe('tag the component', () => {
       before(() => {
-        // @todo: fix this. currently it needs to tag all then help.
-        helper.command.tagAllComponents();
-        helper.command.tagComponent('help -f');
+        helper.command.tagComponent('help');
       });
       it('should save the dists in the objects', () => {
         const catHelp = helper.command.catComponent('help@latest');
@@ -79,6 +85,33 @@ describe('compile extension', function() {
         const dists = catHelp.dists;
         const files = dists.map(d => d.relativePath);
         expect(files).to.include('help.js');
+      });
+      describe('export and import to another scope', () => {
+        before(() => {
+          helper.command.exportAllComponents();
+
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('help');
+        });
+        it('should import the extensions as well into the scope', () => {
+          const scopeList = helper.command.listLocalScopeParsed('--scope');
+          const ids = scopeList.map(entry => entry.id);
+          expect(ids).to.include(`${helper.scopes.remote}/extensions/gulp-ts`);
+        });
+        it('should not show the component as modified', () => {
+          helper.command.expectStatusToBeClean();
+        });
+        describe('running compile on the imported component', () => {
+          before(() => {
+            helper.command.runCmd('bit compile help');
+          });
+          it('should generate dists on the capsule', () => {
+            const helpCapsule = helper.command.getCapsuleOfComponent('help@0.0.1');
+            expect(path.join(helpCapsule, 'dist')).to.be.a.directory();
+            expect(path.join(helpCapsule, 'dist/help.js')).to.be.a.file();
+          });
+        });
       });
     });
   });

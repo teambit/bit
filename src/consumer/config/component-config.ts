@@ -125,6 +125,7 @@ export default class ComponentConfig extends AbstractConfig {
   mergeWithComponentData(component: Component) {
     this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
     this.lang = this.lang || component.lang;
+    this.extensions = this.extensions.length ? this.extensions : component.extensions;
   }
 
   /**

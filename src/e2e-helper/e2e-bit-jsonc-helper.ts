@@ -42,6 +42,16 @@ export default class BitJsoncHelper {
 
     this.addKeyVal(bitJsoncDir, 'variants', variants);
   }
+
+  addKeyValToWorkspace(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
+    const bitJsonc = this.read(bitJsoncDir);
+    bitJsonc.workspace[key] = val;
+    this.write(bitJsonc, bitJsoncDir);
+  }
+
+  addDefaultScope(scope = this.scopes.remote) {
+    this.addKeyValToWorkspace('defaultScope', scope);
+  }
 }
 
 function composePath(dir: string): string {
