@@ -20,17 +20,16 @@ New Extension Checklist
   - Type completions for API.
 * Ship
   - Merge to master.
-  - Understand when extension will be distributed.
+  - Understand when extension will be distributed (NPM, bit.dev etc).
   - Update user facing team members if needed (**).
   - Update related github issues with progress if needed ()
 
- (*) Big diff is a code smell or a design issue. Consult early on those.
- (**) Better involve people in RFC phase.
+ (*) Big diff is a code smell or a design issue.
+ (**) Better involve people in RFC phase. Early is better.
 
 Extension PR checklist.
 ======================
 Respect semver
-
 - Fix: if the PR just fixes bugs and no new API are added just roll with it.
 - Patch:  All patches must be reviewed at least (decide if RFC is needed)
 - Major:  You are breaking the api. Perform new extension checklist.
