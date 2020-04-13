@@ -691,6 +691,7 @@ jobs:
       - run: $Env:Path
       - run: 'npm i -g mocha'
       - checkout
+      - run: 'npm i'
       -
         run:
           name: 'Run e2e tests'
