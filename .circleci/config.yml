@@ -685,7 +685,7 @@ jobs:
   windows_checkout_code:
     <<: *windows_defaults
     environment:
-      Path: "C:\Users\circleci\.npm-global;$ENV:PATH"
+      Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
       # TODO: remove this
       - run: $Env:Path
