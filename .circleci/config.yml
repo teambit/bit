@@ -686,9 +686,8 @@ jobs:
     <<: *windows_defaults
     steps:
       # TODO: remove this
-      - run: npm install --global mocha
-      - run: which mocha
-      - run: npm bin
+      - run: $Env:Path
+      - run: $Env:path += ";C:\Users\circleci\.npm-global"
       - run: $Env:Path
       # - run: Get-ChildItem Env:PATH
       # - run: Get-ChildItem Env:Path
@@ -893,7 +892,7 @@ jobs:
       -
         run:
           name: 'Run e2e tests'
-          command: 'cd bit; circleci tests glob "e2e\**\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
