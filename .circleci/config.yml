@@ -685,7 +685,12 @@ jobs:
   windows_checkout_code:
     <<: *windows_defaults
     steps:
+      # TODO: remove this
+      - run: npm install --global mocha
+      - run: which mocha
       - run: npm bin
+      - run: 'dir C:\Users\circleci\.npm-global'
+      - run: 'dir C:\Users\circleci\.npm-global\node_modules'
       - checkout
       #TODO: remove this
       -
