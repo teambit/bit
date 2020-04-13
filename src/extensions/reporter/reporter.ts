@@ -45,11 +45,9 @@ export default class Reporter {
     this.statusLine.reRender(text);
   }
   info(...messages) {
-    if (this.shouldWriteOutput) {
-      this.statusLine.stopSpinner();
-      console.log(messages); // TODO: default color/style
-      this.statusLine.reRender(this.phaseName);
-    }
+    this.statusLine.stopSpinner();
+    console.log(chalk.bold(messages.join(' '))); // TODO: default color/style
+    this.statusLine.startSpinner();
   }
   createLogger(id) {
     const logger = new Logger();
