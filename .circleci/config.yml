@@ -694,6 +694,7 @@ jobs:
       # - run: Set-Item -Path Env:Path -Value ($Env:Path + ";C:\Temp")
       - run: setx path "C:\Users\circleci\.npm-global"
       - run: $Env:Path
+      - run: 'npm -v'
       # - run: Get-ChildItem Env:PATH
       # - run: Get-ChildItem Env:Path
       # - run: Get-ChildItem Env:path
@@ -808,13 +809,15 @@ jobs:
       -
         attach_workspace:
           at: .
+      - run: $Env:Path
       -
         run: 'npm i -g yarn'
-      -
-        run:
-          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-          name: 'update npm to latest version'
-          command: 'npm i -g npm@latest'
+      - run: 'npm -v'
+      # -
+      #   run:
+      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+      #     name: 'update npm to latest version'
+      #     command: 'npm i -g npm@latest'
       # -
       #   run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
