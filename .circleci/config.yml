@@ -692,11 +692,11 @@ jobs:
       - run: 'npm i -g mocha'
       - checkout
       # - run: 'npm i'
-      -
-        run:
-          name: 'write e2e files'
-          command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
-      - run: '$content = get-content spec-files.txt; npm run mocha-circleci $content'
+      # -
+      #   run:
+      #     name: 'write e2e files'
+      #     command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
+      # - run: '$content = get-content spec-files.txt; npm run mocha-circleci $content'
       # - run: '$content = get-content spec-files.txt'
       # - run: 'npm run mocha-circleci $content'
       # - run: 'npm run mocha-circleci e2e\api\list.e2e.1.ts'
@@ -870,17 +870,31 @@ jobs:
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
-      - run: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
-      - run: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+      # - run: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+      # - run: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
+      -
+        run:
+          name: 'write e2e files'
+          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
+      # - run: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
       -
         run:
           name: 'Run e2e tests'
-          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
           # command which support only - for debug purpose
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
           when: always
+      # -
+      #   run:
+      #     name: 'Run e2e tests'
+      #     command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+      #     # command which support only - for debug purpose
+      #     # command: cd bit; npm run e2e-test-circle --debug
+      #     environment:
+      #       MOCHA_FILE: junit\e2e-test-results.xml
+      #     when: always
       -
         store_test_results:
           path: bit\junit
