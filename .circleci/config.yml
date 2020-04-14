@@ -799,7 +799,8 @@ jobs:
     <<: *windows_defaults
     environment:
       BITSRC_ENV: stg
-    parallelism: 1
+      SKIP_REGISTRY_TESTS: true
+    parallelism: 20
     steps:
       -
         attach_workspace:

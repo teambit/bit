@@ -54,7 +54,7 @@ describe('bit eject command', function() {
     });
   });
 
-  (supportNpmCiRegistryTesting ? describe.only : describe.skip)('using a registry', function() {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('using a registry', function() {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       npmCiRegistry = new NpmCiRegistry(helper);
