@@ -687,21 +687,7 @@ jobs:
     environment:
       Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
-      # TODO: remove this
-      - run: $Env:Path
-      - run: 'npm i -g mocha'
       - checkout
-      # - run: 'npm i'
-      # -
-      #   run:
-      #     name: 'write e2e files'
-      #     command: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
-      # - run: '$content = get-content spec-files.txt; npm run mocha-circleci $content'
-      # - run: '$content = get-content spec-files.txt'
-      # - run: 'npm run mocha-circleci $content'
-      # - run: 'npm run mocha-circleci e2e\api\list.e2e.1.ts'
-      # - run: ',@(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings) | %{&"npm run mocha-circleci" $_}'
-      # - run: '&"npm run mocha-circleci" @(circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings)'
       #TODO: enable this after make it work for windows
       # -
       #   run:
@@ -734,7 +720,6 @@ jobs:
   windows_set_bitsrc_registry:
     <<: *windows_defaults
     steps:
-      # TODO: update this to windows style
       # prod registry
       # -
         # run: npm config set @bit:registry https://node.bit.dev
@@ -746,10 +731,7 @@ jobs:
       -
         run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> .npmrc'
       -
-        run: 'npm config ls'
-      -
         save_cache:
-          # key: bitsrc-registry2
           key: windows_bitsrc-registry-stg-v1
           paths:
             - .npmrc
@@ -765,10 +747,6 @@ jobs:
           at: .
       -
         run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      -
-        run:
           name: 'Install npm dependencies'
           command: 'cd bit; npm install'
       -
@@ -782,10 +760,6 @@ jobs:
       -
         attach_workspace:
           at: .
-      -
-        run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
           name: 'Build bit source code'
@@ -814,26 +788,18 @@ jobs:
       #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
       #     name: 'update npm to latest version'
       #     command: 'npm i -g npm@latest'
-      # -
-      #   run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      #
+      # this might be required if you try to update npm version
+      # - run: setx path "C:\Users\circleci\.npm-global"
       -
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      # -
-      #   run:
-      #     name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
-      #     command: 'sudo apt-get install expect'
-      # -
-      #   run:
-      #     name: 'create global npm directory (to avoid using sudo for npm link)'
-      #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
           key: windows_bitsrc-ssh-key-v1
       -
         restore_cache:
-          # key: bitsrc-registry2
           key: windows_bitsrc-registry-stg-v1
       # -
       #   restore_cache:
@@ -846,16 +812,10 @@ jobs:
       #   run: 'ssh-add ~/.ssh/id_rsa'
       -
         run: 'cd bit; mkdir junit'
-      # -
-      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
-      # -
-      #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
         run:
           name: 'npm link bit to global'
           command: cd bit; npm link
-      # this might be required if you try to update npm version
-      - run: setx path "C:\Users\circleci\.npm-global"
       -
         run: 'bit config set analytics_reporting false'
       -
@@ -871,37 +831,26 @@ jobs:
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
-      # - run: 'circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
-      # - run: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings'
       -
         run:
           name: 'write e2e files'
           command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
-      # - run: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
       -
         run:
-          name: 'Run e2e tests'
+          name: 'run e2e tests'
           command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
-          # command which support only - for debug purpose
+          # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit\e2e-test-results.xml
           when: always
-      # -
-      #   run:
-      #     name: 'Run e2e tests'
-      #     command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
-      #     # command which support only - for debug purpose
-      #     # command: cd bit; npm run e2e-test-circle --debug
-      #     environment:
-      #       MOCHA_FILE: junit\e2e-test-results.xml
-      #     when: always
       -
         store_test_results:
           path: bit\junit
       -
         store_artifacts:
           path: bit\junit
+      # TODO: make it work for windows
       # -
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
