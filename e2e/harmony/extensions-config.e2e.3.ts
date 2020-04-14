@@ -151,6 +151,26 @@ describe('harmony extension config', function() {
           });
         });
       });
+      describe('imported component', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+          helper.scopeHelper.reInitRemoteScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.tagComponent('dummy-extension');
+          helper.command.exportComponent('dummy-extension');
+          helper.extensions.setExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.command.tagAllComponents();
+          helper.command.exportAllComponents();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('bar/foo');
+        });
+        it('should auto-import the extensions as well', () => {
+          const scopeList = helper.command.listLocalScopeParsed('--scope');
+          const ids = scopeList.map(entry => entry.id);
+          expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
+        });
+      });
     });
   });
   describe('config added by extension', function() {

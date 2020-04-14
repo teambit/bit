@@ -9,6 +9,7 @@ import { join } from 'path';
 import { CACHE_ROOT } from '../../constants';
 import { Capsule } from '../isolator/capsule';
 import ConsumerComponent from '../../consumer/component';
+import { AbstractVinyl } from '../../consumer/component/sources';
 
 export class ExecutionCache {
   constructor(private pathToCache: string) {}
@@ -20,7 +21,9 @@ export class ExecutionCache {
     const consumerComponent = (capsule.component as any) as ConsumerComponent;
     // capsule.component..extensions.flows
     const { files, packageJsonFile } = consumerComponent;
-    const content = `${configString}\n${capsule.wrkDir}\n${[...files, packageJsonFile!.toVinylFile()]
+    const vinylFiles: AbstractVinyl[] = [...files];
+    if (packageJsonFile) vinylFiles.push(packageJsonFile.toVinylFile());
+    const content = `${configString}\n${capsule.wrkDir}\n${vinylFiles
       .map(file => (file.contents || '').toString())
       .join('\n')}`;
     const md5 = createHash('md5', { encoding: 'utf8' })
