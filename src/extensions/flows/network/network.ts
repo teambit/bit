@@ -5,6 +5,7 @@
 import { ReplaySubject } from 'rxjs';
 import PQueue from 'p-queue/dist';
 import { Graph } from 'graphlib';
+import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
 import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
@@ -31,7 +32,8 @@ export class Network {
     private seeders: ComponentID[],
     private getFlow: GetFlow,
     private getGraph = getWorkspaceGraph,
-    private postFlow?: PostFlow
+    private postFlow?: PostFlow,
+    private emitter = new EventEmitter()
   ) {}
 
   async execute(options: ExecutionOptions) {
@@ -45,10 +47,16 @@ export class Network {
 
     const graph = await this.createGraph(options);
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
+    this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
     const q = new PQueue({ concurrency: options.concurrency });
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph, q);
     await walk();
+    this.emitter.emit('executionEnded');
     return networkStream;
+  }
+
+  onWorkspaceLoaded(cb) {
+    this.emitter.on('workspaceLoaded', cb);
   }
 
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph, q: PQueue) {

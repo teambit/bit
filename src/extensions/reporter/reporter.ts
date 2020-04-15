@@ -44,9 +44,16 @@ export default class Reporter {
   setStatusText(text) {
     this.statusLine.reRender(text);
   }
+  title(...messages) {
+    this.statusLine.stopSpinner();
+    console.log('');
+    console.log(chalk.bold(messages.join(' '))); // TODO: default color/style
+    console.log('');
+    this.statusLine.startSpinner();
+  }
   info(...messages) {
     this.statusLine.stopSpinner();
-    console.log(chalk.bold(messages.join(' '))); // TODO: default color/style
+    console.log(...messages);
     this.statusLine.startSpinner();
   }
   createLogger(id) {
