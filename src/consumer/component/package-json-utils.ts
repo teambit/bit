@@ -66,11 +66,9 @@ export async function changeDependenciesToRelativeSyntax(
     const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentRootDir);
     if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
     const devDeps = getPackages(component.devDependencies.getAllIds(), componentMap);
-    const compilerDeps = getPackages(component.compilerDependencies.getAllIds(), componentMap);
-    const testerDeps = getPackages(component.testerDependencies.getAllIds(), componentMap);
     const extensionDeps = getPackages(component.extensions.extensionsBitIds, componentMap);
     packageJsonFile.addDependencies(getPackages(component.dependencies.getAllIds(), componentMap));
-    packageJsonFile.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps, ...extensionDeps });
+    packageJsonFile.addDevDependencies({ ...devDeps, ...extensionDeps });
     return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
@@ -135,8 +133,6 @@ export function preparePackageJsonToWrite(
   };
   const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
   const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
-  const bitCompilerDependencies = getBitDependencies(component.compilerDependencies.getAllIds());
-  const bitTesterDependencies = getBitDependencies(component.testerDependencies.getAllIds());
   const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
   const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
@@ -145,8 +141,6 @@ export function preparePackageJsonToWrite(
     packageJsonFile.addDependencies(bitDependencies);
     packageJsonFile.addDevDependencies({
       ...bitDevDependencies,
-      ...bitCompilerDependencies,
-      ...bitTesterDependencies,
       ...bitExtensionDependencies
     });
   };
