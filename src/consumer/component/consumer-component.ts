@@ -486,7 +486,7 @@ export default class Component {
   get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
     return {
       dependencies: this.dependencies.getAllIds(),
-      devDependencies: this.dependencies.getAllIds(),
+      devDependencies: this.devDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds
     };
   }
