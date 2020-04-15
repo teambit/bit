@@ -5,6 +5,7 @@
 import { ReplaySubject } from 'rxjs';
 import PQueue from 'p-queue/dist';
 import { Graph } from 'graphlib';
+import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
 import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
@@ -13,8 +14,6 @@ import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator/capsule';
-
-import { EventEmitter } from 'events';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-classes-per-file */
 import { path } from 'ramda';
+import { EventEmitter } from 'events';
 import { Workspace } from '../workspace';
 import { Network, GetFlow } from './network';
 import { ComponentID } from '../component';
@@ -11,8 +12,6 @@ import { BitId } from '../../bit-id';
 import { Capsule } from '../isolator/capsule';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
-
-import { EventEmitter } from 'events';
 
 export class Flows {
   private emitter = new EventEmitter();
