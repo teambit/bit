@@ -27,10 +27,17 @@ export class RunCmd implements Command {
   constructor(private flows: Flows, private reporter: Reporter) {}
 
   async render([flow, components]: CLIArgs, { parallel, noCache, verbose }: Flags) {
+    this.reporter.title(`Starting "${flow}"`);
     const concurrencyN = parallel && typeof parallel === 'string' ? Number.parseInt(parallel) : 5;
     const actualComps = typeof components === 'string' ? [components] : components;
     const comps = this.flows.getIds(actualComps);
-    this.reporter.startPhase('Flows execution');
+    this.reporter.title('Setting up component execution');
+    this.reporter.setStatusText('Resolving Components from the workspace ([COUNTER-TBD])...');
+    this.flows.onWorkspaceLoaded(numComponents => {
+      this.reporter.info(`V ${numComponents} Components resolved`);
+      this.reporter.title('Executing flows');
+      this.reporter.setStatusText('[COUNTER-TBD] Components remaining. Running');
+    });
     const result = await this.flows.runStream(comps, flow as string, { concurrency: concurrencyN, caching: !noCache });
 
     const report = await handleRunStream(result, this.reporter, verbose as boolean);
