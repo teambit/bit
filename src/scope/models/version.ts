@@ -258,7 +258,7 @@ export default class Version extends BitObject {
   get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
     return {
       dependencies: this.dependencies.getAllIds(),
-      devDependencies: this.dependencies.getAllIds(),
+      devDependencies: this.devDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds
     };
   }
@@ -275,7 +275,7 @@ export default class Version extends BitObject {
 
   getAllDependenciesIds(): BitIds {
     const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
-    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+    return BitIds.fromArray(allDependencies);
   }
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
