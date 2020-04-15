@@ -483,6 +483,14 @@ export default class Component {
     return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
   }
 
+  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+    return {
+      dependencies: this.dependencies.getAllIds(),
+      devDependencies: this.dependencies.getAllIds(),
+      extensionDependencies: this.extensions.extensionsBitIds
+    };
+  }
+
   hasDependencies(): boolean {
     const allDependencies = this.getAllDependencies();
     return Boolean(allDependencies.length);

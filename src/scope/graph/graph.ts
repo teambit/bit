@@ -5,7 +5,6 @@ import ComponentsList from '../../consumer/component/components-list';
 import Component from '../../consumer/component';
 import { ModelComponent, Version } from '../models';
 import { BitId } from '../../bit-id';
-import { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
 import { loadScope } from '../index';
 import Scope from '../scope';
 
@@ -38,10 +37,10 @@ export default class Graph extends GraphLib {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    DEPENDENCIES_TYPES.forEach(depType => {
-      component[depType].get().forEach(dependency => {
-        const depIdStr = dependency.id.toString();
-        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+      depIds.forEach(dependencyId => {
+        const depIdStr = dependencyId.toString();
+        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
         graph.setEdge(idStr, depIdStr, depType);
       });
     });
@@ -88,9 +87,9 @@ export default class Graph extends GraphLib {
     await this.addScopeComponentsAsNodes(allModelComponents, graph, workspaceComponents, onlyLatest);
     R.forEach((componentId: string) => {
       const component: Component = graph.node(componentId);
-      DEPENDENCIES_TYPES.forEach(depType => {
-        component[depType].get().forEach(dependency => {
-          const depIdStr = dependency.id.toString();
+      Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+        depIds.forEach(dependencyId => {
+          const depIdStr = dependencyId.toString();
           if (graph.hasNode(depIdStr)) {
             graph.setEdge(componentId, depIdStr, depType);
           }

@@ -7,7 +7,6 @@ import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
 import Consumer from '../consumer';
-import { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';

@@ -2,14 +2,13 @@ import R from 'ramda';
 import graphLib, { Graph as GraphLib } from 'graphlib';
 import Graph from './graph';
 import Component from '../../consumer/component/consumer-component';
-import Dependencies, { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
+import Dependencies from '../../consumer/component/dependencies/dependencies';
 import loadFlattenedDependenciesForCapsule from '../../consumer/component-ops/load-flattened-dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { Dependency } from '../../consumer/component/dependencies';
 import { Scope } from '..';
 
 export type AllDependenciesGraphs = {
@@ -122,12 +121,9 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
     }
   };
   components.forEach((component: Component) => {
-    DEPENDENCIES_TYPES.forEach(depType => {
-      component[depType].get().forEach((dependency: Dependency) => {
-        setEdge(component.id, dependency.id, depType);
-      });
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+      depIds.forEach(depId => setEdge(component.id, depId, depType));
     });
-    component.extensions.extensionsBitIds.forEach(depId => setEdge(component.id, depId, 'extensionDependencies'));
   });
 
   // uncomment to print the graph content

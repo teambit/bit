@@ -11,7 +11,6 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import { Dependency } from './dependencies';
 
 export default class ComponentLoader {
   _componentsCache: Record<string, any> = {}; // cache loaded components
