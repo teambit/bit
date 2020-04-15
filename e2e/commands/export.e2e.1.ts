@@ -376,7 +376,7 @@ describe('bit export command', function() {
       remote2 = scopeName;
       remote2Path = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent('utils/is-string2', remote2);
+      helper.command.exportComponent('utils/is-string2', remote2, true, '--force');
     });
     it('should have is-type@0.0.2 on that remote', () => {
       const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
