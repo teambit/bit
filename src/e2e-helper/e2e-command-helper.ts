@@ -114,7 +114,7 @@ export default class CommandHelper {
     return this.runCmd(`bit untag ${id}`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true) {
-    const result = this.runCmd(`bit export ${scope} ${id} --force`);
+    const result = this.runCmd(`bit export ${scope} ${id}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }

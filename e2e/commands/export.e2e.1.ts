@@ -1261,4 +1261,22 @@ describe('bit export command', function() {
       });
     });
   });
+  describe('re-export using the component name without the scope name', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      output = helper.command.exportComponent('bar/foo');
+    });
+    // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }
+    it('should not show the "fork" prompt', () => {
+      expect(output).to.have.string('exported 1 components');
+    });
+  });
 });
