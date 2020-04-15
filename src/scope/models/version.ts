@@ -232,6 +232,10 @@ export default class Version extends BitObject {
     );
   }
 
+  get extensionDependencies() {
+    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+  }
+
   getAllFlattenedDependencies(): BitIds {
     return BitIds.fromArray([
       ...this.flattenedDependencies,
@@ -246,7 +250,8 @@ export default class Version extends BitObject {
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
       ...this.compilerDependencies.dependencies,
-      ...this.testerDependencies.dependencies
+      ...this.testerDependencies.dependencies,
+      ...this.extensionDependencies.dependencies
     ];
   }
 
