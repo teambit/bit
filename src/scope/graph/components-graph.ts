@@ -113,17 +113,21 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   });
 
   // set edges
+  const setEdge = (compId: BitId, depId: BitId, depType: string) => {
+    const depIdStr = depId.toString();
+    if (direction === 'normal') {
+      graph.setEdge(compId.toString(), depIdStr, depType);
+    } else {
+      graph.setEdge(depIdStr, compId.toString(), depType);
+    }
+  };
   components.forEach((component: Component) => {
     DEPENDENCIES_TYPES.forEach(depType => {
       component[depType].get().forEach((dependency: Dependency) => {
-        const depIdStr = dependency.id.toString();
-        if (direction === 'normal') {
-          graph.setEdge(component.id.toString(), depIdStr, depType);
-        } else {
-          graph.setEdge(depIdStr, component.id.toString(), depType);
-        }
+        setEdge(component.id, dependency.id, depType);
       });
     });
+    component.extensions.extensionsBitIds.forEach(depId => setEdge(component.id, depId, 'extensionDependencies'));
   });
 
   // uncomment to print the graph content

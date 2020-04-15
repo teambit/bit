@@ -975,12 +975,14 @@ export default class Component {
     const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
     const compilerDependencies = await getDependenciesComponents(getFlatten('flattenedCompilerDependencies'));
     const testerDependencies = await getDependenciesComponents(getFlatten('flattenedTesterDependencies'));
+    const extensionDependencies = await getDependenciesComponents(this.extensions.extensionsBitIds);
     return new ComponentWithDependencies({
       component: this,
       dependencies,
       devDependencies,
       compilerDependencies,
-      testerDependencies
+      testerDependencies,
+      extensionDependencies
     });
   }
 

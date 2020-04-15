@@ -23,21 +23,20 @@ export default async function writeComponentsToCapsules(
   const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const getDeps = (dependencies: Dependencies) =>
-      dependencies
-        .get()
-        .map(dep => graph.node(dep.id.toString()))
-        .map(c => c.clone());
+    const getClonedFromGraph = (id: BitId): ConsumerComponent => graph.node(id.toString()).clone();
+    const getDeps = (dependencies: Dependencies) => dependencies.get().map(dep => getClonedFromGraph(dep.id));
     const dependencies = getDeps(component.dependencies);
     const devDependencies = getDeps(component.devDependencies);
     const compilerDependencies = getDeps(component.compilerDependencies);
     const testerDependencies = getDeps(component.testerDependencies);
+    const extensionDependencies = component.extensions.extensionsBitIds.map(getClonedFromGraph);
     return new ComponentWithDependencies({
       component,
       dependencies,
       devDependencies,
       compilerDependencies,
-      testerDependencies
+      testerDependencies,
+      extensionDependencies
     });
   });
   const concreteOpts: ManyComponentsWriterParams = {
