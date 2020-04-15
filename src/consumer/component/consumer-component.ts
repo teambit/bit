@@ -479,8 +479,8 @@ export default class Component {
   }
 
   getAllDependenciesIds(): BitIds {
-    const allDependencies = this.getAllDependencies();
-    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    return BitIds.fromArray(allDependencies);
   }
 
   get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
@@ -492,7 +492,7 @@ export default class Component {
   }
 
   hasDependencies(): boolean {
-    const allDependencies = this.getAllDependencies();
+    const allDependencies = this.getAllDependenciesIds();
     return Boolean(allDependencies.length);
   }
 
