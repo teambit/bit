@@ -158,11 +158,11 @@ export default class ScopeHelper {
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
    * cloned scope.
    */
-  cloneLocalScope() {
+  cloneLocalScope(dereferenceSymlinks = true) {
     const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
-    fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: true });
+    fs.copySync(this.scopes.localPath, clonedScopePath, { dereference: dereferenceSymlinks });
     this.clonedScopes.push(clonedScopePath);
     return clonedScopePath;
   }
