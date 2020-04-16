@@ -7,7 +7,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
+import { resolveGroupId, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
@@ -63,7 +63,7 @@ export default class Repository {
   }
 
   ensureDir() {
-    return mkdirp(this.getPath());
+    return fs.ensureDir(this.getPath());
   }
 
   getPath() {
