@@ -394,7 +394,7 @@ describe('bit export command', function() {
     describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
       before(() => {
         helper.command.importComponent('utils/is-string1');
-        output = helper.command.exportComponent('utils/is-string1', remote2);
+        output = helper.command.exportComponent('utils/is-string1', remote2, true, '--force');
       });
       it('should not throw an error saying it does not have the version 0.0.1 of the dependency', () => {
         expect(output).to.not.have.string('failed loading version 0.0.1');
