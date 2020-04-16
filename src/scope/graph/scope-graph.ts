@@ -3,7 +3,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { ModelComponent, Version } from '../models';
 import { VERSION_DELIMITER } from '../../constants';
 import Scope from '../scope';
-import { DEPENDENCIES_TYPES, DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
+import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
 import Component from '../../consumer/component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import Consumer from '../../consumer/consumer';
@@ -159,10 +159,10 @@ export default class DependencyGraph {
     const idStr = id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    DEPENDENCIES_TYPES.forEach(depType => {
-      component[depType].get().forEach(dependency => {
-        const depIdStr = dependency.id.toString();
-        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependency.id);
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+      depIds.forEach(dependencyId => {
+        const depIdStr = dependencyId.toString();
+        if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);
         if (reverse) {
           graph.setEdge(depIdStr, idStr, depType);
         } else {

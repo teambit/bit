@@ -22,6 +22,7 @@ import { buildComponentsGraph } from '../graph/components-graph';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { getAllFlattenedDependencies } from './get-flattened-dependencies';
 import { ExtensionDataEntry } from '../../consumer/config/extension-data';
+import GeneralError from '../../error/general-error';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency | ExtensionDataEntry, idFieldName = 'id') => {
@@ -30,7 +31,9 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
     );
     if (foundDependency) {
       dependency[idFieldName] = dependency[idFieldName].changeVersion(foundDependency.version);
+      return true;
     }
+    return false;
   };
   componentsToTag.forEach(oneComponentToTag => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
@@ -39,7 +42,11 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
       // For core extensions there won't be an extensionId but name
       // We only want to add version to external extensions not core extensions
       if (extension.extensionId) {
-        updateDependencyVersion(extension, 'extensionId');
+        const wasDependencyFound = updateDependencyVersion(extension, 'extensionId');
+        if (!wasDependencyFound && !extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
+          throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
+this extension was not included in the tag command.`);
+        }
       }
     });
   });

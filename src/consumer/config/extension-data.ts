@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import R, { find, forEachObjIndexed } from 'ramda';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import Consumer from '../consumer';
 import { ExtensionConfigList } from './extension-config-list';
 
@@ -47,6 +47,14 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   get ids(): string[] {
     const list = this.map(entry => entry.stringId);
     return list;
+  }
+
+  /**
+   * returns only new 3rd party extension ids, not core, nor legacy.
+   */
+  get extensionsBitIds(): BitIds {
+    const bitIds = this.filter(entry => entry.extensionId).map(entry => entry.extensionId) as BitId[];
+    return BitIds.fromArray(bitIds);
   }
 
   findExtension(extensionId: string, ignoreVersion = false): ExtensionDataEntry | undefined {

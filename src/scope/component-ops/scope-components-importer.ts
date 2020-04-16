@@ -169,6 +169,7 @@ export default class ScopeComponentsImporter {
     const devDependencies = await this.importManyWithoutDependencies(version.flattenedDevDependencies);
     const compilerDependencies = await this.importManyWithoutDependencies(version.flattenedCompilerDependencies);
     const testerDependencies = await this.importManyWithoutDependencies(version.flattenedTesterDependencies);
+    const extensionsDependencies = await this.importManyWithoutDependencies(version.extensions.extensionsBitIds);
 
     return new VersionDependencies(
       versionComp,
@@ -176,6 +177,7 @@ export default class ScopeComponentsImporter {
       devDependencies,
       compilerDependencies,
       testerDependencies,
+      extensionsDependencies,
       source
     );
   }
@@ -243,7 +245,12 @@ export default class ScopeComponentsImporter {
 
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
-        .fetch(left.map(def => def.id), this.scope, undefined, context)
+        .fetch(
+          left.map(def => def.id),
+          this.scope,
+          undefined,
+          context
+        )
         .then(componentObjects => {
           logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
           return this.scope.writeManyComponentsToModel(componentObjects, persist);
@@ -342,7 +349,12 @@ export default class ScopeComponentsImporter {
         `getExternalOnes: ${left.length} left. Fetching them from a remote`
       );
       return remotes
-        .fetch(left.map(def => def.id), this.scope, true, context)
+        .fetch(
+          left.map(def => def.id),
+          this.scope,
+          true,
+          context
+        )
         .then(componentObjects => {
           return this.scope.writeManyComponentsToModel(componentObjects);
         })
