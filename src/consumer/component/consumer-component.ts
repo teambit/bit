@@ -455,6 +455,10 @@ export default class Component {
     return BitIds.fromObject(this.flattenedTesterDependencies);
   }
 
+  get extensionDependencies() {
+    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+  }
+
   getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,

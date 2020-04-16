@@ -16,6 +16,7 @@ export type AllDependenciesGraphs = {
   graphDevDeps: GraphLib;
   graphCompilerDeps: GraphLib;
   graphTesterDeps: GraphLib;
+  graphExtensionDeps: GraphLib;
 };
 
 export function buildComponentsGraph(components: Component[]): AllDependenciesGraphs {
@@ -23,13 +24,15 @@ export function buildComponentsGraph(components: Component[]): AllDependenciesGr
   const graphDevDeps = new GraphLib();
   const graphCompilerDeps = new GraphLib();
   const graphTesterDeps = new GraphLib();
+  const graphExtensionDeps = new GraphLib();
   components.forEach(component => {
     _setGraphEdges(component.id, component.dependencies, graphDeps);
     _setGraphEdges(component.id, component.devDependencies, graphDevDeps);
     _setGraphEdges(component.id, component.compilerDependencies, graphCompilerDeps);
     _setGraphEdges(component.id, component.testerDependencies, graphTesterDeps);
+    _setGraphEdges(component.id, component.extensionDependencies, graphExtensionDeps);
   });
-  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
+  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps, graphExtensionDeps };
 }
 
 export function buildComponentsGraphForComponentsAndVersion(
@@ -39,14 +42,16 @@ export function buildComponentsGraphForComponentsAndVersion(
   const graphDevDeps = new GraphLib();
   const graphCompilerDeps = new GraphLib();
   const graphTesterDeps = new GraphLib();
+  const graphExtensionDeps = new GraphLib();
   components.forEach(({ component, version, versionStr }) => {
     const bitId = component.toBitId().changeVersion(versionStr);
     _setGraphEdges(bitId, version.dependencies, graphDeps);
     _setGraphEdges(bitId, version.devDependencies, graphDevDeps);
     _setGraphEdges(bitId, version.compilerDependencies, graphCompilerDeps);
     _setGraphEdges(bitId, version.testerDependencies, graphTesterDeps);
+    _setGraphEdges(bitId, version.extensionDependencies, graphExtensionDeps);
   });
-  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
+  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps, graphExtensionDeps };
 }
 
 export function buildOneGraphForComponentsAndMultipleVersions(components: ComponentsAndVersions[]): Graph {
