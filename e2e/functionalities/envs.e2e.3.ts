@@ -397,11 +397,14 @@ describe('envs', function() {
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const writingCount = (alignedOuput.match(writingRegEx) || []).length;
             // There should be 0 occurrences - since it's not detached
+            console.log('writingCount match', alignedOuput.match(writingRegEx));
             console.log('writingCount', writingCount);
             expect(writingCount).to.equal(0);
             const deletingRegEx = new RegExp('deleting tmp directory', 'g');
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
+            console.log('deletingCount match', alignedOuput.match(deletingRegEx));
+
             console.log('deletingCount', deletingCount);
 
             expect(deletingCount).to.equal(0);
