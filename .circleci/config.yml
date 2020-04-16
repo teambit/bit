@@ -859,21 +859,9 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - checkout_code:
-          filters:
-            branches:
-              ignore:
-                - circle-windows
-      - set_ssh_key:
-          filters:
-            branches:
-              ignore:
-                - circle-windows
-      - set_bitsrc_registry:
-          filters:
-            branches:
-              ignore:
-                - circle-windows
+      - checkout_code
+      - set_ssh_key
+      - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
@@ -918,7 +906,6 @@ workflows:
               ignore:
                 - performance-tests
                 - bit-hub-tests
-                - circle-windows
           requires:
             - set_ssh_key
             - set_bitsrc_registry
@@ -945,12 +932,7 @@ workflows:
             - set_bitsrc_registry
   windows_e2e:
     jobs:
-      - windows_checkout_code:
-          # TODO: remove this filter
-          filters:
-            branches:
-              only:
-                - circle-windows
+      - windows_checkout_code
       - windows_set_ssh_key
       - windows_set_bitsrc_registry
       - windows_install_npm_deps:
