@@ -389,6 +389,9 @@ describe('envs', function() {
             }
             expect(statusCode).to.not.equal(0);
             const alignedOuput = GeneralHelper.alignOutput(output);
+            console.log('alignedOuput---------');
+            console.log(alignedOuput);
+            console.log('alignedOuput---------END');
             const tmpFolder = path.join(helper.scopes.localPath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
             const writingRegEx = new RegExp('writing config files to', 'g');
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
