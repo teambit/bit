@@ -21,17 +21,17 @@ export class MyExtension {
   constructor(private logger:Logger){}
 
   api() {
-    this.logger.log(this, 'start of api call'); // (1)
+    this.logger.log(this.name, 'start of api call'); // (1)
     // ..impel
-    this.logger.log(this, `end of api call, result is`, someVar);
+    this.logger.log(this.name, `end of api call, result is`, someVar);
   }
 }
 ```
 
 **Open Issues**
-- Consumer API should provide him self - see (1) in  example
+- Consumer API should not need to provide name.
+- Projects is compiler with Babel and extension can't use enum to describe level
 
 **Consumers**
 Power the Reporter extension.
-
-
+i

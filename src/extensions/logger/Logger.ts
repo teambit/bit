@@ -1,5 +1,4 @@
 //  will be removed upon implementation
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // eslint-disable-next-line max-classes-per-file
 import { Extension } from '@teambit/harmony';
@@ -43,30 +42,25 @@ export class Logger {
 
   /**
    *
-   * Listen to entries being written to the log.
+   * Listen to entries being written to the LOG.
    *
    * @param callback - Fires on each entry in the log.
-   * @param range - a range that you would like to listen to.
+   * @param range - A filter to apply on the listen function
    *
-   * @example this.logger(function(){}, {})
-   *
+   * @example ```this.logger(function(){})```
+   * @example ```this.logger(function(){},{start:20, end:100})```
    */
-  listen(callback: (label: string, message: string[]) => void, range?: LogRange) {}
+  listen(callback: (entry: LogEntry) => void, range?: LogRange) {}
 
   private write(level: string, label: string, msg: string) {}
 }
 
 // cant use enum, not supported in babel build
-export class Level {
-  static DEBUG = 'DEBUG';
-  static LOG = 'LOG';
-  static WARN = 'WARN';
-  static ERROR = 'ERROR';
-}
+export const Level: 'DEBUG' | 'LOG' | 'WARN' | 'DEBUG' = 'LOG';
 
 export interface LogEntry {
   message: string;
-  level: Level;
+  level: typeof Level;
   time: Date;
 }
 
@@ -87,7 +81,7 @@ export interface LogRange {
   /**
    * defaults to error
    */
-  level?: Level;
+  level?: typeof Level;
 
   /**
    * defaults to all
