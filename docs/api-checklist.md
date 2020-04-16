@@ -4,8 +4,8 @@ API checklist
 The new bit version harmony facilitates the tech side of creating new APIs in Bit cli by extensions.
 This document holds checklists for creating and changing APIs by extensions.
 
-New Extension Checklist
-=======================
+Creating an Extension
+===================
 * RFC - Create a PR with new folder in `src/extensions` which contains:
   - README.md What problem the new API solves.
   - Document API interface which should implement the solution.
@@ -28,7 +28,7 @@ New Extension Checklist
  (*) Big diff is a code smell or a design issue.
  (**) Better involve people in RFC phase. Early is better.
 
-Extension PR checklist.
+Changing an Extension
 ======================
 Respect semver
 - Fix: if the PR just fixes bugs and no new API are added just roll with it.
