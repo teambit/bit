@@ -4,8 +4,8 @@ import { Logger } from './Logger';
 describe('logger', function() {
   it('should support log', function(done) {
     const logger = new Logger();
-    logger.log('TEST!', 'message');
     logger.listen(done);
+    logger.log('TEST!', 'message');
   });
 
   it('should support listening to logs', function() {
