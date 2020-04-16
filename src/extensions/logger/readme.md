@@ -34,4 +34,3 @@ export class MyExtension {
 
 **Consumers**
 Power the Reporter extension.
-i
