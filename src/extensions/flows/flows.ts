@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-classes-per-file */
 import { path } from 'ramda';
+import { EventEmitter } from 'events';
 import { Workspace } from '../workspace';
 import { Network, GetFlow } from './network';
 import { ComponentID } from '../component';
@@ -13,13 +14,18 @@ import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
 
 export class Flows {
+  private emitter = new EventEmitter();
   constructor(private workspace: Workspace) {}
 
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
   createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow) {
-    return new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
+    const network = new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
+    network.onWorkspaceLoaded((...args) => {
+      this.emitter.emit('workspaceLoaded', args);
+    });
+    return network;
   }
 
   createNetworkByFlowName(seeders: ComponentID[], name = 'build', options: ExecutionOptions) {
@@ -87,6 +93,10 @@ export class Flows {
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
     const network = this.createNetwork(ids, getFlow, postFlow);
     return this.run(ids, '', options || {}, network);
+  }
+
+  onWorkspaceLoaded(cb) {
+    this.emitter.on('workspaceLoaded', cb);
   }
 }
 

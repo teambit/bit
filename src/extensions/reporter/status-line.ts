@@ -82,6 +82,9 @@ export default class StatusLine {
   stopSpinner() {
     this.spinner.stop();
   }
+  startSpinner() {
+    this.spinner.start();
+  }
   reRender(phaseName) {
     this.spinner.stop();
     if (phaseName) {

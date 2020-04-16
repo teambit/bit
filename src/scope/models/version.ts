@@ -232,6 +232,10 @@ export default class Version extends BitObject {
     );
   }
 
+  get extensionDependencies() {
+    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+  }
+
   getAllFlattenedDependencies(): BitIds {
     return BitIds.fromArray([
       ...this.flattenedDependencies,
@@ -246,8 +250,17 @@ export default class Version extends BitObject {
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
       ...this.compilerDependencies.dependencies,
-      ...this.testerDependencies.dependencies
+      ...this.testerDependencies.dependencies,
+      ...this.extensionDependencies.dependencies
     ];
+  }
+
+  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+    return {
+      dependencies: this.dependencies.getAllIds(),
+      devDependencies: this.devDependencies.getAllIds(),
+      extensionDependencies: this.extensions.extensionsBitIds
+    };
   }
 
   getAllDependenciesCloned(): Dependencies {
@@ -261,8 +274,8 @@ export default class Version extends BitObject {
   }
 
   getAllDependenciesIds(): BitIds {
-    const allDependencies = this.getAllDependencies();
-    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    return BitIds.fromArray(allDependencies);
   }
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
