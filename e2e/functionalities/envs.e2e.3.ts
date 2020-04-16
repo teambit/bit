@@ -352,13 +352,17 @@ describe('envs', function() {
           helper.command.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
         });
         describe('with default fork level', () => {
-          it('should show results without define fork level', () => {
+          it.only('should show results without define fork level', () => {
             let output;
             let statusCode;
             try {
               helper.command.testComponent('comp/my-comp');
             } catch (err) {
+              console.log('errrrrrrrrrrrrrrrrr1111');
+              console.log(err);
               output = err.stdout.toString();
+              console.log('stdouttttttt1111');
+              console.log(output);
               statusCode = err.status;
             }
             expect(statusCode).to.not.equal(0);
@@ -366,13 +370,17 @@ describe('envs', function() {
             expect(output).to.have.string('✔ group of passed tests');
             expect(output).to.have.string('✖ group of failed tests');
           });
-          it('should write config files to tmp directory', () => {
+          it.only('should write config files to tmp directory', () => {
             let output;
             let statusCode;
             try {
               helper.command.testComponentWithOptions('comp/my-comp', { v: '' });
             } catch (err) {
+              console.log('errrrrrrrrrrrrrrrrr2222');
+              console.log(err);
               output = err.stdout.toString();
+              console.log('stdouttttttt2222');
+              console.log(output);
               statusCode = err.status;
             }
             expect(statusCode).to.not.equal(0);
