@@ -360,6 +360,8 @@ describe('envs', function() {
             } catch (err) {
               console.log('errrrrrrrrrrrrrrrrr1111');
               console.log(err);
+              console.log('errrrrrrrrrrrrrrrrr111 - status');
+              console.log(err.status);
               output = err.stdout.toString();
               console.log('stdouttttttt1111');
               console.log(output);
@@ -378,6 +380,8 @@ describe('envs', function() {
             } catch (err) {
               console.log('errrrrrrrrrrrrrrrrr2222');
               console.log(err);
+              console.log('errrrrrrrrrrrrrrrrr2222 - status');
+              console.log(err.status);
               output = err.stdout.toString();
               console.log('stdouttttttt2222');
               console.log(output);
