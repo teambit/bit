@@ -219,7 +219,7 @@
     "sinon": "^5.0.7",
     "tar": "^4.4.13",
     "type-coverage": "^2.4.0",
-    "typescript": "3.7.4",
+    "typescript": "3.8.3",
     "verdaccio": "^4.4.2"
   },
   "files": [
