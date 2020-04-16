@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { IS_WINDOWS } from '../../src/constants';
 
 describe('typescript components with link files', function() {
   this.timeout(0);
@@ -82,7 +83,7 @@ describe('typescript components with link files', function() {
   });
 
   describe('when the link file uses default-import and specific-import together', () => {
-    if (process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
       // @ts-ignore
       this.skip;
