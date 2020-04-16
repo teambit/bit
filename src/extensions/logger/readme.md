@@ -1,22 +1,37 @@
-Logger
-========
-Logger is in RFC phase and provides only initial check list
+# Logger
 
-** Problem Description **
+A Reusable Logger for bit Extensions.
 
-This extension provides a logging API for bit extensions. it solves several logging related problems:
- - Power the reporter extension.
- - Reusable logger across extensions.
- - Play well legacy logger - write to debug, exception log.
- - Write to extension.log
+**Features**
 
-** Interface ** consult `Logger.ts
-** Commands ** no new commands.
-** Failing Test ** consult `logger.spec.ts`
-** Users ** Reporter extension
-** Related issues *** #2544 #2280
+- Write logs to extensions.log
+- Provide a log store for logs being created in realtime.
+- Play well with legacy logger `via debug.log`
 
-Open issue: Should extension mention who he is when logging or get and instance of the logger with
-this baked inside.
+**Usage**
+
+There is one instance of a logger in the system. Use Bit dependency container to consumer the logger.
+
+```typescript
+import {Extension} from '@teambit/harmony'
+import {Logger} form '../extension/logger'
+
+@Extension()
+export class MyExtension {
+  constructor(private logger:Logger){}
+
+  api() {
+    this.logger.log(this, 'start of api call'); // (1)
+    // ..impel
+    this.logger.log(this, `end of api call, result is`, someVar);
+  }
+}
+```
+
+**Open Issues**
+- Consumer API should provide him self - see (1) in  example
+
+**Consumers**
+Power the Reporter extension.
 
 

@@ -1,7 +1,9 @@
-import { Logger } from './Logger';
+import { Logger, Level } from './Logger';
 
 describe('logger', function() {
-  it('should support query', function() {
-    const logger = new Logger();
+  describe('should support logging by level', function() {
+    Object.keys(Level).forEach(function() {});
   });
+
+  it('should support listening to logs', function() {});
 });
