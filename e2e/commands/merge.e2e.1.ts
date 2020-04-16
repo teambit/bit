@@ -232,7 +232,7 @@ describe('bit merge command', function() {
             expect(statusOutput).to.have.string('bar/foo.js');
             expect(statusOutput).to.have.string('Unexpected token');
           });
-          it.only('should not be able to run the app because of the conflicts', () => {
+          it('should not be able to run the app because of the conflicts', () => {
             const result = helper.general.runWithTryCatch('node app.js');
             // Check only the relevant line since for some reason we got it in circle for windows in this form:
             // SyntaxError: Unexpected token \'<<\'\r\n
