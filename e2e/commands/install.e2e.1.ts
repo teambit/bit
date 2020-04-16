@@ -2,11 +2,12 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
 describe('run bit install', function() {
-  if (process.env.APPVEYOR === 'True') {
+  if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
     // for some reason, on AppVeyor it throws an error:
     // ```
     // Error: Command failed: bit install

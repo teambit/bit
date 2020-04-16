@@ -7,7 +7,8 @@ import { ChildProcess } from 'child_process';
 import Helper from '../src/e2e-helper/e2e-helper';
 
 const isAppVeyor = process.env.APPVEYOR === 'True';
-export const supportNpmCiRegistryTesting = !isAppVeyor;
+const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
+export const supportNpmCiRegistryTesting = !isAppVeyor && !skipRegistryTests;
 
 /**
  * some features, such as installing dependencies as packages, require npm registry to be set.
