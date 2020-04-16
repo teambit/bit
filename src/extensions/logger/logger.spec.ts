@@ -1,16 +1,21 @@
+import { expect } from 'chai';
 import { Logger, Level, LogEntry } from './Logger';
 
 describe('logger', function() {
-  describe('should support logging by level', function() {
-    const results = [];
+  it('should support log', function(done) {
     const logger = new Logger();
-    logger.listen(results.push.bind(results) as any);
-    Object.keys(Level).forEach(function(level) {
-      it(`:${level}`, function() {
-        logger[level]('TEST!', 'this is a test');
-      });
-    });
+    logger.log('TEST!', 'message');
+    logger.listen(done);
   });
+  it('should support listening to logs', function() {
+    const logger = new Logger();
+    const messagesToSend = ['1', '2', '3'];
+    const results: string[] = [];
 
-  it('should support listening to logs', function() {});
+    messagesToSend.forEach(msg => logger.log('TEST', msg));
+
+    logger.listen(entry => results.push(entry.message));
+
+    expect(messagesToSend).equalTo(results);
+  });
 });

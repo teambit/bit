@@ -22,7 +22,6 @@ export class MyExtension {
 
   api() {
     this.logger.log(this.name, 'start of api call'); // (1)
-    // ..impel
     this.logger.log(this.name, `end of api call, result is`, someVar);
   }
 }
