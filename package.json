@@ -90,7 +90,7 @@
     "@types/proper-lockfile": "^4.1.1",
     "@types/react": "^16.9.17",
     "@vuedoc/parser": "^2.0.0-beta.5",
-    "acorn": "^6.4.0",
+    "acorn": "^6.4.1",
     "ajv": "^6.11.0",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",

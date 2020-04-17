@@ -45,6 +45,10 @@ describe('React docs Parser', () => {
           .that.is.an('array')
           .with.lengthOf(1);
       });
+      it('should preserve the spaces in the example', () => {
+        const example = doclet.examples[0].raw;
+        expect(example).to.string('  text');
+      });
       it('should parse the properties description correctly', () => {
         expect(doclet)
           .to.have.property('properties')

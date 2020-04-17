@@ -5,7 +5,11 @@ import PropTypes from 'prop-types';
  * @description Styled button component for the rich and famous!
  *
  * @example
- * <Button text="Example button text" buttonColor="red" buttonHoverColor="green" />
+ * <Button
+ *   text="Example button text"
+ *   buttonColor="red"
+ *   buttonHoverColor="green"
+ * />
  */
 
 class Button extends Component {
