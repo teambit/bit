@@ -96,7 +96,7 @@
     "async-exit-hook": "^2.0.1",
     "babel-plugin-transform-typescript-metadata": "^0.2.2",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "2.1.6-dev.2",
+    "bit-javascript": "2.1.6-dev.3",
     "bluebird": "^3.7.2",
     "chalk": "^2.4.1",
     "chokidar": "^3.3.1",
