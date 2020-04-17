@@ -3,7 +3,6 @@ import first from './array/first';
 import flatten from './array/flatten';
 import filterAsync from './array/filter-async';
 import mapObject from './map-object';
-import mkdirp from './mkdirp';
 import forEach from './object/foreach';
 import hasOwnProperty from './object/has-own-property';
 import cleanObject from './object-clean';
@@ -104,7 +103,6 @@ export {
   filter,
   cleanChar,
   writeFile,
-  mkdirp,
   cleanObject,
   readDirIgnoreDsStore,
   readDirSyncIgnoreDsStore,
