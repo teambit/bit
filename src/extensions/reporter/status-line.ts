@@ -36,7 +36,9 @@ export default class StatusLine {
   public buffer = SPACE_BUFFER;
   private spinner: any = ora({ spinner: 'bouncingBar', stream: stdoutProxy, isEnabled: true }).stop();
   private spinnerLength = 7; // 6 for spinner, 1 for space after it
+  private text: string = '';
   private ids: Array<string> = [];
+  private ended = false;
   constructor() {
     this.reRender = debounce(this.reRender, 100);
     // @ts-ignore
@@ -62,19 +64,20 @@ export default class StatusLine {
       ? `${phaseName}: (${this.ids.map(logId => chalk.hex(stc(logId))(logId)).join(', ')})`
       : phaseName || '';
   }
-  private fullVersionLength(phaseName) {
+  private fullVersionLength(text) {
     // we have to measure the length in this way because otherwise the formatting characters are measured as well
-    return (this.ids.length > 0 ? `${phaseName}: (${this.ids.join(', ')})` : phaseName || '').length;
+    return (this.ids.length > 0 ? `${text}: (${this.ids.join(', ')})` : text || '').length;
   }
   get minimumLength() {
     return this.spinnerLength;
   }
-  private shortStatusLine(phaseName) {
-    return `${phaseName}: (...)`;
+  private shortStatusLine(text) {
+    return `${text}: (...)`;
   }
   clear() {
     clearStatusRow();
     this.spinner.stop();
+    this.ended = true;
   }
   clearIds() {
     this.ids = [];
@@ -85,23 +88,27 @@ export default class StatusLine {
   startSpinner() {
     this.spinner.start();
   }
-  reRender(phaseName) {
+  reRender(newText?: string) {
+    if (this.ended) {
+      return;
+    }
+    if (newText) {
+      this.text = newText;
+    }
     this.spinner.stop();
-    if (phaseName) {
-      const columnCount = getColumnCount();
-      const spinnerLength = 7; // 6 for the spinner, 1 for the space after it
-      if (columnCount < spinnerLength + 10) {
-        clearStatusRow();
-      } else if (columnCount < this.shortStatusLine(phaseName).length + spinnerLength + SPACE_BUFFER) {
-        this.spinner.text = phaseName;
-        this.spinner.start();
-      } else if (columnCount < this.fullVersionLength(phaseName) + this.spinnerLength + SPACE_BUFFER) {
-        this.spinner.text = this.shortStatusLine(phaseName);
-        this.spinner.start();
-      } else {
-        this.spinner.text = this.fullVersion(phaseName);
-        this.spinner.start();
-      }
+    const columnCount = getColumnCount();
+    const spinnerLength = 7; // 6 for the spinner, 1 for the space after it
+    if (columnCount < spinnerLength + 10) {
+      clearStatusRow();
+    } else if (columnCount < this.shortStatusLine(this.text).length + spinnerLength + SPACE_BUFFER) {
+      this.spinner.text = this.text;
+      this.spinner.start();
+    } else if (columnCount < this.fullVersionLength(this.text) + this.spinnerLength + SPACE_BUFFER) {
+      this.spinner.text = this.shortStatusLine(this.text);
+      this.spinner.start();
+    } else {
+      this.spinner.text = this.fullVersion(this.text);
+      this.spinner.start();
     }
   }
 }
