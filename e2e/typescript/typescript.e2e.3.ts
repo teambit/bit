@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { AUTO_GENERATED_STAMP, IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -29,7 +29,7 @@ describe('typescript', function() {
     });
     describe('components with auto-resolve dependencies - with ts compiler', () => {
       // Skipping this test on appveyor because it's fail due to madge issues
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // @ts-ignore
         this.skip;
       } else {
@@ -164,7 +164,7 @@ describe('typescript', function() {
       }
     });
     describe('with default and non default export', () => {
-      if (process.env.APPVEYOR === 'True') {
+      if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
         // fails on AppVeyor for unknown reason ("spawnSync C:\Windows\system32\cmd.exe ENOENT").
         // @ts-ignore
         this.skip;
@@ -589,7 +589,7 @@ describe('typescript', function() {
     });
   });
   describe('react style => .tsx extension', () => {
-    if (process.env.APPVEYOR === 'True') {
+    if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // @ts-ignore
       this.skip;
     } else {

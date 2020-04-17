@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_PACKAGE_MANAGER } from '../../src/constants';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -11,7 +12,7 @@ chai.use(require('chai-fs'));
 //
 // right now this isn't working because if we init the workspace with librarian, importing components doesn't work properly
 describe.skip('run bit install', function() {
-  if (process.env.APPVEYOR === 'True') {
+  if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
     // for some reason, on AppVeyor it throws an error:
     // ```
     // Error: Command failed: bit install
