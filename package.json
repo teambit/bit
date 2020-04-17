@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "2.1.6-dev.2",
+  "version": "2.1.6-dev.3",
   "scripts": {
     "lint": "tsc && eslint \"src/**/*.ts\"",
     "lint-circle": "eslint \"src/**/*.ts\" --format junit -o junit/eslint-results.xml",
@@ -39,7 +39,7 @@
   "main": "dist/index.js",
   "dependencies": {
     "@babel/runtime": "^7.6.3",
-    "@typescript-eslint/typescript-estree": "^2.3.2",
+    "@typescript-eslint/typescript-estree": "^2.28.0",
     "app-module-path": "^2.2.0",
     "bluebird": "^3.7.1",
     "camelcase": "^5.3.1",

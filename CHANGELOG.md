@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.1.6-dev.3] - 2020-04-17
+
+- update @typescript-eslint/typescript-estree package to avoid warning
+
 ## [2.1.6-dev.2] - 2020-04-16
 
 - upgrade typescript to 3.8.3
