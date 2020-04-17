@@ -36,7 +36,7 @@ export default class StatusLine {
   public buffer = SPACE_BUFFER;
   private spinner: any = ora({ spinner: 'bouncingBar', stream: stdoutProxy, isEnabled: true }).stop();
   private spinnerLength = 7; // 6 for spinner, 1 for space after it
-  private text: string = '';
+  private text = '';
   private ids: Array<string> = [];
   private ended = false;
   constructor() {
