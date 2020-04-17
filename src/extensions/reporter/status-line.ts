@@ -95,6 +95,9 @@ export default class StatusLine {
     if (newText) {
       this.text = newText;
     }
+    if (this.text.length === 0) {
+      return;
+    }
     this.spinner.stop();
     const columnCount = getColumnCount();
     const spinnerLength = 7; // 6 for the spinner, 1 for the space after it
