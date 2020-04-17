@@ -366,10 +366,7 @@ export default class Scope {
       nodePathDirDist &&
       components.some(
         component =>
-          (component.dependencies.isCustomResolvedUsed() ||
-            component.devDependencies.isCustomResolvedUsed() ||
-            component.compilerDependencies.isCustomResolvedUsed() ||
-            component.testerDependencies.isCustomResolvedUsed()) &&
+          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
           component.componentMap &&
           component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
           !component.dists.isEmpty()

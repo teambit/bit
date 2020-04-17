@@ -27,15 +27,11 @@ export default async function writeComponentsToCapsules(
     const getDeps = (dependencies: Dependencies) => dependencies.get().map(dep => getClonedFromGraph(dep.id));
     const dependencies = getDeps(component.dependencies);
     const devDependencies = getDeps(component.devDependencies);
-    const compilerDependencies = getDeps(component.compilerDependencies);
-    const testerDependencies = getDeps(component.testerDependencies);
     const extensionDependencies = component.extensions.extensionsBitIds.map(getClonedFromGraph);
     return new ComponentWithDependencies({
       component,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       extensionDependencies
     });
   });

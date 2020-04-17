@@ -258,12 +258,7 @@ export default (async function tagModelComponent({
         return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }
-    const {
-      flattenedDependencies,
-      flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies
-    } = await getAllFlattenedDependencies(
+    const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
       scope,
       consumerComponent.id,
       allDependenciesGraphs,
@@ -276,8 +271,6 @@ export default (async function tagModelComponent({
       consumer,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       message,
       specsResults: testResult ? testResult.specs : undefined
     });

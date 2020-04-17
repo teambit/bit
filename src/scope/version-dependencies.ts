@@ -8,8 +8,6 @@ export default class VersionDependencies {
   component: ComponentVersion;
   dependencies: ComponentVersion[];
   devDependencies: ComponentVersion[];
-  compilerDependencies: ComponentVersion[];
-  testerDependencies: ComponentVersion[];
   extensionsDependencies: ComponentVersion[];
   allDependencies: ComponentVersion[];
   sourceScope: string | null | undefined;
@@ -18,24 +16,14 @@ export default class VersionDependencies {
     component: ComponentVersion,
     dependencies: ComponentVersion[],
     devDependencies: ComponentVersion[],
-    compilerDependencies: ComponentVersion[],
-    testerDependencies: ComponentVersion[],
     extensionsDependencies: ComponentVersion[],
     sourceScope: string
   ) {
     this.component = component;
     this.dependencies = dependencies;
     this.devDependencies = devDependencies;
-    this.compilerDependencies = compilerDependencies;
-    this.testerDependencies = testerDependencies;
     this.extensionsDependencies = extensionsDependencies;
-    this.allDependencies = [
-      ...this.dependencies,
-      ...this.devDependencies,
-      ...this.compilerDependencies,
-      ...this.testerDependencies,
-      ...this.extensionsDependencies
-    ];
+    this.allDependencies = [...this.dependencies, ...this.devDependencies, ...this.extensionsDependencies];
     this.sourceScope = sourceScope;
   }
 
@@ -46,31 +34,18 @@ export default class VersionDependencies {
     const depToConsumer = dep => dep.toConsumer(repo, manipulateDirData);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));
     const devDependenciesP = Promise.all(this.devDependencies.map(depToConsumer));
-    const compilerDependenciesP = Promise.all(this.compilerDependencies.map(depToConsumer));
-    const testerDependenciesP = Promise.all(this.testerDependencies.map(depToConsumer));
     const extensionDependenciesP = Promise.all(this.extensionsDependencies.map(depToConsumer));
     const componentP = this.component.toConsumer(repo, manipulateDirData);
-    const [
-      component,
-      dependencies,
-      devDependencies,
-      compilerDependencies,
-      testerDependencies,
-      extensionDependencies
-    ] = await Promise.all([
+    const [component, dependencies, devDependencies, extensionDependencies] = await Promise.all([
       componentP,
       dependenciesP,
       devDependenciesP,
-      compilerDependenciesP,
-      testerDependenciesP,
       extensionDependenciesP
     ]);
     return new ComponentWithDependencies({
       component,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       extensionDependencies
     });
   }

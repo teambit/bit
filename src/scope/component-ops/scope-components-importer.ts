@@ -167,19 +167,9 @@ export default class ScopeComponentsImporter {
     );
     const dependencies = await this.importManyWithoutDependencies(version.flattenedDependencies);
     const devDependencies = await this.importManyWithoutDependencies(version.flattenedDevDependencies);
-    const compilerDependencies = await this.importManyWithoutDependencies(version.flattenedCompilerDependencies);
-    const testerDependencies = await this.importManyWithoutDependencies(version.flattenedTesterDependencies);
     const extensionsDependencies = await this.importManyWithoutDependencies(version.extensions.extensionsBitIds);
 
-    return new VersionDependencies(
-      versionComp,
-      dependencies,
-      devDependencies,
-      compilerDependencies,
-      testerDependencies,
-      extensionsDependencies,
-      source
-    );
+    return new VersionDependencies(versionComp, dependencies, devDependencies, extensionsDependencies, source);
   }
 
   componentsToComponentsObjects(

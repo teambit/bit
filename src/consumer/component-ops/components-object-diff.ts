@@ -31,8 +31,6 @@ export function componentToPrintableForDiff(component: Component): Record<string
     tester,
     dependencies,
     devDependencies,
-    compilerDependencies,
-    testerDependencies,
     packageDependencies,
     devPackageDependencies,
     compilerPackageDependencies,
@@ -63,8 +61,6 @@ export function componentToPrintableForDiff(component: Component): Record<string
     ...testerPackageDependencies.peerDependencies
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
-  const printableCompilerDependencies = compilerDependencies.toStringOfIds();
-  const printableTesterDependencies = testerDependencies.toStringOfIds();
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter(x => x);
   const overrides = component.overrides.componentOverridesData;
@@ -95,8 +91,6 @@ export function componentToPrintableForDiff(component: Component): Record<string
     .toStringOfIds()
     .sort()
     .concat(parsedDevPackageDependencies)
-    .concat(printableCompilerDependencies)
-    .concat(printableTesterDependencies)
     .filter(x => x);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
