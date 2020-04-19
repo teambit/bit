@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -14,7 +15,7 @@ describe('flows functionality', function() {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('running build task', () => {
+  (IS_WINDOWS ? describe.skip : describe)('running build task', () => {
     let taskOutput;
     before(() => {
       helper.scopeHelper.initWorkspaceAndRemoteScope();
