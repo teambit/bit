@@ -76,29 +76,30 @@ export class Network {
         const { capsule } = visitedCache[seed];
         const flow = await getFlow(capsule);
         visitedCache[seed].visited = true;
-        queueScheduler.schedule(() => {
-          const flowStream = flow.execute(capsule);
-          stream.next(flowStream);
-          flowStream.subscribe({
-            next(data: any) {
-              if (data.type === 'flow:result') {
-                visitedCache[seed].result = data;
-              }
-              return data;
-            },
-            complete() {
-              graph.removeNode(seed);
-              if (postFlow) {
-                postFlow(capsule);
-              }
-              const sources = getSources(graph, visitedCache);
-              return (sources.length || !q.pending) && walk();
-            },
-            error(err) {
-              handleNetworkError(seed, graph, visitedCache, err);
+
+        // queueScheduler.schedule(() => {
+        const flowStream = flow.execute(capsule);
+        stream.next(flowStream);
+        flowStream.subscribe({
+          next(data: any) {
+            if (data.type === 'flow:result') {
+              visitedCache[seed].result = data;
             }
-          });
-        }, 0);
+            return data;
+          },
+          complete() {
+            graph.removeNode(seed);
+            if (postFlow) {
+              postFlow(capsule);
+            }
+            const sources = getSources(graph, visitedCache);
+            return (sources.length || !q.pending) && walk();
+          },
+          error(err) {
+            handleNetworkError(seed, graph, visitedCache, err);
+          }
+        });
+        // }, 0);
       });
     };
   }
