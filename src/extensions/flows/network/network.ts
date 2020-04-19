@@ -2,10 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { ReplaySubject, queueScheduler, from } from 'rxjs';
-import { concatMap } from 'rxjs/operators';
+import { ReplaySubject, queueScheduler, from, zip } from 'rxjs';
+import { mergeMap, tap } from 'rxjs/operators';
 
-import PQueue from 'p-queue/dist';
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
@@ -50,9 +49,9 @@ export class Network {
     const graph = await this.createGraph(options);
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
-    const q = new PQueue({ concurrency: options.concurrency });
-    const walk = this.getWalker(networkStream, startTime, visitedCache, graph, q);
-    await walk();
+
+    const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
+    walk();
     this.emitter.emit('executionEnded');
     return networkStream;
   }
@@ -61,45 +60,54 @@ export class Network {
     this.emitter.on('workspaceLoaded', cb);
   }
 
-  private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph, q: PQueue) {
+  private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
-    const currenConcurrency = 0;
-    const maxConcurrency = 5;
-    return async function walk() {
+    const currentConcurrency = 0;
+    const isPending = () => currentConcurrency > 0;
+
+    return function walk() {
       if (!graph.nodes().length) {
         endNetwork(stream, startTime, visitedCache);
         return;
       }
+      const seeders = from(getSeeders(graph, visitedCache));
+      const flows = from(getSeeders(graph, visitedCache)).pipe(
+        mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
+      );
 
-      getSeeders(graph, visitedCache).map(async function(seed) {
-        const { capsule } = visitedCache[seed];
-        const flow = await getFlow(capsule);
-        visitedCache[seed].visited = true;
+      zip(seeders, flows).subscribe({
+        next([seed, flow]) {
+          const cacheValue = visitedCache[seed];
+          cacheValue.visited = true;
 
-        // queueScheduler.schedule(() => {
-        const flowStream = flow.execute(capsule);
-        stream.next(flowStream);
-        flowStream.subscribe({
-          next(data: any) {
-            if (data.type === 'flow:result') {
-              visitedCache[seed].result = data;
+          const flowStream = flow.execute(cacheValue.capsule);
+
+          stream.next(flowStream);
+          flowStream.pipe(
+            tap((data: any) => {
+              if (data.type === 'flow:result') {
+                cacheValue.result = data;
+              }
+            })
+          );
+          flowStream.subscribe({
+            next(data: any) {
+              return data;
+            },
+            complete() {
+              graph.removeNode(seed);
+              if (postFlow) {
+                postFlow(cacheValue.capsule);
+              }
+              const sources = getSources(graph, visitedCache);
+              return (sources.length || !isPending()) && walk();
+            },
+            error(err) {
+              handleNetworkError(seed, graph, visitedCache, err);
             }
-            return data;
-          },
-          complete() {
-            graph.removeNode(seed);
-            if (postFlow) {
-              postFlow(capsule);
-            }
-            const sources = getSources(graph, visitedCache);
-            return (sources.length || !q.pending) && walk();
-          },
-          error(err) {
-            handleNetworkError(seed, graph, visitedCache, err);
-          }
-        });
-        // }, 0);
+          });
+        }
       });
     };
   }
