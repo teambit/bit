@@ -15,7 +15,7 @@ describe('flows', function() {
     const id = '@bit-test2/flow1';
     const fakeFS = getTestCase(id);
     const fakeCapsule = await createFakeCapsule(fakeFS, id);
-    const stream = await new Flow(['1>&2 echo hello-flow && false', 'echo hello-flow2']).execute(fakeCapsule);
+    const stream = new Flow(['1>&2 echo hello-flow && false', 'echo hello-flow2']).execute(fakeCapsule);
     let started = false;
     let taskSubject = 0;
     return new Promise(resolve =>
@@ -44,7 +44,7 @@ describe('flows', function() {
     const id = '@bit-test2/flow1';
     const fakeFS = getTestCase(id);
     const fakeCapsule = await createFakeCapsule(fakeFS, id);
-    const stream = await new Flow(['echo hello-flow', 'echo hello-flow2']).execute(fakeCapsule);
+    const stream = new Flow(['echo hello-flow', 'echo hello-flow2']).execute(fakeCapsule);
     let started = false;
     let taskSubject = 0;
     let result: any;
@@ -73,7 +73,7 @@ describe('flows', function() {
     const id = '@bit-test2/flow1';
     const fakeFS = getTestCase(id);
     const fakeCapsule = await createFakeCapsule(fakeFS, id);
-    const stream = await new Flow(['echo hello-flow']).execute(fakeCapsule);
+    const stream = new Flow(['echo hello-flow']).execute(fakeCapsule);
     let started = false;
     let taskSubject = false;
     let result: any;
@@ -102,7 +102,7 @@ describe('flows', function() {
     const id = '@bit-test2/flow0';
     const flow = new Flow([]);
     const fakeCapsule = await createFakeCapsule({}, id);
-    const stream = await flow.execute(fakeCapsule);
+    const stream = flow.execute(fakeCapsule);
     let gotEmptyResult = false;
     let started = false;
     return new Promise(resolve =>

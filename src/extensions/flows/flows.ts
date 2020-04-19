@@ -20,7 +20,7 @@ export class Flows {
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
-  createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow) {
+  createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow = () => Promise.resolve()) {
     const network = new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
     network.onWorkspaceLoaded((...args) => {
       this.emitter.emit('workspaceLoaded', args);
@@ -88,10 +88,9 @@ export class Flows {
       const value = flowsWithIds.getValue(id);
       return Promise.resolve(new Flow(value || []));
     };
-    const postFlow = (_capsule: Capsule) => Promise.resolve();
 
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
-    const network = this.createNetwork(ids, getFlow, postFlow);
+    const network = this.createNetwork(ids, getFlow);
     return this.run(ids, '', options || {}, network);
   }
 
