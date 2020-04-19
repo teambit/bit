@@ -92,7 +92,7 @@ export class Network {
                 postFlow(capsule);
               }
               const sources = getSources(graph, visitedCache);
-              return sources.length || !q.pending ? walk() : Promise.resolve();
+              return (sources.length || !q.pending) && walk();
             },
             error(err) {
               handleNetworkError(seed, graph, visitedCache, err);
