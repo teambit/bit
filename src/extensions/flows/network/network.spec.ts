@@ -6,9 +6,9 @@ import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-netw
 // a graph of inter connected capsules where a->b if a is liable for b (b depends on a).
 //
 //
-describe.only('Network', () => {
+describe('Network', () => {
   describe('sanity', function() {
-    it.only('should support 1 component graph', async function() {
+    it('should support 1 component graph', async function() {
       const testCase: GraphTestCase = {
         graph: {
           'bit/a': []
@@ -25,13 +25,11 @@ describe.only('Network', () => {
       return new Promise(resolve =>
         stream.subscribe({
           next(data: any) {
-            console.log('result:', data);
             if (data.type === 'network:result') {
               result = data;
             }
           },
           complete() {
-            console.log('done');
             expect(!!result).to.be.true;
             expect(Object.keys(result.value).length).to.equal(1);
             resolve();

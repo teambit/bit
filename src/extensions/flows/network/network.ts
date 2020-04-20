@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { ReplaySubject, queueScheduler, from, zip } from 'rxjs';
-import { mergeMap, tap, map, filter, mergeAll, bufferWhen } from 'rxjs/operators';
+import { ReplaySubject, from, zip } from 'rxjs';
+import { mergeMap, tap, map, filter, exhaust } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
@@ -86,10 +86,10 @@ export class Network {
           stream.next(flowStream);
           handleResult(flowStream, cacheValue, postFlow);
           flowStream.subscribe({
+            next(data: any) {},
             complete() {
               graph.removeNode(seed);
-              const sources = getSources(graph, visitedCache);
-              return sources.length && walk();
+              return walk();
             },
             error(err) {
               handleNetworkError(seed, graph, visitedCache, err);
@@ -114,12 +114,14 @@ export class Network {
 
 function handleResult(flowStream: ReplaySubject<unknown>, cacheValue: CacheValue, postFlow: PostFlow | null) {
   return flowStream.pipe(
-    filter((data: any) => data.type === 'flow:result'),
+    filter((data: any) => {
+      return data.type === 'flow:result';
+    }),
     tap(msg => {
       cacheValue.result = msg;
       return postFlow && from(postFlow(cacheValue.capsule));
     }),
-    mergeAll()
+    exhaust()
   );
 }
 
