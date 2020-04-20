@@ -48,6 +48,7 @@ export class Network {
 
     const graph = await this.createGraph(options);
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
+
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
 
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
@@ -63,6 +64,7 @@ export class Network {
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
+    let amount = 0;
 
     return function walk() {
       if (!graph.nodes().length) {
@@ -73,14 +75,15 @@ export class Network {
       const flows = from(getSeeders(graph, visitedCache)).pipe(
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
       );
-
       zip(
         zip(seeders, flows).pipe<ReplaySubject<any>>(
+          // eslint-disable-next-line no-sequences
           map(([seed, flow]) => flow.execute(visitedCache[seed].capsule), 5)
         ),
         seeders
       ).subscribe({
         next([flowStream, seed]) {
+          amount += 1;
           const cacheValue = visitedCache[seed];
           cacheValue.visited = true;
           stream.next(flowStream);
@@ -88,8 +91,10 @@ export class Network {
           flowStream.subscribe({
             next(data: any) {},
             complete() {
+              amount -= 1;
               graph.removeNode(seed);
-              return walk();
+              const sources = getSources(graph, visitedCache);
+              return (sources.length > 0 || amount === 0) && walk();
             },
             error(err) {
               handleNetworkError(seed, graph, visitedCache, err);
