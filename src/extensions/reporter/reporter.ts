@@ -46,6 +46,7 @@ export default class Reporter {
         this.statusLine.stopSpinner();
         // TODO: bring these back through the logger extension
         // console.log(chalk.hex(stc(id))(messages.join(' ')));
+        chalk.hex(stc(id))(messages.join(' '));
         this.statusLine.reRender();
       }
     });
@@ -58,6 +59,7 @@ export default class Reporter {
           .forEach(line => {
             // TODO: bring these back through the logger extension
             // console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+            chalk.hex(stc(id))(line);
           });
         this.statusLine.reRender();
       }
