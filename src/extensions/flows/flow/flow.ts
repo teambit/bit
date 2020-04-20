@@ -9,7 +9,7 @@ export class Flow {
   private result: any[] = [];
   constructor(private tasks: string[]) {}
 
-  execute(capsule: Capsule) {
+  execute(capsule: Capsule): ReplaySubject<any> {
     const id = capsule.component.id.toString();
     const startTime = new Date();
     const subject = new ReplaySubject();

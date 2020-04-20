@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ReplaySubject, queueScheduler, from, zip } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { mergeMap, tap, map, filter, mergeAll, bufferWhen } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
@@ -63,8 +63,6 @@ export class Network {
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
-    const currentConcurrency = 0;
-    const isPending = () => currentConcurrency > 0;
 
     return function walk() {
       if (!graph.nodes().length) {
@@ -76,32 +74,22 @@ export class Network {
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
       );
 
-      zip(seeders, flows).subscribe({
-        next([seed, flow]) {
+      zip(
+        zip(seeders, flows).pipe<ReplaySubject<any>>(
+          map(([seed, flow]) => flow.execute(visitedCache[seed].capsule), 5)
+        ),
+        seeders
+      ).subscribe({
+        next([flowStream, seed]) {
           const cacheValue = visitedCache[seed];
           cacheValue.visited = true;
-
-          const flowStream = flow.execute(cacheValue.capsule);
-
           stream.next(flowStream);
-          flowStream.pipe(
-            tap((data: any) => {
-              if (data.type === 'flow:result') {
-                cacheValue.result = data;
-              }
-            })
-          );
+          handleResult(flowStream, cacheValue, postFlow);
           flowStream.subscribe({
-            next(data: any) {
-              return data;
-            },
             complete() {
               graph.removeNode(seed);
-              if (postFlow) {
-                postFlow(cacheValue.capsule);
-              }
               const sources = getSources(graph, visitedCache);
-              return (sources.length || !isPending()) && walk();
+              return sources.length && walk();
             },
             error(err) {
               handleNetworkError(seed, graph, visitedCache, err);
@@ -122,6 +110,17 @@ export class Network {
     const subGraph = createSubGraph(components, options, fullGraph);
     return subGraph;
   }
+}
+
+function handleResult(flowStream: ReplaySubject<unknown>, cacheValue: CacheValue, postFlow: PostFlow | null) {
+  return flowStream.pipe(
+    filter((data: any) => data.type === 'flow:result'),
+    tap(msg => {
+      cacheValue.result = msg;
+      return postFlow && from(postFlow(cacheValue.capsule));
+    }),
+    mergeAll()
+  );
 }
 
 function getSeeders(g: Graph, cache: Cache) {
