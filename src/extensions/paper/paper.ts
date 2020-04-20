@@ -22,7 +22,7 @@ export class Paper {
     command.alias = command.alias || '';
     command.description = command.description || '';
     command.shortDescription = command.shortDescription || '';
-    command.group = command.group || 'extensions';
+    command.group = command.group || 'ungrouped';
     command.options = command.options || [];
     command.private = command.private || false;
     command.loader = command.loader || true;
