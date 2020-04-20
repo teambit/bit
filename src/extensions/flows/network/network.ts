@@ -78,7 +78,7 @@ export class Network {
       zip(
         zip(seeders, flows).pipe<ReplaySubject<any>>(
           // eslint-disable-next-line no-sequences
-          map(([seed, flow]) => flow.execute(visitedCache[seed].capsule), 5)
+          map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))
         ),
         seeders
       ).subscribe({
@@ -87,9 +87,11 @@ export class Network {
           const cacheValue = visitedCache[seed];
           cacheValue.visited = true;
           stream.next(flowStream);
-          handleResult(flowStream, cacheValue, postFlow);
           flowStream.subscribe({
-            next(data: any) {},
+            next(data: any) {
+              cacheValue.result = data;
+              return postFlow && from(postFlow(cacheValue.capsule));
+            },
             complete() {
               amount -= 1;
               graph.removeNode(seed);
@@ -115,19 +117,6 @@ export class Network {
     const subGraph = createSubGraph(components, options, fullGraph);
     return subGraph;
   }
-}
-
-function handleResult(flowStream: ReplaySubject<unknown>, cacheValue: CacheValue, postFlow: PostFlow | null) {
-  return flowStream.pipe(
-    filter((data: any) => {
-      return data.type === 'flow:result';
-    }),
-    tap(msg => {
-      cacheValue.result = msg;
-      return postFlow && from(postFlow(cacheValue.capsule));
-    }),
-    exhaust()
-  );
 }
 
 function getSeeders(g: Graph, cache: Cache) {
