@@ -89,8 +89,11 @@ export class Network {
           stream.next(flowStream);
           flowStream.subscribe({
             next(data: any) {
-              cacheValue.result = data;
-              return postFlow && from(postFlow(cacheValue.capsule));
+              if (data.type === 'flow:result') {
+                cacheValue.result = data;
+                return postFlow && from(postFlow(cacheValue.capsule));
+              }
+              return data;
             },
             complete() {
               amount -= 1;
@@ -99,6 +102,7 @@ export class Network {
               return (sources.length > 0 || amount === 0) && walk();
             },
             error(err) {
+              amount -= 1;
               handleNetworkError(seed, graph, visitedCache, err);
             }
           });
