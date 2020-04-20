@@ -45,12 +45,14 @@ export class Network {
       type: 'network:start',
       startTime
     });
+    console.log('really trying here');
 
     const graph = await this.createGraph(options);
+    console.log('created graph');
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
 
+    console.log('really trying here');
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
-
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
     walk();
     this.emitter.emit('executionEnded');
@@ -60,7 +62,9 @@ export class Network {
   onWorkspaceLoaded(cb) {
     this.emitter.on('workspaceLoaded', cb);
   }
-
+  // caching
+  // concurrency
+  // twice
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
@@ -87,7 +91,8 @@ export class Network {
           const cacheValue = visitedCache[seed];
           cacheValue.visited = true;
           stream.next(flowStream);
-          flowStream.subscribe({
+
+          return flowStream.subscribe({
             next(data: any) {
               if (data.type === 'flow:result') {
                 cacheValue.result = data;
@@ -139,7 +144,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
     duration: endTime.getTime() - startTime.getTime(),
     value: Object.entries(visitedCache).reduce((accum, [key, val]) => {
       accum[key] = {
-        result: val.result,
+        result: val.result.value,
         visited: val.visited
       };
       return accum;
@@ -166,6 +171,7 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
 }
 
 async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Promise<Cache> {
+  console.log('before load capsules');
   const capsules = await workspace.loadCapsules(graph.nodes());
   return capsules.reduce((accum, curr) => {
     accum[curr.component.id.toString()] = {
