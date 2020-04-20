@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- upgrade typescript to 3.8.3
+- [#2159](https://github.com/teambit/bit/issues/2159) - fix `bit export` to not show the "fork" message when specifying an id without scope-name
+- [#2512](https://github.com/teambit/bit/issues/2512) - fix react-docs to preserve spaces/tabs of `@example`
 - [#2487](https://github.com/teambit/bit/issues/2487) - fix react docs of union type prop
 - support running `bit link` for specific components
 - fix capsule to not hang forever when running build/tag/isolate and npm emits errors

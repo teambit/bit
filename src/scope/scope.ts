@@ -15,7 +15,8 @@ import {
   SCOPE_JSON,
   COMPONENT_ORIGINS,
   NODE_PATH_SEPARATOR,
-  CURRENT_UPSTREAM
+  CURRENT_UPSTREAM,
+  LATEST
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
@@ -783,7 +784,7 @@ export default class Scope {
     });
   }
 
-  async loadModelComponentByIdStr(id: string): Promise<Component> {
+  async loadModelComponentByIdStr(id: string): Promise<ModelComponent> {
     // Remove the version before hashing since hashing with the version number will result a wrong hash
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
@@ -791,17 +792,16 @@ export default class Scope {
     return this.objects.load(ref);
   }
 
-  /**
-   * if it's not in the scope, it's probably new, we assume it doesn't have scope.
-   */
-  async isIdHasScope(id: BitIdStr): Promise<boolean> {
-    const component = await this.loadModelComponentByIdStr(id);
-    return Boolean(component && component.scope);
-  }
-
   async getParsedId(id: BitIdStr): Promise<BitId> {
-    const idHasScope = await this.isIdHasScope(id);
-    return BitId.parse(id, idHasScope);
+    const component = await this.loadModelComponentByIdStr(id);
+    const idHasScope = Boolean(component && component.scope);
+    if (!idHasScope) {
+      // if it's not in the scope, it's probably new, we assume it doesn't have scope.
+      return BitId.parse(id, false);
+    }
+    const bitId: BitId = component.toBitId();
+    const version = BitId.getVersionOnlyFromString(id);
+    return bitId.changeVersion(version || LATEST);
   }
 
   static ensure(

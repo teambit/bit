@@ -1678,7 +1678,7 @@ console.log(barFoo.default());`;
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       scopeB = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`, scopeB);
+      helper.command.exportComponent(`${helper.scopes.remote}/utils/is-string@0.0.2`, scopeB, true, '--force');
       // import to a new local scope
       helper.scopeHelper.initNewLocalScope();
       helper.scopeHelper.addRemoteScope(scopePath);

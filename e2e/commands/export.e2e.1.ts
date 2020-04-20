@@ -377,7 +377,7 @@ describe('bit export command', function() {
       remote2 = scopeName;
       remote2Path = scopePath;
       helper.scopeHelper.addRemoteScope(scopePath);
-      helper.command.exportComponent('utils/is-string2', remote2);
+      helper.command.exportComponent('utils/is-string2', remote2, true, '--force');
     });
     it('should have is-type@0.0.2 on that remote', () => {
       const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
@@ -395,7 +395,7 @@ describe('bit export command', function() {
     describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
       before(() => {
         helper.command.importComponent('utils/is-string1');
-        output = helper.command.exportComponent('utils/is-string1', remote2);
+        output = helper.command.exportComponent('utils/is-string1', remote2, true, '--force');
       });
       it('should not throw an error saying it does not have the version 0.0.1 of the dependency', () => {
         expect(output).to.not.have.string('failed loading version 0.0.1');
@@ -1262,6 +1262,24 @@ describe('bit export command', function() {
         const list = helper.command.listRemoteScopeParsed();
         expect(list).to.have.lengthOf(1);
       });
+    });
+  });
+  describe('re-export using the component name without the scope name', () => {
+    let output;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      helper.command.exportAllComponents();
+      helper.command.tagComponent('bar/foo -f');
+      output = helper.command.exportComponent('bar/foo');
+    });
+    // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }
+    it('should not show the "fork" prompt', () => {
+      expect(output).to.have.string('exported 1 components');
     });
   });
 });
