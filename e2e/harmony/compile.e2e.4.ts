@@ -2,10 +2,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('compile extension', function() {
+(IS_WINDOWS ? describe.skip : describe)('compile extension', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {

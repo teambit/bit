@@ -2,13 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
+import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '../reporter';
 import { Capsule } from '../isolator/capsule';
 import { pipeOutput } from '../../utils/child_process';
-import fsOutputFile from '../../utils/fs-output-file';
+import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 
 export type installOpts = {
   packageManager?: string;
@@ -30,7 +31,7 @@ function deleteBitBinFromPkgJson(capsule: Capsule) {
 }
 
 function linkBitBinInCapsule(capsule) {
-  const bitBinPath = './node_modules/bit-bin';
+  const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
   const localBitBinPath = path.join(__dirname, '../..');
   // if there are no deps, sometimes the node_modules folder is not created
   // and we need it in order to perform the linking
@@ -39,11 +40,11 @@ function linkBitBinInCapsule(capsule) {
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
-  // we use execa here rather than the capsule.fs because there are some edge cases
+  // we use fs directly here rather than the capsule.fs because there are some edge cases
   // that the capusle fs does not deal with well (eg. identifying and deleting
   // a symlink rather than the what the symlink links to)
-  execa.sync('rm', ['-rf', bitBinPath], { cwd: capsule.wrkDir });
-  execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+  fs.removeSync(bitBinPath);
+  createSymlinkOrCopy(localBitBinPath, bitBinPath);
 }
 
 export default class PackageManager {
