@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-classes-per-file */
-import { path } from 'ramda';
 import { EventEmitter } from 'events';
 import { Workspace } from '../workspace';
 import { Network, GetFlow } from './network';

@@ -45,13 +45,10 @@ export class Network {
       type: 'network:start',
       startTime
     });
-    console.log('really trying here');
 
     const graph = await this.createGraph(options);
-    console.log('created graph');
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
 
-    console.log('really trying here');
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
     walk();
@@ -80,10 +77,7 @@ export class Network {
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
       );
       zip(
-        zip(seeders, flows).pipe<ReplaySubject<any>>(
-          // eslint-disable-next-line no-sequences
-          map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))
-        ),
+        zip(seeders, flows).pipe<ReplaySubject<any>>(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
         seeders
       ).subscribe({
         next([flowStream, seed]) {
