@@ -44,7 +44,8 @@ export default class Reporter {
     logger.onInfo((...messages) => {
       if (this.shouldWriteOutput) {
         this.statusLine.stopSpinner();
-        console.log(chalk.hex(stc(id))(messages.join(' ')));
+        // TODO: bring these back through the logger extension
+        // console.log(chalk.hex(stc(id))(messages.join(' ')));
         this.statusLine.reRender();
       }
     });
@@ -55,7 +56,8 @@ export default class Reporter {
         lines
           .filter(line => line.replace(/\s+/, '').length > 0)
           .forEach(line => {
-            console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+            // TODO: bring these back through the logger extension
+            // console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
           });
         this.statusLine.reRender();
       }
