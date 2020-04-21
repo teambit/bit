@@ -28,6 +28,7 @@ export class LegacyCommand implements Command {
     this.shortDescription = summery;
     this.group = group;
     this.loader = cmd.loader;
+    this.private = cmd.private;
     this.migration = cmd.migration;
 
     this.commands = cmd.commands.map(sub => {
