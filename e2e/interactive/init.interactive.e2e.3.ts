@@ -67,7 +67,7 @@ describe('run bit init - interactive', function() {
       });
     }
   });
-  describe('change dir, use yarn, set compiler from bit.envs', () => {
+  describe.skip('change dir, use yarn, set compiler from bit.envs', () => {
     // Skip on windows since the interactive keys are not working on windows
     if (IS_WINDOWS || process.env.APPVEYOR === 'True') {
       // @ts-ignore

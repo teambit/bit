@@ -2151,10 +2151,11 @@ console.log(barFoo.default());`;
   });
   describe('import compiler with a non-exist version', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
     });
     it('should throw an error that a component does not exist', () => {
-      const compiler = 'bit.envs/compilers/babel@1000.0.0';
+      helper.env.importCompiler(); // makes sure the component exists. (only not the same version)
+      const compiler = `${helper.scopes.env}/compilers/babel@1000.0.1`;
       const error = new ComponentNotFound(compiler);
       const importCmd = () => helper.env.importCompiler(compiler);
       helper.general.expectToThrow(importCmd, error);
