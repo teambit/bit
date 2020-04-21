@@ -1,7 +1,7 @@
-import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { Workspace } from '@bit/bit.core.workspace';
+import { Scope } from '@bit/bit.core.scope';
 import { BitId as ComponentId } from '../../bit-id';
-import { Component } from '../component';
+import { Component } from '@bit/bit.core.component';
 
 /**
  * A facade to resolve a component from the correct host

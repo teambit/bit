@@ -1,6 +1,6 @@
 import { Harmony } from '@teambit/harmony';
-import { Workspace } from '../workspace';
-import { BitCli } from '../cli';
+import { Workspace } from '@bit/bit.core.workspace';
+import { BitCli } from '@bit/bit.core.cli';
 import { CreateCmd } from './create.cmd';
 import { Create, Registry } from './create';
 

@@ -3,7 +3,7 @@
 /* eslint-disable max-len */
 import { Subject, ReplaySubject } from 'rxjs';
 import { Task } from '../task';
-import { Capsule } from '../../isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 
 export class Flow {
   private result: any[] = [];

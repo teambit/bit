@@ -1,5 +1,5 @@
 import { Paper } from '../paper';
-import { Reporter } from '../reporter';
+import { Reporter } from '@bit/bit.core.reporter';
 import CommandRegistry from './registry';
 
 export type PaperConfig = {

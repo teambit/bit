@@ -2,14 +2,14 @@
 /* eslint-disable max-classes-per-file */
 import { path } from 'ramda';
 import { EventEmitter } from 'events';
-import { Workspace } from '../workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import { Network, GetFlow } from './network';
-import { ComponentID } from '../component';
+import { ComponentID } from '@bit/bit.core.component';
 import { Flow } from './flow/flow';
 import BitIdAndValueArray from '../../bit-id/bit-id-and-value-array';
 import { ExecutionOptions } from './network/options';
 import { BitId } from '../../bit-id';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
 

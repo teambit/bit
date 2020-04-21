@@ -1,6 +1,6 @@
-import { GraphBuilder } from '../graph';
+import { GraphBuilder } from '@bit/bit.core.graph';
 import getCoreInsights from './core-insights-getter';
-import { BitCli } from '../cli';
+import { BitCli } from '@bit/bit.core.cli';
 import { InsightManager } from './insight-manager';
 import { Insight } from './insight';
 import InsightsCmd from './insights.cmd';

@@ -7,7 +7,7 @@ import TagMap from './tag-map';
 import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
-import Isolator from '../isolator/isolator';
+import Isolator from '@bit/bit.core.isolator';
 import { loadConsumerIfExist } from '../../consumer';
 
 /**

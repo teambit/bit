@@ -1,5 +1,5 @@
 import PackageManager from './package-manager';
-import { Reporter } from '../reporter';
+import { Reporter } from '@bit/bit.core.reporter';
 
 export type InstallDeps = [Reporter];
 

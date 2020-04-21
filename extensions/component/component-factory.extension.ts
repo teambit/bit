@@ -1,4 +1,4 @@
-import { IsolatorExt } from '../isolator';
+import { IsolatorExt } from '@bit/bit.core.isolator';
 import componentProvider from './component.provider';
 
 export default {

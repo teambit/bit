@@ -1,7 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 import path from 'path';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
-import { Workspace } from '../workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import { BitId } from '../../bit-id';
 import { composeComponentPath } from '../../utils/bit/compose-component-path';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';

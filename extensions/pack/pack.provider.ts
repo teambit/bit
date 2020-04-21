@@ -1,7 +1,7 @@
 import { Packer } from './pack';
-import { BitCli } from '../cli';
+import { BitCli } from '@bit/bit.core.cli';
 import { PackCmd } from './pack.cmd';
-import { Scope } from '../scope';
+import { Scope } from '@bit/bit.core.scope';
 
 export type PackDeps = [BitCli, Scope];
 

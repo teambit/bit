@@ -1,6 +1,6 @@
-import { BitCliExt } from '../cli';
-import { WorkspaceExt } from '../workspace';
-import { CompileExt } from '../compile';
+import { BitCliExt } from '@bit/bit.core.cli';
+import { WorkspaceExt } from '@bit/bit.core.workspace';
+import { CompileExt } from '@bit/bit.core.compile';
 import { provideTest } from './test.provider';
 
 export default {

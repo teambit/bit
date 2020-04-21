@@ -1,5 +1,5 @@
-import { BitCliExt } from '../cli';
-import { WorkspaceExt } from '../workspace';
+import { BitCliExt } from '@bit/bit.core.cli';
+import { WorkspaceExt } from '@bit/bit.core.workspace';
 import { provideCreate } from './create.provider';
 
 export default {

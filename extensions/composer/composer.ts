@@ -1,4 +1,4 @@
-import { Watch } from '../watch';
+import { Watch } from '@bit/bit.core.watch';
 import { BitId as ComponentId } from '../../bit-id';
 
 export default class Composer {

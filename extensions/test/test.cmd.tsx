@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color, AppContext } from 'ink';
-import { Command, CLIArgs } from '../cli';
-import { Flags } from '../paper/command';
+import { Command, CLIArgs } from '@bit/bit.core.cli';
+import { Flags } from '@bit/bit.core.paper';
 import { Test } from './test';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../cli/chalk-box';
 

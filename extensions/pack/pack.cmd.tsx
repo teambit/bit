@@ -2,9 +2,9 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, CLIArgs } from '../cli';
+import { Command, CLIArgs } from '@bit/bit.core.cli';
 import { Packer } from './pack';
-import { Flags } from '../paper/command';
+import { Flags } from '@bit/bit.core.paper';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';

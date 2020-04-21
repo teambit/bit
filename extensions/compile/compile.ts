@@ -1,15 +1,15 @@
 import path from 'path';
-import { Workspace } from '../workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
-import { ResolvedComponent } from '../workspace/resolved-component';
+import { ResolvedComponent } from '@bit/bit.core.workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
-import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
+import { Component } from '@bit/bit.core.component';
+import { Capsule } from '@bit/bit.core.isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
-import { Scope } from '../scope';
-import { Flows } from '../flows';
-import { IdsAndFlows } from '../flows/flows';
+import { Scope } from '@bit/bit.core.scope';
+import { Flows } from '@bit/bit.core.flows';
+import { IdsAndFlows } from '@bit/bit.core.flows';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;

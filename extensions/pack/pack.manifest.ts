@@ -1,6 +1,6 @@
 import packProvider from './pack.provider';
-import { ScopeExt } from '../scope';
-import { BitCliExt } from '../cli';
+import { ScopeExt } from '@bit/bit.core.scope';
+import { BitCliExt } from '@bit/bit.core.cli';
 
 export default {
   name: 'pack',

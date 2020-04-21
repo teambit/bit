@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Flows } from './flows';
-import { BitCliExt, BitCli } from '../cli';
-import { WorkspaceExt, Workspace } from '../workspace';
+import { BitCliExt, BitCli } from '@bit/bit.core.cli';
+import { WorkspaceExt, Workspace } from '@bit/bit.core.workspace';
 import { RunCmd } from './run';
-import { ReporterExt, Reporter } from '../reporter';
+import { ReporterExt, Reporter } from '@bit/bit.core.reporter';
 
 type ScriptDeps = [BitCli, Workspace, Reporter];
 

@@ -1,9 +1,9 @@
-import { Workspace } from '../workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import ConsumerComponent from '../../consumer/component';
 import { BitId } from '../../bit-id';
-import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
-import { Compile } from '../compile/compile';
+import { Component } from '@bit/bit.core.component';
+import { Capsule } from '@bit/bit.core.isolator';
+import { Compile } from '@bit/bit.core.compile';
 import ComponentsList from '../../consumer/component/components-list';
 
 export type ComponentsAndCapsules = {

@@ -6,14 +6,14 @@ import { ReplaySubject } from 'rxjs';
 import PQueue from 'p-queue/dist';
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
-import { Workspace } from '../../workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
 import { ExecutionOptions } from './options';
 import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
-import { ComponentID } from '../../component';
-import { Capsule } from '../../isolator/capsule';
+import { ComponentID } from '@bit/bit.core.component';
+import { Capsule } from '@bit/bit.core.isolator';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully

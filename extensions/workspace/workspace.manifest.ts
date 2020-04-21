@@ -1,9 +1,9 @@
 import workspaceProvider from './workspace.provider';
-import { ScopeExt } from '../scope';
-import { ComponentFactoryExt } from '../component';
-import { IsolatorExt } from '../isolator';
-import { WorkspaceConfigExt } from '../workspace-config';
-import { ReporterExt } from '../reporter';
+import { ScopeExt } from '@bit/bit.core.scope';
+import { ComponentFactoryExt } from '@bit/bit.core.component';
+import { IsolatorExt } from '@bit/bit.core.isolator';
+import { WorkspaceConfigExt } from '@bit/bit.core.workspace-config';
+import { ReporterExt } from '@bit/bit.core.reporter';
 
 export default {
   name: 'workspace',

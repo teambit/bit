@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color } from 'ink';
-import { PaperError } from '../../paper';
+import { PaperError } from '@bit/bit.core.paper';
 
 export default class NoDataForInsight extends PaperError {
   constructor(readonly insightName: string) {

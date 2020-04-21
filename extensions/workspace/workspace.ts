@@ -2,14 +2,14 @@ import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { difference, groupBy } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { Consumer } from '../../consumer';
-import { Scope } from '../scope';
-import { WorkspaceConfig } from '../workspace-config';
-import { Component, ComponentFactory } from '../component';
+import { Scope } from '@bit/bit.core.scope';
+import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
+import { Component, ComponentFactory } from '@bit/bit.core.component';
 import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
-import { Isolator } from '../isolator';
-import { Logger } from '../reporter';
+import { Isolator } from '@bit/bit.core.isolator';
+import { Logger } from '@bit/bit.core.reporter';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -18,7 +18,7 @@ import { AddActionResults } from '../../consumer/component-ops/add-components/ad
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
-import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
+import { ComponentScopeDirMap } from '@bit/bit.core.workspace-config/workspace-settings';
 import legacyLogger from '../../logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
 /**

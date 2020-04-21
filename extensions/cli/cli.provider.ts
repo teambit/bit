@@ -1,6 +1,6 @@
 import { buildRegistry } from '../../cli';
 import { BitCli } from './cli';
-import { Paper } from '../paper';
+import { Paper } from '@bit/bit.core.paper';
 import { LegacyCommand } from './legacy-command';
 import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
 

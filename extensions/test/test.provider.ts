@@ -1,8 +1,8 @@
-import { Workspace } from '../workspace';
-import { BitCli } from '../cli';
+import { Workspace } from '@bit/bit.core.workspace';
+import { BitCli } from '@bit/bit.core.cli';
 import { TestCmd } from './test.cmd';
 import { Test } from './test';
-import { Compile } from '../compile/compile';
+import { Compile } from '@bit/bit.core.compile';
 
 export type ServeConfig = {};
 

@@ -1,6 +1,6 @@
 import { provide } from './insight.provider';
-import { ComponentGraphExt } from '../graph';
-import { BitCliExt } from '../cli';
+import { ComponentGraphExt } from '@bit/bit.core.graph';
+import { BitCliExt } from '@bit/bit.core.cli';
 
 export default {
   name: 'insights',

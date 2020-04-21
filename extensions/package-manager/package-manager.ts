@@ -6,8 +6,8 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
-import { Reporter } from '../reporter';
-import { Capsule } from '../isolator/capsule';
+import { Reporter } from '@bit/bit.core.reporter';
+import { Capsule } from '@bit/bit.core.isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 

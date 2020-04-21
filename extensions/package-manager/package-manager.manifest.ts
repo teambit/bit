@@ -1,4 +1,4 @@
-import { ReporterExt } from '../reporter';
+import { ReporterExt } from '@bit/bit.core.reporter';
 import { providePackageManager } from './package-manager.provider';
 
 const DEFAULT_PACKAGE_MANAGER = 'librarian';

@@ -1,5 +1,5 @@
 import { ReplaySubject } from 'rxjs';
-import { Reporter } from '../../reporter';
+import { Reporter } from '@bit/bit.core.reporter';
 
 export async function handleRunStream(stream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
   const summary: { [k: string]: string } = {};

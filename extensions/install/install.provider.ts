@@ -1,9 +1,9 @@
 import InstallCmd from './install.cmd';
-import { Workspace } from '../workspace';
-import { BitCli } from '../cli';
-import { PackageManager } from '../package-manager';
+import { Workspace } from '@bit/bit.core.workspace';
+import { BitCli } from '@bit/bit.core.cli';
+import { PackageManager } from '@bit/bit.core.package-manager';
 import { Install } from './install';
-import { Reporter } from '../reporter';
+import { Reporter } from '@bit/bit.core.reporter';
 
 export type InstallConfig = {};
 

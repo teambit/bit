@@ -2,9 +2,9 @@
 import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Color } from 'ink';
-import { Command, CLIArgs } from '../paper';
-import { Workspace } from '../workspace';
-import { Flows } from '../flows';
+import { Command, CLIArgs } from '@bit/bit.core.paper';
+import { Workspace } from '@bit/bit.core.workspace';
+import { Flows } from '@bit/bit.core.flows';
 
 export default class ComposeCmd implements Command {
   name = 'start [id]';

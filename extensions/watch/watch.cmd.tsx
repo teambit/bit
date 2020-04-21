@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Color } from 'ink';
-import { Command } from '../paper';
+import { Command } from '@bit/bit.core.paper';
 
 export default class ServeCommand implements Command {
   name = 'watch [id...]';

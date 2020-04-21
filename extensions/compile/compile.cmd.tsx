@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Command, CLIArgs } from '../cli';
-import { Flags } from '../paper/command';
+import { Command, CLIArgs } from '@bit/bit.core.cli';
+import { Flags } from '@bit/bit.core.paper';
 import { Compile } from './compile';
 
 export class CompileCmd implements Command {

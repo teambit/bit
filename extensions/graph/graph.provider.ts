@@ -1,6 +1,6 @@
-import { Workspace } from '../workspace';
-import { Scope } from '../scope';
-import { ComponentFactory } from '../component';
+import { Workspace } from '@bit/bit.core.workspace';
+import { Scope } from '@bit/bit.core.scope';
+import { ComponentFactory } from '@bit/bit.core.component';
 import { GraphBuilder } from './graph-builder';
 
 export type GraphDeps = [Workspace, Scope, ComponentFactory];

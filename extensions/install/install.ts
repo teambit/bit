@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { Workspace } from '../workspace';
-import { PackageManager } from '../package-manager';
-import { Reporter } from '../reporter';
+import { Workspace } from '@bit/bit.core.workspace';
+import { PackageManager } from '@bit/bit.core.package-manager';
+import { Reporter } from '@bit/bit.core.reporter';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import { DEFAULT_REGISTRY_DOMAIN_PREFIX, DEFAULT_PACKAGE_MANAGER } from '../../constants';
 

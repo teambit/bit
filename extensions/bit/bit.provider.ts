@@ -1,4 +1,4 @@
-import { Workspace } from '../../extensions/workspace';
+import { Workspace } from '@bit/bit.core.workspace';
 import { Scope } from '../../scope';
 import Bit from './bit';
 

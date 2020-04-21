@@ -1,7 +1,7 @@
-import { Workspace } from '../workspace';
-import { Scope } from '../scope';
+import { Workspace } from '@bit/bit.core.workspace';
+import { Scope } from '@bit/bit.core.scope';
 import { ComponentGraph } from './component-graph';
-import { ComponentFactory } from '../component';
+import { ComponentFactory } from '@bit/bit.core.component';
 import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
 
 export class GraphBuilder {

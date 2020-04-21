@@ -1,4 +1,4 @@
-import { Paper, Command } from '../paper';
+import { Paper, Command } from '@bit/bit.core.paper';
 
 export class BitCli {
   constructor(

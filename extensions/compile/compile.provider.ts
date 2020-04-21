@@ -1,9 +1,9 @@
-import { Workspace } from '../workspace';
-import { BitCli } from '../cli';
+import { Workspace } from '@bit/bit.core.workspace';
+import { BitCli } from '@bit/bit.core.cli';
 import { CompileCmd } from './compile.cmd';
 import { Compile } from './compile';
-import { Flows } from '../flows';
-import { Scope } from '../scope';
+import { Flows } from '@bit/bit.core.flows';
+import { Scope } from '@bit/bit.core.scope';
 
 export type CompileDeps = [BitCli, Workspace, Flows, Scope];
 

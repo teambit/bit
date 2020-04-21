@@ -2,12 +2,12 @@
 // :TODO make sure React is not an unused variable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
-import { Command, CLIArgs } from '../../cli';
-import { Flags, PaperOptions } from '../../paper/command';
+import { Command, CLIArgs } from '@bit/bit.core.cli';
+import { Flags, PaperOptions } from '@bit/bit.core.paper';
 import { Flows } from '../flows';
 import { handleRunStream } from './handle-run-stream';
 import { Report } from './report';
-import { Reporter } from '../../reporter';
+import { Reporter } from '@bit/bit.core.reporter';
 
 export class RunCmd implements Command {
   name = 'run <flow> [component...]';

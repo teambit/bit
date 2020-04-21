@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Graph } from 'graphlib';
 import { ExecutionOptions } from '../network/options';
-import { ComponentID, Component } from '../../component';
+import { ComponentID, Component } from '@bit/bit.core.component';
 import { Network } from '../network';
 import { BitId } from '../../../bit-id';
 import { Consumer } from '../../../consumer';
 import { Workspace } from '../../..';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
 import { Flow } from '../flow';
-import { Capsule } from '../../isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };

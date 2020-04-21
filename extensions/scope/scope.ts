@@ -1,7 +1,7 @@
 import LegacyScope from '../../scope/scope';
 import { PersistOptions } from '../../scope/types';
 import { BitIds as ComponentsIds } from '../../bit-id';
-import { Component, ComponentID } from '../component';
+import { Component, ComponentID } from '@bit/bit.core.component';
 import { ComponentHost } from '../../shared-types';
 
 // eslint-disable-next-line import/prefer-default-export

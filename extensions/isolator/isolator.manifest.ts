@@ -1,5 +1,5 @@
 import Isolator from './isolator';
-import { PackageManagerExt } from '../package-manager';
+import { PackageManagerExt } from '@bit/bit.core.package-manager';
 
 export default {
   name: 'Isolator',
