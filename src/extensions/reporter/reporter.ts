@@ -6,7 +6,6 @@ import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
 
 export default class Reporter {
-  private phaseName?: string;
   private outputShouldBeSuppressed = false;
   private statusLine = new StatusLine();
   constructor() {
@@ -17,26 +16,9 @@ export default class Reporter {
         this.statusLine.clear();
       }
       if (this.shouldWriteOutput) {
-        this.statusLine.reRender(this.phaseName);
+        this.statusLine.reRender();
       }
     });
-  }
-  startPhase(phaseName) {
-    this.phaseName = phaseName;
-    this.statusLine.clear();
-    {
-      const columnCount = getColumnCount();
-      const titleUnderline = Array(Math.round(columnCount / 2))
-        .fill('-')
-        .join('');
-      if (!this.outputShouldBeSuppressed) {
-        console.log('');
-        console.log(phaseName);
-        console.log(titleUnderline);
-        console.log('');
-        this.statusLine.reRender(phaseName);
-      }
-    }
   }
   suppressOutput() {
     this.outputShouldBeSuppressed = true;
@@ -62,8 +44,10 @@ export default class Reporter {
     logger.onInfo((...messages) => {
       if (this.shouldWriteOutput) {
         this.statusLine.stopSpinner();
-        console.log(chalk.hex(stc(id))(messages.join(' ')));
-        this.statusLine.reRender(this.phaseName);
+        // TODO: bring these back through the logger extension
+        // console.log(chalk.hex(stc(id))(messages.join(' ')));
+        chalk.hex(stc(id))(messages.join(' '));
+        this.statusLine.reRender();
       }
     });
     logger.onWarn((...messages) => {
@@ -73,19 +57,19 @@ export default class Reporter {
         lines
           .filter(line => line.replace(/\s+/, '').length > 0)
           .forEach(line => {
-            console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+            // TODO: bring these back through the logger extension
+            // console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
+            chalk.hex(stc(id))(line);
           });
-        this.statusLine.reRender(this.phaseName);
+        this.statusLine.reRender();
       }
     });
     return logger;
   }
   end() {
-    this.phaseName = undefined;
-    this.statusLine.clearIds();
-    this.statusLine.reRender(this.phaseName);
+    this.statusLine.clear();
   }
   private get shouldWriteOutput() {
-    return this.phaseName && !this.outputShouldBeSuppressed;
+    return !this.outputShouldBeSuppressed;
   }
 }
