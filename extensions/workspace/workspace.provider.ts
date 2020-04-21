@@ -2,11 +2,11 @@ import { Harmony } from '@teambit/harmony';
 import { Scope } from '@bit/bit.core.scope';
 import Workspace from './workspace';
 import { ComponentFactory } from '@bit/bit.core.component';
-import { loadConsumerIfExist } from '../../consumer';
+import { loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import { Isolator } from '@bit/bit.core.isolator';
 import { Reporter } from '@bit/bit.core.reporter';
 import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
-import ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 
 export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
 

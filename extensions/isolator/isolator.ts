@@ -2,18 +2,18 @@ import path from 'path';
 import hash from 'object-hash';
 import fs from 'fs-extra';
 import { flatten, filter, uniq, concat, map, equals } from 'ramda';
-import { CACHE_ROOT } from '../../constants';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import { Component } from '@bit/bit.core.component';
-import ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { PackageManager } from '@bit/bit.core.package-manager';
 import { Capsule } from './capsule';
 import writeComponentsToCapsules from './write-components-to-capsules';
-import Consumer from '../../consumer/consumer';
-import { loadScope } from '../../scope';
+import Consumer from 'bit-bin/dist/consumer/consumer';
+import { loadScope } from 'bit-bin/dist/scope';
 import CapsuleList from './capsule-list';
-import Graph from '../../scope/graph/graph'; // TODO: use graph extension?
-import { BitId } from '../../bit-id';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import Graph from 'bit-bin/dist/scope/graph/graph'; // TODO: use graph extension?
+import { BitId } from 'bit-bin/dist/bit-id';
+import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 

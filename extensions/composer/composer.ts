@@ -1,5 +1,5 @@
 import { Watch } from '@bit/bit.core.watch';
-import { BitId as ComponentId } from '../../bit-id';
+import { BitId as ComponentId } from 'bit-bin/dist/bit-id';
 
 export default class Composer {
   constructor(private watcher: Watch) {}

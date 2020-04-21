@@ -1,12 +1,12 @@
 import path from 'path';
 import { Workspace } from '@bit/bit.core.workspace';
-import ConsumerComponent from '../../consumer/component';
-import { BitId } from '../../bit-id';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { BitId } from 'bit-bin/dist/bit-id';
 import { ResolvedComponent } from '@bit/bit.core.workspace/resolved-component';
-import buildComponent from '../../consumer/component-ops/build-component';
+import buildComponent from 'bit-bin/dist/consumer/component-ops/build-component';
 import { Component } from '@bit/bit.core.component';
 import { Capsule } from '@bit/bit.core.isolator';
-import DataToPersist from '../../consumer/component/sources/data-to-persist';
+import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
 import { Scope } from '@bit/bit.core.scope';
 import { Flows } from '@bit/bit.core.flows';
 import { IdsAndFlows } from '@bit/bit.core.flows';

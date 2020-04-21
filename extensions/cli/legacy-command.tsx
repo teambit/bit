@@ -2,8 +2,8 @@
 import { Color, AppContext } from 'ink';
 import React from 'react';
 import { Command, PaperOptions, GenericObject } from '@bit/bit.core.paper';
-import LegacyInterface from '../../cli/command';
-import allHelp from '../../cli/templates/all-help';
+import LegacyInterface from 'bit-bin/dist/cli/command';
+import allHelp from 'bit-bin/dist/cli/templates/all-help';
 import { getID } from '@bit/bit.core.paper/registry';
 import { Paper } from '@bit/bit.core.paper';
 

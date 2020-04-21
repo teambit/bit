@@ -1,4 +1,4 @@
-import { BitId as ComponentId } from '../../../bit-id';
+import { BitId as ComponentId } from 'bit-bin/dist/bit-id';
 import { AnyMap } from './types';
 
 export class ExtensionConfig {

@@ -2,7 +2,7 @@ import { Workspace } from '@bit/bit.core.workspace';
 import { Scope } from '@bit/bit.core.scope';
 import { ComponentGraph } from './component-graph';
 import { ComponentFactory } from '@bit/bit.core.component';
-import { buildOneGraphForComponents } from '../../scope/graph/components-graph';
+import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 
 export class GraphBuilder {
   _graph?: ComponentGraph;

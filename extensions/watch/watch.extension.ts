@@ -1,5 +1,5 @@
 import Watch from './watch';
-import WatchComponents from '../../consumer/component-ops/watch-components';
+import WatchComponents from 'bit-bin/dist/consumer/component-ops/watch-components';
 
 export default {
   name: 'Watch',

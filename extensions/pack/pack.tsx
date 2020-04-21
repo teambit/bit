@@ -1,8 +1,8 @@
 import path from 'path';
 import execa from 'execa';
 import fs from 'fs-extra';
-import LegacyScope from '../../scope/scope';
-import IsolatedEnvironment from '../../environment';
+import LegacyScope from 'bit-bin/dist/scope/scope';
+import IsolatedEnvironment from 'bit-bin/dist/environment';
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 

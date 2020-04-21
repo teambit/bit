@@ -1,26 +1,26 @@
 import { Harmony, ExtensionManifest } from '@teambit/harmony';
 import { difference, groupBy } from 'ramda';
 import { compact } from 'ramda-adjunct';
-import { Consumer } from '../../consumer';
+import { Consumer } from 'bit-bin/dist/consumer';
 import { Scope } from '@bit/bit.core.scope';
 import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
 import { Component, ComponentFactory } from '@bit/bit.core.component';
-import ComponentsList from '../../consumer/component/components-list';
-import { ComponentHost } from '../../shared-types';
-import { BitIds, BitId } from '../../bit-id';
+import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
+import { ComponentHost } from 'bit-bin/dist/shared-types';
+import { BitIds, BitId } from 'bit-bin/dist/bit-id';
 import { Isolator } from '@bit/bit.core.isolator';
 import { Logger } from '@bit/bit.core.reporter';
-import ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ResolvedComponent } from './resolved-component';
-import AddComponents from '../../consumer/component-ops/add-components';
-import { PathOsBasedRelative } from '../../utils/path';
-import { AddActionResults } from '../../consumer/component-ops/add-components/add-components';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
+import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
+import { PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
+import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
+import { ExtensionConfigList, ExtensionConfigEntry } from 'bit-bin/dist/consumer/config/extension-config-list';
 import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '@bit/bit.core.workspace-config/workspace-settings';
-import legacyLogger from '../../logger/logger';
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
+import legacyLogger from 'bit-bin/dist/logger/logger';
+import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from 'bit-bin/dist/constants';
 /**
  * API of the Bit Workspace
  */

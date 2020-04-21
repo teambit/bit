@@ -1,8 +1,8 @@
 import { omit } from 'ramda';
-import { ResolveModulesConfig } from '../../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
-import LegacyWorkspaceConfig from '../../consumer/config/workspace-config';
-import GeneralError from '../../error/general-error';
-import { ExtensionConfigList, ExtensionConfigEntry } from '../../consumer/config/extension-config-list';
+import { ResolveModulesConfig } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
+import LegacyWorkspaceConfig from 'bit-bin/dist/consumer/config/workspace-config';
+import GeneralError from 'bit-bin/dist/error/general-error';
+import { ExtensionConfigList, ExtensionConfigEntry } from 'bit-bin/dist/consumer/config/extension-config-list';
 
 const LEGACY_PROPS = [
   'dependenciesDirectory',

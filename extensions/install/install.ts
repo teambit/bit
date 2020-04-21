@@ -3,8 +3,8 @@ import path from 'path';
 import { Workspace } from '@bit/bit.core.workspace';
 import { PackageManager } from '@bit/bit.core.package-manager';
 import { Reporter } from '@bit/bit.core.reporter';
-import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { DEFAULT_REGISTRY_DOMAIN_PREFIX, DEFAULT_PACKAGE_MANAGER } from '../../constants';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { DEFAULT_REGISTRY_DOMAIN_PREFIX, DEFAULT_PACKAGE_MANAGER } from 'bit-bin/dist/constants';
 
 async function symlinkCapsulesInNodeModules(isolatedEnvs) {
   await Promise.all(

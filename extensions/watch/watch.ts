@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
-import WatchComponents from '../../consumer/component-ops/watch-components';
-import { BitId as ComponentId } from '../../bit-id';
+import WatchComponents from 'bit-bin/dist/consumer/component-ops/watch-components';
+import { BitId as ComponentId } from 'bit-bin/dist/bit-id';
 
 export default class Watch extends WatchComponents {
   constructor(private legacyWatcher: WatchComponents) {

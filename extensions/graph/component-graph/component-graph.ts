@@ -3,7 +3,7 @@ import { Graph as LegacyGraph } from 'graphlib';
 import Component from '@bit/bit.core.component';
 import { Dependency } from '../dependency';
 import { Workspace } from '@bit/bit.core.workspace';
-import { buildOneGraphForComponents } from '../../../scope/graph/components-graph';
+import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 import ComponentFactory from '@bit/bit.core.component';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 

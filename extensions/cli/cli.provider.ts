@@ -1,8 +1,8 @@
-import { buildRegistry } from '../../cli';
+import { buildRegistry } from 'bit-bin/dist/cli';
 import { BitCli } from './cli';
 import { Paper } from '@bit/bit.core.paper';
 import { LegacyCommand } from './legacy-command';
-import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+import legacyLoadExtensions from 'bit-bin/dist/legacy-extensions/extensions-loader';
 
 export type BitCLIDeps = [Paper];
 

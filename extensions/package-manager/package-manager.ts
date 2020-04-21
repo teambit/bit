@@ -8,8 +8,8 @@ import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '@bit/bit.core.reporter';
 import { Capsule } from '@bit/bit.core.isolator';
-import { pipeOutput } from '../../utils/child_process';
-import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
+import { pipeOutput } from 'bit-bin/dist/utils/child_process';
+import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
 
 export type installOpts = {
   packageManager?: string;

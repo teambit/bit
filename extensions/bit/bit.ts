@@ -1,5 +1,5 @@
 import { Workspace } from '@bit/bit.core.workspace';
-import { Scope } from '../../scope';
+import { Scope } from 'bit-bin/dist/scope';
 
 export default class Bit {
   constructor(
