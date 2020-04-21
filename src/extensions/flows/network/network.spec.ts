@@ -1,6 +1,8 @@
 /* eslint-disable no-sequences */
 import { expect } from 'chai';
 import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-network';
+import { flatMap, toArray, mergeMap } from 'rxjs/operators';
+import { ReplaySubject, Observable } from 'rxjs';
 
 //
 // a graph of inter connected capsules where a->b if a is liable for b (b depends on a).
@@ -81,21 +83,21 @@ describe('Network', () => {
       }
     };
     const stream = await createTestNetworkStream(testCase);
-    let result;
-    return new Promise(resolve =>
-      stream.subscribe({
-        next(data: any) {
-          if (data.type === 'network:result') {
-            result = data;
+
+    const flatMapNest = (toFlat: ReplaySubject<any>) =>
+      toFlat.pipe(
+        flatMap((x: any) => {
+          if (x instanceof ReplaySubject) {
+            return flatMapNest(x);
           }
-        },
-        complete() {
-          expect(!!result).to.be.true;
-          expect(Object.keys(result.value).length).to.equal(3);
-          resolve();
-        }
-      })
-    );
+          const subject = new ReplaySubject();
+          subject.next(x);
+          return subject;
+        })
+      );
+    flatMapNest(stream).subscribe((x: any) => console.log('got: ', x.type));
+
+    // stream.pipe(flatMapNest(), flatMapNest()).subscribe((x: any) => console.log('got:', x.type));
   });
   it('structure is a-->b-->c seeder is b', function() {});
   it('structure is a-->b-->c seeder is c ', function() {});
