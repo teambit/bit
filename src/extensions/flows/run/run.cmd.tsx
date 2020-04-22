@@ -58,6 +58,8 @@ export class RunCmd implements Command {
         case LogLevel.DEBUG:
           this.reporter.debug(componentId, messages);
           break;
+        default:
+          break;
       }
     });
     const report = await handleRunStream(result, logPublisher, verbose as boolean);
