@@ -1,6 +1,5 @@
 /* eslint-disable no-sequences */
 import { expect } from 'chai';
-import { ReplaySubject } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-network';
 import { flattenReplaySubject } from '../util/flatten-nested-map';
@@ -10,100 +9,93 @@ import { flattenReplaySubject } from '../util/flatten-nested-map';
 //
 //
 describe('Network', () => {
+  function getTestCaseFunc(toExpect: string, graph: { [k: string]: string[] } = { 'bit/a': [] }, input = ['bit/a']) {
+    return async function() {
+      const testCase: GraphTestCase = {
+        graph,
+        input,
+        options: {
+          concurrency: 4,
+          traverse: 'both',
+          caching: true
+        }
+      };
+      const stream = await createTestNetworkStream(testCase);
+
+      return new Promise((resolve, reject) =>
+        flattenReplaySubject(stream)
+          .pipe(toArray())
+          .subscribe(
+            results => {
+              const report = results
+                .filter((x: any) => x.type === 'flow:result')
+                .reduce((accum, curr: any): string => (accum ? `${accum}-->${curr.id}` : curr.id), '');
+              expect(report).to.equal(toExpect);
+            },
+            reject,
+            resolve
+          )
+      );
+    };
+  }
   describe('sanity', function() {
-    it('should support 1 component graph', async function() {
-      const testCase: GraphTestCase = {
-        graph: {
-          'bit/a': []
-        },
-        input: ['bit/a'],
-        options: {
-          concurrency: 4,
-          traverse: 'both',
-          caching: true
-        }
-      };
-      const stream = await createTestNetworkStream(testCase);
-      let result;
-      return new Promise(resolve =>
-        stream.subscribe({
-          next(data: any) {
-            if (data.type === 'network:result') {
-              result = data;
-            }
-          },
-          complete() {
-            expect(!!result).to.be.true;
-            expect(Object.keys(result.value).length).to.equal(1);
-            resolve();
-          }
-        })
-      );
-    });
-    it('should support 0 component graph', async function() {
-      const testCase: GraphTestCase = {
-        graph: {},
-        input: [],
-        options: {
-          concurrency: 4,
-          traverse: 'both',
-          caching: true
-        }
-      };
-      const stream = await createTestNetworkStream(testCase);
-      let result;
-      return new Promise(resolve =>
-        stream.subscribe({
-          next(data: any) {
-            if (data.type === 'network:result') {
-              result = data;
-            }
-          },
-          complete() {
-            expect(!!result).to.be.true;
-            expect(Object.keys(result.value).length).to.equal(0);
-            resolve();
-          }
-        })
-      );
-    });
+    it('should support 1 component graph', getTestCaseFunc('bit/a'));
+    it('should support 0 component graph', getTestCaseFunc('', {}, []));
   });
 
-  it('structure is a-->b-->c seeder is a ', async function() {
-    const testCase: GraphTestCase = {
-      graph: {
+  it(
+    'structure is a-->b-->c seeder is a ',
+    getTestCaseFunc(
+      'bit/c-->bit/b-->bit/a',
+      {
         'bit/a': [],
         'bit/b': ['bit/a'],
         'bit/c': ['bit/b']
       },
-      input: ['bit/a'],
-      options: {
-        concurrency: 4,
-        traverse: 'both',
-        caching: true
-      }
-    };
-    const stream: ReplaySubject<any> = await createTestNetworkStream(testCase);
+      ['bit/a']
+    )
+  );
 
-    return new Promise((resolve, reject) =>
-      flattenReplaySubject(stream)
-        .pipe(toArray())
-        .subscribe(
-          results => {
-            const report = results
-              .filter((x: any) => x.type === 'flow:result')
-              .reduce((accum, curr: any): string => (accum ? `${accum}-->${curr.id}` : curr.id), '');
-            expect(report).to.equal('bit/c-->bit/b-->bit/a');
-          },
-          reject,
-          resolve
-        )
-    );
+  it(
+    'structure is a-->b-->c seeder is b',
+    getTestCaseFunc(
+      'bit/c-->bit/b-->bit/a',
+      {
+        'bit/a': [],
+        'bit/b': ['bit/a'],
+        'bit/c': ['bit/b']
+      },
+      ['bit/b']
+    )
+  );
 
-    // stream.pipe(flatMapNest(), flatMapNest()).subscribe((x: any) => console.log('got:', x.type));
-  });
-  it('structure is a-->b-->c seeder is b', function() {});
-  it('structure is a-->b-->c seeder is c ', function() {});
-  it('circular structure is a-->b-->c-->d-->b seeder is a', function() {});
-  it('circular structure is a-->b-->c-->d-->b seeder is c', function() {});
+  it(
+    'structure is a-->b-->c seeder is c ',
+    getTestCaseFunc(
+      'bit/c-->bit/b-->bit/a',
+      {
+        'bit/a': [],
+        'bit/b': ['bit/a'],
+        'bit/c': ['bit/b']
+      },
+      ['bit/c']
+    )
+  );
+
+  // currently fails on circular
+  it.skip(
+    'circular structure is a-->b-->c-->b seeder is a',
+    getTestCaseFunc(
+      'bit/c-->bit/b-->bit/a',
+      {
+        'bit/a': [],
+        'bit/b': ['bit/a', 'bit/c'],
+        'bit/c': ['bit/b']
+      },
+      ['bit/a']
+    )
+  );
+
+  // currently fails on circular
+  it.skip('circular structure is a-->b-->c-->b seeder is c', function() {});
 });

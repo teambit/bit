@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Graph } from 'graphlib';
+import { ReplaySubject } from 'rxjs';
 import { ExecutionOptions } from '../network/options';
 import { ComponentID, Component } from '../../component';
 import { Network } from '../network';
@@ -16,7 +17,7 @@ export type GraphTestCase = {
   options: ExecutionOptions;
 };
 
-export async function createTestNetworkStream(testCase: GraphTestCase) {
+export async function createTestNetworkStream(testCase: GraphTestCase): Promise<ReplaySubject<any>> {
   const fakeGetGraph = createGetGraphFn(testCase);
   const fakeWorkSpace = createFakeWorkSpace(fakeGetGraph);
   const ids = testCase.input.map(val => new ComponentID(BitId.parse(val)));
