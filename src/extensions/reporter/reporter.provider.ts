@@ -1,7 +1,8 @@
 import Reporter from './reporter';
+import { Logger } from '../logger';
 
-export type InstallDeps = [Reporter];
+export type ReporterDeps = [Logger];
 
-export async function provideReporter() {
-  return new Reporter();
+export async function provideReporter([logger]: ReporterDeps) {
+  return new Reporter(logger);
 }

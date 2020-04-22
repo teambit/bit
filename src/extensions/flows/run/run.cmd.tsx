@@ -43,25 +43,8 @@ export class RunCmd implements Command {
 
     // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
     const logPublisher = this.logger.createLogPublisher('flows');
-    this.logger.subscribe('flows', (logEntry: LogEntry) => {
-      const { componentId, messages } = logEntry;
-      switch (logEntry.logLevel) {
-        case LogLevel.INFO:
-          this.reporter.info(componentId, messages);
-          break;
-        case LogLevel.WARN:
-          this.reporter.warn(componentId, messages);
-          break;
-        case LogLevel.ERROR:
-          this.reporter.error(componentId, messages);
-          break;
-        case LogLevel.DEBUG:
-          this.reporter.debug(componentId, messages);
-          break;
-        default:
-          break;
-      }
-    });
+
+    this.reporter.subscribe('flows');
     const report = await handleRunStream(result, logPublisher, verbose as boolean);
     this.reporter.end();
     const reportComp = <Report props={report} />;
