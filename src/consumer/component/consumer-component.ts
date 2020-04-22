@@ -88,12 +88,8 @@ export type ComponentProps = {
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  compilerDependencies?: Dependency[];
-  testerDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
   flattenedDevDependencies?: BitIds;
-  flattenedCompilerDependencies?: BitIds;
-  flattenedTesterDependencies?: BitIds;
   packageDependencies?: Record<string, any>;
   devPackageDependencies?: Record<string, any>;
   peerPackageDependencies?: Record<string, any>;
@@ -142,17 +138,9 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  compilerDependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  testerDependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDevDependencies: BitIds;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedCompilerDependencies: BitIds;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedTesterDependencies: BitIds;
   packageDependencies: any;
   devPackageDependencies: any;
   peerPackageDependencies: any;
@@ -229,12 +217,8 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
-    compilerDependencies,
-    testerDependencies,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -270,12 +254,8 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
-    this.setCompilerDependencies(compilerDependencies);
-    this.setTesterDependencies(testerDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
-    this.flattenedCompilerDependencies = flattenedCompilerDependencies || new BitIds();
-    this.flattenedTesterDependencies = flattenedTesterDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -318,8 +298,6 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
-    newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
-    newInstance.setTesterDependencies(this.testerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
     newInstance.files = this.files.map(file => file.clone());
     newInstance.dists = this.dists.clone();
@@ -348,14 +326,6 @@ export default class Component {
 
   setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
-  }
-
-  setCompilerDependencies(compilerDependencies?: Dependency[]) {
-    this.compilerDependencies = new Dependencies(compilerDependencies);
-  }
-
-  setTesterDependencies(testerDependencies?: Dependency[]) {
-    this.testerDependencies = new Dependencies(testerDependencies);
   }
 
   setDists(dists: Dist[] | undefined, mainDistFile?: PathOsBased | undefined) {
@@ -443,38 +413,16 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedCompilerDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedCompilerDependencies);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedTesterDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedTesterDependencies);
-  }
-
   get extensionDependencies() {
     return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
   }
 
   getAllDependencies(): Dependency[] {
-    return [
-      ...this.dependencies.dependencies,
-      ...this.devDependencies.dependencies,
-      ...this.compilerDependencies.dependencies,
-      ...this.testerDependencies.dependencies
-    ];
+    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
   }
 
   getAllDependenciesCloned(): Dependencies {
-    const dependencies = [
-      ...this.dependencies.getClone(),
-      ...this.devDependencies.getClone(),
-      ...this.compilerDependencies.getClone(),
-      ...this.testerDependencies.getClone()
-    ];
+    const dependencies = [...this.dependencies.getClone(), ...this.devDependencies.getClone()];
     return new Dependencies(dependencies);
   }
 
@@ -501,12 +449,7 @@ export default class Component {
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return [
-      ...this.flattenedDependencies,
-      ...this.flattenedDevDependencies,
-      ...this.flattenedCompilerDependencies,
-      ...this.flattenedTesterDependencies
-    ];
+    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
   }
 
   getAllNonEnvsFlattenedDependencies(): BitId[] {
@@ -541,10 +484,6 @@ export default class Component {
     this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.customResolvedPaths.forEach(customPath => {
       customPath.destinationPath = pathNormalizeToLinux(
         stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
@@ -906,8 +845,6 @@ export default class Component {
       tester: this.tester ? this.tester.toObject() : null,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
-      compilerDependencies: this.compilerDependencies.serialize(),
-      testerDependencies: this.testerDependencies.serialize(),
       extensions: this.extensions.map(ext => {
         const res = Object.assign({}, ext);
         if (res.extensionId) {
@@ -985,15 +922,11 @@ export default class Component {
 
     const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
     const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
-    const compilerDependencies = await getDependenciesComponents(getFlatten('flattenedCompilerDependencies'));
-    const testerDependencies = await getDependenciesComponents(getFlatten('flattenedTesterDependencies'));
     const extensionDependencies = await getDependenciesComponents(this.extensions.extensionsBitIds);
     return new ComponentWithDependencies({
       component: this,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       extensionDependencies
     });
   }
@@ -1014,8 +947,6 @@ export default class Component {
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     this.setDependencies(componentFromModel.dependencies.get());
     this.setDevDependencies(componentFromModel.devDependencies.get());
-    this.setCompilerDependencies(componentFromModel.compilerDependencies.get());
-    this.setTesterDependencies(componentFromModel.testerDependencies.get());
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1041,10 +972,6 @@ export default class Component {
       dependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       devDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      compilerDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      testerDependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageDependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -1089,8 +1016,6 @@ export default class Component {
       tester: testerInstance,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
