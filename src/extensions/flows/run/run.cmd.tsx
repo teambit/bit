@@ -8,6 +8,7 @@ import { Flows } from '../flows';
 import { handleRunStream } from './handle-run-stream';
 import { Report } from './report';
 import { Reporter } from '../../reporter';
+import { Logger, LogPublisher, LogEntry, LogLevel } from '../../logger';
 
 export class RunCmd implements Command {
   name = 'run <flow> [component...]';
@@ -24,7 +25,7 @@ export class RunCmd implements Command {
     ['v', 'verbose', 'include stdout in screen']
   ];
 
-  constructor(private flows: Flows, private reporter: Reporter) {}
+  constructor(private flows: Flows, private reporter: Reporter, private logger: Logger) {}
 
   async render([flow, components]: CLIArgs, { parallel, noCache, verbose }: Flags) {
     this.reporter.title(`Starting "${flow}"`);
@@ -34,13 +35,32 @@ export class RunCmd implements Command {
     this.reporter.title('Setting up component execution');
     this.reporter.setStatusText('Resolving Components from the workspace ([COUNTER-TBD])...');
     this.flows.onWorkspaceLoaded(numComponents => {
-      this.reporter.info(`V ${numComponents} Components resolved`);
+      this.reporter.info(undefined, `V ${numComponents} Components resolved`);
       this.reporter.title('Executing flows');
       this.reporter.setStatusText('[COUNTER-TBD] Components remaining. Running');
     });
     const result = await this.flows.runStream(comps, flow as string, { concurrency: concurrencyN, caching: !noCache });
 
-    const report = await handleRunStream(result, this.reporter, verbose as boolean);
+    // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
+    const logPublisher = this.logger.createLogPublisher('flows');
+    this.logger.subscribe('flows', (logEntry: LogEntry) => {
+      const { componentId, messages } = logEntry;
+      switch (logEntry.logLevel) {
+        case LogLevel.INFO:
+          this.reporter.info(componentId, messages);
+          break;
+        case LogLevel.WARN:
+          this.reporter.warn(componentId, messages);
+          break;
+        case LogLevel.ERROR:
+          this.reporter.error(componentId, messages);
+          break;
+        case LogLevel.DEBUG:
+          this.reporter.debug(componentId, messages);
+          break;
+      }
+    });
+    const report = await handleRunStream(result, logPublisher, verbose as boolean);
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;

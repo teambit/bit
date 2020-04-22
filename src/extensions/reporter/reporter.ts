@@ -33,9 +33,61 @@ export default class Reporter {
     console.log('');
     this.statusLine.startSpinner();
   }
-  info(...messages) {
+  info(componentId, messages) {
+    const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
-    console.log(...messages);
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  warn(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        // console.log(chalk.yellow('warn:'), chalk.hex(stc(id))(line));
+        if (componentId) {
+          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(chalk.yellow('warn:'), line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  error(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(chalk.red('error:'), line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  debug(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(line);
+        }
+      });
     this.statusLine.startSpinner();
   }
   createLogger(id) {
