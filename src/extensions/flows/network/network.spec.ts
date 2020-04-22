@@ -29,7 +29,10 @@ describe('Network', () => {
             results => {
               const report = results
                 .filter((x: any) => x.type === 'flow:result')
-                .reduce((accum, curr: any): string => (accum ? `${accum}-->${curr.id}` : curr.id), '');
+                .reduce(
+                  (accum, curr: any): string => (accum ? `${accum}-->${curr.id.toString()}` : curr.id.toString()),
+                  ''
+                );
               expect(report).to.equal(toExpect);
             },
             reject,

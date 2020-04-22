@@ -27,8 +27,8 @@ describe('flows', function() {
           data instanceof Subject && ++taskSubject;
         },
         error(err) {
-          expect(started, 'started message sent');
-          expect(err.value.length, 'got two results').to.equal(2);
+          expect(started, 'started message sent').to.be.true;
+          expect(err.value.tasks.length, 'got two results').to.equal(2);
           expect(taskSubject, 'got subject').to.equal(1);
           resolve();
         },
@@ -61,7 +61,7 @@ describe('flows', function() {
         },
         complete() {
           expect(started, 'started message sent');
-          expect(result.length, 'got two result exactly').to.equal(2);
+          expect(result.tasks.length, 'got two result exactly').to.equal(2);
           expect(taskSubject, 'got two subjects').to.equal(2);
           resolve();
         }
@@ -90,7 +90,7 @@ describe('flows', function() {
         },
         complete() {
           expect(started, 'started message sent');
-          expect(result.length, 'got one result exactly').to.equal(1);
+          expect(result.tasks.length, 'got one result exactly').to.equal(1);
           expect(taskSubject, 'got subject').to.be.true;
           resolve();
         }
@@ -113,7 +113,7 @@ describe('flows', function() {
           }
 
           if (data.type === 'flow:result') {
-            expect(data.value.length).to.equal(0);
+            expect(data.value.tasks.length).to.equal(0);
             gotEmptyResult = true;
           }
         },

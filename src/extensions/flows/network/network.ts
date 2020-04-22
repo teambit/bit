@@ -154,7 +154,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
     duration: endTime.getTime() - startTime.getTime(),
     value: Object.entries(visitedCache).reduce((accum, [key, val]) => {
       accum[key] = {
-        result: val.result.value,
+        result: val.result,
         visited: val.visited
       };
       return accum;

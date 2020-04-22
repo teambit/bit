@@ -17,7 +17,7 @@ const printMessage = (customMessage: string, level = 'info', customPrint = print
 
 const strategies: { [k: string]: (msg: any, reporter: Reporter, verbose: boolean) => void } = {
   'task:stdout': (msg: any, reporter: Reporter, verbose = true): void => {
-    verbose && reporter.createLogger(msg.id).info(msg.value);
+    verbose && reporter.createLogger(msg.id.toString()).info(msg.value);
   },
   'task:stderr': print('error'),
   'flow:start': printMessage('***** Flow Started *****'),
