@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 import stc from 'string-to-color';
 import chalk from 'chalk';
-import Logger from './logger';
+import { Logger, LogEntry, LogLevel } from '../logger';
 import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
 
 export default class Reporter {
   private outputShouldBeSuppressed = false;
   private statusLine = new StatusLine();
-  constructor() {
+  constructor(private logger: Logger) {
     this.outputShouldBeSuppressed = process.argv.includes('--json') || process.argv.includes('-j');
     process.on('SIGWINCH', () => {
       const columnCount = getColumnCount();
@@ -33,38 +33,86 @@ export default class Reporter {
     console.log('');
     this.statusLine.startSpinner();
   }
-  info(...messages) {
+  info(componentId, messages) {
+    const lines = messages.split(/\n/);
     this.statusLine.stopSpinner();
-    console.log(...messages);
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(line);
+        }
+      });
     this.statusLine.startSpinner();
   }
-  createLogger(id) {
-    const logger = new Logger();
-    this.statusLine.addId(id);
-    logger.onInfo((...messages) => {
-      if (this.shouldWriteOutput) {
-        this.statusLine.stopSpinner();
-        // TODO: bring these back through the logger extension
-        // console.log(chalk.hex(stc(id))(messages.join(' ')));
-        chalk.hex(stc(id))(messages.join(' '));
-        this.statusLine.reRender();
+  warn(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        // console.log(chalk.yellow('warn:'), chalk.hex(stc(id))(line));
+        if (componentId) {
+          console.log(chalk.yellow('warn:'), chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(chalk.yellow('warn:'), line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  error(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.red('error:'), chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(chalk.red('error:'), line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  debug(componentId, messages) {
+    const lines = messages.split(/\n/);
+    this.statusLine.stopSpinner();
+    lines
+      .filter(line => line.replace(/\s+/, '').length > 0)
+      .forEach(line => {
+        if (componentId) {
+          console.log(chalk.hex(stc(componentId))(line));
+        } else {
+          console.log(line);
+        }
+      });
+    this.statusLine.startSpinner();
+  }
+  subscribe(extensionName) {
+    this.logger.subscribe(extensionName, (logEntry: LogEntry) => {
+      const { componentId, messages } = logEntry;
+      switch (logEntry.logLevel) {
+        case LogLevel.INFO:
+          this.info(componentId, messages);
+          break;
+        case LogLevel.WARN:
+          this.warn(componentId, messages);
+          break;
+        case LogLevel.ERROR:
+          this.error(componentId, messages);
+          break;
+        case LogLevel.DEBUG:
+          this.debug(componentId, messages);
+          break;
+        default:
+          break;
       }
     });
-    logger.onWarn((...messages) => {
-      if (this.shouldWriteOutput) {
-        const lines = messages.join(' ').split(/\n/);
-        this.statusLine.stopSpinner();
-        lines
-          .filter(line => line.replace(/\s+/, '').length > 0)
-          .forEach(line => {
-            // TODO: bring these back through the logger extension
-            // console.log(chalk.yellow('WARN:'), chalk.hex(stc(id))(line));
-            chalk.hex(stc(id))(line);
-          });
-        this.statusLine.reRender();
-      }
-    });
-    return logger;
+  }
+  unsubscribe(extensionName) {
+    this.logger.unsubscribe(extensionName);
   }
   end() {
     this.statusLine.clear();

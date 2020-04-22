@@ -9,7 +9,7 @@ import ComponentsList from '../../consumer/component/components-list';
 import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
-import { Logger } from '../reporter';
+import { LogPublisher } from '../logger';
 import ConsumerComponent from '../../consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from '../../consumer/component-ops/add-components';
@@ -51,7 +51,7 @@ export default class Workspace implements ComponentHost {
 
     readonly isolateEnv: Isolator,
 
-    private logger: Logger,
+    private logger: LogPublisher,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 
