@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ReplaySubject, from, zip } from 'rxjs';
-import { mergeMap, tap, map, filter, exhaust } from 'rxjs/operators';
+import { mergeMap, tap, map, filter, exhaust, take, concatAll } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
@@ -18,6 +18,8 @@ import { Capsule } from '../../isolator/capsule';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
+
+let didEnd = 0;
 
 type CacheValue = {
   visited: boolean;
@@ -45,7 +47,6 @@ export class Network {
       type: 'network:start',
       startTime
     });
-
     const graph = await this.createGraph(options);
 
     const createCapsuleStartTime = new Date();
@@ -64,6 +65,7 @@ export class Network {
 
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
+
     walk();
     this.emitter.emit('executionEnded');
     return networkStream;
@@ -88,16 +90,17 @@ export class Network {
         endNetwork(stream, startTime, visitedCache);
         return;
       }
-      const seeders = from(getSeeders(graph, visitedCache));
-      const flows = from(getSeeders(graph, visitedCache)).pipe(
+      const seeders = from(getSeeders(graph, visitedCache, amount)).pipe(take(5));
+      const flows = from(getSeeders(graph, visitedCache, amount)).pipe(
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
+        // take(2)
       );
+      amount += getSeeders(graph, visitedCache, amount).length;
       zip(
         zip(seeders, flows).pipe<ReplaySubject<any>>(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
         seeders
       ).subscribe({
         next([flowStream, seed]) {
-          amount += 1;
           const cacheValue = visitedCache[seed];
           cacheValue.visited = true;
           stream.next(flowStream);
@@ -110,17 +113,26 @@ export class Network {
               }
               return data;
             },
-            complete() {
+            complete(): void {
               amount -= 1;
               graph.removeNode(seed);
               const sources = getSources(graph, visitedCache);
-              return (sources.length > 0 || amount === 0) && walk();
+              if (amount === 0) {
+                walk();
+              }
             },
             error(err) {
               amount -= 1;
+              graph.removeNode(seed);
               handleNetworkError(seed, graph, visitedCache, err);
             }
           });
+        },
+        error(err) {
+          // console.log('GOT ERROR!!!!!!')
+        },
+        complete() {
+          // console.log('GOT DONE')
         }
       });
     };
@@ -138,20 +150,19 @@ export class Network {
   }
 }
 
-function getSeeders(g: Graph, cache: Cache) {
+function getSeeders(g: Graph, cache: Cache, amount = 0) {
   const sources = getSources(g, cache);
-  return sources.length ? sources : [g.nodes()[0]].filter(v => v);
+  return sources.length ? sources.slice(0, Math.max(5 - amount, 0)) : [g.nodes()[0]].filter(v => v);
 }
 function getSources(g: Graph, cache: Cache) {
   return g.sources().filter(seed => !cache[seed].visited);
 }
 
 function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCache: Cache) {
-  const endTime = new Date();
-  network.next({
+  const endMessage = {
     type: 'network:result',
-    endTime,
-    duration: endTime.getTime() - startTime.getTime(),
+    startTime,
+    duration: new Date().getTime() - startTime.getTime(),
     value: Object.entries(visitedCache).reduce((accum, [key, val]) => {
       accum[key] = {
         result: val.result,
@@ -163,7 +174,10 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
     code: !!~Object.entries(visitedCache).findIndex(
       ([k, value]: [string, CacheValue]) => !value.visited || value.result instanceof Error
     )
-  });
+  };
+  const sorted = Object.values(endMessage.value);
+
+  network.next(endMessage);
   network.complete();
 }
 

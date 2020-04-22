@@ -47,7 +47,7 @@ describe('Network', () => {
   });
 
   it(
-    'structure is a-->b-->c seeder is a ',
+    'structure is c-->b-->a seeder is a ',
     getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
@@ -60,7 +60,7 @@ describe('Network', () => {
   );
 
   it(
-    'structure is a-->b-->c seeder is b',
+    'structure is c-->b-->a seeder is b',
     getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
@@ -73,7 +73,7 @@ describe('Network', () => {
   );
 
   it(
-    'structure is a-->b-->c seeder is c ',
+    'structure is c-->b-->a seeder is c ',
     getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {
@@ -85,9 +85,23 @@ describe('Network', () => {
     )
   );
 
+  it(
+    'structure is l->a c->h c->a c->l',
+    getTestCaseFunc(
+      'bit/c-->bit/l-->bit/h-->bit/a',
+      {
+        'bit/a': [],
+        'bit/l': ['bit/a'],
+        'bit/h': [],
+        'bit/c': ['bit/a', 'bit/l', 'bit/h']
+      },
+      []
+    )
+  );
+
   // currently fails on circular
   it.skip(
-    'circular structure is a-->b-->c-->b seeder is a',
+    'circular structure is b-->c-->b-->a seeder is a',
     getTestCaseFunc(
       'bit/c-->bit/b-->bit/a',
       {

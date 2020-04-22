@@ -6,7 +6,7 @@ import { IS_WINDOWS } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-describe('flows functionality', function() {
+describe.only('flows functionality', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {

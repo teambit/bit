@@ -111,6 +111,7 @@ export default class Workspace implements ComponentHost {
   }
 
   async loadCapsules(bitIds: string[]) {
+    console.log('load capsules');
     // throw new Error("Method not implemented.");
     const components = await this.load(bitIds);
     return components.map(comp => comp.capsule);
@@ -122,6 +123,7 @@ export default class Workspace implements ComponentHost {
    */
   async load(ids: Array<BitId | string>) {
     const components = await this.getMany(ids);
+    console.log('create network');
     const isolatedEnvironment = await this.isolateEnv.createNetworkFromConsumer(
       components.map(c => c.id.toString()),
       this.consumer,
@@ -129,6 +131,7 @@ export default class Workspace implements ComponentHost {
         packageManager: 'npm'
       }
     );
+    console.log('nework ready');
     const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
       accum[curr.id.toString()] = curr.value;
       return accum;

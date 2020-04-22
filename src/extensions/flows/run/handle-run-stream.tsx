@@ -35,7 +35,7 @@ export function reportRunStream(stream: ReplaySubject<any>, reporter: Reporter, 
           result = message;
         }
         if (strategies[message.type]) {
-          strategies[message.type(message, reporter, verbose)];
+          strategies[message.type](message, reporter, verbose);
         } else {
           reporter
             .createLogger(message.id)
@@ -43,7 +43,9 @@ export function reportRunStream(stream: ReplaySubject<any>, reporter: Reporter, 
         }
         return result;
       },
-      complete: () => resolve(result),
+      complete: () => {
+        return resolve(result);
+      },
       error: reject
     });
   });

@@ -16,7 +16,7 @@ export class Flow {
     subject.next({
       type: 'flow:start',
       id,
-      value: startTime
+      startTime
     });
     if (this.tasks && this.tasks.length) {
       this.execSequence(capsule, subject, startTime, 0);
@@ -65,7 +65,7 @@ export class Flow {
     return this.tasks.length;
   }
 
-  private handleDone(subject: Subject<any>, capsule: Capsule, start: Date, isError = false) {
+  private handleDone(subject: Subject<any>, capsule: Capsule, startTime: Date, isError = false) {
     const endTime = new Date();
     subject[isError ? 'error' : 'next']({
       type: 'flow:result',
@@ -74,8 +74,8 @@ export class Flow {
         capsule,
         tasks: this.result
       },
-      endTime,
-      duration: endTime.getTime() - start.getTime()
+      startTime,
+      duration: endTime.getTime() - startTime.getTime()
     });
     subject.complete();
     this.result = [];

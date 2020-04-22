@@ -9,7 +9,6 @@ type FlowMessages<F = any, T = any> = ReplaySubject<F | ReplaySubject<T>>;
  *
  * @param toFlat ReplaySubject with nested messages
  */
-
 export function flattenReplaySubject(toFlat: ReplaySubject<NetworkMessages> | ReplaySubject<FlowMessages>) {
   return toFlat.pipe(flattenNestedMap() as any);
 }
