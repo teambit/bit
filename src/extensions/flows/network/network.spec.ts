@@ -1,8 +1,9 @@
 /* eslint-disable no-sequences */
 import { expect } from 'chai';
+import { ReplaySubject } from 'rxjs';
+import { toArray } from 'rxjs/operators';
 import { GraphTestCase, createTestNetworkStream } from '../util/create-fake-network';
-import { flatMap, toArray, mergeMap } from 'rxjs/operators';
-import { ReplaySubject, Observable } from 'rxjs';
+import { flattenReplaySubject } from '../util/flatten-nested-map';
 
 //
 // a graph of inter connected capsules where a->b if a is liable for b (b depends on a).
@@ -68,7 +69,7 @@ describe('Network', () => {
     });
   });
 
-  it.only('structure is a-->b-->c seeder is a ', async function() {
+  it('structure is a-->b-->c seeder is a ', async function() {
     const testCase: GraphTestCase = {
       graph: {
         'bit/a': [],
@@ -82,20 +83,22 @@ describe('Network', () => {
         caching: true
       }
     };
-    const stream = await createTestNetworkStream(testCase);
+    const stream: ReplaySubject<any> = await createTestNetworkStream(testCase);
 
-    const flatMapNest = (toFlat: ReplaySubject<any>) =>
-      toFlat.pipe(
-        flatMap((x: any) => {
-          if (x instanceof ReplaySubject) {
-            return flatMapNest(x);
-          }
-          const subject = new ReplaySubject();
-          subject.next(x);
-          return subject;
-        })
-      );
-    flatMapNest(stream).subscribe((x: any) => console.log('got: ', x.type));
+    return new Promise((resolve, reject) =>
+      flattenReplaySubject(stream)
+        .pipe(toArray())
+        .subscribe(
+          results => {
+            const report = results
+              .filter((x: any) => x.type === 'flow:result')
+              .reduce((accum, curr: any): string => (accum ? `${accum}-->${curr.id}` : curr.id), '');
+            expect(report).to.equal('bit/c-->bit/b-->bit/a');
+          },
+          reject,
+          resolve
+        )
+    );
 
     // stream.pipe(flatMapNest(), flatMapNest()).subscribe((x: any) => console.log('got:', x.type));
   });

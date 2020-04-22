@@ -112,7 +112,6 @@ export default class Workspace implements ComponentHost {
 
   async loadCapsules(bitIds: string[]) {
     // throw new Error("Method not implemented.");
-    console.log('BEFORE LOAD!!!!!!');
     const components = await this.load(bitIds);
     return components.map(comp => comp.capsule);
   }

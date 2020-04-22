@@ -26,17 +26,16 @@ export function flattenNestedMap<N = any, F = any, T = any>(isRecursive = true):
 }
 
 /**
- * takes an object and creates a ReplaySubject  from it.
+ * takes an object and creates a ReplaySubject from it.
  *
  * @param toSubject
  */
-export function toReplaySubject<N, F, T>(
-  toSubject: N | F | ReplaySubject<FlowMessages<F, T>> | ReplaySubject<FlowMessages<F, T>>
-) {
+export function toReplaySubject<N, F, T>(toSubject: N | F | ReplaySubject<FlowMessages<F, T>>) {
   if (toSubject instanceof ReplaySubject) {
     return toSubject;
   }
   const subject = new ReplaySubject<any>();
   subject.next(toSubject);
+  subject.complete();
   return subject;
 }

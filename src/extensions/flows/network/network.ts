@@ -47,7 +47,20 @@ export class Network {
     });
 
     const graph = await this.createGraph(options);
+
+    const createCapsuleStartTime = new Date();
+    networkStream.next({
+      type: 'network:capsules:start',
+      startTime: createCapsuleStartTime
+    });
+
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
+
+    networkStream.next({
+      type: 'network:capsules:end',
+      startTime: createCapsuleStartTime,
+      duration: new Date().getTime() - createCapsuleStartTime.getTime()
+    });
 
     this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph);
@@ -59,9 +72,12 @@ export class Network {
   onWorkspaceLoaded(cb) {
     this.emitter.on('workspaceLoaded', cb);
   }
+  // TODO: Qballer
   // caching
-  // concurrency
-  // twice
+  // concurrency -
+  // twice -- seems ok, write test
+  // not done  - DONE
+  // remove emitter
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
     const postFlow = this.postFlow ? this.postFlow.bind(this) : null;
@@ -165,7 +181,6 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
 }
 
 async function createCapsuleVisitCache(graph: Graph, workspace: Workspace): Promise<Cache> {
-  console.log('before load capsules');
   const capsules = await workspace.loadCapsules(graph.nodes());
   return capsules.reduce((accum, curr) => {
     accum[curr.component.id.toString()] = {

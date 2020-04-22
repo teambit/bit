@@ -1,57 +1,50 @@
 import { ReplaySubject } from 'rxjs';
 import { Reporter } from '../../reporter';
+import { flattenReplaySubject } from '../util/flatten-nested-map';
 
-export async function handleRunStream(stream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
-  const summary: { [k: string]: string } = {};
-  const streamPromise = await new Promise(resolve =>
-    stream.subscribe({
-      next(networkData: any) {
-        if (networkData instanceof ReplaySubject) {
-          handleFlowStream(networkData, reporter, summary, verbose);
-        } else if (networkData.type === 'network:start') {
-          //
-        } else if (networkData.type === 'network:result') {
-          summary['network:result'] = networkData;
-        } else {
-          reporter.createLogger('run-infra').warn(`~~~~~~ Got ${networkData.type} on ${networkData.id}~~~~~~`);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const print = (level = 'info') => (msg: any, reporter: Reporter, _verbose = true): void => {
+  reporter.createLogger(msg.id)[level](msg.value);
+};
+
+const printMessage = (customMessage: string, level = 'info', customPrint = print) => (
+  msg: any,
+  reporter: Reporter,
+  verbose: boolean
+) => {
+  return customPrint(level)({ ...msg, value: customMessage || msg.value }, reporter, verbose);
+};
+
+const strategies: { [k: string]: (msg: any, reporter: Reporter, verbose: boolean) => void } = {
+  'task:stdout': (msg: any, reporter: Reporter, verbose = true): void => {
+    verbose && reporter.createLogger(msg.id).info(msg.value);
+  },
+  'task:stderr': print('error'),
+  'flow:start': printMessage('***** Flow Started *****'),
+  'flow:result': print(),
+  'network:start': printMessage('***** Run Flows Started *****'),
+  'network:result': printMessage('***** Run Flows Finished *****')
+};
+
+export function reportRunStream(stream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
+  let result;
+  return new Promise((resolve, reject) => {
+    flattenReplaySubject(stream).subscribe({
+      next(message: any) {
+        if (message.type === 'network:result') {
+          result = message;
         }
+        if (strategies[message.type]) {
+          strategies[message.type(message, reporter, verbose)];
+        } else {
+          reporter
+            .createLogger(message.id)
+            .info('got unknown message from network: ', message.type, 'from', message.id);
+        }
+        return result;
       },
-      complete() {
-        resolve(summary);
-      },
-      error() {
-        resolve(summary);
-      }
-    })
-  );
-
-  return streamPromise;
-}
-function handleFlowStream(networkData: ReplaySubject<any>, reporter: Reporter, summery: any, verbose: boolean) {
-  networkData.subscribe({
-    next(flowData: any) {
-      if (flowData.type === 'flow:start') {
-        reporter.createLogger(flowData.id).info(`***** started ${flowData.id} *****`);
-      } else if (flowData.type === 'flow:result') {
-        reporter.createLogger(flowData.id).info(`***** finished ${flowData.id} - duration:${flowData.duration} *****`);
-        summery[flowData.id] = flowData;
-      } else if (flowData instanceof ReplaySubject) {
-        handleTaskStream(flowData, reporter, verbose);
-      }
-    },
-    error() {},
-    complete() {}
-  });
-}
-
-function handleTaskStream(taskStream: ReplaySubject<any>, reporter: Reporter, verbose: boolean) {
-  taskStream.subscribe({
-    next(data: any) {
-      if (data.type === 'task:stdout' && verbose) {
-        reporter.createLogger(data.id).info(data.value);
-      } else if (data.type === 'task:stderr') {
-        reporter.createLogger(data.id).warn(data.value);
-      }
-    }
+      complete: () => resolve(result),
+      error: reject
+    });
   });
 }

@@ -97,7 +97,6 @@ async function safeGetLock(
       await options.init(cachePath);
     } else {
       lockState = 'UNLOCKERROR';
-      // console.log('something else: ', e.code) should log this
     }
   }
   return lockState === 'UNLOCK'
