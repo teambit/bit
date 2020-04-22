@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'gulp-typescript',
+  name: 'typescript',
   dependencies: [],
   provider: async () => {}
 };

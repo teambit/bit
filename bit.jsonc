@@ -44,6 +44,12 @@
    * new set of dependencies.
   **/
   "variants": {
+    "create": {
+      "@bit/bit.core/typescript": {},
+      "compile": {
+        "compiler": "#@bit/bit.core.typescript:transpile"
+      }
+    },
     /**
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.

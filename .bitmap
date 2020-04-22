@@ -951,6 +951,34 @@
         "origin": "AUTHORED",
         "exported": false
     },
+    "typescript": {
+        "files": [
+            {
+                "relativePath": "index.js",
+                "test": false,
+                "name": "index.js"
+            },
+            {
+                "relativePath": "transpile.js",
+                "test": false,
+                "name": "transpile.js"
+            },
+            {
+                "relativePath": "tsconfig.default.json",
+                "test": false,
+                "name": "tsconfig.default.json"
+            },
+            {
+                "relativePath": "typescript.manifest.js",
+                "test": false,
+                "name": "typescript.manifest.js"
+            }
+        ],
+        "mainFile": "index.js",
+        "rootDir": "extensions/typescript",
+        "origin": "AUTHORED",
+        "exported": false
+    },
     "watch": {
         "files": [
             {
