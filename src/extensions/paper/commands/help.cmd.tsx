@@ -7,13 +7,13 @@ import { Command } from '../command';
 export function Help(Renderer = DefaultHelpRender) {
   return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {
     const help: HelpProps = Object.entries(commands)
-      .filter(([_name, command]) => !command.private && !!command.shortDescription)
+      .filter(([_name, command]) => !command.private && (command.shortDescription || command.description))
       .reduce(function(partialHelp, [id, command]) {
         partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},
-          description: groups[command.group!] || ''
+          description: groups[command.group!] || command.group
         };
-        partialHelp[command.group!].commands[id] = command.shortDescription;
+        partialHelp[command.group!].commands[id] = command.shortDescription || command.description;
         return partialHelp;
       }, {});
     return render(<Renderer {...help} />);

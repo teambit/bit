@@ -1,7 +1,6 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const fetch = require('make-fetch-happen');
 const semver = require('semver');
-const mkdirp = require('mkdirp');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
@@ -83,7 +82,7 @@ function getInstallationPathFromEnv() {
 function correctInstallationPathForWindows(originalDir) {
   const osPath = process.env.path;
   const splittedOsPath = osPath.split(';');
-  const pathsExistingInOrigDir = splittedOsPath.filter((currPath) => {
+  const pathsExistingInOrigDir = splittedOsPath.filter(currPath => {
     const includes = currPath && originalDir.includes(currPath);
     return includes;
   });
@@ -125,7 +124,7 @@ function getInstallationPath() {
       const updatedDir = correctInstallationPathForWindows(dir);
       finalDir = updatedDir || dir;
     }
-    mkdirp.sync(finalDir);
+    fs.ensureDirSync(finalDir);
     return finalDir;
   }
 }
