@@ -101,6 +101,11 @@
         "react": ">15.0.1"
       }
     },
+    "cli": {
+      "@teambit/package": {
+        "bin": "app.js"
+      }
+    },
     "extensions/*": {
       /**
        * configure extensions to be compiled by the TypeScript environment.

@@ -52,6 +52,11 @@
     "cli": {
         "files": [
             {
+                "relativePath": "app.js",
+                "test": false,
+                "name": "app.js"
+            },
+            {
                 "relativePath": "cli.extension.ts",
                 "test": false,
                 "name": "cli.extension.ts"
