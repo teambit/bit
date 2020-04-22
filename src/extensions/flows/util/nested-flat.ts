@@ -1,13 +1,17 @@
 import { ReplaySubject } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
+type NetworkMessages<N = any, F = any, T = any> = ReplaySubject<N | FlowMessages<F, T>>;
+type FlowMessages<F = any, T = any> = ReplaySubject<F | ReplaySubject<T>>;
+
 /**
  * takes a stream of higher order ReplaySubjects and flattens it recursively.
  *
  * @param toFlat ReplaySubject with nested messages
  */
-export function flattenReplaySubject<T = any>(toFlat: ReplaySubject<T>) {
-  return toFlat.pipe(flattenNested());
+
+export function flattenReplaySubject(toFlat: ReplaySubject<NetworkMessages> | ReplaySubject<FlowMessages>) {
+  return toFlat.pipe(flattenNestedMap() as any);
 }
 
 /**
@@ -15,8 +19,10 @@ export function flattenReplaySubject<T = any>(toFlat: ReplaySubject<T>) {
  *
  * @param isRecursive should flatten recursively or 1 level
  */
-export function flattenNested<T = any>(isRecursive = true) {
-  return flatMap((x: T) => (x instanceof ReplaySubject && isRecursive ? flattenReplaySubject(x) : toReplaySubject(x)));
+export function flattenNestedMap<N = any, F = any, T = any>(isRecursive = true): ReplaySubject<N | F | T> {
+  return flatMap(function(toFlat: N | ReplaySubject<FlowMessages<F, T>>) {
+    return toFlat instanceof ReplaySubject && isRecursive ? flattenReplaySubject(toFlat) : toReplaySubject(toFlat);
+  }) as any;
 }
 
 /**
@@ -24,11 +30,13 @@ export function flattenNested<T = any>(isRecursive = true) {
  *
  * @param toSubject
  */
-export function toReplaySubject<T = any>(toSubject: T | ReplaySubject<T>) {
+export function toReplaySubject<N, F, T>(
+  toSubject: N | F | ReplaySubject<FlowMessages<F, T>> | ReplaySubject<FlowMessages<F, T>>
+) {
   if (toSubject instanceof ReplaySubject) {
     return toSubject;
   }
-  const subject = new ReplaySubject<T>();
+  const subject = new ReplaySubject<any>();
   subject.next(toSubject);
   return subject;
 }
