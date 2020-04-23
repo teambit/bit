@@ -1,0 +1,1 @@
+export { TemplatePublicType } from './types';
