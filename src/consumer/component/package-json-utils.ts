@@ -117,6 +117,8 @@ export function preparePackageJsonToWrite(
     return dependencies.reduce((acc, depId: BitId) => {
       let packageDependency;
       const devCapsulePath = capsulePaths && capsulePaths.getValueIgnoreScopeAndVersion(depId);
+      // consider removing the next if block, when coming from a capsule, it shouldn't reach here
+      // because writeBitDependencies is false
       if (capsulePaths && devCapsulePath) {
         const relative = path.relative(
           capsulePaths.getValueIgnoreScopeAndVersion(component.id) as string,

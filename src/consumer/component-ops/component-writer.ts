@@ -167,6 +167,9 @@ export default class ComponentWriter {
         // this only needs to be done in an isolated
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
+        // bit-bin should not be installed in the capsule. it'll be symlinked later on.
+        // see package-manager.linkBitBinInCapsule();
+        packageJson.removeDependency('bit-bin');
       }
 
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
