@@ -57,7 +57,7 @@ Usage instructions, focused for the actual end user, not other maintainers that 
 Extended description, preferably with a specific use case where this extension is required to solve a real-world problem.
 
 ## API Usage
-Here we should explain (and demonstrate) how to use this extension progrematiccaly.
+Here we should explain (and demonstrate) how to use this extension programmatically.
 It mainly need to serve other people who want to build extension that consume this extension.
 
 Sections to consider here:
