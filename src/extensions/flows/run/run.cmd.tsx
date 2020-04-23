@@ -10,7 +10,7 @@ import { reportRunStream } from './handle-run-stream';
 import { Report } from './report';
 import { Reporter } from '../../reporter';
 import { Logger, LogPublisher } from '../../logger';
-import { flattenReplaySubject } from '../util/flatten-nested-map';
+import { flattenReplaySubject, flattenNestedMap } from '../util/flatten-nested-map';
 
 export class RunCmd implements Command {
   name = 'run <flow> [component...]';
@@ -41,19 +41,23 @@ export class RunCmd implements Command {
       this.reporter.title('Executing flows');
       this.reporter.setStatusText('[COUNTER-TBD] Components remaining. Running');
     });
-    const result: ReplaySubject<any> = await this.flows.runStream(comps, flow as string, {
+    const runStream: ReplaySubject<any> = await this.flows.runStream(comps, flow as string, {
       concurrency: concurrencyN,
       caching: !noCache
     });
     console.log('can Register to stream');
     // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
     const logPublisher = this.logger.createLogPublisher('flows');
-    flattenReplaySubject(result).subscribe(message => {
-      console.log(`got message from ${message.id} of ${message.type}`);
-    });
+
+    // runStream.pipe(flattenNestedMap())
+    // .subscribe({
+    //   next(data:any){
+    //     console.log(`got ${data.type} from ${data.id}`)
+    //   }
+    // })
     this.reporter.subscribe('flows');
     console.log('yes');
-    const report = await reportRunStream(result, logPublisher, verbose as boolean);
+    const report = await reportRunStream(runStream, logPublisher, verbose as boolean);
     console.log('no');
     // const report = await handleRunStream(result, logPublisher, verbose as boolean);
     this.reporter.end();
