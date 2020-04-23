@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { ReplaySubject, from, zip } from 'rxjs';
-import { mergeMap, tap, map, filter, exhaust, take, concatAll } from 'rxjs/operators';
+import { mergeMap, tap, map, filter, exhaust, take, concatAll, switchMap } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';
@@ -15,11 +15,13 @@ import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator/capsule';
+import { flatten } from '../../../utils';
+import { flattenNestedMap, flattenReplaySubject } from '../util/flatten-nested-map';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
 
-let didEnd = 0;
+const didEnd = 0;
 
 type CacheValue = {
   visited: boolean;
@@ -74,11 +76,7 @@ export class Network {
   onWorkspaceLoaded(cb) {
     this.emitter.on('workspaceLoaded', cb);
   }
-  // TODO: Qballer
-  // caching
-  // concurrency -
-  // twice -- seems ok, write test
-  // not done  - DONE
+
   // remove emitter
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph) {
     const getFlow = this.getFlow.bind(this);
@@ -87,54 +85,47 @@ export class Network {
 
     return function walk() {
       if (!graph.nodes().length) {
+        console.log('end!!!');
         endNetwork(stream, startTime, visitedCache);
         return;
       }
-      const seeders = from(getSeeders(graph, visitedCache, amount)).pipe(take(5));
+      const seeders = from(getSeeders(graph, visitedCache, amount));
       const flows = from(getSeeders(graph, visitedCache, amount)).pipe(
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
-        // take(2)
       );
+
       amount += getSeeders(graph, visitedCache, amount).length;
+      console.log('amount of flows executing, count is', amount);
+
       zip(
         zip(seeders, flows).pipe<ReplaySubject<any>>(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
         seeders
-      ).subscribe({
-        next([flowStream, seed]) {
-          const cacheValue = visitedCache[seed];
-          cacheValue.visited = true;
-          stream.next(flowStream);
-
-          return flowStream.subscribe({
-            next(data: any) {
-              if (data.type === 'flow:result') {
-                cacheValue.result = data;
-                return postFlow && from(postFlow(cacheValue.capsule));
-              }
-              return data;
-            },
-            complete(): void {
-              amount -= 1;
-              graph.removeNode(seed);
-              const sources = getSources(graph, visitedCache);
-              if (amount === 0) {
-                walk();
-              }
-            },
-            error(err) {
-              amount -= 1;
-              graph.removeNode(seed);
-              handleNetworkError(seed, graph, visitedCache, err);
-            }
-          });
-        },
-        error(err) {
-          // console.log('GOT ERROR!!!!!!')
-        },
-        complete() {
-          // console.log('GOT DONE')
-        }
-      });
+      )
+        .pipe(
+          switchMap(([flowStream, seed]) => {
+            visitedCache[seed].visited = true;
+            stream.next(flowStream);
+            return flowStream;
+          }),
+          filter((data: any) => data.type === 'flow:result')
+        )
+        .subscribe({
+          next(data: any) {
+            const seed = data.id.toString();
+            const cacheValue = visitedCache[seed];
+            cacheValue.result = data;
+            amount -= 1;
+            console.log('amount of flows executing, count is', amount);
+            handlePostFlow(postFlow, cacheValue, graph, seed, amount, walk);
+            return data;
+          },
+          error(err) {
+            const seed = err.id;
+            amount -= 1;
+            graph.removeNode(seed);
+            handleNetworkError(seed, graph, visitedCache, err);
+          }
+        });
     };
   }
 
@@ -150,9 +141,30 @@ export class Network {
   }
 }
 
+function handlePostFlow(
+  postFlow: PostFlow | null,
+  cacheValue: CacheValue,
+  graph: Graph,
+  seed: string,
+  amount: number,
+  walk: () => void
+) {
+  if (postFlow) {
+    postFlow(cacheValue.capsule)
+      .then(res => {
+        graph.removeNode(seed);
+        // const sources = getSources(graph, visitedCache);
+        if (amount === 0) {
+          walk();
+        }
+      })
+      .catch(() => {});
+  }
+}
+
 function getSeeders(g: Graph, cache: Cache, amount = 0) {
   const sources = getSources(g, cache);
-  return sources.length ? sources.slice(0, Math.max(5 - amount, 0)) : [g.nodes()[0]].filter(v => v);
+  return sources.length ? sources.slice(0, Math.max(5 - amount, 1)) : [g.nodes()[0]].filter(v => v);
 }
 function getSources(g: Graph, cache: Cache) {
   return g.sources().filter(seed => !cache[seed].visited);
@@ -178,7 +190,7 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
   const sorted = Object.values(endMessage.value);
 
   network.next(endMessage);
-  network.complete();
+  // setTimeout(()=> network.complete(), 0);
 }
 
 function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: Error) {

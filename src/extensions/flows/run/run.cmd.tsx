@@ -2,13 +2,15 @@
 // :TODO make sure React is not an unused variable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
+import { ReplaySubject } from 'rxjs';
 import { Command, CLIArgs } from '../../cli';
 import { Flags, PaperOptions } from '../../paper/command';
 import { Flows } from '../flows';
 import { reportRunStream } from './handle-run-stream';
 import { Report } from './report';
 import { Reporter } from '../../reporter';
-import { Logger } from '../../logger';
+import { Logger, LogPublisher } from '../../logger';
+import { flattenReplaySubject } from '../util/flatten-nested-map';
 
 export class RunCmd implements Command {
   name = 'run <flow> [component...]';
@@ -39,16 +41,78 @@ export class RunCmd implements Command {
       this.reporter.title('Executing flows');
       this.reporter.setStatusText('[COUNTER-TBD] Components remaining. Running');
     });
-    const result = await this.flows.runStream(comps, flow as string, { concurrency: concurrencyN, caching: !noCache });
-
+    const result: ReplaySubject<any> = await this.flows.runStream(comps, flow as string, {
+      concurrency: concurrencyN,
+      caching: !noCache
+    });
+    console.log('can Register to stream');
     // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
     const logPublisher = this.logger.createLogPublisher('flows');
-
+    flattenReplaySubject(result).subscribe(message => {
+      console.log(`got message from ${message.id} of ${message.type}`);
+    });
     this.reporter.subscribe('flows');
+    console.log('yes');
     const report = await reportRunStream(result, logPublisher, verbose as boolean);
+    console.log('no');
     // const report = await handleRunStream(result, logPublisher, verbose as boolean);
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;
   }
+}
+
+export async function handleRunStream(stream: ReplaySubject<any>, logPublisher: LogPublisher, verbose: boolean) {
+  const summary: { [k: string]: string } = {};
+  const streamPromise = await new Promise(resolve =>
+    stream.subscribe({
+      next(networkData: any) {
+        if (networkData instanceof ReplaySubject) {
+          handleFlowStream(networkData, logPublisher, summary, verbose);
+        } else if (networkData.type === 'network:start') {
+          //
+        } else if (networkData.type === 'network:result') {
+          summary['network:result'] = networkData;
+        } else {
+          logPublisher.warn('run-infra', `~~~~~~ Got ${networkData.type} on ${networkData.id}~~~~~~`);
+        }
+      },
+      complete() {
+        resolve(summary);
+      },
+      error() {
+        resolve(summary);
+      }
+    })
+  );
+
+  return streamPromise;
+}
+function handleFlowStream(networkData: ReplaySubject<any>, logPublisher: LogPublisher, summery: any, verbose: boolean) {
+  networkData.subscribe({
+    next(flowData: any) {
+      if (flowData.type === 'flow:start') {
+        logPublisher.info(flowData.id, `***** started ${flowData.id} *****`);
+      } else if (flowData.type === 'flow:result') {
+        logPublisher.info(flowData.id, `***** finished ${flowData.id} - duration:${flowData.duration} *****`);
+        summery[flowData.id] = flowData;
+      } else if (flowData instanceof ReplaySubject) {
+        handleTaskStream(flowData, logPublisher, verbose);
+      }
+    },
+    error() {},
+    complete() {}
+  });
+}
+
+function handleTaskStream(taskStream: ReplaySubject<any>, logPublisher: LogPublisher, verbose: boolean) {
+  taskStream.subscribe({
+    next(data: any) {
+      if (data.type === 'task:stdout' && verbose) {
+        logPublisher.info(data.id, data.value);
+      } else if (data.type === 'task:stderr') {
+        logPublisher.warn(data.id, data.value);
+      }
+    }
+  });
 }

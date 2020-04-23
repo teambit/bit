@@ -77,7 +77,7 @@ export class Flow {
       startTime,
       duration: endTime.getTime() - startTime.getTime()
     });
-    subject.complete();
+    setTimeout(subject.complete.bind(subject), 0);
     this.result = [];
   }
 }
