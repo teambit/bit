@@ -36,8 +36,6 @@ import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension
 export default function updateDependenciesVersions(consumer: Consumer, component: Component) {
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
-  updateDependencies(component.compilerDependencies);
-  updateDependencies(component.testerDependencies);
   updateExtensions(component.extensions);
 
   function resolveVersion(id: BitId): string | undefined {

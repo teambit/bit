@@ -508,8 +508,6 @@ export default class Consumer {
       };
       copyDependenciesVersionsFromModelToFS(version.dependencies, componentFromModel.dependencies);
       copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
-      copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
-      copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
       sortProperties(version);
 
@@ -532,8 +530,6 @@ export default class Consumer {
       componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
       version.dependencies.sort();
       version.devDependencies.sort();
-      version.compilerDependencies.sort();
-      version.testerDependencies.sort();
       version.packageDependencies = sortObject(version.packageDependencies);
       version.devPackageDependencies = sortObject(version.devPackageDependencies);
       version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
@@ -542,8 +538,6 @@ export default class Consumer {
       sortOverrides(version.overrides);
       componentFromModel.dependencies.sort();
       componentFromModel.devDependencies.sort();
-      componentFromModel.compilerDependencies.sort();
-      componentFromModel.testerDependencies.sort();
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
       componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
@@ -916,8 +910,6 @@ export default class Consumer {
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
-    let modelCompilerDependencies = new Dependencies([]);
-    let modelTesterDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // find the model version of the component and get the stored versions of the dependencies
@@ -927,14 +919,10 @@ export default class Consumer {
         // otherwise, the component is probably on the file-system only and not on the model.
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
-        modelCompilerDependencies = mainComponentFromModel.compilerDependencies;
-        modelTesterDependencies = mainComponentFromModel.testerDependencies;
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
-    await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
-    await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
   async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
