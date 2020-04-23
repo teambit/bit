@@ -66,7 +66,6 @@ export default class PackageManager {
     if (packageManager === 'npm' || packageManager === 'yarn') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async capsule => {
-        // manipulatePackageJsonBeforeInstall(capsule);
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
         const installProc =
