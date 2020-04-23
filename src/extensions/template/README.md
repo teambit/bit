@@ -68,6 +68,7 @@ Sections to consider here:
 ## Documentation
 Here we should explain things in more details. Think about documentation for future maintainers of the extension.
 Here should be stuff like:
-1. internal structure if it's complex
+1. Internal structure if it's complex
 2. Special algorithms
 3. General flow between the files / classes / functions
+4. Open issues
