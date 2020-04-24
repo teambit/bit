@@ -8,23 +8,15 @@ const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = tr
   logger[level](msg.id, msg.value);
 };
 
-const printMessage = (customMessage: string, level = 'info', customPrint = print) => (
-  msg: any,
-  reporter: LogPublisher,
-  verbose: boolean
-) => {
-  return customPrint(level)({ ...msg, value: customMessage || msg.value }, reporter, verbose);
-};
-
 const strategies: { [k: string]: (msg: any, logger: LogPublisher, verbose: boolean) => void } = {
-  'task:stdout': (msg: any, logger: LogPublisher, verbose = true): void => {
+  'task:stdout': (msg: any, logger: LogPublisher, verbose = true) => {
     verbose && logger.info(msg.id, msg.value);
   },
   'task:stderr': print('error'),
-  'flow:start': printMessage('***** Flow Started *****'),
+  'flow:start': print(),
   'flow:result': print(),
-  'network:start': printMessage('***** Run Flows Started *****'),
-  'network:result': printMessage('***** Run Flows Finished *****')
+  'network:start': print(),
+  'network:result': print()
 };
 
 export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublisher, verbose: boolean) {
@@ -32,16 +24,19 @@ export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublis
     .pipe(
       flattenNestedMap(),
       tap((message: any) => {
+        console.log(' I HAVE', message.type);
         if (strategies[message.type]) {
           strategies[message.type](message, logger, verbose);
         } else {
-          logger.info(
-            message.id.toString(),
-            `got unknown message from network: ${message.type} from ${message.id.toString()}`
-          );
+          logger.debug(message.id, `got unknown message from network: ${message.type} from ${message.id}`);
         }
       }),
-      filter((message: any) => message.type === 'network:result')
+      filter((message: any) => message.type.trim() === 'network:result'),
+      tap(message => console.log('tap message:', message.type))
     )
-    .toPromise();
+    .toPromise()
+    .then((result: any) => {
+      console.log('then');
+      return result;
+    });
 }

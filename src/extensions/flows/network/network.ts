@@ -15,13 +15,9 @@ import { createSubGraph, getNeighborsByDirection } from './sub-graph';
 import { Flow } from '../flow';
 import { ComponentID } from '../../component';
 import { Capsule } from '../../isolator/capsule';
-import { flatten } from '../../../utils';
-import { flattenNestedMap, flattenReplaySubject } from '../util/flatten-nested-map';
 
 export type GetFlow = (capsule: Capsule) => Promise<Flow>;
 export type PostFlow = (capsule: Capsule) => Promise<void>; // runs when finishes flow successfully
-
-const didEnd = 0;
 
 type CacheValue = {
   visited: boolean;

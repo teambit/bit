@@ -45,21 +45,11 @@ export class RunCmd implements Command {
       concurrency: concurrencyN,
       caching: !noCache
     });
-    console.log('can Register to stream');
     // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
     const logPublisher = this.logger.createLogPublisher('flows');
 
-    // runStream.pipe(flattenNestedMap())
-    // .subscribe({
-    //   next(data:any){
-    //     console.log(`got ${data.type} from ${data.id}`)
-    //   }
-    // })
-    this.reporter.subscribe('flows');
-    console.log('yes');
     const report = await reportRunStream(runStream, logPublisher, verbose as boolean);
-    console.log('no');
-    // const report = await handleRunStream(result, logPublisher, verbose as boolean);
+    console.log('done');
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;
