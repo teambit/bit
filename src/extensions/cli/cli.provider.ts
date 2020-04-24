@@ -4,10 +4,11 @@ import CommandRegistry from './registry';
 import { buildRegistry } from '../../cli';
 import { LegacyCommand } from './legacy-command';
 import legacyLoadExtensions from '../../legacy-extensions/extensions-loader';
+import { Core } from '../core';
 
-export type CLIDeps = [Reporter];
+export type CLIDeps = [Reporter, Core];
 
-export async function CLIProvider([reporter]: CLIDeps) {
+export async function CLIProvider([reporter, core]: CLIDeps) {
   const legacyExtensions = await legacyLoadExtensions();
   // Make sure to register all the hooks actions in the global hooks manager
   legacyExtensions.forEach(extension => {
