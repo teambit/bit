@@ -16,21 +16,6 @@ export type installOpts = {
   packageManager?: string;
 };
 
-function deleteBitBinFromPkgJson(capsule: Capsule) {
-  const packageJsonPath = 'package.json';
-  const pjsonString = capsule.fs.readFileSync(packageJsonPath).toString();
-  if (pjsonString) {
-    let packageJson;
-    try {
-      packageJson = JSON.parse(pjsonString);
-    } catch (err) {
-      throw new Error(`failed parsing the package.json file at ${capsule.wrkDir}`);
-    }
-    delete packageJson.dependencies['bit-bin'];
-    capsule.fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  }
-}
-
 function linkBitBinInCapsule(capsule) {
   const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
   const localBitBinPath = path.join(__dirname, '../..');
@@ -82,16 +67,7 @@ export default class PackageManager {
     } catch (e) {}
     return false;
   }
-  async checkPackageManagerInCapsule(capsule: Capsule): Promise<string> {
-    const isYarn = await this.checkIfFileExistsInCapsule(capsule, 'yarn.lock');
-    if (isYarn) return 'yarn';
-    const isLib = await this.checkIfFileExistsInCapsule(capsule, 'librarian-manifests.json');
-    if (isLib) return 'librarian';
-    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'node_modules');
-    if (isNPM) return 'npm';
 
-    return '';
-  }
   async removeLockFilesInCapsule(capsule: Capsule) {
     async function safeUnlink(toRemove: string) {
       try {
@@ -113,33 +89,16 @@ export default class PackageManager {
       }
       return ret;
     }
-    if (packageManager === 'yarn') {
+    if (packageManager === 'npm' || packageManager === 'yarn') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
       await pMapSeries(capsules, async capsule => {
-        deleteBitBinFromPkgJson(capsule);
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
-        const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
-        logPublisher.info(componentId, '$ yarn'); // TODO: better
-        logPublisher.info(componentId, '');
-        installProc.stdout!.on('data', d => logPublisher.info(componentId, d.toString()));
-        installProc.stderr!.on('data', d => logPublisher.warn(componentId, d.toString()));
-        installProc.on('error', e => {
-          logPublisher.error(componentId, e);
-          console.error('error', e); // eslint-disable-line no-console
-        });
-        await installProc;
-        linkBitBinInCapsule(capsule);
-        this.emitter.emit('capsuleInstalled', componentId);
-      });
-    } else if (packageManager === 'npm') {
-      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
-      await pMapSeries(capsules, async capsule => {
-        deleteBitBinFromPkgJson(capsule);
-        // TODO: remove this hack once harmony supports ownExtensionName
-        const componentId = capsule.component.id.toString();
-        const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-        logPublisher.info(componentId, '$ npm install --no-package-lock'); // TODO: better
+        const installProc =
+          packageManager === 'npm'
+            ? execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' })
+            : execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logPublisher.info(componentId, packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'); // TODO: better
         logPublisher.info(componentId, '');
         installProc.stdout!.on('data', d => logPublisher.info(componentId, d.toString()));
         installProc.stderr!.on('data', d => logPublisher.warn(componentId, d.toString()));

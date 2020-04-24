@@ -83,7 +83,7 @@ export default class ManyComponentsWriter {
   bitMap: BitMap;
   basePath?: string;
   capsulePaths?: CapsulePaths;
-  pacackgeManager?: string;
+  packageManager?: string;
   // Apply config added by extensions
   applyExtensionsAddedConfig?: boolean;
 
@@ -109,7 +109,7 @@ export default class ManyComponentsWriter {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.capsulePaths = params.capsulePaths;
-    this.pacackgeManager = params.packageManager;
+    this.packageManager = params.packageManager;
     this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
@@ -169,12 +169,12 @@ export default class ManyComponentsWriter {
     const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
     // add componentMap entries into .bitmap before starting the process because steps like writing package-json
     // rely on .bitmap to determine whether a dependency exists and what's its origin
-    componentWriterInstances.forEach(componentWriter => {
+    componentWriterInstances.forEach((componentWriter: ComponentWriter) => {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
-    this.writtenComponents = await pMapSeries(componentWriterInstances, componentWriter =>
-      componentWriter.populateComponentsFilesToWrite(this.pacackgeManager)
+    this.writtenComponents = await pMapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
+      componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {

@@ -1,6 +1,5 @@
 import R from 'ramda';
 import fs from 'fs-extra';
-import path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -104,9 +103,8 @@ export function preparePackageJsonToWrite(
   bitMap: BitMap,
   component: Component,
   bitDir: string,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  override? = true,
-  writeBitDependencies? = false,
+  override = true,
+  writeBitDependencies = false, // e.g. when it's a capsule
   excludeRegistryPrefix?: boolean,
   capsulePaths?: CapsulePaths,
   packageManager?: string
@@ -115,17 +113,13 @@ export function preparePackageJsonToWrite(
   const getBitDependencies = (dependencies: BitIds) => {
     if (!writeBitDependencies) return {};
     return dependencies.reduce((acc, depId: BitId) => {
-      let packageDependency;
-      const devCapsulePath = capsulePaths && capsulePaths.getValueIgnoreScopeAndVersion(depId);
-      if (capsulePaths && devCapsulePath) {
-        const relative = path.relative(
-          capsulePaths.getValueIgnoreScopeAndVersion(component.id) as string,
-          devCapsulePath
+      if (capsulePaths) {
+        // when coming from a capsule, it shouldn't reach here because writeBitDependencies is false
+        throw new Error(
+          `preparePackageJsonToWrite doesn't expect capsules to add bit dependencies to the package.json`
         );
-        packageDependency = `file:${relative}`;
-      } else {
-        packageDependency = getPackageDependency(bitMap, depId, component.id);
       }
+      const packageDependency = getPackageDependency(bitMap, depId, component.id);
       const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
       return acc;

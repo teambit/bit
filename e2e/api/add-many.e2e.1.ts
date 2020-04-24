@@ -25,6 +25,7 @@ function sortComponentsArrayByComponentId(componentsArray) {
 }
 
 describe('bit add many programmatically', function() {
+  this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
