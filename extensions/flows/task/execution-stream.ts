@@ -1,5 +1,5 @@
 import { ReplaySubject, Subject } from 'rxjs';
-import ContainerExec from '@bit/bit.core.isolator';
+import ContainerExec from '@bit/bit.core.isolator/capsule/container-exec';
 
 export function createExecutionStream(exec: ContainerExec, id: string, time: Date = new Date()): Subject<any> {
   let message: any = null;

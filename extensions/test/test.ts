@@ -2,7 +2,7 @@ import { Workspace } from '@bit/bit.core.workspace';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { BitId } from 'bit-bin/bit-id';
 import { Component } from '@bit/bit.core.component';
-import { Capsule } from '@bit/bit.core.isolator';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 import { Compile } from '@bit/bit.core.compile';
 import ComponentsList from 'bit-bin/consumer/component/components-list';
 

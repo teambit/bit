@@ -9,7 +9,7 @@ import { Flow } from './flow/flow';
 import BitIdAndValueArray from 'bit-bin/bit-id/bit-id-and-value-array';
 import { ExecutionOptions } from './network/options';
 import { BitId } from 'bit-bin/bit-id';
-import { Capsule } from '@bit/bit.core.isolator';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
 
@@ -100,4 +100,17 @@ export class Flows {
   }
 }
 
-export class IdsAndFlows extends BitIdAndValueArray<string[]> {}
+export class IdsAndFlows extends Array<{ id: BitId; value: string[] }> {
+  getFlows(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqual(id));
+    return found ? found.value : null;
+  }
+  getFlowsIgnoreVersion(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqualWithoutVersion(id));
+    return found ? found.value : null;
+  }
+  getFlowsIgnoreScopeAndVersion(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
+    return found ? found.value : null;
+  }
+}

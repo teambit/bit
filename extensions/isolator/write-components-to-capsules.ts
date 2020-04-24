@@ -22,7 +22,7 @@ export default async function writeComponentsToCapsules(
   packageManager: string
 ) {
   components = components.map(c => c.clone());
-  const capsulePaths = buildCapsulePaths(capsules);
+  // const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
     const getClonedFromGraph = (id: BitId): ConsumerComponent => graph.node(id.toString()).clone();
@@ -58,7 +58,7 @@ export default async function writeComponentsToCapsules(
     excludeRegistryPrefix: false,
     silentPackageManagerResult: false,
     isolated: true,
-    capsulePaths,
+    // capsulePaths,
     packageManager,
     applyExtensionsAddedConfig: true
   };
@@ -93,13 +93,13 @@ function normalizeComponentDir(componentWithDependencies: ComponentWithDependenc
   });
 }
 
-function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
-  const capsulePaths = capsules.map(componentCapsule => {
-    const id = componentCapsule.component.id;
-    return {
-      id: id instanceof BitId ? id : id.legacyComponentId,
-      value: componentCapsule.wrkDir
-    };
-  });
-  return new CapsulePaths(...capsulePaths);
-}
+// function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
+//   const capsulePaths = capsules.map(componentCapsule => {
+//     const id = componentCapsule.component.id;
+//     return {
+//       id: id instanceof BitId ? id : id.legacyComponentId,
+//       value: componentCapsule.wrkDir
+//     };
+//   });
+//   return new CapsulePaths(...capsulePaths);
+// }

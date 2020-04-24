@@ -50,6 +50,9 @@
         "compile": {
           "compiler": "#@bit/bit.core.typescript:transpile"
         }
+      },
+      "devDependencies": {
+        "@types/node": "^12.12.25"
       }
     },
     "typescript": {

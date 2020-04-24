@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import { lock, unlock } from 'proper-lockfile';
 import { join } from 'path';
 import { CACHE_ROOT } from 'bit-bin/constants';
-import { Capsule } from '@bit/bit.core.isolator';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { AbstractVinyl } from 'bit-bin/consumer/component/sources';
 

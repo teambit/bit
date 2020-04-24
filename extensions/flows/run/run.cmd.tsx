@@ -3,7 +3,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react';
 import { Command, CLIArgs } from '@bit/bit.core.cli';
-import { Flags, PaperOptions } from '@bit/bit.core.paper';
+import { Flags, PaperOptions } from '@bit/bit.core.paper/command';
 import { Flows } from '../flows';
 import { handleRunStream } from './handle-run-stream';
 import { Report } from './report';

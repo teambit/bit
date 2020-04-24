@@ -5,10 +5,10 @@ import { ComponentID, Component } from '@bit/bit.core.component';
 import { Network } from '../network';
 import { BitId } from 'bit-bin/bit-id';
 import { Consumer } from 'bit-bin/consumer';
-import { Workspace } from 'bit-bin/..';
+import { Workspace } from '@bit/bit.core.workspace';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
 import { Flow } from '../flow';
-import { Capsule } from '@bit/bit.core.isolator';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };

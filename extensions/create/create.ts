@@ -1,4 +1,5 @@
 /* eslint max-classes-per-file: 0 */
+import Vinyl from 'vinyl';
 import path from 'path';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '@bit/bit.core.workspace';
@@ -12,8 +13,6 @@ import { AddActionResults } from 'bit-bin/consumer/component-ops/add-components/
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
 type TemplateFunc = (...args: string[]) => TemplateFuncResult;
-
-export class TemplateFileVinyl extends AbstractVinyl {}
 
 export class Create {
   constructor(private workspace: Workspace, private registry: Registry) {}
@@ -68,12 +67,12 @@ export class Create {
   ): Promise<PathOsBasedRelative[]> {
     const dataToPersist = new DataToPersist();
     const vinylFiles = templateFiles.map(templateFile => {
-      const templateFileVinyl = new TemplateFileVinyl({
+      const templateFileVinyl = new Vinyl({
         base: componentPath,
         path: path.join(componentPath, templateFile.path),
         contents: Buffer.from(templateFile.content)
       });
-      return templateFileVinyl;
+      return AbstractVinyl.fromVinyl(templateFileVinyl);
     });
     const results = vinylFiles.map(v => v.path);
     dataToPersist.addManyFiles(vinylFiles);

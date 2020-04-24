@@ -7,7 +7,7 @@ import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Reporter } from '@bit/bit.core.reporter';
-import { Capsule } from '@bit/bit.core.isolator';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 import { pipeOutput } from 'bit-bin/utils/child_process';
 import createSymlinkOrCopy from 'bit-bin/utils/fs/create-symlink-or-copy';
 

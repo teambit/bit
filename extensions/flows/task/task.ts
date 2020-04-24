@@ -3,8 +3,8 @@
 import { Subject } from 'rxjs';
 import { join } from 'path';
 import { createExecutionStream } from './execution-stream';
-import ContainerExec from '@bit/bit.core.isolator';
-import { Capsule } from '@bit/bit.core.isolator';
+import ContainerExec from '@bit/bit.core.isolator/capsule/container-exec';
+import { Capsule } from '@bit/bit.core.isolator/capsule';
 
 export const PackageMarker = '#';
 
