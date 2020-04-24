@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
+import { EventEmitter } from 'events';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
@@ -47,8 +48,28 @@ function linkBitBinInCapsule(capsule) {
   createSymlinkOrCopy(localBitBinPath, bitBinPath);
 }
 
+// TODO:
+// this is a hack in order to pass events from here to flows (and later install)
+// we need to solve this hack by changing the dependency chain of the relevant extensions
+// essentially flattening the structure so that we have less extensions to pass this event through
+//
+// at the time of writing, it's Flows => Workspace => Isolator => PackageManager
+let emitter = null;
+export function onCapsuleInstalled(cb) {
+  // @ts-ignore - this is a hack
+  emitter.on('capsuleInstalled', componentName => cb(componentName));
+}
+export function beforeInstallingCapsules(cb) {
+  // @ts-ignore - this is a hack
+  emitter.on('beforeInstallingCapsules', numCapsules => cb(numCapsules));
+}
+
 export default class PackageManager {
-  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
+  private emitter = new EventEmitter();
+  constructor(readonly packageManagerName: string, readonly logger: Logger) {
+    // @ts-ignore - this is a hack
+    emitter = this.emitter;
+  }
 
   get name() {
     return this.packageManagerName;
@@ -84,8 +105,13 @@ export default class PackageManager {
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
     const logPublisher = this.logger.createLogPublisher('packageManager');
+    this.emitter.emit('beforeInstallingCapsules', capsules.length);
     if (packageManager === 'librarian') {
-      return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
+      const ret = await librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
+      for (const capsule of capsules) {
+        this.emitter.emit('capsuleInstalled', capsule.component.id.toString());
+      }
+      return ret;
     }
     if (packageManager === 'yarn') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
@@ -104,6 +130,7 @@ export default class PackageManager {
         });
         await installProc;
         linkBitBinInCapsule(capsule);
+        this.emitter.emit('capsuleInstalled', componentId);
       });
     } else if (packageManager === 'npm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
@@ -122,6 +149,7 @@ export default class PackageManager {
         });
         await installProc;
         linkBitBinInCapsule(capsule);
+        this.emitter.emit('capsuleInstalled', componentId);
       });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
