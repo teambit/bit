@@ -1,9 +1,8 @@
 import { ReplaySubject } from 'rxjs';
-import { tap, filter } from 'rxjs/operators';
+import { tap, filter, take } from 'rxjs/operators';
 import { flattenNestedMap } from '../util/flatten-nested-map';
 import { LogPublisher } from '../../logger';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = true): void => {
   logger[level](msg.id, msg.value);
 };
@@ -24,7 +23,6 @@ export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublis
     .pipe(
       flattenNestedMap(),
       tap((message: any) => {
-        console.log(' I HAVE', message.type);
         if (strategies[message.type]) {
           strategies[message.type](message, logger, verbose);
         } else {
@@ -32,11 +30,8 @@ export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublis
         }
       }),
       filter((message: any) => message.type.trim() === 'network:result'),
-      tap(message => console.log('tap message:', message.type))
+      // tap(message => console.log('tap message:', message.type)),
+      take(1)
     )
-    .toPromise()
-    .then((result: any) => {
-      console.log('then');
-      return result;
-    });
+    .toPromise();
 }

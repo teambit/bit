@@ -49,7 +49,6 @@ export class RunCmd implements Command {
     const logPublisher = this.logger.createLogPublisher('flows');
 
     const report = await reportRunStream(runStream, logPublisher, verbose as boolean);
-    console.log('done');
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;

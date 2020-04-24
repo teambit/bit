@@ -81,7 +81,6 @@ export class Network {
 
     return function walk() {
       if (!graph.nodes().length) {
-        console.log('end!!!');
         endNetwork(stream, startTime, visitedCache);
         return;
       }
@@ -91,7 +90,6 @@ export class Network {
       );
 
       amount += getSeeders(graph, visitedCache, amount).length;
-      console.log('amount of flows executing, count is', amount);
 
       zip(
         zip(seeders, flows).pipe<ReplaySubject<any>>(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))),
@@ -111,7 +109,6 @@ export class Network {
             const cacheValue = visitedCache[seed];
             cacheValue.result = data;
             amount -= 1;
-            console.log('amount of flows executing, count is', amount);
             handlePostFlow(postFlow, cacheValue, graph, seed, amount, walk);
             return data;
           },
