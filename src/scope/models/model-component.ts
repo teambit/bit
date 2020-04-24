@@ -412,12 +412,8 @@ export default class Component extends BitObject {
       tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
-      compilerDependencies: version.compilerDependencies.getClone(),
-      testerDependencies: version.testerDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       flattenedDevDependencies: version.flattenedDevDependencies.clone(),
-      flattenedCompilerDependencies: version.flattenedCompilerDependencies.clone(),
-      flattenedTesterDependencies: version.flattenedTesterDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -436,7 +432,7 @@ export default class Component extends BitObject {
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,
       scopesList: clone(this.scopesList),
-      extensions: clone(version.extensions)
+      extensions: version.extensions.clone()
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

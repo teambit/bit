@@ -106,7 +106,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
         // this is a workaround to get the 'example' tag parsed when using react-docs
         // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
         // the @description tag.
-        extractDataRegex(formatted.description, doclets, filePath);
+        extractDataRegex(formatted.description, doclets, filePath, false);
         formatted.description = doclets[0].description;
         formatted.examples = doclets[0].examples;
         return formatted;

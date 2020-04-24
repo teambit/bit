@@ -178,8 +178,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     specsResults
   }: {
     readonly consumerComponent: ConsumerComponent;
@@ -187,8 +185,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     message?: string;
     flattenedDependencies?: Record<string, any>;
     flattenedDevDependencies?: Record<string, any>;
-    flattenedCompilerDependencies?: Record<string, any>;
-    flattenedTesterDependencies?: Record<string, any>;
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
@@ -265,10 +261,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       flattenedDependencies,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedCompilerDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedTesterDependencies,
       specsResults,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       message,
@@ -286,8 +278,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     message,
     specsResults
   }: {
@@ -295,8 +285,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     consumer: Consumer;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    flattenedCompilerDependencies: BitIds;
-    flattenedTesterDependencies: BitIds;
     message: string;
     specsResults?: any;
   }): Promise<ModelComponent> {
@@ -313,8 +301,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       message,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       specsResults
     });
     if (source.version) {

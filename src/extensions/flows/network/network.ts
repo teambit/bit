@@ -5,6 +5,7 @@
 import { ReplaySubject } from 'rxjs';
 import PQueue from 'p-queue/dist';
 import { Graph } from 'graphlib';
+import { EventEmitter } from 'events';
 import { Workspace } from '../../workspace';
 import { Consumer } from '../../../consumer';
 import DependencyGraph from '../../../scope/graph/scope-graph';
@@ -31,7 +32,8 @@ export class Network {
     private seeders: ComponentID[],
     private getFlow: GetFlow,
     private getGraph = getWorkspaceGraph,
-    private postFlow?: PostFlow
+    private postFlow?: PostFlow,
+    private emitter = new EventEmitter()
   ) {}
 
   async execute(options: ExecutionOptions) {
@@ -45,10 +47,16 @@ export class Network {
 
     const graph = await this.createGraph(options);
     const visitedCache = await createCapsuleVisitCache(graph, this.workspace);
+    this.emitter.emit('workspaceLoaded', Object.keys(visitedCache).length);
     const q = new PQueue({ concurrency: options.concurrency });
     const walk = this.getWalker(networkStream, startTime, visitedCache, graph, q);
     await walk();
+    this.emitter.emit('executionEnded');
     return networkStream;
+  }
+
+  onWorkspaceLoaded(cb) {
+    this.emitter.on('workspaceLoaded', cb);
   }
 
   private getWalker(stream: ReplaySubject<any>, startTime: Date, visitedCache: Cache, graph: Graph, q: PQueue) {
@@ -70,7 +78,7 @@ export class Network {
             const flowStream = await flow.execute(capsule);
             stream.next(flowStream);
 
-            return new Promise(resolve =>
+            return new Promise((resolve, reject) =>
               flowStream.subscribe({
                 next(data: any) {
                   if (data.type === 'flow:result') {
@@ -82,13 +90,13 @@ export class Network {
                   if (postFlow) {
                     postFlow(capsule)
                       .then(() => resolve())
-                      .catch(() => resolve());
+                      .catch(e => reject(e));
                   } else {
                     resolve();
                   }
                 },
                 error(err) {
-                  handleNetworkError(seed, graph, visitedCache, new Error(err.message));
+                  handleNetworkError(seed, graph, visitedCache, err);
                   resolve();
                 }
               })
@@ -153,7 +161,7 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
       // graph.removeNode(dependent);
     })
     .forEach(dependent => graph.removeNode(dependent));
-  visitedCache[seed].result = new Error(err.message);
+  visitedCache[seed].result = err;
   graph.removeNode(seed);
 }
 

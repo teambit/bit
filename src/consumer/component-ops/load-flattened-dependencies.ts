@@ -12,20 +12,16 @@ export default (async function loadFlattenedDependenciesForCapsule(
 ): Promise<ComponentWithDependencies> {
   const dependencies = await loadManyDependencies(component.dependencies.getAllIds());
   const devDependencies = await loadManyDependencies(component.devDependencies.getAllIds());
-  const compilerDependencies = await loadManyDependencies(component.compilerDependencies.getAllIds());
-  const testerDependencies = await loadManyDependencies(component.testerDependencies.getAllIds());
+  const extensionDependencies = await loadManyDependencies(component.extensions.extensionsBitIds);
 
   await loadFlattened(dependencies);
   await loadFlattened(devDependencies);
-  await loadFlattened(compilerDependencies);
-  await loadFlattened(testerDependencies);
 
   return new ComponentWithDependencies({
     component,
     dependencies,
     devDependencies,
-    compilerDependencies,
-    testerDependencies
+    extensionDependencies
   });
 
   async function loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {

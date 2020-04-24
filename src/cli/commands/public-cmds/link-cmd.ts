@@ -7,7 +7,7 @@ import { CodemodResult } from '../../../consumer/component-ops/codemod-component
 import { codemodTemplate } from '../../templates/codemod-template';
 
 export default class Link extends Command {
-  name = 'link';
+  name = 'link [ids...]';
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
   // @ts-ignore
@@ -17,8 +17,8 @@ export default class Link extends Command {
   private = false;
   loader = true;
 
-  action(args: string[], { rewire = false }: { rewire: boolean }): Promise<any> {
-    return link(rewire);
+  action([ids]: [string[]], { rewire = false }: { rewire: boolean }): Promise<any> {
+    return link(ids, rewire);
   }
 
   report(results: { linksResults: LinksResult[]; codemodResults?: CodemodResult[] }): string {

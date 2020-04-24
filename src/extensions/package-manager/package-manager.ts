@@ -2,12 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import path, { join } from 'path';
+import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
-import { Reporter } from '../reporter';
+import { Logger, LogPublisher } from '../logger';
 import { Capsule } from '../isolator/capsule';
 import { pipeOutput } from '../../utils/child_process';
-import fsOutputFile from '../../utils/fs-output-file';
+import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 
 export type installOpts = {
   packageManager?: string;
@@ -29,7 +31,7 @@ function deleteBitBinFromPkgJson(capsule: Capsule) {
 }
 
 function linkBitBinInCapsule(capsule) {
-  const bitBinPath = './node_modules/bit-bin';
+  const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
   const localBitBinPath = path.join(__dirname, '../..');
   // if there are no deps, sometimes the node_modules folder is not created
   // and we need it in order to perform the linking
@@ -38,15 +40,15 @@ function linkBitBinInCapsule(capsule) {
   } catch (e) {
     // fail silently - we only need to create it if it doesn't already exist
   }
-  // we use execa here rather than the capsule.fs because there are some edge cases
+  // we use fs directly here rather than the capsule.fs because there are some edge cases
   // that the capusle fs does not deal with well (eg. identifying and deleting
   // a symlink rather than the what the symlink links to)
-  execa.sync('rm', ['-rf', bitBinPath], { cwd: capsule.wrkDir });
-  execa.sync('ln', ['-s', localBitBinPath, bitBinPath], { cwd: capsule.wrkDir });
+  fs.removeSync(bitBinPath);
+  createSymlinkOrCopy(localBitBinPath, bitBinPath);
 }
 
 export default class PackageManager {
-  constructor(readonly packageManagerName: string, readonly reporter: Reporter) {}
+  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
 
   get name() {
     return this.packageManagerName;
@@ -62,12 +64,10 @@ export default class PackageManager {
   async checkPackageManagerInCapsule(capsule: Capsule): Promise<string> {
     const isYarn = await this.checkIfFileExistsInCapsule(capsule, 'yarn.lock');
     if (isYarn) return 'yarn';
-
-    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'package-lock.json');
-    if (isNPM) return 'npm';
-
     const isLib = await this.checkIfFileExistsInCapsule(capsule, 'librarian-manifests.json');
     if (isLib) return 'librarian';
+    const isNPM = await this.checkIfFileExistsInCapsule(capsule, 'node_modules');
+    if (isNPM) return 'npm';
 
     return '';
   }
@@ -83,43 +83,46 @@ export default class PackageManager {
   }
   async runInstall(capsules: Capsule[], opts: installOpts = {}) {
     const packageManager = opts.packageManager || this.packageManagerName;
+    const logPublisher = this.logger.createLogPublisher('packageManager');
     if (packageManager === 'librarian') {
       return librarian.runMultipleInstalls(capsules.map(cap => cap.wrkDir));
     }
     if (packageManager === 'yarn') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ yarn'); // TODO: better
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
-          installProc.on('error', e => {
-            console.error('error', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        // TODO: remove this hack once harmony supports ownExtensionName
+        const componentId = capsule.component.id.toString();
+        const installProc = execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logPublisher.info(componentId, '$ yarn'); // TODO: better
+        logPublisher.info(componentId, '');
+        installProc.stdout!.on('data', d => logPublisher.info(componentId, d.toString()));
+        installProc.stderr!.on('data', d => logPublisher.warn(componentId, d.toString()));
+        installProc.on('error', e => {
+          logPublisher.error(componentId, e);
+          console.error('error', e); // eslint-disable-line no-console
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else if (packageManager === 'npm') {
-      await Promise.all(
-        capsules.map(async capsule => {
-          deleteBitBinFromPkgJson(capsule);
-          const reporter = this.reporter.createLogger(capsule.component.id.toString());
-          const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
-          reporter.info('$ npm install --no-package-lock'); // TODO: better
-          reporter.info('');
-          installProc.stdout!.on('data', d => reporter.info(d.toString()));
-          installProc.stderr!.on('data', d => reporter.warn(d.toString()));
-          installProc.on('error', e => {
-            console.log('error:', e); // eslint-disable-line no-console
-          });
-          await installProc;
-          linkBitBinInCapsule(capsule);
-        })
-      );
+      // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
+      await pMapSeries(capsules, async capsule => {
+        deleteBitBinFromPkgJson(capsule);
+        // TODO: remove this hack once harmony supports ownExtensionName
+        const componentId = capsule.component.id.toString();
+        const installProc = execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' });
+        logPublisher.info(componentId, '$ npm install --no-package-lock'); // TODO: better
+        logPublisher.info(componentId, '');
+        installProc.stdout!.on('data', d => logPublisher.info(componentId, d.toString()));
+        installProc.stderr!.on('data', d => logPublisher.warn(componentId, d.toString()));
+        installProc.on('error', e => {
+          console.log('error:', e); // eslint-disable-line no-console
+          logPublisher.error(componentId, e);
+        });
+        await installProc;
+        linkBitBinInCapsule(capsule);
+      });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
     }
@@ -127,14 +130,15 @@ export default class PackageManager {
   }
 
   async runInstallInFolder(folder: string, opts: installOpts = {}) {
-    const reporter = this.reporter.createLogger(folder);
+    // TODO: remove this hack once harmony supports ownExtensionName
+    const logPublisher: LogPublisher = this.logger.createLogPublisher('packageManager');
     const packageManager = opts.packageManager || this.packageManagerName;
     if (packageManager === 'librarian') {
       const child = librarian.runInstall(folder, { stdio: 'pipe' });
       await new Promise((resolve, reject) => {
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logPublisher.info(folder, d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logPublisher.warn(folder, d.toString()));
         child.on('error', e => reject(e));
         child.on('close', () => {
           // TODO: exit status
@@ -151,18 +155,17 @@ export default class PackageManager {
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
-      reporter.info('$ npm install');
-      reporter.info('');
+      logPublisher.info(folder, '$ npm install');
+      logPublisher.info(folder, '');
       await new Promise((resolve, reject) => {
         // @ts-ignore
-        child.stdout.on('data', d => reporter.info(d.toString()));
+        child.stdout.on('data', d => logPublisher.info(folder, d.toString()));
         // @ts-ignore
-        child.stderr.on('data', d => reporter.warn(d.toString()));
+        child.stderr.on('data', d => logPublisher.warn(folder, d.toString()));
         child.on('error', e => {
           reject(e);
         });
         child.on('close', exitStatus => {
-          // TODO: exit status
           if (exitStatus) {
             reject(new Error(`${folder}`));
           } else {

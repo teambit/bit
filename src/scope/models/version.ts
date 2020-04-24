@@ -56,12 +56,8 @@ export type VersionProps = {
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
-  compilerDependencies?: Dependency[];
-  testerDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
   flattenedDevDependencies?: BitIds;
-  flattenedCompilerDependencies?: BitIds;
-  flattenedTesterDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
@@ -98,12 +94,8 @@ export default class Version extends BitObject {
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  compilerDependencies: Dependencies;
-  testerDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
-  flattenedCompilerDependencies: BitIds;
-  flattenedTesterDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
@@ -133,15 +125,11 @@ export default class Version extends BitObject {
     this.log = props.log;
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
-    this.compilerDependencies = new Dependencies(props.compilerDependencies);
-    this.testerDependencies = new Dependencies(props.testerDependencies);
     this.docs = props.docs;
     this.ci = props.ci || {};
     this.specsResults = props.specsResults;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = props.flattenedDevDependencies || new BitIds();
-    this.flattenedCompilerDependencies = props.flattenedCompilerDependencies || new BitIds();
-    this.flattenedTesterDependencies = props.flattenedTesterDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -188,8 +176,6 @@ export default class Version extends BitObject {
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
-        key === 'compilerDependencies' ||
-        key === 'testerDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
         key === 'overrides'
@@ -214,8 +200,6 @@ export default class Version extends BitObject {
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
-          compilerDependencies: getDependencies(this.compilerDependencies),
-          testerDependencies: getDependencies(this.testerDependencies),
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           packageDependencies: obj.packageDependencies,
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -232,37 +216,38 @@ export default class Version extends BitObject {
     );
   }
 
+  get extensionDependencies() {
+    return new Dependencies(this.extensions.extensionsBitIds.map(id => new Dependency(id, [])));
+  }
+
   getAllFlattenedDependencies(): BitIds {
-    return BitIds.fromArray([
-      ...this.flattenedDependencies,
-      ...this.flattenedDevDependencies,
-      ...this.flattenedCompilerDependencies,
-      ...this.flattenedTesterDependencies
-    ]);
+    return BitIds.fromArray([...this.flattenedDependencies, ...this.flattenedDevDependencies]);
   }
 
   getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
-      ...this.compilerDependencies.dependencies,
-      ...this.testerDependencies.dependencies
+      ...this.extensionDependencies.dependencies
     ];
   }
 
+  get depsIdsGroupedByType(): { dependencies: BitIds; devDependencies: BitIds; extensionDependencies: BitIds } {
+    return {
+      dependencies: this.dependencies.getAllIds(),
+      devDependencies: this.devDependencies.getAllIds(),
+      extensionDependencies: this.extensions.extensionsBitIds
+    };
+  }
+
   getAllDependenciesCloned(): Dependencies {
-    const dependencies = [
-      ...this.dependencies.getClone(),
-      ...this.devDependencies.getClone(),
-      ...this.compilerDependencies.getClone(),
-      ...this.testerDependencies.getClone()
-    ];
+    const dependencies = [...this.dependencies.getClone(), ...this.devDependencies.getClone()];
     return new Dependencies(dependencies);
   }
 
   getAllDependenciesIds(): BitIds {
-    const allDependencies = this.getAllDependencies();
-    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    return BitIds.fromArray(allDependencies);
   }
 
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
@@ -275,8 +260,6 @@ export default class Version extends BitObject {
     };
     this.flattenedDependencies = getUpdated(this.flattenedDependencies);
     this.flattenedDevDependencies = getUpdated(this.flattenedDevDependencies);
-    this.flattenedCompilerDependencies = getUpdated(this.flattenedCompilerDependencies);
-    this.flattenedTesterDependencies = getUpdated(this.flattenedTesterDependencies);
   }
 
   refs(): Ref[] {
@@ -345,12 +328,8 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        compilerDependencies: this.compilerDependencies.cloneAsObject(),
-        testerDependencies: this.testerDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
-        flattenedCompilerDependencies: this.flattenedCompilerDependencies.map(dep => dep.serialize()),
-        flattenedTesterDependencies: this.flattenedTesterDependencies.map(dep => dep.serialize()),
         extensions: this.extensions.map(ext => {
           const extensionClone = R.clone(ext);
           if (extensionClone.extensionId) {
@@ -406,12 +385,8 @@ export default class Version extends BitObject {
       specsResults,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       devPackageDependencies,
       peerPackageDependencies,
       compilerPackageDependencies,
@@ -508,12 +483,8 @@ export default class Version extends BitObject {
       docs,
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
-      compilerDependencies: _getDependencies(compilerDependencies),
-      testerDependencies: _getDependencies(testerDependencies),
       flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
-      flattenedCompilerDependencies: _getFlattenedDependencies(flattenedCompilerDependencies),
-      flattenedTesterDependencies: _getFlattenedDependencies(flattenedTesterDependencies),
       devPackageDependencies,
       peerPackageDependencies,
       compilerPackageDependencies,
@@ -544,8 +515,6 @@ export default class Version extends BitObject {
     mainDistFile,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies,
     message,
     specsResults,
     username,
@@ -555,8 +524,6 @@ export default class Version extends BitObject {
     files: Array<SourceFileModel>;
     flattenedDependencies: BitIds;
     flattenedDevDependencies: BitIds;
-    flattenedCompilerDependencies: BitIds;
-    flattenedTesterDependencies: BitIds;
     message: string;
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
@@ -599,8 +566,6 @@ export default class Version extends BitObject {
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
-      compilerDependencies: component.compilerDependencies.get(),
-      testerDependencies: component.testerDependencies.get(),
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
@@ -614,8 +579,6 @@ export default class Version extends BitObject {
       ),
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies,
       ignoreSharedDir: component.ignoreSharedDir,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,

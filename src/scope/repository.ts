@@ -1,5 +1,5 @@
+import fs from 'fs-extra';
 import Scope from './scope';
-import { mkdirp } from '../utils';
 
 export default class Repository {
   scope: Scope;
@@ -15,6 +15,6 @@ export default class Repository {
   }
 
   ensureDir() {
-    return mkdirp(this.getPath());
+    return fs.ensureDir(this.getPath());
   }
 }

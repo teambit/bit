@@ -16,7 +16,7 @@ export default class InsightsCmd implements Command {
     this.insightManager = insightManager;
     this.opts = [['l', 'list', 'list all insights']];
     this.name = 'insights [...names]';
-    this.description = 'start a dev environment for a workspace or a specific component';
+    this.description = 'Insights on component graph';
     this.group = 'development';
   }
 
@@ -39,21 +39,20 @@ export default class InsightsCmd implements Command {
 
 function template(results) {
   return (
-    <Box key="help" flexDirection="column">
+    <div key="help">
       {results.map(function(result) {
         return (
-          <Box key={result.metaData.name}>
-            <Box>
+          <div key={result.metaData.name}>
+            <div>
+              <Text>{'\n'}</Text>
               <Text bold underline>
                 {result.metaData.name}
-                {'\n'}
               </Text>
-            </Box>
-            <Text>{'\n'}</Text>
-            <Box>{result.renderedData}</Box>
-          </Box>
+            </div>
+            <div>{result.renderedData}</div>
+          </div>
         );
       })}
-    </Box>
+    </div>
   );
 }

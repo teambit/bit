@@ -25,8 +25,6 @@ import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
 export type AllDependencies = {
   dependencies: Dependency[];
   devDependencies: Dependency[];
-  compilerDependencies: Dependency[];
-  testerDependencies: Dependency[];
 };
 
 export type AllPackagesDependencies = {
@@ -106,9 +104,7 @@ export default class DependencyResolver {
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
-      devDependencies: [],
-      compilerDependencies: [],
-      testerDependencies: []
+      devDependencies: []
     };
     this.allPackagesDependencies = {
       packageDependencies: {},
@@ -184,8 +180,6 @@ export default class DependencyResolver {
     this.populateDependencies(allFiles, testsFiles);
     this.component.setDependencies(this.allDependencies.dependencies);
     this.component.setDevDependencies(this.allDependencies.devDependencies);
-    this.component.setCompilerDependencies(this.allDependencies.compilerDependencies);
-    this.component.setTesterDependencies(this.allDependencies.testerDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -229,8 +223,7 @@ export default class DependencyResolver {
    * destinationRelativePath - destination written inside the link file.
    *
    * When a dependency is found in a regular (implementation) file, it goes to `dependencies`. If
-   * it found on a test file, it goes to `devDependencies`. Same goes for environment dependencies,
-   * such ad `compilerDependencies` and `testerDependencies`.
+   * it found on a test file, it goes to `devDependencies`.
    * Similarly, when a package is found in a regular file, it goes to `packageDependencies`. When
    * if found in a test file, it goes to `devPackageDependencies`.
    * An exception for the above is when a package is required in a regular or test file but is also
@@ -256,7 +249,6 @@ export default class DependencyResolver {
     });
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
-    this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
     this.populatePeerPackageDependencies();
@@ -625,9 +617,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
-      ...this.allDependencies.devDependencies,
-      ...this.allDependencies.compilerDependencies,
-      ...this.allDependencies.testerDependencies
+      ...this.allDependencies.devDependencies
     ];
     const existingDependency = this.getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
@@ -924,16 +914,10 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.allPackagesDependencies.testerPackageDependencies
     );
 
-    // remove dev and env dependencies that are also regular dependencies
+    // remove dev dependencies that are also regular dependencies
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new BitIds(...this.allDependencies.dependencies.map(c => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
-      d => !componentDepsIds.has(d.id)
-    );
-    this.allDependencies.compilerDependencies = this.allDependencies.compilerDependencies.filter(
-      d => !componentDepsIds.has(d.id)
-    );
-    this.allDependencies.testerDependencies = this.allDependencies.testerDependencies.filter(
       d => !componentDepsIds.has(d.id)
     );
   }
@@ -961,19 +945,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     }, {});
 
     return R.isEmpty(foundPackages) ? undefined : foundPackages;
-  }
-
-  // when env dependencies are not sent to the dependency-resolver, they should be copied from the model
-  copyEnvDependenciesFromModelIfNeeded() {
-    if (!this.componentFromModel) return;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!shouldProcessEnvDependencies(this.component.compiler)) {
-      this.allDependencies.compilerDependencies = this.componentFromModel.compilerDependencies.get();
-    }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    if (!shouldProcessEnvDependencies(this.component.tester)) {
-      this.allDependencies.testerDependencies = this.componentFromModel.testerDependencies.get();
-    }
   }
 
   combineIssues() {

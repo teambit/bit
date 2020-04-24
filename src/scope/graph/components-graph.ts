@@ -2,35 +2,31 @@ import R from 'ramda';
 import graphLib, { Graph as GraphLib } from 'graphlib';
 import Graph from './graph';
 import Component from '../../consumer/component/consumer-component';
-import Dependencies, { DEPENDENCIES_TYPES } from '../../consumer/component/dependencies/dependencies';
+import Dependencies from '../../consumer/component/dependencies/dependencies';
 import loadFlattenedDependenciesForCapsule from '../../consumer/component-ops/load-flattened-dependencies';
 import ComponentWithDependencies from '../component-dependencies';
 import GeneralError from '../../error/general-error';
 import { ComponentsAndVersions } from '../scope';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { Dependency } from '../../consumer/component/dependencies';
 import { Scope } from '..';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
   graphDevDeps: GraphLib;
-  graphCompilerDeps: GraphLib;
-  graphTesterDeps: GraphLib;
+  graphExtensionDeps: GraphLib;
 };
 
 export function buildComponentsGraph(components: Component[]): AllDependenciesGraphs {
   const graphDeps = new GraphLib();
   const graphDevDeps = new GraphLib();
-  const graphCompilerDeps = new GraphLib();
-  const graphTesterDeps = new GraphLib();
+  const graphExtensionDeps = new GraphLib();
   components.forEach(component => {
     _setGraphEdges(component.id, component.dependencies, graphDeps);
     _setGraphEdges(component.id, component.devDependencies, graphDevDeps);
-    _setGraphEdges(component.id, component.compilerDependencies, graphCompilerDeps);
-    _setGraphEdges(component.id, component.testerDependencies, graphTesterDeps);
+    _setGraphEdges(component.id, component.extensionDependencies, graphExtensionDeps);
   });
-  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
+  return { graphDeps, graphDevDeps, graphExtensionDeps };
 }
 
 export function buildComponentsGraphForComponentsAndVersion(
@@ -38,16 +34,14 @@ export function buildComponentsGraphForComponentsAndVersion(
 ): AllDependenciesGraphs {
   const graphDeps = new GraphLib();
   const graphDevDeps = new GraphLib();
-  const graphCompilerDeps = new GraphLib();
-  const graphTesterDeps = new GraphLib();
+  const graphExtensionDeps = new GraphLib();
   components.forEach(({ component, version, versionStr }) => {
     const bitId = component.toBitId().changeVersion(versionStr);
     _setGraphEdges(bitId, version.dependencies, graphDeps);
     _setGraphEdges(bitId, version.devDependencies, graphDevDeps);
-    _setGraphEdges(bitId, version.compilerDependencies, graphCompilerDeps);
-    _setGraphEdges(bitId, version.testerDependencies, graphTesterDeps);
+    _setGraphEdges(bitId, version.extensionDependencies, graphExtensionDeps);
   });
-  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
+  return { graphDeps, graphDevDeps, graphExtensionDeps };
 }
 
 export function buildOneGraphForComponentsAndMultipleVersions(components: ComponentsAndVersions[]): Graph {
@@ -113,16 +107,17 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   });
 
   // set edges
+  const setEdge = (compId: BitId, depId: BitId, depType: string) => {
+    const depIdStr = depId.toString();
+    if (direction === 'normal') {
+      graph.setEdge(compId.toString(), depIdStr, depType);
+    } else {
+      graph.setEdge(depIdStr, compId.toString(), depType);
+    }
+  };
   components.forEach((component: Component) => {
-    DEPENDENCIES_TYPES.forEach(depType => {
-      component[depType].get().forEach((dependency: Dependency) => {
-        const depIdStr = dependency.id.toString();
-        if (direction === 'normal') {
-          graph.setEdge(component.id.toString(), depIdStr, depType);
-        } else {
-          graph.setEdge(depIdStr, component.id.toString(), depType);
-        }
-      });
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+      depIds.forEach(depId => setEdge(component.id, depId, depType));
     });
   });
 

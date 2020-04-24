@@ -101,6 +101,7 @@ describe('support vue files', function() {
         helper.command.addComponentAllowFiles('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
         helper.command.runCmd('npm i fuzzysearch');
       });
+
       it('should find missing vue dependencies', () => {
         const output = helper.command.tagAllComponents();
         expect(output).to.have.string('9 component(s) tagged');

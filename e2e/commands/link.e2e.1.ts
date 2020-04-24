@@ -358,6 +358,19 @@ console.log(isType());`;
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
+    describe('with entering specific ids', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(beforeLink);
+        output = helper.command.linkAndRewire('bar/foo');
+      });
+      it('should link only the specified ids', () => {
+        expect(output).to.have.string('linked 1 components');
+      });
+      it('should rewire only the specified ids', () => {
+        expect(output).to.have.string('rewired 1 components');
+      });
+    });
     describe('with css files in one dir and extension', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScope();

@@ -179,19 +179,11 @@ export default function validateVersionInstance(version: Version): void {
   });
   version.dependencies.validate();
   version.devDependencies.validate();
-  version.compilerDependencies.validate();
-  version.testerDependencies.validate();
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
   if (!version.devDependencies.isEmpty() && !version.flattenedDevDependencies.length) {
     throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
-  }
-  if (!version.compilerDependencies.isEmpty() && !version.flattenedCompilerDependencies.length) {
-    throw new VersionInvalid(`${message}, it has compilerDependencies but its flattenedCompilerDependencies is empty`);
-  }
-  if (!version.testerDependencies.isEmpty() && !version.flattenedTesterDependencies.length) {
-    throw new VersionInvalid(`${message}, it has testerDependencies but its flattenedTesterDependencies is empty`);
   }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
@@ -208,8 +200,6 @@ export default function validateVersionInstance(version: Version): void {
   };
   validateFlattenedDependencies(version.flattenedDependencies);
   validateFlattenedDependencies(version.flattenedDevDependencies);
-  validateFlattenedDependencies(version.flattenedCompilerDependencies);
-  validateFlattenedDependencies(version.flattenedTesterDependencies);
   const allDependenciesIds = version.getAllDependenciesIds();
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
   if (!R.isEmpty(depsDuplications)) {

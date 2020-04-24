@@ -20,10 +20,8 @@ export async function getAllFlattenedDependencies(
 ): Promise<{
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
-  flattenedCompilerDependencies: BitIds;
-  flattenedTesterDependencies: BitIds;
 }> {
-  const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = allDependenciesGraphs;
+  const { graphDeps, graphDevDeps, graphExtensionDeps } = allDependenciesGraphs;
   const params = {
     scope,
     componentId,
@@ -39,22 +37,15 @@ export async function getAllFlattenedDependencies(
     graph: graphDevDeps,
     prodGraph: graphDeps
   });
-  const flattenedCompilerDependencies = await getFlattenedDependencies({
+  const flattenedExtensionDependencies = await getFlattenedDependencies({
     ...params,
-    graph: graphCompilerDeps,
-    prodGraph: graphDeps
-  });
-  const flattenedTesterDependencies = await getFlattenedDependencies({
-    ...params,
-    graph: graphTesterDeps,
+    graph: graphExtensionDeps,
     prodGraph: graphDeps
   });
 
   return {
     flattenedDependencies,
-    flattenedDevDependencies,
-    flattenedCompilerDependencies,
-    flattenedTesterDependencies
+    flattenedDevDependencies: BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExtensionDependencies])
   };
 }
 

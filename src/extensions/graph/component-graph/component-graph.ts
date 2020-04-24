@@ -7,7 +7,7 @@ import { buildOneGraphForComponents } from '../../../scope/graph/components-grap
 import ComponentFactory from '../../component/component-factory';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
-export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
+export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
 type Node = { id: string; node: Component };
 type Edge = { sourceId: string; targetId: string; edge: Dependency };

@@ -200,8 +200,8 @@ export default class CommandHelper {
   untag(id: string) {
     return this.runCmd(`bit untag ${id}`);
   }
-  exportComponent(id: string, scope: string = this.scopes.remote, assert = true) {
-    const result = this.runCmd(`bit export ${scope} ${id} --force`);
+  exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
+    const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
   }
@@ -370,8 +370,8 @@ export default class CommandHelper {
   link() {
     return this.runCmd('bit link');
   }
-  linkAndRewire() {
-    return this.runCmd('bit link --rewire');
+  linkAndRewire(ids = '') {
+    return this.runCmd(`bit link ${ids} --rewire`);
   }
 
   packComponent(id: string, options: Record<string, any>, extract = false) {
