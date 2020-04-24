@@ -1,9 +1,9 @@
-import { ExtensionManifest } from '@teambit/harmony';
+// eslint-disable-next-line import/prefer-default-export
 import { CLIProvider } from './cli.provider';
-import { PaperExt } from '../paper';
+import { ReporterExt } from '../reporter';
 
-export const BitCliExt: ExtensionManifest = {
+export default {
   name: 'BitCli',
-  dependencies: [PaperExt],
+  dependencies: [ReporterExt],
   provider: CLIProvider
 };

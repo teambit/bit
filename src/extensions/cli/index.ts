@@ -1,3 +1,4 @@
-export { BitCliExt } from './cli.extension';
-export { BitCli } from './cli';
-export { Command, CLIArgs } from '../paper';
+export { CLI as BitCli } from './cli';
+export { default as BitCliExt } from './cli.extension';
+export { Command, CLIArgs, PaperOptions } from './command';
+export * from './exceptions';

@@ -1,6 +1,8 @@
 import { Workspace } from '../../extensions/workspace';
 import { Scope } from '../../scope';
 
+const WORKSPACE_EXTENSION = '@teambit/workspace';
+
 export default class Bit {
   constructor(
     /**

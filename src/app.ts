@@ -26,6 +26,7 @@ try {
       // @ts-ignore :TODO until refactoring cli extension to dynamiclly load extensions
       return cli?.instance.run();
     })
+    // :TODO error handling must be refactored here.
     .catch(err => {
       const originalError = err.originalError || err;
       const errorHandlerExist = findErrorDefinition(originalError);
