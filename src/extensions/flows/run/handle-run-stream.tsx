@@ -1,5 +1,9 @@
 import { ReplaySubject } from 'rxjs';
+import { EventEmitter } from 'events';
 import { LogPublisher } from '../../logger';
+
+// TODO: fix this hack by using the internal flow events
+export const flowEvents = new EventEmitter();
 
 export async function handleRunStream(stream: ReplaySubject<any>, logPublisher: LogPublisher, verbose: boolean) {
   const summary: { [k: string]: string } = {};
@@ -31,9 +35,11 @@ function handleFlowStream(networkData: ReplaySubject<any>, logPublisher: LogPubl
   networkData.subscribe({
     next(flowData: any) {
       if (flowData.type === 'flow:start') {
-        logPublisher.info(flowData.id, `***** started ${flowData.id} *****`);
+        flowEvents.emit('flowStarted', flowData.id);
+        // logPublisher.info(flowData.id, `***** started ${flowData.id} *****`);
       } else if (flowData.type === 'flow:result') {
-        logPublisher.info(flowData.id, `***** finished ${flowData.id} - duration:${flowData.duration} *****`);
+        flowEvents.emit('flowExecuted', flowData.id);
+        // logPublisher.info(flowData.id, `***** finished ${flowData.id} - duration:${flowData.duration} *****`);
         summery[flowData.id] = flowData;
       } else if (flowData instanceof ReplaySubject) {
         handleTaskStream(flowData, logPublisher, verbose);
