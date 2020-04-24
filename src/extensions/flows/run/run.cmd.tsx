@@ -35,7 +35,7 @@ export class RunCmd implements Command {
     let totalFlows = 0;
     let flowRunning = ''; // this is just a sample for the log because concurrency
     onCapsuleInstalled(componentName => {
-      capsulesInstalled++;
+      capsulesInstalled += 1;
       this.reporter.setStatusText(
         `Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
       );
@@ -70,6 +70,7 @@ export class RunCmd implements Command {
 
     // this.reporter.subscribe('flows');
     const report = await handleRunStream(result, logPublisher, verbose as boolean);
+    this.reporter.info(undefined, `V ${flowsExecuted} Flows executed`);
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;
