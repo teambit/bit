@@ -91,16 +91,15 @@ async function rewriteFlattenedDependencies(
   const notFoundDependencies = new BitIds();
   const updateAll = updatedComponents.map(async updatedComponent => {
     const id = updatedComponent.component.toBitId().changeVersion(updatedComponent.versionStr);
-    const {
-      flattenedDependencies,
-      flattenedDevDependencies,
-      flattenedCompilerDependencies,
-      flattenedTesterDependencies
-    } = await getAllFlattenedDependencies(scope, id, allDependenciesGraphs, dependenciesCache, notFoundDependencies);
+    const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
+      scope,
+      id,
+      allDependenciesGraphs,
+      dependenciesCache,
+      notFoundDependencies
+    );
     updatedComponent.version.flattenedDependencies = flattenedDependencies;
     updatedComponent.version.flattenedDevDependencies = flattenedDevDependencies;
-    updatedComponent.version.flattenedCompilerDependencies = flattenedCompilerDependencies;
-    updatedComponent.version.flattenedTesterDependencies = flattenedTesterDependencies;
   });
   await Promise.all(updateAll);
 }

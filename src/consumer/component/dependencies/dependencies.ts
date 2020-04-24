@@ -11,12 +11,10 @@ import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 import { PathLinux } from '../../../utils/path';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 
-export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
+export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {
   dependencies: 'prod',
-  devDependencies: 'dev',
-  compilerDependencies: 'compiler',
-  testerDependencies: 'tester'
+  devDependencies: 'dev'
 };
 
 export default class Dependencies {

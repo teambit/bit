@@ -382,12 +382,7 @@ async function convertToCorrectScope(
         dependency.id = updatedScope;
       }
     });
-    const flattenedFields = [
-      'flattenedDependencies',
-      'flattenedDevDependencies',
-      'flattenedCompilerDependencies',
-      'flattenedTesterDependencies'
-    ];
+    const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
     flattenedFields.forEach(flattenedField => {
       const ids: BitIds = version[flattenedField];
       const needsChange = ids.some(id => id.scope !== remoteScope);
