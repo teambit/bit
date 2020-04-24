@@ -18,7 +18,6 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../extensions/isolator/capsule-paths';
 
 /**
  * Add components as dependencies to root package.json
@@ -106,19 +105,12 @@ export function preparePackageJsonToWrite(
   override = true,
   writeBitDependencies = false, // e.g. when it's a capsule
   excludeRegistryPrefix?: boolean,
-  capsulePaths?: CapsulePaths,
   packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
     if (!writeBitDependencies) return {};
     return dependencies.reduce((acc, depId: BitId) => {
-      if (capsulePaths) {
-        // when coming from a capsule, it shouldn't reach here because writeBitDependencies is false
-        throw new Error(
-          `preparePackageJsonToWrite doesn't expect capsules to add bit dependencies to the package.json`
-        );
-      }
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
       const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
