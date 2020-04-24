@@ -60,8 +60,9 @@ function getContainerScript() {
   try {
     userTask = require(pathToTask);
   } catch (e) {
+    const errorMsg = e.message || '';
     process.send ? process.send(e) : console.error(e);
-    handleError({ message: 'script-container can not find user task at ' + pathToTask });
+    handleError({ message: 'script-container failed running user task at ' + pathToTask + '. message: ' + errorMsg });
   }
 
   const toExecute = userTask.default || userTask;

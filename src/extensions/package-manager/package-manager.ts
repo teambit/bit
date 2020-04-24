@@ -68,6 +68,8 @@ export default class PackageManager {
       await pMapSeries(capsules, async capsule => {
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
+        // until the reporter is ready, I don't have a better way to see what's going on with the installation
+        console.log('installing', capsule.wrkDir);
         const installProc =
           packageManager === 'npm'
             ? execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' })

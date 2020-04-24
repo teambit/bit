@@ -82,7 +82,8 @@ result.value [
     const componentAndCapsules = await getComponentsAndCapsules(componentsIds, this.workspace);
     const idsAndScriptsArr = componentAndCapsules
       .map(c => {
-        const compileConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+        const compileCoreConfig = c.component.config.extensions.findCoreExtension('compile')?.config;
+        const compileConfig = compileCoreConfig || c.component.config.extensions.findExtension('compile')?.config;
         const compiler = compileConfig ? [compileConfig.compiler] : [];
         return { id: c.consumerComponent.id, value: compiler };
       })
