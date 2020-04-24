@@ -1,5 +1,5 @@
 // import WorkspaceConfig from './workspace-config';
-import { getConsumerInfo } from 'bit-bin/dist/consumer/consumer-locator';
+import { getConsumerInfo } from 'bit-bin/consumer/consumer-locator';
 
 export type WorkspaceConfigDeps = [];
 

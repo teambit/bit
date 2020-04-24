@@ -1,8 +1,8 @@
 import Bluebird from 'bluebird';
 import harmony, { HarmonyError } from '@teambit/harmony';
-import HooksManager from 'bit-bin/dist/hooks';
-import defaultHandleError, { findErrorDefinition } from 'bit-bin/dist/cli/default-error-handler';
-import { logErrAndExit } from 'bit-bin/dist/cli/command-registry';
+import HooksManager from 'bit-bin/hooks';
+import defaultHandleError, { findErrorDefinition } from 'bit-bin/cli/default-error-handler';
+import { logErrAndExit } from 'bit-bin/cli/command-registry';
 import { BitExt } from '@bit/bit.core.bit';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs

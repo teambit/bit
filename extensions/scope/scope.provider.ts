@@ -1,6 +1,6 @@
-import { loadConsumerIfExist } from 'bit-bin/dist/consumer';
+import { loadConsumerIfExist } from 'bit-bin/consumer';
 import { Scope } from './scope';
-import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
+import { loadScopeIfExist } from 'bit-bin/scope/scope-loader';
 
 export type ScopeConfig = {};
 

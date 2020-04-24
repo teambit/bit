@@ -1,5 +1,5 @@
 // TODO: remove this
-import { CommandOptions } from 'bit-bin/dist/cli/command';
+import { CommandOptions } from 'bit-bin/cli/command';
 
 export interface Command {
   /**

@@ -1,4 +1,4 @@
-import AbstractError from 'bit-bin/dist/error/abstract-error';
+import AbstractError from 'bit-bin/error/abstract-error';
 
 export default class InvalidConfigFile extends AbstractError {
   path: string;

@@ -4,7 +4,7 @@ import { Color, AppContext } from 'ink';
 import { Command, CLIArgs } from '@bit/bit.core.cli';
 import { Flags } from '@bit/bit.core.paper';
 import { Test } from './test';
-import { paintAllSpecsResults, paintSummarySpecsResults } from 'bit-bin/dist/cli/chalk-box';
+import { paintAllSpecsResults, paintSummarySpecsResults } from 'bit-bin/cli/chalk-box';
 
 export class TestCmd implements Command {
   name = 'run-test [component...]'; // @todo: choose a name. "test" is taken.

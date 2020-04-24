@@ -1,6 +1,6 @@
 import { Workspace } from '@bit/bit.core.workspace';
 import { Scope } from '@bit/bit.core.scope';
-import { BitId as ComponentId } from 'bit-bin/dist/bit-id';
+import { BitId as ComponentId } from 'bit-bin/bit-id';
 import { Component } from '@bit/bit.core.component';
 
 /**

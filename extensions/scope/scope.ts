@@ -1,8 +1,8 @@
-import LegacyScope from 'bit-bin/dist/scope/scope';
-import { PersistOptions } from 'bit-bin/dist/scope/types';
-import { BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
+import LegacyScope from 'bit-bin/scope/scope';
+import { PersistOptions } from 'bit-bin/scope/types';
+import { BitIds as ComponentsIds } from 'bit-bin/bit-id';
 import { Component, ComponentID } from '@bit/bit.core.component';
-import { ComponentHost } from 'bit-bin/dist/shared-types';
+import { ComponentHost } from 'bit-bin/shared-types';
 
 // eslint-disable-next-line import/prefer-default-export
 export class Scope implements ComponentHost {

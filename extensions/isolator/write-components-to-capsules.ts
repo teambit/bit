@@ -1,18 +1,18 @@
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import ConsumerComponent from 'bit-bin/consumer/component';
 import { Capsule } from './capsule';
-import { getComponentLinks } from 'bit-bin/dist/links/link-generator';
-import { getManipulateDirForComponentWithDependencies } from 'bit-bin/dist/consumer/component-ops/manipulate-dir';
+import { getComponentLinks } from 'bit-bin/links/link-generator';
+import { getManipulateDirForComponentWithDependencies } from 'bit-bin/consumer/component-ops/manipulate-dir';
 
-import { ComponentWithDependencies } from 'bit-bin/dist/scope';
+import { ComponentWithDependencies } from 'bit-bin/scope';
 import ManyComponentsWriter, {
   ManyComponentsWriterParams
-} from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+} from 'bit-bin/consumer/component-ops/many-components-writer';
 
 import CapsuleList from './capsule-list';
 import CapsulePaths from './capsule-paths';
-import Graph from 'bit-bin/dist/scope/graph/graph'; // TODO: use graph extension?
-import { BitId } from 'bit-bin/dist/bit-id';
-import { Dependencies } from 'bit-bin/dist/consumer/component/dependencies';
+import Graph from 'bit-bin/scope/graph/graph'; // TODO: use graph extension?
+import { BitId } from 'bit-bin/bit-id';
+import { Dependencies } from 'bit-bin/consumer/component/dependencies';
 
 export default async function writeComponentsToCapsules(
   components: ConsumerComponent[],

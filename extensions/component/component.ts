@@ -8,7 +8,7 @@ import ComponentID from './id';
 import State from './state';
 import Snap, { Author } from './snap';
 import Isolator from '@bit/bit.core.isolator';
-import { loadConsumerIfExist } from 'bit-bin/dist/consumer';
+import { loadConsumerIfExist } from 'bit-bin/consumer';
 
 /**
  * in-memory representation of a component.
