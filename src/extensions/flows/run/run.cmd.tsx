@@ -79,7 +79,6 @@ export class RunCmd implements Command {
 
     // console.log('DONE')
     this.reporter.info(undefined, `✔️  ${flowsExecuted} Flows executed`);
-
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;

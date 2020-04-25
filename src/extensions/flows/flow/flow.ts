@@ -79,6 +79,7 @@ export class Flow {
         capsule,
         tasks: this.result
       },
+      code: isError ? 1 : 0,
       startTime,
       duration: endTime.getTime() - startTime.getTime()
     });
