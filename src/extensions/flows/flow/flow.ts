@@ -8,7 +8,12 @@ import { Capsule } from '../../isolator/capsule';
 export class Flow {
   private result: any[] = [];
   constructor(private tasks: string[]) {}
-
+  /**
+   * Takes a capsule and return a stream of streams.
+   * Return value represent the execution of tasks.
+   *
+   * @param capsule ComponentCapsule to execute tasks
+   */
   execute(capsule: Capsule): ReplaySubject<any> {
     const id = capsule.component.id.toString();
     const startTime = new Date();

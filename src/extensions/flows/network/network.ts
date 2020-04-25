@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-this-alias */
 import { ReplaySubject, from, zip } from 'rxjs';
-import { mergeMap, map, filter, mergeAll } from 'rxjs/operators';
+import { mergeMap, map, filter, mergeAll, tap } from 'rxjs/operators';
 
 import { Graph } from 'graphlib';
 import { EventEmitter } from 'events';

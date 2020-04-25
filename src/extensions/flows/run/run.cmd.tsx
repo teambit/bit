@@ -39,7 +39,7 @@ export class RunCmd implements Command {
     onCapsuleInstalled(componentName => {
       capsulesInstalled += 1;
       this.reporter.setStatusText(
-        `Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
+        `⏳ Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
       );
     });
     beforeInstallingCapsules(numCapsules => {
@@ -48,24 +48,27 @@ export class RunCmd implements Command {
     flowEvents.on('flowStarted', flowName => {
       totalFlows += 1;
       flowRunning = flowName;
-      this.reporter.setStatusText(`Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
+      this.reporter.setStatusText(`⏳ Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
     });
     flowEvents.on('flowExecuted', flowName => {
       flowsExecuted += 1;
-      this.reporter.setStatusText(`Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
+      this.reporter.setStatusText(`⏳ Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
     });
     this.reporter.title(`Starting "${flow}"`);
     const concurrencyN = parallel && typeof parallel === 'string' ? Number.parseInt(parallel) : 5;
     const actualComps = typeof components === 'string' ? [components] : components;
     const comps = this.flows.getIds(actualComps);
-    this.reporter.title('Setting up component execution');
-    this.reporter.setStatusText(`Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}).`);
+    this.reporter.title('setting up component execution');
+    this.reporter.setStatusText(`⏳ Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}).`);
     this.flows.onWorkspaceLoaded(numComponents => {
-      this.reporter.info(undefined, `V ${capsulesInstalled} Components resolved`);
-      this.reporter.title('Executing flows');
-      this.reporter.setStatusText('Executing flows');
+      capsulesInstalled
+        ? this.reporter.info(undefined, `📦 ${capsulesInstalled} Components resolved`)
+        : this.reporter.info(undefined, `📦 Components loaded from cache`);
+
+      this.reporter.title('🎬  Executing flows');
+      this.reporter.setStatusText('⏳ Executing flows');
     });
-    const runStream: ReplaySubject<any> = await this.flows.runStream(comps, flow as string, {
+    const runStream: ReplaySubject<any> = await this.flows.run(comps, flow as string, {
       concurrency: concurrencyN,
       caching: !noCache
     });
@@ -73,9 +76,10 @@ export class RunCmd implements Command {
     const logPublisher = this.logger.createLogPublisher('flows');
 
     const report = await reportRunStream(runStream, logPublisher, verbose as boolean);
-    this.reporter.info(undefined, `V ${flowsExecuted} Flows executed`);
 
-    this.reporter.info(undefined, `V ${flowsExecuted} Flows executed`);
+    // console.log('DONE')
+    this.reporter.info(undefined, `✔️  ${flowsExecuted} Flows executed`);
+
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;

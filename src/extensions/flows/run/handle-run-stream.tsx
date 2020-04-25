@@ -8,26 +8,44 @@ export const flowEvents = new EventEmitter();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = true): void => {
-  logger[level](msg.id, msg.value);
+  [logger].forEach(log => log[level](msg.id, msg.value));
+};
+const printAll = (logs: LogPublisher[], id: string, msg: string) => {
+  logs.forEach(log => log.info(id, msg));
 };
 
 const strategies: { [k: string]: (msg: any, logger: LogPublisher, verbose: boolean) => void } = {
   'task:stdout': (msg: any, logger: LogPublisher, verbose = true) => {
-    verbose && logger.info(msg.id, msg.value);
+    verbose && printAll([logger, console], msg.id, msg.value);
   },
-  'task:stderr': print('error'),
-  'flow:start': print(),
-  'flow:result': print(),
+  'task:stderr': function(msg, logger: LogPublisher) {
+    [logger, console].forEach(log => log.info(msg.id, msg.value));
+  },
+  'flow:start': function(msg: any) {
+    flowEvents.emit('flowStarted', msg.id.toString());
+    print();
+  },
+  'flow:result': function(msg: any) {
+    flowEvents.emit('flowExecuted', msg.id.toString());
+    print();
+  },
   'network:start': print(),
   'network:result': print()
 };
 
+/**
+ * Takes a Reporter (currently logger) with an execution stream and display results to the UI
+ * TODO: Replace event emitter with in flows with reporter handling here.
+ *
+ * @param runStream network stream from execution
+ * @param logger way to publish logs - TODO should change to reporter
+ * @param verbose UI option to verbose log everything
+ */
 export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublisher, verbose: boolean) {
   return runStream
     .pipe(
       flattenNestedMap(),
       tap((message: any) => {
-        // console.log('got message: ', message.type, 'from', message.id)
         if (strategies[message.type]) {
           strategies[message.type](message, logger, verbose);
         } else {

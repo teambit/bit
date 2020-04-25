@@ -18,6 +18,14 @@ export class Flows {
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
+
+  /**
+   * Creates a custom network from workspace.
+   *
+   * @param seeders - array of components to build.
+   * @param getFlow - function which provide component flow.
+   * @param postFlow - postFlow callback.
+   */
   createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow = () => Promise.resolve()) {
     const network = new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
     network.onWorkspaceLoaded((...args) => {
@@ -26,6 +34,13 @@ export class Flows {
     return network;
   }
 
+  /**
+   * Creates network which runs named flow according to project configuration.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   */
   createNetworkByFlowName(seeders: ComponentID[], name = 'build', options: ExecutionOptions) {
     const getFlow = async (capsule: Capsule) => {
       const seed = capsule.component.id;
@@ -48,8 +63,16 @@ export class Flows {
     return this.createNetwork(seeders, getFlow, postFlow);
   }
 
-  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
-    const resultStream = await this.runStream(seeders, name, options, network);
+  /**
+   * Executes named flow on network and returns a promise with network:result message.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   * @param network optional custom network
+   */
+  async runToPromise(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+    const resultStream = await this.run(seeders, name, options, network);
     return new Promise((resolve, reject) => {
       resultStream.subscribe({
         next(data: any) {
@@ -65,7 +88,15 @@ export class Flows {
     });
   }
 
-  async runStream(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+  /**
+   * Executes named flow on network and returns an execution stream.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   * @param network optional custom network
+   */
+  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
     const opts: ExecutionOptions = Object.assign(
       {
         caching: true,
@@ -79,6 +110,12 @@ export class Flows {
     return resultStream;
   }
 
+  /**
+   *  runs custom flow on network.
+   *
+   * @param flowsWithIds
+   * @param options
+   */
   async runMultiple(flowsWithIds: IdsAndFlows, options?: Partial<ExecutionOptions>) {
     const getFlow = (capsule: Capsule) => {
       const id = capsule.component.id;
@@ -89,7 +126,7 @@ export class Flows {
 
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
     const network = this.createNetwork(ids, getFlow);
-    return this.run(ids, '', options || {}, network);
+    return this.runToPromise(ids, '', options || {}, network);
   }
 
   onWorkspaceLoaded(cb) {
