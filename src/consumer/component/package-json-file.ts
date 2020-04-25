@@ -128,6 +128,7 @@ export default class PackageJsonFile {
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     };
+    if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
   }
 
@@ -151,6 +152,10 @@ export default class PackageJsonFile {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
+  }
+
+  removeDependency(dependency: string) {
+    delete this.packageJsonObject.dependencies[dependency];
   }
 
   replaceDependencies(dependencies: Record<string, any>) {

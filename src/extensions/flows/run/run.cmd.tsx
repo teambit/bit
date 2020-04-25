@@ -7,10 +7,11 @@ import { Command, CLIArgs } from '../../cli';
 import { Flags, PaperOptions } from '../../paper/command';
 import { Flows } from '../flows';
 import { reportRunStream } from './handle-run-stream';
+import { flowEvents } from './handle-run-stream';
 import { Report } from './report';
 import { Reporter } from '../../reporter';
-import { Logger, LogPublisher } from '../../logger';
-import { flattenReplaySubject, flattenNestedMap } from '../util/flatten-nested-map';
+import { Logger } from '../../logger';
+import { onCapsuleInstalled, beforeInstallingCapsules } from '../../package-manager';
 
 export class RunCmd implements Command {
   name = 'run <flow> [component...]';
@@ -30,82 +31,53 @@ export class RunCmd implements Command {
   constructor(private flows: Flows, private reporter: Reporter, private logger: Logger) {}
 
   async render([flow, components]: CLIArgs, { parallel, noCache, verbose }: Flags) {
+    let capsulesInstalled = 0;
+    let totalCapsules = 0;
+    let flowsExecuted = 0;
+    let totalFlows = 0;
+    let flowRunning = ''; // this is just a sample for the log because concurrency
+    onCapsuleInstalled(componentName => {
+      capsulesInstalled += 1;
+      this.reporter.setStatusText(
+        `Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}). ${componentName}`
+      );
+    });
+    beforeInstallingCapsules(numCapsules => {
+      totalCapsules += numCapsules;
+    });
+    flowEvents.on('flowStarted', flowName => {
+      totalFlows += 1;
+      flowRunning = flowName;
+      this.reporter.setStatusText(`Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
+    });
+    flowEvents.on('flowExecuted', flowName => {
+      flowsExecuted += 1;
+      this.reporter.setStatusText(`Running flows (${flowsExecuted}/${totalFlows}). Running ${flowRunning}`);
+    });
     this.reporter.title(`Starting "${flow}"`);
     const concurrencyN = parallel && typeof parallel === 'string' ? Number.parseInt(parallel) : 5;
     const actualComps = typeof components === 'string' ? [components] : components;
     const comps = this.flows.getIds(actualComps);
     this.reporter.title('Setting up component execution');
-    this.reporter.setStatusText('Resolving Components from the workspace ([COUNTER-TBD])...');
+    this.reporter.setStatusText(`Resolving Components from the workspace (${capsulesInstalled}/${totalCapsules}).`);
     this.flows.onWorkspaceLoaded(numComponents => {
-      this.reporter.info(undefined, `V ${numComponents} Components resolved`);
+      this.reporter.info(undefined, `V ${capsulesInstalled} Components resolved`);
       this.reporter.title('Executing flows');
-      this.reporter.setStatusText('[COUNTER-TBD] Components remaining. Running');
+      this.reporter.setStatusText('Executing flows');
     });
     const runStream: ReplaySubject<any> = await this.flows.runStream(comps, flow as string, {
       concurrency: concurrencyN,
       caching: !noCache
     });
-    // TODO: remove this hack once harmony gives us a solution for "own extension name" or something similar
+
     const logPublisher = this.logger.createLogPublisher('flows');
 
     const report = await reportRunStream(runStream, logPublisher, verbose as boolean);
+    this.reporter.info(undefined, `V ${flowsExecuted} Flows executed`);
+
+    this.reporter.info(undefined, `V ${flowsExecuted} Flows executed`);
     this.reporter.end();
     const reportComp = <Report props={report} />;
     return reportComp;
   }
-}
-
-export async function handleRunStream(stream: ReplaySubject<any>, logPublisher: LogPublisher, verbose: boolean) {
-  const summary: { [k: string]: string } = {};
-  const streamPromise = await new Promise(resolve =>
-    stream.subscribe({
-      next(networkData: any) {
-        if (networkData instanceof ReplaySubject) {
-          handleFlowStream(networkData, logPublisher, summary, verbose);
-        } else if (networkData.type === 'network:start') {
-          //
-        } else if (networkData.type === 'network:result') {
-          summary['network:result'] = networkData;
-        } else {
-          logPublisher.warn('run-infra', `~~~~~~ Got ${networkData.type} on ${networkData.id}~~~~~~`);
-        }
-      },
-      complete() {
-        resolve(summary);
-      },
-      error() {
-        resolve(summary);
-      }
-    })
-  );
-
-  return streamPromise;
-}
-function handleFlowStream(networkData: ReplaySubject<any>, logPublisher: LogPublisher, summery: any, verbose: boolean) {
-  networkData.subscribe({
-    next(flowData: any) {
-      if (flowData.type === 'flow:start') {
-        logPublisher.info(flowData.id, `***** started ${flowData.id} *****`);
-      } else if (flowData.type === 'flow:result') {
-        logPublisher.info(flowData.id, `***** finished ${flowData.id} - duration:${flowData.duration} *****`);
-        summery[flowData.id] = flowData;
-      } else if (flowData instanceof ReplaySubject) {
-        handleTaskStream(flowData, logPublisher, verbose);
-      }
-    },
-    error() {},
-    complete() {}
-  });
-}
-
-function handleTaskStream(taskStream: ReplaySubject<any>, logPublisher: LogPublisher, verbose: boolean) {
-  taskStream.subscribe({
-    next(data: any) {
-      if (data.type === 'task:stdout' && verbose) {
-        logPublisher.info(data.id, data.value);
-      } else if (data.type === 'task:stderr') {
-        logPublisher.warn(data.id, data.value);
-      }
-    }
-  });
 }

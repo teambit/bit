@@ -5,7 +5,6 @@ import { Workspace } from '../workspace';
 import { Network, GetFlow } from './network';
 import { ComponentID } from '../component';
 import { Flow } from './flow/flow';
-import BitIdAndValueArray from '../../bit-id/bit-id-and-value-array';
 import { ExecutionOptions } from './network/options';
 import { BitId } from '../../bit-id';
 import { Capsule } from '../isolator/capsule';
@@ -84,7 +83,7 @@ export class Flows {
     const getFlow = (capsule: Capsule) => {
       const id = capsule.component.id;
       // @ts-ignore for some reason the capsule.component here is ConsumerComponent
-      const value = flowsWithIds.getValue(id);
+      const value = flowsWithIds.getFlows(id);
       return Promise.resolve(new Flow(value || []));
     };
 
@@ -98,4 +97,17 @@ export class Flows {
   }
 }
 
-export class IdsAndFlows extends BitIdAndValueArray<string[]> {}
+export class IdsAndFlows extends Array<{ id: BitId; value: string[] }> {
+  getFlows(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqual(id));
+    return found ? found.value : null;
+  }
+  getFlowsIgnoreVersion(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqualWithoutVersion(id));
+    return found ? found.value : null;
+  }
+  getFlowsIgnoreScopeAndVersion(id: BitId): string[] | null {
+    const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
+    return found ? found.value : null;
+  }
+}

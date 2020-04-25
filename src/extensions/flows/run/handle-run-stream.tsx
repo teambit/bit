@@ -1,7 +1,10 @@
 import { ReplaySubject } from 'rxjs';
+import { EventEmitter } from 'events';
 import { tap, filter, take } from 'rxjs/operators';
 import { flattenNestedMap } from '../util/flatten-nested-map';
 import { LogPublisher } from '../../logger';
+
+export const flowEvents = new EventEmitter();
 
 const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = true): void => {
   logger[level](msg.id, msg.value);
