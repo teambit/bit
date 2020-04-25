@@ -84,12 +84,12 @@ export class Network {
         endNetwork(stream, startTime, visitedCache);
         return;
       }
-      amount += getSeeders(graph, visitedCache, amount).length;
 
       const seeders = from(getSeeders(graph, visitedCache, amount));
       const flows = from(getSeeders(graph, visitedCache, amount)).pipe(
         mergeMap(seed => from(getFlow(visitedCache[seed].capsule)))
       );
+      amount += getSeeders(graph, visitedCache, amount).length;
 
       zip(zip(seeders, flows).pipe(map(([seed, flow]) => flow.execute(visitedCache[seed].capsule))), seeders)
         .pipe(
@@ -100,7 +100,9 @@ export class Network {
             return flowStream;
           }),
           mergeAll(),
-          // tap((x:any)=> console.log('~~~~~got this', x.type, 'from',typeof x.id === 'string'? x.id : x.id &&  x.id.toString())),
+          // tap((x: any) =>
+          //   console.log('~~~~~got this', x.type, 'from', typeof x.id === 'string' ? x.id : x.id && x.id.toString())
+          // ),
           filter((data: any) => data.type === 'flow:result')
         )
         .subscribe({
@@ -110,8 +112,8 @@ export class Network {
             cacheValue.result = data;
             amount -= 1;
             graph.removeNode(seed);
+            // console.log(`got ${data.type} from ${seed} amount is now ${amount}`, graph.nodes());
             handlePostFlow(postFlow, cacheValue);
-            // console.log(`got ${data.type} from ${seed} amount is now ${amount}`, graph.nodes())
             if (amount === 0) {
               walk();
             }
