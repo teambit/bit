@@ -141,11 +141,7 @@ export class Network {
 
 function handlePostFlow(postFlow: PostFlow | null, cacheValue: CacheValue) {
   if (postFlow) {
-    postFlow(cacheValue.capsule)
-      .then(res => {
-        // console.log('POST')
-      })
-      .catch(() => {});
+    postFlow(cacheValue.capsule).catch(() => {});
   }
 }
 
@@ -169,16 +165,12 @@ function endNetwork(network: ReplaySubject<unknown>, startTime: Date, visitedCac
       };
       return accum;
     }, {}),
-    // eslint-disable-next-line no-empty-pattern
     code: !!~Object.entries(visitedCache).findIndex(
       ([k, value]: [string, CacheValue]) => !value.visited || value.result instanceof Error
     )
   };
-  const sorted = Object.values(endMessage.value);
-
   network.next(endMessage);
   network.complete();
-  // setTimeout(()=> network.complete(), 0);
 }
 
 function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err: Error) {
@@ -187,7 +179,6 @@ function handleNetworkError(seed: string, graph: Graph, visitedCache: Cache, err
     .map(dependent => {
       visitedCache[dependent].result = new Error(`Error due to ${seed}`);
       return dependent;
-      // graph.removeNode(dependent);
     })
     .forEach(dependent => graph.removeNode(dependent));
   visitedCache[seed].result = err;
