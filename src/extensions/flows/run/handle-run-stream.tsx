@@ -6,6 +6,7 @@ import { LogPublisher } from '../../logger';
 
 export const flowEvents = new EventEmitter();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const print = (level = 'info') => (msg: any, logger: LogPublisher, _verbose = true): void => {
   logger[level](msg.id, msg.value);
 };
@@ -26,6 +27,7 @@ export function reportRunStream(runStream: ReplaySubject<any>, logger: LogPublis
     .pipe(
       flattenNestedMap(),
       tap((message: any) => {
+        // console.log('got message: ', message.type, 'from', message.id)
         if (strategies[message.type]) {
           strategies[message.type](message, logger, verbose);
         } else {
