@@ -44,7 +44,7 @@ describe('flows functionality', function() {
       taskOutput = helper.command.runTask('build help');
     });
     it('should output results', () => {
-      expect(taskOutput).to.have.string('Hello Report!');
+      expect(taskOutput).to.have.string('Flows executed');
     });
     it('should write dists files', () => {
       const helpCapsule = helper.command.getCapsuleOfComponent('help');

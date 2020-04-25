@@ -1,16 +1,39 @@
 **Flows**
----------
-Run user flows on a network of dependent component
+==========
+Run user flows on a graph of dependent component. Used as low level API for compile/test/watch etc..
 
-**Product**
 - Provides a `bit run` command to execute flows over networks.
-- Provides an API to create network and execute user flows.
+- Provides an API to create network and execute flows.
 
+Usage
+======
+
+run: `bit run <flow-name> [component-name]`
+examples:
+
+```bash
+# runs build flow on components
+bit run build
+
+# runs build on logo and all dependents.
+bit run build logo
+```
+
+Configuration
+=============
+
+
+Design
+=======
 **Terms**
 - Capsule - isolated representation of a component in filesystem.
 - Network - A graph of isolated component dependents.
 - Flow - A collection of tasks to execute in a component capsules.
 - Task - a runnable activity in a capsule.
+
+
+API
+====
 
 ```ts
 export class Network {
@@ -50,43 +73,9 @@ export class Task {
 }
 
 export class Flows {
-  createNetworkByFlowName(name:string, seeders?:BitID[]):NetworkCreationStream {}  // for Run in workspace
-  createNetwork(seeders:ComponentCapsule[], get:(id:BitID) => Task[]) => NetworkCreationStream {} // for compile
+  // for Run in workspace
+  createNetworkByFlowName(name:string, seeders?:BitID[]):NetworkCreationStream {}
+  // for compile
+  createNetwork(seeders:ComponentCapsule[], get:(id:BitID) => Task[]) => NetworkCreationStream {}
 }
 ```
-EndTimeInfo = {duration:number, end:Date}
-Start = Date
-
-**Network Execution Messages**
-- network:start
-- network:end -> EndTimeInfo
-- network:FlowStream
-- flow:start
-- flow:result -> DependencyError || Array<T | Error | PervTaskFailedError>, EndTimeInfo
-- flow:TaskStream
-- task:start,
-- task:result -> T extends {status:number},
-- task:stdout -> string messages.
-- task:stderr -> string messages.
-
-
-**Network Creation Messages**
-- capsule:sync:start
-- capsule:sync
-- capsule:create:start
-- capsule:create -> EndTimeInfo, Capsule
-- capsule:install:stdout
-- capsule:install:stderr
-- capsule:install:start
-- capsule:install -> EndTimeInfo, id, status
-- network:start
-- network:end -> Network, EndTimeInfo
-- capsule:stream
-
-**Open questions?**
-1. How to buffer messages until subscribed ? or provide subscriber
-2. stream of streams or messages ?
-3. How to handle caching ?
-4. How to handle version ?
-5. Why did scripts need a registry ?
-
