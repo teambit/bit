@@ -111,6 +111,22 @@ interface DependencyDefinition {
   relativePaths?: RelativePath[];
 }
 
+/**
+ * A definition of one dependency statement in a file
+ * For example `import('something')` or require('something')
+ */
+interface FileDependencyDefinition {
+  // The path itself as appear in the source code (what inside the () for example)
+  // This can be a module path like 'my-package' or relative (for legacy support)
+  dependencyPath: string;
+  // Used for legacy support
+  relativePaths?: RelativePath[];
+  // Used for statements like `import type {x} from 'y'
+  isType?: boolean;
+}
+
+export type FileDependenciesDefinition = FileDependencyDefinition[];
+
 export interface DependenciesDefinition {
   dependencies?: DependencyDefinition[];
   devDependencies?: DependencyDefinition[];
