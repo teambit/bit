@@ -129,3 +129,4 @@ Additional modules
 - Cache - Caches capsule execution in `~/Library/Caches/Bit/capsules`
 - Run  - Holds run command as a component.
 - util - fake-capsule creation, rxjs helper etc.
+
