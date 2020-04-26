@@ -108,8 +108,7 @@ export default class Fs implements Network {
     return DependencyGraph.loadFromString(graphStr);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  connect() {
+  connect(): Promise<Fs> {
     return loadScope(this.scopePath).then(scope => {
       this.scope = scope;
       return this;

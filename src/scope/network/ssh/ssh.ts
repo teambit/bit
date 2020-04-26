@@ -91,7 +91,6 @@ export default class SSH implements Network {
    * 4) anonymous. (for read operations only) - trying to do the action as anonymous user
    * 5) prompt of user/password
    */
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async connect(strategiesNames: SSHConnectionStrategyName[] = DEFAULT_STRATEGIES): Promise<SSH> {
     const strategies: { [key: string]: Function } = {
       token: this._tokenAuthentication,
@@ -106,7 +105,7 @@ export default class SSH implements Network {
       const strategyFunc = strategies[strategyName].bind(this);
       try {
         const strategyResult = await strategyFunc(); // eslint-disable-line
-        if (strategyResult) return strategyResult;
+        if (strategyResult) return strategyResult as SSH;
       } catch (err) {
         logger.debug(`ssh, failed to connect using ${strategyName}. ${err.message}`);
         if (err instanceof AuthenticationStrategyFailed) {

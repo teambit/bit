@@ -98,9 +98,9 @@ export default class BitObject {
     return inflate(fileContents).then(buffer => parse(buffer, types));
   }
 
-  static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
-    return Promise.resolve(parse(fileContents, types));
-  }
+  // static parse(fileContents: Buffer, types: { [key: string]: Function }): Promise<BitObject> {
+  //   return Promise.resolve(parse(fileContents, types));
+  // }
 
   /**
    * prefer using `this.parseObject()`, unless it must be sync.

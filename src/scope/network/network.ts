@@ -8,7 +8,8 @@ import { SSHConnectionStrategyName } from './ssh/ssh';
 import { ComponentLogs } from '../models/model-component';
 
 export interface Network {
-  connect(host: string): Network;
+  // @todo: this causes ts errors in the ssh class for some reason
+  // connect(host: string): Promise<any>;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
