@@ -38,6 +38,7 @@ const natives = process.binding('natives');
  * @param {String} [options.type] - The type of content being passed in. Useful if you want to use a non-js detective
  * @return {String[]}
  */
+// eslint-disable-next-line complexity
 function precinct(content, options) {
   options = options || {};
   let dependencies = [];
