@@ -1,5 +1,6 @@
 import R from 'ramda';
 import fs from 'fs-extra';
+import { compact } from 'ramda-adjunct';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -18,6 +19,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
+import PackageJson from './package-json';
 
 /**
  * Add components as dependencies to root package.json
@@ -169,9 +171,6 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
     const rootDir = consumer.getPath();
     const dependenciesDirectory = consumer.config.workspaceSettings._dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
-    const driver = consumer.driver.getDriver(false);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
@@ -184,16 +183,17 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
 
 export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
   const rootDir = consumer.getPath();
-  const driver = consumer.driver.getDriver(false);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const PackageJson = driver.PackageJson;
+
   if (
     consumer.config.workspaceSettings._manageWorkspaces &&
     consumer.config.workspaceSettings.packageManager === 'yarn' &&
     consumer.config.workspaceSettings._useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
-    await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
+    if (dirsToRemove && dirsToRemove.length) {
+      const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
+      await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
+    }
   }
   await PackageJson.removeComponentsFromDependencies(
     rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.

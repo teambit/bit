@@ -58,9 +58,11 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
+export const DEFAULT_INDEX_NAME = 'index';
 
-export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
+export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
+
+export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const NO_PLUGIN_TYPE = 'none';
 
