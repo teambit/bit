@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import R from 'ramda';
-import { partition, lset } from 'lodash';
+import { partition, set } from 'lodash';
 import generateTree, { processPath } from './generate-tree-madge';
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
@@ -380,7 +380,7 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
         fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-        lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
+        set(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
       }
       if (fileDep.bits && fileDep.bits.includes(pkg)) {
         fileDep.bits = fileDep.bits.filter(packageName => packageName !== pkg);
