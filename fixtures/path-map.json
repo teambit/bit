@@ -1,0 +1,88 @@
+[
+  {
+    "file": "bar/foo.js",
+    "dependencies": [
+      {
+        "importSource": "../utils",
+        "resolvedDep": "utils/index.js",
+        "importSpecifiers": [
+          {
+            "isDefault": false,
+            "name": "isString"
+          },
+          {
+            "isDefault": false,
+            "name": "isArray"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "utils/index.js",
+    "dependencies": [
+      {
+        "importSource": "./is-string",
+        "resolvedDep": "utils/is-string/index.js",
+        "importSpecifiers": [
+          {
+            "isDefault": true,
+            "name": "isString",
+            "exported": true
+          }
+        ]
+      },
+      {
+        "importSource": "./is-array",
+        "resolvedDep": "utils/is-array/index.js",
+        "importSpecifiers": [
+          {
+            "isDefault": true,
+            "name": "isArray",
+            "exported": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "utils/is-string/index.js",
+    "dependencies": [
+      {
+        "importSource": "./is-string",
+        "resolvedDep": "utils/is-string/is-string.js",
+        "importSpecifiers": [
+          {
+            "isDefault": true,
+            "name": "isString",
+            "exported": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "utils/is-string/is-string.js",
+    "dependencies": []
+  },
+  {
+    "file": "utils/is-array/index.js",
+    "dependencies": [
+      {
+        "importSource": "./is-array",
+        "resolvedDep": "utils/is-array/is-array.js",
+        "importSpecifiers": [
+          {
+            "isDefault": true,
+            "name": "isArray",
+            "exported": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "utils/is-array/is-array.js",
+    "dependencies": []
+  }
+]

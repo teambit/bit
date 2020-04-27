@@ -1,0 +1,6 @@
+fixtures/precinct/unparseable.js
+fixtures/precinct/typescriptWithError.ts
+fixtures/precinct/styles.css
+fixtures/precinct/es6WithError.js
+fixtures/build-tree/unparsed.js
+fixtures/build-tree/unparsed.css

@@ -5,7 +5,6 @@ import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component/consumer-component';
-import { Driver } from '../../../../driver';
 import { pathNormalizeToLinux, pathRelativeLinux, getExt } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import Consumer from '../../../../consumer/consumer';
@@ -21,6 +20,8 @@ import OverridesDependencies from './overrides-dependencies';
 import ShowDoctorError from '../../../../error/show-doctor-error';
 import PackageJsonFile from '../../package-json-file';
 import IncorrectRootDir from '../../exceptions/incorrect-root-dir';
+import { getDependencyTree } from '../files-dependency-builder';
+import PackageJson from '../../package-json';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -155,25 +156,20 @@ export default class DependencyResolver {
   async loadDependenciesForComponent(
     bitDir: string,
     cacheResolvedDependencies: Record<string, any>,
-    cacheProjectAst: Record<string, any> | null | undefined
+    cacheProjectAst: Record<string, any> | undefined
   ): Promise<Component> {
-    const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
-    const getDependenciesTree = async () => {
-      return driver.getDependencyTree(
-        bitDir,
-        this.consumerPath,
-        allFiles,
-        this.component.bindingPrefix,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer.config.workspaceSettings._resolveModules,
-        cacheResolvedDependencies,
-        cacheProjectAst
-      );
-    };
     // find the dependencies (internal files and packages) through automatic dependency resolution
-    const dependenciesTree = await getDependenciesTree();
+    const dependenciesTree = await getDependencyTree({
+      baseDir: bitDir,
+      workspacePath: this.consumerPath,
+      filePaths: allFiles,
+      bindingPrefix: this.component.bindingPrefix,
+      resolveModulesConfig: this.consumer.config.workspaceSettings._resolveModules,
+      cacheResolvedDependencies,
+      cacheProjectAst
+    });
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
@@ -715,7 +711,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           : this.consumerPath;
         const depPath = path.join(basePath, bitDep);
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        const packageJson = this.consumer.driver.driver.PackageJson.findPackage(depPath);
+        const packageJson = PackageJson.findPackage(depPath);
         if (packageJson) {
           const depVersion = packageJson.version;
           return componentId.changeVersion(depVersion);

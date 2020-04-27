@@ -3,12 +3,8 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R from 'ramda';
 import pMapSeries from 'p-map-series';
-import chalk from 'chalk';
-import format from 'string-format';
 import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
-import { Driver } from '../driver';
-import DriverNotFound from '../driver/exceptions/driver-not-found';
 import { WorkspaceConfig, WorkspaceConfigFileInputProps } from '../extensions/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
@@ -22,8 +18,7 @@ import {
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   LATEST,
-  DEPENDENCIES_FIELDS,
-  DEFAULT_LANGUAGE
+  DEPENDENCIES_FIELDS
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -137,7 +132,6 @@ export default class Consumer {
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
-    this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
@@ -151,14 +145,6 @@ export default class Consumer {
   get tester(): Promise<TesterExtension | undefined> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.getEnv(TESTER_ENV_TYPE);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get driver(): Driver {
-    if (!this._driver) {
-      this._driver = Driver.load(this.config.lang || DEFAULT_LANGUAGE);
-    }
-    return this._driver;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -198,31 +184,6 @@ export default class Consumer {
       return fs.remove(tmpPath);
     }
     return undefined;
-  }
-
-  /**
-   * Check if the driver installed and print message if not
-   *
-   *
-   * @param {any} msg msg to print in case the driver not found (use string-format with the err context)
-   * @returns {boolean} true if the driver exists, false otherwise
-   * @memberof Consumer
-   */
-  warnForMissingDriver(msg?: string): boolean {
-    try {
-      this.driver.getDriver(false);
-
-      return true;
-    } catch (err) {
-      msg = msg
-        ? format(msg, err)
-        : `Warning: Bit is not able to run the link command. Please install bit-${err.lang} driver and run the link command.`;
-      if (err instanceof DriverNotFound) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        console.log(chalk.yellow(msg)); // eslint-disable-line
-      }
-      throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
-    }
   }
 
   /**

@@ -78,6 +78,7 @@ import eol from './eol';
 import render from './pretty-json-chalk';
 import Queue from './queue';
 import toBoolean from './to-boolean';
+import isRelativeImport from './is-relative-import';
 
 export {
   identityFile,
@@ -157,5 +158,6 @@ export {
   generateRandomStr,
   render,
   Queue,
-  toBoolean
+  toBoolean,
+  isRelativeImport
 };

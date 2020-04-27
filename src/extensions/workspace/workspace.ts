@@ -21,6 +21,7 @@ import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '../workspace-config/workspace-settings';
 import legacyLogger from '../../logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../constants';
+import { DependencyResolver } from '../dependency-resolver';
 /**
  * API of the Bit Workspace
  */
@@ -50,6 +51,8 @@ export default class Workspace implements ComponentHost {
     private componentFactory: ComponentFactory,
 
     readonly isolateEnv: Isolator,
+
+    private dependencyResolver: DependencyResolver,
 
     private logger: LogPublisher,
 

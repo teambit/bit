@@ -17,7 +17,7 @@ import {
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import { Driver } from '../../driver';
+import { npmLogin } from '../../registry';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
@@ -37,7 +37,6 @@ export default function loginToBitSrc(
   let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
     const clientGeneratedId = uuid();
-    const driver = Driver.load(DEFAULT_LANGUAGE);
     if (getSync(CFG_USER_TOKEN_KEY)) {
       return resolve({
         isAlreadyLoggedIn: true
@@ -80,10 +79,10 @@ export default function loginToBitSrc(
               // this makes sure to have also the auth-token of the previous registry.
               // (the @bit:registry part points only to the current registry).
               // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-              actualNpmrcPath = driver.npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
+              actualNpmrcPath = npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
             }
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            actualNpmrcPath = driver.npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
+            actualNpmrcPath = npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
           } catch (e) {
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;

@@ -16,7 +16,6 @@ import {
   NewerVersionFound,
   LoginFailed
 } from '../consumer/exceptions';
-import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -350,13 +349,6 @@ please fix the file in order to run bit commands`
       err.fieldName
     )}" in your bit.json or package.json file is invalid.
 please make sure it's not absolute and doesn't contain invalid characters`
-  ],
-  [
-    DriverNotFound,
-    err =>
-      `error: a client-driver ${chalk.bold(err.driver)} is missing for the language ${chalk.bold(
-        err.lang
-      )} set in your bit.json file.`
   ],
   [
     MissingMainFile,
