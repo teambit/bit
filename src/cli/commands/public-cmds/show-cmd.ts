@@ -93,9 +93,8 @@ export default class Show extends Command {
     detailed: boolean;
   }): string {
     if (versions) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return JSON.stringify(
-        components.map(c => c.toObject()),
+        (components || []).map(c => c.toObject()),
         null,
         '  '
       );

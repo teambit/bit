@@ -2,7 +2,7 @@
 import React from 'react';
 import { Color, AppContext } from 'ink';
 import { Command, CLIArgs } from '../cli';
-import { Flags } from '../paper/command';
+import { Flags, PaperOptions } from '../paper/command';
 import { Test } from './test';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../cli/chalk-box';
 
@@ -12,17 +12,15 @@ export class TestCmd implements Command {
   shortDescription = '';
   alias = '';
   group = '';
-
-  // @ts-ignore
   options = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
     ['j', 'json', 'return results in json format']
-  ];
+  ] as PaperOptions;
 
   constructor(private test: Test) {}
 
-  async render([components]: CLIArgs, { all, verbose }: { all?: boolean; verbose?: boolean }) {
+  async render([components]: CLIArgs, { all = false, verbose = false }: { all?: boolean; verbose?: boolean }) {
     // @ts-ignore
     const results = await this.test.test(components, { all, verbose });
 
