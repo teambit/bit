@@ -10,7 +10,6 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
-let logSpy;
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -27,7 +26,6 @@ describe('bit tag command', function() {
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
-    logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bit.json', () => {
     let output;
