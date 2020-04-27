@@ -4,11 +4,9 @@
 import fs from 'fs';
 import path from 'path';
 import R from 'ramda';
-import partition from 'lodash.partition';
-import lset from 'lodash.set';
+import { partition, set } from 'lodash';
 import generateTree, { processPath } from './generate-tree-madge';
-import PackageJson from '../package-json/package-json';
-import { DEFAULT_BINDINGS_PREFIX } from '../constants';
+import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
 import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
 import { PathMapItem } from './path-map';
 import {
@@ -18,6 +16,7 @@ import {
   DependencyTreeParams,
   ResolveModulesConfig
 } from './types/dependency-tree-type';
+import PackageJson from '../../package-json';
 
 export type LinkFile = {
   file: string;
@@ -230,14 +229,14 @@ type FoundPackages = { [packageName: string]: string };
  *
  * @param {Array} missing
  * @param {string} cwd
- * @param {string} consumerPath
+ * @param {string} workspacePath
  * @param {string} bindingPrefix
  * @returns new object with grouped missing
  */
 function groupMissing(
   missing: Missing,
   cwd,
-  consumerPath,
+  workspacePath,
   bindingPrefix
 ): { missingGroups: MissingGroupItem[]; foundPackages: FoundPackages } {
   // temporarily disable this functionality since it cause few bugs: explanation below (on using the packageJson)
@@ -270,7 +269,7 @@ function groupMissing(
       group.packages.forEach(packageName => {
         // Don't try to resolve the same package twice
         if (R.contains(packageName, missingPackages)) return;
-        const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
+        const resolvedPath = resolveModulePath(packageName, cwd, workspacePath);
         if (!resolvedPath) {
           missingPackages.push(packageName);
           return;
@@ -353,20 +352,20 @@ function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseD
  * config aliases are passed later on to webpack-enhancer and it expects them to have the full path
  */
 function getResolveConfigAbsolute(
-  consumerPath: string,
+  workspacePath: string,
   resolveConfig: ResolveModulesConfig | null | undefined
 ): ResolveModulesConfig | null | undefined {
   if (!resolveConfig) return resolveConfig;
   const resolveConfigAbsolute = R.clone(resolveConfig);
   if (resolveConfig.modulesDirectories) {
     resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map(moduleDirectory => {
-      return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(consumerPath, moduleDirectory);
+      return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(workspacePath, moduleDirectory);
     });
   }
   if (resolveConfigAbsolute.aliases) {
     Object.keys(resolveConfigAbsolute.aliases).forEach(alias => {
       if (!path.isAbsolute(resolveConfigAbsolute.aliases[alias])) {
-        resolveConfigAbsolute.aliases[alias] = path.join(consumerPath, resolveConfigAbsolute.aliases[alias]);
+        resolveConfigAbsolute.aliases[alias] = path.join(workspacePath, resolveConfigAbsolute.aliases[alias]);
       }
     });
   }
@@ -381,7 +380,7 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
         fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-        lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
+        set(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
       }
       if (fileDep.bits && fileDep.bits.includes(pkg)) {
         fileDep.bits = fileDep.bits.filter(packageName => packageName !== pkg);
@@ -415,21 +414,21 @@ function mergeErrorsToTree(baseDir, errors, tree: Tree) {
 /**
  * Function for fetching dependency tree of file or dir
  * @param baseDir working directory
- * @param consumerPath
+ * @param workspacePath
  * @param filePaths path of the file to calculate the dependencies
  * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
 export async function getDependencyTree({
   baseDir,
-  consumerPath,
+  workspacePath,
   filePaths,
   bindingPrefix,
   resolveModulesConfig,
   visited = {},
   cacheProjectAst
 }: DependencyTreeParams): Promise<{ tree: Tree }> {
-  const resolveConfigAbsolute = getResolveConfigAbsolute(consumerPath, resolveModulesConfig);
+  const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
     baseDir,
     includeNpm: true,
@@ -440,10 +439,18 @@ export async function getDependencyTree({
     resolveConfig: resolveConfigAbsolute,
     cacheProjectAst
   };
+  // This is important because without this, madge won't know to resolve files if we run the
+  // CMD not from the root dir
+  const fullPaths = filePaths.map(filePath => {
+    if (filePath.startsWith(baseDir)) {
+      return filePath;
+    }
+    return path.join(baseDir, filePath);
+  });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const { madgeTree, skipped, pathMap, errors } = generateTree(filePaths, config);
+  const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
   const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
-  const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);
+  const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, workspacePath, bindingPrefix);
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
   if (errors) mergeErrorsToTree(baseDir, errors, tree);

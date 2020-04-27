@@ -10,7 +10,7 @@ describe('buildTree', () => {
   describe('getDependencyTree', () => {
     const dependencyTreeParams = {
       baseDir: '.',
-      consumerPath: __dirname,
+      workspacePath: __dirname,
       filePaths: [],
       bindingPrefix: '@bit',
       resolveModulesConfig: undefined

@@ -6,7 +6,7 @@ import {
   getDependenciesFromCallExpression,
   getSpecifierValueForImportDeclaration
 } from '../parser-helper';
-import { isRelativeImport } from '../../../utils';
+import { isRelativeImport } from '../../../../../../utils';
 
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');

@@ -11,12 +11,12 @@ const Config = require('./Config');
 // needed for the lazy loading.
 require('module-definition');
 require('detective-stylus');
-require('../../constants');
-require('../../utils');
-require('../../utils/is-relative-import');
-require('../../dependency-builder/detectives/detective-css-and-preprocessors');
-require('../../dependency-builder/detectives/detective-typescript');
-require('../../dependency-builder/detectives/parser-helper');
+require('../../../../../constants');
+require('../../../../../utils');
+require('../../../../../utils/is-relative-import');
+require('../detectives/detective-css-and-preprocessors');
+require('../detectives/detective-typescript');
+require('../detectives/parser-helper');
 
 const dependencyTree = rewire('./');
 const fixtures = path.resolve(`${__dirname}/../../../fixtures/dependency-tree`);
