@@ -283,18 +283,6 @@ describe('bit tag command', function() {
         "error: component \"non/existing\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
     });
-    it.skip('should print warning if the a driver is not installed', () => {
-      const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
-      helper.fs.createFile('bar', 'foo2.js', fixture);
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
-      // var myargs = logSpy.getCalls()[4].args
-      // console.log("args", myargs);
-      expect(
-        logSpy.calledWith(
-          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run tag again.\n'
-        )
-      ).to.be.true;
-    });
     it.skip('should persist the model in the scope', () => {});
     it.skip('should run the onCommit hook', () => {});
     it.skip('should throw error if the build failed', () => {});

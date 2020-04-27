@@ -106,8 +106,6 @@ export default class Consumer {
   addedGitHooks: string[] | undefined; // list of git hooks added during init process
   existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _driver: Driver;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
