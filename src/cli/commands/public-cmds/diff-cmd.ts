@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { diff } from '../../../api/consumer';
 import { DiffResults } from '../../../consumer/component-ops/components-diff';
 import { WILDCARD_HELP } from '../../../constants';
@@ -13,8 +13,7 @@ export default class Diff extends Command {
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files
   ${WILDCARD_HELP('diff')}`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['v', 'verbose', 'show a more verbose output when possible']];
+  opts = [['v', 'verbose', 'show a more verbose output when possible']] as CommandOptions;
   loader = true;
 
   action([values]: [string[]], { verbose = false }: { verbose?: boolean }): Promise<DiffResults[]> {

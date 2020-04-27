@@ -1,4 +1,4 @@
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
 import { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
@@ -9,12 +9,11 @@ export default class Doctor extends Command {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['j', 'json', 'return diagnoses in json format'],
     ['', 'list', 'list all available diagnoses'],
     ['s', 'save [filePath]', 'save diagnoses to a file']
-  ];
+  ] as CommandOptions;
   migration = false;
 
   action(

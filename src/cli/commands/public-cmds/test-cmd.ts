@@ -1,5 +1,5 @@
 import R from 'ramda';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
@@ -14,13 +14,12 @@ export default class Test extends Command {
   name = 'test [id]';
   description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
     ['j', 'json', 'return results in json format'],
     ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true; // In case the compiler is not installed yet

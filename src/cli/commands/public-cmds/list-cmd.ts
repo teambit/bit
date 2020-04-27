@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { listScope } from '../../../api/consumer';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
@@ -12,7 +12,6 @@ export default class List extends Command {
   name = 'list [scope]';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
@@ -21,7 +20,7 @@ export default class List extends Command {
     ['o', 'outdated', 'show latest versions from remotes'],
     ['j', 'json', 'show the output in JSON format'],
     ['n', 'namespace <string>', 'show only specified namespace by using wildcards']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   skipWorkspace = true;
