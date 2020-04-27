@@ -1,21 +1,30 @@
-**Flows**
-==========
-Run user flows on a graph of dependent component. Used as low level API for compile/test/watch.
+# `@teambit/flows
 
-- Provides a `bit run` command to execute flows over networks.
-- Provides an API to create network and execute flows.
+Run tasks on components and their dependents.  
 
-Usage
-======
-run: `bit run <flow-name> [component-name]`
+- Provides a `bit run` command to execute tasks on components in worksapce.
+- Provides an API to create network of components and execute tasks.
+- Used as a low-level API for other Bit commands like `compile`, `test` and `watch`.
 
-examples:
+## Description
+
+Inside a Bit project all components are linked to each other in a **network** according to their dependency graph. When you make a change, you can see the downstream effets when running component tasks. This means that all tasks run in the right order and if several components don't directly depend on each other, Flows parallelizes their tasks (and shows live console output in a readable order).
+
+## Usage
+
+### Command sinopsys
+
+```sh
+bit run <flow-name> [components...] [-v | --verbose] [--concurrency]
+```
+
+#### Examples
 
 ```bash
-# runs build flow on components
+# runs 'build' flow on all components that have 'build' task defined.
 bit run build
 
-# runs build in the logo capsule and all of logo's dependents.
+# runs 'build' flow for a specific component.
 bit run build logo
 
 # same as before with verbose output
@@ -25,34 +34,32 @@ bit run build logo --verbose
 bit run build logo --concurrency 4 --verbose
 ```
 
-Configuration
-=============
-Use bit.jsonc configuration docs to understand how to configure bit.
+### Configuration
+
+Use `bit.jsonc` configuration docs to understand how to configure bit.
 
 ```js
-// workspace configuration
+// workspace configuration with default values for 'concurrency' and 'verbose'
 
 {
   "@teambit/flows": {
-    // can be override with cli
     "concurrency": 4,
     "verbose": false,
-    // workspace
     "tasks": {
       // the structure of a module task id: = `\`#${PackageName}:${PathToModule}\``
-      "build": ["#@bit/bit.evangalist.extensions.react-ts:transpile"],
-      "compileHack": ["ls -la", "mkdir dist;cp index.js dist/index.js"]
+      "build": ["@bit/bit.evangalist.extensions.react-ts:transpile"],
     }
   }
 }
 
 ```
-You may also use the variance configuring option to override the flow of specific component.
+
+You may also use the `variants` configuring option to override `tasks` of a specific component(s).
 The structure allows only for the task entry in that use case.
 
 ```javascript
 {
-  "variance": {
+  "variants": {
     "ui/*":{
       "@teambit/flows": {
         "tasks": {
@@ -64,11 +71,11 @@ The structure allows only for the task entry in that use case.
 }
 ```
 
-Consult with the docs to learn more about variance.
+Consult with the docs to learn more about variants.
 
-Flows  API
-===========
-Flows API is document in flows.ts module. Here are two examples:
+## Flows  API
+
+Flows API is document in [`flows.ts`](https://github.com/teambit/bit/blob/harmony/main/src/extensions/flows/flows.ts) module. Here are two examples:
 
 ```javascript
 import {Flows, flattenReplaySubject} from '@teambit/flows'
@@ -85,47 +92,51 @@ const result = await flows.runToPromise(seeders)
 console.log('result is', result)
 ```
 
-Recommended Work **Flows**
-===========================
-Prefer convention over configuration, if teams can agree on the kind of actions there teams supports
-you can scale development by a lot. Helping developers to avoid the details of each component build and treat it as the "same" action.
+## Recommended Work`Flows`
 
-For example
- - build - run all compilation/testing/lint
- - ci - flow to run bit CI system
- - dev - compiling with source map and what not.
- - personal - personal workflow team doesn't know of, to test things.
+Flows prefers convention over configuration for managing team's workflow to scale their development. It's philosophy is that when teams agree on the kind of actions they support it's easier to onboard developers to various projects in the organization. This is mainly becasue it helps developers avoid the details of each component build and treat it as the "same" action.
 
-How to implement a task
-========================
-A task is a module inside a bit component which exports a default function with the following signature. This component should be defined as dev Dependency of the component consuming this task.
+For example:
 
-A task needs to expose a function on the default export or module.exports with the following signature
+ - `build` - run all compilation/testing/lint
+ - `ci` - flow to run bit CI system
+ - `dev` - compiling with source map and what not.
+ - `personal` - personal workflow team doesn't know of, to test things.
+
+## How to implement a task
+
+A `task` is a module which exports a default function (or `module.exports`) with the following signature:
 
 ```typescript
 export type Task = () => any | () => Promise<any>
 ```
 
-Each task stdout, stderr is reported.
-Each task return value (which is truthy) should be reported to bit main process.
+- Tasks should be tracked and exported as components to a remote Bit scope.
+- Tasks defined as `devDependencies` for components consuming them.
+- Each task `stdout`, `stderr` is reported.
+- Each task should return a value (which is truthy) which will be reported to Bit's main process.
 
-Design
-=======
-The flows API solves the problem of reporting the execution of dynamic activities across a graph of isolated components. The problem becomes complex in use cases like typescript API where dependent/dependency components build order needs to be respected.
+## Design
 
-Flows solves this problem by providing - Unified UX, Aggressive caching and Topological execution order.
+The Flows API solves the problem of reporting the execution of dynamic activities across a graph of isolated components. The problem becomes complex in use cases like TypeScript API where dependent/dependency components build order needs to be respected.
 
-**Entities**
+Flows solves this problem by providing:
 
-- Capsule - isolated representation of a component in filesystem.
+- Unified UX
+- Aggressive caching
+- Topological execution order.
+
+### Entities
+
+- Capsule - Isolated representation of a component in filesystem.
 - Network - A graph of component capsules.
-- Flow - A collection of tasks to execute in component capsule.
+- Flow - A collection of tasks to execute in a capsule.
 - Task - a runnable activity in a capsule defined by bash or javascript task.
 
 For each main term there is a module in the flows implementation.
 
-Additional modules
-===================
+### Additional modules
+
 - Cache - Caches capsule execution in `~/Library/Caches/Bit/capsules`
 - Run  - Holds run command as a component.
 - util - fake-capsule creation, rxjs helper etc.
