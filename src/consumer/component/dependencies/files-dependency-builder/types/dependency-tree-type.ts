@@ -59,11 +59,10 @@ export type ResolveModulesConfig = {
 
 export type DependencyTreeParams = {
   baseDir: string;
-  workspacePath: string;
+  consumerPath: string;
   filePaths: string[];
   bindingPrefix: string;
-  resolveModulesConfig?: ResolveModulesConfig;
-  visited?: Record<string, any>;
-  cacheResolvedDependencies?: Record<string, any>;
-  cacheProjectAst?: Record<string, any>;
+  resolveModulesConfig: ResolveModulesConfig | null | undefined;
+  visited: Record<string, any> | null | undefined;
+  cacheProjectAst: Record<string, any> | null | undefined;
 };

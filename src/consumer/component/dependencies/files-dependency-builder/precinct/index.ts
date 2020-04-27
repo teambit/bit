@@ -23,7 +23,7 @@ import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveStylable from '../detectives/detective-stylable';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveVue from '../detectives/detective-vue';
-import { SUPPORTED_EXTENSIONS } from '../../../../../constants';
+import { SUPPORTED_EXTENSIONS } from '../../constants';
 
 const debug = require('debug')('precinct');
 
@@ -38,7 +38,6 @@ const natives = process.binding('natives');
  * @param {String} [options.type] - The type of content being passed in. Useful if you want to use a non-js detective
  * @return {String[]}
  */
-// eslint-disable-next-line complexity
 function precinct(content, options) {
   options = options || {};
   let dependencies = [];

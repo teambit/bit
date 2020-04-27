@@ -15,9 +15,9 @@ import appModulePath from 'app-module-path';
 import webpackResolve from 'enhanced-resolve';
 import isRelative from 'is-relative-path';
 import objectAssign from 'object-assign';
+import { isRelativeImport } from '../../utils';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import vueLookUp from '../lookups/vue-lookup';
-import { isRelativeImport } from '../../../../../utils';
 
 const debug = require('debug')('cabinet');
 
