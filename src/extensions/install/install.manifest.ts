@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { provideInstaller } from './install.provider';
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
@@ -8,4 +9,4 @@ export default {
   name: 'Install',
   dependencies: [BitCliExt, WorkspaceExt, PackageManagerExt, ReporterExt],
   provider: provideInstaller
-};
+} as ExtensionManifest;

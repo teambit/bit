@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import workspaceProvider from './workspace.provider';
 import { ScopeExt } from '../scope';
 import { ComponentFactoryExt } from '../component';
@@ -9,4 +10,4 @@ export default {
   name: 'workspace',
   dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, IsolatorExt, LoggerExt],
   provider: workspaceProvider
-};
+} as ExtensionManifest;

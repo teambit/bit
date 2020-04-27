@@ -76,7 +76,7 @@ export interface Command {
 
   json?: (args: CLIArgs, flags: Flags) => GenericObject;
 }
-export type Flags = { [flagName: string]: CLIArgs | boolean | undefined };
-export type CLIArgs = Array<Array<string> | string>;
+export type Flags = { [flagName: string]: string | string[] | boolean | undefined };
+export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type PaperOptions = CommandOptions;

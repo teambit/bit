@@ -23,9 +23,10 @@ export class TestCmd implements Command {
   constructor(private test: Test) {}
 
   // @ts-ignore
-  async render([components]: [string[]], { all, verbose }: { all: boolean; verbose: boolean }) {
+  async render([components]: CLIArgs, { all, verbose }: { all: boolean; verbose: boolean }) {
     // @ts-ignore
     const results = await this.test.test(components, { all, verbose });
+
     const testResults = {
       type: 'results',
       results
