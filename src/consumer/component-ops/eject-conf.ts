@@ -50,7 +50,7 @@ export async function getEjectConfDataToPersist(
 
 function getBitJsonToWrite(component: ConsumerComponent): ComponentConfig {
   const componentConfig = ComponentConfig.fromComponent(component);
-  componentConfig.compiler = component.compiler ? component.compiler.toBitJsonObject() : {};
-  componentConfig.tester = component.tester ? component.tester.toBitJsonObject() : {};
+  componentConfig.setCompiler(component.compiler ? component.compiler.toBitJsonObject() : {});
+  componentConfig.setTester(component.tester ? component.tester.toBitJsonObject() : {});
   return componentConfig;
 }

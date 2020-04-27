@@ -91,27 +91,23 @@ export default class AbstractConfig {
     this.extensions = props.extensions || new ExtensionDataList();
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get compiler(): Compilers | undefined {
     const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  set compiler(compiler: string | Compilers) {
+  setCompiler(compiler: string | Compilers) {
     this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get tester(): Testers | undefined {
     const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  set tester(tester: string | Testers) {
+  setTester(tester: string | Testers) {
     this._tester = AbstractConfig.transformEnvToObject(tester);
   }
 
