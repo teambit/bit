@@ -1,6 +1,5 @@
 // covers also init, create, tag, import and export commands
 
-import sinon from 'sinon';
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
