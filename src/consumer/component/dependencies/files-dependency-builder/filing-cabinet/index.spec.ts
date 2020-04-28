@@ -8,12 +8,13 @@ const path = require('path');
 
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const cabinet = rewire('./');
-const fixtures = `${__dirname}/../../../fixtures/filing-cabinet`;
+const fixtures = `${__dirname}/../../../../../../fixtures/filing-cabinet`;
+
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockedFiles = require(`${fixtures}/mockedJSFiles`);
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockAST = require(`${fixtures}/ast`);
-const mockRootDir = path.join(__dirname, '..', '..', '..');
+const mockRootDir = path.join(__dirname, '..', '..', '..', '..', '..', '..');
 
 // needed for the lazy loading
 require('resolve-dependency-path');
