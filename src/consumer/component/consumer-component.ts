@@ -137,9 +137,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies: BitIds;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDevDependencies: BitIds;
   packageDependencies: any;
   devPackageDependencies: any;
@@ -399,18 +397,6 @@ export default class Component {
     const res = await injectConf(this, consumerPath, force);
     // @ts-ignore
     return res;
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedDependencies);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedDevDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
   get extensionDependencies() {

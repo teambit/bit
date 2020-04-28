@@ -52,8 +52,7 @@ export default class Remote extends Command {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm()];
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  action(args: string[], { global }: { glboal: boolean }): Promise<any> {
+  action(args: string[], { global }: { global: boolean }): Promise<any> {
     return remoteList(global);
   }
 

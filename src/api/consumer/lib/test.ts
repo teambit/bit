@@ -21,8 +21,7 @@ export default (async function test(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
   includeUnmodified = false,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  verbose: boolean | null | undefined
+  verbose?: boolean | null
 ): Promise<SpecsResultsWithMetaData> {
   loader.start(BEFORE_RUNNING_SPECS);
 
