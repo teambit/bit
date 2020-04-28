@@ -8,15 +8,20 @@ import { Capsule } from '../../isolator/capsule';
 export class Flow {
   private result: any[] = [];
   constructor(private tasks: string[]) {}
-
-  async execute(capsule: Capsule) {
+  /**
+   * Takes a capsule and return a stream of streams.
+   * Return value represent the execution of tasks.
+   *
+   * @param capsule ComponentCapsule to execute tasks
+   */
+  execute(capsule: Capsule): ReplaySubject<any> {
     const id = capsule.component.id.toString();
     const startTime = new Date();
     const subject = new ReplaySubject();
     subject.next({
       type: 'flow:start',
       id,
-      value: startTime
+      startTime
     });
     if (this.tasks && this.tasks.length) {
       this.execSequence(capsule, subject, startTime, 0);
@@ -65,17 +70,20 @@ export class Flow {
     return this.tasks.length;
   }
 
-  private handleDone(subject: Subject<any>, capsule: Capsule, start: Date, isError = false) {
+  private handleDone(subject: Subject<any>, capsule: Capsule, startTime: Date, isError = false) {
     const endTime = new Date();
     subject[isError ? 'error' : 'next']({
       type: 'flow:result',
       id: capsule.component.id,
-      capsule,
-      value: this.result,
-      endTime,
-      duration: endTime.getTime() - start.getTime()
+      value: {
+        capsule,
+        tasks: this.result
+      },
+      code: isError ? 1 : 0,
+      startTime,
+      duration: endTime.getTime() - startTime.getTime()
     });
-    subject.complete();
+    setTimeout(subject.complete.bind(subject), 0);
     this.result = [];
   }
 }

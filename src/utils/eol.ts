@@ -19,18 +19,18 @@ function converts(text: string | Buffer, to: string) {
   return text.toString().replace(newline, to);
 }
 
-exports.lf = function(text: string | Buffer) {
+export function lf(text: string | Buffer) {
   return converts(text, '\n');
-};
+}
 
-exports.auto = function(text: string | Buffer) {
+export function auto(text: string | Buffer) {
   return converts(text, lineBreak);
-};
+}
 
-exports.cr = function(text: string | Buffer) {
+export function cr(text: string | Buffer) {
   return converts(text, '\r');
-};
+}
 
-exports.crlf = function(text: string | Buffer) {
+export function crlf(text: string | Buffer) {
   return converts(text, '\r\n');
-};
+}

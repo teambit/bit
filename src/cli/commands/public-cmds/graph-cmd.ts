@@ -1,8 +1,7 @@
 import * as path from 'path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import os from 'os';
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
 
@@ -10,7 +9,6 @@ export default class Graph extends Command {
   name = 'graph [id]';
   description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
@@ -20,7 +18,7 @@ export default class Graph extends Command {
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]'
     ]
-  ];
+  ] as CommandOptions;
   remoteOp = true;
 
   action(

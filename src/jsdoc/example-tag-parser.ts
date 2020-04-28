@@ -1,10 +1,9 @@
 import GeneralError from '../error/general-error';
 
-type Example = {
+export type Example = {
   raw: string;
   description?: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  code?: Array;
+  code?: any;
   returns?: Record<string, any>;
 };
 

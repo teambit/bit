@@ -12,7 +12,7 @@ type AbstractVinylProps = {
   base: PathOsBased;
   contents: Buffer;
 };
-// @ts-ignore
+
 export default class AbstractVinyl extends Vinyl {
   override = true;
   verbose = false;
@@ -29,16 +29,10 @@ export default class AbstractVinyl extends Vinyl {
 
   // Update the base path and keep the relative value to be the same
   updatePaths({ newBase, newRelative, newCwd }: { newBase?: string; newRelative?: string; newCwd?: string }) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const relative = newRelative || this.relative;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const base = newBase || this.base;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (newCwd) this.cwd = newCwd;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.base = base;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.path = path.join(this.base, relative);
   }
 
@@ -70,7 +64,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedString(parsedString: any): AbstractVinylProps {
+  static loadFromParsedStringBase(parsedString: any): AbstractVinylProps {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const contents = Buffer.isBuffer(parsedString._contents)
       ? parsedString._contents
@@ -81,11 +75,6 @@ export default class AbstractVinyl extends Vinyl {
       base: parsedString._base,
       contents
     };
-  }
-
-  static loadFromParsedStringArray(arr: Record<string, any>[]): AbstractVinylProps[] | null | undefined {
-    if (!arr) return undefined;
-    return arr.map(this.loadFromParsedString);
   }
 
   /**

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { migrate } from '../../../api/consumer';
 
 export default class Migrate extends Command {
@@ -9,8 +9,7 @@ export default class Migrate extends Command {
   loader = true;
   migration = false;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['v', 'verbose', 'showing logs for the migration process']];
+  opts = [['v', 'verbose', 'showing logs for the migration process']] as CommandOptions;
 
   action([scopePath]: [string], { verbose }: { verbose: boolean | null | undefined }): Promise<any> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

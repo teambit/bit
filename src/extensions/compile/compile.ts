@@ -26,50 +26,24 @@ export class Compile {
   }
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
-    const reportResults = await this.compile(ids.map(id => id.toString()));
-    /**
-     * {
-    result: {
-      type: 'flow:result',
-      id: [BitId],
-      capsule: [Capsule],
-      value: [],
-      endTime: 2020-04-01T19:48:13.041Z,
-      duration: 2
-    },
-    visited: true
-  },
-
-  value can be:
-result.value [
-  {
-    type: 'task:result',
-    id: 'help:#@bit/bit.evangalist.extensions.react-ts:transpile',
-    value: { dir: 'dist' },
-    endTime: 2020-04-01T19:48:18.830Z,
-    duration: 5785,
-    code: 0
-  }
-]
-     */
-    // @ts-ignore please fix once flows.run() get types
+    const reportResults: any = await this.compile(ids.map(id => id.toString()));
     const resultsP: buildHookResult[] = Object.values(reportResults.value).map((reportResult: any) => {
-      const result = reportResult.result;
-      const id: BitId = result.id;
-      if (!result.value || !result.value.length) return { id };
-      // @todo: check why this is an array and values are needed
-      const distDir = result.value[0].value.dir;
+      const result = reportResult.result.value.tasks;
+      const id: BitId = reportResult.result.id;
+      if (!result.length || !result[0].value) return { id };
+      const distDir = result[0].value.dir;
       if (!distDir) {
         throw new Error(
           `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
         );
       }
-      const distFiles = result.capsule.fs.readdirSync(distDir);
+      const capsule = reportResult.result.value.capsule;
+      const distFiles = capsule.fs.readdirSync(distDir);
       const distFilesObjects = distFiles.map(distFilePath => {
         const distPath = path.join(distDir, distFilePath);
         return {
           path: distFilePath,
-          content: result.capsule.fs.readFileSync(distPath).toString()
+          content: capsule.fs.readFileSync(distPath).toString()
         };
       });
       return { id, dists: distFilesObjects };

@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { BitCliExt } from '../cli';
 import { WorkspaceExt } from '../workspace';
 import { FlowsExt } from '../flows';
@@ -8,4 +9,4 @@ export default {
   name: 'compile',
   dependencies: [BitCliExt, WorkspaceExt, FlowsExt, ScopeExt],
   provider: provideCompile
-};
+} as ExtensionManifest;

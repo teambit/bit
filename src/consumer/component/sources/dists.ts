@@ -57,8 +57,7 @@ export default class Dists {
   distEntryShouldBeStripped: boolean | null | undefined = false;
   _mainDistFile: PathOsBasedRelative | null | undefined;
   distsRootDir: PathOsBasedRelative | null | undefined; // populated only after getDistDirForConsumer() is called
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  constructor(dists?: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
+  constructor(dists: Dist[] | null | undefined, mainDistFile: PathOsBased | null | undefined) {
     this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }

@@ -30,7 +30,6 @@ import loader from '../../cli/loader';
 import CompilerExtension from '../../legacy-extensions/compiler-extension';
 import TesterExtension from '../../legacy-extensions/tester-extension';
 import { EnvType } from '../../legacy-extensions/env-extension-types';
-import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import {
@@ -137,9 +136,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDependencies: BitIds;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   flattenedDevDependencies: BitIds;
   packageDependencies: any;
   devPackageDependencies: any;
@@ -172,8 +169,6 @@ export default class Component {
   origin: ComponentOrigin;
   customResolvedPaths: CustomResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _driver: Driver;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
   packageJsonFile: PackageJsonFile | undefined; // populated when loadedFromFileSystem or when writing the components. for author it never exists
   packageJsonChangedProps: Record<string, any> | undefined; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
@@ -194,14 +189,6 @@ export default class Component {
       name: this.name,
       version: this.version
     });
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get driver(): Driver {
-    if (!this._driver) {
-      this._driver = Driver.load(this.lang);
-    }
-    return this._driver;
   }
 
   constructor({
@@ -399,18 +386,6 @@ export default class Component {
     const res = await injectConf(this, consumerPath, force);
     // @ts-ignore
     return res;
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedDependencies);
-  }
-
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  flattenedDevDependencies(): BitIds {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
   get extensionDependencies() {

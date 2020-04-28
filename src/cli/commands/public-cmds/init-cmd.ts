@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import * as pathlib from 'path';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, CFG_INIT_INTERACTIVE } from '../../../constants';
@@ -16,7 +16,6 @@ export default class Init extends Command {
   skipWorkspace = true;
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
@@ -38,7 +37,7 @@ export default class Init extends Command {
     ['p', 'package-manager <package-manager>', 'set up package manager (npm or yarn)'],
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['I', 'interactive', 'EXPERIMENTAL. start an interactive process']
-  ];
+  ] as CommandOptions;
 
   action([path]: [string], flags: Record<string, any>): Promise<{ [key: string]: any }> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

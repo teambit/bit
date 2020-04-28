@@ -1,17 +1,16 @@
 import { Consumer } from '..';
 import { DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import { getDependencyTree } from '../component/dependencies/files-dependency-builder';
 
 export type DependencyStatusResult = { missingFiles: string[] };
 export type DependencyStatusProps = { mainFile: string[] };
 
 async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps: DependencyStatusProps) {
-  const driver = consumer.driver.getDriver(false);
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const tree = await driver.getDependencyTree({
+  const tree = await getDependencyTree({
     baseDir: consumerPath,
-    consumerPath,
+    workspacePath: consumerPath,
     filePaths: paths,
     bindingPrefix: DEFAULT_BINDINGS_PREFIX,
     resolveModulesConfig: consumer.config.workspaceSettings._resolveModules

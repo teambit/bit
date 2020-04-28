@@ -167,7 +167,6 @@ function getCurrentPackageJson(component: ConsumerComponent): PackageJsonFile {
   const newVersion = '0.0.1-new';
   const getBitDependencies = (dependencies: BitIds) => {
     return dependencies.reduce((acc, depId: BitId) => {
-      // const devCapsulePath = capsulePaths && capsulePaths.getValueIgnoreScopeAndVersion(depId);
       const packageDependency = depId.hasVersion() ? depId.version : newVersion;
       const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
