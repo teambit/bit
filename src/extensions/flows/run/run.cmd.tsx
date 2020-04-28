@@ -20,8 +20,6 @@ export class RunCmd implements Command {
   shortDescription = '';
   alias = '';
   group = '';
-
-  // @ts-ignore
   options: PaperOptions = [
     ['p', 'parallel', 'specify the number of parallel flows to run.'],
     ['n', 'no-cache', 'Get execution result from cache if possibile.'],

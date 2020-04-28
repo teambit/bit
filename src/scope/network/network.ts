@@ -8,7 +8,8 @@ import { SSHConnectionStrategyName } from './ssh/ssh';
 import { ComponentLogs } from '../models/model-component';
 
 export interface Network {
-  connect(host: string): Network;
+  // @todo: this causes ts errors in the ssh class for some reason
+  // connect(host: string): Promise<any>;
   close(): void;
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
@@ -18,6 +19,6 @@ export interface Network {
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   log(id: BitId): Promise<ComponentLogs>;
-  latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
+  latestVersions(bitIds: BitIds): Promise<string[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;
 }

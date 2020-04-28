@@ -1,10 +1,9 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const assert = require('assert');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const detective = require('./');
+import assert from 'assert';
+import detective from './';
 
 describe('detective-css', function() {
   function test(src, deps, opts) {
+    // @ts-ignore
     assert.deepEqual(detective(src, opts), deps);
   }
 
@@ -23,6 +22,7 @@ describe('detective-css', function() {
 
     it('throws if called with no arguments', function() {
       assert.throws(function() {
+        // @ts-ignore
         detective();
       });
     });
@@ -36,7 +36,7 @@ describe('detective-css', function() {
 
   it('dangles the parsed AST', function() {
     detective('@import "_foo.css";');
-
+    // @ts-ignore
     assert.ok(detective.ast);
   });
 

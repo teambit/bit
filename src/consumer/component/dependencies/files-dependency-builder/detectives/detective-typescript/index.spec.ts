@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 import { expect } from 'chai';
 import assert from 'assert';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detective from './';
 
 describe('detective-typescript', () => {
@@ -102,6 +101,7 @@ describe('detective-typescript', () => {
   it('throws when content is not provided', () => {
     assert.throws(
       () => {
+        // @ts-ignore
         detective();
       },
       Error,

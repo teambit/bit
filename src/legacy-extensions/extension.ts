@@ -52,7 +52,6 @@ export type LoadArgsProps = BaseLoadArgsProps;
  * Load extension
  * Config
  */
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export default class Extension extends BaseExtension {
   registeredHooksActions: RegisteredHooksActions;
   newHooks: string[];
@@ -125,7 +124,7 @@ export default class Extension extends BaseExtension {
   static async load(props: LoadArgsProps): Promise<Extension> {
     props.rawConfig = props.rawConfig || {};
     props.options = props.options || {};
-    const baseExtensionProps: BaseExtensionProps = await super.load(props);
+    const baseExtensionProps = (await super.load(props)) as BaseExtensionProps;
     // const extensionProps: ExtensionProps = ((await super.load(props): BaseExtensionProps): ExtensionProps);
     // const extensionProps: ExtensionProps = (baseExtensionProps: ExtensionProps);
     const extensionProps: ExtensionProps = {

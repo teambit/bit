@@ -166,8 +166,8 @@ export default class ComponentWriter {
         packageJson.removeDependency('bit-bin');
       }
 
-      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject() : {};
-      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject() : {};
+      componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
+      componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       if (this.applyExtensionsAddedConfig) {
         this._mergePackageJsonPropsFromExtensions(packageJson);

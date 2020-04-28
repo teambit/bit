@@ -26,8 +26,7 @@ const tableColumnConfig = {
 
 export default function paintComponent(
   component: ConsumerComponent,
-  componentModel?: ConsumerComponent,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  componentModel: ConsumerComponent | undefined,
   showRemoteVersion: boolean,
   detailed: boolean,
   dependenciesInfo: DependenciesInfo[],

@@ -3,7 +3,6 @@
 
 import os from 'os';
 import path from 'path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import dependencyTree from './dependency-tree';
 
 /**

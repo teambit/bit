@@ -1,12 +1,11 @@
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { watchAll } from '../../../api/consumer';
 
 export default class Watch extends Command {
   name = 'watch';
   description = 'watch components and perform `build` on changes';
   alias = 'w';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
+  opts = [['v', 'verbose', 'showing npm verbose output for inspection']] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true; // In case the compiler is not installed yet

@@ -1,6 +1,6 @@
 import R from 'ramda';
 import chalk from 'chalk';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP, CURRENT_UPSTREAM } from '../../../constants';
@@ -17,7 +17,6 @@ export default class Export extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/export
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages'],
     ['a', 'all', 'export all components include non-staged'],
@@ -38,7 +37,7 @@ export default class Export extends Command {
     ],
     ['', 'all-versions', 'export not only staged versions but all of them'],
     ['f', 'force', 'force changing a component remote without asking for a confirmation']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

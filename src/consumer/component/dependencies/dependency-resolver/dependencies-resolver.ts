@@ -515,9 +515,8 @@ export default class DependencyResolver {
   processOneDepFile(
     originFile: PathLinuxRelative,
     depFile: string,
-    importSpecifiers?: ImportSpecifier[],
-    linkFile?: string,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    importSpecifiers: ImportSpecifier[] | undefined,
+    linkFile: string | undefined,
     fileType: FileType,
     depFileObject: FileObject,
     nested = false

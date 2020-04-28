@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { provide } from './insight.provider';
 import { ComponentGraphExt } from '../graph';
 import { BitCliExt } from '../cli';
@@ -9,4 +10,4 @@ export default {
     silence: false
   },
   provider: provide
-};
+} as ExtensionManifest;

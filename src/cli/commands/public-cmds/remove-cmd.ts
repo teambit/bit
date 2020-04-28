@@ -1,5 +1,5 @@
 import yn from 'yn';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { remove } from '../../../api/consumer';
 import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
@@ -15,7 +15,6 @@ export default class Remove extends Command {
   ${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
@@ -30,7 +29,7 @@ export default class Remove extends Command {
       'removes the component from the scope, even if used as a dependency. WARNING: components that depend on this component will corrupt'
     ],
     ['s', 'silent [boolean]', 'skip confirmation']
-  ];
+  ] as CommandOptions;
   loader = true;
   migration = true;
   remoteOp = true;

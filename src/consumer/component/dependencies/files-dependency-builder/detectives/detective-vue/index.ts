@@ -1,4 +1,4 @@
-module.exports = function(src, options: Record<string, any> = {}) {
+export default function(src, options: Record<string, any> = {}) {
   // eslint-disable-next-line import/no-dynamic-require, global-require
   const compiler = require('vue-template-compiler');
   const finalDependencies = {};
@@ -20,7 +20,7 @@ module.exports = function(src, options: Record<string, any> = {}) {
   const { script, styles } = compiler.parseComponent(src, { pad: 'line' });
   // it must be required here, otherwise, it'll be a cyclic dependency
   // eslint-disable-next-line import/no-dynamic-require, global-require
-  const precinct = require('../../precinct');
+  const precinct = require('../../precinct').default;
   if (script) {
     if (script.lang) {
       options.type = script.lang;
@@ -38,4 +38,4 @@ module.exports = function(src, options: Record<string, any> = {}) {
   }
 
   return finalDependencies;
-};
+}
