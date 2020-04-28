@@ -19,7 +19,7 @@ require('../detectives/detective-typescript');
 require('../detectives/parser-helper');
 
 const dependencyTree = rewire('./');
-const fixtures = path.resolve(`${__dirname}/../../../fixtures/dependency-tree`);
+const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
 
 describe('dependencyTree', function() {
   this.timeout(8000);
