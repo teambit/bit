@@ -68,9 +68,6 @@ export default class StatusLine {
         this.spinner.start();
       }
     };
-    process.on('exit', () => {
-      this.clear();
-    });
   }
   addId(id) {
     this.ids.push(id);
