@@ -32,6 +32,8 @@ const stdoutProxy = new Proxy(process.stdout, {
   }
 });
 
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+
 export default class StatusLine {
   public buffer = SPACE_BUFFER;
   private spinner: any = ora({ spinner: 'bouncingBar', stream: stdoutProxy, isEnabled: true }).stop();
@@ -55,6 +57,20 @@ export default class StatusLine {
         this.spinner.start();
       }
     };
+    // @ts-ignore
+    process.stderr.write = (buffer, encoding, callback) => {
+      const wasSpinning = this.spinner.isSpinning;
+      if (wasSpinning) {
+        this.spinner.stop();
+      }
+      originalStderrWrite(buffer, encoding, callback);
+      if (wasSpinning) {
+        this.spinner.start();
+      }
+    };
+    process.on('exit', () => {
+      this.clear();
+    });
   }
   addId(id) {
     this.ids.push(id);
