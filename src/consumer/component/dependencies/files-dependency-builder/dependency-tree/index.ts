@@ -25,7 +25,7 @@ const Config = require('./Config');
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @return {Object}
  */
-module.exports = function(options) {
+export default function(options) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
@@ -34,7 +34,7 @@ module.exports = function(options) {
   }
 
   return traverse(config);
-};
+}
 
 /**
  * Executes a post-order depth first search on the dependency tree and returns a

@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveCssAndPreprocessors from '../detective-css-and-preprocessors';
 
 /**
@@ -7,9 +6,11 @@ import detectiveCssAndPreprocessors from '../detective-css-and-preprocessors';
  * @param  {String} fileContent
  * @return {String[]}
  */
-module.exports = function detective(fileContent) {
+function detective(fileContent) {
   const detectiveResult = detectiveCssAndPreprocessors(fileContent, 'css');
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   detective.ast = detectiveCssAndPreprocessors.ast;
   return detectiveResult;
-};
+}
+
+export default detective;

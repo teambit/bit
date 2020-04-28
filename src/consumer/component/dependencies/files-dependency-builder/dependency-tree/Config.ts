@@ -2,13 +2,10 @@
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const path = require('path');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const debug = require('debug')('tree');
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-function Config(options) {
+export function Config(options) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.filename = options.filename;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -67,5 +64,3 @@ function Config(options) {
 Config.prototype.clone = function() {
   return new Config(this);
 };
-
-module.exports = Config;

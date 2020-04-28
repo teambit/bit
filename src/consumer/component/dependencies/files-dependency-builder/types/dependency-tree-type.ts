@@ -43,8 +43,7 @@ export type DependenciesResults = {
   unidentifiedPackages?: string[];
   bits?: Record<string, any>;
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  missing?: { [key: MissingType]: string[] };
+  missing?: { [key in MissingType]: string[] };
 };
 
 export type Tree = {
