@@ -16,8 +16,14 @@ export default function componentIdToPackageName(
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
   const scope = id.scope || defaultScope;
   const partsToJoin = scope ? [scope, name] : [name];
-  const nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);
+  let nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);
   if (!withPrefix) return nameWithoutPrefix;
   const registryPrefix = bindingPrefix || npmRegistryName();
+  // Make sure we don't have the prefix also as part of the scope name
+  // since prefixes are now taken from the owner name, and the scope name has the owner name as well.
+  const registryPrefixWithDot = `${registryPrefix}.`;
+  if (nameWithoutPrefix.startsWith(registryPrefixWithDot)) {
+    nameWithoutPrefix = nameWithoutPrefix.replace(registryPrefixWithDot, '');
+  }
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }

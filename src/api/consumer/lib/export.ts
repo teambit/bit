@@ -177,12 +177,22 @@ async function getComponentsToExport(
 
 function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
   const workspaceDefaultScope = consumer.config.workspaceSettings.defaultScope;
+  const workspaceDefaultOwner = consumer.config.workspaceSettings.defaultOwner;
   const idsArray = ids.map(id => {
     if (remote) return id.changeScope(remote);
     if (id.hasScope()) return id;
     const overrides = consumer.config.componentsConfig?.getOverrideComponentData(id);
     const componentDefaultScope = overrides ? overrides.defaultScope : null;
-    return id.changeScope(componentDefaultScope || workspaceDefaultScope || null);
+    let scopeWithOwner;
+    if (workspaceDefaultScope) {
+      scopeWithOwner = `${workspaceDefaultOwner}.${workspaceDefaultScope}`;
+    }
+    // TODO: handle separation of owner from default scope on component
+    // TODO: handle owner of component
+    if (componentDefaultScope) {
+      scopeWithOwner = componentDefaultScope;
+    }
+    return id.changeScope(scopeWithOwner);
   });
   return BitIds.fromArray(idsArray);
 }

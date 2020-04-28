@@ -310,7 +310,7 @@ export default class WorkspaceConfig {
   getCoreExtensionsConfig(): { [extensionName: string]: any } {
     const workspaceConfig = this.workspaceSettings;
     // TODO: take it somehow from harmony that should get it by the workspace extension manifest
-    const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory'];
+    const workspaceExtPropNames = ['defaultScope', 'componentsDefaultDirectory', 'defaultOwner'];
     const workspaceExtProps = pick(workspaceExtPropNames, workspaceConfig);
     const result = omit(workspaceExtPropNames, workspaceConfig);
     result.workspace = workspaceExtProps;

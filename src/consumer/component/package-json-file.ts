@@ -105,6 +105,10 @@ export default class PackageJsonFile {
       version: component.version,
       homepage: component._getHomepage(),
       main: component.mainFile,
+      // Used for determine that a package is a component
+      // Used when resolve dependencies to identify that some package should be treated as component
+      // TODO: replace by better way to identify that something is a component for sure
+      component: true,
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
