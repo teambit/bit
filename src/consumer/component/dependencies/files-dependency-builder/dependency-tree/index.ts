@@ -65,6 +65,7 @@ module.exports._getDependencies = function(config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  // @ts-ignore
   delete precinct.ast;
 
   try {
@@ -102,6 +103,7 @@ module.exports._getDependencies = function(config) {
       dependency,
       filename: config.filename,
       directory: config.directory,
+      // @ts-ignore
       ast: precinct.ast,
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,

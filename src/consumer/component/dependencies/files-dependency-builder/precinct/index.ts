@@ -7,21 +7,13 @@ import getModuleType from 'module-definition';
 import Walker from 'node-source-walk';
 import detectiveAmd from 'detective-amd';
 import detectiveStylus from 'detective-stylus';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveEs6 from '../detectives/detective-es6';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveLess from '../detectives/detective-less';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveSass from '../detectives/detective-sass';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveScss from '../detectives/detective-scss';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveCss from '../detectives/detective-css';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveTypeScript from '../detectives/detective-typescript';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveStylable from '../detectives/detective-stylable';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectiveVue from '../detectives/detective-vue';
 import { SUPPORTED_EXTENSIONS } from '../../../../../constants';
 
