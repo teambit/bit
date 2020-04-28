@@ -1,5 +1,6 @@
 import R from 'ramda';
 import fs from 'fs-extra';
+import { compact } from 'ramda-adjunct';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -18,7 +19,7 @@ import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 import ComponentVersion from '../../scope/component-version';
 import BitMap from '../bit-map/bit-map';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../extensions/isolator/capsule-paths';
+import PackageJson from './package-json';
 
 /**
  * Add components as dependencies to root package.json
@@ -106,19 +107,12 @@ export function preparePackageJsonToWrite(
   override = true,
   writeBitDependencies = false, // e.g. when it's a capsule
   excludeRegistryPrefix?: boolean,
-  capsulePaths?: CapsulePaths,
   packageManager?: string
 ): { packageJson: PackageJsonFile; distPackageJson: PackageJsonFile | null | undefined } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const getBitDependencies = (dependencies: BitIds) => {
     if (!writeBitDependencies) return {};
     return dependencies.reduce((acc, depId: BitId) => {
-      if (capsulePaths) {
-        // when coming from a capsule, it shouldn't reach here because writeBitDependencies is false
-        throw new Error(
-          `preparePackageJsonToWrite doesn't expect capsules to add bit dependencies to the package.json`
-        );
-      }
       const packageDependency = getPackageDependency(bitMap, depId, component.id);
       const packageName = componentIdToPackageName(depId, component.bindingPrefix, component.defaultScope);
       acc[packageName] = packageDependency;
@@ -177,9 +171,6 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
     const rootDir = consumer.getPath();
     const dependenciesDirectory = consumer.config.workspaceSettings._dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
-    const driver = consumer.driver.getDriver(false);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
@@ -192,16 +183,17 @@ export async function addWorkspacesToPackageJson(consumer: Consumer, customImpor
 
 export async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
   const rootDir = consumer.getPath();
-  const driver = consumer.driver.getDriver(false);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const PackageJson = driver.PackageJson;
+
   if (
     consumer.config.workspaceSettings._manageWorkspaces &&
     consumer.config.workspaceSettings.packageManager === 'yarn' &&
     consumer.config.workspaceSettings._useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
-    await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
+    if (dirsToRemove && dirsToRemove.length) {
+      const dirsToRemoveWithoutEmpty = compact(dirsToRemove);
+      await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemoveWithoutEmpty);
+    }
   }
   await PackageJson.removeComponentsFromDependencies(
     rootDir, // @todo: fix. the registryPrefix should be retrieved from the component.

@@ -5,9 +5,10 @@ import { ComponentFactoryExt } from '../component';
 import { IsolatorExt } from '../isolator';
 import { WorkspaceConfigExt } from '../workspace-config';
 import { LoggerExt } from '../logger';
+import { DependencyResolverExt } from '../dependency-resolver';
 
 export default {
   name: 'workspace',
-  dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, IsolatorExt, LoggerExt],
+  dependencies: [WorkspaceConfigExt, ScopeExt, ComponentFactoryExt, IsolatorExt, DependencyResolverExt, LoggerExt],
   provider: workspaceProvider
 } as ExtensionManifest;

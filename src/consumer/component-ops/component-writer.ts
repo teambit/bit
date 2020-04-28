@@ -19,7 +19,6 @@ import EnvExtension from '../../legacy-extensions/env-extension';
 import ComponentConfig from '../config/component-config';
 import PackageJsonFile from '../component/package-json-file';
 import ShowDoctorError from '../../error/show-doctor-error';
-import CapsulePaths from '../../extensions/isolator/capsule-paths';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -35,7 +34,6 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
-  capsulePaths?: CapsulePaths;
   applyExtensionsAddedConfig?: boolean;
 };
 
@@ -53,7 +51,6 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
-  capsulePaths?: CapsulePaths;
   applyExtensionsAddedConfig?: boolean;
   constructor({
     component,
@@ -68,7 +65,6 @@ export default class ComponentWriter {
     writeBitDependencies = false,
     deleteBitDirContent,
     existingComponentMap,
-    capsulePaths,
     excludeRegistryPrefix = false,
     applyExtensionsAddedConfig = false
   }: ComponentWriterProps) {
@@ -85,7 +81,6 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
-    this.capsulePaths = capsulePaths;
     this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
   }
 
@@ -155,7 +150,6 @@ export default class ComponentWriter {
         this.override,
         this.writeBitDependencies,
         this.excludeRegistryPrefix,
-        this.capsulePaths,
         packageManager
       );
 

@@ -16,6 +16,7 @@ export default (async function loadFlattenedDependenciesForCapsule(
 
   await loadFlattened(dependencies);
   await loadFlattened(devDependencies);
+  await loadFlattened(extensionDependencies);
 
   return new ComponentWithDependencies({
     component,

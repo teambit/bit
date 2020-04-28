@@ -7,8 +7,9 @@ import { Isolator } from '../isolator';
 import { Logger } from '../logger';
 import { WorkspaceConfig } from '../workspace-config';
 import ConsumerComponent from '../../consumer/component';
+import { DependencyResolver } from '../dependency-resolver';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Logger];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -24,7 +25,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, logger]: WorkspaceDeps,
+  [workspaceConfig, scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -43,6 +44,7 @@ export default async function provideWorkspace(
         scope,
         component,
         isolator,
+        dependencyResolver,
         logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony

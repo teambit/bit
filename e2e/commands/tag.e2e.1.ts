@@ -1,6 +1,5 @@
 // covers also init, create, tag, import and export commands
 
-import sinon from 'sinon';
 import * as path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -10,7 +9,6 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
-let logSpy;
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -27,7 +25,6 @@ describe('bit tag command', function() {
   });
   before(() => {
     helper.scopeHelper.reInitLocalScope();
-    logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bit.json', () => {
     let output;
@@ -282,18 +279,6 @@ describe('bit tag command', function() {
       expect(output).to.have.string(
         "error: component \"non/existing\" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)"
       );
-    });
-    it.skip('should print warning if the a driver is not installed', () => {
-      const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
-      helper.fs.createFile('bar', 'foo2.js', fixture);
-      helper.command.addComponentAllowFiles('bar/foo2.js', { i: 'bar/foo2' });
-      // var myargs = logSpy.getCalls()[4].args
-      // console.log("args", myargs);
-      expect(
-        logSpy.calledWith(
-          'Warning: Bit is not be able calculate the dependencies tree. Please install bit-javascript driver and run tag again.\n'
-        )
-      ).to.be.true;
     });
     it.skip('should persist the model in the scope', () => {});
     it.skip('should run the onCommit hook', () => {});
