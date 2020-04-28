@@ -15,7 +15,7 @@ const Walker = require('node-source-walk');
  * @param  {String|Object} src - File's content or AST
  * @return {String[]}
  */
-module.exports = function(src) {
+export default function(src) {
   const walker = new Walker();
 
   const dependencies = {};
@@ -102,4 +102,4 @@ module.exports = function(src) {
   });
 
   return dependencies;
-};
+}

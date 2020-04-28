@@ -16,9 +16,8 @@ export default class ComposeCmd implements Command {
 
   constructor(private workspace: Workspace, private flows: Flows) {}
 
-  // @ts-ignore
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async render([id]: CLIArgs) {
+  async render([id]: CLIArgs): Promise<React.ReactElement> {
     // eslint-disable-line @typescript-eslint/no-unused-vars
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async () => {

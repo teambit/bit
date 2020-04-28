@@ -1,6 +1,6 @@
 const stylable = require('stylable');
 
-module.exports = function(src) {
+export default function(src) {
   const css = stylable.safeParse(src);
   const dependencies = {};
   const addDependency = dependency => {
@@ -32,4 +32,4 @@ module.exports = function(src) {
   });
 
   return dependencies;
-};
+}

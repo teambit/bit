@@ -18,7 +18,7 @@ const Walker = require('node-source-walk');
  * @param  {Object} options - options to pass to the parser
  * @return {String[]}
  */
-module.exports = function(src, options: Record<string, any> = {}) {
+export default function(src, options: Record<string, any> = {}) {
   options.parser = Parser;
 
   const walker = new Walker(options);
@@ -130,4 +130,4 @@ module.exports = function(src, options: Record<string, any> = {}) {
   });
 
   return dependencies;
-};
+}

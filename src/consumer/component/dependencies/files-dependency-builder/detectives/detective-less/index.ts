@@ -9,9 +9,11 @@ import detectiveCssAndPreprocessors from '../detective-css-and-preprocessors';
  * @param  {String} fileContent
  * @return {String[]}
  */
-module.exports = function detective(fileContent) {
+function detective(fileContent) {
   const detectiveResult = detectiveCssAndPreprocessors(fileContent, 'less');
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   detective.ast = detectiveCssAndPreprocessors.ast;
   return detectiveResult;
-};
+}
+
+export default detective;

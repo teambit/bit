@@ -1,15 +1,14 @@
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
+import Config from './Config';
+import cabinet from '../filing-cabinet';
+import precinct from '../precinct';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const debug = require('debug')('tree');
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const fs = require('fs');
-const precinct = require('../precinct');
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const cabinet = require('../filing-cabinet');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const Config = require('./Config');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -25,7 +24,7 @@ const Config = require('./Config');
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @return {Object}
  */
-module.exports = function(options) {
+export default function(options) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
@@ -34,7 +33,7 @@ module.exports = function(options) {
   }
 
   return traverse(config);
-};
+}
 
 /**
  * Executes a post-order depth first search on the dependency tree and returns a
@@ -66,6 +65,7 @@ module.exports._getDependencies = function(config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  // @ts-ignore
   delete precinct.ast;
 
   try {
@@ -103,6 +103,7 @@ module.exports._getDependencies = function(config) {
       dependency,
       filename: config.filename,
       directory: config.directory,
+      // @ts-ignore
       ast: precinct.ast,
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
