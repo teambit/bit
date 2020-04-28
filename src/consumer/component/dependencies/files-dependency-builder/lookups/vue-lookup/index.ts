@@ -14,7 +14,7 @@ const languageMap = {
 export default function(options) {
   const { dependency, filename, isScript } = options;
   // eslint-disable-next-line import/no-dynamic-require, global-require
-  const cabinet = require('../../filing-cabinet');
+  const cabinet = require('../../filing-cabinet').default;
 
   const fileContent = fs.readFileSync(filename);
   const { script, styles } = compiler.parseComponent(fileContent.toString(), { pad: 'line' });
