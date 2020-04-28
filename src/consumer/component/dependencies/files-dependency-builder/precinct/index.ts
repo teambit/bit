@@ -216,4 +216,4 @@ precinct.paperwork = function(filename, options) {
   return deps;
 };
 
-module.exports = precinct;
+export default precinct;

@@ -5,7 +5,7 @@
 const path = require('path');
 const debug = require('debug')('tree');
 
-export function Config(options) {
+export default function Config(options) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.filename = options.filename;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
