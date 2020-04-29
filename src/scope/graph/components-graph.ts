@@ -117,7 +117,12 @@ function buildGraphFromComponentsObjects(components: Component[], direction: 'no
   };
   components.forEach((component: Component) => {
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach(depId => setEdge(component.id, depId, depType));
+      depIds.forEach(depId => {
+        if (!graph.hasNode(depId.toString())) {
+          throw new Error(`buildGraphFromComponentsObjects: missing node of ${depId.toString()}`);
+        }
+        setEdge(component.id, depId, depType);
+      });
     });
   });
 
