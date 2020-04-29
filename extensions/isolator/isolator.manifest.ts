@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import Isolator from './isolator';
 import { PackageManagerExt } from '@bit/bit.core.package-manager';
 
@@ -6,4 +7,4 @@ export default {
   dependencies: [PackageManagerExt],
   config: {},
   provider: Isolator.provide
-};
+} as ExtensionManifest;

@@ -1,6 +1,6 @@
 /* eslint max-classes-per-file: 0 */
-import Vinyl from 'vinyl';
 import path from 'path';
+import Vinyl from 'vinyl';
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '@bit/bit.core.workspace';
 import { BitId } from 'bit-bin/bit-id';
@@ -13,7 +13,6 @@ import { AddActionResults } from 'bit-bin/consumer/component-ops/add-components/
 type TemplateFile = { path: string; content: string };
 type TemplateFuncResult = { files: TemplateFile[]; main?: string };
 type TemplateFunc = (...args: string[]) => TemplateFuncResult;
-
 export class Create {
   constructor(private workspace: Workspace, private registry: Registry) {}
 

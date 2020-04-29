@@ -14,7 +14,7 @@ export default class Watch extends WatchComponents {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async watch(componentIds: ComponentId[] = []) {
-    // await this.watchAll();
+    await this.watchAll();
 
     return new Observable(subscriber => {
       subscriber.next();

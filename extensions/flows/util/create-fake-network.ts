@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Graph } from 'graphlib';
+import { ReplaySubject } from 'rxjs';
 import { ExecutionOptions } from '../network/options';
 import { ComponentID, Component } from '@bit/bit.core.component';
 import { Network } from '../network';
@@ -8,7 +9,7 @@ import { Consumer } from 'bit-bin/consumer';
 import { Workspace } from '@bit/bit.core.workspace';
 import { getFakeCapsuleLocation, createFakeCapsule } from './create-capsule';
 import { Flow } from '../flow';
-import { Capsule } from '@bit/bit.core.isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 
 export type GraphTestCase = {
   graph: { [id: string]: string[] };
@@ -16,7 +17,7 @@ export type GraphTestCase = {
   options: ExecutionOptions;
 };
 
-export async function createTestNetworkStream(testCase: GraphTestCase) {
+export async function createTestNetworkStream(testCase: GraphTestCase): Promise<ReplaySubject<any>> {
   const fakeGetGraph = createGetGraphFn(testCase);
   const fakeWorkSpace = createFakeWorkSpace(fakeGetGraph);
   const ids = testCase.input.map(val => new ComponentID(BitId.parse(val)));

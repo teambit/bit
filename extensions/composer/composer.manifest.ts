@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 import { WatchExt } from '@bit/bit.core.watch';
 import { provideComposer } from './composer.provider';
 import { BitCliExt } from '@bit/bit.core.cli';
@@ -8,4 +9,4 @@ export default {
   name: 'Composer',
   dependencies: [WatchExt, BitCliExt, WorkspaceExt, FlowsExt],
   provider: provideComposer
-};
+} as ExtensionManifest;

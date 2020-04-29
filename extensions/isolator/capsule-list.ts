@@ -1,16 +1,16 @@
-import { BitId } from 'bit-bin/bit-id';
 import { Capsule } from './capsule';
+import { BitId } from 'bit-bin/bit-id';
 
 export default class CapsuleList extends Array<{ id: BitId; value: Capsule }> {
-  getValue(id: BitId): Capsule | null {
+  getCapsule(id: BitId): Capsule | null {
     const found = this.find(item => item.id.isEqual(id));
     return found ? found.value : null;
   }
-  getValueIgnoreVersion(id: BitId): Capsule | null {
+  getCapsuleIgnoreVersion(id: BitId): Capsule | null {
     const found = this.find(item => item.id.isEqualWithoutVersion(id));
     return found ? found.value : null;
   }
-  getValueIgnoreScopeAndVersion(id: BitId): Capsule | null {
+  getCapsuleIgnoreScopeAndVersion(id: BitId): Capsule | null {
     const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
     return found ? found.value : null;
   }

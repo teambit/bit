@@ -23,8 +23,6 @@ describe('task', function() {
   });
 
   describe('should run module', function() {
-    this.timeout(100 * 10000);
-
     it('with stdout and result', async function() {
       const stream = await runTask('#@bit/extension', '@bit-test/button0', createModuleTestCase);
       return expectMessage(stream, 'hello-module', 'task:stdout', 0, { message: 'hello-module' });

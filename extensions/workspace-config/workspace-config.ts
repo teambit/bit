@@ -69,7 +69,7 @@ export default class WorkspaceConfig {
 
   _setCompiler(compiler) {
     if (this.legacyConfig) {
-      this.legacyConfig.compiler = compiler;
+      this.legacyConfig.setCompiler(compiler);
     }
   }
 
@@ -79,7 +79,7 @@ export default class WorkspaceConfig {
 
   _setTester(tester) {
     if (this.legacyConfig) {
-      this.legacyConfig.tester = tester;
+      this.legacyConfig.setTester(tester);
     }
   }
 

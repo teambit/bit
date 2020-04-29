@@ -4,11 +4,12 @@ import Workspace from './workspace';
 import { ComponentFactory } from '@bit/bit.core.component';
 import { loadConsumerIfExist } from 'bit-bin/consumer';
 import { Isolator } from '@bit/bit.core.isolator';
-import { Reporter } from '@bit/bit.core.reporter';
+import { Logger } from '../logger';
 import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
 import ConsumerComponent from 'bit-bin/consumer/component';
+import { DependencyResolver } from '@bit/bit.core.dependency-resolver';
 
-export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, Reporter];
+export type WorkspaceDeps = [WorkspaceConfig, Scope, ComponentFactory, Isolator, DependencyResolver, Logger];
 
 export type WorkspaceCoreConfig = {
   /**
@@ -24,7 +25,7 @@ export type WorkspaceCoreConfig = {
 };
 
 export default async function provideWorkspace(
-  [workspaceConfig, scope, component, isolator, reporter]: WorkspaceDeps,
+  [workspaceConfig, scope, component, isolator, dependencyResolver, logger]: WorkspaceDeps,
   harmony: Harmony
 ) {
   // don't use loadConsumer() here because the consumer might not be available.
@@ -43,7 +44,8 @@ export default async function provideWorkspace(
         scope,
         component,
         isolator,
-        reporter.createLogger('workspace'), // TODO: get the 'worksacpe' name in a better way
+        dependencyResolver,
+        logger.createLogPublisher('workspace'), // TODO: get the 'worksacpe' name in a better way
         undefined,
         harmony
       );

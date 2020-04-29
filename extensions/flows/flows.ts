@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable max-classes-per-file */
-import { path } from 'ramda';
 import { EventEmitter } from 'events';
 import { Workspace } from '@bit/bit.core.workspace';
 import { Network, GetFlow } from './network';
 import { ComponentID } from '@bit/bit.core.component';
 import { Flow } from './flow/flow';
-import BitIdAndValueArray from 'bit-bin/bit-id/bit-id-and-value-array';
 import { ExecutionOptions } from './network/options';
 import { BitId } from 'bit-bin/bit-id';
-import { Capsule } from '@bit/bit.core.isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
 
@@ -20,7 +18,15 @@ export class Flows {
   getIds(ids: string[]) {
     return ids.map(id => new ComponentID(this.workspace.consumer.getParsedId(id)));
   }
-  createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow) {
+
+  /**
+   * Creates a custom network from workspace.
+   *
+   * @param seeders - array of components to build.
+   * @param getFlow - function which provide component flow.
+   * @param postFlow - postFlow callback.
+   */
+  createNetwork(seeders: ComponentID[], getFlow: GetFlow, postFlow: PostFlow = () => Promise.resolve()) {
     const network = new Network(this.workspace, seeders, getFlow, getWorkspaceGraph, postFlow);
     network.onWorkspaceLoaded((...args) => {
       this.emitter.emit('workspaceLoaded', args);
@@ -28,6 +34,13 @@ export class Flows {
     return network;
   }
 
+  /**
+   * Creates network which runs named flow according to project configuration.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   */
   createNetworkByFlowName(seeders: ComponentID[], name = 'build', options: ExecutionOptions) {
     const getFlow = async (capsule: Capsule) => {
       const seed = capsule.component.id;
@@ -50,8 +63,16 @@ export class Flows {
     return this.createNetwork(seeders, getFlow, postFlow);
   }
 
-  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
-    const resultStream = await this.runStream(seeders, name, options, network);
+  /**
+   * Executes named flow on network and returns a promise with network:result message.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   * @param network optional custom network
+   */
+  async runToPromise(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+    const resultStream = await this.run(seeders, name, options, network);
     return new Promise((resolve, reject) => {
       resultStream.subscribe({
         next(data: any) {
@@ -67,7 +88,15 @@ export class Flows {
     });
   }
 
-  async runStream(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+  /**
+   * Executes named flow on network and returns an execution stream.
+   *
+   * @param seeders array of components to build
+   * @param name flow name
+   * @param options
+   * @param network optional custom network
+   */
+  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
     const opts: ExecutionOptions = Object.assign(
       {
         caching: true,
@@ -81,18 +110,23 @@ export class Flows {
     return resultStream;
   }
 
+  /**
+   *  runs custom flow on network.
+   *
+   * @param flowsWithIds
+   * @param options
+   */
   async runMultiple(flowsWithIds: IdsAndFlows, options?: Partial<ExecutionOptions>) {
     const getFlow = (capsule: Capsule) => {
       const id = capsule.component.id;
       // @ts-ignore for some reason the capsule.component here is ConsumerComponent
-      const value = flowsWithIds.getValue(id);
+      const value = flowsWithIds.getFlows(id);
       return Promise.resolve(new Flow(value || []));
     };
-    const postFlow = (_capsule: Capsule) => Promise.resolve();
 
     const ids = flowsWithIds.map(withID => new ComponentID(withID.id));
-    const network = this.createNetwork(ids, getFlow, postFlow);
-    return this.run(ids, '', options || {}, network);
+    const network = this.createNetwork(ids, getFlow);
+    return this.runToPromise(ids, '', options || {}, network);
   }
 
   onWorkspaceLoaded(cb) {

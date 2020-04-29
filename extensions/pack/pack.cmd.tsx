@@ -4,19 +4,18 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '@bit/bit.core.cli';
 import { Packer } from './pack';
-import { Flags } from '@bit/bit.core.paper';
+import { Flags, PaperOptions } from '@bit/bit.core.paper';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
   description = 'Create tar for npm publish';
-  // @ts-ignore
   options = [
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
     ['o', 'override [boolean]', 'override existing pack file'],
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix', 'keep custom prefix'],
     ['j', 'json', 'return the output as JSON']
-  ];
+  ] as PaperOptions;
   shortDescription = '';
   alias = '';
   group = '';

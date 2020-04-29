@@ -1,13 +1,13 @@
 import { Graph } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
-import Component from '@bit/bit.core.component';
+import { Component } from '@bit/bit.core.component';
 import { Dependency } from '../dependency';
 import { Workspace } from '@bit/bit.core.workspace';
 import { buildOneGraphForComponents } from 'bit-bin/scope/graph/components-graph';
-import ComponentFactory from '@bit/bit.core.component';
+import { ComponentFactory } from '@bit/bit.core.component';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
-export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
+export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 
 type Node = { id: string; node: Component };
 type Edge = { sourceId: string; targetId: string; edge: Dependency };

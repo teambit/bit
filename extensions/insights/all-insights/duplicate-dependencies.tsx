@@ -2,8 +2,7 @@
 import React from 'react';
 import { Color, Box, Text, render } from 'ink';
 import { Insight, InsightResult, RawResult } from '../insight';
-import { GraphBuilder } from '@bit/bit.core.graph';
-import { VersionSubgraph } from '@bit/bit.core.graph';
+import { GraphBuilder, VersionSubgraph } from '@bit/bit.core.graph';
 import NoDataForInsight from '../exceptions/no-data-for-insight';
 
 export const INSIGHT_NAME = 'duplicate dependencies';

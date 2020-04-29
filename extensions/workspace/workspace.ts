@@ -9,7 +9,7 @@ import ComponentsList from 'bit-bin/consumer/component/components-list';
 import { ComponentHost } from 'bit-bin/shared-types';
 import { BitIds, BitId } from 'bit-bin/bit-id';
 import { Isolator } from '@bit/bit.core.isolator';
-import { Logger } from '@bit/bit.core.reporter';
+import { LogPublisher } from '../logger';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from 'bit-bin/consumer/component-ops/add-components';
@@ -21,6 +21,7 @@ import { coreConfigurableExtensions } from './core-configurable-extensions';
 import { ComponentScopeDirMap } from '@bit/bit.core.workspace-config/workspace-settings';
 import legacyLogger from 'bit-bin/logger/logger';
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from 'bit-bin/constants';
+import { DependencyResolver } from '@bit/bit.core.dependency-resolver';
 /**
  * API of the Bit Workspace
  */
@@ -51,7 +52,9 @@ export default class Workspace implements ComponentHost {
 
     readonly isolateEnv: Isolator,
 
-    private logger: Logger,
+    private dependencyResolver: DependencyResolver,
+
+    private logger: LogPublisher,
 
     private componentList: ComponentsList = new ComponentsList(consumer),
 

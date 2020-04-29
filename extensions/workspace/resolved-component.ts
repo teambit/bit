@@ -1,5 +1,5 @@
 import { Component } from '@bit/bit.core.component';
-import { Capsule } from '@bit/bit.core.isolator/capsule';
+import { Capsule } from '@bit/bit.core.isolator';
 
 export class ResolvedComponent {
   constructor(readonly component: Component, readonly capsule: Capsule) {}

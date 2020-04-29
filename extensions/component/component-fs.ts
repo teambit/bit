@@ -24,7 +24,7 @@ export default class ComponentFS extends MemoryFS {
       let dirPath = file.relativeDir;
       if (!dirPath.startsWith('/')) dirPath = path.join('/', dirPath);
       fs.mkdirpSync(dirPath);
-      fs.writeFileSync(`/${file.relative}`, eol.auto(file.contents));
+      fs.writeFileSync(`/${file.relative}`, eol.auto(file.contents || ''));
     });
 
     return fs;

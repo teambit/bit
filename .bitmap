@@ -335,6 +335,16 @@
                 "name": "dependency-resolver.manifest.ts"
             },
             {
+                "relativePath": "dependency-resolver.provider.ts",
+                "test": false,
+                "name": "dependency-resolver.provider.ts"
+            },
+            {
+                "relativePath": "dependency-resolver.ts",
+                "test": false,
+                "name": "dependency-resolver.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"
@@ -471,6 +481,11 @@
                 "relativePath": "util/create-fake-network.ts",
                 "test": false,
                 "name": "create-fake-network.ts"
+            },
+            {
+                "relativePath": "util/flatten-nested-map.ts",
+                "test": false,
+                "name": "flatten-nested-map.ts"
             }
         ],
         "mainFile": "index.ts",
@@ -696,6 +711,11 @@
                 "relativePath": "readme.md",
                 "test": false,
                 "name": "readme.md"
+            },
+            {
+                "relativePath": "symlink-dependencies-to-capsules.ts",
+                "test": false,
+                "name": "symlink-dependencies-to-capsules.ts"
             },
             {
                 "relativePath": "write-components-to-capsules.ts",

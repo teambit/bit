@@ -9,7 +9,6 @@ import ManyComponentsWriter, {
 } from 'bit-bin/consumer/component-ops/many-components-writer';
 
 import CapsuleList from './capsule-list';
-import CapsulePaths from './capsule-paths';
 import Graph from 'bit-bin/scope/graph/graph'; // TODO: use graph extension?
 import { BitId } from 'bit-bin/bit-id';
 import { Dependencies } from 'bit-bin/consumer/component/dependencies';
@@ -22,22 +21,25 @@ export default async function writeComponentsToCapsules(
   packageManager: string
 ) {
   components = components.map(c => c.clone());
-  // const capsulePaths = buildCapsulePaths(capsules);
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const getClonedFromGraph = (id: BitId): ConsumerComponent => graph.node(id.toString()).clone();
+    const getClonedFromGraph = (id: BitId): ConsumerComponent => {
+      const consumerComponent = graph.node(id.toString());
+      if (!consumerComponent) {
+        throw new Error(
+          `unable to find the dependency "${id.toString()}" of "${component.id.toString()}" in the graph`
+        );
+      }
+      return consumerComponent.clone();
+    };
     const getDeps = (dependencies: Dependencies) => dependencies.get().map(dep => getClonedFromGraph(dep.id));
     const dependencies = getDeps(component.dependencies);
     const devDependencies = getDeps(component.devDependencies);
-    const compilerDependencies = getDeps(component.compilerDependencies);
-    const testerDependencies = getDeps(component.testerDependencies);
     const extensionDependencies = component.extensions.extensionsBitIds.map(getClonedFromGraph);
     return new ComponentWithDependencies({
       component,
       dependencies,
       devDependencies,
-      compilerDependencies,
-      testerDependencies,
       extensionDependencies
     });
   });
@@ -47,7 +49,7 @@ export default async function writeComponentsToCapsules(
     override: false,
     writePackageJson: true,
     writeConfig: false,
-    writeBitDependencies: true,
+    writeBitDependencies: false,
     createNpmLinkFiles: false,
     saveDependenciesAsComponents: false,
     writeDists: false,
@@ -58,7 +60,6 @@ export default async function writeComponentsToCapsules(
     excludeRegistryPrefix: false,
     silentPackageManagerResult: false,
     isolated: true,
-    // capsulePaths,
     packageManager,
     applyExtensionsAddedConfig: true
   };
@@ -77,7 +78,7 @@ export default async function writeComponentsToCapsules(
   // write data to capsule
   await Promise.all(
     manyComponentsWriter.writtenComponents.map(async componentToWrite => {
-      const capsule = capsuleList.getValue(componentToWrite.id);
+      const capsule = capsuleList.getCapsule(componentToWrite.id);
       if (!capsule) return;
       await componentToWrite.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
     })
@@ -92,14 +93,3 @@ function normalizeComponentDir(componentWithDependencies: ComponentWithDependenc
     component.stripOriginallySharedDir(manipulateDirData);
   });
 }
-
-// function buildCapsulePaths(capsules: Capsule[]): CapsulePaths {
-//   const capsulePaths = capsules.map(componentCapsule => {
-//     const id = componentCapsule.component.id;
-//     return {
-//       id: id instanceof BitId ? id : id.legacyComponentId,
-//       value: componentCapsule.wrkDir
-//     };
-//   });
-//   return new CapsulePaths(...capsulePaths);
-// }
