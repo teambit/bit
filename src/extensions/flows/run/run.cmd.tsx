@@ -4,7 +4,7 @@
 import React from 'react';
 import { ReplaySubject } from 'rxjs';
 import { Command, CLIArgs } from '../../cli';
-import { Flags, PaperOptions } from '../../paper/command';
+import { Flags, PaperOptions } from '../../paper';
 import { Flows } from '../flows';
 import { reportRunStream } from './handle-run-stream';
 import { flowEvents } from './handle-run-stream';

@@ -1,5 +1,5 @@
 import { ComponentFactory } from '../component';
-import Isolator from '../isolator/isolator';
+import { Isolator } from '../isolator';
 
 type ComponentDeps = [Isolator];
 type ComponentConfig = {};

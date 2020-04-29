@@ -4,7 +4,7 @@ import React from 'react';
 import { Color } from 'ink';
 import { Command, CLIArgs } from '../cli';
 import { Packer } from './pack';
-import { Flags, PaperOptions } from '../paper/command';
+import { Flags, PaperOptions } from '../paper';
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
