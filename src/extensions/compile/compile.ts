@@ -5,11 +5,10 @@ import { BitId } from '../../bit-id';
 import { ResolvedComponent } from '../workspace/resolved-component';
 import buildComponent from '../../consumer/component-ops/build-component';
 import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 import DataToPersist from '../../consumer/component/sources/data-to-persist';
 import { Scope } from '../scope';
-import { Flows } from '../flows';
-import { IdsAndFlows } from '../flows/flows';
+import { Flows, IdsAndFlows } from '../flows';
 
 export type ComponentAndCapsule = {
   consumerComponent: ConsumerComponent;

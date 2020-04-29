@@ -6,13 +6,17 @@ const path = require('path');
 const rewire = require('rewire');
 const sinon = require('sinon');
 
-const fixtures = `${__dirname}/../../../fixtures/precinct`;
+const fixtures = '../../../../../../fixtures/precinct';
+const fixturesFullPath = path.resolve(__dirname, fixtures);
+const exampleASTPath = path.join(fixtures, 'exampleAST');
 // eslint-disable-next-line import/no-dynamic-require, global-require
-const ast = require(`${fixtures}/exampleAST`);
-const precinct = rewire('./');
+const ast = require(exampleASTPath);
+
+const precinctNonWired = rewire('./');
+const precinct = precinctNonWired.default;
 
 function read(filename) {
-  return fs.readFileSync(path.join(fixtures, filename), 'utf8');
+  return fs.readFileSync(path.join(fixturesFullPath, filename), 'utf8');
 }
 
 describe('node-precinct', () => {
@@ -157,10 +161,10 @@ describe('node-precinct', () => {
 
   describe('paperwork', () => {
     it('returns the dependencies for the given filepath', () => {
-      assert.ok(Object.keys(precinct.paperwork(`${fixtures}/es6.js`)).length);
-      assert.ok(Object.keys(precinct.paperwork(`${fixtures}/styles.scss`)).length);
-      assert.ok(Object.keys(precinct.paperwork(`${fixtures}/typescript.ts`)).length);
-      assert.ok(Object.keys(precinct.paperwork(`${fixtures}/styles.css`)).length);
+      assert.ok(Object.keys(precinct.paperwork(`${fixturesFullPath}/es6.js`)).length);
+      assert.ok(Object.keys(precinct.paperwork(`${fixturesFullPath}/styles.scss`)).length);
+      assert.ok(Object.keys(precinct.paperwork(`${fixturesFullPath}/typescript.ts`)).length);
+      assert.ok(Object.keys(precinct.paperwork(`${fixturesFullPath}/styles.css`)).length);
     });
 
     it('throws if the file cannot be found', () => {
@@ -170,7 +174,7 @@ describe('node-precinct', () => {
     });
 
     it('filters out core modules if options.includeCore is false', () => {
-      const deps = precinct.paperwork(`${fixtures}/coreModules.js`, {
+      const deps = precinct.paperwork(`${fixturesFullPath}/coreModules.js`, {
         includeCore: false
       });
 
@@ -178,7 +182,7 @@ describe('node-precinct', () => {
     });
 
     it('does not filter out core modules by default', () => {
-      const deps = precinct.paperwork(`${fixtures}/coreModules.js`);
+      const deps = precinct.paperwork(`${fixturesFullPath}/coreModules.js`);
       assert(Object.keys(deps).length);
     });
 
@@ -189,7 +193,7 @@ describe('node-precinct', () => {
         }
       };
 
-      const deps = precinct.paperwork(`${fixtures}/amd.js`, {
+      const deps = precinct.paperwork(`${fixturesFullPath}/amd.js`, {
         includeCore: false,
         amd: config.amd
       });
@@ -199,9 +203,9 @@ describe('node-precinct', () => {
     describe('when given detective configuration', () => {
       it('still does not filter out core module by default', () => {
         const stub = sinon.stub().returns([]);
-        const revert = precinct.__set__('precinct', stub);
+        const revert = precinctNonWired.__set__('precinct', stub);
 
-        precinct.paperwork(`${fixtures}/amd.js`, {
+        precinct.paperwork(`${fixturesFullPath}/amd.js`, {
           amd: {
             skipLazyLoaded: true
           }

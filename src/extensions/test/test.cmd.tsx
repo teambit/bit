@@ -2,7 +2,7 @@
 import React from 'react';
 import { Color, AppContext } from 'ink';
 import { Command, CLIArgs } from '../cli';
-import { Flags, PaperOptions } from '../paper/command';
+import { Flags, PaperOptions } from '../paper';
 import { Test } from './test';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../cli/chalk-box';
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Color, Box, Text } from 'ink';
 import { Command, CLIArgs } from '../cli';
-import { Flags } from '../paper/command';
+import { Flags } from '../paper';
 import { InsightManager } from './insight-manager';
 import { InsightResult } from './insight';
 
