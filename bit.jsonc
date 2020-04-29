@@ -1,48 +1,15 @@
-/**
- * this is the main configuration file of your bit workspace.
- * for full documentation, please see: https://docs.bit.dev/configuration
-**/{
+{
   "$schema": "",
-  /**
-   * main configuration of the Bit workspace.
-  **/
   "workspace": {
     "defaultScope": "bit.core",
     "workspace": {},
     "dependencyResolver": {}
   },
-  /**
-   * main configuration for component dependency resolution.
-  **/
   "dependencyResolver": {
-    /**
-     * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
-     * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
-     * and totally removes the need of a 'node_modules' directory in your project.
-    */
     "packageManager": "npm",
-    /**
-    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-    * an invalid state that can cause build failures or incompatible dependency versions.
-    * (For historical reasons, JavaScript package managers generally do not treat this invalid
-    * state as an error.)
-    *
-    * The default value is false to avoid legacy compatibility issues.
-    * It is strongly recommended to set strictPeerDependencies=true.
-    */
     "strictPeerDependencies": true,
-    /**
-     * map of extra arguments to pass to the configured package manager upon the installation
-     * of dependencies.
-    */
     "extraArgs": []
   },
-  /**
-   * workspace variants allow to set different subsets of configuration for components in your workspace.
-   * this is extremely useful for upgrading, aligning and building components with a
-   * new set of dependencies.
-  **/
   "variants": {
     "*": {
       "extensions": {
@@ -51,22 +18,28 @@
           "compiler": "#@bit/bit.core.typescript:transpile"
         }
       },
+      // why this is needed? try to automate this
       "devDependencies": {
         "@types/node": "^12.12.25"
       }
     },
+    "flows": {
+      // could be nicer to not repeat myself, I only want to add devDependency for this component
+      // but keep the same "extensions" as other components in the general "*"
+      "extensions": {
+        "typescript": {},
+        "compile": {
+          "compiler": "#@bit/bit.core.typescript:transpile"
+        }
+      },
+      "devDependencies": {
+        "@types/mocha": "^7.0.2"
+      }
+    },
+    // override typescript to not get compiled
     "typescript": {
       "extensions": {
       }
     }
   }
-  /**
-   * automate Bit workflow with Git.
-  */
-  // "gitPolicy": {
-  /**
-     * fetch dependency and component updates on `git pull`.
-    **/
-  // "dependencyUpdateOnPull": true
-  // }
 }

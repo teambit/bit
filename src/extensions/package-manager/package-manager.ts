@@ -91,17 +91,21 @@ export default class PackageManager {
     }
     if (packageManager === 'npm' || packageManager === 'yarn') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
-      await pMapSeries(capsules, async capsule => {
+      await pMapSeries(capsules, async (capsule: Capsule) => {
         // TODO: remove this hack once harmony supports ownExtensionName
         const componentId = capsule.component.id.toString();
         // until the reporter is ready, I don't have a better way to see what's going on with the installation
-        console.log('installing', capsule.wrkDir);
+        console.log('installing', capsule.wrkDir, packageManager);
+        // await capsule.fs.promises.unlink('./node_modules');
+        // await fs.remove(path.join(capsule.wrkDir, 'node_modules'));
         const installProc =
           packageManager === 'npm'
             ? execa('npm', ['install', '--no-package-lock'], { cwd: capsule.wrkDir, stdio: 'pipe' })
             : execa('yarn', [], { cwd: capsule.wrkDir, stdio: 'pipe' });
         logPublisher.info(componentId, packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'); // TODO: better
         logPublisher.info(componentId, '');
+        // installProc.stdout!.on('data', d => console.log(componentId, d.toString()));
+        // installProc.stderr!.on('data', d => console.log(componentId, d.toString()));
         installProc.stdout!.on('data', d => logPublisher.info(componentId, d.toString()));
         installProc.stderr!.on('data', d => logPublisher.warn(componentId, d.toString()));
         installProc.on('error', e => {

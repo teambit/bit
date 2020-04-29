@@ -9,11 +9,14 @@ function transpile() {
   fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfig, null, 2));
   let results;
   try {
-    result = childProcess.execSync('npx tsc -d', { cwd: 'node_modules/.bin' });
+    // @todo: make sure this is working on Windows
+    result = childProcess.execSync(path.join(__dirname, 'node_modules/.bin/tsc'));
   } catch (err) {
     console.log('transpile -> err', err);
-    console.log('transpile -> stdour', err.stdout ? err.stdout.toString() : '');
+    console.log('transpile -> stdout', err.stdout ? err.stdout.toString() : '');
     console.log('transpile -> stderr', err.stderr ? err.stderr.toString() : '');
+    // @todo: probably a bug in Flows. when the next line is un-commented, Flows hangs
+    // return { err };
   }
   console.log('transpile -> results', results);
   return { dir: 'dist', results };
