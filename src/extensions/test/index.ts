@@ -1,1 +1,1 @@
-export { default as TextExt } from './test.manifest';
+export { default as TestExt } from './test.manifest';

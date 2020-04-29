@@ -7,7 +7,7 @@ import { ComponentID } from '../component';
 import { Flow } from './flow/flow';
 import { ExecutionOptions } from './network/options';
 import { BitId } from '../../bit-id';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
 

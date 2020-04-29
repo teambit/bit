@@ -5,8 +5,8 @@ import provideBit from './bit.provider';
 import { ComposerExt } from '../composer';
 import { InstallExt } from '../install';
 
-import CompileExt from '../compile/compile.manifest';
-import TestExt from '../test/test.manifest';
+import { CompileExt } from '../compile';
+import { TestExt } from '../test';
 import { ComponentGraphExt } from '../graph';
 import { CreateExt } from '../create';
 import { FlowsExt } from '../flows';

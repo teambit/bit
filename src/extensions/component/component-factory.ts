@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import Isolator from '../isolator/isolator';
+import { Isolator } from '../isolator';
 import ConsumerComponent from '../../consumer/component';
 import Component from './component';
 import State from './state';
