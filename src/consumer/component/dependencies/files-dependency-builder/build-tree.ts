@@ -445,7 +445,7 @@ export async function getDependencyTree({
     if (filePath.startsWith(baseDir)) {
       return filePath;
     }
-    return path.join(baseDir, filePath);
+    return path.resolve(baseDir, filePath);
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
