@@ -1,12 +1,12 @@
 import assert from 'assert';
 import sinon from 'sinon';
-import mockfs from 'mock-fs';
 import path from 'path';
+import mockfs from 'mock-fs';
 import rewire from 'rewire';
+import Config from './Config';
+import precinct from '../precinct';
 
 const expect = require('chai').expect;
-const precinct = require('../precinct');
-const Config = require('./Config');
 
 // needed for the lazy loading.
 require('module-definition');
@@ -16,9 +16,17 @@ require('../../../../../utils');
 require('../../../../../utils/is-relative-import');
 require('../detectives/detective-css-and-preprocessors');
 require('../detectives/detective-typescript');
+require('../detectives/detective-css');
+require('../detectives/detective-sass');
+require('../detectives/detective-scss');
+require('../detectives/detective-less');
 require('../detectives/parser-helper');
+require('../dependency-tree/Config');
+require('../precinct');
+require('../filing-cabinet');
 
-const dependencyTree = rewire('./');
+const dependencyTreeRewired = rewire('./');
+const dependencyTree = dependencyTreeRewired.default;
 const fixtures = path.resolve(`${__dirname}/../../../../../../fixtures/dependency-tree`);
 
 describe('dependencyTree', function() {
@@ -187,14 +195,14 @@ describe('dependencyTree', function() {
     const directory = `${__dirname}/cyclic`;
     const filename = path.normalize(`${directory}/a.js`);
 
-    const spy = sinon.spy(dependencyTree, '_getDependencies');
+    const spy = sinon.spy(dependencyTreeRewired, '_getDependencies');
 
-    const tree = dependencyTree({ filename, directory });
+    const tree = dependencyTreeRewired.default({ filename, directory });
 
     assert(spy.callCount === 2);
     assert(Object.keys(tree[filename]).length);
 
-    dependencyTree._getDependencies.restore();
+    dependencyTreeRewired._getDependencies.restore();
   });
 
   it('excludes Nodejs core modules by default', () => {
@@ -337,7 +345,7 @@ describe('dependencyTree', function() {
       // @ts-ignore
       this._directory = `${fixtures}/commonjs`;
       // @ts-ignore
-      this._revert = dependencyTree.__set__('traverse', () => []);
+      this._revert = dependencyTreeRewired.__set__('traverse', () => []);
     });
 
     afterEach(() => {
@@ -413,11 +421,11 @@ describe('dependencyTree', function() {
   describe('memoization (#2)', () => {
     beforeEach(() => {
       // @ts-ignore
-      this._spy = sinon.spy(dependencyTree, '_getDependencies');
+      this._spy = sinon.spy(dependencyTreeRewired, '_getDependencies');
     });
 
     afterEach(() => {
-      dependencyTree._getDependencies.restore();
+      dependencyTreeRewired._getDependencies.restore();
     });
 
     it('accepts a cache object for memoization (#2)', () => {

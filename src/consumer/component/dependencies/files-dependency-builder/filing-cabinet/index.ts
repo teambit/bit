@@ -121,7 +121,8 @@ module.exports.register = function(extension, lookupStrategy) {
  * @param  {Object} options.ast
  * @return {String}
  */
-export function _getJSType(options) {
+
+function _getJSType(options) {
   options = options || {};
 
   if (options.config) {

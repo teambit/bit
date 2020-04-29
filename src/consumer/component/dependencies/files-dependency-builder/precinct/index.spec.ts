@@ -12,7 +12,8 @@ const exampleASTPath = path.join(fixtures, 'exampleAST');
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const ast = require(exampleASTPath);
 
-const precinct = rewire('./');
+const precinctNonWired = rewire('./');
+const precinct = precinctNonWired.default;
 
 function read(filename) {
   return fs.readFileSync(path.join(fixturesFullPath, filename), 'utf8');
@@ -202,7 +203,7 @@ describe('node-precinct', () => {
     describe('when given detective configuration', () => {
       it('still does not filter out core module by default', () => {
         const stub = sinon.stub().returns([]);
-        const revert = precinct.__set__('precinct', stub);
+        const revert = precinctNonWired.__set__('precinct', stub);
 
         precinct.paperwork(`${fixturesFullPath}/amd.js`, {
           amd: {
