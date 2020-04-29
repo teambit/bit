@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import stc from 'string-to-color';
 import chalk from 'chalk';
-import { Logger, LogEntry, LogLevel } from '../logger';
+import { Logger, LogEntry, LogLevel } from '@bit/bit.core.logger';
 import StatusLine from './status-line';
 import getColumnCount from './get-column-count';
 

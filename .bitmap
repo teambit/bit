@@ -728,6 +728,39 @@
         "origin": "AUTHORED",
         "exported": false
     },
+    "logger": {
+        "files": [
+            {
+                "relativePath": "README.md",
+                "test": false,
+                "name": "README.md"
+            },
+            {
+                "relativePath": "index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "logger.manifest.ts",
+                "test": false,
+                "name": "logger.manifest.ts"
+            },
+            {
+                "relativePath": "logger.provider.ts",
+                "test": false,
+                "name": "logger.provider.ts"
+            },
+            {
+                "relativePath": "logger.ts",
+                "test": false,
+                "name": "logger.ts"
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/logger",
+        "origin": "AUTHORED",
+        "exported": false
+    },
     "pack": {
         "files": [
             {

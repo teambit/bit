@@ -2,7 +2,7 @@ import { ReplaySubject } from 'rxjs';
 import { EventEmitter } from 'events';
 import { tap, filter, take } from 'rxjs/operators';
 import { flattenNestedMap } from '../util/flatten-nested-map';
-import { LogPublisher } from 'bit-bin/logger';
+import { LogPublisher } from '@bit/bit.core.logger';
 
 export const flowEvents = new EventEmitter();
 

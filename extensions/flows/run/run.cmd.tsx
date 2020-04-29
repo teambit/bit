@@ -10,7 +10,7 @@ import { reportRunStream } from './handle-run-stream';
 import { flowEvents } from './handle-run-stream';
 import { Report } from './report';
 import { Reporter } from '@bit/bit.core.reporter';
-import { Logger } from 'bit-bin/logger';
+import { Logger } from '@bit/bit.core.logger';
 import { onCapsuleInstalled, beforeInstallingCapsules } from '@bit/bit.core.package-manager';
 
 export class RunCmd implements Command {

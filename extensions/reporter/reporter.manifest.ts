@@ -1,5 +1,5 @@
 import { provideReporter } from './reporter.provider';
-import { LoggerExt } from '../logger';
+import { LoggerExt } from '@bit/bit.core.logger';
 
 export default {
   name: 'Reporter',

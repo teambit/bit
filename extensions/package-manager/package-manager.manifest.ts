@@ -1,4 +1,4 @@
-import { LoggerExt } from '../logger';
+import { LoggerExt } from '@bit/bit.core.logger';
 import { providePackageManager } from './package-manager.provider';
 
 const DEFAULT_PACKAGE_MANAGER = 'librarian';

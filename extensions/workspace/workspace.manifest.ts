@@ -4,7 +4,7 @@ import { ScopeExt } from '@bit/bit.core.scope';
 import { ComponentFactoryExt } from '@bit/bit.core.component';
 import { IsolatorExt } from '@bit/bit.core.isolator';
 import { WorkspaceConfigExt } from '@bit/bit.core.workspace-config';
-import { LoggerExt } from '../logger';
+import { LoggerExt } from '@bit/bit.core.logger';
 import { DependencyResolverExt } from '@bit/bit.core.dependency-resolver';
 
 export default {

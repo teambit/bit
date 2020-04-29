@@ -1,5 +1,5 @@
 import Reporter from './reporter';
-import { Logger } from '../logger';
+import { Logger } from '@bit/bit.core.logger';
 
 export type ReporterDeps = [Logger];
 

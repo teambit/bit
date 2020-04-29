@@ -4,7 +4,7 @@ import Workspace from './workspace';
 import { ComponentFactory } from '@bit/bit.core.component';
 import { loadConsumerIfExist } from 'bit-bin/consumer';
 import { Isolator } from '@bit/bit.core.isolator';
-import { Logger } from '../logger';
+import { Logger } from '@bit/bit.core.logger';
 import { WorkspaceConfig } from '@bit/bit.core.workspace-config';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { DependencyResolver } from '@bit/bit.core.dependency-resolver';

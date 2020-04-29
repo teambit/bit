@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
-import { Logger, LogPublisher } from '../logger';
+import { Logger, LogPublisher } from '@bit/bit.core.logger';
 import { Capsule } from '@bit/bit.core.isolator';
 import { pipeOutput } from 'bit-bin/utils/child_process';
 import createSymlinkOrCopy from 'bit-bin/utils/fs/create-symlink-or-copy';

@@ -4,7 +4,7 @@ import { BitCliExt, BitCli } from '@bit/bit.core.cli';
 import { WorkspaceExt, Workspace } from '@bit/bit.core.workspace';
 import { RunCmd } from './run';
 import { ReporterExt, Reporter } from '@bit/bit.core.reporter';
-import { LoggerExt, Logger } from '../logger';
+import { LoggerExt, Logger } from '@bit/bit.core.logger';
 
 type ScriptDeps = [BitCli, Workspace, Reporter, Logger];
 

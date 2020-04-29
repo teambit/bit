@@ -9,7 +9,7 @@ import ComponentsList from 'bit-bin/consumer/component/components-list';
 import { ComponentHost } from 'bit-bin/shared-types';
 import { BitIds, BitId } from 'bit-bin/bit-id';
 import { Isolator } from '@bit/bit.core.isolator';
-import { LogPublisher } from '../logger';
+import { LogPublisher } from '@bit/bit.core.logger';
 import ConsumerComponent from 'bit-bin/consumer/component';
 import { ResolvedComponent } from './resolved-component';
 import AddComponents from 'bit-bin/consumer/component-ops/add-components';
