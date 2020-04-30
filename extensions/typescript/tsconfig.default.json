@@ -9,6 +9,12 @@
     "rootDir": ".",
     "esModuleInterop": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "resolveJsonModule": true
   }
 }
