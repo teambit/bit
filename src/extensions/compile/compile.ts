@@ -26,7 +26,7 @@ export class Compile {
 
   async compileDuringBuild(ids: BitId[]): Promise<buildHookResult[]> {
     const reportResults: any = await this.compile(ids.map(id => id.toString()));
-    const resultsP: buildHookResult[] = Object.values(reportResults.value).map((reportResult: any) => {
+    const resultsP = Object.values(reportResults.value).map(async (reportResult: any) => {
       const result = reportResult.result.value.tasks;
       const id: BitId = reportResult.result.id;
       if (!result.length || !result[0].value) return { id };
@@ -36,8 +36,8 @@ export class Compile {
           `compile extension failed on ${id.toString()}, it expects to get "dir" as a result of executing the compilers`
         );
       }
-      const capsule = reportResult.result.value.capsule;
-      const distFiles = capsule.fs.readdirSync(distDir);
+      const capsule: Capsule = reportResult.result.value.capsule;
+      const distFiles = await getFilesFromCapsuleRecursive(capsule, distDir, path.join(capsule.wrkDir, distDir));
       const distFilesObjects = distFiles.map(distFilePath => {
         const distPath = path.join(distDir, distFilePath);
         return {
@@ -122,4 +122,20 @@ async function pipeRunTask(ids: string[], task: Function, workspace: Workspace) 
   const components = await getComponentsAndCapsules(ids, workspace);
   const results = await Promise.all(components.map(component => task(component)));
   return { results, components };
+}
+
+// @todo: refactor. was taken partly from stackOverflow.
+// it uses the absolute path because for some reason `capsule.fs.promises.readdir` doesn't work
+// the same as `capsule.fs.readdir` and it doesn't have the capsule dir as pwd.
+async function getFilesFromCapsuleRecursive(capsule: Capsule, distDir: string, dir: string) {
+  const subDirs = await capsule.fs.promises.readdir(dir);
+  const files = await Promise.all(
+    subDirs.map(async subDir => {
+      const res = path.resolve(dir, subDir);
+      return (await capsule.fs.promises.stat(res)).isDirectory()
+        ? getFilesFromCapsuleRecursive(capsule, distDir, res)
+        : path.relative(path.join(capsule.wrkDir, distDir), res);
+    })
+  );
+  return files.reduce((a, f) => a.concat(f), []);
 }
