@@ -2,10 +2,8 @@ import LegacyScope from 'bit-bin/scope/scope';
 import { PersistOptions } from 'bit-bin/scope/types';
 import { BitIds as ComponentsIds } from 'bit-bin/bit-id';
 import { Component, ComponentID } from '@bit/bit.core.component';
-import { ComponentHost } from 'bit-bin/shared-types';
 
-// eslint-disable-next-line import/prefer-default-export
-export class Scope implements ComponentHost {
+export class Scope {
   public onBuild?: Function[];
   constructor(
     /**
