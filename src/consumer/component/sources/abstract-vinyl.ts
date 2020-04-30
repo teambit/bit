@@ -1,6 +1,7 @@
 import * as path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
+import { FileConstructor } from './vinyl-types';
 import logger from '../../../logger/logger';
 import { eol } from '../../../utils';
 import { PathOsBased } from '../../../utils/path';
@@ -13,7 +14,7 @@ type AbstractVinylProps = {
   contents: Buffer;
 };
 
-export default class AbstractVinyl extends Vinyl {
+export default class AbstractVinyl extends (Vinyl as FileConstructor) {
   override = true;
   verbose = false;
 
