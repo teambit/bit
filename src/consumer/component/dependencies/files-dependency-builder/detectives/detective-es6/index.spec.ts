@@ -3,9 +3,9 @@
  */
 
 import { expect } from 'chai';
+import detective from './';
 
 const assert = require('assert');
-const detective = require('./');
 
 describe('detective-es6', () => {
   const ast = {
@@ -97,6 +97,7 @@ describe('detective-es6', () => {
   it('throws when content is not provided', function() {
     assert.throws(
       function() {
+        // @ts-ignore
         detective();
       },
       Error,
@@ -132,7 +133,9 @@ describe('detective-es6', () => {
     it('should recognize default imports as default', () => {
       const deps = detective('import foo from "foo";');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.have.property('importSpecifiers');
+      // @ts-ignore
       const importSpecifier = deps.foo.importSpecifiers[0];
       expect(importSpecifier.name).to.equal('foo');
       expect(importSpecifier.isDefault).to.be.true;
@@ -140,7 +143,9 @@ describe('detective-es6', () => {
     it('should recognize non-default imports as non-default', () => {
       const deps = detective('import { foo } from "foo";');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.have.property('importSpecifiers');
+      // @ts-ignore
       const importSpecifier = deps.foo.importSpecifiers[0];
       expect(importSpecifier.name).to.equal('foo');
       expect(importSpecifier.isDefault).to.be.false;
@@ -148,7 +153,9 @@ describe('detective-es6', () => {
     it('should support export-default-as syntax', () => {
       const deps = detective('export { default as foo } from "foo";');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.have.property('importSpecifiers');
+      // @ts-ignore
       const importSpecifier = deps.foo.importSpecifiers[0];
       expect(importSpecifier.name).to.equal('foo');
       expect(importSpecifier.isDefault).to.be.true;
@@ -156,12 +163,15 @@ describe('detective-es6', () => {
     it('should not be supported for CommonJS', () => {
       const deps = detective('const foo = require("foo");');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.not.have.property('importSpecifiers');
     });
     it('should add "exported": true if the same variable has been imported and exported', () => {
       const deps = detective('import { foo } from "foo"; export default foo;');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.have.property('importSpecifiers');
+      // @ts-ignore
       const importSpecifier = deps.foo.importSpecifiers[0];
       expect(importSpecifier.name).to.equal('foo');
       expect(importSpecifier.exported).to.be.true;
@@ -169,7 +179,9 @@ describe('detective-es6', () => {
     it('should not add "exported" property if the variable has been imported but not exported', () => {
       const deps = detective('import { foo } from "foo";');
       expect(deps).to.have.property('foo');
+      // @ts-ignore
       expect(deps.foo).to.have.property('importSpecifiers');
+      // @ts-ignore
       const importSpecifier = deps.foo.importSpecifiers[0];
       expect(importSpecifier.name).to.equal('foo');
       expect(importSpecifier).to.not.have.property('exported');

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import requestify from 'requestify';
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { searchAdapter } from '../../../search';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { formatter } from '../../../search/searcher';
@@ -13,8 +13,10 @@ export default class Search extends Command {
   name = 'search <query...>';
   description = 'search for components by desired functionality.';
   alias = '';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts = [['s', 'scope <scopename>', 'search in scope'], ['r', 'reindex', 're-index all components']];
+  opts = [
+    ['s', 'scope <scopename>', 'search in scope'],
+    ['r', 'reindex', 're-index all components']
+  ] as CommandOptions;
   loader = true;
   migration = true;
 

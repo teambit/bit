@@ -8,8 +8,7 @@ export default class Cmd {
   description: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   alias: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  opts: CommandOptions;
+  opts: CommandOptions = [];
   commands: Cmd[] = [];
   private?: boolean;
   loader?: boolean;

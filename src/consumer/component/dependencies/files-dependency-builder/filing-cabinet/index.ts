@@ -57,7 +57,7 @@ type Options = {
   wasCustomResolveUsed?: boolean;
 };
 
-module.exports = function cabinet(options: Options) {
+export default function cabinet(options: Options) {
   const { dependency, filename } = options;
   const ext = options.ext || path.extname(filename);
   debug(`working on a dependency "${dependency}" of a file "${filename}"`);
@@ -93,7 +93,7 @@ module.exports = function cabinet(options: Options) {
   }
   debug(`resolved path for ${dependency}: ${result}`);
   return result;
-};
+}
 
 module.exports.supportedFileExtensions = Object.keys(defaultLookups);
 
@@ -121,7 +121,8 @@ module.exports.register = function(extension, lookupStrategy) {
  * @param  {Object} options.ast
  * @return {String}
  */
-module.exports._getJSType = function(options) {
+
+function _getJSType(options) {
   options = options || {};
 
   if (options.config) {
@@ -140,7 +141,7 @@ module.exports._getJSType = function(options) {
 
   debug('using the filename to find the module type');
   return getModuleType.sync(options.filename);
-};
+}
 
 /**
  * @private
@@ -155,7 +156,7 @@ module.exports._getJSType = function(options) {
  */
 function jsLookup(options: Options) {
   const { configPath, dependency, directory, config, webpackConfig, filename, ast, isScript, content } = options;
-  const type = module.exports._getJSType({
+  const type = _getJSType({
     config,
     webpackConfig,
     filename,

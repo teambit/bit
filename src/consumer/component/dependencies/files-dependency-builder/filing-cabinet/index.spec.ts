@@ -1,19 +1,19 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const assert = require('assert');
-const sinon = require('sinon');
-const rewire = require('rewire');
-const mock = require('mock-fs');
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const path = require('path');
+import path from 'path';
+import assert from 'assert';
+import sinon from 'sinon';
+import rewire from 'rewire';
+import mock from 'mock-fs';
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-const cabinet = rewire('./');
-const fixtures = `${__dirname}/../../../fixtures/filing-cabinet`;
+const cabinetNonDefault = rewire('./');
+const cabinet = cabinetNonDefault.default;
+
+const fixtures = `${__dirname}/../../../../../../fixtures/filing-cabinet`;
+
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockedFiles = require(`${fixtures}/mockedJSFiles`);
 // eslint-disable-next-line import/no-dynamic-require, global-require
 const mockAST = require(`${fixtures}/ast`);
-const mockRootDir = path.join(__dirname, '..', '..', '..');
+const mockRootDir = path.join(__dirname, '..', '..', '..', '..', '..', '..');
 
 // needed for the lazy loading
 require('resolve-dependency-path');
@@ -33,7 +33,7 @@ describe('filing-cabinet', () => {
     });
 
     it('dangles off its supported file extensions', () => {
-      assert.deepEqual(cabinet.supportedFileExtensions, [
+      assert.deepEqual(cabinetNonDefault.supportedFileExtensions, [
         '.js',
         '.jsx',
         '.ts',
@@ -95,7 +95,7 @@ describe('filing-cabinet', () => {
     describe('es6', () => {
       it('assumes commonjs for es6 modules with no requirejs/webpack config', () => {
         const stub = sinon.stub();
-        const revert = cabinet.__set__('commonJSLookup', stub);
+        const revert = cabinetNonDefault.__set__('commonJSLookup', stub);
 
         cabinet({
           dependency: './bar',
@@ -106,23 +106,6 @@ describe('filing-cabinet', () => {
         assert.ok(stub.called);
 
         revert();
-      });
-
-      it('assumes amd for es6 modules with a requirejs config', () => {
-        const spy = sinon.spy(cabinet, '_getJSType');
-
-        const result = cabinet({
-          dependency: './bar',
-          filename: 'js/es6/foo.js',
-          directory: 'js/es6/',
-          config: {
-            baseUrl: './'
-          }
-        });
-
-        assert.ok(spy.called);
-        assert.equal(result, path.normalize('js/es6/bar.js'));
-        spy.restore();
       });
     });
 
@@ -179,7 +162,7 @@ describe('filing-cabinet', () => {
     describe('commonjs', () => {
       it("uses require's resolver", () => {
         const stub = sinon.stub();
-        const revert = cabinet.__set__('commonJSLookup', stub);
+        const revert = cabinetNonDefault.__set__('commonJSLookup', stub);
 
         cabinet({
           dependency: './bar',
@@ -475,7 +458,7 @@ describe('filing-cabinet', () => {
   describe('.register', () => {
     it('registers a custom resolver for a given extension', () => {
       const stub = sinon.stub().returns('foo.foobar');
-      cabinet.register('.foobar', stub);
+      cabinetNonDefault.register('.foobar', stub);
 
       const pathResult = cabinet({
         dependency: './bar',
@@ -497,7 +480,7 @@ describe('filing-cabinet', () => {
 
       const stub = sinon.stub().returns('foo');
 
-      cabinet.register('.foobar', stub);
+      cabinetNonDefault.register('.foobar', stub);
 
       cabinet({
         dependency: './bar',
@@ -521,8 +504,8 @@ describe('filing-cabinet', () => {
       const stub = sinon.stub().returns('foo');
       const stub2 = sinon.stub().returns('foo');
 
-      cabinet.register('.foobar', stub);
-      cabinet.register('.barbar', stub2);
+      cabinetNonDefault.register('.foobar', stub);
+      cabinetNonDefault.register('.barbar', stub2);
 
       cabinet({
         dependency: './bar',
@@ -544,10 +527,10 @@ describe('filing-cabinet', () => {
       const stub = sinon.stub;
       const newExt = '.foobar';
 
-      cabinet.register(newExt, stub);
-      cabinet.register(newExt, stub);
+      cabinetNonDefault.register(newExt, stub);
+      cabinetNonDefault.register(newExt, stub);
 
-      const { supportedFileExtensions } = cabinet;
+      const { supportedFileExtensions } = cabinetNonDefault;
 
       assert.equal(supportedFileExtensions.indexOf(newExt), supportedFileExtensions.lastIndexOf(newExt));
     });

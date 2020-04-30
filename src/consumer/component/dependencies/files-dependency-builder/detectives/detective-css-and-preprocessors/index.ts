@@ -9,7 +9,7 @@ const isUrl = require('is-url');
  * @param  {String} syntax, can be one of the following: css, less, sass, scss.
  * @return {String[]}
  */
-module.exports = function detective(fileContent, syntax) {
+function detective(fileContent, syntax) {
   // eslint-disable-next-line import/no-dynamic-require, global-require
   const debug = require('debug')(`detective-${syntax}`);
   debug(`parsing ${syntax} syntax`);
@@ -42,7 +42,7 @@ module.exports = function detective(fileContent, syntax) {
     dependencies = clearUrlImports(dependencies);
   });
   return dependencies;
-};
+}
 
 function isImportStatement(node) {
   if (node.type === 'Atrule' && node.name === 'import') {
@@ -139,3 +139,5 @@ function handleError() {
   // handle parse error
   return false;
 }
+
+export default detective;

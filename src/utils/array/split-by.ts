@@ -9,7 +9,7 @@
  *  splitBy([1, 2, 3, 4, 5], isEven) // => [[1, 3, 5], [2, 4]]
  * ```
  */
-function splitBy(array: [], fn: (elm: any) => boolean): [Array<any>, Array<any>] {
+export default function splitBy(array: [], fn: (elm: any) => boolean): [Array<any>, Array<any>] {
   const truthy = [];
   const falsy = [];
 
@@ -20,5 +20,3 @@ function splitBy(array: [], fn: (elm: any) => boolean): [Array<any>, Array<any>]
 
   return [falsy, truthy];
 }
-
-module.exports = splitBy;

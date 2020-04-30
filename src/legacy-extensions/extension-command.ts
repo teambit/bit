@@ -1,17 +1,17 @@
-import Command from '../cli/command';
+import Command, { CommandOptions } from '../cli/command';
 
 type ExtensionCommandProps = {
   name: string;
   action: Function;
   report: Function;
   description: string;
-  opts?: [string, string, string][];
+  opts?: CommandOptions;
 };
 
 export default class ExtensionCommand extends Command {
   name = '';
   description = '';
-  opts = [];
+  opts: CommandOptions = [];
 
   private = false;
   migration = false;
@@ -26,7 +26,6 @@ export default class ExtensionCommand extends Command {
     this.description = props.description;
     this._action = props.action;
     this._report = props.report;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.opts = props.opts || [];
   }
 

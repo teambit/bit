@@ -273,8 +273,7 @@ export default class BitId {
     return chunk;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static getValidBitId(box?: string, name: string): BitId {
+  static getValidBitId(box: string | undefined, name: string): BitId {
     return new BitId({ name: BitId.getValidIdChunk(name), box: box ? BitId.getValidIdChunk(box) : undefined });
   }
 

@@ -21,7 +21,15 @@ export default async function writeComponentsToCapsules(
   components = components.map(c => c.clone());
   const writeToPath = '.';
   const componentsWithDependencies = components.map(component => {
-    const getClonedFromGraph = (id: BitId): ConsumerComponent => graph.node(id.toString()).clone();
+    const getClonedFromGraph = (id: BitId): ConsumerComponent => {
+      const consumerComponent = graph.node(id.toString());
+      if (!consumerComponent) {
+        throw new Error(
+          `unable to find the dependency "${id.toString()}" of "${component.id.toString()}" in the graph`
+        );
+      }
+      return consumerComponent.clone();
+    };
     const getDeps = (dependencies: Dependencies) => dependencies.get().map(dep => getClonedFromGraph(dep.id));
     const dependencies = getDeps(component.dependencies);
     const devDependencies = getDeps(component.devDependencies);

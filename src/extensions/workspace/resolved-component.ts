@@ -1,5 +1,5 @@
 import { Component } from '../component';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 
 export class ResolvedComponent {
   constructor(readonly component: Component, readonly capsule: Capsule) {}

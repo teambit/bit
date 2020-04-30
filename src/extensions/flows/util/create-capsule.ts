@@ -3,7 +3,7 @@ import { State, Console } from '@teambit/capsule';
 import { tmpdir } from 'os';
 import { mkdirp, writeFile } from 'fs-extra';
 import { Component } from '../../component';
-import { FsContainer, Capsule } from '../../isolator/capsule';
+import { FsContainer, Capsule } from '../../isolator';
 
 type CapsuleContent = { [k: string]: string };
 

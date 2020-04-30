@@ -8,7 +8,7 @@ import pMapSeries from 'p-map-series';
 import execa from 'execa';
 import librarian from 'librarian';
 import { Logger, LogPublisher } from '../logger';
-import { Capsule } from '../isolator/capsule';
+import { Capsule } from '../isolator';
 import { pipeOutput } from '../../utils/child_process';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 

@@ -1,4 +1,4 @@
-import Command from '../../command';
+import Command, { CommandOptions } from '../../command';
 import { link } from '../../../api/consumer';
 import linkTemplate from '../../templates/link-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -10,10 +10,9 @@ export default class Link extends Command {
   name = 'link [ids...]';
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
-  // @ts-ignore
   opts = [
     ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")']
-  ];
+  ] as CommandOptions;
   private = false;
   loader = true;
 
