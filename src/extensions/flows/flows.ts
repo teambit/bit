@@ -10,6 +10,7 @@ import { BitId } from '../../bit-id';
 import { Capsule } from '../isolator';
 import { PostFlow, getWorkspaceGraph } from './network/network';
 import { getExecutionCache } from './cache';
+import logger from '../../logger/logger';
 
 export class Flows {
   private emitter = new EventEmitter();
@@ -72,18 +73,26 @@ export class Flows {
    * @param network optional custom network
    */
   async runToPromise(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+    logger.debug(`flowsExt, runToPromise is running ${name} on ${seeders.map(s => s.toString()).join(', ')}`);
     const resultStream = await this.run(seeders, name, options, network);
+    logger.debug(`flowsExt, runToPromise got resultStream`);
     return new Promise((resolve, reject) => {
       resultStream.subscribe({
         next(data: any) {
           if (data.type === 'network:result') {
+            logger.debug(`flowsExt, runToPromise going to resolve the promise.`);
             resolve(data);
+          } else {
+            logger.debug(`flowsExt, runToPromise data.type is ${data.type}. the promise is not resolved nor rejected`);
           }
         },
         error(err: any) {
+          logger.debug(`flowsExt, runToPromise going to reject the promise.`);
           reject(err);
         },
-        complete() {}
+        complete() {
+          logger.debug(`flowsExt, runToPromise in complete()`);
+        }
       });
     });
   }
@@ -152,5 +161,8 @@ export class IdsAndFlows extends Array<{ id: BitId; value: string[] }> {
   getFlowsIgnoreScopeAndVersion(id: BitId): string[] | null {
     const found = this.find(item => item.id.isEqualWithoutScopeAndVersion(id));
     return found ? found.value : null;
+  }
+  toString() {
+    return this.map(({ id, value }) => `id: ${id}, task: ${value.join(', ')}`).join('; ');
   }
 }
