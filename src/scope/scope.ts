@@ -349,7 +349,6 @@ export default class Scope {
             contents: Buffer.from(file.content)
           });
         });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         component.setDists(distsFiles);
         return { component: component.id.toString(), buildResults: builtFiles.map(b => b.path) };
       })

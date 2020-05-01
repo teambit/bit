@@ -4,9 +4,8 @@ import { compact } from 'ramda-adjunct';
 import { Consumer } from '../../consumer';
 import { Scope } from '../scope';
 import { WorkspaceConfig } from '../workspace-config';
-import { Component, ComponentFactory } from '../component';
+import { Component, ComponentFactory, ComponentID } from '../component';
 import ComponentsList from '../../consumer/component/components-list';
-import { ComponentHost } from '../../shared-types';
 import { BitIds, BitId } from '../../bit-id';
 import { Isolator } from '../isolator';
 import { LogPublisher } from '../logger';
@@ -25,7 +24,7 @@ import { DependencyResolver } from '../dependency-resolver';
 /**
  * API of the Bit Workspace
  */
-export default class Workspace implements ComponentHost {
+export default class Workspace {
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
 
@@ -145,8 +144,13 @@ export default class Workspace implements ComponentHost {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: string | BitId): Promise<Component | undefined> {
-    const componentId = typeof id === 'string' ? this.consumer.getParsedId(id) : id;
+  async get(id: string | BitId | ComponentID): Promise<Component | undefined> {
+    const getBitId = (): BitId => {
+      if (id instanceof ComponentID) return id._legacy;
+      if (typeof id === 'string') return this.consumer.getParsedId(id);
+      return id;
+    };
+    const componentId = getBitId();
     if (!componentId) return undefined;
     const legacyComponent = await this.consumer.loadComponent(componentId);
     return this.componentFactory.fromLegacyComponent(legacyComponent);

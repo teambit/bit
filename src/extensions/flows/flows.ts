@@ -96,7 +96,13 @@ export class Flows {
    * @param options
    * @param network optional custom network
    */
-  async run(seeders: ComponentID[], name = 'build', options?: Partial<ExecutionOptions>, network?: Network) {
+  // @todo: @qballer please add return type
+  async run(
+    seeders: ComponentID[],
+    name = 'build',
+    options?: Partial<ExecutionOptions>,
+    network?: Network
+  ): Promise<any> {
     const opts: ExecutionOptions = Object.assign(
       {
         caching: true,
