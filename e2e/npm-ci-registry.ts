@@ -39,10 +39,10 @@ export default class NpmCiRegistry {
   constructor(helper: Helper) {
     this.helper = helper;
   }
-  async init() {
+  async init(scopes: string[] = ['@ci']) {
     await this._establishRegistry();
     this._addDefaultUser();
-    this._registerToCiScope();
+    this._registerScopes(scopes);
   }
 
   /**
@@ -91,8 +91,11 @@ EOD`;
     fs.removeSync('adduser.sh');
   }
 
-  _registerToCiScope() {
-    this.helper.command.runCmd('npm config set @ci:registry http://localhost:4873');
+  // TODO: improve this to only write it to project level npmrc instead of global one
+  _registerScopes(scopes: string[] = ['@ci']) {
+    scopes.forEach(scope => {
+      this.helper.command.runCmd(`npm config set ${scope}:registry http://localhost:4873`);
+    });
   }
 
   /**
