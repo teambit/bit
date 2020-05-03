@@ -106,9 +106,7 @@ export default class NodeModuleLinker {
     const componentMap = component.componentMap;
     const componentId = component.id;
     // @todo: this should probably be `const bindingPrefix = component.bindingPrefix;`
-    const bindingPrefix = this.consumer
-      ? this.consumer.config.workspaceSettings._bindingPrefix
-      : DEFAULT_BINDINGS_PREFIX;
+    const bindingPrefix = component.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(
       bindingPrefix,
       componentId,
