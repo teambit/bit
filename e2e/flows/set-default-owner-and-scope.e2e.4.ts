@@ -6,7 +6,7 @@ import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
 chai.use(require('chai-fs'));
 
 // (supportNpmCiRegistryTesting ? describe : describe.skip)(
-describe.only('set default owner and scope', function() {
+describe('set default owner and scope', function() {
   this.timeout(0);
   let helper: Helper;
   before(() => {
