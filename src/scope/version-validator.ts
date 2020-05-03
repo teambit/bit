@@ -200,7 +200,10 @@ export default function validateVersionInstance(version: Version): void {
   };
   validateFlattenedDependencies(version.flattenedDependencies);
   validateFlattenedDependencies(version.flattenedDevDependencies);
-  const allDependenciesIds = version.getAllDependenciesIds();
+  // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a
+  // dependency and extensionDependency. we can't remove it from extDep, otherwise, the ext won't
+  // be running
+  const allDependenciesIds = version.getDependenciesIdsExcludeExtensions();
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
   if (!R.isEmpty(depsDuplications)) {
     const duplicationStr = Object.keys(depsDuplications)

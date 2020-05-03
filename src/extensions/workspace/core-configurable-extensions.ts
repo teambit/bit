@@ -1,3 +1,4 @@
+import { ExtensionManifest } from '@teambit/harmony';
 // TODO: make this in a better way
 // This used by the workspace to do:
 // 1. know which extensions to look in the workspace itself (in the bitmap) and which are core
@@ -8,7 +9,7 @@ import workspaceExt from './workspace.manifest';
 import { FlowsExt } from '../flows';
 import { CreateExt } from '../create';
 
-const coreConfigurableExtensions = {
+const coreConfigurableExtensions: { [extName: string]: ExtensionManifest } = {
   // TODO: change the way we get the name when moving to decorators
   [ComposerExt.name]: ComposerExt,
   [FlowsExt.name]: FlowsExt,
