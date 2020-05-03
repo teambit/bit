@@ -209,7 +209,11 @@ interface GroupedDependenciesTree {
 function groupDependencyTree(tree, cwd, bindingPrefix): GroupedDependenciesTree {
   const result = {};
   Object.keys(tree).forEach(key => {
-    result[key] = groupDependencyList(tree[key], cwd, bindingPrefix);
+    if (tree[key] && !R.isEmpty(tree[key])) {
+      result[key] = groupDependencyList(tree[key], cwd, bindingPrefix);
+    } else {
+      result[key] = {};
+    }
   });
 
   return result;
