@@ -29,7 +29,7 @@ describe('bit link', function() {
       describe('when scopeDefault is not set', () => {
         let linkOutput;
         before(() => {
-          linkOutput = helper.command.runCmd('bit link');
+          linkOutput = helper.command.link();
         });
         it('should create links although the paths do not have scope name (until export)', () => {
           expect(linkOutput).to.have.string(path.normalize('node_modules/@bit/utils.is-type/utils/is-type.js'));
